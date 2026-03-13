@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Triage Nyeri Dada Kritis - CardiologyVault</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Menggunakan murni jsPDF untuk hasil teks 100% anti-blank -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        .step-hidden { display: none; }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .checkbox-custom:checked + label {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+        .checkbox-custom:checked + label i {
+            display: inline-block;
+        }
+        
+        /* CSS Khusus untuk Mode Cetak (PDF) */
+        @media print {
+            body { background-color: white; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .shadow-lg { box-shadow: none !important; }
+            .border-t-4 { border-top: 2px solid #000 !important; }
+            #emr-report-content { 
+                border: none !important; 
+                background: white !important; 
+                padding: 0 !important;
+                font-family: monospace;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen pb-10">
+
+<div class="max-w-3xl mx-auto pt-8 px-4">
+    <!-- Header -->
+    <div class="bg-blue-900 text-white rounded-t-xl p-6 shadow-lg no-print">
+        <h1 class="text-2xl font-bold flex flex-col md:flex-row md:items-center">
+            <div class="flex items-center">
+                <i class="fas fa-heartbeat mr-3 text-red-400"></i> Alat Triage Cepat Nyeri Dada
+            </div>
+            <span class="text-sm font-normal text-blue-300 md:ml-3 mt-1 md:mt-0 italic">(part of CardiologyVault)</span>
+        </h1>
+        <p class="text-blue-200 mt-2 text-sm">Protokol Eksklusi "The Big Three" Berbasis Kondisi Lapangan</p>
+        <p class="text-xs text-blue-300 mt-1">Developed by Bayushi Eka Putra, MD, FIHA</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="bg-white rounded-b-xl shadow-lg p-6 border-t-4 border-red-500 min-h-[400px]">
+        
+        <!-- STEP 0: Pemilihan Faskes -->
+        <div id="step-0" class="step-content fade-in text-center py-8 no-print">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6"><i class="fas fa-hospital-alt text-blue-600 mr-2"></i>Kondisi Fasilitas Anda Saat Ini?</h2>
+            <p class="text-gray-600 mb-8">Pilih ketersediaan alat untuk menyesuaikan jalur algoritme diagnostik.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button onclick="selectFacility(true)" class="p-6 border-2 border-blue-200 rounded-xl hover:bg-blue-50 hover:border-blue-500 transition group relative overflow-hidden">
+                    <div class="absolute inset-0 bg-blue-500 opacity-0 group-hover:opacity-10 transition-opacity"></div>
+                    <i class="fas fa-heartbeat text-4xl text-blue-600 mb-3"></i>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Tersedia EKG 12-Lead</h3>
+                    <p class="text-sm text-gray-500">Alat EKG ada dan berfungsi dengan baik.</p>
+                </button>
+                
+                <button onclick="selectFacility(false)" class="p-6 border-2 border-orange-200 rounded-xl hover:bg-orange-50 hover:border-orange-500 transition group relative overflow-hidden">
+                    <div class="absolute inset-0 bg-orange-500 opacity-0 group-hover:opacity-10 transition-opacity"></div>
+                    <i class="fas fa-stethoscope text-4xl text-orange-600 mb-3"></i>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">TIDAK Ada EKG</h3>
+                    <p class="text-sm text-gray-500">Mengandalkan anamnesis dan pemeriksaan fisik murni.</p>
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="mb-8 step-hidden no-print" id="progress-container">
+            <div class="flex justify-between mb-1">
+                <span class="text-xs font-semibold text-blue-700 uppercase" id="step-indicator">Langkah 1 dari 4</span>
+                <span class="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded" id="mode-indicator">Mode: -</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" id="progress-bar" style="width: 25%"></div>
+            </div>
+        </div>
+
+        <!-- STEP 1: EKG / Klinis Kritis -->
+        <div id="step-1" class="step-content step-hidden fade-in no-print">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">
+                <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm mr-2">1</span> 
+                <span id="step-1-title">Evaluasi EKG 12-Lead</span>
+            </h2>
+            
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                <p class="text-sm font-bold text-yellow-800"><i class="fas fa-exclamation-triangle mr-2"></i>Tindakan Segera (Menit 0):</p>
+                <ul class="list-disc ml-5 text-sm text-yellow-800 mt-1">
+                    <li>Oksigen jika SpO2 < 90%</li>
+                    <li>Ukur TD di <strong>kedua lengan</strong> (Sangat krusial untuk singkirkan Diseksi Aorta!)</li>
+                </ul>
+            </div>
+            
+            <!-- Jika ADA EKG -->
+            <div id="step-1-ecg" class="space-y-3 hidden">
+                <p class="font-semibold mb-3">Apakah hasil EKG menunjukkan:</p>
+                <button onclick="recordStep1('Ada ST-Elevasi/LBBB Baru'); triggerResult('STEMI')" class="w-full text-left p-4 border rounded-lg hover:bg-red-50 hover:border-red-400 transition flex items-center justify-between group">
+                    <div>
+                        <span class="font-bold text-red-600">YA</span> - Terdapat ST-Elevasi (STEMI) atau LBBB Baru
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400 group-hover:text-red-500"></i>
+                </button>
+                <button onclick="recordStep1('Non-STEMI / Normal'); nextStep(2)" class="w-full text-left p-4 border rounded-lg hover:bg-blue-50 hover:border-blue-400 transition flex items-center justify-between group">
+                    <div>
+                        <span class="font-bold text-blue-600">TIDAK</span> - EKG Normal, ST-Depresi, T-Inversi, atau Non-Diagnostik
+                    </div>
+                    <i class="fas fa-arrow-right text-gray-400 group-hover:text-blue-500"></i>
+                </button>
+            </div>
+
+            <!-- Jika TIDAK ADA EKG -->
+            <div id="step-1-no-ecg" class="space-y-3 hidden">
+                <p class="font-semibold text-red-600 mb-2">Evaluasi Gejala Iskemik Risiko Tinggi (High-Risk Features):</p>
+                <p class="text-sm text-gray-600 mb-3">Karena tidak ada EKG, kita harus mendeteksi potensi STEMI secara klinis. Apakah pasien mengalami <strong>semua/sebagian besar</strong> gejala berikut?</p>
+                <ul class="list-disc ml-5 text-sm text-gray-700 mb-4 bg-gray-50 p-3 rounded">
+                    <li>Nyeri dada tipikal (seperti ditindih benda berat/diremas).</li>
+                    <li>Menjalar ke rahang bawah, leher, atau lengan kiri.</li>
+                    <li>Disertai <strong>Keringat Dingin (Diaforesis)</strong> masif.</li>
+                    <li>Tampak sakit berat, pucat, atau ada instabilitas hemodinamik (Hipotensi/Takikardia).</li>
+                </ul>
+
+                <button onclick="recordStep1('Gejala Iskemik Risiko Tinggi (+)'); triggerResult('ACS_HIGH_RISK_NO_ECG')" class="w-full text-left p-4 border rounded-lg hover:bg-red-50 hover:border-red-400 transition flex items-center justify-between group">
+                    <div>
+                        <span class="font-bold text-red-600">YA</span> - Gejala sangat khas & pasien tampak sakit sedang/berat.
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400 group-hover:text-red-500"></i>
+                </button>
+                <button onclick="recordStep1('Gejala Iskemik Atipikal/Stabil'); nextStep(2)" class="w-full text-left p-4 border rounded-lg hover:bg-blue-50 hover:border-blue-400 transition flex items-center justify-between group">
+                    <div>
+                        <span class="font-bold text-blue-600">TIDAK</span> - Nyeri atipikal, pasien tampak stabil, atau gejala meragukan.
+                    </div>
+                    <i class="fas fa-arrow-right text-gray-400 group-hover:text-blue-500"></i>
+                </button>
+            </div>
+            
+            <div class="mt-4 text-center">
+                 <button onclick="resetApp()" class="text-sm text-gray-500 hover:text-gray-700 underline">Ganti Kondisi Faskes</button>
+            </div>
+        </div>
+
+        <!-- STEP 2: Aortic Dissection -->
+        <div id="step-2" class="step-content step-hidden fade-in no-print">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2"><span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm mr-2">2</span> Eksklusi Diseksi Aorta</h2>
+            <p class="text-sm text-gray-600 mb-4">Kondisi paling mematikan jika salah diberi pengencer darah. Cari asimetri anatomis.</p>
+            
+            <p class="font-semibold mb-3 text-red-600">Pilih jika ada (Red Flags):</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+                <div class="relative">
+                    <input type="checkbox" id="ad-1" value="Nyeri dada merobek (Tearing) tiba-tiba" class="checkbox-custom hidden peer">
+                    <label for="ad-1" class="block p-3 border rounded-lg cursor-pointer transition peer-checked:bg-red-50 peer-checked:border-red-500">
+                        <i class="fas fa-check-circle hidden text-red-500 mr-2"></i>Nyeri dada/punggung terasa "merobek" (*tearing*) & mendadak maksimal
+                    </label>
+                </div>
+                <div class="relative">
+                    <input type="checkbox" id="ad-2" value="Beda TD > 20mmHg antar lengan" class="checkbox-custom hidden peer">
+                    <label for="ad-2" class="block p-3 border rounded-lg cursor-pointer transition peer-checked:bg-red-50 peer-checked:border-red-500">
+                        <i class="fas fa-check-circle hidden text-red-500 mr-2"></i>Beda Tekanan Darah > 20 mmHg antara lengan Kanan & Kiri
+                    </label>
+                </div>
+                <div class="relative">
+                    <input type="checkbox" id="ad-3" value="Defisit nadi/neurologis" class="checkbox-custom hidden peer">
+                    <label for="ad-3" class="block p-3 border rounded-lg cursor-pointer transition peer-checked:bg-red-50 peer-checked:border-red-500">
+                        <i class="fas fa-check-circle hidden text-red-500 mr-2"></i>Defisit nadi (nadi lemah sebelah) / Defisit neurologis (stroke) baru
+                    </label>
+                </div>
+                <div class="relative">
+                    <input type="checkbox" id="ad-4" value="Pelebaran Mediastinum (X-Ray)" class="checkbox-custom hidden peer">
+                    <label for="ad-4" class="block p-3 border rounded-lg cursor-pointer transition peer-checked:bg-red-50 peer-checked:border-red-500">
+                        <i class="fas fa-check-circle hidden text-red-500 mr-2"></i>Pelebaran Mediastinum pada Rontgen (Lewati jika tidak ada Rontgen)
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex space-x-3">
+                <button onclick="checkAorta()" class="flex-1 bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition">Lanjutkan Evaluasi</button>
+                <button onclick="prevStep(1)" class="px-4 py-3 border text-gray-600 rounded-lg hover:bg-gray-100"><i class="fas fa-arrow-left"></i></button>
+            </div>
+        </div>
+
+        <!-- STEP 3: Pulmonary Embolism -->
+        <div id="step-3" class="step-content step-hidden fade-in no-print">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2"><span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm mr-2">3</span> Eksklusi Emboli Paru (PE)</h2>
+            <p class="text-sm text-gray-600 mb-4">Gunakan Modifikasi Kriteria Wells. Centang yang sesuai:</p>
+            
+            <div class="space-y-2 mb-6" id="wells-form">
+                <label class="flex items-center p-3 border rounded hover:bg-gray-50 cursor-pointer">
+                    <input type="checkbox" class="w-5 h-5 text-blue-600" data-label="Tanda klinis DVT" value="3.0">
+                    <span class="ml-3">Tanda klinis DVT (kaki bengkak unilateral, nyeri tekan betis) <b>(+3.0)</b></span>
+                </label>
+                <label class="flex items-center p-3 border rounded hover:bg-gray-50 cursor-pointer">
+                    <input type="checkbox" class="w-5 h-5 text-blue-600" data-label="Diagnosis PE lebih memungkinkan" value="3.0">
+                    <span class="ml-3">Diagnosis alternatif selain PE kurang memungkinkan (sesak tak wajar) <b>(+3.0)</b></span>
+                </label>
+                <label class="flex items-center p-3 border rounded hover:bg-gray-50 cursor-pointer">
+                    <input type="checkbox" class="w-5 h-5 text-blue-600" data-label="Takikardia >100x/m" value="1.5">
+                    <span class="ml-3">Takikardia (Heart Rate > 100x/menit) <b>(+1.5)</b></span>
+                </label>
+                <label class="flex items-center p-3 border rounded hover:bg-gray-50 cursor-pointer">
+                    <input type="checkbox" class="w-5 h-5 text-blue-600" data-label="Imobilisasi/Operasi baru" value="1.5">
+                    <span class="ml-3">Imobilisasi >3 hari atau operasi dalam 4 minggu terakhir <b>(+1.5)</b></span>
+                </label>
+                <label class="flex items-center p-3 border rounded hover:bg-gray-50 cursor-pointer">
+                    <input type="checkbox" class="w-5 h-5 text-blue-600" data-label="Riwayat DVT/PE" value="1.5">
+                    <span class="ml-3">Riwayat DVT atau PE sebelumnya <b>(+1.5)</b></span>
+                </label>
+                <label class="flex items-center p-3 border rounded hover:bg-gray-50 cursor-pointer">
+                    <input type="checkbox" class="w-5 h-5 text-blue-600" data-label="Batuk Darah" value="1.0">
+                    <span class="ml-3">Batuk darah (Hemoptisis) <b>(+1.0)</b></span>
+                </label>
+                <label class="flex items-center p-3 border rounded hover:bg-gray-50 cursor-pointer">
+                    <input type="checkbox" class="w-5 h-5 text-blue-600" data-label="Keganasan Aktif" value="1.0">
+                    <span class="ml-3">Keganasan/Kanker aktif <b>(+1.0)</b></span>
+                </label>
+            </div>
+
+            <div class="flex space-x-3">
+                <button onclick="checkPE()" class="flex-1 bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition">Hitung Skor Wells & Lanjut</button>
+                <button onclick="prevStep(2)" class="px-4 py-3 border text-gray-600 rounded-lg hover:bg-gray-100"><i class="fas fa-arrow-left"></i></button>
+            </div>
+        </div>
+
+        <!-- STEP 4: NSTEMI/UAP (HEART/Clinical) -->
+        <div id="step-4" class="step-content step-hidden fade-in no-print">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2"><span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm mr-2">4</span> Evaluasi ACS (NSTEMI/UAP)</h2>
+            <p class="text-sm text-gray-600 mb-4" id="step-4-desc">Evaluasi kecurigaan Iskemia Miokard.</p>
+            
+            <p class="font-semibold mb-2">Riwayat Nyeri (History):</p>
+            <select id="acs-history" class="w-full p-3 border rounded-lg mb-4 bg-gray-50">
+                <option value="0">Tidak Curiga (Nyeri tajam saat palpasi, bisa ditunjuk 1 jari, posisi bergantung)</option>
+                <option value="1">Cukup Curiga (Campuran gejala tipikal dan atipikal)</option>
+                <option value="2">Sangat Curiga (Ditindih benda berat, menjalar lengan kiri/rahang, diaforesis)</option>
+            </select>
+
+            <p class="font-semibold mb-2">Faktor Risiko Jantung:</p>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4 text-sm" id="acs-risks">
+                <label class="flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer"><input type="checkbox" value="Diabetes" class="mr-2"> Diabetes</label>
+                <label class="flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer"><input type="checkbox" value="Perokok Aktif" class="mr-2"> Perokok Aktif</label>
+                <label class="flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer"><input type="checkbox" value="Hipertensi" class="mr-2"> Hipertensi</label>
+                <label class="flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer"><input type="checkbox" value="Dislipidemia" class="mr-2"> Dislipidemia</label>
+                <label class="flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer"><input type="checkbox" value="Riwayat Keluarga CAD" class="mr-2"> Riw. Keluarga CAD</label>
+                <label class="flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer"><input type="checkbox" value="Usia > 65" class="mr-2"> Usia > 65 tahun</label>
+                <label class="flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer"><input type="checkbox" value="Obesitas" class="mr-2"> Obesitas Jelas</label>
+            </div>
+
+            <div id="acs-ekg-container" class="hidden">
+                <p class="font-semibold mb-2 text-blue-700">Perubahan EKG (Tanpa STEMI):</p>
+                <select id="acs-ekg" class="w-full p-3 border border-blue-200 rounded-lg mb-6 bg-blue-50">
+                    <option value="0">EKG Normal</option>
+                    <option value="1">Perubahan repolarisasi non-spesifik / LBBB lama</option>
+                    <option value="2">Depresi ST signifikan atau Inversi T simetris dalam</option>
+                </select>
+            </div>
+            <div id="acs-no-ekg-note" class="hidden mb-6 bg-orange-50 p-3 rounded border border-orange-200 text-sm text-orange-800">
+                <i class="fas fa-info-circle mr-1"></i> Penilaian murni berdasarkan anamnesis (H) dan faktor risiko (R) karena tidak ada EKG.
+            </div>
+
+            <div class="flex space-x-3 mt-4">
+                <button onclick="checkACS()" class="flex-1 bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition">Analisis Hasil Akhir</button>
+                <button onclick="prevStep(3)" class="px-4 py-3 border text-gray-600 rounded-lg hover:bg-gray-100"><i class="fas fa-arrow-left"></i></button>
+            </div>
+        </div>
+
+        <!-- RESULTS PAGE & REPORT -->
+        <div id="result-page" class="step-content step-hidden fade-in text-center">
+            
+            <!-- Result Overview -->
+            <div class="no-print">
+                <div id="result-icon" class="text-6xl mb-4"></div>
+                <h2 id="result-title" class="text-2xl font-bold mb-2"></h2>
+                <div id="result-desc" class="text-gray-700 mb-6 bg-gray-50 p-4 rounded-lg inline-block text-left w-full"></div>
+                
+                <div class="bg-white border p-4 rounded-lg text-left shadow-sm mb-6">
+                    <h3 class="font-bold border-b pb-2 mb-2 text-gray-800"><i class="fas fa-clipboard-list mr-2"></i>Rencana Tindakan:</h3>
+                    <ul id="result-action" class="list-disc ml-5 space-y-2 text-sm text-gray-700"></ul>
+                </div>
+            </div>
+
+            <!-- EMR Report Section (Printable & Copyable) -->
+            <div class="mt-2 text-left border-t border-gray-300 pt-6">
+                <h3 class="font-bold text-gray-800 mb-3 no-print"><i class="fas fa-file-medical mr-2"></i>Laporan Rekam Medis (EMR/SOAP)</h3>
+                
+                <!-- Report Container -->
+                <div id="emr-report-content" class="bg-blue-50 border border-blue-200 p-4 rounded text-sm text-gray-800 leading-relaxed font-mono overflow-x-auto shadow-inner">
+                    <!-- Report content will be injected here -->
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 mt-4 no-print">
+                    <button onclick="copyToClipboard()" id="btn-copy" class="flex-1 bg-green-600 text-white p-3 rounded-lg font-bold hover:bg-green-700 transition flex items-center justify-center shadow">
+                        <i class="fas fa-copy mr-2"></i> <span id="text-copy">Salin (Copy)</span>
+                    </button>
+                    <button onclick="downloadPDF()" id="btn-pdf" class="flex-1 bg-blue-800 text-white p-3 rounded-lg font-bold hover:bg-blue-900 transition flex items-center justify-center shadow">
+                        <i class="fas fa-file-pdf mr-2"></i> Cetak / Simpan PDF
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Notification Toast for Copy/PDF -->
+            <div id="toast-notification" class="fixed bottom-5 right-5 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 z-50 pointer-events-none flex items-center">
+                <i id="toast-icon" class="fas fa-check-circle text-green-400 mr-2"></i> 
+                <span id="toast-msg">Berhasil!</span>
+            </div>
+
+            <button onclick="resetApp()" class="w-full bg-gray-200 text-gray-800 p-3 rounded-lg font-bold hover:bg-gray-300 transition mt-6 no-print">
+                <i class="fas fa-redo mr-2"></i>Mulai Evaluasi Pasien Baru
+            </button>
+        </div>
+
+    </div>
+    
+    <div class="mt-8 text-xs text-gray-500 max-w-2xl mx-auto border-t border-gray-300 pt-5 text-center no-print">
+        <p class="font-bold text-gray-600 mb-1"><i class="fas fa-info-circle mr-1"></i> Disclaimer Klinis</p>
+        <p class="leading-relaxed">
+            Aplikasi ini adalah alat bantu pengambil keputusan (<em>Clinical Decision Support Tool</em>) untuk faskes terbatas dan bukan pengganti penilaian klinis komprehensif. Keputusan akhir, diagnosis, dan tatalaksana pasien tetap menjadi tanggung jawab penuh dokter yang merawat. Jika ragu pada kasus atipikal, utamakan prinsip keselamatan pasien dan segera rujuk.
+        </p>
+    </div>
+</div>
+
+<script>
+    let hasECG = true;
+    
+    // Objek untuk menyimpan data pasien selama proses berjalan
+    let patientData = {
+        fasilitas: "",
+        evaluasiAwal: "",
+        adFindings: [],
+        peScore: 0,
+        peFindings: [],
+        acsHistory: "",
+        acsRisks: [],
+        acsEkg: "",
+        diagnosisAkhir: "",
+        tindakanAkhir: [],
+        adEvaluated: false,
+        peEvaluated: false,
+        acsEvaluated: false
+    };
+
+    function selectFacility(ecgAvailable) {
+        hasECG = ecgAvailable;
+        patientData.fasilitas = hasECG ? "Tersedia EKG 12-Lead" : "TIDAK Tersedia EKG";
+        
+        // Hide step 0, show progress
+        document.getElementById('step-0').classList.add('step-hidden');
+        document.getElementById('progress-container').style.display = 'block';
+        document.getElementById('mode-indicator').innerText = hasECG ? "Mode: Ada EKG" : "Mode: Tanpa EKG";
+
+        // Setup UI based on mode
+        if (hasECG) {
+            document.getElementById('step-1-title').innerText = "Evaluasi EKG 12-Lead";
+            document.getElementById('step-1-ecg').classList.remove('hidden');
+            document.getElementById('step-1-no-ecg').classList.add('hidden');
+            
+            document.getElementById('acs-ekg-container').classList.remove('hidden');
+            document.getElementById('acs-no-ekg-note').classList.add('hidden');
+            document.getElementById('step-4-desc').innerText = "Evaluasi Iskemia Miokard menggunakan Modifikasi HEART Score (Tanpa Troponin).";
+        } else {
+            document.getElementById('step-1-title').innerText = "Gejala Klinis Iskemik Kritis";
+            document.getElementById('step-1-ecg').classList.add('hidden');
+            document.getElementById('step-1-no-ecg').classList.remove('hidden');
+            
+            document.getElementById('acs-ekg-container').classList.add('hidden');
+            document.getElementById('acs-no-ekg-note').classList.remove('hidden');
+            document.getElementById('step-4-desc').innerText = "Evaluasi Iskemia murni mengandalkan Anamnesis dan Faktor Risiko.";
+        }
+
+        nextStep(1);
+    }
+
+    function updateProgress(step) {
+        document.getElementById('progress-bar').style.width = (step * 25) + '%';
+        if(step <= 4) {
+            document.getElementById('step-indicator').innerText = 'Langkah ' + step + ' dari 4';
+        }
+    }
+
+    function hideAllSteps() {
+        document.querySelectorAll('.step-content').forEach(el => el.classList.add('step-hidden'));
+    }
+
+    function nextStep(step) {
+        hideAllSteps();
+        document.getElementById('step-' + step).classList.remove('step-hidden');
+        updateProgress(step);
+    }
+
+    function prevStep(step) {
+        hideAllSteps();
+        document.getElementById('step-' + step).classList.remove('step-hidden');
+        updateProgress(step);
+    }
+
+    // Perekaman Data per Step
+    function recordStep1(finding) {
+        patientData.evaluasiAwal = finding;
+    }
+
+    function checkAorta() {
+        patientData.adEvaluated = true;
+        patientData.adFindings = [];
+        const checkboxes = document.querySelectorAll('#step-2 input[type="checkbox"]:checked');
+        checkboxes.forEach((cb) => {
+            patientData.adFindings.push(cb.value);
+        });
+        
+        if (patientData.adFindings.length > 0) {
+            triggerResult('AD');
+        } else {
+            nextStep(3);
+        }
+    }
+
+    function checkPE() {
+        patientData.peEvaluated = true;
+        patientData.peScore = 0;
+        patientData.peFindings = [];
+        const checkboxes = document.querySelectorAll('#wells-form input[type="checkbox"]:checked');
+        checkboxes.forEach((cb) => {
+            patientData.peScore += parseFloat(cb.value);
+            patientData.peFindings.push(cb.getAttribute('data-label'));
+        });
+
+        if (patientData.peScore > 4.0) {
+            triggerResult('PE');
+        } else {
+            nextStep(4);
+        }
+    }
+
+    function checkACS() {
+        patientData.acsEvaluated = true;
+        const historySelect = document.getElementById('acs-history');
+        patientData.acsHistory = historySelect.options[historySelect.selectedIndex].text;
+        
+        patientData.acsRisks = [];
+        document.querySelectorAll('#acs-risks input[type="checkbox"]:checked').forEach((cb) => {
+            patientData.acsRisks.push(cb.value);
+        });
+        
+        let historyScore = parseInt(historySelect.value);
+        let riskScore = (patientData.acsRisks.length >= 3) ? 2 : ((patientData.acsRisks.length >= 1) ? 1 : 0);
+
+        if (hasECG) {
+            const ekgSelect = document.getElementById('acs-ekg');
+            patientData.acsEkg = ekgSelect.options[ekgSelect.selectedIndex].text;
+            let ekgScore = parseInt(ekgSelect.value);
+            
+            const totalScore = historyScore + ekgScore + riskScore;
+            if (totalScore >= 3 || historyScore === 2 || ekgScore === 2) {
+                triggerResult('NSTEMI');
+            } else {
+                triggerResult('LOW_RISK');
+            }
+        } else {
+            patientData.acsEkg = "Tidak dinilai (Tidak ada alat)";
+            const totalScore = historyScore + riskScore;
+            if (totalScore >= 2 || historyScore === 2) {
+                triggerResult('NSTEMI'); 
+            } else {
+                triggerResult('LOW_RISK');
+            }
+        }
+    }
+
+    function triggerResult(type) {
+        hideAllSteps();
+        document.getElementById('progress-container').style.display = 'none';
+        const resultPage = document.getElementById('result-page');
+        resultPage.classList.remove('step-hidden');
+
+        const icon = document.getElementById('result-icon');
+        const title = document.getElementById('result-title');
+        const desc = document.getElementById('result-desc');
+        const action = document.getElementById('result-action');
+
+        let titleText = "";
+        let actionHTML = "";
+        patientData.tindakanAkhir = [];
+
+        if (type === 'STEMI') {
+            titleText = "KODE MERAH: STEMI";
+            icon.innerHTML = '<i class="fas fa-heartbeat text-red-600"></i>';
+            title.className = "text-3xl font-bold mb-2 text-red-600";
+            desc.innerHTML = "Pasien mengalami Sindrom Koroner Akut tipe STEMI berdasarkan EKG. Kondisi mengancam nyawa yang membutuhkan reperfusi segera.";
+            
+            patientData.tindakanAkhir = [
+                "Pasang Oksigen (jika SpO2 < 90%), pastikan IV line lancar.",
+                "PENTING: Pastikan TD/Nadi Lengan Kanan-Kiri simetris sebelum lanjut (Eksklusi Diseksi Aorta klinis).",
+                "Berikan Aspirin 160-320 mg (kunyah).",
+                "Berikan Clopidogrel 300 mg atau Ticagrelor 180 mg.",
+                "Nitrat sublingual (ISDN 5mg) jika TD Sistolik > 90 mmHg (Hindari jika curiga infark Ventrikel Kanan).",
+                "RUJUK SEGERA ke RS dengan fasilitas Cath Lab (PCI) atau Fibrinolitik."
+            ];
+        } 
+        else if (type === 'ACS_HIGH_RISK_NO_ECG') {
+            titleText = "KODE MERAH: Suspek ACS Risiko Tinggi";
+            icon.innerHTML = '<i class="fas fa-heartbeat text-red-600"></i>';
+            title.className = "text-3xl font-bold mb-2 text-red-600";
+            desc.innerHTML = "Meski tanpa EKG, presentasi klinis pasien (nyeri khas + keringat dingin/instabil) sangat mengarah pada STEMI atau Sindrom Koroner Akut berat.";
+            
+            patientData.tindakanAkhir = [
+                "Pasang Oksigen, pastikan IV line terpasang lancar.",
+                "SANGAT PENTING: Cek tekanan darah kedua lengan. Jika TIDAK ADA beda >20mmHg, berikan Aspirin 160-320 mg (kunyah).",
+                "Berikan ISDN 5mg sublingual jika TD Sistolik > 100 mmHg.",
+                "RUJUK SEGERA ke faskes terdekat yang memiliki EKG & Marka Jantung untuk kepastian diagnostik!"
+            ];
+        }
+        else if (type === 'AD') {
+            titleText = "AWAS: Curiga Diseksi Aorta";
+            icon.innerHTML = '<i class="fas fa-exclamation-triangle text-purple-600"></i>';
+            title.className = "text-3xl font-bold mb-2 text-purple-600";
+            desc.innerHTML = "Terdapat tanda asimetri klinis atau karakter nyeri khas robekan. Salah pemberian obat (pengencer darah) pada kasus ini berakibat fatal.";
+            
+            patientData.tindakanAkhir = [
+                "KONTRAINDIKASI MUTLAK: JANGAN berikan Aspirin, Clopidogrel, atau Antikoagulan.",
+                "Turunkan Tekanan Darah dan Heart Rate segera (Target Sistolik 100-120 mmHg, HR < 60x/menit). Obat: Beta-blocker IV.",
+                "Manajemen nyeri hebat dengan Analgetik kuat.",
+                "RUJUK SEGERA ke RS besar / Bedah Toraks Vaskular."
+            ];
+        }
+        else if (type === 'PE') {
+            titleText = "WASPADA: Curiga Emboli Paru (PE)";
+            icon.innerHTML = '<i class="fas fa-lungs text-blue-500"></i>';
+            title.className = "text-3xl font-bold mb-2 text-blue-600";
+            desc.innerHTML = "Skor klinis menunjukkan kemungkinan tinggi (High Probability) ke arah Emboli Paru akut.";
+            
+            patientData.tindakanAkhir = [
+                "Berikan Oksigenasi maksimal. Pertahankan SpO2 > 90%.",
+                "Pasang IV Line. Berikan cairan hati-hati jika TD rendah (cegah Right Heart Failure).",
+                "Pertimbangkan antikoagulan awal jika tidak ada perdarahan aktif (Konsultasi via telepon).",
+                "RUJUK ke RS dengan fasilitas CT-PA / Echocardiography."
+            ];
+        }
+        else if (type === 'NSTEMI') {
+            titleText = "Curiga ACS (NSTEMI / UAP)";
+            icon.innerHTML = '<i class="fas fa-file-medical-alt text-orange-500"></i>';
+            title.className = "text-3xl font-bold mb-2 text-orange-600";
+            desc.innerHTML = "Riwayat klinis, faktor risiko, dan/atau perubahan EKG mendukung ke arah iskemia miokard.";
+            
+            patientData.tindakanAkhir = [
+                "Berikan Aspirin 160-320 mg (kunyah).",
+                "Berikan ISDN 5mg sublingual jika masih nyeri (Pastikan TD Sistolik > 90 mmHg).",
+                "Pantau ketat di IGD.",
+                "RUJUK untuk pemeriksaan Troponin (Marka Jantung) dan perawatan definitif."
+            ];
+        }
+        else {
+            titleText = "Risiko Rendah untuk 'The Big 3'";
+            icon.innerHTML = '<i class="fas fa-check-circle text-green-500"></i>';
+            title.className = "text-3xl font-bold mb-2 text-green-600";
+            desc.innerHTML = "Tanda bahaya untuk STEMI, Diseksi Aorta, Emboli Paru, dan UAP/NSTEMI kemungkinan besar dapat disingkirkan secara klinis.";
+            
+            patientData.tindakanAkhir = [
+                "Cari penyebab nyeri dada Non-Cardiac (GERD, Kostokondritis, Paru).",
+                "Pertimbangkan pemberian PPI, Antasida, atau Analgetik.",
+                "Observasi respons pengobatan 1-2 jam. Jika membaik, dapat dipulangkan dengan edukasi Warning Signs.",
+                "Jadwalkan kontrol poli umum/penyakit dalam."
+            ];
+        }
+
+        title.innerText = titleText;
+        patientData.diagnosisAkhir = titleText;
+        
+        // Render UI Action items
+        action.innerHTML = "";
+        patientData.tindakanAkhir.forEach(item => {
+            let li = document.createElement('li');
+            li.innerHTML = item;
+            action.appendChild(li);
+        });
+
+        generateReportText();
+    }
+
+    function generateReportText() {
+        const d = new Date();
+        const dateTime = d.toLocaleDateString('id-ID') + ' ' + d.toLocaleTimeString('id-ID');
+        
+        let report = `<strong>=======================================</strong><br>`;
+        report += `<strong>    LAPORAN TRIAGE NYERI DADA (IGD)    </strong><br>`;
+        report += `<strong>=======================================</strong><br>`;
+        report += `Waktu Pemeriksaan : ${dateTime}<br>`;
+        report += `Status Faskes     : ${patientData.fasilitas}<br><br>`;
+
+        report += `<strong>[ HASIL TRIAGE / KESIMPULAN ]</strong><br>`;
+        report += `-> <strong>${patientData.diagnosisAkhir.toUpperCase()}</strong><br><br>`;
+
+        report += `<strong>[ SUBJEKTIF & OBJEKTIF (KLINIS) ]</strong><br>`;
+        report += `- Evaluasi Awal Kritis : ${patientData.evaluasiAwal || 'Normal/Lewat'}<br>`;
+        
+        report += `- Tanda Diseksi Aorta  : `;
+        if (!patientData.adEvaluated) {
+            report += `<em>Tidak dievaluasi (Triage terhenti di langkah sebelumnya)</em><br>`;
+        } else if(patientData.adFindings.length > 0) {
+            report += `<strong>POSITIF (${patientData.adFindings.join(', ')})</strong><br>`;
+        } else {
+            report += `Negatif<br>`;
+        }
+
+        report += `- Risiko Emboli Paru   : `;
+        if (!patientData.peEvaluated) {
+            report += `<em>Tidak dievaluasi (Triage terhenti di langkah sebelumnya)</em><br>`;
+        } else {
+            report += `Skor Wells ${patientData.peScore} `;
+            if(patientData.peFindings.length > 0) {
+                report += `(${patientData.peFindings.join(', ')})<br>`;
+            } else {
+                report += `(Rendah)<br>`;
+            }
+        }
+
+        report += `- Evaluasi Iskemia/ACS :<br>`;
+        if (!patientData.acsEvaluated) {
+            report += `  * <em>Tidak dievaluasi (Triage terhenti di langkah sebelumnya)</em><br>`;
+        } else {
+            report += `  * Riwayat Nyeri : ${patientData.acsHistory}<br>`;
+            report += `  * Faktor Risiko : ${patientData.acsRisks.length > 0 ? patientData.acsRisks.join(', ') : 'Tidak ada/Tidak diketahui'}<br>`;
+            report += `  * Hasil EKG     : ${patientData.acsEkg}<br>`;
+        }
+        
+        report += `<br><strong>[ RENCANA TINDAKAN & TATALAKSANA ]</strong><br>`;
+        patientData.tindakanAkhir.forEach((item, index) => {
+            report += `${index + 1}. ${item}<br>`;
+        });
+        
+        report += `<br>---------------------------------------<br>`;
+        report += `Dihasilkan oleh: CardiologyVault Triage<br>`;
+        report += `Dokter Pemeriksa: .....................<br>`;
+
+        // Menggunakan innerHTML agar tag <br> dan <strong> dirender sempurna oleh html2pdf
+        document.getElementById('emr-report-content').innerHTML = report;
+    }
+
+    function copyToClipboard() {
+        const textToCopy = document.getElementById('emr-report-content').innerText;
+        
+        // Menggunakan execCommand langsung agar terhindar dari error izin iFrame (Clipboard API)
+        let textArea = document.createElement("textarea");
+        textArea.value = textToCopy;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+            document.execCommand('copy');
+            showToast("Berhasil disalin ke clipboard!", false);
+        } catch (err) {
+            console.error('Gagal menyalin text', err);
+            showToast("Gagal menyalin. Silakan block teks manual.", true);
+        }
+        textArea.remove();
+    }
+
+    function downloadPDF() {
+        const btnPdf = document.getElementById('btn-pdf');
+        const originalHTML = btnPdf.innerHTML;
+        btnPdf.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Memproses PDF...';
+        btnPdf.disabled = true;
+
+        // Menggunakan setTimeout agar UI sempat mengupdate tombol menjadi loading
+        setTimeout(() => {
+            try {
+                // Ambil teks murni (plain text) dari report.
+                // Metode ini 100% mem-bypass rendering DOM/Canvas sehingga mustahil Blank.
+                const rawText = document.getElementById('emr-report-content').innerText;
+                
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                // Set font bergaya mesin tik/rekam medis (Courier)
+                doc.setFont("courier", "normal");
+                doc.setFontSize(10);
+
+                // Pecah teks agar otomatis turun baris jika kepanjangan (margin 180mm)
+                const lines = doc.splitTextToSize(rawText, 180); 
+                
+                // Cetak teks ke dalam dokumen PDF pada koordinat X: 15, Y: 20
+                doc.text(lines, 15, 20); 
+                
+                // Eksekusi Unduh
+                doc.save('Laporan_Triage_IGD.pdf');
+                
+                btnPdf.innerHTML = originalHTML;
+                btnPdf.disabled = false;
+                showToast("PDF berhasil diunduh!", false);
+            } catch(err) {
+                console.error("PDF Error: ", err);
+                btnPdf.innerHTML = originalHTML;
+                btnPdf.disabled = false;
+                showToast("Gagal membuat PDF.", true);
+            }
+        }, 150);
+    }
+
+    function showToast(message, isError = false) {
+        const toast = document.getElementById('toast-notification');
+        const toastMsg = document.getElementById('toast-msg');
+        const toastIcon = document.getElementById('toast-icon');
+        
+        toastMsg.innerText = message;
+        
+        if (isError) {
+            toastIcon.className = "fas fa-exclamation-circle text-red-400 mr-2";
+        } else {
+            toastIcon.className = "fas fa-check-circle text-green-400 mr-2";
+        }
+        
+        // Show toast
+        toast.classList.remove('opacity-0');
+        
+        setTimeout(() => {
+            toast.classList.add('opacity-0');
+        }, 3000);
+    }
+
+    function resetApp() {
+        // Reset Variables
+        patientData = {
+            fasilitas: "", evaluasiAwal: "", adFindings: [], peScore: 0,
+            peFindings: [], acsHistory: "", acsRisks: [], acsEkg: "",
+            diagnosisAkhir: "", tindakanAkhir: [],
+            adEvaluated: false, peEvaluated: false, acsEvaluated: false
+        };
+
+        // Reset all checkboxes & selects
+        document.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
+        document.getElementById('acs-history').value = "0";
+        document.getElementById('acs-ekg').value = "0";
+        
+        // Go back to Step 0 (Selection)
+        hideAllSteps();
+        document.getElementById('progress-container').style.display = 'none';
+        document.getElementById('step-0').classList.remove('step-hidden');
+    }
+</script>
+</body>
+</html>
