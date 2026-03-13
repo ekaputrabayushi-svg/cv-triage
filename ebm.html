@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator EBM: Diagnostik & Terapeutik</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .tab-active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: 600; }
+        .tab-inactive { color: #6b7280; }
+        .tab-inactive:hover { color: #374151; }
+        input[type="number"], select { text-align: center; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    </style>
+</head>
+<body class="text-gray-800 antialiased p-4 md:p-8">
+
+<div class="max-w-6xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 pb-0 transition-all">
+
+    <!-- Header Aplikasi Web -->
+    <div class="bg-blue-600 p-6 text-white text-center md:text-left flex flex-col md:flex-row justify-between items-center relative">
+        <div class="z-10">
+            <h1 class="text-3xl font-bold"><i class="fa-solid fa-stethoscope mr-3"></i>Kalkulator EBM Komprehensif</h1>
+            <p class="mt-2 text-blue-100">Uji Diagnostik & Studi Terapeutik / Observasional dengan Interpretasi Klinis</p>
+            
+            <!-- Badge Developer & CardiologyVault -->
+            <div class="mt-4 inline-flex flex-wrap items-center justify-center md:justify-start gap-2 text-xs md:text-sm text-blue-100 bg-blue-800/40 py-1.5 px-4 rounded-full border border-blue-400/30">
+                <span><i class="fa-solid fa-laptop-medical mr-1"></i> Developed by <b class="text-white tracking-wide">Bayushi Eka Putra, MD, FIHA</b></span>
+                <span class="mx-1 text-blue-300">|</span>
+                <span><i class="fa-solid fa-heart-pulse mr-1"></i> Part of <b class="text-white tracking-wide">CardiologyVault</b></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="flex border-b border-gray-200 overflow-x-auto">
+        <button id="tab-diag" class="w-1/3 py-4 text-center tab-active transition-colors duration-300 font-medium whitespace-nowrap px-4" onclick="switchTab('diagnostic')">
+            <i class="fa-solid fa-vial mr-2"></i> 1. Uji Diagnostik
+        </button>
+        <button id="tab-thera" class="w-1/3 py-4 text-center tab-inactive transition-colors duration-300 font-medium whitespace-nowrap px-4" onclick="switchTab('therapeutic')">
+            <i class="fa-solid fa-pills mr-2"></i> 2. Studi Terapeutik
+        </button>
+        <button id="tab-edu" class="w-1/3 py-4 text-center tab-inactive transition-colors duration-300 font-medium whitespace-nowrap px-4" onclick="switchTab('education')">
+            <i class="fa-solid fa-user-doctor mr-2"></i> 3. Edukasi & Komunikasi Pasien
+        </button>
+    </div>
+
+    <div class="p-6 md:p-8">
+        <!-- ==============================
+             SECTION 1: UJI DIAGNOSTIK
+             ============================== -->
+        <div id="sec-diagnostic" class="block space-y-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- KOLOM KIRI: INPUT AREA -->
+                <div class="space-y-6">
+                    <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                        <h2 class="text-lg font-bold text-gray-800 mb-3"><i class="fa-solid fa-circle-question text-blue-500 mr-2"></i>Langkah 1: Pilih Ketersediaan Data</h2>
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <label class="flex-1 cursor-pointer">
+                                <input type="radio" name="diagMode" value="manual" class="peer sr-only" checked onchange="toggleDiagMode()">
+                                <div class="p-4 rounded-lg border-2 border-gray-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:bg-gray-50 transition-all">
+                                    <div class="font-semibold text-gray-800 mb-1">Punya Tabel 2x2</div>
+                                    <div class="text-xs text-gray-500">Saya tahu jumlah subjek TP, FP, FN, TN.</div>
+                                </div>
+                            </label>
+                            <label class="flex-1 cursor-pointer">
+                                <input type="radio" name="diagMode" value="reverse" class="peer sr-only" onchange="toggleDiagMode()">
+                                <div class="p-4 rounded-lg border-2 border-gray-200 peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:bg-gray-50 transition-all">
+                                    <div class="font-semibold text-gray-800 mb-1">Bantu Buat Tabel</div>
+                                    <div class="text-xs text-gray-500">Saya cuma punya Sens, Spe, Prev & N.</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="diag-param-input" class="hidden bg-indigo-50 p-6 rounded-lg border border-indigo-200 shadow-sm transition-all">
+                        <h2 class="text-lg font-bold text-indigo-900 mb-2"><i class="fa-solid fa-calculator mr-2"></i>Langkah 2: Masukkan Parameter Literatur</h2>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="block text-xs font-semibold text-gray-700 mb-1">Sensitivitas (%)</label><input type="number" id="param-sens" class="p-2 w-full border border-gray-300 rounded focus:ring-indigo-500" placeholder="Cth: 85"></div>
+                            <div><label class="block text-xs font-semibold text-gray-700 mb-1">Spesifisitas (%)</label><input type="number" id="param-spec" class="p-2 w-full border border-gray-300 rounded focus:ring-indigo-500" placeholder="Cth: 90"></div>
+                            <div><label class="block text-xs font-semibold text-gray-700 mb-1">Prevalensi (%)</label><input type="number" id="param-prev" class="p-2 w-full border border-gray-300 rounded focus:ring-indigo-500" placeholder="Cth: 15"></div>
+                            <div><label class="block text-xs font-semibold text-gray-700 mb-1">Total Pasien (N)</label><input type="number" id="param-n" class="p-2 w-full border border-gray-300 rounded focus:ring-indigo-500" placeholder="Cth: 1000"></div>
+                        </div>
+                        <button onclick="generateFromParams()" class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded transition-colors shadow-sm"><i class="fa-solid fa-gears mr-2"></i>Generate Tabel 2x2</button>
+                    </div>
+
+                    <div id="diag-table-container" class="bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-sm transition-all mb-4">
+                        <h2 class="text-lg font-bold text-gray-700 mb-2" id="diag-table-title"><i class="fa-solid fa-table-cells mr-2"></i>Tabel Kontingensi 2x2</h2>
+                        <p class="text-sm text-gray-500 mb-4" id="diag-table-desc">Masukkan angka pasien. Hasil akan langsung keluar di sebelah kanan.</p>
+                        
+                        <div class="overflow-x-auto w-full rounded-lg border border-gray-200">
+                            <table class="w-full text-left border-collapse bg-white min-w-[400px]">
+                                <thead>
+                                    <tr>
+                                        <th class="p-2 border-b border-r border-gray-300 bg-gray-100"></th>
+                                        <th class="p-2 border-b border-r border-gray-300 bg-gray-100 text-center text-red-600 font-semibold text-sm">Sakit (+) <br><span class="text-xs font-normal text-gray-500">(Gold Std)</span></th>
+                                        <th class="p-2 border-b border-gray-300 bg-gray-100 text-center text-green-600 font-semibold text-sm">Sehat (-) <br><span class="text-xs font-normal text-gray-500">(Gold Std)</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <th class="p-2 border-b border-r border-gray-300 bg-gray-100 font-semibold text-center text-sm">Hasil Tes (+)</th>
+                                        <td class="border-b border-r border-gray-300 p-0"><input type="number" id="diag-tp" class="p-3 bg-red-50 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold w-full min-w-[60px]" placeholder="TP" value="0" min="0" oninput="calcDiagnostic()"></td>
+                                        <td class="border-b border-gray-300 p-0"><input type="number" id="diag-fp" class="p-3 bg-green-50 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold w-full min-w-[60px]" placeholder="FP" value="0" min="0" oninput="calcDiagnostic()"></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="p-2 border-r border-gray-300 bg-gray-100 font-semibold text-center text-sm">Hasil Tes (-)</th>
+                                        <td class="border-r border-gray-300 p-0"><input type="number" id="diag-fn" class="p-3 bg-red-50 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold w-full min-w-[60px]" placeholder="FN" value="0" min="0" oninput="calcDiagnostic()"></td>
+                                        <td class="p-0"><input type="number" id="diag-tn" class="p-3 bg-green-50 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold w-full min-w-[60px]" placeholder="TN" value="0" min="0" oninput="calcDiagnostic()"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KOLOM KANAN: HASIL & INTERPRETASI DIAGNOSTIK -->
+                <div class="space-y-6">
+                    <div class="bg-blue-50 p-6 rounded-lg border border-blue-200 shadow-sm relative h-full">
+                        <h2 class="text-xl font-semibold mb-4 text-blue-800">Hasil & Parameter Kinerja</h2>
+                        <div id="diag-warning" class="hidden absolute top-4 right-4 text-amber-600 text-sm font-bold bg-amber-100 px-3 py-1 rounded">Isi tabel 2x2!</div>
+
+                        <div class="grid grid-cols-2 gap-3 mb-6">
+                            <div class="bg-white p-3 rounded shadow-sm border border-blue-100 text-center"><p class="text-xs text-gray-500 uppercase font-semibold">Sensitivitas (TPR)</p><p class="text-2xl font-bold text-gray-800" id="res-sens">0.00%</p></div>
+                            <div class="bg-white p-3 rounded shadow-sm border border-blue-100 text-center"><p class="text-xs text-gray-500 uppercase font-semibold">Spesifisitas (TNR)</p><p class="text-2xl font-bold text-gray-800" id="res-spec">0.00%</p></div>
+                            <div class="bg-white p-3 rounded shadow-sm border border-blue-100 text-center"><p class="text-xs text-gray-500 uppercase font-semibold">Pos. Pred. Value (PPV)</p><p class="text-xl font-bold text-blue-700" id="res-ppv">0.00%</p></div>
+                            <div class="bg-white p-3 rounded shadow-sm border border-blue-100 text-center"><p class="text-xs text-gray-500 uppercase font-semibold">Neg. Pred. Value (NPV)</p><p class="text-xl font-bold text-blue-700" id="res-npv">0.00%</p></div>
+                            <div class="bg-white p-3 rounded shadow-sm border border-blue-100 text-center"><p class="text-xs text-gray-500 uppercase font-semibold">Likelihood Ratio (+)</p><p class="text-xl font-bold text-gray-800" id="res-lrp">0.00</p></div>
+                            <div class="bg-white p-3 rounded shadow-sm border border-blue-100 text-center"><p class="text-xs text-gray-500 uppercase font-semibold">Likelihood Ratio (-)</p><p class="text-xl font-bold text-gray-800" id="res-lrn">0.00</p></div>
+                        </div>
+
+                        <!-- Penjelasan Klinis Diagnostik -->
+                        <div class="bg-gray-800 text-white p-5 rounded-lg shadow-inner">
+                            <h3 class="text-md font-semibold mb-2 border-b border-gray-600 pb-2"><i class="fa-solid fa-lightbulb text-yellow-400 mr-2"></i>Interpretasi Klinis Tes Diagnostik</h3>
+                            <div id="diag-interpretation" class="text-gray-300 text-sm leading-relaxed space-y-2">
+                                <i>Masukkan data pada tabel (Opsi 1) atau rekonstruksi parameter (Opsi 2) untuk melihat interpretasi otomatis.</i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==============================
+             SECTION 2: STUDI TERAPEUTIK
+             ============================== -->
+        <div id="sec-therapeutic" class="hidden space-y-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- Input Data Terapeutik -->
+                <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-sm mb-4">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-700">Tabel 2x2 (Intervensi / Observasi)</h2>
+                    
+                    <div class="mb-4">
+                        <label class="inline-flex items-center cursor-pointer mr-4">
+                            <input type="radio" name="studyType" value="cohort" class="form-radio text-blue-600" checked onchange="calcTherapeutic()">
+                            <span class="ml-2 font-medium">Risk Ratio (RR) <span class="text-xs font-normal text-gray-500">- Kohort / RCT</span></span>
+                        </label>
+                        <br class="md:hidden">
+                        <label class="inline-flex items-center cursor-pointer mt-2 md:mt-0">
+                            <input type="radio" name="studyType" value="casecontrol" class="form-radio text-blue-600" onchange="calcTherapeutic()">
+                            <span class="ml-2 font-medium">Odds Ratio (OR) <span class="text-xs font-normal text-gray-500">- Case Control</span></span>
+                        </label>
+                    </div>
+                    
+                    <div class="overflow-x-auto w-full rounded-lg border border-gray-200">
+                        <table class="w-full text-left border-collapse bg-white min-w-[450px]">
+                            <thead>
+                                <tr>
+                                    <th class="p-2 border-b border-r border-gray-300 bg-gray-100"></th>
+                                    <th class="p-2 border-b border-r border-gray-300 bg-gray-100 text-center text-red-600 font-semibold text-sm">Kejadian / Event (+)</th>
+                                    <th class="p-2 border-b border-gray-300 bg-gray-100 text-center text-green-600 font-semibold text-sm">Tidak Ada Kejadian (-)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th class="p-2 border-b border-r border-gray-300 bg-gray-100 font-semibold text-center text-sm">Kel. Intervensi / Terpapar</th>
+                                    <td class="border-b border-r border-gray-300 p-0"><input type="number" id="thera-a" class="p-3 bg-red-50 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold w-full min-w-[60px]" placeholder="a" value="0" min="0" oninput="calcTherapeutic()"></td>
+                                    <td class="border-b border-gray-300 p-0"><input type="number" id="thera-b" class="p-3 bg-green-50 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold w-full min-w-[60px]" placeholder="b" value="0" min="0" oninput="calcTherapeutic()"></td>
+                                </tr>
+                                <tr>
+                                    <th class="p-2 border-r border-gray-300 bg-gray-100 font-semibold text-center text-sm">Kel. Kontrol / Tidak Terpapar</th>
+                                    <td class="border-r border-gray-300 p-0"><input type="number" id="thera-c" class="p-3 bg-red-50 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold w-full min-w-[60px]" placeholder="c" value="0" min="0" oninput="calcTherapeutic()"></td>
+                                    <td class="p-0"><input type="number" id="thera-d" class="p-3 bg-green-50 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold w-full min-w-[60px]" placeholder="d" value="0" min="0" oninput="calcTherapeutic()"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Hasil Terapeutik -->
+                <div class="bg-emerald-50 p-6 rounded-lg border border-emerald-200 shadow-sm relative">
+                    <h2 class="text-xl font-semibold mb-4 text-emerald-800">Hasil Analisis & Interval Kepercayaan</h2>
+                    <div id="thera-warning" class="hidden absolute top-4 right-4 text-amber-600 text-sm font-bold bg-amber-100 px-3 py-1 rounded">Isi tabel 2x2!</div>
+
+                    <div class="space-y-4">
+                        <div class="bg-white p-4 rounded shadow-sm border border-emerald-100 flex justify-between items-center">
+                            <div><p class="text-sm text-gray-500 font-bold uppercase" id="label-primary-metric">Relative Risk (RR)</p><p class="text-xs text-gray-400">Rasio Risiko</p></div>
+                            <div class="text-right"><p class="text-3xl font-black text-gray-800" id="res-primary-val">-</p><p class="text-sm font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded inline-block mt-1 border border-gray-200" id="res-primary-ci">95% CI: -</p></div>
+                        </div>
+
+                        <div class="bg-white p-4 rounded shadow-sm border border-emerald-100 flex justify-between items-center">
+                            <div><p class="text-sm text-gray-500 font-bold uppercase">Absolute Risk Diff (ARR / ARI)</p><p class="text-xs text-gray-400">Selisih Risiko Absolut</p></div>
+                            <div class="text-right"><p class="text-2xl font-bold text-gray-800" id="res-arr">-</p></div>
+                        </div>
+
+                        <div class="bg-white p-4 rounded shadow-sm border border-emerald-100 flex justify-between items-center">
+                            <div><p class="text-sm text-gray-500 font-bold uppercase" id="label-nnt">Number Needed to Treat (NNT)</p><p class="text-xs text-gray-400">Jumlah pasien yg perlu diterapi</p></div>
+                            <div class="text-right"><p class="text-2xl font-bold text-emerald-600" id="res-nnt">-</p></div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-800 text-white p-6 rounded-lg shadow-md mt-6">
+                        <h3 class="text-lg font-semibold mb-3 border-b border-gray-600 pb-2"><i class="fa-solid fa-graduation-cap text-green-400 mr-2"></i>Interpretasi Hasil & Makna Confidence Interval (CI)</h3>
+                        <div id="thera-interpretation" class="text-gray-300 text-sm leading-relaxed space-y-3">
+                            <i>Masukkan data penelitian pada tabel 2x2 di atas untuk membaca penjelasan klinis.</i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==============================
+             SECTION 3: EDUKASI PASIEN & MAKNA KLINIS
+             ============================== -->
+        <div id="sec-education" class="hidden space-y-8">
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg shadow-sm mb-6">
+                <h3 class="text-lg font-bold text-blue-800 mb-2"><i class="fa-solid fa-book-medical mr-2"></i>Panduan Membaca Data:</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+                    <div>
+                        <p class="font-semibold text-blue-700">Sensitivitas vs PPV</p>
+                        <ul class="list-disc pl-5 mt-1">
+                            <li><b>Sensitivitas</b>: Fokus pada <i>penyakit</i>. (Berguna bagi dokter saat memilih alat skrining).</li>
+                            <li><b>PPV (Pos. Pred. Value)</b>: Fokus pada <i>pasien</i>. "Tes saya positif, seberapa besar kemungkinan saya benar-benar sakit?"</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-blue-700">Ilmu Inferensi: Mengapa CI bisa Lebar/Sempit?</p>
+                        <ul class="list-disc pl-5 mt-1">
+                            <li><b>CI Sempit:</b> Presisi tinggi! Sampel penelitiannya sangat besar, sehingga tebakan angkanya akurat.</li>
+                            <li><b>CI Lebar:</b> Presisi rendah. Sampel terlalu sedikit atau bervariasi. Meski hasilnya signifikan, akurasinya masih dipertanyakan.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Input Nilai Mandiri -->
+                <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm lg:col-span-1">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800"><i class="fa-solid fa-keyboard mr-2 text-indigo-500"></i>Masukkan Data Parameter</h2>
+                    
+                    <div class="space-y-4">
+                        <div class="border-b pb-4">
+                            <h4 class="font-semibold text-sm text-gray-700 mb-2 uppercase">Diagnostik (%)</h4>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div><label class="text-xs text-gray-500">Sensitivitas</label><input type="number" id="edu-sens" class="p-2 border rounded w-full bg-gray-50 focus:ring-indigo-500 text-sm" placeholder="Misal: 95" oninput="generatePatientScript()"></div>
+                                <div><label class="text-xs text-gray-500">Spesifisitas</label><input type="number" id="edu-spec" class="p-2 border rounded w-full bg-gray-50 focus:ring-indigo-500 text-sm" placeholder="Misal: 80" oninput="generatePatientScript()"></div>
+                                <div><label class="text-xs text-gray-500">PPV</label><input type="number" id="edu-ppv" class="p-2 border rounded w-full bg-blue-50 focus:ring-indigo-500 text-sm font-semibold" placeholder="Misal: 60" oninput="generatePatientScript()"></div>
+                                <div><label class="text-xs text-gray-500">NPV</label><input type="number" id="edu-npv" class="p-2 border rounded w-full bg-blue-50 focus:ring-indigo-500 text-sm font-semibold" placeholder="Misal: 99" oninput="generatePatientScript()"></div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-semibold text-sm text-gray-700 mb-2 uppercase">Terapeutik / Observasional</h4>
+                            <div class="mb-3">
+                                <label class="text-xs text-gray-500">Pilih Jenis Metrik dari Jurnal</label>
+                                <select id="edu-metric-type" class="p-2 border rounded w-full bg-gray-50 focus:ring-indigo-500 text-sm font-semibold text-gray-700" onchange="updateMetricLabel(); generatePatientScript();">
+                                    <option value="rr">Relative Risk (RR)</option>
+                                    <option value="or">Odds Ratio (OR)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-xs text-gray-500" id="label-edu-metric-val">Nilai RR (Point Estimate)</label>
+                                <input type="number" step="0.01" id="edu-metric-val" class="p-2 border rounded w-full bg-green-50 focus:ring-indigo-500 text-sm font-bold text-center" placeholder="Misal: 0.5" oninput="generatePatientScript()">
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 border-t border-gray-100 pt-3">
+                                <div class="col-span-2"><p class="text-xs text-gray-500 font-semibold mb-1 text-center">Confidence Interval (CI) 95%</p></div>
+                                <div><label class="text-xs text-gray-400">Batas Bawah</label><input type="number" step="0.01" id="edu-ci-low" class="p-2 border rounded w-full bg-gray-50 focus:ring-indigo-500 text-sm text-center" placeholder="Misal: 0.3" oninput="generatePatientScript()"></div>
+                                <div><label class="text-xs text-gray-400">Batas Atas</label><input type="number" step="0.01" id="edu-ci-high" class="p-2 border rounded w-full bg-gray-50 focus:ring-indigo-500 text-sm text-center" placeholder="Misal: 0.8" oninput="generatePatientScript()"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hasil Generator Skrip -->
+                <div class="lg:col-span-2 space-y-4" id="edu-output-container">
+                    <div class="flex items-center justify-center h-full text-gray-400 bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-10">
+                        <p class="text-center"><i class="fa-solid fa-comments text-4xl mb-3"></i><br>Mulai ketik angka di sebelah kiri untuk<br>membuat skrip komunikasi pasien.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    
+    <!-- Footer Web -->
+    <div class="bg-gray-100 p-6 text-center border-t border-gray-200 mt-4 rounded-b-xl">
+        <p class="text-gray-800 font-bold mb-1">Developed by Bayushi Eka Putra, MD, FIHA &bull; Part of CardiologyVault</p>
+        <p class="text-xs text-gray-500">
+            Engineered for Evidence-Based Medicine &bull; CI calculated at 95% level (&alpha; = 0.05). <br>
+            Aplikasi berjalan 100% secara lokal di browser Anda. Tidak ada data pasien yang dikirim ke server.
+        </p>
+    </div>
+</div>
+
+<script>
+    // --- TAB SWITCH LOGIC ---
+    function switchTab(tab) {
+        const diagTab = document.getElementById('tab-diag');
+        const theraTab = document.getElementById('tab-thera');
+        const eduTab = document.getElementById('tab-edu');
+        
+        const secDiag = document.getElementById('sec-diagnostic');
+        const secThera = document.getElementById('sec-therapeutic');
+        const secEdu = document.getElementById('sec-education');
+
+        [diagTab, theraTab, eduTab].forEach(t => { t.className = "w-1/3 py-4 text-center tab-inactive transition-colors duration-300 font-medium whitespace-nowrap px-4"; });
+        [secDiag, secThera, secEdu].forEach(s => s.style.display = 'none');
+
+        if (tab === 'diagnostic') {
+            diagTab.className = "w-1/3 py-4 text-center tab-active transition-colors duration-300 font-medium whitespace-nowrap px-4";
+            secDiag.style.display = 'block';
+        } else if (tab === 'therapeutic') {
+            theraTab.className = "w-1/3 py-4 text-center tab-active transition-colors duration-300 font-medium whitespace-nowrap px-4";
+            secThera.style.display = 'block';
+        } else if (tab === 'education') {
+            eduTab.className = "w-1/3 py-4 text-center tab-active transition-colors duration-300 font-medium whitespace-nowrap px-4";
+            secEdu.style.display = 'block';
+        }
+    }
+
+    // --- TOGGLE DIAGNOSTIC MODE (WIZARD LOGIC) ---
+    function toggleDiagMode() {
+        const mode = document.querySelector('input[name="diagMode"]:checked').value;
+        const paramInput = document.getElementById('diag-param-input');
+        const tableTitle = document.getElementById('diag-table-title');
+        const tableDesc = document.getElementById('diag-table-desc');
+        const tableContainer = document.getElementById('diag-table-container');
+        const inputs = ['diag-tp', 'diag-fp', 'diag-fn', 'diag-tn'];
+
+        if (mode === 'manual') {
+            paramInput.classList.add('hidden');
+            tableTitle.innerHTML = '<i class="fa-solid fa-table-cells mr-2"></i>Langkah 2: Isi Tabel 2x2';
+            tableDesc.innerText = "Masukkan angka pasien. Hasil akan langsung keluar di sebelah kanan.";
+            tableContainer.classList.replace('bg-indigo-50', 'bg-gray-50');
+            tableContainer.classList.replace('border-indigo-200', 'border-gray-200');
+            
+            inputs.forEach(id => {
+                const el = document.getElementById(id);
+                el.readOnly = false;
+                el.classList.remove('bg-gray-200', 'text-gray-500');
+                if (id.includes('tp') || id.includes('fn')) el.classList.add('bg-red-50');
+                if (id.includes('fp') || id.includes('tn')) el.classList.add('bg-green-50');
+            });
+        } else {
+            paramInput.classList.remove('hidden');
+            tableTitle.innerHTML = '<i class="fa-solid fa-table-cells mr-2"></i>Tabel 2x2 (Hasil Rekonstruksi)';
+            tableDesc.innerText = "Tabel ini tidak bisa diedit. Angka diisi otomatis berdasarkan parameter yang Anda masukkan di atas.";
+            tableContainer.classList.replace('bg-gray-50', 'bg-indigo-50');
+            tableContainer.classList.replace('border-gray-200', 'border-indigo-200');
+
+            inputs.forEach(id => {
+                const el = document.getElementById(id);
+                el.readOnly = true;
+                el.classList.remove('bg-red-50', 'bg-green-50');
+                el.classList.add('bg-gray-200', 'text-gray-500');
+            });
+        }
+
+        inputs.forEach(id => document.getElementById(id).value = 0);
+        calcDiagnostic();
+    }
+
+    function generateFromParams() {
+        let sens = parseFloat(document.getElementById('param-sens').value) / 100;
+        let spec = parseFloat(document.getElementById('param-spec').value) / 100;
+        let prev = parseFloat(document.getElementById('param-prev').value) / 100;
+        let n = parseInt(document.getElementById('param-n').value);
+
+        if (isNaN(sens) || isNaN(spec) || isNaN(prev) || isNaN(n)) {
+            alert("Mohon isi keempat parameter (Sens, Spe, Prev, N) untuk memproses rekonstruksi tabel.");
+            return;
+        }
+
+        let dPos = Math.round(n * prev);
+        let dNeg = n - dPos; 
+
+        let tp = Math.round(dPos * sens);
+        let fn = dPos - tp;
+
+        let tn = Math.round(dNeg * spec);
+        let fp = dNeg - tn;
+
+        document.getElementById('diag-tp').value = tp;
+        document.getElementById('diag-fp').value = fp;
+        document.getElementById('diag-fn').value = fn;
+        document.getElementById('diag-tn').value = tn;
+
+        calcDiagnostic();
+        
+        const inputs = ['diag-tp', 'diag-fp', 'diag-fn', 'diag-tn'];
+        inputs.forEach(id => {
+            const el = document.getElementById(id);
+            el.classList.add('ring-4', 'ring-indigo-300', 'bg-indigo-100');
+            setTimeout(() => { el.classList.remove('ring-4', 'ring-indigo-300', 'bg-indigo-100'); }, 800);
+        });
+    }
+
+    function calcDiagnostic() {
+        let tp = parseFloat(document.getElementById('diag-tp').value) || 0;
+        let fp = parseFloat(document.getElementById('diag-fp').value) || 0;
+        let fn = parseFloat(document.getElementById('diag-fn').value) || 0;
+        let tn = parseFloat(document.getElementById('diag-tn').value) || 0;
+        
+        let total = tp + fp + fn + tn;
+        let diseasePos = tp + fn;
+        let diseaseNeg = fp + tn;
+        let testPos = tp + fp;
+        let testNeg = fn + tn;
+
+        if (total === 0) {
+            document.getElementById('diag-warning').style.display = 'block';
+            return;
+        }
+        document.getElementById('diag-warning').style.display = 'none';
+
+        let sens = diseasePos > 0 ? tp / diseasePos : 0;
+        let spec = diseaseNeg > 0 ? tn / diseaseNeg : 0;
+        let prev = diseasePos / total;
+
+        let ppv = testPos > 0 ? tp / testPos : 0;
+        let npv = testNeg > 0 ? tn / testNeg : 0;
+        
+        let lrp = spec !== 1 ? sens / (1 - spec) : Infinity;
+        let lrn = spec !== 0 ? (1 - sens) / spec : Infinity;
+
+        document.getElementById('res-sens').innerText = (sens * 100).toFixed(1) + '%';
+        document.getElementById('res-spec').innerText = (spec * 100).toFixed(1) + '%';
+        document.getElementById('res-ppv').innerText = (ppv * 100).toFixed(1) + '%';
+        document.getElementById('res-npv').innerText = (npv * 100).toFixed(1) + '%';
+        document.getElementById('res-lrp').innerText = isFinite(lrp) ? lrp.toFixed(2) : "∞";
+        document.getElementById('res-lrn').innerText = isFinite(lrn) ? lrn.toFixed(3) : "∞";
+
+        let interpHTML = `<ul class="list-disc pl-5 space-y-1.5">`;
+        interpHTML += `<li><b>Prevalensi Kasus (${(prev*100).toFixed(1)}%):</b> Dari total ${total} pasien, terdapat ${diseasePos} orang yang benar-benar sakit.</li>`;
+        interpHTML += `<li><b>Sensitivitas (${(sens*100).toFixed(1)}%):</b> Dari semua subjek yang benar-benar sakit, tes ini mampu mendeteksi ${(sens*100).toFixed(1)}% di antaranya. Sifat: <b>SnNout</b>.</li>`;
+        interpHTML += `<li><b>Spesifisitas (${(spec*100).toFixed(1)}%):</b> Dari semua subjek yang benar-benar sehat, tes ini benar menyatakan negatif pada ${(spec*100).toFixed(1)}% di antaranya. Sifat: <b>SpPin</b>.</li>`;
+        interpHTML += `<li><b>PPV (${(ppv*100).toFixed(1)}%):</b> Jika hasil tes POSITIF, pasien memiliki kemungkinan ${(ppv*100).toFixed(1)}% bahwa ia memang sakit sungguhan.</li>`;
+        interpHTML += `<li><b>NPV (${(npv*100).toFixed(1)}%):</b> Jika hasil tes NEGATIF, pasien memiliki kemungkinan ${(npv*100).toFixed(1)}% bahwa ia memang betul-betul sehat.</li>`;
+        
+        let lrpText = "Sangat lemah, tes positif tidak mengubah kemungkinan penyakit secara berarti.";
+        if (lrp > 10) lrpText = "<b>Sangat kuat!</b> Bukti diagnostik yang sangat baik untuk membuktikan adanya penyakit.";
+        else if (lrp > 5) lrpText = "<b>Kuat.</b> Cukup baik untuk konfirmasi penyakit.";
+        else if (lrp > 2) lrpText = "<b>Lemah.</b> Sedikit meningkatkan kecurigaan klinis.";
+        
+        interpHTML += `<li><b>Likelihood Ratio (+):</b> Nilai ${isFinite(lrp) ? lrp.toFixed(2) : '∞'} menunjukkan: ${lrpText}</li>`;
+        interpHTML += `</ul>`;
+        
+        document.getElementById('diag-interpretation').innerHTML = interpHTML;
+    }
+
+    function calcTherapeutic() {
+        let type = document.querySelector('input[name="studyType"]:checked').value;
+        
+        let a_raw = parseFloat(document.getElementById('thera-a').value) || 0;
+        let b_raw = parseFloat(document.getElementById('thera-b').value) || 0;
+        let c_raw = parseFloat(document.getElementById('thera-c').value) || 0;
+        let d_raw = parseFloat(document.getElementById('thera-d').value) || 0;
+
+        let total = a_raw + b_raw + c_raw + d_raw;
+        if (total === 0) {
+            document.getElementById('thera-warning').style.display = 'block';
+            return;
+        }
+        document.getElementById('thera-warning').style.display = 'none';
+
+        let a = a_raw, b = b_raw, c = c_raw, d = d_raw;
+        let isCorrected = false;
+        if (a === 0 || b === 0 || c === 0 || d === 0) {
+            a += 0.5; b += 0.5; c += 0.5; d += 0.5;
+            isCorrected = true;
+        }
+
+        let nIntervention = a + b;
+        let nControl = c + d;
+        let riskIntervention = a / nIntervention;
+        let riskControl = c / nControl;
+
+        let val = 0;
+        let ci_lower = 0;
+        let ci_upper = 0;
+        let termName = "";
+
+        if (type === 'cohort') {
+            termName = "Risiko (RR)";
+            document.getElementById('label-primary-metric').innerText = "Risk Ratio (RR)";
+            val = riskIntervention / riskControl;
+            
+            let se_lnRR = Math.sqrt((1/a) + (1/c) - (1/nIntervention) - (1/nControl));
+            let lnRR = Math.log(val);
+            ci_lower = Math.exp(lnRR - 1.96 * se_lnRR);
+            ci_upper = Math.exp(lnRR + 1.96 * se_lnRR);
+        } else if (type === 'casecontrol') {
+            termName = "Odds (OR)";
+            document.getElementById('label-primary-metric').innerText = "Odds Ratio (OR)";
+            val = (a * d) / (b * c);
+
+            let se_lnOR = Math.sqrt((1/a) + (1/b) + (1/c) + (1/d));
+            let lnOR = Math.log(val);
+            ci_lower = Math.exp(lnOR - 1.96 * se_lnOR);
+            ci_upper = Math.exp(lnOR + 1.96 * se_lnOR);
+        }
+
+        let riskDiff = riskControl - riskIntervention; 
+        let arr_val = Math.abs(riskDiff);
+        let nnt = 0;
+        let nnt_label = "NNT / NNH";
+        
+        if (riskDiff > 0) { 
+            nnt = 1 / arr_val;
+            nnt_label = "Number Needed to Treat (NNT)";
+            document.getElementById('res-arr').innerText = (arr_val * 100).toFixed(1) + '% (Turun)';
+            document.getElementById('res-arr').className = "text-2xl font-bold text-emerald-600";
+        } else if (riskDiff < 0) { 
+            nnt = 1 / arr_val;
+            nnt_label = "Number Needed to Harm (NNH)";
+            document.getElementById('res-arr').innerText = (arr_val * 100).toFixed(1) + '% (Naik)';
+            document.getElementById('res-arr').className = "text-2xl font-bold text-red-600";
+        } else {
+            document.getElementById('res-arr').innerText = "0%";
+            document.getElementById('res-arr').className = "text-2xl font-bold text-gray-800";
+        }
+
+        document.getElementById('label-nnt').innerText = nnt_label;
+        document.getElementById('res-nnt').innerText = nnt > 0 ? (nnt === Infinity ? "∞" : Math.ceil(nnt)) : "-";
+        
+        document.getElementById('res-primary-val').innerText = isFinite(val) ? val.toFixed(2) : "N/A";
+        document.getElementById('res-primary-ci').innerText = `95% CI: ${ci_lower.toFixed(2)} - ${ci_upper.toFixed(2)}`;
+
+        let isSignificant = (ci_lower > 1) || (ci_upper < 1);
+        let meaningHTML = `<div class="mb-2">`;
+        
+        if (isCorrected) { meaningHTML += `<p class="text-amber-400 text-xs italic mb-2"><i class="fa-solid fa-triangle-exclamation"></i> Terdapat angka nol (0) pada tabel. Perhitungan menggunakan koreksi Haldane-Anscombe (+0.5).</p>`; }
+
+        if (val > 1) {
+            meaningHTML += `<p><strong class="text-red-400">FAKTOR RISIKO:</strong> Nilai ${termName} = <b>${val.toFixed(2)}</b> berarti kelompok intervensi/terpapar memiliki risiko/peluang <b>${val.toFixed(2)} kali lipat lebih besar</b> untuk mengalami kejadian dibandingkan kelompok kontrol.</p>`;
+        } else if (val < 1) {
+            let reduction = (1 - val) * 100;
+            meaningHTML += `<p><strong class="text-emerald-400">FAKTOR PROTEKTIF:</strong> Nilai ${termName} = <b>${val.toFixed(2)}</b> berarti intervensi menurunkan risiko kejadian. Risiko/peluang pada kelompok intervensi <b>berkurang sebesar ${reduction.toFixed(1)}%</b> dibandingkan kontrol.</p>`;
+        } else {
+            meaningHTML += `<p>Nilai ${termName} = <b>1.0</b> berarti <b>TIDAK ADA PERBEDAAN</b> risiko antara kelompok intervensi dan kontrol.</p>`;
+        }
+        
+        meaningHTML += `<p class="mt-3 text-blue-300 font-semibold border-t border-gray-600 pt-2"><i class="fa-solid fa-chart-line mr-1"></i> Makna 95% Confidence Interval (CI: ${ci_lower.toFixed(2)} hingga ${ci_upper.toFixed(2)})</p>`;
+        
+        if (isSignificant) {
+            meaningHTML += `<p class="mt-1 text-green-300"><i class="fa-solid fa-check-circle mr-1"></i> <b>BERMAKNA SECARA STATISTIK (Signifikan).</b><br>
+            Karena rentang 95% CI (${ci_lower.toFixed(2)} - ${ci_upper.toFixed(2)}) <b>TIDAK melewati angka 1</b>. Anda bisa yakin 95% bahwa efek observasi/intervensi ini adalah efek nyata yang terjadi pada populasi, bukan sekadar kebetulan (p-value < 0.05).</p>`;
+        } else {
+            meaningHTML += `<p class="mt-1 text-red-300"><i class="fa-solid fa-times-circle mr-1"></i> <b>TIDAK BERMAKNA SECARA STATISTIK (Tidak Signifikan).</b><br>
+            Karena rentang 95% CI (${ci_lower.toFixed(2)} - ${ci_upper.toFixed(2)}) <b>MELEWATI ANGKA 1</b>. Hal ini mengindikasikan bahwa hasil yang Anda dapatkan secara statistik mungkin diakibatkan oleh faktor kebetulan (p-value > 0.05). Hasil penelitian ini tidak cukup kuat untuk diandalkan.</p>`;
+        }
+
+        if (nnt > 0 && isFinite(nnt)) {
+            let num = Math.ceil(nnt);
+            if (riskDiff > 0) {
+                meaningHTML += `<p class="mt-3 text-emerald-300"><b>Makna NNT (${num}):</b> Anda perlu memberikan intervensi/terapi ini kepada <b>${num} pasien</b> untuk mencegah 1 kejadian buruk yang tidak diinginkan.</p>`;
+            } else {
+                 meaningHTML += `<p class="mt-3 text-red-300"><b>Makna NNH (${num}):</b> Jika Anda memberikan paparan ini kepada <b>${num} pasien</b>, hal ini akan menyebabkan 1 kejadian buruk tambahan.</p>`;
+            }
+        }
+
+        meaningHTML += `</div>`;
+        document.getElementById('thera-interpretation').innerHTML = meaningHTML;
+    }
+
+    function updateMetricLabel() {
+        const type = document.getElementById('edu-metric-type').value;
+        const label = document.getElementById('label-edu-metric-val');
+        if (type === 'rr') { label.innerText = 'Nilai RR (Point Estimate)'; } 
+        else { label.innerText = 'Nilai OR (Point Estimate)'; }
+    }
+
+    function generatePatientScript() {
+        const sens = document.getElementById('edu-sens').value;
+        const spec = document.getElementById('edu-spec').value;
+        const ppv = document.getElementById('edu-ppv').value;
+        const npv = document.getElementById('edu-npv').value;
+        
+        const metricType = document.getElementById('edu-metric-type').value;
+        const metricVal = document.getElementById('edu-metric-val').value;
+        const ciLowStr = document.getElementById('edu-ci-low').value;
+        const ciHighStr = document.getElementById('edu-ci-high').value;
+
+        const container = document.getElementById('edu-output-container');
+        let html = '';
+
+        const createCard = (title, doctorText, patientText, icon, colorKey) => {
+            const t = {
+                'blue': { bg: 'bg-blue-50', border: 'border-blue-100', title: 'text-blue-800', icon: 'text-blue-600' },
+                'indigo': { bg: 'bg-indigo-50', border: 'border-indigo-100', title: 'text-indigo-800', icon: 'text-indigo-600' },
+                'emerald': { bg: 'bg-emerald-50', border: 'border-emerald-100', title: 'text-emerald-800', icon: 'text-emerald-600' },
+                'purple': { bg: 'bg-purple-50', border: 'border-purple-100', title: 'text-purple-800', icon: 'text-purple-600' }
+            }[colorKey];
+
+            return `
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
+                    <div class="${t.bg} p-3 border-b ${t.border} flex items-center">
+                        <i class="${icon} ${t.icon} mr-2 text-lg"></i>
+                        <h3 class="font-bold ${t.title}">${title}</h3>
+                    </div>
+                    <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="border-r border-gray-100 pr-4">
+                            <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Makna EBM (Untuk Dokter)</p>
+                            <p class="text-sm text-gray-700 leading-relaxed">${doctorText}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-green-600 uppercase tracking-wider mb-2 mt-2 md:mt-0"><i class="fa-regular fa-comment-dots mr-1"></i>Skrip Edukasi Pasien</p>
+                            <div class="bg-gray-50 p-4 rounded-md border-l-4 border-green-500 italic text-sm text-gray-800 leading-relaxed">
+                                "${patientText}"
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+        if (sens) {
+            let fn = (100 - parseFloat(sens)).toFixed(0);
+            html += createCard(`Sensitivitas (${sens}%) & Angka Kebocoran (${fn}%)`, 
+                `Fokus pada probabilitas alat "Meleset" (<b>False Negative Rate = ${fn}%</b>). Sensitivitas ${sens}% berarti tes ini menangkap ${sens}% pasien yang benar-benar sakit, namun berisiko <b>MENGABAIKAN ${fn}% pasien</b> yang sebenarnya sakit (hasil tesnya negatif padahal penyakitnya ada).`,
+                `Alat ini dirancang untuk mendeteksi keberadaan penyakit tersebut. Dengan kepekaan ${sens}%, artinya dari 100 orang yang sakit, alat ini berhasil mendeteksi ${parseFloat(sens).toFixed(0)} orang. Namun Bapak/Ibu harus paham, masih ada kemungkinan ${fn} orang (dari 100) yang sebenarnya sakit tapi 'lolos' atau tidak terdeteksi oleh alat ini.`,
+                'fa-solid fa-microscope', 'blue');
+        }
+        
+        if (spec) {
+            let fp = (100 - parseFloat(spec)).toFixed(0);
+            html += createCard(`Spesifisitas (${spec}%) & Alarm Palsu (${fp}%)`, 
+                `Fokus pada probabilitas "Salah Sangka" (<b>False Positive Rate = ${fp}%</b>). Spesifisitas ${spec}% berarti tes ini benar menyingkirkan ${spec}% orang sehat, namun akan memberikan <b>ALARM PALSU pada ${fp}% orang sehat</b> (dinyatakan sakit padahal aslinya sehat).`,
+                `Alat ini cukup teliti untuk memastikan siapa yang sehat. Dari 100 orang yang bebas penyakit, alat ini benar menyatakan ${parseFloat(spec).toFixed(0)} orang itu sehat. Tapi, alat ini bisa 'salah sangka' pada ${fp} orang (hasilnya seolah-olah positif padahal Bapak/Ibu sehat). Jadi, tes positif dari alat ini belum tentu kiamat.`,
+                'fa-solid fa-bullseye', 'blue');
+        }
+
+        if (ppv) {
+            html += createCard(`Positive Predictive Value / PPV (${ppv}%)`, 
+                `Probabilitas pasien benar-benar sakit JIKA hasil tesnya positif.<br><br><span class="text-red-600 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> CRITICAL WARNING:</span> Anda <b>tidak bisa mengandalkan PPV tunggal secara mentah</b>. PPV sangat tertipu oleh <b>Prevalensi</b> (seberapa umum penyakit ini). Jika penyakit ini sangat langka, sebagian besar hasil positif hanyalah <i>False Positive</i>, sehingga PPV akan sangat rendah meskipun sensitivitas alat tinggi. Selalu cross-check dengan kondisi klinis pasien.`,
+                `Bapak/Ibu, hasil tes Anda memang positif. Tapi jangan panik dulu. Secara statistik, kemungkinan Bapak/Ibu benar-benar mengalami kondisi ini adalah ${ppv}%. Artinya masih ada kemungkinan ${100-ppv}% bahwa ini hanyalah 'alarm palsu'. Karena alat tes sangat bergantung pada seberapa umum penyakit ini terjadi di masyarakat, kita tidak bisa menelan hasil ini mentah-mentah. Kita akan lakukan observasi/tes lanjutan untuk memastikan.`,
+                'fa-solid fa-plus-circle', 'indigo');
+        }
+
+        if (npv) {
+            html += createCard(`Negative Predictive Value / NPV (${npv}%)`, 
+                `Probabilitas pasien benar-benar sehat JIKA hasil tesnya negatif.<br><br><span class="text-amber-600 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> WARNING:</span> Sama seperti PPV, NPV terpengaruh Prevalensi. Jika Anda praktik di daerah episentrum wabah (prevalensi penyakit sangat tinggi), hasil tes negatif menjadi lebih sering "salah" (NPV akan turun drastis).`,
+                `Kabar baik, hasil tes Bapak/Ibu negatif. Dari profil alat ini, jika hasilnya negatif, kita bisa ${npv}% yakin bahwa Bapak/Ibu benar-benar bebas dari penyakit ini. Namun, karena tidak ada alat yang 100% sempurna di dunia medis, apabila keluhan Bapak/Ibu masih terus berlanjut besok, segera hubungi saya kembali.`,
+                'fa-solid fa-minus-circle', 'indigo');
+        }
+
+        if (metricVal) {
+            let valNum = parseFloat(metricVal);
+            let hasError = false;
+
+            if (ciLowStr && ciHighStr) {
+                let ciLow = parseFloat(ciLowStr);
+                let ciHigh = parseFloat(ciHighStr);
+
+                if (ciLow > ciHigh) {
+                    let temp = ciLow; ciLow = ciHigh; ciHigh = temp;
+                }
+
+                if (valNum <= ciLow || valNum >= ciHigh) {
+                    html += `
+                        <div class="bg-red-50 rounded-lg shadow-sm border-2 border-red-400 p-5 mb-4">
+                            <h3 class="font-bold text-red-800 text-lg mb-2"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Kesalahan Input Statistik</h3>
+                            <p class="text-red-700 text-sm">Nilai tengah (Point Estimate) yang Anda masukkan adalah <b>${valNum}</b>, namun rentang CI yang Anda berikan adalah <b>${ciLow} - ${ciHigh}</b>.</p>
+                            <p class="text-red-700 text-sm font-semibold mt-2">Secara hukum matematis EBM, nilai RR atau OR HARUS berada di dalam rentang Confidence Interval. Mohon periksa kembali angka yang tertera di jurnal Anda.</p>
+                        </div>
+                    `;
+                    hasError = true;
+                }
+            }
+
+            if (!hasError) {
+                let docTxt = "";
+                let patTxt = "";
+                let title = "";
+
+                if (metricType === 'rr') {
+                    title = `Relative Risk / RR (${valNum})`;
+                    docTxt = valNum > 1 ? `Faktor risiko. Meningkatkan risiko sebanyak ${valNum}x lipat.` : `Faktor protektif. Menurunkan risiko kejadian sebanyak ${((1-valNum)*100).toFixed(0)}%.`;
+                    patTxt = valNum > 1 
+                        ? `Jika Bapak tetap melanjutkan, risiko Bapak untuk mengalami komplikasi adalah ${valNum} kali lipat lebih besar dibandingkan mereka yang berhenti.` 
+                        : `Dengan melakukan tindakan/minum obat ini, kita bisa menurunkan risiko Bapak terkena serangan sebesar ${((1-valNum)*100).toFixed(0)}%.`;
+                } else {
+                    title = `Odds Ratio / OR (${valNum})`;
+                    docTxt = `Rasio peluang (odds). Sering dipakai di studi retrospektif (Case-Control). Nilai ${valNum} menunjukkan besarnya asosiasi kejadian. <br><br><b>Catatan:</b> Jangan bahasakan ini sebagai 'Risiko' ke pasien agar tidak melebih-lebihkan, gunakan kata 'Peluang' atau 'Kecenderungan'.`;
+                    patTxt = `Berdasarkan perbandingan riwayat pasien, orang yang memiliki kondisi seperti Bapak memiliki kecenderungan atau peluang ${valNum} kali lebih besar untuk mengalami keluhan ini dibandingkan yang tidak.`;
+                }
+                
+                html += createCard(title, docTxt, patTxt, metricType === 'rr' ? 'fa-solid fa-chart-line' : 'fa-solid fa-dice', 'emerald');
+            }
+        }
+
+        if (ciLowStr && ciHighStr && metricVal) {
+            let ciLow = parseFloat(ciLowStr);
+            let ciHigh = parseFloat(ciHighStr);
+            let valNum = parseFloat(metricVal);
+            
+            if (ciLow < ciHigh && valNum > ciLow && valNum < ciHigh) {
+                let sig = (ciLow > 1 || ciHigh < 1);
+                
+                let isWide = (ciHigh / ciLow) > 3; 
+                let ratioCalc = (ciHigh / ciLow).toFixed(1);
+                
+                let docAnalysis = `CI adalah <b>Statistik Inferensi</b>: kita menebak nilai asli di populasi nyata berbekal data sampel. Rentang ini adalah rentang kepercayaan 95%.<br><br>`;
+                
+                docAnalysis += `<b>Akurasi/Presisi Data:</b> Rentang CI ini tergolong <b class="${isWide ? 'text-red-600' : 'text-green-600'}">${isWide ? 'LEBAR (Kurang Presisi)' : 'SEMPIT (Akurat & Presisi)'}</b>. `;
+                docAnalysis += isWide 
+                    ? `Ini berarti sampel penelitiannya terlalu sedikit atau variasi datanya ekstrem (<i>Wide Confidence Interval</i>). ` 
+                    : `Ini menunjukkan kekuatan sampel yang besar sehingga tebakannya tajam (<i>Narrow Confidence Interval</i>). `;
+
+                docAnalysis += `<div class="bg-blue-50 p-3 rounded-md border-l-4 border-blue-400 text-xs text-blue-900 mt-3 mb-3 leading-relaxed shadow-sm">
+                    <b><i class="fa-solid fa-circle-info mr-1"></i> Dasar Ilmu EBM: Mengapa disebut ${isWide ? 'Lebar' : 'Sempit'}?</b><br>
+                    Pada metrik rasio seperti RR/OR, EBM menilai kepresisian dari <b>kelipatannya (Batas Atas dibagi Batas Bawah)</b>, bukan dari selisih pengurangannya. Di data ini, batas atas (${ciHigh}) adalah <b>${ratioCalc}x lipat</b> dari batas bawah (${ciLow}). Jika kelipatan > 3, rentang dianggap lebar.<br>
+                    <i>Contoh klinis: CI 0.2 - 0.8 (kelipatan 4x). Walau angkanya terlihat kecil, ini berarti khasiat obat bisa menurunkan risiko 80% (Sangat Hebat) atau hanya 20% (Biasa Saja). Secara sains, penelitian ini belum akurat/presisi menentukan seberapa besar sebenarnya khasiat obat tersebut.</i>
+                </div>`;
+
+                docAnalysis += `<b>Signifikansi:</b> Rentang ini ${sig ? 'TIDAK melewati' : 'MELEWATI'} angka 1, berarti secara statistik ${sig ? '<b class="text-green-600">BERMAKNA (Signifikan)</b>' : '<b class="text-red-600">TIDAK BERMAKNA</b>'}.`;
+                
+                let patTxt = "";
+                if (sig && !isWide) {
+                    patTxt = `Penelitian besar dengan data yang sangat kuat sudah membuktikan bahwa efek pengobatan ini pasti nyata manfaatnya, bukan sekadar kebetulan. Itulah mengapa ini menjadi standar medis.`;
+                } else if (sig && isWide) {
+                    patTxt = `Data yang ada saat ini memang menunjukkan ada manfaatnya secara statistik. Tapi karena jumlah pasien yang diteliti di jurnal ini masih terbatas, akurasi angkanya masih bisa berubah. Kita bisa jadikan ini sebagai referensi, namun bukan satu-satunya patokan mutlak.`;
+                } else {
+                    patTxt = `Meskipun secara angka sepertinya obat/tindakan ini ada efeknya, tapi ilmu pengetahuan (statistik) menilai rentang keraguannya sangat tinggi. Secara medis, kita belum bisa yakin apakah ini benar-benar bermanfaat atau hanya kebetulan belaka. Lebih aman kita pilih opsi standar yang lain.`;
+                }
+
+                html += createCard(`Makna Confidence Interval (${ciLow} - ${ciHigh})`, docAnalysis, patTxt, 'fa-solid fa-arrows-left-right', 'purple');
+            }
+        }
+
+        if (html === '') {
+            html = `<div class="flex items-center justify-center h-full text-gray-400 bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-10">
+                        <p class="text-center"><i class="fa-solid fa-comments text-4xl mb-3"></i><br>Mulai ketik angka di sebelah kiri untuk<br>membuat skrip komunikasi pasien.</p>
+                    </div>`;
+        }
+
+        container.innerHTML = html;
+    }
+
+    // Initialize display
+    switchTab('diagnostic');
+</script>
+</body>
+</html>
