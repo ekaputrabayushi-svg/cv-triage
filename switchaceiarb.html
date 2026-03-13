@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kalkulator Switching ACEi ↔ ARB</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @keyframes slideUp {from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); }}
+    .animate-slide-up {animation: slideUp 0.4s ease-out forwards;}
+    /* Nonaktifkan seleksi teks agar tidak bisa diblok/copy sembarangan */
+    body { user-select: none; -webkit-user-select: none; -ms-user-select: none; }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-800">
+  <div class="max-w-5xl mx-auto">
+    <div class="mb-8 flex items-center gap-4">
+      <div class="bg-emerald-600 p-3 rounded-lg text-white shadow-lg shadow-emerald-200">
+        <i data-lucide="calculator" class="w-8 h-8"></i>
+      </div>
+      <div>
+        <h1 class="text-3xl font-bold text-slate-900">Kalkulator Switching ACEi ↔ ARB</h1>
+        <p class="text-slate-500">Protokol Konversi Dosis & Efek Samping - dr. Bayushi Eka Putra</p>
+      </div>
+    </div>
+    <div class="flex space-x-2 mb-6 bg-white p-1 rounded-xl shadow-sm border border-slate-200 w-fit">
+      <button id="tabBtnCalc" class="px-6 py-2.5 rounded-lg font-medium text-sm transition-all bg-emerald-50 text-emerald-700 shadow-sm" onclick="switchTab('calculator')">Kalkulator Konversi</button>
+      <button id="tabBtnGuide" class="px-6 py-2.5 rounded-lg font-medium text-sm transition-all text-slate-600 hover:bg-slate-50" onclick="switchTab('guidelines')">Panduan & Ekuivalensi</button>
+    </div>
+    <div id="viewCalculator" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div class="lg:col-span-5 space-y-6">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+          <h2 class="text-lg font-bold mb-4 flex items-center gap-2"><i data-lucide="arrow-right" class="text-emerald-500 w-5 h-5"></i> Parameter Konversi</h2>
+          <div class="mb-5">
+            <label class="block text-sm font-semibold mb-2 text-slate-700">Arah Switching</label>
+            <select id="directionSelect" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 outline-none">
+              <option value="to_arb">Dari ACEi ➔ ke ARB</option><option value="to_acei">Dari ARB ➔ ke ACEi</option>
+            </select>
+          </div>
+          <div class="mb-5">
+            <label class="block text-sm font-semibold mb-2 text-slate-700">Alasan Switching</label>
+            <select id="reasonSelect" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 outline-none"></select>
+          </div>
+          <div class="flex gap-4 mb-5">
+            <div class="flex-1">
+              <label id="sourceLabel" class="block text-sm font-semibold mb-2 text-slate-700">ACEi (Saat ini)</label>
+              <select id="sourceSelect" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 outline-none"></select>
+            </div>
+            <div class="flex items-center pt-6 text-slate-400"><i data-lucide="arrow-right" class="w-5 h-5"></i></div>
+            <div class="flex-1">
+              <label id="targetLabel" class="block text-sm font-semibold mb-2 text-slate-700">ARB (Target)</label>
+              <select id="targetSelect" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 outline-none"></select>
+            </div>
+          </div>
+          <div class="mb-6">
+            <label id="doseLabel" class="block text-sm font-semibold mb-2 text-slate-700">Dosis Total Harian (mg/hari)</label>
+            <input type="number" id="doseInput" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 outline-none" placeholder="Contoh: 5">
+            <p id="doseHelperText" class="text-xs text-slate-500 mt-1"></p>
+          </div>
+          <button onclick="calculateSwitch()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-md shadow-emerald-200">Kalkulasi Dosis Ekuivalen</button>
+        </div>
+      </div>
+      <div class="lg:col-span-7 h-full">
+        <div id="resultEmpty" class="bg-white rounded-2xl p-10 shadow-sm border border-slate-200 h-full flex flex-col items-center justify-center text-center border-dashed">
+          <div class="bg-slate-100 p-4 rounded-full text-slate-400 mb-4"><i data-lucide="calculator" class="w-10 h-10"></i></div>
+          <h3 class="text-xl font-bold text-slate-800 mb-2">Tunggu Kalkulasi</h3>
+          <p class="text-slate-500 max-w-sm">Masukkan dosis obat saat ini untuk melihat prediksi ekuivalensi dosis dan protokol manajemen efek sampingnya.</p>
+        </div>
+        <div id="resultContent" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-slide-up">
+          <div id="washoutBanner" class="p-6">
+            <div class="flex items-start gap-4">
+              <div id="washoutIconContainer" class="p-3 rounded-full"><i id="washoutIcon" data-lucide="check-circle-2" class="w-7 h-7"></i></div>
+              <div>
+                <h3 class="text-lg font-bold text-slate-900 mb-1">Status Washout Period</h3>
+                <div id="washoutText" class="text-2xl font-black mb-2 text-slate-800"></div>
+                <p id="washoutDesc" class="font-medium"></p>
+              </div>
+            </div>
+          </div>
+          <div id="warningsContainer"></div>
+          <div class="p-6 space-y-6">
+            <div>
+              <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3">Rekomendasi Dosis Target</h4>
+              <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex gap-4">
+                <div class="bg-emerald-100 text-emerald-600 p-2 rounded-lg h-fit shrink-0"><i data-lucide="activity" class="w-5 h-5"></i></div>
+                <div>
+                  <p id="recDoseText" class="font-bold text-xl text-slate-900 mb-1"></p>
+                  <ul id="instructionsList" class="list-disc pl-5 space-y-2 mt-3 text-slate-600 text-sm"></ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="viewGuidelines" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 space-y-10">
+      <div class="border-l-4 border-emerald-600 pl-4"><h2 class="text-2xl font-bold text-slate-900">Panduan Switching ACEi ↔ ARB</h2><p class="text-slate-500 mt-1">Acuan ringkas alasan peralihan, ekuivalensi, dan mitigasi risiko.</p></div>
+      <section><h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2"><i data-lucide="shield-alert" class="text-amber-500 w-6 h-6"></i> 1. Mengapa dilakukan Switching?</h3><div class="grid md:grid-cols-2 gap-6"><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><h4 class="font-bold text-slate-800 mb-2 flex items-center gap-2"><i data-lucide="alert-circle" class="text-slate-500 w-4 h-4"></i> Batuk Kering (Dry Cough)</h4><p class="text-sm text-slate-600 mb-2">Terjadi pada 5-20% pasien akibat akumulasi <b>Bradikinin</b> dan Substansi P karena hambatan enzim ACE.</p><p class="text-sm font-semibold text-emerald-700">➔ ARB tidak menghambat pemecahan bradikinin, sehingga merupakan terapi pengganti utama yang aman.</p></div><div class="bg-red-50 p-4 rounded-xl border border-red-100"><h4 class="font-bold text-red-900 mb-2 flex items-center gap-2"><i data-lucide="alert-triangle" class="text-red-600 w-4 h-4"></i> Angioedema</h4><p class="text-sm text-red-800 mb-2">Pembengkakan asimetris pada wajah, bibir, atau lidah (Risiko henti napas). Juga akibat bradikinin.</p><p class="text-sm font-semibold text-red-900">➔ Ada reaktivitas silang antara ACEi dan ARB (&lt;10%). Obat pengganti hanya digunakan jika benar-benar perlu, dengan pengawasan, dan SETELAH gejala angioedema tuntas.</p></div></div></section>
+      <section><h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2"><i data-lucide="activity" class="text-emerald-500 w-6 h-6"></i> 2. Acuan Target Dosis Maksimal (HF/HTN)</h3><div class="grid md:grid-cols-2 gap-8"><div><h4 class="font-bold text-slate-700 mb-3 border-b-2 border-slate-200 pb-1">Golongan ACE Inhibitor</h4><ul class="space-y-2 text-sm text-slate-600"><li class="flex justify-between p-2 hover:bg-slate-50 rounded"><span>Captopril</span> <span class="font-mono font-bold">150 mg/hari</span></li><li class="flex justify-between p-2 hover:bg-slate-50 rounded bg-slate-50"><span>Enalapril</span> <span class="font-mono font-bold">20 - 40 mg/hari</span></li><li class="flex justify-between p-2 hover:bg-slate-50 rounded"><span>Ramipril</span> <span class="font-mono font-bold">10 mg/hari</span></li><li class="flex justify-between p-2 hover:bg-slate-50 rounded bg-slate-50"><span>Lisinopril</span> <span class="font-mono font-bold">20 - 40 mg/hari</span></li><li class="flex justify-between p-2 hover:bg-slate-50 rounded"><span>Perindopril</span> <span class="font-mono font-bold">8 - 10 mg/hari</span></li></ul></div><div><h4 class="font-bold text-emerald-800 mb-3 border-b-2 border-emerald-200 pb-1">Golongan ARB</h4><ul class="space-y-2 text-sm text-slate-600"><li class="flex justify-between p-2 hover:bg-emerald-50 rounded"><span>Candesartan</span> <span class="font-mono font-bold">32 mg/hari</span></li><li class="flex justify-between p-2 hover:bg-emerald-50 rounded bg-emerald-50"><span>Valsartan</span> <span class="font-mono font-bold">320 mg/hari</span></li><li class="flex justify-between p-2 hover:bg-emerald-50 rounded"><span>Losartan</span> <span class="font-mono font-bold">150 mg/hari</span></li><li class="flex justify-between p-2 hover:bg-emerald-50 rounded bg-emerald-50"><span>Irbesartan</span> <span class="font-mono font-bold">300 mg/hari</span></li><li class="flex justify-between p-2 hover:bg-emerald-50 rounded"><span>Telmisartan</span> <span class="font-mono font-bold">80 mg/hari</span></li></ul></div></div><p class="text-xs text-slate-500 mt-4 italic">*Kalkulator ini menghitung proporsi dosis obat asal saat ini terhadap dosis maksimalnya, lalu mengalikannya dengan dosis maksimal obat target untuk mencari titik ekuivalen kasar. Selalu titrasi dosis berdasarkan respon klinis individu.</p></section>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('contextmenu',e=>e.preventDefault());document.addEventListener('keydown',e=>{if(e.keyCode===123||(e.ctrlKey&&e.shiftKey&&(e.keyCode===73||e.keyCode===74||e.keyCode===67))||(e.ctrlKey&&e.keyCode===85))e.preventDefault();});
+    const _tA={"Captopril":{t:150,u:"mg/hari",s:"TID (3x Sehari)",st:12.5},"Enalapril":{t:20,u:"mg/hari",s:"BID (2x Sehari)",st:2.5},"Ramipril":{t:10,u:"mg/hari",s:"OD (1x Sehari)",st:2.5},"Lisinopril":{t:20,u:"mg/hari",s:"OD (1x Sehari)",st:2.5},"Perindopril":{t:8,u:"mg/hari",s:"OD (1x Sehari)",st:2}};const _tB={"Candesartan":{t:32,u:"mg/hari",s:"OD (1x Sehari)",st:4},"Valsartan":{t:320,u:"mg/hari",s:"BID (2x Sehari)",st:40},"Losartan":{t:150,u:"mg/hari",s:"OD (1x Sehari)",st:25},"Irbesartan":{t:300,u:"mg/hari",s:"OD (1x Sehari)",st:75},"Telmisartan":{t:80,u:"mg/hari",s:"OD (1x Sehari)",st:20}};const _q=document.getElementById.bind(document);const _d1=_q('directionSelect'),_d2=_q('reasonSelect'),_d3=_q('sourceSelect'),_d4=_q('targetSelect'),_d5=_q('doseInput'),_l1=_q('sourceLabel'),_l2=_q('targetLabel'),_l3=_q('doseLabel'),_l4=_q('doseHelperText'),_r1=_q('resultEmpty'),_r2=_q('resultContent');function _uF(){const v=_d1.value,i=v==='to_arb';_l1.innerText=i?'ACEi (Saat ini)':'ARB (Saat ini)';_l2.innerText=i?'ARB (Target)':'ACEi (Target)';const c=_d2.value;_d2.innerHTML='';if(i)_d2.add(new Option('Batuk Kering (Dry Cough) akibat ACEi','cough'));_d2.add(new Option('Riwayat Angioedema','angioedema'));_d2.add(new Option('Intoleransi / Biaya / Alasan Klinis Lainnya','other'));if(_d2.querySelector(`option[value="${c}"]`))_d2.value=c;const sD=i?_tA:_tB,tD=i?_tB:_tA;_d3.innerHTML='';Object.keys(sD).forEach(k=>{let o=new Option(k,k);if((i&&k==='Ramipril')||(!i&&k==='Candesartan'))o.selected=!0;_d3.add(o)});_d4.innerHTML='';Object.keys(tD).forEach(k=>{let o=new Option(k,k);if((i&&k==='Candesartan')||(!i&&k==='Ramipril'))o.selected=!0;_d4.add(o)});_uH();}function _uH(){const i=_d1.value==='to_arb',s=_d3.value,t=_d4.value;if(!s||!t)return;const d=i?_tA[s]:_tB[s];_l3.innerText=`Dosis Total Harian ${s} (mg/hari)`;_l4.innerText=`Dosis target/maksimal untuk ${s} adalah ${d.t} mg/hari.`;_d5.placeholder=`Contoh: ${d.t/2}`;_r2.classList.add('hidden');_r1.classList.remove('hidden');}_d1.addEventListener('change',_uF);_d3.addEventListener('change',_uH);_d4.addEventListener('change',_uH);_d2.addEventListener('change',_uH);_d5.addEventListener('input',_uH);_uF();window.switchTab=function(t){const b1=_q('tabBtnCalc'),b2=_q('tabBtnGuide'),v1=_q('viewCalculator'),v2=_q('viewGuidelines'),c1="px-6 py-2.5 rounded-lg font-medium text-sm transition-all bg-emerald-50 text-emerald-700 shadow-sm",c2="px-6 py-2.5 rounded-lg font-medium text-sm transition-all text-slate-600 hover:bg-slate-50";if(t==='calculator'){b1.className=c1;b2.className=c2;v1.classList.remove('hidden');v2.classList.add('hidden');}else{b2.className=c1;b1.className=c2;v2.classList.remove('hidden');v1.classList.add('hidden');}};window.calculateSwitch=function(){const d=_d1.value,r=_d2.value,s=_d3.value,t=_d4.value,i=parseFloat(_d5.value),sD=d==='to_arb'?_tA[s]:_tB[s],tD=d==='to_arb'?_tB[t]:_tA[t];let wT="",wD="",w=[],inS=[],rD="";const wB=_q('washoutBanner'),wIC=_q('washoutIconContainer'),wI=_q('washoutIcon'),wDe=_q('washoutDesc');if(d==='to_arb'){if(r==='angioedema'){wT="Tunggu Resolusi Total";wD="Tunggu hingga aman dari risiko hipersensitivitas.";wB.className="p-6 bg-amber-50 border-b border-amber-200";wIC.className="p-3 rounded-full bg-amber-100 text-amber-600";wI.setAttribute('data-lucide','clock');wDe.className="font-medium text-amber-800";w.push({y:'danger',x:'PERHATIAN KRITIS: Terdapat risiko reaktivitas silang (cross-reactivity) angioedema <10% antara ACEi dan ARB. ARB HANYA boleh dimulai JIKA gejala angioedema telah hilang sepenuhnya, dan butuh pemantauan ketat.'});inS.push('Hentikan ACEi segera. Berikan terapi suportif untuk angioedema.');}else if(r==='cough'){wT="0 Jam (Langsung)";wD="Aman untuk langsung diswitch pada dosis berikutnya.";wB.className="p-6 bg-emerald-50 border-b border-emerald-200";wIC.className="p-3 rounded-full bg-emerald-100 text-emerald-600";wI.setAttribute('data-lucide','check-circle-2');wDe.className="font-medium text-emerald-800";inS.push('Tidak perlu jeda waktu (washout). Hentikan ACEi hari ini, dan berikan ARB pada jadwal minum obat berikutnya.');inS.push('Catatan: Batuk kering karena ACEi biasanya akan mereda dalam 1-4 minggu.');}else{wT="0 Jam (Langsung)";wD="Aman untuk langsung diswitch pada dosis berikutnya.";wB.className="p-6 bg-emerald-50 border-b border-emerald-200";wIC.className="p-3 rounded-full bg-emerald-100 text-emerald-600";wI.setAttribute('data-lucide','check-circle-2');wDe.className="font-medium text-emerald-800";inS.push('Tidak diperlukan jeda waktu. Penggantian dari ACEi ke ARB dapat dilakukan langsung.');}}else{wT="0 Jam (Langsung)";wD="Aman untuk langsung diswitch pada dosis berikutnya.";wB.className="p-6 bg-emerald-50 border-b border-emerald-200";wIC.className="p-3 rounded-full bg-emerald-100 text-emerald-600";wI.setAttribute('data-lucide','check-circle-2');wDe.className="font-medium text-emerald-800";inS.push('Tidak diperlukan jeda waktu khusus. Penggantian dari ARB ke ACEi dapat dilakukan pada jadwal dosis berikutnya.');if(r==='angioedema')w.push({y:'danger',x:'PERHATIAN: Riwayat angioedema pada ARB. Penggunaan ACEi berisiko memicu angioedema kembali. Pantau sangat ketat atau pertimbangkan alternatif lain.'});}_q('washoutText').innerText=wT;wDe.innerText=wD;const sM=sD.t,tM=tD.t,tS=tD.st;if(!isNaN(i)&&i>0){const rt=Math.min(i/sM,1);let eq=Math.round(rt*tM);if(eq<tS)eq=tS;if(tD.s.includes("BID"))rD=`${eq} mg/hari (Berikan ${Math.round((eq/2)*10)/10} mg, 2x Sehari)`;else if(tD.s.includes("TID"))rD=`${eq} mg/hari (Berikan ${Math.round((eq/3)*10)/10} mg, 3x Sehari)`;else rD=`${eq} mg, 1x Sehari`;inS.push(`Dosis ekuivalen untuk ${i} mg ${s} setara dengan sekitar ${eq} mg ${t} harian.`);if(i>=sM)w.push({y:'info',x:`Pasien sudah berada di dosis target maksimal ${s}. Pastikan untuk memantau Tekanan Darah dan fungsi Ginjal setelah switch ke dosis tinggi ${t}.`});}else{rD="Mulai Dosis Awal (Starting Dose)";if(tD.s.includes("BID"))inS.push(`Mulai ${t} dari dosis rendah: ${tS*2} mg/hari (Berikan ${tS} mg, 2x Sehari)`);else if(tD.s.includes("TID"))inS.push(`Mulai ${t} dari dosis rendah: ${tS*3} mg/hari (Berikan ${tS} mg, 3x Sehari)`);else inS.push(`Mulai ${t} dari dosis rendah: ${tS} mg, 1x Sehari`);inS.push('Titrasi naik perlahan sesuai toleransi pasien, tekanan darah, dan fungsi ginjal.');}const wC=_q('warningsContainer');wC.innerHTML='';w.forEach(wa=>{const dv=document.createElement('div');if(wa.y==='danger'){dv.className="px-6 py-4 border-b font-medium text-sm flex gap-3 bg-red-50 border-red-100 text-red-700";dv.innerHTML=`<i data-lucide="alert-triangle" class="shrink-0 mt-0.5 w-5 h-5"></i><p>${wa.x}</p>`;}else{dv.className="px-6 py-4 border-b font-medium text-sm flex gap-3 bg-blue-50 border-blue-100 text-blue-700";dv.innerHTML=`<i data-lucide="info" class="shrink-0 mt-0.5 w-5 h-5"></i><p>${wa.x}</p>`;}wC.appendChild(dv);});_q('recDoseText').innerText=rD;const iL=_q('instructionsList');iL.innerHTML='';inS.forEach(iT=>{const li=document.createElement('li');li.innerText=iT;iL.appendChild(li);});_r1.classList.add('hidden');_r2.classList.remove('hidden');_r2.classList.remove('animate-slide-up');void _r2.offsetWidth;_r2.classList.add('animate-slide-up');lucide.createIcons();};lucide.createIcons();
+  </script>
+</body>
+</html>
