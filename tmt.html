@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Probabilitas Treadmill Test</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Library untuk Generate PDF langsung (html2pdf) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* Tambahan style khusus print */
+        @media print {
+            body, html { 
+                background-color: white !important; 
+                height: auto !important; 
+                overflow: visible !important; 
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important; 
+            }
+            .no-print { display: none !important; }
+            .print-break-inside-avoid { break-inside: avoid; }
+            @page { margin: 1.5cm; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans print:bg-white print:p-0 p-4 md:p-8">
+
+    <div id="main-container" class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg print:overflow-visible print:shadow-none print:w-full print:border-none relative">
+        
+        <!-- HEADER -->
+        <div class="bg-slate-800 text-white p-6 print:bg-white print:text-black print:border-b-2 print:border-slate-800 print:p-4 rounded-t-xl" id="header-container">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="activity" class="w-8 h-8 print:text-slate-800" id="header-icon"></i>
+                    <div>
+                        <div class="text-[10px] font-bold tracking-widest text-blue-400 uppercase mb-0.5 print:text-blue-700" id="header-vault-brand">Part of CardiologyVault</div>
+                        <h1 class="text-2xl font-bold" id="header-title">Kalkulator Probabilitas Treadmill Test</h1>
+                        <p class="text-slate-300 text-sm print:text-slate-600" id="header-subtitle">Berdasarkan Teorema Bayes & Clinical Guidelines</p>
+                    </div>
+                </div>
+                <div class="text-right hidden sm:block">
+                    <p class="text-xs text-slate-400" id="header-dev-label">Dikembangkan oleh:</p>
+                    <p class="font-semibold text-sm">dr. Bayushi Eka Putra, SpJP, FIHA</p>
+                    <p class="text-xs text-slate-400 mt-1" id="current-date"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 md:flex gap-8 print:block print:p-0 print:pt-6">
+            
+            <!-- PANEL INPUT -->
+            <div id="input-panel" class="md:w-1/3 space-y-6 no-print">
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <h2 class="font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                        <i data-lucide="calculator" class="w-5 h-5"></i> Parameter Klinis
+                    </h2>
+                    
+                    <div class="space-y-4 text-sm">
+                        <!-- Gender Input -->
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Jenis Kelamin</label>
+                            <div class="flex rounded-md shadow-sm">
+                                <button id="btn-gender-M" onclick="setState('gender', 'M')" class="flex-1 py-1.5 border bg-blue-50 text-blue-700 border-blue-200 z-10 font-medium rounded-l-md transition-colors">Laki-laki</button>
+                                <button id="btn-gender-F" onclick="setState('gender', 'F')" class="flex-1 py-1.5 border-y border-r border-l-0 bg-white text-gray-500 border-gray-200 hover:bg-gray-50 font-medium rounded-r-md transition-colors">Perempuan</button>
+                            </div>
+                        </div>
+
+                        <!-- Age Group Input -->
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Kelompok Usia</label>
+                            <select id="input-age" onchange="setState('ageGroup', this.value)" class="w-full border border-gray-200 rounded-md py-1.5 px-3 bg-white text-slate-700 shadow-sm outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                                <option value="30-39">30-39 Tahun</option>
+                                <option value="40-49">40-49 Tahun</option>
+                                <option value="50-59" selected>50-59 Tahun</option>
+                                <option value="60-69">60-69 Tahun</option>
+                                <option value="70+">&gt; 70 Tahun</option>
+                            </select>
+                        </div>
+
+                        <!-- Symptoms Input -->
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Sifat Gejala / Keluhan</label>
+                            <select id="input-symptom" onchange="setState('symptom', this.value)" class="w-full border border-gray-200 rounded-md py-1.5 px-3 bg-white text-slate-700 shadow-sm outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                                <option value="typical">Angina Tipikal</option>
+                                <option value="atypical" selected>Angina Atipikal</option>
+                                <option value="nonanginal">Nyeri Dada Non-Angina</option>
+                                <option value="dyspnea">Sesak Napas (Dyspnea)</option>
+                            </select>
+                        </div>
+
+                        <hr class="my-3 border-slate-200" />
+
+                        <!-- Test Result Toggle -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">
+                                Hasil Treadmill Test
+                            </label>
+                            <div class="flex rounded-md shadow-sm">
+                                <button id="btn-result-positive" onclick="setState('result', 'positive')" class="flex-1 py-2 text-sm font-medium rounded-l-md border bg-red-50 text-red-700 border-red-200 z-10 transition-colors">
+                                    Positif (Iskemia)
+                                </button>
+                                <button id="btn-result-negative" onclick="setState('result', 'negative')" class="flex-1 py-2 text-sm font-medium rounded-r-md border-y border-r border-l-0 bg-white text-gray-500 border-gray-200 hover:bg-gray-50 transition-colors">
+                                    Negatif (Normal)
+                                </button>
+                            </div>
+                        </div>
+
+                        <button id="btn-print" onclick="generatePDF()" class="w-full mt-4 bg-slate-800 hover:bg-slate-700 text-white font-medium py-2.5 px-4 rounded-md flex justify-center items-center gap-2 transition-colors">
+                            <i data-lucide="printer" class="w-5 h-5"></i> Unduh File PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL HASIL -->
+            <div id="result-panel" class="md:w-2/3 mt-8 md:mt-0 print:w-full print:mt-0">
+                <div class="space-y-6">
+                    
+                    <!-- Header for Print only -->
+                    <div class="print-only-element hidden mb-6 pb-4 border-b border-gray-200">
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p><span class="text-gray-500 w-24 inline-block">Nama Pasien</span>: .......................................</p>
+                                <p><span class="text-gray-500 w-24 inline-block">No. RM</span>: .......................................</p>
+                            </div>
+                            <div>
+                                <p><span class="text-gray-500 w-24 inline-block">Tanggal Tes</span>: .......................................</p>
+                                <p><span class="text-gray-500 w-24 inline-block">Dokter</span>: .......................................</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Highlight Kotak Hasil Utama -->
+                    <div class="bg-white border-2 border-slate-100 rounded-xl p-6 text-center shadow-sm print:border-gray-300 print:shadow-none">
+                        <h3 class="text-slate-500 font-medium mb-1">Post-Test Probability (Kemungkinan PJK)</h3>
+                        <div class="flex justify-center items-end gap-2">
+                            <span id="display-prob" class="text-6xl font-black text-yellow-600">
+                                0%
+                            </span>
+                        </div>
+                        <div id="display-result-badge" class="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-700">
+                            <!-- Icon and text injected via JS -->
+                        </div>
+                        <div class="mt-2 text-sm text-slate-500">
+                            PTP Awal (Berdasarkan ESC 2019): <strong id="display-ptp">0%</strong>
+                        </div>
+                    </div>
+
+                    <hr class="print:border-gray-200 no-print" />
+
+                    <!-- Section 1: Interpretasi Klinis (Untuk Dokter) -->
+                    <div class="mb-8">
+                        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-3 border-l-4 border-slate-800 pl-3">
+                            <i data-lucide="stethoscope" class="w-5 h-5"></i> Evaluasi Klinis (Untuk Sejawat / Rekam Medis)
+                        </h2>
+                        <div id="doctor-explanation" class="bg-white print:bg-transparent text-sm text-gray-700 space-y-3">
+                            <!-- Injected via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Penjelasan Pasien -->
+                    <div class="mb-8 print-break-inside-avoid">
+                        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-3 border-l-4 border-blue-500 pl-3">
+                            <i data-lucide="user" class="w-5 h-5"></i> Ringkasan Edukasi Pasien
+                        </h2>
+                        <div id="patient-explanation" class="bg-white print:bg-transparent space-y-4 text-gray-800">
+                            <!-- Injected via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Footer / Signature for print -->
+                    <div class="print-only-element hidden mt-16 text-right print-break-inside-avoid">
+                        <p class="mb-16 text-sm text-gray-600">Dokter Penanggung Jawab,</p>
+                        <p class="font-bold border-b border-gray-400 inline-block px-16 pb-1 text-transparent select-none">.</p>
+                        <p class="text-xs text-gray-500 mt-1">(Tanda Tangan & Nama Terang)</p>
+                    </div>
+
+                    <!-- Developer Credit for print -->
+                    <div class="print-only-element hidden mt-12 text-center text-xs text-gray-500 border-t border-gray-200 pt-3 print-break-inside-avoid">
+                        <em>*Kalkulator medis ini dikembangkan oleh <strong>dr. Bayushi Eka Putra, SpJP, FIHA</strong> sebagai alat bantu simulasi probabilitas.<br>Keputusan klinis akhir dan diagnosis tetap menjadi tanggung jawab penuh dokter yang memeriksa pasien.</em>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+    
+    <!-- Keterangan Footer di Web -->
+    <p class="text-center text-slate-400 text-xs mt-6 no-print">
+        Disclaimer: Kalkulator ini adalah alat bantu edukasi dan simulasi probabilitas. Tidak menggantikan penilaian klinis dokter secara langsung.
+    </p>
+
+    <!-- Application Logic -->
+    <script>
+        // Tanggal Hari Ini
+        const todayStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+        document.getElementById('current-date').textContent = todayStr;
+
+        // Tabel PTP (ESC 2019)
+        const PTP_TABLE = {
+            M: {
+                typical: { '30-39': 3, '40-49': 22, '50-59': 32, '60-69': 44, '70+': 52 },
+                atypical: { '30-39': 4, '40-49': 10, '50-59': 17, '60-69': 26, '70+': 34 },
+                nonanginal: { '30-39': 1, '40-49': 3, '50-59': 11, '60-69': 22, '70+': 25 },
+                dyspnea: { '30-39': 0, '40-49': 12, '50-59': 20, '60-69': 27, '70+': 32 },
+            },
+            F: {
+                typical: { '30-39': 5, '40-49': 10, '50-59': 13, '60-69': 16, '70+': 27 },
+                atypical: { '30-39': 3, '40-49': 6, '50-59': 6, '60-69': 11, '70+': 19 },
+                nonanginal: { '30-39': 1, '40-49': 2, '50-59': 3, '60-69': 6, '70+': 14 },
+                dyspnea: { '30-39': 3, '40-49': 3, '50-59': 9, '60-69': 14, '70+': 12 },
+            }
+        };
+
+        const SENS = 68; // Sensitivitas TMT
+        const SPEC = 77; // Spesifisitas TMT
+
+        // State Aplikasi
+        let state = {
+            gender: 'M',
+            ageGroup: '50-59',
+            symptom: 'atypical',
+            result: 'positive'
+        };
+
+        // Utility: Clamping
+        const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+
+        // Update State & Re-render
+        function setState(key, value) {
+            state[key] = value;
+            updateUI();
+            calculateAndRender();
+        }
+
+        function updateUI() {
+            // Update Gender Buttons
+            const btnM = document.getElementById('btn-gender-M');
+            const btnF = document.getElementById('btn-gender-F');
+            if (state.gender === 'M') {
+                btnM.className = 'flex-1 py-1.5 border bg-blue-50 text-blue-700 border-blue-200 z-10 font-medium rounded-l-md transition-colors';
+                btnF.className = 'flex-1 py-1.5 border-y border-r border-l-0 bg-white text-gray-500 border-gray-200 hover:bg-gray-50 font-medium rounded-r-md transition-colors';
+            } else {
+                btnM.className = 'flex-1 py-1.5 border bg-white text-gray-500 border-gray-200 hover:bg-gray-50 font-medium rounded-l-md transition-colors';
+                btnF.className = 'flex-1 py-1.5 border-y border-r border-l-0 bg-pink-50 text-pink-700 border-pink-200 z-10 font-medium rounded-r-md transition-colors';
+            }
+
+            // Update Result Buttons
+            const btnPos = document.getElementById('btn-result-positive');
+            const btnNeg = document.getElementById('btn-result-negative');
+            if (state.result === 'positive') {
+                btnPos.className = 'flex-1 py-2 text-sm font-medium rounded-l-md border bg-red-50 text-red-700 border-red-200 z-10 transition-colors';
+                btnNeg.className = 'flex-1 py-2 text-sm font-medium rounded-r-md border-y border-r border-l-0 bg-white text-gray-500 border-gray-200 hover:bg-gray-50 transition-colors';
+            } else {
+                btnPos.className = 'flex-1 py-2 text-sm font-medium rounded-l-md border bg-white text-gray-500 border-gray-200 hover:bg-gray-50 transition-colors';
+                btnNeg.className = 'flex-1 py-2 text-sm font-medium rounded-r-md border-y border-r border-l-0 bg-green-50 text-green-700 border-green-200 z-10 transition-colors';
+            }
+        }
+
+        function getRiskCategory(prob) {
+            if (prob < 15) return { label: 'Rendah (Low Risk)', color: 'text-green-600', bg: 'bg-green-100' };
+            if (prob <= 85) return { label: 'Menengah (Intermediate Risk)', color: 'text-yellow-600', bg: 'bg-yellow-100' };
+            return { label: 'Tinggi (High Risk)', color: 'text-red-600', bg: 'bg-red-100' };
+        }
+
+        function calculateAndRender() {
+            let currentPtp = PTP_TABLE[state.gender][state.symptom][state.ageGroup];
+            currentPtp = Math.max(currentPtp, 1);
+            
+            const p_ptp = clamp(currentPtp, 1, 99) / 100;
+            const p_sens = SENS / 100;
+            const p_spec = SPEC / 100;
+
+            let lr, preOdds, postOdds, postProbRaw;
+
+            preOdds = p_ptp / (1 - p_ptp);
+
+            if (state.result === 'positive') {
+                lr = p_sens / (1 - p_spec);
+            } else {
+                lr = (1 - p_sens) / p_spec;
+            }
+
+            postOdds = preOdds * lr;
+            postProbRaw = postOdds / (1 + postOdds);
+            
+            const postProb = (postProbRaw * 100).toFixed(1);
+            const isPositive = state.result === 'positive';
+            const risk = getRiskCategory(parseFloat(postProb));
+
+            const probEl = document.getElementById('display-prob');
+            probEl.textContent = `${postProb}%`;
+            probEl.className = `text-6xl font-black ${risk.color}`;
+
+            document.getElementById('display-ptp').textContent = `${currentPtp}%`;
+
+            const badgeEl = document.getElementById('display-result-badge');
+            badgeEl.innerHTML = `
+                <i data-lucide="heart-pulse" class="w-4 h-4 ${isPositive ? 'text-red-500' : 'text-green-500'}"></i>
+                Hasil Treadmill: ${isPositive ? 'POSITIF (Abnormal)' : 'NEGATIF (Normal)'}
+            `;
+
+            let recHtml = '';
+            const probFloat = parseFloat(postProb);
+            if (probFloat < 15) {
+                recHtml = `<li>Probabilitas pasca-tes &lt;15%. Investigasi lanjutan (seperti CCTA atau ICA) umumnya <strong>tidak diindikasikan</strong>. Pertimbangkan penyebab non-kardiak.</li>`;
+            } else if (probFloat >= 15 && probFloat <= 85) {
+                recHtml = `<li>Probabilitas pasca-tes 15-85%. Indikasi kuat untuk pemeriksaan non-invasif lanjutan. <strong>Coronary CTA (CCTA)</strong> lebih direkomendasikan pada PTP lebih rendah dalam rentang ini, sementara <strong>Functional Stress Imaging</strong> (Echo/CMR/PET/SPECT) diutamakan jika PTP di batas atas atau ada riwayat revaskularisasi.</li>`;
+            } else {
+                recHtml = `<li>Probabilitas pasca-tes &gt;85%. Pasien tergolong risiko tinggi. Pertimbangkan untuk langsung merujuk ke <strong>Invasive Coronary Angiography (ICA)</strong>, terutama jika ada gejala angina refrakter atau bukti iskemik luas.</li>`;
+            }
+
+            document.getElementById('doctor-explanation').innerHTML = `
+                <p>Berdasarkan perhitungan <strong>Teorema Bayes</strong>, pasien memiliki <em>Pre-Test Probability</em> (PTP) untuk CAD obstruktif sebesar <strong>${currentPtp}%</strong>.</p>
+                <p>Treadmill test yang dilakukan memiliki sensitivitas ${SENS}% dan spesifisitas ${SPEC}%. Dengan hasil tes yang <strong>${isPositive ? 'POSITIF' : 'NEGATIF'}</strong>, maka didapatkan <em>Likelihood Ratio</em> (${isPositive ? 'LR+' : 'LR-'}) sebesar <strong>${lr.toFixed(2)}</strong>.</p>
+                <p>Hal ini menggeser probabilitas penyakit (<em>Post-Test Probability</em>) menjadi <strong>${postProb}%</strong>, yang menempatkan pasien pada kategori probabilitas <strong>${risk.label}</strong>.</p>
+                <div class="mt-4 p-3 bg-slate-50 border border-slate-200 rounded-md">
+                    <strong>Rekomendasi Klinis (Sesuai ESC Guidelines):</strong>
+                    <ul class="list-disc ml-5 mt-2 space-y-1">${recHtml}</ul>
+                </div>
+            `;
+
+            let message = "";
+            let nextStep = "";
+
+            if (!isPositive) {
+                if (probFloat < 15) {
+                    message = `Kabar baik. Dari awal, kecurigaan kita terhadap adanya penyumbatan pembuluh darah jantung Anda memang cukup kecil (${currentPtp}%). Setelah melihat hasil tes treadmill Anda yang bagus (negatif), kemungkinan adanya penyumbatan yang berbahaya turun menjadi sangat kecil, yaitu sekitar ${postProb}%.`;
+                    nextStep = "Saat ini Anda tidak memerlukan pemeriksaan lanjutan seperti CT scan atau kateterisasi. Kita akan fokus pada perbaikan gaya hidup, olahraga teratur, dan mengontrol faktor risiko (seperti tensi atau kolesterol).";
+                } else if (probFloat <= 85) {
+                    message = `Hasil tes treadmill Anda hari ini bagus dan tidak menunjukkan tanda-tanda kekurangan oksigen (negatif). Ini menurunkan kemungkinan adanya penyumbatan jantung menjadi ${postProb}%. Namun, karena keluhan atau profil risiko awal Anda cukup tinggi, kemungkinan tersebut belum sepenuhnya hilang.`;
+                    nextStep = "Karena tes treadmill kadang bisa 'melewatkan' penyumbatan (false negative), kita mungkin masih perlu memastikan kondisi Anda dengan tes yang lebih akurat, seperti CT Scan Jantung, tergantung pada keluhan Anda ke depannya.";
+                } else {
+                    message = `Meskipun hasil tes treadmill Anda hari ini tampak baik (negatif), keluhan dan kondisi Anda sangat mengarah pada adanya sumbatan (risiko masih ${postProb}%). Treadmill test tidak sempurna dan bisa saja tidak mendeteksi masalah pada beberapa orang.`;
+                    nextStep = "Untuk keselamatan Anda, saya tetap menyarankan kita melakukan pemeriksaan yang lebih pasti, seperti CT Scan Jantung atau Kateterisasi Jantung, agar tidak ada sumbatan tersembunyi yang terlewat.";
+                }
+            } else {
+                if (probFloat < 15) {
+                    message = `Pada saat Anda berlari di treadmill tadi, mesin mendeteksi adanya sedikit perubahan pada rekam jantung (positif). Namun, karena dari awal profil risiko Anda sangat rendah, kemungkinan bahwa ini adalah penyumbatan jantung sungguhan hanya sekitar ${postProb}%. Seringkali ini adalah 'alarm palsu' (false positive) yang bisa terjadi pada orang sehat.`;
+                    nextStep = "Kita tidak perlu panik. Untuk memastikannya, kita bisa melakukan evaluasi lanjutan atau pemeriksaan lain yang lebih spesifik, tapi saat ini kondisi Anda kemungkinan besar aman.";
+                } else if (probFloat <= 85) {
+                    message = `Hasil tes treadmill Anda hari ini menunjukkan ada tanda-tanda otot jantung kekurangan oksigen saat bekerja keras (positif). Berdasarkan perhitungan, kemungkinan Anda memiliki penyumbatan di pembuluh darah jantung saat ini adalah sekitar ${postProb}%.`;
+                    nextStep = "Angka ini cukup signifikan. Oleh karena itu, saya menyarankan kita melakukan pemeriksaan lanjutan yang lebih jelas untuk melihat anatomi pembuluh darah, seperti CT Scan Jantung (CCTA), agar kita bisa melihat secara langsung apakah benar ada sumbatan dan seberapa parah kondisinya.";
+                } else {
+                    message = `Tes treadmill Anda menunjukkan respon yang sangat jelas bahwa jantung kekurangan suplai darah saat aktivitas (positif). Ditambah dengan keluhan dan faktor risiko Anda, kemungkinan adanya penyumbatan pembuluh darah jantung sangat tinggi, yaitu mencapai ${postProb}%.`;
+                    nextStep = "Ini memerlukan perhatian serius. Langkah terbaik dan tercepat saat ini adalah melakukan Kateterisasi Jantung (Angiografi Koroner). Tindakan ini memungkinkan kita melihat sumbatannya secara langsung dan, jika memungkinkan, langsung memasang ring (stent) untuk membuka alirannya.";
+                }
+            }
+
+            document.getElementById('patient-explanation').innerHTML = `
+                <p class="text-lg leading-relaxed">${message}</p>
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-md mt-4">
+                    <h4 class="font-bold text-blue-800 flex items-center gap-2 mb-2">
+                        <i data-lucide="info" class="w-5 h-5"></i>
+                        Langkah Selanjutnya:
+                    </h4>
+                    <p class="text-blue-900">${nextStep}</p>
+                </div>
+            `;
+
+            lucide.createIcons();
+        }
+
+        // Fungsi Generate PDF Langsung Download
+        function generatePDF() {
+            const btn = document.getElementById('btn-print');
+            const originalText = btn.innerHTML;
+            
+            // Ubah teks tombol jadi loading
+            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Sedang Memproses PDF...`;
+            btn.disabled = true;
+
+            const element = document.getElementById('main-container');
+            const inputPanel = document.getElementById('input-panel');
+            const resultPanel = document.getElementById('result-panel');
+            const printOnlyElements = document.querySelectorAll('.print-only-element');
+            const noPrintElements = document.querySelectorAll('.no-print');
+            const headerContainer = document.getElementById('header-container');
+
+            // --- Manipulasi DOM Sementara Untuk Tampilan PDF ---
+            inputPanel.style.display = 'none'; // Hilangkan input form
+            resultPanel.classList.remove('md:w-2/3'); // Jadikan result full width
+            resultPanel.classList.add('w-full');
+            
+            // Tampilkan Header/Footer khusus cetak
+            printOnlyElements.forEach(el => {
+                el.classList.remove('hidden');
+                el.classList.add('block');
+            });
+            
+            // Hilangkan bagian yang tidak perlu
+            noPrintElements.forEach(el => el.style.display = 'none');
+
+            // Ubah style header jadi putih untuk PDF agar lebih formal
+            headerContainer.classList.remove('bg-slate-800', 'text-white');
+            headerContainer.classList.add('bg-white', 'text-black', 'border-b-2', 'border-slate-800');
+            document.getElementById('header-icon').classList.add('text-slate-800');
+            document.getElementById('header-vault-brand').classList.replace('text-blue-400', 'text-blue-700');
+            document.getElementById('header-subtitle').classList.replace('text-slate-300', 'text-slate-600');
+            document.getElementById('header-dev-label').classList.replace('text-slate-400', 'text-slate-500');
+            document.getElementById('current-date').classList.replace('text-slate-400', 'text-slate-500');
+
+            // Konfigurasi PDF
+            const opt = {
+                margin:       15,
+                filename:     `Laporan_Treadmill_Test_${new Date().getTime()}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Proses generate dan download PDF
+            html2pdf().set(opt).from(element).save().then(() => {
+                // --- Kembalikan UI seperti semula ---
+                inputPanel.style.display = 'block';
+                resultPanel.classList.add('md:w-2/3');
+                resultPanel.classList.remove('w-full');
+                
+                printOnlyElements.forEach(el => {
+                    el.classList.add('hidden');
+                    el.classList.remove('block');
+                });
+                
+                noPrintElements.forEach(el => el.style.display = '');
+
+                headerContainer.classList.add('bg-slate-800', 'text-white');
+                headerContainer.classList.remove('bg-white', 'text-black', 'border-b-2', 'border-slate-800');
+                document.getElementById('header-icon').classList.remove('text-slate-800');
+                document.getElementById('header-vault-brand').classList.replace('text-blue-700', 'text-blue-400');
+                document.getElementById('header-subtitle').classList.replace('text-slate-600', 'text-slate-300');
+                document.getElementById('header-dev-label').classList.replace('text-slate-500', 'text-slate-400');
+                document.getElementById('current-date').classList.replace('text-slate-500', 'text-slate-400');
+
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                lucide.createIcons();
+            });
+        }
+
+        // Initialize App
+        updateUI();
+        calculateAndRender();
+        lucide.createIcons();
+
+    </script>
+</body>
+</html>
