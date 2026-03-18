@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KardioKinetik Pro - Triage ACS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+        
+        /* Hide number input arrows */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-cyan-900">
+
+    <!-- HEADER -->
+    <div class="border-b border-slate-800 bg-slate-900/50 p-6 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row md:items-start justify-between gap-4">
+            <div class="flex-1">
+                <h1 class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 md:h-10 md:w-10 text-cyan-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    <span>KardioKinetik Pro</span>
+                </h1>
+                <p class="text-slate-400 text-sm mt-2 ml-10 md:ml-12 leading-relaxed">
+                    Algoritme Troponin dan CKMB serta Estimasi Onset Berdasar Data Trend Enzim Jantung
+                </p>
+                <p class="text-cyan-600 text-xs mt-2 font-bold tracking-wider uppercase ml-10 md:ml-12">
+                    part of CardiologyVault
+                </p>
+            </div>
+            <div class="text-left md:text-right shrink-0 ml-10 md:ml-4">
+                <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">Developed by</p>
+                <p class="text-sm font-medium text-slate-200 bg-slate-900/80 px-3 py-1.5 rounded-md border border-slate-800 inline-block">
+                    Bayushi Eka Putra, MD, FIHA
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-5xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- LEFT PANEL - INPUTS -->
+        <div class="lg:col-span-1 space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <h2 class="text-lg font-semibold mb-4 text-white flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                    Input Data Enzim
+                </h2>
+                
+                <!-- Enzyme Toggle -->
+                <div class="flex flex-col gap-2 mb-6">
+                    <div class="flex bg-slate-950 rounded-lg p-1 border border-slate-800">
+                        <button id="tab-trop" class="tab-btn flex-1 py-2 text-xs md:text-sm font-medium rounded-md transition-all text-slate-500 hover:text-slate-300" onclick="setEnzyme('Troponin I/T (Konv.)')">Troponin I/T (Konv.)</button>
+                        <button id="tab-ckmb" class="tab-btn flex-1 py-2 text-xs md:text-sm font-medium rounded-md transition-all text-slate-500 hover:text-slate-300" onclick="setEnzyme('CK-MB')">CK-MB</button>
+                    </div>
+                    <button id="tab-hs" class="tab-btn w-full py-2 text-sm font-medium rounded-md transition-all border bg-slate-950 border-slate-800 text-indigo-500/50 hover:text-indigo-400 hover:border-indigo-800" onclick="setEnzyme('hs-Troponin')">
+                        hs-Troponin (ESC 0/1h)
+                    </button>
+                </div>
+
+                <!-- INPUTS KONVENSIONAL -->
+                <div id="input-conv" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Nilai Rujukan / Cut-off (ULN)</label>
+                        <input type="number" id="in-uln" step="0.01" value="0.04" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none transition-all" />
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Data 1 (Awal)</label>
+                            <input type="number" id="in-val1" step="0.01" value="0.2" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none transition-all" />
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Data 2 (Serial)</label>
+                            <input type="number" id="in-val2" step="0.01" value="1.5" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none transition-all" />
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Jeda Waktu (Jam)</label>
+                        <input type="number" id="in-jeda" step="1" value="6" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none transition-all" />
+                    </div>
+                </div>
+
+                <!-- INPUTS HS-TROPONIN -->
+                <div id="input-hs" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Reagen / Assay Lab RS</label>
+                        <select id="in-hs-assay" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all appearance-none"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Jeda Pengambilan Darah Kedua</label>
+                        <select id="in-hs-interval" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all appearance-none" onchange="updateHsIntervalLabel()">
+                            <option value="1">1 Jam (Algoritme ESC 0/1h - Utama)</option>
+                            <option value="2">2 Jam (Algoritme ESC 0/2h - Alternatif)</option>
+                            <option value="3">3 Jam (Algoritme 0/3h - Konvensional)</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Nilai 0 Jam (ng/L)</label>
+                            <input type="number" id="in-hs-val0" step="1" value="10" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" />
+                        </div>
+                        <div>
+                            <label id="lbl-hs-val1" class="block text-xs text-slate-400 mb-1">Nilai 1 Jam (ng/L)</label>
+                            <input type="number" id="in-hs-val1" step="1" value="50" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" />
+                        </div>
+                    </div>
+                    <div class="text-xs text-slate-500 bg-slate-950 p-3 rounded-lg border border-slate-800/50">
+                        ⚠️ Pastikan darah pertama (0 Jam) diambil pada saat pasien tiba di IGD.
+                    </div>
+                </div>
+
+                <button id="btn-analyze" onclick="handleAnalyze()" class="w-full mt-6 text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition-all active:scale-95 flex justify-center items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    Analisis Pasien
+                </button>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL - VISUALIZATION -->
+        <div id="output-panel" class="lg:col-span-2 space-y-6">
+            <!-- Will be populated by JS -->
+        </div>
+
+    </div>
+
+    <script>
+        // --- DATA DICTIONARIES ---
+        const TROPONIN_DATA = [
+            { t: 0, v: 1 }, { t: 4, v: 2 }, { t: 8, v: 5 }, { t: 12, v: 15 },
+            { t: 18, v: 35 }, { t: 24, v: 50 }, { t: 36, v: 46 }, { t: 48, v: 40 },
+            { t: 72, v: 25 }, { t: 96, v: 15 }, { t: 120, v: 8 }
+        ];
+
+        const CKMB_DATA = [
+            { t: 0, v: 1 }, { t: 4, v: 2 }, { t: 8, v: 5 }, { t: 12, v: 12 },
+            { t: 16, v: 18 }, { t: 20, v: 23 }, { t: 24, v: 25 }, { t: 36, v: 12 },
+            { t: 48, v: 5 }, { t: 72, v: 1.5 }, { t: 96, v: 1 }, { t: 120, v: 1 }
+        ];
+
+        const HS_CUTOFFS = {
+            'Abbott (Architect/Alinity TnI-hs)': { 
+                unit: 'ng/L', uln: 26, 
+                limits: {
+                    '1': { ruleOutA: 4, ruleOutB: 5, deltaOut: 2, ruleIn: 64, deltaIn: 6 },
+                    '2': { ruleOutA: 6, ruleOutB: 6, deltaOut: 2, ruleIn: 64, deltaIn: 15 }
+                }
+            },
+            'Roche (Elecsys/Cobas TnT-hs)': { 
+                unit: 'ng/L', uln: 14, 
+                limits: {
+                    '1': { ruleOutA: 5, ruleOutB: 12, deltaOut: 3, ruleIn: 52, deltaIn: 5 },
+                    '2': { ruleOutA: 14, ruleOutB: 14, deltaOut: 4, ruleIn: 52, deltaIn: 10 }
+                }
+            },
+            'Siemens (Centaur/Atellica TnI-hs)': { 
+                unit: 'ng/L', uln: 45, 
+                limits: {
+                    '1': { ruleOutA: 3, ruleOutB: 6, deltaOut: 3, ruleIn: 120, deltaIn: 12 },
+                    '2': { ruleOutA: 6, ruleOutB: 6, deltaOut: 3, ruleIn: 120, deltaIn: 20 }
+                }
+            },
+            'Beckman Coulter (Access TnI-hs)': { 
+                unit: 'ng/L', uln: 18, 
+                limits: {
+                    '1': { ruleOutA: 4, ruleOutB: 5, deltaOut: 4, ruleIn: 50, deltaIn: 15 },
+                    '2': { ruleOutA: 5, ruleOutB: 5, deltaOut: 5, ruleIn: 50, deltaIn: 15 }
+                }
+            }
+        };
+
+        // --- GLOBAL STATE ---
+        let currentEnzyme = 'hs-Troponin';
+        let isAnalyzed = false;
+        let convResult = null;
+        let hsResult = null;
+
+        // --- INITIALIZATION ---
+        window.onload = () => {
+            // Populate HS Select
+            const assaySelect = document.getElementById('in-hs-assay');
+            Object.keys(HS_CUTOFFS).forEach(key => {
+                const opt = document.createElement('option');
+                opt.value = key; opt.text = key;
+                assaySelect.appendChild(opt);
+            });
+            
+            setEnzyme('hs-Troponin');
+            handleAnalyze(); // Auto analyze on load
+        };
+
+        function updateHsIntervalLabel() {
+            const val = document.getElementById('in-hs-interval').value;
+            document.getElementById('lbl-hs-val1').innerText = `Nilai ${val} Jam (ng/L)`;
+        }
+
+        function setEnzyme(type) {
+            currentEnzyme = type;
+            isAnalyzed = false;
+            
+            // Reset Tabs UI
+            document.getElementById('tab-trop').className = `tab-btn flex-1 py-2 text-xs md:text-sm font-medium rounded-md transition-all ${type === 'Troponin I/T (Konv.)' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}`;
+            document.getElementById('tab-ckmb').className = `tab-btn flex-1 py-2 text-xs md:text-sm font-medium rounded-md transition-all ${type === 'CK-MB' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}`;
+            document.getElementById('tab-hs').className = `tab-btn w-full py-2 text-sm font-medium rounded-md transition-all border ${type === 'hs-Troponin' ? 'bg-indigo-900/50 border-indigo-500/50 text-indigo-300 shadow-md' : 'bg-slate-950 border-slate-800 text-indigo-500/50 hover:text-indigo-400 hover:border-indigo-800'}`;
+            
+            // Toggle Inputs
+            if (type === 'hs-Troponin') {
+                document.getElementById('input-conv').classList.add('hidden');
+                document.getElementById('input-hs').classList.remove('hidden');
+                const btn = document.getElementById('btn-analyze');
+                btn.className = "w-full mt-6 text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition-all active:scale-95 flex justify-center items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-indigo-900/20";
+            } else {
+                document.getElementById('input-hs').classList.add('hidden');
+                document.getElementById('input-conv').classList.remove('hidden');
+                const btn = document.getElementById('btn-analyze');
+                btn.className = "w-full mt-6 text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition-all active:scale-95 flex justify-center items-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-cyan-900/20";
+            }
+
+            renderOutputPanel();
+        }
+
+        function handleAnalyze() {
+            if (currentEnzyme === 'hs-Troponin') {
+                calculateHsTroponin();
+            } else {
+                calculateConventional();
+            }
+        }
+
+        // --- MATH LOGIC ---
+        function calculateConventional() {
+            const uln = parseFloat(document.getElementById('in-uln').value);
+            const val1 = parseFloat(document.getElementById('in-val1').value);
+            const val2 = parseFloat(document.getElementById('in-val2').value);
+            const jeda = parseFloat(document.getElementById('in-jeda').value);
+
+            if (!uln || isNaN(val1) || isNaN(val2) || isNaN(jeda)) return;
+
+            const u1 = val1 / uln;
+            const u2 = val2 / uln;
+            
+            let phase = '';
+            let isRising = false;
+            const diff = u2 - u1;
+            const ratio = u2 / u1;
+
+            if (ratio > 1.1) {
+                phase = 'Eskalasi (Rising)';
+                isRising = true;
+            } else if (ratio < 0.9) {
+                phase = 'Resolusi (Falling)';
+                isRising = false;
+            } else {
+                phase = 'Puncak (Peak)';
+                isRising = diff > 0;
+            }
+
+            const dataSet = currentEnzyme === 'Troponin I/T (Konv.)' ? TROPONIN_DATA : CKMB_DATA;
+            const maxV = Math.max(...dataSet.map(d => d.v));
+            const cappedU2 = Math.min(u2, maxV);
+            
+            let t2 = 0;
+            let subset = isRising ? dataSet.filter(d => d.t <= 24) : dataSet.filter(d => d.t >= 24);
+            
+            if (!isRising) {
+                for (let i = 0; i < subset.length - 1; i++) {
+                    if (cappedU2 <= subset[i].v && cappedU2 >= subset[i+1].v) {
+                        let r = (subset[i].v - cappedU2) / (subset[i].v - subset[i+1].v);
+                        t2 = subset[i].t + r * (subset[i+1].t - subset[i].t);
+                        break;
+                    }
+                }
+                if(t2 === 0) t2 = subset[subset.length-1].t; 
+            } else {
+                for (let i = 0; i < subset.length - 1; i++) {
+                    if (cappedU2 >= subset[i].v && cappedU2 <= subset[i+1].v) {
+                        let r = (cappedU2 - subset[i].v) / (subset[i+1].v - subset[i].v);
+                        t2 = subset[i].t + r * (subset[i+1].t - subset[i].t);
+                        break;
+                    }
+                }
+                if(t2 === 0) t2 = subset[0].t;
+            }
+
+            const t1 = Math.max(0, t2 - jeda);
+
+            convResult = {
+                u1, u2, t1, t2, phase,
+                color: currentEnzyme === 'Troponin I/T (Konv.)' ? '#06b6d4' : '#f97316'
+            };
+            isAnalyzed = true;
+            renderOutputPanel();
+        }
+
+        function calculateHsTroponin() {
+            const v0 = parseFloat(document.getElementById('in-hs-val0').value);
+            const v1 = parseFloat(document.getElementById('in-hs-val1').value);
+            const assayKey = document.getElementById('in-hs-assay').value;
+            const intervalStr = document.getElementById('in-hs-interval').value;
+            
+            if (isNaN(v0) || isNaN(v1)) return;
+
+            const assayData = HS_CUTOFFS[assayKey];
+            const delta = v1 - v0;
+            
+            let status = '';
+            let color = '';
+            let desc = '';
+            let limitsUsed = null;
+
+            if (intervalStr === '3') {
+                const uln = assayData.uln;
+                const relativeDelta = (v0 > 0) ? (delta / v0) * 100 : 0;
+                
+                if (v0 < uln && v1 < uln && delta <= 5) {
+                    status = 'RULE-OUT';
+                    color = 'text-emerald-400';
+                    desc = 'Kadar 0h dan 3h stabil di bawah normal (ULN). Risiko NSTEMI rendah. Pertimbangkan diagnosis banding lain.';
+                } else if ((v0 >= uln || v1 >= uln) && (relativeDelta >= 20 || delta >= 15)) {
+                    status = 'RULE-IN';
+                    color = 'text-red-500';
+                    desc = 'Kadar melebihi normal (ULN) dengan lonjakan signifikan pada jam ke-3. Terkonfirmasi NSTEMI/Myocardial Injury akut.';
+                } else {
+                    status = 'OBSERVE';
+                    color = 'text-amber-400';
+                    desc = 'Zona Abu-abu. Kinetik lambat atau samar. Lakukan observasi lanjutan dan cek Echocardiografi.';
+                }
+                limitsUsed = { ruleIn: uln, deltaIn: v0 * 0.2, ruleOutB: uln }; 
+            } else {
+                limitsUsed = assayData.limits[intervalStr];
+                
+                if (v0 < limitsUsed.ruleOutA || (v0 < limitsUsed.ruleOutB && delta < limitsUsed.deltaOut)) {
+                    status = 'RULE-OUT';
+                    color = 'text-emerald-400';
+                    desc = `Risiko NSTEMI sangat rendah (Algoritme ${intervalStr}h). Pertimbangkan diagnosis banding lain atau pulangkan jika GRACE score rendah.`;
+                } else if (v0 >= limitsUsed.ruleIn || delta >= limitsUsed.deltaIn) {
+                    status = 'RULE-IN';
+                    color = 'text-red-500';
+                    desc = `Terkonfirmasi NSTEMI/Myocardial Injury (Algoritme ${intervalStr}h). Masukkan ke ICCU dan siapkan strategi invasif.`;
+                } else {
+                    status = 'OBSERVE';
+                    color = 'text-amber-400';
+                    desc = `Zona Abu-abu. Lakukan evaluasi klinis ulang dan periksa enzim kembali di jam ke-${parseInt(intervalStr) + 1} atau ke-3.`;
+                }
+            }
+
+            hsResult = { v0, v1, delta, status, color, desc, limits: limitsUsed, interval: intervalStr, assay: assayData };
+            isAnalyzed = true;
+            renderOutputPanel();
+        }
+
+        // --- UI RENDERING ---
+        function renderOutputPanel() {
+            const panel = document.getElementById('output-panel');
+            
+            if (currentEnzyme === 'hs-Troponin') {
+                panel.innerHTML = renderHsHTML();
+            } else {
+                panel.innerHTML = renderConvHTML();
+            }
+        }
+
+        function renderHsHTML() {
+            if (!isAnalyzed || !hsResult) {
+                return `
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col h-full">
+                    <h2 class="text-lg font-semibold mb-6 text-white flex items-center justify-between border-b border-slate-800 pb-4">
+                        <span class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                            Triage hs-Troponin ESC Algorithm
+                        </span>
+                    </h2>
+                    <div class="h-[250px] flex flex-col items-center justify-center text-slate-500 border-2 border-dashed border-slate-800 rounded-xl bg-slate-950/50 flex-grow">
+                        <p>Masukkan nilai absolut hs-Troponin untuk melihat Kurva Mikro.</p>
+                    </div>
+                </div>`;
+            }
+
+            const isRuleInTriggered = hsResult.interval === '3' ? hsResult.delta >= 15 : hsResult.delta >= hsResult.limits.deltaIn;
+            const SVG_W = 800; const SVG_H = 350;
+            const PADDING = { top: 40, right: 40, bottom: 40, left: 60 };
+            const GRAPH_W = SVG_W - PADDING.left - PADDING.right;
+            const GRAPH_H = SVG_H - PADDING.top - PADDING.bottom;
+
+            const hsMaxV = Math.max(hsResult.v0, hsResult.v1, hsResult.limits.ruleIn * 1.3, 50);
+            const currentInterval = parseInt(hsResult.interval);
+            const maxMicroHours = currentInterval + 2; 
+            
+            const scaleXHs = (t) => PADDING.left + (t / maxMicroHours) * GRAPH_W; 
+            const scaleYHs = (v) => Math.min(PADDING.top + GRAPH_H, Math.max(PADDING.top, PADDING.top + GRAPH_H - (v / hsMaxV) * GRAPH_H));
+
+            // Generate Grid X
+            let gridXHTML = '';
+            for (let i = 0; i <= maxMicroHours; i++) {
+                gridXHTML += `
+                <g>
+                    <line x1="${scaleXHs(i)}" y1="${PADDING.top}" x2="${scaleXHs(i)}" y2="${SVG_H - PADDING.bottom}" stroke="#1e293b" stroke-width="1" />
+                    <text x="${scaleXHs(i)}" y="${SVG_H - 15}" fill="#64748b" font-size="12" text-anchor="middle">${i} Jam</text>
+                </g>`;
+            }
+
+            const ruleInY = scaleYHs(hsResult.limits.ruleIn);
+            const ruleOutY = scaleYHs(hsResult.limits.ruleOutB);
+            
+            let ruleOutRectHTML = '';
+            if (hsResult.interval !== '3') {
+                ruleOutRectHTML = `
+                <rect x="${PADDING.left}" y="${ruleOutY}" width="${GRAPH_W}" height="${Math.max(0, PADDING.top + GRAPH_H - ruleOutY)}" fill="#10b981" fill-opacity="0.05" />
+                <line x1="${PADDING.left}" y1="${ruleOutY}" x2="${SVG_W - PADDING.right}" y2="${ruleOutY}" stroke="#10b981" stroke-width="1" stroke-dasharray="4 4" />
+                <text x="${SVG_W - PADDING.right - 5}" y="${ruleOutY + 12}" fill="#10b981" font-size="11" text-anchor="end" font-weight="bold">Batas Rule-Out (&lt; ${hsResult.limits.ruleOutB})</text>
+                `;
+            }
+
+            const ruleInText = hsResult.interval === '3' 
+                ? `Batas Rule-In: Kadar > ULN (${hsResult.assay.uln}) & Kenaikan Signifikan`
+                : `Batas Rule-In: Kadar \u2265 ${hsResult.limits.ruleIn} ATAU \u0394 \u2265 ${hsResult.limits.deltaIn}`;
+
+            const badgeColor = hsResult.color.replace('text-', 'border-');
+
+            return `
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col h-full">
+                <h2 class="text-lg font-semibold mb-6 text-white flex items-center justify-between border-b border-slate-800 pb-4">
+                    <span class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        Triage hs-Troponin ESC Algorithm
+                    </span>
+                    <span class="text-sm px-4 py-1 font-bold rounded-full bg-slate-950 border ${badgeColor}/50 ${hsResult.color}">${hsResult.status}</span>
+                </h2>
+
+                <div class="space-y-6 flex flex-col flex-grow justify-between">
+                    <!-- Cards -->
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
+                            <p class="text-xs text-slate-500 mb-1">Nilai 0 Jam</p>
+                            <p class="text-2xl font-bold text-slate-200">${hsResult.v0} <span class="text-sm font-normal">ng/L</span></p>
+                        </div>
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
+                            <p class="text-xs text-slate-500 mb-1">Nilai ${hsResult.interval} Jam</p>
+                            <p class="text-2xl font-bold text-slate-200">${hsResult.v1} <span class="text-sm font-normal">ng/L</span></p>
+                        </div>
+                        
+                        <div class="bg-slate-950 p-3 md:p-4 rounded-xl border text-center relative overflow-hidden flex flex-col justify-center ${isRuleInTriggered ? 'border-red-900/80 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'border-indigo-900/50'}">
+                            <div class="absolute inset-0 ${isRuleInTriggered ? 'bg-red-500/10' : 'bg-indigo-500/5'}"></div>
+                            <p class="text-[10px] md:text-xs mb-1 relative z-10 ${isRuleInTriggered ? 'text-red-400 font-bold' : 'text-indigo-400'}">Delta Perubahan (Δ)</p>
+                            <p class="text-xl md:text-2xl font-bold relative z-10 ${isRuleInTriggered ? 'text-red-400' : 'text-indigo-300'}">
+                                ${hsResult.delta > 0 ? '+' : ''}${hsResult.delta} <span class="text-sm font-normal">ng/L</span>
+                            </p>
+                            ${isRuleInTriggered ? '<div class="absolute top-0 right-0 bg-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-lg rounded-tr-xl">RULE-IN TRIGGER</div>' : ''}
+                        </div>
+                    </div>
+
+                    <!-- SVG Chart -->
+                    <div class="relative overflow-x-auto custom-scrollbar pb-2">
+                        <svg width="${SVG_W}" height="${SVG_H}" class="min-w-[600px] w-full bg-slate-950 rounded-xl shadow-inner border border-slate-800/50">
+                            <!-- Rule In Zone -->
+                            <rect x="${PADDING.left}" y="${PADDING.top}" width="${GRAPH_W}" height="${Math.max(0, ruleInY - PADDING.top)}" fill="#ef4444" fill-opacity="0.05" />
+                            <line x1="${PADDING.left}" y1="${ruleInY}" x2="${SVG_W - PADDING.right}" y2="${ruleInY}" stroke="#ef4444" stroke-width="1" stroke-dasharray="4 4" />
+                            <text x="${SVG_W - PADDING.right - 5}" y="${ruleInY - 8}" fill="#ef4444" font-size="11" text-anchor="end" font-weight="bold">${ruleInText}</text>
+                            
+                            <!-- Rule Out Zone -->
+                            ${ruleOutRectHTML}
+                            
+                            <!-- Grids -->
+                            ${gridXHTML}
+
+                            <!-- Labels -->
+                            <text x="${SVG_W / 2}" y="${SVG_H - 2}" fill="#94a3b8" font-size="12" text-anchor="middle" font-weight="500">Jendela Observasi Mikro (Jam)</text>
+                            <text x="15" y="${SVG_H / 2}" fill="#94a3b8" font-size="12" text-anchor="middle" transform="rotate(-90 15 ${SVG_H/2})" font-weight="500">Kadar (ng/L)</text>
+
+                            <!-- Trajectory -->
+                            <line x1="${scaleXHs(0)}" y1="${scaleYHs(hsResult.v0)}" x2="${scaleXHs(currentInterval)}" y2="${scaleYHs(hsResult.v1)}" stroke="#818cf8" stroke-width="3" />
+                            <line x1="${scaleXHs(currentInterval)}" y1="${scaleYHs(hsResult.v1)}" x2="${scaleXHs(currentInterval + 2)}" y2="${scaleYHs(hsResult.v1 + (hsResult.delta * 2))}" stroke="#818cf8" stroke-width="2" stroke-dasharray="6 4" stroke-opacity="0.5" />
+
+                            <!-- Points -->
+                            <circle cx="${scaleXHs(0)}" cy="${scaleYHs(hsResult.v0)}" r="5" fill="#0f172a" stroke="#818cf8" stroke-width="3" />
+                            <text x="${scaleXHs(0) - 10}" y="${scaleYHs(hsResult.v0) - 10}" fill="#cbd5e1" font-size="12" text-anchor="end" font-weight="bold">0h (${hsResult.v0})</text>
+
+                            <circle cx="${scaleXHs(currentInterval)}" cy="${scaleYHs(hsResult.v1)}" r="6" fill="#818cf8" />
+                            <text x="${scaleXHs(currentInterval) - 10}" y="${scaleYHs(hsResult.v1) - 15}" fill="#fff" font-size="12" text-anchor="middle" font-weight="bold">${currentInterval}h (${hsResult.v1})</text>
+                            
+                            <!-- Delta Text -->
+                            <text x="${scaleXHs(currentInterval / 2)}" y="${scaleYHs((hsResult.v0 + hsResult.v1)/2) - 10}" fill="${isRuleInTriggered ? "#ef4444" : "#a5b4fc"}" font-size="12" text-anchor="middle" font-weight="bold">
+                                Δ ${hsResult.delta > 0 ? '+' : ''}${hsResult.delta} ${isRuleInTriggered ? '(⚠️ Rule-In!)' : ''}
+                            </text>
+                        </svg>
+                    </div>
+
+                    <!-- Interpretation -->
+                    <div class="rounded-xl p-5 border bg-slate-950 relative ${hsResult.status === 'RULE-IN' ? 'border-red-900/50' : hsResult.status === 'RULE-OUT' ? 'border-emerald-900/50' : 'border-amber-900/50'}">
+                        <div class="absolute top-0 left-0 w-1 h-full rounded-l-xl ${hsResult.status === 'RULE-IN' ? 'bg-red-500' : hsResult.status === 'RULE-OUT' ? 'bg-emerald-500' : 'bg-amber-500'}"></div>
+                        <h3 class="text-lg font-bold mb-2 ${hsResult.color}">Tindakan Klinis: ${hsResult.status}</h3>
+                        <p class="text-slate-300 text-sm leading-relaxed">${hsResult.desc}</p>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function renderConvHTML() {
+            if (!isAnalyzed || !convResult) {
+                return `
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                    <h2 class="text-lg font-semibold mb-6 text-white flex items-center justify-between">
+                        <span>Pemetaan Kinetik Enzim (Makroskopis)</span>
+                    </h2>
+                    <div class="h-[350px] flex flex-col items-center justify-center text-slate-500 border-2 border-dashed border-slate-800 rounded-xl bg-slate-950/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-3 opacity-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                        <p>Masukkan data enzim serial untuk melihat trajektori berhari-hari.</p>
+                    </div>
+                </div>`;
+            }
+
+            const SVG_W = 800; const SVG_H = 350;
+            const PADDING = { top: 40, right: 40, bottom: 40, left: 60 };
+            const GRAPH_W = SVG_W - PADDING.left - PADDING.right;
+            const GRAPH_H = SVG_H - PADDING.top - PADDING.bottom;
+
+            const scaleXConv = (t) => PADDING.left + (t / 120) * GRAPH_W;
+            const maxIdealV = currentEnzyme === 'Troponin I/T (Konv.)' ? 50 : 25;
+            const renderMaxVConv = Math.max(maxIdealV, convResult.u1, convResult.u2) * 1.1; 
+            const scaleYConv = (v) => PADDING.top + GRAPH_H - (v / renderMaxVConv) * GRAPH_H;
+
+            const dataSet = currentEnzyme === 'Troponin I/T (Konv.)' ? TROPONIN_DATA : CKMB_DATA;
+            let idealPath = `M ${scaleXConv(dataSet[0].t)} ${scaleYConv(dataSet[0].v)}`;
+            for (let i = 1; i < dataSet.length; i++) {
+                let prev = dataSet[i-1];
+                let curr = dataSet[i];
+                let midX = (scaleXConv(prev.t) + scaleXConv(curr.t)) / 2;
+                idealPath += ` C ${midX} ${scaleYConv(prev.v)}, ${midX} ${scaleYConv(curr.v)}, ${scaleXConv(curr.t)} ${scaleYConv(curr.v)}`;
+            }
+
+            let gridXHTML = '';
+            [0, 24, 48, 72, 96, 120].forEach(t => {
+                gridXHTML += `
+                <g>
+                    <line x1="${scaleXConv(t)}" y1="${PADDING.top}" x2="${scaleXConv(t)}" y2="${SVG_H - PADDING.bottom}" stroke="#1e293b" stroke-width="1" stroke-dasharray="4 4" />
+                    <text x="${scaleXConv(t)}" y="${SVG_H - 15}" fill="#64748b" font-size="12" text-anchor="middle">${t}h</text>
+                </g>`;
+            });
+
+            let gridYHTML = '';
+            [0, 20, 40, 60].filter(v => v <= renderMaxVConv).forEach(v => {
+                gridYHTML += `
+                <g>
+                    <line x1="${PADDING.left}" y1="${scaleYConv(v)}" x2="${SVG_W - PADDING.right}" y2="${scaleYConv(v)}" stroke="#1e293b" stroke-width="1" />
+                    <text x="${PADDING.left - 10}" y="${scaleYConv(v) + 4}" fill="#64748b" font-size="12" text-anchor="end">${v}x</text>
+                </g>`;
+            });
+
+            const isEscalation = convResult.phase.includes('Eskalasi');
+            const isResolution = convResult.phase.includes('Resolusi');
+            
+            let adviceHTML = '';
+            if (isEscalation) {
+                adviceHTML = `
+                <p><strong>Analisis:</strong> Kadar ${currentEnzyme} menunjukkan kurva positif (naik dari ${convResult.u1.toFixed(1)}x menjadi ${convResult.u2.toFixed(1)}x ULN). Ini menempatkan pasien pada <strong>fase akut pra-puncak</strong>.</p>
+                <p><strong>Tindakan RS Tipe C/D:</strong> Waktu sangat berharga (<em>Time is Muscle</em>). Jika pasien masih mengeluhkan nyeri dada, pertimbangkan segera strategi reperfusi.</p>`;
+            } else if (isResolution) {
+                adviceHTML = `
+                <p><strong>Analisis:</strong> Kadar ${currentEnzyme} menunjukkan penurunan. Pasien diperkirakan sudah melewati fase puncak (<strong>Late Presentation / &gt;24 Jam</strong>).</p>
+                <p><strong>Tindakan RS Tipe C/D:</strong> Reperfusi akut mungkin tidak lagi memberikan <em>benefit</em> maksimal. Fokus pada terapi medikamentosa optimal (Obrs, DAPT, Statin).</p>`;
+            } else {
+                adviceHTML = `<p>Kadar menetap pada nilai tinggi. Evaluasi keluhan nyeri persisten atau instabilitas hemodinamik.</p>`;
+            }
+
+            return `
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                <h2 class="text-lg font-semibold mb-6 text-white flex items-center justify-between">
+                    <span>Pemetaan Kinetik Enzim (Makroskopis)</span>
+                    <span class="text-xs px-3 py-1 rounded-full bg-slate-950 border ${isEscalation ? 'border-red-500/50 text-red-400' : 'border-emerald-500/50 text-emerald-400'}">${convResult.phase}</span>
+                </h2>
+
+                <div class="relative overflow-x-auto custom-scrollbar pb-4">
+                    <svg width="${SVG_W}" height="${SVG_H}" class="min-w-[600px] w-full bg-slate-950 rounded-xl shadow-inner border border-slate-800/50">
+                        ${gridXHTML}
+                        ${gridYHTML}
+                        
+                        <text x="${SVG_W / 2}" y="${SVG_H - 2}" fill="#94a3b8" font-size="12" text-anchor="middle" font-weight="500">Waktu Pasca Onset (Jam)</text>
+                        <text x="15" y="${SVG_H / 2}" fill="#94a3b8" font-size="12" text-anchor="middle" transform="rotate(-90 15 ${SVG_H/2})" font-weight="500">Kelipatan Normal (x ULN)</text>
+
+                        <path d="${idealPath}" fill="none" stroke="${convResult.color}" stroke-width="3" stroke-opacity="0.2" stroke-dasharray="8 4" />
+
+                        <line x1="${scaleXConv(convResult.t1)}" y1="${scaleYConv(convResult.u1)}" x2="${scaleXConv(convResult.t2)}" y2="${scaleYConv(convResult.u2)}" stroke="${convResult.color}" stroke-width="3" />
+
+                        <circle cx="${scaleXConv(convResult.t1)}" cy="${scaleYConv(convResult.u1)}" r="6" fill="#0f172a" stroke="${convResult.color}" stroke-width="3" />
+                        <text x="${scaleXConv(convResult.t1)}" y="${scaleYConv(convResult.u1) - 15}" fill="#cbd5e1" font-size="12" text-anchor="middle" font-weight="bold">D1</text>
+                        
+                        <circle cx="${scaleXConv(convResult.t2)}" cy="${scaleYConv(convResult.u2)}" r="6" fill="${convResult.color}" />
+                        <text x="${scaleXConv(convResult.t2)}" y="${scaleYConv(convResult.u2) - 15}" fill="#fff" font-size="12" text-anchor="middle" font-weight="bold">D2</text>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="rounded-2xl p-6 border ${isEscalation ? 'bg-red-950/20 border-red-900/50' : 'bg-emerald-950/20 border-emerald-900/50'}">
+                <h3 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    Interpretasi Klinis & Prediksi Onset
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="bg-slate-900/50 rounded-lg p-4 border border-slate-800">
+                        <p class="text-slate-400 text-sm mb-1">Status Kinetik</p>
+                        <p class="text-xl font-bold ${isEscalation ? 'text-red-400' : 'text-emerald-400'}">${convResult.phase}</p>
+                    </div>
+                    <div class="bg-slate-900/50 rounded-lg p-4 border border-slate-800">
+                        <p class="text-slate-400 text-sm mb-1">Estimasi Jam Ke-</p>
+                        <p class="text-xl font-bold text-white">~ ${Math.round(convResult.t2)} Jam <span class="text-sm font-normal text-slate-400">pasca onset</span></p>
+                    </div>
+                </div>
+
+                <div class="text-slate-300 text-sm leading-relaxed space-y-2">
+                    ${adviceHTML}
+                </div>
+            </div>`;
+        }
+    </script>
+</body>
+</html>
