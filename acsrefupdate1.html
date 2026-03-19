@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ACS Referral Assistant - Part of CardiologyVault</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- React & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Babel (to compile JSX in browser) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Custom CSS Animations -->
+  <style>
+    @keyframes fade-in-up {
+      0% { opacity: 0; transform: translateY(15px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in-up {
+      animation: fade-in-up 0.3s ease-out forwards;
+    }
+
+    @keyframes toast-in {
+      0% { opacity: 0; transform: translate(-50%, 20px); }
+      100% { opacity: 1; transform: translate(-50%, 0); }
+    }
+    .animate-toast-in {
+      animation: toast-in 0.3s ease-out forwards;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body>
+  <!-- Root element for React -->
+  <div id="root"></div>
+
+  <!-- React Application Code -->
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    function App() {
+      // --- STATE MANAGEMENT ---
+      const [hospitalName, setHospitalName] = useState('RSUD Rujukan');
+      const [doctorName, setDoctorName] = useState('dr. Bayushi Eka Putra'); // Personalized default
+
+      // Patient Info & Vitals
+      const [patient, setPatient] = useState({
+        name: '',
+        age: '',
+        gender: 'L',
+        td: '',
+        hr: '',
+        rr: '',
+        spo2: '',
+        ecgDesc: 'Sinus rhythm, ST elevasi (-)'
+      });
+
+      // PQRST Assessment
+      const [pqrst, setPqrst] = useState({
+        p: 'Muncul saat aktivitas, tidak hilang dengan istirahat',
+        q: 'Terasa seperti tertindih beban berat / diremas',
+        r: 'Dada kiri menjalar ke lengan kiri dan leher',
+        s: 'Disertai keringat dingin dan mual',
+        t: 'Berlangsung terus-menerus > 20 menit'
+      });
+
+      // Scoring System Selection
+      const [activeScoreType, setActiveScoreType] = useState('MARBURG');
+
+      // HEART Score Components
+      const [heartHistory, setHeartHistory] = useState(0);
+      const [heartEcg, setHeartEcg] = useState(0);
+      const [riskFactors, setRiskFactors] = useState({
+        ht: false, dm: false, smoker: false, obese: false, lipid: false, fhx: false, cadHx: false
+      });
+      const [heartTroponin, setHeartTroponin] = useState(0);
+
+      // Marburg Score Components
+      const [marburg, setMarburg] = useState({
+        vascular: false,   
+        exercise: false,   
+        palpation: false,  
+        belief: false      
+      });
+
+      // Initial Treatment
+      const [treatments, setTreatments] = useState({
+        aspirin: false, clopidogrel: false, isdn: false, o2: false, ivline: false
+      });
+      const [otherTreatment, setOtherTreatment] = useState('');
+
+      // UI States
+      const [toastMessage, setToastMessage] = useState('');
+      const [isCopied, setIsCopied] = useState(false); 
+
+      // --- ECG SIMULATOR DATA & STATES ---
+      const ecgPatternsData = {
+        'normal': { 
+            name: 'Normal / Non-Diagnostic', ste: [], std: [], tPeak: [], tInv: [],
+            artery: 'Tidak ada tanda oklusi akut epikardial', 
+            warning: 'Tetap evaluasi klinis. Pertimbangkan Unstable Angina (UAP) atau NSTEMI. Cek enzim jantung serial.' 
+        },
+        'anterior': { 
+            name: 'Anterior STEMI', ste: ['V1', 'V2', 'V3', 'V4'], std: ['II', 'III', 'aVF'], tPeak: [], tInv: [],
+            artery: 'LAD (Left Anterior Descending)', 
+            warning: '⚠️ Risiko tinggi! Menyerang dinding depan ventrikel kiri. Sering memicu syok kardiogenik, letal aritmia (VT/VF), dan gagal jantung (HFrEF). Segera reperfusi!' 
+        },
+        'inferior': { 
+            name: 'Inferior STEMI', ste: ['II', 'III', 'aVF'], std: ['I', 'aVL'], tPeak: [], tInv: [],
+            artery: 'RCA (Right Coronary Artery) 80% / LCx 20%', 
+            warning: '🛑 KONTRAINDIKASI NITRAT jika curiga Infark RV! Selalu rekam sandapan kanan (V3R, V4R). Jika RV infark (+), pemberian ISDN memicu hipotensi mematikan. Waspada Bradikardia/Total AV Block.' 
+        },
+        'lateral': { 
+            name: 'Lateral STEMI', ste: ['I', 'aVL', 'V5', 'V6'], std: ['II', 'III', 'aVF'], tPeak: [], tInv: [],
+            artery: 'LCx (Left Circumflex) atau Diagonal dari LAD', 
+            warning: 'Mengindikasikan kerusakan dinding samping ventrikel kiri. Sering datang bersamaan dengan infark Anterior (menjadi Anterolateral) atau Inferior.' 
+        },
+        'posterior': { 
+            name: 'Posterior STEMI', ste: ['V7', 'V8', 'V9'], std: ['V1', 'V2', 'V3'], tPeak: [], tInv: [],
+            artery: 'LCx atau RCA', 
+            warning: '🔍 EKG 12-lead standar mungkin HANYA menunjukkan ST Depresi V1-V3 (gambar cermin) + gelombang R tinggi. WAJIB pasang lead punggung (V7-V9) untuk membuktikan adanya ST Elevasi tersembunyi.' 
+        },
+        'anterolateral': { 
+            name: 'Ekstensif Anterolateral STEMI', ste: ['V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'I', 'aVL'], std: ['II', 'III', 'aVF'], tPeak: [], tInv: [],
+            artery: 'Proximal LAD atau LMA (Left Main Artery)', 
+            warning: '💀 "Widow-Maker" Lesion. Oklusi terjadi sangat pangkal, mematikan suplai darah hampir ke seluruh ventrikel kiri. Prognosis sangat buruk jika telat direperfusi. Siapkan DC Shock!' 
+        },
+        'lma': {
+            name: 'aVR STE + Global STD (LMA/TVD)', ste: ['aVR', 'V1'], std: ['I', 'II', 'III', 'aVF', 'V4', 'V5', 'V6'], tPeak: [], tInv: [],
+            artery: 'Left Main (LMA) atau Triple Vessel Disease (TVD)',
+            warning: '🚨 Iskemia subendokardial global pekat! Pasien berada di ambang kolaps (risiko henti jantung mendadak). Konsul bedah untuk CABG emergensi atau siapkan PCI kompleks risiko tinggi.'
+        },
+        'hatw': {
+            name: 'Hyperacute T Waves (OMI)', ste: [], std: [], tPeak: ['V2', 'V3', 'V4', 'V5'], tInv: [],
+            artery: 'LAD atau RCA (Fase Hiperakut)',
+            warning: '⏱️ Tanda OMI sangat awal, muncul SEBELUM ST Elevasi! Gelombang T terlihat tinggi, asimetris, dan basisnya lebar (membengkak). Jangan dipulangkan, ulang EKG 15-30 menit!'
+        },
+        'dewinter': {
+            name: 'De Winter Syndrome (OMI)', ste: ['aVR'], std: ['V2', 'V3', 'V4', 'V5', 'V6'], tPeak: ['V2', 'V3', 'V4', 'V5', 'V6'], tInv: [],
+            artery: 'Proximal LAD (Ekuivalen STEMI)',
+            warning: '🚨 Ekuivalen STEMI Anterior! Ciri khas: ST Depresi upsloping di prekordial yang langsung diikuti gelombang T tinggi dan simetris. Tatalaksana identik dengan STEMI, butuh Cath Lab segera!'
+        },
+        'wellens': {
+            name: 'Wellens Syndrome (OMI)', ste: [], std: [], tPeak: [], tInv: ['V2', 'V3', 'V4'],
+            artery: 'Proximal LAD (Stenosis Kritis)',
+            warning: '⚠️ Ditemukan justru saat pasien SEDANG BEBAS NYERI dada. Berupa T Inversi dalam atau bifasik di V2-V3. Berisiko tinggi infark anterior masif dalam waktu dekat. KONTRAINDIKASI mutlak untuk Treadmill Test!'
+        }
+      };
+      const [activeEcgPattern, setActiveEcgPattern] = useState('normal');
+
+      // --- CALCULATIONS ---
+
+      // HEART Score Calculations
+      const ageScore = useMemo(() => {
+        const ageNum = parseInt(patient.age);
+        if (isNaN(ageNum)) return 0;
+        if (ageNum >= 65) return 2;
+        if (ageNum >= 45) return 1;
+        return 0;
+      }, [patient.age]);
+
+      const riskScore = useMemo(() => {
+        if (riskFactors.cadHx) return 2;
+        let count = 0;
+        if (riskFactors.ht) count++;
+        if (riskFactors.dm) count++;
+        if (riskFactors.smoker) count++;
+        if (riskFactors.obese) count++;
+        if (riskFactors.lipid) count++;
+        if (riskFactors.fhx) count++;
+
+        if (count >= 3) return 2;
+        if (count >= 1) return 1;
+        return 0;
+      }, [riskFactors]);
+
+      const totalHeartScore = heartHistory + heartEcg + ageScore + riskScore + heartTroponin;
+      const heartCategory = useMemo(() => {
+        if (totalHeartScore <= 3) return 'Low Risk (Bisa observasi/pulang bila klinis baik)';
+        if (totalHeartScore <= 6) return 'Moderate Risk (Indikasi kuat rawat inap / rujuk)';
+        return 'High Risk (Indikasi mutlak rujuk & tatalaksana invasif)';
+      }, [totalHeartScore]);
+
+      // Marburg Score Calculations
+      const marburgAgeGenderScore = useMemo(() => {
+        const ageNum = parseInt(patient.age);
+        if (isNaN(ageNum)) return 0;
+        if (patient.gender === 'L' && ageNum >= 55) return 1;
+        if (patient.gender === 'P' && ageNum >= 65) return 1;
+        return 0;
+      }, [patient.age, patient.gender]);
+
+      const totalMarburgScore = useMemo(() => {
+        let score = marburgAgeGenderScore;
+        if (marburg.vascular) score++;
+        if (marburg.exercise) score++;
+        if (marburg.palpation) score++;
+        if (marburg.belief) score++;
+        return score;
+      }, [marburgAgeGenderScore, marburg]);
+
+      const marburgCategory = useMemo(() => {
+        if (totalMarburgScore <= 2) return 'Probabilitas Rendah (Cari penyebab non-kardiak)';
+        return 'Probabilitas Tinggi PJK (Indikasi EKG & Rujuk RS)';
+      }, [totalMarburgScore]);
+
+      // --- HANDLERS ---
+      const handlePatientChange = (e) => {
+        setPatient({ ...patient, [e.target.name]: e.target.value });
+      };
+
+      const handlePqrstChange = (e) => {
+        setPqrst({ ...pqrst, [e.target.name]: e.target.value });
+      };
+
+      const toggleRiskFactor = (key) => setRiskFactors({ ...riskFactors, [key]: !riskFactors[key] });
+      const toggleMarburg = (key) => setMarburg({ ...marburg, [key]: !marburg[key] });
+      const toggleTreatment = (key) => setTreatments({ ...treatments, [key]: !treatments[key] });
+
+      const handleEcgSimulatorSelect = (key) => {
+        setActiveEcgPattern(key);
+        const pattern = ecgPatternsData[key];
+        
+        // Auto-generate ECG description
+        let desc = pattern.name;
+        if (pattern.ste?.length > 0) desc += `, STE di ${pattern.ste.join(', ')}`;
+        if (pattern.std?.length > 0) desc += `, STD di ${pattern.std.join(', ')}`;
+        if (pattern.tPeak?.length > 0) desc += `, T Peak di ${pattern.tPeak.join(', ')}`;
+        if (pattern.tInv?.length > 0) desc += `, T Inversi di ${pattern.tInv.join(', ')}`;
+        
+        setPatient({ ...patient, ecgDesc: desc });
+
+        // Auto update HEART Score ECG component
+        if (key !== 'normal') {
+            setHeartEcg(2); // Auto set to high risk ECG for all OMI/STEMI variants
+        } else {
+            setHeartEcg(0);
+        }
+      };
+
+      const showToast = (msg) => {
+        setToastMessage(msg);
+        setTimeout(() => setToastMessage(''), 3000);
+      };
+
+      // Generate the final letter text
+      const generateLetterText = () => {
+        const activeTreatments = Object.entries(treatments)
+          .filter(([_, val]) => val)
+          .map(([key]) => {
+            const labels = { aspirin: 'Aspirin (Kunyah)', clopidogrel: 'Clopidogrel', isdn: 'ISDN Sublingual', o2: 'Oksigen', ivline: 'IV Line (Akses Vena)' };
+            return labels[key];
+          });
+        if (otherTreatment) activeTreatments.push(otherTreatment);
+        const txText = activeTreatments.length > 0 ? activeTreatments.map(t => `- ${t}`).join('\n') : '- Belum ada obat spesifik yang diberikan';
+
+        let scoringSection = '';
+        if (activeScoreType === 'HEART') {
+            const activeRiskFactors = Object.entries(riskFactors)
+            .filter(([key, val]) => val && key !== 'cadHx')
+            .map(([key]) => {
+              const labels = { ht: 'Hipertensi', dm: 'Diabetes', smoker: 'Perokok', obese: 'Obesitas', lipid: 'Dislipidemia', fhx: 'Riwayat Klg CAD' };
+              return labels[key];
+            });
+          if (riskFactors.cadHx) activeRiskFactors.unshift('Riwayat PJK/CAD');
+          const riskText = activeRiskFactors.length > 0 ? activeRiskFactors.join(', ') : 'Tidak ada penyerta nyata';
+
+          scoringSection = `Stratifikasi Risiko (HEART Score):
+- Skor Total: ${totalHeartScore} (Kategori: ${heartCategory.split(' (')[0]})
+- Rincian: History(${heartHistory}), ECG(${heartEcg}), Age(${ageScore}), RiskFactors(${riskScore}), Troponin(${heartTroponin})
+- Faktor Risiko: ${riskText}`;
+        } else {
+          scoringSection = `Stratifikasi Klinis (Marburg Heart Score):
+- Skor Total: ${totalMarburgScore}/5 (Kategori: ${marburgCategory.split(' (')[0]})
+- Rincian Poin:
+  * Usia/JK (${marburgAgeGenderScore})
+  * Riw. Vaskuler (${marburg.vascular ? 1 : 0})
+  * Nyeri aktivitas (${marburg.exercise ? 1 : 0})
+  * Nyeri Tdk Direproduksi Palpasi (${marburg.palpation ? 1 : 0})
+  * Firasat pasien PJK (${marburg.belief ? 1 : 0})`;
+        }
+
+        return `Yth. TS Dokter Jaga IGD ${hospitalName}
+
+Mohon evaluasi lanjutan dan tatalaksana pasien ${patient.name || '[Nama Pasien]'} (${patient.age || '[Usia]'} th, ${patient.gender === 'L' ? 'Laki-laki' : 'Perempuan'}) dengan Suspek Sindrom Koroner Akut (dd/ UAP, NSTEMI, STEMI/OMI).
+
+Anamnesis (PQRST):
+P: ${pqrst.p}
+Q: ${pqrst.q}
+R: ${pqrst.r}
+S: ${pqrst.s}
+T: ${pqrst.t}
+
+Pemeriksaan Fisik & Penunjang:
+- TTV: TD: ${patient.td || '-'} mmHg, HR: ${patient.hr || '-'} x/m, RR: ${patient.rr || '-'} x/m, SpO2: ${patient.spo2 || '-'}%
+- EKG: ${patient.ecgDesc}
+
+${scoringSection}
+
+Tatalaksana Awal di Faskes 1:
+${txText}
+
+Dirujuk untuk tatalaksana komprehensif (observasi klinis, EKG serial, pemeriksaan marka jantung, atau tindakan revaskularisasi emergensi) karena keterbatasan fasilitas di faskes kami. Atas bantuan TS, kami ucapkan terima kasih.
+
+Salam Sejawat,
+${doctorName}`;
+      };
+
+      const copyToClipboard = () => {
+        const text = generateLetterText();
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          setIsCopied(true);
+          showToast('Surat rujukan berhasil disalin ke clipboard!');
+          setTimeout(() => {
+            setIsCopied(false);
+          }, 2500);
+        } catch (err) {
+          console.error('Failed to copy', err);
+          showToast('Gagal menyalin text. Silakan blok dan copy manual.');
+        }
+        document.body.removeChild(textArea);
+      };
+
+      const sendViaWhatsApp = () => {
+        const text = generateLetterText();
+        const encodedText = encodeURIComponent(text);
+        // Menggunakan API wa.me agar otomatis membuka app WA di HP atau WA Web di PC
+        const waUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
+        window.open(waUrl, '_blank');
+      };
+
+      // Helper to render an individual ECG Lead box in the simulator
+      const renderSimulatorLead = (leadName) => {
+        const pattern = ecgPatternsData[activeEcgPattern];
+        const isSte = pattern.ste?.includes(leadName);
+        const isStd = pattern.std?.includes(leadName);
+        const isTPeak = pattern.tPeak?.includes(leadName);
+        const isTInv = pattern.tInv?.includes(leadName);
+        
+        let boxClasses = "p-1 sm:p-2 rounded-lg border-2 text-center font-bold flex flex-col justify-center items-center h-14 sm:h-16 transition-all duration-300 relative overflow-hidden ";
+        let iconHtml = null;
+
+        if (isSte) {
+            boxClasses += "bg-red-600 border-red-800 text-white shadow-[0_0_15px_rgba(220,38,38,0.7)] animate-pulse scale-105 z-10";
+            iconHtml = <i className="fas fa-arrow-up mt-1 text-xs sm:text-sm text-red-200"></i>;
+        } else if (isStd && isTPeak) {
+            // De Winter combined UI
+            boxClasses += "bg-gradient-to-b from-blue-600 to-orange-500 border-slate-700 text-white shadow-[0_0_10px_rgba(249,115,22,0.4)] scale-[1.02] z-10";
+            iconHtml = (
+                <div className="flex items-center gap-1 mt-1">
+                    <i className="fas fa-arrow-down text-[10px] sm:text-xs text-blue-200"></i>
+                    <i className="fas fa-mountain text-[10px] sm:text-xs text-orange-200"></i>
+                </div>
+            );
+        } else if (isStd) {
+            boxClasses += "bg-blue-600 border-blue-800 text-white shadow-inner";
+            iconHtml = <i className="fas fa-arrow-down mt-1 text-xs sm:text-sm text-blue-200"></i>;
+        } else if (isTPeak) {
+            boxClasses += "bg-orange-500 border-orange-700 text-white shadow-[0_0_10px_rgba(249,115,22,0.5)] animate-pulse";
+            iconHtml = <i className="fas fa-mountain mt-1 text-xs sm:text-sm text-orange-200"></i>;
+        } else if (isTInv) {
+            boxClasses += "bg-purple-600 border-purple-800 text-white shadow-inner";
+            iconHtml = <i className="fas fa-angle-double-down mt-1 text-xs sm:text-sm text-purple-200"></i>;
+        } else {
+            boxClasses += "bg-slate-50 border-slate-200 text-slate-500";
+            iconHtml = <i className="fas fa-minus mt-1 text-[10px] sm:text-xs text-slate-300 opacity-50"></i>;
+        }
+
+        return (
+            <div key={leadName} className={boxClasses}>
+                <span className="text-xs sm:text-sm z-10">{leadName}</span>
+                <div className="z-10">{iconHtml}</div>
+            </div>
+        );
+      };
+
+      // --- RENDER ---
+      const inputClass = "w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none";
+      const labelClass = "block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide";
+
+      return (
+        <div className="min-h-screen bg-slate-100 text-slate-800 font-sans pb-20 md:pb-8">
+          
+          {/* Navbar */}
+          <header className="bg-blue-700 text-white p-4 shadow-md sticky top-0 z-20">
+            <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-2">
+              <div className="flex items-center gap-3">
+                <i className="fas fa-heartbeat text-red-400" style={{ fontSize: '28px' }}></i>
+                <h1 className="text-xl md:text-2xl font-bold tracking-tight leading-tight">
+                  ACS Referral Assistant <br className="block sm:hidden" />
+                  <span className="text-sm md:text-lg font-medium text-blue-200 block sm:inline sm:ml-2">Part of CardiologyVault</span>
+                </h1>
+              </div>
+              <div className="text-blue-200 text-xs sm:text-sm font-medium tracking-wide md:text-right mt-1 md:mt-0">
+                Developed by <span className="text-white font-bold">Bayushi Eka Putra, MD, FIHA</span>
+                <div className="text-[10px] sm:text-xs text-blue-300 mt-0.5"><i className="fas fa-history mr-1"></i>Updated: 20 March 2026</div>
+              </div>
+            </div>
+          </header>
+
+          {/* Main Content */}
+          <main className="max-w-6xl mx-auto mt-4 sm:mt-6 px-3 sm:px-4 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+            
+            {/* LEFT COLUMN: INPUT FORMS */}
+            <div className="lg:col-span-7 space-y-4 sm:space-y-6">
+              
+              {/* Section: Setting Rujukan */}
+              <section className="bg-white p-4 sm:p-5 md:p-6 rounded-xl shadow-sm border border-slate-200">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelClass}>Nama Dokter Perujuk</label>
+                    <input type="text" value={doctorName} onChange={(e) => setDoctorName(e.target.value)} className={inputClass} />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Tujuan RS Rujukan</label>
+                    <input type="text" value={hospitalName} onChange={(e) => setHospitalName(e.target.value)} className={inputClass} />
+                  </div>
+                </div>
+              </section>
+
+              {/* Section: Data Pasien & TTV */}
+              <section className="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-slate-200">
+                <h2 className="text-lg font-bold flex items-center gap-2 mb-5 text-slate-800 border-b pb-3">
+                  <i className="fas fa-wave-square text-blue-600" style={{ fontSize: '20px' }}></i> Triage & Vitals
+                </h2>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="col-span-2 sm:col-span-2">
+                    <label className={labelClass}>Nama Pasien</label>
+                    <input type="text" name="name" value={patient.name} onChange={handlePatientChange} placeholder="Inisial/Nama" className={inputClass} />
+                  </div>
+                  <div className="col-span-1">
+                    <label className={labelClass}>Usia (Thn)</label>
+                    <input type="number" name="age" value={patient.age} onChange={handlePatientChange} placeholder="55" className={inputClass} />
+                  </div>
+                  <div className="col-span-1">
+                    <label className={labelClass}>Gender</label>
+                    <select name="gender" value={patient.gender} onChange={handlePatientChange} className={`${inputClass} bg-white cursor-pointer`}>
+                      <option value="L">Laki-laki</option>
+                      <option value="P">Perempuan</option>
+                    </select>
+                  </div>
+                  
+                  <div className="col-span-1">
+                    <label className={labelClass}>TD (mmHg)</label>
+                    <input type="text" name="td" value={patient.td} onChange={handlePatientChange} placeholder="140/90" className={inputClass} />
+                  </div>
+                  <div className="col-span-1">
+                    <label className={labelClass}>HR (x/m)</label>
+                    <input type="number" name="hr" value={patient.hr} onChange={handlePatientChange} placeholder="98" className={inputClass} />
+                  </div>
+                  <div className="col-span-1">
+                    <label className={labelClass}>RR (x/m)</label>
+                    <input type="number" name="rr" value={patient.rr} onChange={handlePatientChange} placeholder="20" className={inputClass} />
+                  </div>
+                  <div className="col-span-1">
+                    <label className={labelClass}>SpO2 (%)</label>
+                    <input type="number" name="spo2" value={patient.spo2} onChange={handlePatientChange} placeholder="98" className={inputClass} />
+                  </div>
+
+                  <div className="col-span-2 sm:col-span-4 mt-2">
+                    <label className={labelClass}>Interpretasi Cepat EKG (Visual)</label>
+                    <input type="text" name="ecgDesc" value={patient.ecgDesc} onChange={handlePatientChange} className={inputClass} />
+                    <p className="text-xs text-slate-400 mt-1 italic">TIPS: Gunakan Simulator EKG di bawah untuk auto-fill data ini.</p>
+                  </div>
+                </div>
+              </section>
+
+              {/* NEW SECTION: 12-LEAD ECG SIMULATOR */}
+              <section className="bg-slate-800 p-5 md:p-6 rounded-xl shadow-lg border border-slate-700 text-white relative overflow-hidden">
+                {/* Background Decor */}
+                <i className="fas fa-heartbeat absolute -bottom-10 -right-10 text-slate-700/50" style={{ fontSize: '180px' }}></i>
+                
+                <h2 className="text-lg font-bold flex items-center gap-2 mb-4 text-white border-b border-slate-600 pb-3 relative z-10">
+                  <i className="fas fa-microchip text-teal-400" style={{ fontSize: '20px' }}></i> 12-Lead ECG & Infarct Locator
+                </h2>
+                
+                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* Left side: Controls & Info */}
+                    <div className="lg:col-span-5 space-y-4">
+                        <label className="block text-xs font-semibold text-teal-300 mb-2 uppercase tracking-wide">Pilih Pola Elevasi ST / OMI:</label>
+                        <div className="flex flex-wrap gap-2 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
+                            {Object.entries(ecgPatternsData).map(([key, data]) => (
+                                <button
+                                    key={key}
+                                    onClick={() => handleEcgSimulatorSelect(key)}
+                                    className={`px-3 py-1.5 text-xs font-bold rounded-full transition-all border text-left ${
+                                        activeEcgPattern === key 
+                                        ? 'bg-teal-500 border-teal-400 text-slate-900 shadow-[0_0_10px_rgba(20,184,166,0.6)]' 
+                                        : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
+                                    }`}
+                                >
+                                    {data.name}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Info Panel */}
+                        <div className="mt-4 p-4 bg-slate-900/80 rounded-lg border border-slate-600">
+                            <div className="mb-3">
+                                <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Arteri Tersangka:</span>
+                                <div className="text-teal-400 font-black text-sm mt-1">{ecgPatternsData[activeEcgPattern].artery}</div>
+                            </div>
+                            <div>
+                                <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Clinical Pearl / Waspada:</span>
+                                <div className="text-sm mt-1 text-slate-200 leading-relaxed border-l-2 border-red-500 pl-3">
+                                    {ecgPatternsData[activeEcgPattern].warning}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right side: 12-Lead Grid UI */}
+                    <div className="lg:col-span-7 bg-white p-3 rounded-lg shadow-inner flex flex-col justify-between">
+                        <div>
+                            <div className="text-center text-xs font-bold text-slate-500 mb-2 border-b pb-1">Representasi Layout EKG 12 Lead</div>
+                            <div className="grid grid-cols-4 gap-1 sm:gap-2">
+                                {/* Standard 3x4 ECG grid mapping */}
+                                <div className="space-y-1 sm:space-y-2">
+                                    {renderSimulatorLead('I')}
+                                    {renderSimulatorLead('II')}
+                                    {renderSimulatorLead('III')}
+                                </div>
+                                <div className="space-y-1 sm:space-y-2">
+                                    {renderSimulatorLead('aVR')}
+                                    {renderSimulatorLead('aVL')}
+                                    {renderSimulatorLead('aVF')}
+                                </div>
+                                <div className="space-y-1 sm:space-y-2">
+                                    {renderSimulatorLead('V1')}
+                                    {renderSimulatorLead('V2')}
+                                    {renderSimulatorLead('V3')}
+                                </div>
+                                <div className="space-y-1 sm:space-y-2">
+                                    {renderSimulatorLead('V4')}
+                                    {renderSimulatorLead('V5')}
+                                    {renderSimulatorLead('V6')}
+                                </div>
+                            </div>
+                            {activeEcgPattern === 'posterior' && (
+                                 <div className="mt-2 sm:mt-3 grid grid-cols-3 gap-1 sm:gap-2 p-2 bg-slate-100 rounded-lg border border-dashed border-slate-300 animate-fade-in-up">
+                                    <div className="col-span-3 text-center text-[10px] font-bold text-slate-400 uppercase">Ekstensi Posterior</div>
+                                    {renderSimulatorLead('V7')}
+                                    {renderSimulatorLead('V8')}
+                                    {renderSimulatorLead('V9')}
+                                 </div>
+                            )}
+                        </div>
+                        
+                        {/* Legend */}
+                        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mt-4 text-[10px] font-bold text-slate-500 bg-slate-50 p-2 rounded border border-slate-200">
+                            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-red-600 inline-block"></span> STE</span>
+                            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block"></span> STD</span>
+                            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-orange-500 inline-block"></span> HATW (T Peak)</span>
+                            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-purple-600 inline-block"></span> T Inversi</span>
+                            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-gradient-to-b from-blue-600 to-orange-500 inline-block border border-slate-300"></span> De Winter (STD+Peak)</span>
+                        </div>
+                    </div>
+                </div>
+              </section>
+
+              {/* Section: Anamnesis PQRST */}
+              <section className="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-slate-200">
+                <h2 className="text-lg font-bold flex items-center gap-2 mb-5 text-slate-800 border-b pb-3">
+                  <i className="fas fa-clipboard-list text-blue-600" style={{ fontSize: '20px' }}></i> Anamnesis PQRST (Nyeri Dada)
+                </h2>
+                <div className="space-y-4">
+                  {[
+                    { label: 'P (Provokes / Palliates)', name: 'p', placeholder: 'Pemicu & pereda' },
+                    { label: 'Q (Quality)', name: 'q', placeholder: 'Rasa/sifat nyeri' },
+                    { label: 'R (Radiates)', name: 'r', placeholder: 'Lokasi & penjalaran' },
+                    { label: 'S (Symptoms)', name: 's', placeholder: 'Gejala penyerta' },
+                    { label: 'T (Time)', name: 't', placeholder: 'Durasi & onset' }
+                  ].map((item) => (
+                    <div key={item.name} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                      <label className="sm:w-1/3 text-sm font-bold text-slate-700">{item.label}</label>
+                      <div className="sm:w-2/3">
+                        <input 
+                          type="text" 
+                          name={item.name} 
+                          value={pqrst[item.name]} 
+                          onChange={handlePqrstChange} 
+                          placeholder={item.placeholder}
+                          className={inputClass}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Section: SCORING SYSTEM SELECTOR */}
+              <section className="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-red-500 overflow-hidden">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center border-b pb-4 mb-5 gap-4">
+                  <h2 className="text-lg font-bold flex items-center gap-2 text-slate-800">
+                    <i className="fas fa-exclamation-circle text-red-500" style={{ fontSize: '20px' }}></i> Sistem Skoring
+                  </h2>
+                  
+                  {/* Tab Switcher */}
+                  <div className="flex flex-col sm:flex-row bg-slate-100 p-1.5 rounded-lg w-full sm:w-auto gap-1">
+                    <button 
+                      onClick={() => setActiveScoreType('MARBURG')}
+                      className={`flex-1 sm:flex-none px-4 py-2.5 text-sm font-bold rounded-md transition-all ${activeScoreType === 'MARBURG' ? 'bg-white shadow-sm text-blue-700 ring-1 ring-slate-200' : 'text-slate-500 hover:bg-slate-200'}`}
+                    >
+                      Marburg Score
+                    </button>
+                    <button 
+                      onClick={() => setActiveScoreType('HEART')}
+                      className={`flex-1 sm:flex-none px-4 py-2.5 text-sm font-bold rounded-md transition-all ${activeScoreType === 'HEART' ? 'bg-white shadow-sm text-blue-700 ring-1 ring-slate-200' : 'text-slate-500 hover:bg-slate-200'}`}
+                    >
+                      HEART Score
+                    </button>
+                  </div>
+                </div>
+                
+                {/* --- TAB CONTENT: MARBURG SCORE --- */}
+                {activeScoreType === 'MARBURG' && (
+                  <div className="space-y-4 animate-fade-in-up">
+                    <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-800 mb-2 flex gap-3 items-start border border-blue-100">
+                      <i className="fas fa-stethoscope shrink-0 mt-0.5 text-blue-600" style={{ fontSize: '20px' }}></i>
+                      <p className="leading-relaxed"><b>Marburg Heart Score</b> divalidasi khusus untuk dokter di layanan primer (Puskesmas/Klinik) untuk menilai risiko PJK klinis tanpa memerlukan enzim jantung (Troponin).</p>
+                    </div>
+
+                    <div className="flex justify-between items-center bg-slate-50 p-4 rounded-lg border border-slate-200">
+                      <span className="font-bold text-slate-700">Total Skor Marburg:</span>
+                      <span className={`text-xl font-black ${totalMarburgScore >= 3 ? 'text-red-600' : 'text-green-600'}`}>
+                        {totalMarburgScore} / 5
+                      </span>
+                    </div>
+
+                    <div className="space-y-3 mt-4">
+                      <div className="flex justify-between items-center p-4 border rounded-lg bg-slate-50 border-slate-200">
+                        <div>
+                          <p className="font-bold text-sm text-slate-800">Usia & Jenis Kelamin (Otomatis)</p>
+                          <p className="text-xs text-slate-500 mt-0.5">Pria &ge; 55 th atau Wanita &ge; 65 th</p>
+                        </div>
+                        <span className="font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded-full">+{marburgAgeGenderScore}</span>
+                      </div>
+
+                      {[
+                        { key: 'vascular', label: 'Riwayat Penyakit Vaskuler', desc: 'Pernah didiagnosis PJK, Stroke, atau Penyakit Arteri Perifer (PAD)' },
+                        { key: 'exercise', label: 'Nyeri Memberat dengan Aktivitas', desc: 'Keluhan makin parah saat bergerak/berjalan' },
+                        { key: 'palpation', label: 'Nyeri TIDAK Dapat Direproduksi dengan Palpasi', desc: 'Centang jika ditekan dinding dadanya TIDAK menimbulkan nyeri yang sama (Khas Kardiak)', isRed: true },
+                        { key: 'belief', label: 'Firasat Pasien (Patient\'s Belief)', desc: 'Pasien merasa yakin bahwa nyeri ini bersumber dari jantungnya' }
+                      ].map((item) => (
+                        <label key={item.key} className={`flex items-start gap-4 p-4 rounded-lg border cursor-pointer transition-all ${marburg[item.key] ? 'bg-red-50 border-red-300 ring-1 ring-red-300' : 'bg-white border-slate-200 hover:bg-slate-50'}`}>
+                          <input 
+                            type="checkbox" 
+                            checked={marburg[item.key]} 
+                            onChange={() => toggleMarburg(item.key)} 
+                            className="w-5 h-5 mt-0.5 text-red-600 rounded shrink-0 cursor-pointer" 
+                          />
+                          <div className="flex-1">
+                            <p className={`font-bold text-sm ${item.isRed && !marburg[item.key] ? 'text-red-600' : 'text-slate-800'}`}>{item.label}</p>
+                            <p className="text-xs text-slate-500 mt-1 leading-relaxed">{item.desc}</p>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* --- TAB CONTENT: HEART SCORE --- */}
+                {activeScoreType === 'HEART' && (
+                  <div className="space-y-6 animate-fade-in-up">
+                    <div className="flex justify-between items-center bg-slate-50 p-4 rounded-lg border border-slate-200">
+                      <span className="font-bold text-slate-700">Total Skor HEART:</span>
+                      <span className={`text-xl font-black ${totalHeartScore >= 4 ? 'text-red-600' : 'text-blue-600'}`}>
+                        {totalHeartScore}
+                      </span>
+                    </div>
+
+                    {/* History */}
+                    <div>
+                      <p className="text-sm font-bold text-slate-700 mb-3">History (Anamnesis - Karakteristik Nyeri)</p>
+                      <div className="flex flex-col gap-3">
+                        <button onClick={() => setHeartHistory(2)} className={`w-full text-left p-4 rounded-lg border transition-all block ${heartHistory === 2 ? 'bg-red-50 border-red-500 ring-1 ring-red-500' : 'bg-white border-slate-200 hover:bg-slate-50'}`}>
+                          <div className={`font-bold text-sm ${heartHistory === 2 ? 'text-red-700' : 'text-slate-800'}`}>Sangat Khas ACS (Skor 2)</div>
+                          <div className={`text-xs mt-1.5 leading-relaxed ${heartHistory === 2 ? 'text-red-600' : 'text-slate-500'}`}>Nyeri retrosternal/tengah dada seperti diremas/tertindih, menjalar (lengan kiri/rahang/punggung), durasi {'>'}15-20 mnt, disertai keringat dingin/mual.</div>
+                        </button>
+                        <button onClick={() => setHeartHistory(1)} className={`w-full text-left p-4 rounded-lg border transition-all block ${heartHistory === 1 ? 'bg-orange-50 border-orange-500 ring-1 ring-orange-500' : 'bg-white border-slate-200 hover:bg-slate-50'}`}>
+                          <div className={`font-bold text-sm ${heartHistory === 1 ? 'text-orange-700' : 'text-slate-800'}`}>Cukup Khas (Skor 1)</div>
+                          <div className={`text-xs mt-1.5 leading-relaxed ${heartHistory === 1 ? 'text-orange-600' : 'text-slate-500'}`}>Gejala campuran kardiak & non-kardiak. Nyeri dada kiri namun tanpa penjalaran jelas, atau pola dan durasinya tidak sepenuhnya menyerupai ACS klasik.</div>
+                        </button>
+                        <button onClick={() => setHeartHistory(0)} className={`w-full text-left p-4 rounded-lg border transition-all block ${heartHistory === 0 ? 'bg-green-50 border-green-500 ring-1 ring-green-500' : 'bg-white border-slate-200 hover:bg-slate-50'}`}>
+                          <div className={`font-bold text-sm ${heartHistory === 0 ? 'text-green-700' : 'text-slate-800'}`}>Tidak Khas / Non-Kardiak (Skor 0)</div>
+                          <div className={`text-xs mt-1.5 leading-relaxed ${heartHistory === 0 ? 'text-green-600' : 'text-slate-500'}`}>Nyeri tajam/pleuritik, bisa ditunjuk dengan 1 jari, sangat dipengaruhi tarikan napas atau perubahan posisi tubuh, atau nyeri saat dinding dada ditekan.</div>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* ECG */}
+                    <div>
+                      <p className="text-sm font-bold text-slate-700 mb-3">ECG (Elektrokardiogram)</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <button onClick={() => setHeartEcg(2)} className={`w-full py-3 px-2 text-sm rounded-lg border transition-all font-bold ${heartEcg === 2 ? 'bg-red-50 border-red-500 text-red-700 ring-1 ring-red-500' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>ST depresi / T inversi (2)</button>
+                        <button onClick={() => setHeartEcg(1)} className={`w-full py-3 px-2 text-sm rounded-lg border transition-all font-bold ${heartEcg === 1 ? 'bg-orange-50 border-orange-500 text-orange-700 ring-1 ring-orange-500' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>Non-spesifik / LBBB lama (1)</button>
+                        <button onClick={() => setHeartEcg(0)} className={`w-full py-3 px-2 text-sm rounded-lg border transition-all font-bold ${heartEcg === 0 ? 'bg-green-50 border-green-500 text-green-700 ring-1 ring-green-500' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>Normal (0)</button>
+                      </div>
+                    </div>
+
+                    {/* Risk Factors */}
+                    <div>
+                      <p className="text-sm font-bold text-slate-700 mb-3">Risk Factors (Pilih yang ada) - Skor: <span className="text-blue-600">{riskScore}</span></p>
+                      
+                      <label className="flex items-center gap-3 mb-3 p-3 bg-red-50 border border-red-200 rounded-lg cursor-pointer transition-colors hover:bg-red-100">
+                        <input type="checkbox" checked={riskFactors.cadHx} onChange={() => toggleRiskFactor('cadHx')} className="w-5 h-5 text-red-600 rounded shrink-0 cursor-pointer" />
+                        <span className="text-sm font-bold text-red-800">Riwayat PJK / Pasang Ring (Otomatis skor 2)</span>
+                      </label>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {[
+                          { key: 'ht', label: 'Hipertensi' },
+                          { key: 'dm', label: 'Diabetes' },
+                          { key: 'smoker', label: 'Perokok Aktif' },
+                          { key: 'obese', label: 'Obesitas' },
+                          { key: 'lipid', label: 'Dislipidemia' },
+                          { key: 'fhx', label: 'Riwayat Klg PJK' },
+                        ].map(rf => (
+                          <label key={rf.key} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${riskFactors[rf.key] ? 'bg-blue-50 border-blue-400 ring-1 ring-blue-400' : 'bg-white border-slate-200 hover:bg-slate-50'}`}>
+                            <input type="checkbox" checked={riskFactors[rf.key]} onChange={() => toggleRiskFactor(rf.key)} disabled={riskFactors.cadHx} className="w-5 h-5 text-blue-600 rounded shrink-0 cursor-pointer" />
+                            <span className={`text-sm font-medium ${riskFactors[rf.key] ? 'text-blue-800' : 'text-slate-700'}`}>{rf.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </section>
+
+              {/* Section: Tatalaksana */}
+              <section className="bg-white p-4 sm:p-5 md:p-6 rounded-xl shadow-sm border border-slate-200">
+                <h2 className="text-lg font-bold flex items-center gap-2 mb-4 sm:mb-5 text-slate-800 border-b pb-3">
+                  <i className="fas fa-pills text-blue-600" style={{ fontSize: '20px' }}></i> Tatalaksana Awal (Faskes 1)
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4 sm:mb-5">
+                   {[
+                      { key: 'aspirin', label: 'Aspirin Kunyah' },
+                      { key: 'clopidogrel', label: 'Clopidogrel' },
+                      { key: 'isdn', label: 'ISDN Sublingual' },
+                      { key: 'o2', label: 'Oksigen (Nasal/Mask)' },
+                      { key: 'ivline', label: 'Pasang IV Line' },
+                   ].map(tx => (
+                    <label key={tx.key} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${treatments[tx.key] ? 'bg-green-50 border-green-500 ring-1 ring-green-500' : 'bg-white border-slate-200 hover:bg-slate-50'}`}>
+                      <input type="checkbox" checked={treatments[tx.key]} onChange={() => toggleTreatment(tx.key)} className="w-5 h-5 text-green-600 rounded shrink-0 cursor-pointer" />
+                      <span className={`text-sm font-bold ${treatments[tx.key] ? 'text-green-800' : 'text-slate-700'}`}>{tx.label}</span>
+                    </label>
+                   ))}
+                </div>
+                <div>
+                  <label className={labelClass}>Terapi / Catatan Tambahan</label>
+                  <input 
+                    type="text" 
+                    placeholder="Mis: Atorvastatin 40mg..." 
+                    value={otherTreatment}
+                    onChange={(e) => setOtherTreatment(e.target.value)}
+                    className={inputClass} 
+                  />
+                </div>
+              </section>
+
+            </div>
+
+            {/* RIGHT COLUMN: OUTPUT / PREVIEW */}
+            <div className="lg:col-span-5 relative">
+              <div className="lg:sticky lg:top-24 space-y-4 sm:space-y-5 max-h-none lg:max-h-[calc(100vh-6rem)] overflow-y-visible lg:overflow-y-auto pb-6">
+                
+                {/* Action Box */}
+                <div className={`p-5 rounded-xl shadow-md border-2 transition-all ${
+                  (activeScoreType === 'HEART' && totalHeartScore >= 4) || (activeScoreType === 'MARBURG' && totalMarburgScore >= 3) 
+                  ? 'bg-red-50 border-red-300' : 'bg-blue-50 border-blue-300'
+                }`}>
+                  <h3 className="text-lg font-black text-slate-800 mb-2 flex items-center gap-2">
+                    Kesimpulan Triage ({activeScoreType})
+                  </h3>
+                  <p className="text-sm text-slate-700 mb-4 bg-white/60 p-3 rounded-lg border border-white/40">
+                    Kategori Risiko: <br/>
+                    <span className={`text-lg font-bold block mt-1 ${
+                      (activeScoreType === 'HEART' && totalHeartScore >= 4) || (activeScoreType === 'MARBURG' && totalMarburgScore >= 3) 
+                      ? 'text-red-700' : 'text-blue-700'
+                    }`}>
+                      {activeScoreType === 'HEART' ? heartCategory : marburgCategory}
+                    </span>
+                  </p>
+                  
+                  {/* ACTION BUTTONS */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button 
+                      onClick={copyToClipboard}
+                      className={`w-full py-3 px-3 text-white font-bold rounded-lg shadow-md flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02] text-sm ${
+                        isCopied ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800'
+                      }`}
+                    >
+                      {isCopied ? (
+                        <React.Fragment>
+                          <i className="fas fa-check"></i> Disalin!
+                        </React.Fragment>
+                      ) : (
+                        <React.Fragment>
+                          <i className="fas fa-copy"></i> Salin Teks
+                        </React.Fragment>
+                      )}
+                    </button>
+
+                    <button 
+                      onClick={sendViaWhatsApp}
+                      className="w-full py-3 px-3 bg-[#25D366] hover:bg-[#1DA851] active:bg-[#158c42] text-white font-bold rounded-lg shadow-md flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02] text-sm"
+                    >
+                      <i className="fab fa-whatsapp" style={{ fontSize: '18px' }}></i> Kirim via WA
+                    </button>
+                  </div>
+                </div>
+
+                {/* Letter Preview */}
+                <div className="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-slate-200">
+                   <h3 className="text-sm font-bold text-slate-500 mb-4 uppercase tracking-wider flex items-center justify-between border-b pb-2">
+                      Preview Rujukan
+                      <i className="fas fa-paper-plane text-slate-400" style={{ fontSize: '18px' }}></i>
+                   </h3>
+                   <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 font-mono text-xs sm:text-sm whitespace-pre-wrap text-slate-700 overflow-y-auto max-h-[400px] leading-relaxed">
+                     {generateLetterText()}
+                   </div>
+                </div>
+
+              </div>
+            </div>
+
+          </main>
+
+          {/* Footer / Disclaimer */}
+          <footer className="max-w-6xl mx-auto mt-8 mb-4 px-4 text-center">
+            <div className="bg-slate-200/60 rounded-lg p-4 text-xs text-slate-500 leading-relaxed border border-slate-300 shadow-sm">
+              <span className="font-bold text-slate-600"><i className="fas fa-info-circle mr-1"></i> DISCLAIMER MEDIS:</span> Aplikasi <b>ACS Referral Assistant</b> ini ditujukan semata-rata sebagai alat bantu administratif dan edukasi bagi tenaga medis profesional. Kalkulator skor (HEART/Marburg) serta simulator EKG yang disediakan tidak dirancang untuk menggantikan penilaian klinis komprehensif. Keputusan akhir mengenai diagnosis, tatalaksana, dan indikasi rujukan pasien tetap menjadi tanggung jawab penuh dokter yang merawat. Pengembang dibebaskan dari segala kewajiban atau tuntutan medis dan hukum yang mungkin timbul dari penggunaan aplikasi ini.
+            </div>
+          </footer>
+
+          {/* Floating Toast Notification */}
+          {toastMessage && (
+            <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-toast-in z-50">
+              <i className="fas fa-check-circle text-green-400" style={{ fontSize: '20px' }}></i>
+              <span className="font-medium text-sm">{toastMessage}</span>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
