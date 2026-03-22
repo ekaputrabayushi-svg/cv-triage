@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPR Metronome - Cardiology Vault</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Mencegah highlight biru saat di-tap di mobile */
+        * { -webkit-tap-highlight-color: transparent; }
+        
+        /* Animasi khusus untuk ventilasi */
+        @keyframes breathPulse {
+            0% { background-color: rgba(15, 23, 42, 0.5); transform: scale(1); }
+            50% { background-color: rgba(6, 182, 212, 0.6); transform: scale(1.05); box-shadow: 0 0 20px rgba(6, 182, 212, 0.8); }
+            100% { background-color: rgba(15, 23, 42, 0.5); transform: scale(1); }
+        }
+        .animate-breath {
+            animation: breathPulse 1s ease-out;
+        }
+    </style>
+</head>
+<body id="app-body" class="min-h-[100dvh] flex flex-col items-center justify-between transition-colors duration-75 py-4 px-4 select-none relative bg-slate-900">
+
+    <div class="w-full max-w-md flex justify-between items-start shrink-0 px-2 mt-2">
+        <div class="text-left">
+            <h1 class="text-gray-400 font-bold tracking-widest text-[11px] sm:text-xs uppercase">Waktu Aktual</h1>
+            <div id="current-time" class="text-slate-200 font-mono text-xl sm:text-2xl font-bold tracking-wider mt-0.5">--:--:--</div>
+        </div>
+        <div class="text-right">
+            <h1 class="text-gray-400 font-bold tracking-widest text-[11px] sm:text-xs uppercase">Total Durasi</h1>
+            <div id="total-duration" class="font-mono text-xl sm:text-2xl font-bold tracking-wider mt-0.5 text-slate-200">0m 0s</div>
+        </div>
+    </div>
+
+    <div class="text-center shrink-0 mt-3 sm:mt-4 mb-1 sm:mb-2">
+        <h3 class="text-red-500 font-bold tracking-widest text-[10px] sm:text-xs uppercase">Emergency Mode</h3>
+        <h2 class="text-slate-200 font-black tracking-widest text-sm sm:text-base uppercase mt-0.5">Cardiology Vault</h2>
+        <p class="text-slate-500 text-[9px] sm:text-[11px] mt-1.5 max-w-[300px] mx-auto leading-tight">
+            CPR Cycle Metronome and Logger<br/>(Developed by Bayushi Eka Putra, MD, FIHA)
+        </p>
+    </div>
+
+    <div class="flex flex-col items-center justify-center flex-grow w-full py-2">
+        <div class="mb-4 sm:mb-6 md:mb-8 text-center">
+            <div id="timer-display" class="text-7xl sm:text-8xl md:text-[130px] font-black tracking-tighter tabular-nums text-white">
+                2:00
+            </div>
+            <div id="timer-label" class="text-sm sm:text-lg md:text-xl font-medium mt-1 sm:mt-2 text-gray-400">
+                READY TO START
+            </div>
+        </div>
+
+        <div class="flex gap-2 sm:gap-4 mb-6 sm:mb-8 md:mb-10" id="bpm-container">
+            <button onclick="setBpm(100)" id="bpm-100" class="px-3 py-1.5 sm:px-6 sm:py-3 rounded-full text-base sm:text-xl font-bold transition-all bg-slate-800 text-gray-400 border-2 border-transparent hover:bg-slate-700">100 <span class="text-[10px] sm:text-sm font-normal">BPM</span></button>
+            <button onclick="setBpm(110)" id="bpm-110" class="px-3 py-1.5 sm:px-6 sm:py-3 rounded-full text-base sm:text-xl font-bold transition-all bg-blue-600 text-white border-2 border-blue-400 shadow-[0_0_15px_rgba(37,99,235,0.5)]">110 <span class="text-[10px] sm:text-sm font-normal">BPM</span></button>
+            <button onclick="setBpm(120)" id="bpm-120" class="px-3 py-1.5 sm:px-6 sm:py-3 rounded-full text-base sm:text-xl font-bold transition-all bg-slate-800 text-gray-400 border-2 border-transparent hover:bg-slate-700">120 <span class="text-[10px] sm:text-sm font-normal">BPM</span></button>
+        </div>
+
+        <button id="btn-start-stop" onclick="toggleMetronome()" class="w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 rounded-full text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-wider transition-transform active:scale-95 shadow-2xl flex items-center justify-center border-4 shrink-0 bg-green-600 hover:bg-green-500 border-green-400 text-white">
+            START
+        </button>
+    </div>
+
+    <!-- NEW FEATURE: COGNITIVE OFFLOAD ASSISTANT PANEL -->
+    <div class="w-full max-w-md bg-slate-800/80 rounded-2xl border border-slate-700 p-2 sm:p-3 mb-2 shrink-0 shadow-lg flex gap-2">
+        
+        <!-- Auto Epinephrine Tracker -->
+        <div class="flex-1 bg-slate-900/50 rounded-xl p-2 text-center border border-slate-700 relative overflow-hidden transition-colors" id="epi-card">
+            <div class="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Epinephrine Timer</div>
+            <div id="epi-countdown" class="text-slate-500 font-mono font-black text-xl sm:text-2xl mt-0.5">--:--</div>
+            <div id="epi-alert-bar" class="absolute bottom-0 left-0 h-1 bg-purple-500 w-0 transition-all duration-1000"></div>
+        </div>
+
+        <!-- Ventilation Pacer -->
+        <div class="flex-1 bg-slate-900/50 rounded-xl p-2 text-center border border-slate-700 relative transition-colors flex flex-col justify-center" id="vent-card">
+            <div class="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Ventilation Pacer</div>
+            <div id="vent-status" class="text-slate-500 font-bold text-sm sm:text-base mt-0.5 leading-tight">Standby</div>
+            <div id="vent-subtext" class="text-[8px] sm:text-[9px] text-slate-500 mt-0.5">Tunggu Airway</div>
+        </div>
+
+        <!-- 5H5T Quick Access -->
+        <button onclick="toggle5H5T(true)" class="w-12 sm:w-16 bg-rose-900/40 hover:bg-rose-800/60 rounded-xl border border-rose-800/50 flex flex-col items-center justify-center transition-colors shadow-inner">
+            <span class="text-rose-400 font-black text-sm sm:text-base leading-none">5H</span>
+            <span class="text-rose-400 font-black text-sm sm:text-base leading-none border-t border-rose-700/50 mt-1 pt-1 w-2/3 text-center">5T</span>
+        </button>
+    </div>
+
+    <!-- MAIN ACTION BUTTONS -->
+    <div class="w-full max-w-md flex flex-col gap-2 shrink-0 mt-0">
+        <div class="flex gap-2">
+            <button onclick="handleAction('⚡ Shock Delivered', 'shock')" class="flex-1 bg-orange-600 hover:bg-orange-500 py-2 sm:py-3 rounded-xl font-bold text-white shadow-lg active:scale-95 transition-all flex flex-col items-center justify-center">
+                <span class="text-sm sm:text-lg">⚡</span><span class="text-[10px] sm:text-xs mt-1">SHOCK</span>
+            </button>
+            <button onclick="handleAction('🫁 Advanced Airway Placed', 'airway')" id="btn-airway" class="flex-1 bg-cyan-600 hover:bg-cyan-500 py-2 sm:py-3 rounded-xl font-bold text-white shadow-lg active:scale-95 transition-all flex flex-col items-center justify-center">
+                <span class="text-sm sm:text-lg">🫁</span><span class="text-[10px] sm:text-xs mt-1">AIRWAY</span>
+            </button>
+            <button onclick="toggleLogModal(true)" class="flex-1 bg-slate-700 hover:bg-slate-600 border border-slate-500 py-2 sm:py-3 rounded-xl font-bold text-white shadow-lg active:scale-95 transition-all flex flex-col items-center justify-center relative">
+                <span class="text-sm sm:text-lg">📋</span><span class="text-[10px] sm:text-xs mt-1">LOGS</span>
+                <span id="log-badge" class="hidden absolute -top-2 -right-2 bg-blue-500 text-white text-[10px] w-6 h-6 flex items-center justify-center rounded-full border-2 border-slate-900 shadow-md">0</span>
+            </button>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="handleAction('💉 Epinephrine', 'med', 'epi')" class="flex-1 bg-purple-600 hover:bg-purple-500 py-2 sm:py-3 rounded-xl font-bold text-white shadow-lg active:scale-95 transition-all flex flex-col items-center justify-center">
+                <span class="text-sm sm:text-lg">💉</span><span class="text-[10px] sm:text-xs mt-1">EPI</span>
+            </button>
+            <button onclick="handleAction('💉 Amiodarone', 'med')" class="flex-1 bg-blue-600 hover:bg-blue-500 py-2 sm:py-3 rounded-xl font-bold text-white shadow-lg active:scale-95 transition-all flex flex-col items-center justify-center">
+                <span class="text-sm sm:text-lg">💉</span><span class="text-[10px] sm:text-xs mt-1">AMIO</span>
+            </button>
+            <button onclick="handleAction('💉 Lidocaine', 'med')" class="flex-1 bg-teal-600 hover:bg-teal-500 py-2 sm:py-3 rounded-xl font-bold text-white shadow-lg active:scale-95 transition-all flex flex-col items-center justify-center">
+                <span class="text-sm sm:text-lg">💉</span><span class="text-[10px] sm:text-xs mt-1">LIDO</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- LOG MODAL -->
+    <div id="log-modal" class="hidden absolute inset-0 bg-slate-950/95 backdrop-blur-sm z-50 flex flex-col p-4 sm:p-6 animate-in fade-in duration-200">
+        <div class="flex justify-between items-center mb-4 mt-2">
+            <div>
+                <h2 class="text-2xl font-black text-white">Event Log</h2>
+                <p class="text-slate-400 text-sm">Timeline & Summary</p>
+            </div>
+            <button onclick="toggleLogModal(false)" class="bg-slate-800 text-slate-300 hover:text-white px-4 py-2 rounded-lg font-bold">
+                TUTUP
+            </button>
+        </div>
+
+        <div class="flex-grow overflow-y-auto bg-slate-900 rounded-2xl border border-slate-700 p-2 sm:p-4 mb-3 shadow-inner">
+            <div id="log-list" class="space-y-2">
+                <div class="h-full flex items-center justify-center text-slate-500 font-medium py-10">Belum ada kejadian tercatat.</div>
+            </div>
+        </div>
+
+        <div id="summary-card" class="hidden bg-slate-800 rounded-2xl border border-slate-600 p-3 sm:p-4 mb-4 shrink-0 shadow-lg">
+            <h3 class="text-slate-300 font-bold text-xs uppercase tracking-wider mb-2 border-b border-slate-600 pb-2">Resuscitation Summary</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-1 text-xs sm:text-sm" id="summary-content"></div>
+        </div>
+
+        <div class="shrink-0 flex flex-col gap-2">
+            <div id="copy-status" class="text-center text-green-400 font-bold text-sm h-5"></div>
+            <div class="flex gap-2">
+                <button id="btn-clear" onclick="handleClearLogs()" disabled class="flex-1 border py-3 sm:py-4 rounded-xl font-bold text-xs sm:text-sm shadow-lg active:scale-95 transition-all uppercase tracking-wide flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 border-slate-800 text-slate-600 bg-transparent">
+                    <span class="text-base sm:text-lg">🗑️</span><span id="clear-text">HAPUS</span>
+                </button>
+                <button id="btn-copy" onclick="copyLogsToClipboard()" disabled class="flex-1 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white py-3 sm:py-4 rounded-xl font-black text-xs sm:text-sm shadow-lg active:scale-95 transition-all uppercase tracking-wide flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2">
+                    <span class="text-base sm:text-lg">📋</span><span>COPY</span>
+                </button>
+                <button id="btn-pdf" onclick="exportToPDF()" disabled class="flex-1 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-500 text-white py-3 sm:py-4 rounded-xl font-black text-xs sm:text-sm shadow-lg active:scale-95 transition-all uppercase tracking-wide flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2">
+                    <span class="text-base sm:text-lg">📄</span><span>PDF</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW FEATURE: 5H & 5T MODAL -->
+    <div id="modal-5h5t" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex flex-col justify-center items-center p-4 animate-in zoom-in-95 duration-200">
+        <div class="bg-slate-800 rounded-3xl w-full max-w-sm border border-slate-600 shadow-2xl overflow-hidden">
+            <div class="bg-slate-900 px-4 py-4 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="text-rose-500 font-black text-xl tracking-wide uppercase">Reversible Causes</h3>
+                <button onclick="toggle5H5T(false)" class="text-slate-400 hover:text-white bg-slate-800 p-2 rounded-lg font-bold">X</button>
+            </div>
+            <div class="p-4 grid grid-cols-2 gap-4 text-sm sm:text-base">
+                <div>
+                    <h4 class="text-rose-400 font-bold border-b border-rose-900/50 pb-1 mb-2">The 5 H's</h4>
+                    <ul class="text-slate-300 space-y-2 font-medium">
+                        <li><span class="text-slate-500 mr-1">H</span>ypovolemia</li>
+                        <li><span class="text-slate-500 mr-1">H</span>ypoxia</li>
+                        <li><span class="text-slate-500 mr-1">H</span>ydrogen ion (Acidosis)</li>
+                        <li><span class="text-slate-500 mr-1">H</span>ypo-/Hyperkalemia</li>
+                        <li><span class="text-slate-500 mr-1">H</span>ypothermia</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-rose-400 font-bold border-b border-rose-900/50 pb-1 mb-2">The 5 T's</h4>
+                    <ul class="text-slate-300 space-y-2 font-medium">
+                        <li><span class="text-slate-500 mr-1">T</span>ension pneumothorax</li>
+                        <li><span class="text-slate-500 mr-1">T</span>amponade (Cardiac)</li>
+                        <li><span class="text-slate-500 mr-1">T</span>oxins</li>
+                        <li><span class="text-slate-500 mr-1">T</span>hrombosis (Pulmonary)</li>
+                        <li><span class="text-slate-500 mr-1">T</span>hrombosis (Coronary)</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="bg-slate-900/50 p-3 text-center text-[10px] sm:text-xs text-slate-500 font-bold">
+                Ases dan obati penyebab yang mendasari.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State Variables
+        let isRunning = false;
+        let bpm = 110;
+        let timeRemaining = 120;
+        let isCheckingRhythm = false;
+        let logs = [];
+        let confirmClear = false;
+        
+        const CYCLE_TIME = 120;
+        const CHECK_TIME = 5;
+
+        // Smart Assistant Variables
+        let lastEpiTimeMs = 0;
+        const EPI_TARGET_SEC = 240; // 4 menit = 240 detik
+        let hasAirway = false;
+        let breathInterval = null;
+
+        // Audio & Timers refs
+        let audioCtx = null;
+        let nextNoteTime = 0;
+        let metronomeInterval = null;
+        let countdownInterval = null;
+
+        // --- DOM Elements ---
+        const body = document.getElementById('app-body');
+        const timerDisplay = document.getElementById('timer-display');
+        const timerLabel = document.getElementById('timer-label');
+        const btnStartStop = document.getElementById('btn-start-stop');
+        const durationDisplay = document.getElementById('total-duration');
+
+        // --- Global Clock & Live Duration & Smart Assistant Check ---
+        setInterval(() => {
+            const now = new Date();
+            const nowMs = now.getTime();
+            document.getElementById('current-time').innerText = now.toLocaleTimeString('id-ID', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            // Calc Duration
+            if (logs.length > 0) {
+                const firstLog = logs[0];
+                const lastLog = logs[logs.length - 1];
+                const endMs = isRunning ? nowMs : lastLog.id;
+                const diffSeconds = Math.max(0, Math.floor((endMs - firstLog.id) / 1000));
+                const m = Math.floor(diffSeconds / 60);
+                const s = diffSeconds % 60;
+                durationDisplay.innerText = `${m}m ${s}s`;
+                durationDisplay.className = `font-mono text-xl sm:text-2xl font-bold tracking-wider mt-0.5 ${isRunning ? 'text-green-400' : 'text-slate-200'}`;
+            } else {
+                durationDisplay.innerText = `0m 0s`;
+                durationDisplay.className = `font-mono text-xl sm:text-2xl font-bold tracking-wider mt-0.5 text-slate-200`;
+            }
+
+            // SMART ASSISTANT: Check Epinephrine Timer
+            if (lastEpiTimeMs > 0) {
+                const diffSec = Math.floor((nowMs - lastEpiTimeMs) / 1000);
+                const remainingSec = EPI_TARGET_SEC - diffSec;
+                
+                const epiCountdown = document.getElementById('epi-countdown');
+                const epiAlertBar = document.getElementById('epi-alert-bar');
+                
+                // Update Progress Bar
+                const progressPct = Math.min(100, (diffSec / EPI_TARGET_SEC) * 100);
+                epiAlertBar.style.width = `${progressPct}%`;
+
+                if (remainingSec <= 0) {
+                    epiCountdown.innerText = "GIVE NOW";
+                    epiCountdown.classList.add('text-rose-500', 'animate-pulse');
+                    epiCountdown.classList.remove('text-purple-400', 'text-slate-500');
+                    epiAlertBar.classList.replace('bg-purple-500', 'bg-rose-500');
+                    document.getElementById('epi-card').classList.add('border-rose-500/50', 'bg-rose-950/30');
+
+                    // Notifikasi suara pas di detik 0
+                    if (remainingSec === 0) speak("Consider Epinephrine now");
+                } else {
+                    epiCountdown.innerText = formatTime(remainingSec);
+                    epiCountdown.classList.add('text-purple-400');
+                    epiCountdown.classList.remove('text-slate-500', 'text-rose-500', 'animate-pulse');
+                    epiAlertBar.classList.replace('bg-rose-500', 'bg-purple-500');
+                    document.getElementById('epi-card').classList.remove('border-rose-500/50', 'bg-rose-950/30');
+                }
+            }
+
+        }, 1000);
+
+        // --- Format Time ---
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
+
+        // --- Audio Context Setup ---
+        function initAudio() {
+            try {
+                if (!audioCtx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) audioCtx = new AudioContext();
+                }
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            } catch (error) { console.warn("Audio Context Error:", error); }
+        }
+
+        // --- Metronome Beep ---
+        function playClick(time) {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = 800;
+                osc.type = 'sine';
+                gain.gain.setValueAtTime(1, time);
+                gain.gain.setTargetAtTime(0, time, 0.015);
+                osc.start(time);
+                osc.stop(time + 0.1);
+            } catch (e) {}
+        }
+
+        function triggerFlash() {
+            body.classList.add('bg-red-600');
+            body.classList.remove('bg-gray-900', 'bg-slate-900', 'bg-amber-600');
+            setTimeout(() => renderUIState(), 100);
+        }
+
+        // --- Sound Effects ---
+        function playEffect(type) {
+            initAudio();
+            if (!audioCtx) return;
+            const t = audioCtx.currentTime;
+            
+            try {
+                if (type === 'shock') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, t);
+                    osc.frequency.exponentialRampToValueAtTime(1200, t + 0.3); 
+                    gain.gain.setValueAtTime(0.8, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+                    osc.start(t);
+                    osc.stop(t + 0.3);
+                } else if (type === 'airway') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, t);
+                    osc.frequency.exponentialRampToValueAtTime(900, t + 0.15); 
+                    gain.gain.setValueAtTime(0.7, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+                    osc.start(t);
+                    osc.stop(t + 0.15);
+                } else if (type === 'med') {
+                    const playTone = (freq, startTime) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.type = 'sine';
+                        osc.frequency.value = freq;
+                        gain.gain.setValueAtTime(0.6, startTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.2);
+                        osc.start(startTime);
+                        osc.stop(startTime + 0.2);
+                    };
+                    playTone(1200, t);       
+                    playTone(1600, t + 0.15); 
+                } else if (type === 'breath') {
+                    // Soft breath noise / tone for ventilation pacer
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(300, t);
+                    osc.frequency.exponentialRampToValueAtTime(150, t + 0.5);
+                    gain.gain.setValueAtTime(0.3, t);
+                    gain.gain.linearRampToValueAtTime(0, t + 0.5);
+                    osc.start(t);
+                    osc.stop(t + 0.5);
+                }
+            } catch(e) {}
+        }
+
+        // --- TTS ---
+        function speak(text) {
+            try {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 1.0;
+                    utterance.pitch = 1.1;
+                    window.speechSynthesis.speak(utterance);
+                }
+            } catch (e) {}
+        }
+
+        // --- Main Controller ---
+        function toggleMetronome() {
+            initAudio();
+            isRunning = !isRunning;
+            
+            if (isRunning) {
+                isCheckingRhythm = false;
+                timeRemaining = CYCLE_TIME;
+                speak("CPR Started.");
+                addLog(`CPR Cycle Started (${bpm} BPM)`);
+                startMetronomeEngine();
+                startTimer();
+                
+                // Jika sudah ada airway, nyalakan pacer napas
+                if (hasAirway) startBreathPacer();
+            } else {
+                isCheckingRhythm = false;
+                speak("CPR Stopped.");
+                addLog("CPR Stopped");
+                stopMetronomeEngine();
+                stopTimer();
+                stopBreathPacer();
+            }
+            renderUIState();
+        }
+
+        function setBpm(newBpm) {
+            if (isRunning) return;
+            bpm = newBpm;
+            
+            [100, 110, 120].forEach(rate => {
+                const btn = document.getElementById(`bpm-${rate}`);
+                if (rate === bpm) {
+                    btn.className = "px-3 py-1.5 sm:px-6 sm:py-3 rounded-full text-base sm:text-xl font-bold transition-all bg-blue-600 text-white border-2 border-blue-400 shadow-[0_0_15px_rgba(37,99,235,0.5)]";
+                } else {
+                    btn.className = "px-3 py-1.5 sm:px-6 sm:py-3 rounded-full text-base sm:text-xl font-bold transition-all bg-slate-800 text-gray-400 border-2 border-transparent hover:bg-slate-700 disabled:opacity-50";
+                }
+            });
+        }
+
+        // --- Metronome Engine ---
+        function startMetronomeEngine() {
+            stopMetronomeEngine(); // clear existing
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const getEngineTime = () => audioCtx ? audioCtx.currentTime : performance.now() / 1000;
+            nextNoteTime = getEngineTime() + 0.1;
+
+            metronomeInterval = setInterval(() => {
+                if(!isRunning || isCheckingRhythm) return;
+                
+                const scheduleAheadTime = 0.2;
+                const secondsPerBeat = 60.0 / bpm;
+                const engineTime = getEngineTime();
+
+                while (nextNoteTime < engineTime + scheduleAheadTime) {
+                    playClick(nextNoteTime);
+                    const timeUntilNote = (nextNoteTime - engineTime) * 1000;
+                    setTimeout(() => triggerFlash(), Math.max(0, timeUntilNote));
+                    nextNoteTime += secondsPerBeat;
+                }
+            }, 25);
+        }
+
+        function stopMetronomeEngine() {
+            if (metronomeInterval) clearInterval(metronomeInterval);
+        }
+
+        // --- Countdown Timer Engine ---
+        function startTimer() {
+            stopTimer();
+            countdownInterval = setInterval(() => {
+                timeRemaining--;
+
+                if (isCheckingRhythm) {
+                    if (timeRemaining <= 0) {
+                        isCheckingRhythm = false;
+                        timeRemaining = CYCLE_TIME;
+                        speak("Resume CPR.");
+                        addLog("CPR Resumed");
+                        if (hasAirway) startBreathPacer(); // Resume breathing pacer
+                    }
+                } else {
+                    if (timeRemaining === 10) speak("Prepare to check rhythm, prepare to switch compressor.");
+                    if (timeRemaining <= 0) {
+                        isCheckingRhythm = true;
+                        timeRemaining = CHECK_TIME;
+                        speak("Stop CPR. Check rhythm.");
+                        addLog("Rhythm / Pulse Check");
+                        stopBreathPacer(); // Pause breathing pacer during rhythm check
+                    }
+                }
+                renderUIState();
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (countdownInterval) clearInterval(countdownInterval);
+        }
+
+        // --- NEW: Ventilation Pacer Engine ---
+        function startBreathPacer() {
+            stopBreathPacer();
+            breathInterval = setInterval(() => {
+                if (isRunning && !isCheckingRhythm) {
+                    // Trigger visual cue
+                    const ventCard = document.getElementById('vent-card');
+                    ventCard.classList.remove('animate-breath');
+                    void ventCard.offsetWidth; // trigger reflow
+                    ventCard.classList.add('animate-breath');
+                    
+                    document.getElementById('vent-status').innerText = "BERIKAN NAPAS";
+                    setTimeout(() => {
+                        if(hasAirway) document.getElementById('vent-status').innerText = "1 Napas / 6 Detik";
+                    }, 1000);
+
+                    // Trigger audio cue
+                    playEffect('breath');
+                }
+            }, 6000); // Setiap 6 Detik
+        }
+        
+        function stopBreathPacer() {
+            if (breathInterval) clearInterval(breathInterval);
+        }
+
+        // --- Event Logs & Actions ---
+        function handleAction(eventName, effectType, specific = null) {
+            addLog(eventName);
+            playEffect(effectType);
+
+            // Smart Assistant Integrations
+            if (specific === 'epi') {
+                lastEpiTimeMs = Date.now();
+                document.getElementById('epi-countdown').classList.remove('text-rose-500', 'animate-pulse');
+            }
+            if (effectType === 'airway' && !hasAirway) {
+                hasAirway = true;
+                const ventStatus = document.getElementById('vent-status');
+                const btnAirway = document.getElementById('btn-airway');
+                
+                ventStatus.innerText = "1 Napas / 6 Detik";
+                ventStatus.classList.replace('text-slate-500', 'text-cyan-400');
+                document.getElementById('vent-subtext').innerText = "CPR Kontinu";
+                
+                // Ubah style button airway agar terlihat aktif
+                btnAirway.classList.replace('bg-cyan-600', 'bg-cyan-800');
+                btnAirway.classList.add('ring-2', 'ring-cyan-400');
+
+                if (isRunning && !isCheckingRhythm) startBreathPacer();
+            }
+        }
+
+        function addLog(eventName) {
+            const now = new Date();
+            logs.push({
+                id: Date.now(),
+                time: now.toLocaleTimeString('id-ID', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                event: eventName
+            });
+            updateLogUI();
+        }
+
+        function deleteSingleLog(id) {
+            logs = logs.filter(l => l.id !== id);
+            updateLogUI();
+        }
+
+        function handleClearLogs() {
+            if (confirmClear) {
+                logs = [];
+                confirmClear = false;
+                
+                // Reset Smart Assistant Data
+                lastEpiTimeMs = 0;
+                hasAirway = false;
+                stopBreathPacer();
+                
+                // Reset UI Smart Assistant
+                document.getElementById('epi-countdown').innerText = '--:--';
+                document.getElementById('epi-countdown').className = 'text-slate-500 font-mono font-black text-xl sm:text-2xl mt-0.5';
+                document.getElementById('epi-alert-bar').style.width = '0%';
+                document.getElementById('epi-alert-bar').className = 'absolute bottom-0 left-0 h-1 bg-purple-500 w-0 transition-all duration-1000';
+                document.getElementById('epi-card').classList.remove('border-rose-500/50', 'bg-rose-950/30');
+
+                document.getElementById('vent-status').innerText = 'Standby';
+                document.getElementById('vent-status').className = 'text-slate-500 font-bold text-sm sm:text-base mt-0.5 leading-tight';
+                document.getElementById('vent-subtext').innerText = 'Tunggu Airway';
+                
+                const btnAirway = document.getElementById('btn-airway');
+                btnAirway.className = 'flex-1 bg-cyan-600 hover:bg-cyan-500 py-2 sm:py-3 rounded-xl font-bold text-white shadow-lg active:scale-95 transition-all flex flex-col items-center justify-center';
+
+                updateLogUI();
+            } else {
+                confirmClear = true;
+                const btn = document.getElementById('btn-clear');
+                const txt = document.getElementById('clear-text');
+                btn.classList.replace('bg-transparent', 'bg-red-600');
+                btn.classList.replace('text-red-400', 'text-white');
+                btn.classList.add('animate-pulse');
+                txt.innerText = "YAKIN?";
+                
+                setTimeout(() => {
+                    confirmClear = false;
+                    updateLogUI();
+                }, 3000);
+            }
+        }
+
+        // --- Data Summarizer ---
+        function getSummary() {
+            const epiLogs = logs.filter(l => l.event.includes("Epinephrine"));
+            const amioLogs = logs.filter(l => l.event.includes("Amiodarone"));
+            const lidoLogs = logs.filter(l => l.event.includes("Lidocaine"));
+            const shocks = logs.filter(l => l.event.includes("Shock"));
+            const airway = logs.find(l => l.event.includes("Airway"));
+            
+            return {
+                startTime: logs.length > 0 ? logs[0].time : "-",
+                duration: durationDisplay.innerText,
+                epiCount: epiLogs.length,
+                epiTimes: epiLogs.map(l => l.time).join(", ") || "-",
+                amioCount: amioLogs.length,
+                amioTimes: amioLogs.map(l => l.time).join(", ") || "-",
+                lidoCount: lidoLogs.length,
+                lidoTimes: lidoLogs.map(l => l.time).join(", ") || "-",
+                shockCount: shocks.length,
+                shockTimes: shocks.map(s => s.time).join(", ") || "-",
+                airwayTime: airway ? airway.time : "Belum terpasang"
+            };
+        }
+
+        // --- Export / Clipboard ---
+        function copyLogsToClipboard() {
+            if (logs.length === 0) return;
+            const summary = getSummary();
+            let text = `CODE BLUE EVENT LOG:\n`;
+            text += logs.map(l => `[${l.time}] ${l.event}`).join('\n');
+            text += `\n\n--- RESUSCITATION SUMMARY ---`;
+            text += `\nWaktu Mulai: ${summary.startTime}\nDurasi Total: ${summary.duration}`;
+            text += `\nTotal Epinephrine: ${summary.epiCount}x (${summary.epiCount > 0 ? 'Pukul: '+summary.epiTimes : '-'})`;
+            text += `\nTotal Amiodarone: ${summary.amioCount}x (${summary.amioCount > 0 ? 'Pukul: '+summary.amioTimes : '-'})`;
+            text += `\nTotal Lidocaine: ${summary.lidoCount}x (${summary.lidoCount > 0 ? 'Pukul: '+summary.lidoTimes : '-'})`;
+            text += `\nTotal Shock: ${summary.shockCount}x (${summary.shockCount > 0 ? 'Pukul: '+summary.shockTimes : '-'})`;
+            text += `\nAdvanced Airway: ${summary.airwayTime}`;
+
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            const stat = document.getElementById('copy-status');
+            try {
+                document.execCommand('copy');
+                stat.innerText = "Disalin ke Clipboard! ✓";
+            } catch(e) { stat.innerText = "Gagal menyalin."; }
+            document.body.removeChild(ta);
+            setTimeout(() => stat.innerText = "", 3000);
+        }
+
+        function exportToPDF() {
+            if(logs.length === 0) return;
+            const win = window.open('', '_blank');
+            if(!win) { alert("Pop-up diblokir!"); return; }
+            const summary = getSummary();
+            
+            const html = `<!DOCTYPE html><html><head><title>Code Blue Log</title>
+                <style>
+                    body { font-family: sans-serif; padding: 40px; color: #111; line-height: 1.6; }
+                    .header { text-align: center; border-bottom: 3px solid #dc2626; padding-bottom: 20px; margin-bottom: 30px; }
+                    h1 { color: #dc2626; margin: 0 0 10px 0; font-size: 28px; text-transform: uppercase; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { border: 1px solid #000; padding: 12px; text-align: left; }
+                    th { background-color: #f3f4f6; }
+                    .summary-box { background-color: #f8fafc; border: 2px solid #334155; border-radius: 8px; padding: 20px; margin-top: 30px; }
+                    .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+                    @media print { body { padding: 0; } .summary-box { border: 1px solid #000; } }
+                </style></head><body>
+                <div class="header"><h1>CODE BLUE EVENT LOG</h1>
+                <div><strong>Date Generated:</strong> ${new Date().toLocaleString('id-ID')}</div></div>
+                <table><thead><tr><th style="width:120px">TIME</th><th>EVENT / INTERVENTION</th></tr></thead>
+                <tbody>${logs.map(l => `<tr><td>${l.time}</td><td><strong>${l.event}</strong></td></tr>`).join('')}</tbody></table>
+                <div class="summary-box"><h3>Resuscitation Summary</h3>
+                <div class="summary-grid">
+                    <div><strong>Waktu Mulai:</strong> ${summary.startTime}</div>
+                    <div><strong>Durasi Total:</strong> ${summary.duration}</div>
+                    <div style="grid-column: 1/-1"><strong>Airway:</strong> ${summary.airwayTime}</div>
+                    <div style="grid-column: 1/-1"><strong>Epinephrine:</strong> ${summary.epiCount}x (${summary.epiCount>0?summary.epiTimes:'-'})</div>
+                    <div style="grid-column: 1/-1"><strong>Amiodarone:</strong> ${summary.amioCount}x (${summary.amioCount>0?summary.amioTimes:'-'})</div>
+                    <div style="grid-column: 1/-1"><strong>Lidocaine:</strong> ${summary.lidoCount}x (${summary.lidoCount>0?summary.lidoTimes:'-'})</div>
+                    <div style="grid-column: 1/-1"><strong>Shock:</strong> ${summary.shockCount}x (${summary.shockCount>0?summary.shockTimes:'-'})</div>
+                </div></div>
+                <script>window.onload = function(){ setTimeout(function(){ window.print(); }, 500); };<\/script>
+            </body></html>`;
+            win.document.open(); win.document.write(html); win.document.close();
+        }
+
+        // --- UI Updaters ---
+        function renderUIState() {
+            // Colors
+            body.className = `min-h-[100dvh] flex flex-col items-center justify-between transition-colors duration-75 py-4 px-4 select-none relative ${!isRunning ? 'bg-slate-900' : (isCheckingRhythm ? 'bg-amber-600' : 'bg-gray-900')}`;
+            
+            // Timer Texts
+            timerDisplay.innerText = formatTime(timeRemaining);
+            if (timeRemaining <= 10 && isRunning && !isCheckingRhythm) {
+                timerDisplay.className = "text-7xl sm:text-8xl md:text-[130px] font-black tracking-tighter tabular-nums text-red-400 animate-pulse";
+            } else {
+                timerDisplay.className = "text-7xl sm:text-8xl md:text-[130px] font-black tracking-tighter tabular-nums text-white";
+            }
+
+            timerLabel.innerText = !isRunning ? 'READY TO START' : (isCheckingRhythm ? 'CHECKING RHYTHM / PULSE' : 'CPR CYCLE TIMER');
+            timerLabel.className = `text-sm sm:text-lg md:text-xl font-medium mt-1 sm:mt-2 ${isCheckingRhythm ? 'text-yellow-100 animate-pulse' : 'text-gray-400'}`;
+
+            // Buttons & BPM
+            btnStartStop.innerText = isRunning ? 'STOP' : 'START';
+            btnStartStop.className = `w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 rounded-full text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-wider transition-transform active:scale-95 shadow-2xl flex items-center justify-center border-4 shrink-0 ${isRunning ? 'bg-red-500 hover:bg-red-600 border-red-400 text-white' : 'bg-green-600 hover:bg-green-500 border-green-400 text-white'}`;
+
+            [100, 110, 120].forEach(rate => {
+                const btn = document.getElementById(`bpm-${rate}`);
+                if(isRunning) btn.disabled = true;
+                else btn.disabled = false;
+                if(isRunning && rate !== bpm) btn.classList.add('opacity-50');
+                else btn.classList.remove('opacity-50');
+            });
+        }
+
+        function toggleLogModal(show) {
+            const modal = document.getElementById('log-modal');
+            if (show) {
+                updateLogUI();
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+        
+        function toggle5H5T(show) {
+            const modal = document.getElementById('modal-5h5t');
+            if (show) {
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function updateLogUI() {
+            // Badge
+            const badge = document.getElementById('log-badge');
+            if(logs.length > 0) { badge.classList.remove('hidden'); badge.innerText = logs.length; }
+            else { badge.classList.add('hidden'); }
+
+            // Log List
+            const list = document.getElementById('log-list');
+            if (logs.length === 0) {
+                list.innerHTML = `<div class="h-full flex items-center justify-center text-slate-500 font-medium py-10">Belum ada kejadian tercatat.</div>`;
+            } else {
+                list.innerHTML = logs.map(log => `
+                    <div class="flex items-center justify-between p-2 sm:p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                        <div class="flex items-center gap-2 sm:gap-3 overflow-hidden">
+                            <span class="text-blue-400 font-mono text-sm sm:text-base min-w-[75px] sm:min-w-[85px] shrink-0 font-bold">${log.time}</span>
+                            <span class="text-slate-200 text-sm sm:text-base font-medium truncate">${log.event}</span>
+                        </div>
+                        <button onclick="deleteSingleLog(${log.id})" class="text-slate-500 hover:text-red-400 hover:bg-red-950/50 p-1.5 sm:p-2 rounded-lg transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                        </button>
+                    </div>
+                `).reverse().join(''); // Reverse supaya log terbaru ada di atas
+            }
+
+            // Summary
+            const sumCard = document.getElementById('summary-card');
+            const sumCont = document.getElementById('summary-content');
+            if(logs.length > 0) {
+                sumCard.classList.remove('hidden');
+                const s = getSummary();
+                sumCont.innerHTML = `
+                    <div class="text-slate-400">Mulai: <span class="text-white font-mono">${s.startTime}</span></div>
+                    <div class="text-slate-400">Durasi: <span class="text-green-400 font-mono font-bold">${s.duration}</span></div>
+                    <div class="text-slate-400 col-span-1 sm:col-span-2">Airway: <span class="text-cyan-400 font-bold">${s.airwayTime}</span></div>
+                    <div class="text-slate-400 col-span-1 sm:col-span-2 mt-1">Epinephrine: <span class="text-purple-400 font-bold">${s.epiCount}x</span> ${s.epiCount>0 ? `<span class="text-slate-500 font-mono text-[10px] sm:text-xs ml-1">(${s.epiTimes})</span>`:''}</div>
+                    <div class="text-slate-400 col-span-1 sm:col-span-2">Amiodarone: <span class="text-blue-400 font-bold">${s.amioCount}x</span> ${s.amioCount>0 ? `<span class="text-slate-500 font-mono text-[10px] sm:text-xs ml-1">(${s.amioTimes})</span>`:''}</div>
+                    <div class="text-slate-400 col-span-1 sm:col-span-2">Lidocaine: <span class="text-teal-400 font-bold">${s.lidoCount}x</span> ${s.lidoCount>0 ? `<span class="text-slate-500 font-mono text-[10px] sm:text-xs ml-1">(${s.lidoTimes})</span>`:''}</div>
+                    <div class="text-slate-400 col-span-1 sm:col-span-2">Shock: <span class="text-orange-400 font-bold">${s.shockCount}x</span> ${s.shockCount>0 ? `<span class="text-slate-500 font-mono text-[10px] sm:text-xs ml-1">(${s.shockTimes})</span>`:''}</div>
+                `;
+            } else {
+                sumCard.classList.add('hidden');
+            }
+
+            // Buttons Disable State
+            const btnClr = document.getElementById('btn-clear');
+            const btnCpy = document.getElementById('btn-copy');
+            const btnPdf = document.getElementById('btn-pdf');
+            
+            if(logs.length === 0) {
+                btnClr.disabled = true; btnCpy.disabled = true; btnPdf.disabled = true;
+                btnClr.className = "flex-1 border py-3 sm:py-4 rounded-xl font-bold text-xs sm:text-sm shadow-lg active:scale-95 transition-all uppercase tracking-wide flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 border-slate-800 text-slate-600 bg-transparent";
+            } else {
+                btnClr.disabled = false; btnCpy.disabled = false; btnPdf.disabled = false;
+                if(!confirmClear) {
+                    btnClr.className = "flex-1 border py-3 sm:py-4 rounded-xl font-bold text-xs sm:text-sm shadow-lg active:scale-95 transition-all uppercase tracking-wide flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 bg-transparent text-red-400 border-red-900/50 hover:bg-red-950/30";
+                    document.getElementById('clear-text').innerText = "HAPUS";
+                }
+            }
+        }
+    </script>
+</body>
+</html>
