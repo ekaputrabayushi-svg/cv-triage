@@ -228,13 +228,175 @@
             egfr: null
         };
 
-        const categories = ["All", "OAC (DOAC/VKA)", "Statin", "Anti-HF", "Anti-Aritmia", "Parenteral/IV", "Anti-Diabetik", "Metabolik"];
+        const categories = ["All", "Anti-Hipertensi", "Anti-HF", "Anti-Aritmia", "OAC (DOAC/VKA)", "Statin", "Parenteral/IV", "Anti-Diabetik", "Metabolik"];
 
         /* * LOGIKA KLINIS (Diperbarui berdasarkan tinjauan sejawat dr. Bayushi Eka Putra)
          * Menggunakan parameter spesifik: `crcl` untuk komparasi angka.
          * Telah ditambahkan ceiling dose, pedoman SGLT2i spesifik, alternatif obat, & waktu pemberian HD.
          */
         const drugs = [
+            // ==================== ANTI-HIPERTENSI ====================
+            {
+                name: "Ramipril", category: "Anti-Hipertensi",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "Dosis Reduksi: Inisiasi 1.25 mg/hari. Maksimal 5 mg/hari. (Sebagian terdialisis, sangat disarankan berikan setelah sesi HD).";
+                    const c = Number(crcl);
+                    if (c >= 30) return "Dosis Standar. Hati-hati hiperkalemia & peningkatan SCr (>30% dari baseline hentikan/reduksi).";
+                    return "Dosis Reduksi: Inisiasi 1.25 mg/hari. Maksimal 5 mg/hari (CrCl < 30).";
+                }
+            },
+            {
+                name: "Lisinopril", category: "Anti-Hipertensi",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "Dosis Reduksi: Inisiasi 2.5 mg/hari. Obat ini sangat dialyzable (terdialisis 20-30%). Wajib berikan SETELAH sesi HD.";
+                    const c = Number(crcl);
+                    if (c >= 30) return "Dosis Standar (Inisiasi 10 mg/hari, maks 40 mg/hari).";
+                    if (c >= 10) return "Dosis Reduksi: Inisiasi 2.5 - 5 mg/hari. Maksimal 40 mg/hari.";
+                    return "Dosis Reduksi: Inisiasi 2.5 mg/hari. Maksimal 40 mg/hari.";
+                }
+            },
+            {
+                name: "Captopril", category: "Anti-Hipertensi",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "Dosis Reduksi: Gunakan 50% dari dosis normal. Terdialisis, sehingga berikan dosis tambahan atau jadwal rutin SETELAH sesi HD.";
+                    const c = Number(crcl);
+                    if (c >= 50) return "Dosis Standar.";
+                    if (c >= 10) return "Dosis Reduksi: Gunakan 75% dari dosis normal. Titrasi perlahan.";
+                    return "Dosis Reduksi: Gunakan 50% dari dosis normal (CrCl < 10).";
+                }
+            },
+            {
+                name: "Valsartan", category: "Anti-Hipertensi",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "TIDAK PERLU PENYESUAIAN DOSIS RUTIN. Sangat terikat protein sehingga tidak terdialisis. Inisiasi perlahan untuk mencegah hipotensi post-HD.";
+                    return "TIDAK PERLU PENYESUAIAN DOSIS GINJAL secara spesifik, namun inisiasi sangat hati-hati pada CrCl < 30. Awasi kalium dan Cr.";
+                }
+            },
+            {
+                name: "Candesartan", category: "Anti-Hipertensi",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "Inisiasi 4 mg/hari. Tidak terdialisis. Observasi tekanan darah dengan ketat.";
+                    const c = Number(crcl);
+                    if (c >= 30) return "Dosis Standar (Inisiasi 8-16 mg/hari).";
+                    return "Dosis Reduksi (Inisiasi): Mulai dari 4 mg/hari (CrCl < 30). Titrasi perlahan.";
+                }
+            },
+            {
+                name: "Telmisartan / Irbesartan", category: "Anti-Hipertensi",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "TIDAK PERLU PENYESUAIAN DOSIS. Ekskresi dominan bilier/hepatik (terutama Telmisartan). Tidak terdialisis.";
+                    return "TIDAK PERLU PENYESUAIAN DOSIS GINJAL. Relatif aman untuk CKD berat karena jalur eliminasi non-ginjal yang tinggi. Tetap awasi kalium.";
+                }
+            },
+            {
+                name: "Amlodipine / Lercanidipine", category: "Anti-Hipertensi",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "TIDAK PERLU PENYESUAIAN DOSIS. Ikatan protein tinggi (>90%), tidak terdialisis. Waspada eksaserbasi edema perifer.";
+                    return "TIDAK PERLU PENYESUAIAN DOSIS GINJAL. Metabolisme dominan hepatik. Lercanidipine dapat menjadi alternatif jika Amlodipine menyebabkan edema berat.";
+                }
+            },
+            {
+                name: "Nifedipine (IR / OROS)", category: "Anti-Hipertensi",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "TIDAK PERLU PENYESUAIAN DOSIS. Tidak terdialisis.";
+                    return "TIDAK PERLU PENYESUAIAN DOSIS GINJAL. Penggunaan bentuk OROS/SR lebih disarankan untuk stabilitas hemodinamik.";
+                }
+            },
+            {
+                name: "Diltiazem / Verapamil", category: "Anti-Hipertensi",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "TIDAK PERLU PENYESUAIAN DOSIS secara matematis. Tidak terdialisis. NAMUN, hati-hati retensi cairan dan bradikardi.";
+                    return "TIDAK PERLU PENYESUAIAN DOSIS GINJAL. Titrasi perlahan karena risiko akumulasi metabolit dan penumpukan efek inotropik/kronotropik negatif.";
+                }
+            },
+            {
+                name: "Bisoprolol", category: "Anti-Hipertensi",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "Dosis Reduksi: Maksimal 10 mg/hari. Terdialisis minimal (<10%). Diberikan SETELAH HD untuk keamanan hemodinamik.";
+                    const c = Number(crcl);
+                    if (c >= 20) return "Dosis Standar. Titrasi sesuai respons klinis (Target HR).";
+                    return "Dosis Reduksi: Jangan melebihi 10 mg/hari (CrCl < 20). Eliminasi bergeser 50% ginjal, 50% hepatik.";
+                }
+            },
+            {
+                name: "Carvedilol / Metoprolol", category: "Anti-Hipertensi",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "TIDAK PERLU PENYESUAIAN DOSIS. Ekskresi dominan hepatik dan tidak terdialisis.";
+                    return "TIDAK PERLU PENYESUAIAN DOSIS GINJAL. Pilihan Beta-blocker teraman pada pasien dengan CKD berat (Metabolisme utamanya hepatik).";
+                }
+            },
+            {
+                name: "Atenolol", category: "Anti-Hipertensi",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "Dosis Reduksi Ekstrim: 25 - 50 mg/hari ATAU berikan setelah sesi HD. Obat ini SANGAT terdialisis (klirens via ginjal eksklusif).";
+                    const c = Number(crcl);
+                    if (c > 35) return "Dosis Standar.";
+                    if (c >= 15) return "Dosis Reduksi: Maksimal 50 mg/hari.";
+                    return "Dosis Reduksi Ekstrim: Maksimal 25 mg/hari ATAU 50 mg selang sehari (CrCl < 15). Risiko bradikardi/blok tinggi.";
+                }
+            },
+            {
+                name: "Nebivolol", category: "Anti-Hipertensi",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "Inisiasi dosis sangat rendah (2.5 mg/hari). Pertimbangkan alternatif Beta-blocker hepatik (Carvedilol).";
+                    const c = Number(crcl);
+                    if (c >= 30) return "Dosis Standar.";
+                    return "Inisiasi dosis rendah: Mulai 2.5 mg/hari. Titrasi sangat lambat (CrCl < 30).";
+                }
+            },
+            {
+                name: "Propranolol", category: "Anti-Hipertensi",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "TIDAK PERLU PENYESUAIAN DOSIS. Sangat lipofilik, tidak terdialisis.";
+                    return "TIDAK PERLU PENYESUAIAN DOSIS GINJAL. Metabolisme murni hepatik.";
+                }
+            },
+            {
+                name: "Hydrochlorothiazide (HCTZ)", category: "Anti-Hipertensi",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "KONTRAINDIKASI / TIDAK EFEKTIF: Kehilangan efikasi diuretik pada anuria/ESRD. Ganti strategi ke ultrafiltrasi HD atau Loop Diuretik dosis tinggi.";
+                    const c = Number(crcl);
+                    if (c >= 30) return "Dosis Standar (12.5 - 25 mg/hari).";
+                    return "TIDAK DISARANKAN SECARA RUTIN: Kehilangan efektivitas diuretik jika CrCl < 30. Ganti dengan Loop Diuretik (Furosemide).";
+                }
+            },
+            {
+                name: "Clonidine", category: "Anti-Hipertensi",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "TIDAK PERLU PENYESUAIAN DOSIS RUTIN. Hanya ~5% terdialisis. Hati-hati efek rebound hypertension jika pasien lupa minum atau mendadak dihentikan.";
+                    const c = Number(crcl);
+                    if (c >= 10) return "Dosis Standar.";
+                    return "Dosis Reduksi: Pertimbangkan memperpanjang interval dosis atau mulai dengan dosis terkecil (CrCl < 10). Sebagian obat diekskresi via ginjal.";
+                }
+            },
+            {
+                name: "Methyldopa", category: "Anti-Hipertensi",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "Obat ini dapat terdialisis. Berikan dosis maintanance SETELAH sesi HD selesai untuk mencegah krisis hipertensi rebound.";
+                    const c = Number(crcl);
+                    if (c >= 50) return "Dosis Standar. Berikan setiap 8 jam.";
+                    if (c >= 10) return "Perpanjang Interval: Berikan setiap 8 - 12 jam.";
+                    return "Perpanjang Interval Ekstrim: Berikan setiap 12 - 24 jam (CrCl < 10).";
+                }
+            },
+
             // ==================== OAC (DOAC/VKA) ====================
             {
                 name: "Rivaroxaban (Xarelto)", category: "OAC (DOAC/VKA)",
@@ -765,13 +927,13 @@
                 // Deteksi kata kunci dengan sensitivitas yang ditingkatkan
                 const doseTextUpper = doseText.toUpperCase();
                 
-                if (doseTextUpper.includes("KONTRAINDIKASI") || doseTextUpper.includes("SANGAT TIDAK DISARANKAN")) {
+                if (doseTextUpper.includes("KONTRAINDIKASI") || doseTextUpper.includes("SANGAT TIDAK DISARANKAN") || doseTextUpper.includes("TIDAK EFEKTIF")) {
                     alertLevel = 2;
                     border = "border-l-4 border-l-rose-500";
                     bg = "bg-rose-50/50";
                     icon = `<i class="fa-solid fa-shield-halved text-rose-500 text-lg"></i>`;
                     textStyle = "text-rose-700 font-bold";
-                } else if (doseTextUpper.includes("REDUKSI") || doseTextUpper.includes("HATI-HATI") || doseTextUpper.includes("KURANGI") || doseTextUpper.includes("INISIASI") || doseTextUpper.includes("TIDAK DISARANKAN") || doseTextUpper.includes("PENGGUNAAN KHUSUS") || doseTextUpper.includes("FLAG WARNING")) {
+                } else if (doseTextUpper.includes("REDUKSI") || doseTextUpper.includes("HATI-HATI") || doseTextUpper.includes("KURANGI") || doseTextUpper.includes("INISIASI") || doseTextUpper.includes("TIDAK DISARANKAN") || doseTextUpper.includes("PENGGUNAAN KHUSUS") || doseTextUpper.includes("FLAG WARNING") || doseTextUpper.includes("PERPANJANG INTERVAL")) {
                     alertLevel = 1;
                     border = "border-l-4 border-l-amber-400";
                     bg = "bg-amber-50/30";
