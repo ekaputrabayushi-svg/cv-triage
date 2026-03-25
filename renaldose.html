@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Renal Dose Optimizer - CardiologyVault</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Sembunyikan scrollbar tapi tetap bisa di-scroll (untuk chip kategori) */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* Transisi halus */
+        .transition-all {
+            transition-property: all;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 300ms;
+        }
+        /* Mencegah zoom otomatis di iPhone saat tap input */
+        input[type="number"], input[type="text"] {
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body class="bg-[#f3f6f9] text-slate-800 font-sans min-h-screen flex flex-col antialiased">
+
+    <div class="max-w-6xl mx-auto w-full p-3 sm:p-5 md:p-6 space-y-4 sm:space-y-5 flex-grow">
+        
+        <!-- CardiologyVault Header -->
+        <div class="bg-slate-900 rounded-2xl p-5 sm:p-6 shadow-xl text-white flex flex-col md:flex-row items-start md:items-center justify-between relative overflow-hidden">
+            <div class="absolute right-0 top-0 opacity-10 pointer-events-none">
+                <svg width="300" height="300" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 50 Q 25 20, 50 50 T 90 50" stroke="white" strokeWidth="2" fill="none"/>
+                    <path d="M10 60 Q 30 10, 60 60 T 90 60" stroke="white" strokeWidth="1" fill="none"/>
+                </svg>
+            </div>
+
+            <div class="z-10">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fa-solid fa-database text-cyan-400 text-sm"></i>
+                    <span class="text-xs font-semibold tracking-widest text-cyan-400 uppercase">CardiologyVault</span>
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold flex items-center gap-3">
+                    Renal Dose Optimizer
+                </h1>
+                <p class="text-slate-400 mt-2 max-w-xl text-xs sm:text-sm leading-relaxed">
+                    Algoritma penyesuaian dosis kardiovaskular presisi tinggi berbasis farmakokinetik ginjal (Cockcroft-Gault) & CKD-EPI. Dilengkapi protokol Hemodialisa.
+                </p>
+            </div>
+            
+            <div class="mt-4 md:mt-0 z-10 bg-white/10 backdrop-blur-md px-4 py-3 rounded-xl border border-white/20 flex items-center gap-3 w-full md:w-auto">
+                <div class="bg-cyan-500/20 p-2 rounded-lg">
+                    <i class="fa-solid fa-stethoscope text-cyan-300 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] text-slate-300">Developed By</p>
+                    <p class="font-bold text-white text-xs sm:text-sm">Bayushi Eka Putra, MD, FIHA</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
+            
+            <!-- PANEL KIRI: Data Pasien -->
+            <div class="lg:col-span-4 flex flex-col gap-4 sm:gap-5">
+                <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200">
+                    <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                        <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-calculator text-indigo-500"></i>
+                            Parameter Pasien
+                        </h2>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <!-- Dialysis Toggle -->
+                        <div id="hdToggleBtn" class="p-3 sm:p-4 rounded-xl border-2 transition-all flex items-center justify-between cursor-pointer border-slate-200 hover:border-indigo-300 bg-slate-50 select-none">
+                            <div class="flex items-center gap-3">
+                                <div id="hdToggleIconBg" class="p-2 rounded-lg bg-slate-200 text-slate-500 transition-colors">
+                                    <i class="fa-solid fa-droplet text-lg"></i>
+                                </div>
+                                <div>
+                                    <p id="hdToggleText1" class="font-bold text-sm text-slate-700 transition-colors">Rutin Hemodialisa (HD)</p>
+                                    <p class="text-xs text-slate-500">Pasien ESRD On-HD</p>
+                                </div>
+                            </div>
+                            <div id="hdToggleSwitch" class="w-12 h-6 rounded-full flex items-center p-1 transition-colors bg-slate-300 relative">
+                                <div id="hdToggleKnob" class="w-4 h-4 rounded-full bg-white absolute left-1 transition-all duration-300"></div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">Gender</label>
+                                <div class="flex bg-slate-100 p-1 rounded-lg">
+                                    <button id="btnGenderM" class="flex-1 py-2 text-xs font-bold rounded-md transition-all bg-white shadow text-indigo-600">Laki-laki</button>
+                                    <button id="btnGenderF" class="flex-1 py-2 text-xs font-bold rounded-md transition-all text-slate-500">Perempuan</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">Usia (Thn)</label>
+                                <input type="number" id="inputAge" inputmode="numeric" class="w-full border-slate-200 border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none disabled:bg-slate-100 disabled:text-slate-400 transition-colors" placeholder="0" />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">BB (kg)</label>
+                                <input type="number" id="inputWeight" inputmode="decimal" class="w-full border-slate-200 border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none disabled:bg-slate-100 disabled:text-slate-400 transition-colors" placeholder="0" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">SCr (mg/dL)</label>
+                                <input type="number" id="inputScr" step="0.1" inputmode="decimal" class="w-full border-slate-200 border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none disabled:bg-slate-100 disabled:text-slate-400 transition-colors" placeholder="0.0" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Renal Function Output -->
+                <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200">
+                   <h2 class="text-base font-bold text-slate-800 flex items-center gap-2 mb-4">
+                        <i class="fa-solid fa-chart-line text-emerald-500"></i>
+                        Klirens Ginjal
+                    </h2>
+
+                    <div class="space-y-4 relative">
+                        <!-- Dialysis Overlay -->
+                        <div id="dialysisOverlay" class="hidden absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-xl">
+                            <div class="bg-rose-100 text-rose-700 px-4 py-2 rounded-lg font-bold border border-rose-200 shadow-sm flex items-center gap-2 text-sm">
+                                <i class="fa-solid fa-triangle-exclamation"></i> OVERRIDE: Mode Dialisis
+                            </div>
+                        </div>
+
+                        <div class="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 relative">
+                            <p class="text-[10px] sm:text-xs font-bold text-indigo-400 uppercase tracking-wider mb-1">Cockcroft-Gault (CrCl)</p>
+                            <div class="flex items-end gap-2">
+                                <span id="crclValue" class="text-3xl sm:text-4xl font-black text-indigo-900 leading-none">--</span>
+                                <span class="text-indigo-600 font-semibold text-xs sm:text-sm mb-1">mL/min</span>
+                            </div>
+                            <p class="text-[10px] text-indigo-400 mt-1">Digunakan sbg patokan panduan dosis di kanan <i class="fa-solid fa-arrow-right ml-1"></i></p>
+                        </div>
+
+                        <div class="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100 opacity-60">
+                            <div class="flex justify-between items-center mb-1">
+                                <p class="text-[10px] sm:text-xs font-bold text-emerald-500 uppercase tracking-wider">eGFR (CKD-EPI)</p>
+                                <span id="stageBadge" class="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-md text-white bg-slate-200">-</span>
+                            </div>
+                            <div class="flex items-end gap-2">
+                                <span id="egfrValue" class="text-3xl sm:text-4xl font-black text-emerald-900 leading-none">--</span>
+                                <span class="text-emerald-600 font-semibold text-xs sm:text-sm mb-1">mL/min/1.73m²</span>
+                            </div>
+                            
+                            <div class="h-1.5 w-full bg-slate-200 rounded-full mt-3 overflow-hidden">
+                                <div id="stageBar" class="h-full bg-slate-200 w-0 transition-all duration-500"></div>
+                            </div>
+                            <p id="stageDesc" class="text-[10px] sm:text-[11px] font-medium mt-1.5 text-slate-400">Masukkan data</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL KANAN: Drug Recommendations -->
+            <div class="lg:col-span-8 flex flex-col min-h-[500px]">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 h-full flex flex-col overflow-hidden">
+                    
+                    <div class="p-4 sm:p-5 border-b border-slate-100 bg-slate-50 flex flex-col gap-3 sm:gap-4">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid fa-heart-pulse text-rose-500 text-lg sm:text-xl"></i>
+                                Panduan Dosis Klinis (Berdasarkan CrCl)
+                            </h2>
+                            <div class="relative w-full sm:w-64">
+                                <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                <input type="text" id="searchInput" placeholder="Cari obat..." class="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm" />
+                            </div>
+                        </div>
+
+                        <!-- Smart Category Chips -->
+                        <div class="flex items-center gap-2 overflow-x-auto pb-2 pt-1 scrollbar-hide" id="categoryContainer">
+                            <!-- Injected via JS -->
+                        </div>
+                    </div>
+
+                    <div id="drugListContainer" class="divide-y divide-slate-100 flex-grow overflow-y-auto max-h-[60vh] lg:max-h-[600px] bg-slate-50/30">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Disclaimer Medis -->
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800 flex items-start gap-3 shadow-sm mt-2">
+            <i class="fa-solid fa-shield-halved text-amber-500 text-lg mt-0.5 flex-shrink-0"></i>
+            <p class="leading-relaxed">
+                <strong>Disclaimer Medis:</strong> Kalkulator penyesuaian dosis ini adalah alat bantu komputasi klinis dan <strong>tidak menggantikan pertimbangan medis profesional (clinical judgment)</strong> dokter yang merawat. Perbedaan batasan <em>cutoff</em> pada kelas obat yang sama merujuk pada profil farmakokinetik spesifik panduan (mis. ESC/AHA/KDIGO). Selalu verifikasi rekomendasi dengan evaluasi klinis pasien secara holistik.
+            </p>
+        </div>
+    </div>
+
+    <!-- Footer Branding -->
+    <footer class="mt-4 text-center pb-6">
+        <div class="inline-flex items-center justify-center gap-2 text-slate-400 text-[10px] sm:text-xs font-medium">
+            <i class="fa-solid fa-database text-[10px] sm:text-xs"></i>
+            <span>Part of <strong>CardiologyVault</strong> Platform.</span>
+        </div>
+        <p class="text-[9px] sm:text-[10px] text-slate-400 mt-1 px-4">
+            Designed and conceptually developed by <span class="font-bold text-slate-500">Bayushi Eka Putra, MD, FIHA</span>.<br>
+            For clinical reference only.
+        </p>
+    </footer>
+
+    <!-- App Logic -->
+    <script>
+        // State
+        const state = {
+            age: '',
+            weight: '',
+            scr: '',
+            gender: 'M',
+            isDialysis: false,
+            searchQuery: '',
+            activeCategory: 'All',
+            crcl: null,
+            egfr: null
+        };
+
+        const categories = ["All", "OAC (DOAC/VKA)", "Statin", "Anti-HF", "Anti-Aritmia", "Parenteral/IV", "Anti-Diabetik", "Metabolik"];
+
+        /* * LOGIKA KLINIS (Diperbarui berdasarkan tinjauan sejawat dr. Bayushi Eka Putra)
+         * Menggunakan parameter spesifik: `crcl` untuk komparasi angka.
+         * Telah ditambahkan ceiling dose, pedoman SGLT2i spesifik, alternatif obat, & waktu pemberian HD.
+         */
+        const drugs = [
+            // ==================== OAC (DOAC/VKA) ====================
+            {
+                name: "Rivaroxaban (Xarelto)", category: "OAC (DOAC/VKA)",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "KONTRAINDIKASI: Jangan digunakan pada pasien Hemodialisa rutin.";
+                    const c = Number(crcl);
+                    if (c > 50) return "Dosis Standar: 20 mg sekali sehari.";
+                    if (c >= 15) return "Dosis Reduksi: 15 mg sekali sehari.";
+                    return "TIDAK DISARANKAN SECARA RUTIN: Hindari penggunaan kecuali ada pertimbangan khusus ahli (CrCl < 15, profil mendekati ESRD).";
+                }
+            },
+            {
+                name: "Apixaban (Eliquis)", category: "OAC (DOAC/VKA)",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "PENGGUNAAN KHUSUS (FDA/Off-label): 2.5 mg dua kali sehari. Observasi perdarahan sangat ketat.";
+                    const c = Number(crcl);
+                    let criteria = 0;
+                    if (Number(state.age) >= 80) criteria++;
+                    if (Number(state.weight) <= 60) criteria++;
+                    if (Number(state.scr) >= 1.5) criteria++;
+                    
+                    if (c < 15) {
+                        return "TIDAK DISARANKAN SECARA RUTIN: Tidak direkomendasikan bila CrCl <15 mL/menit. Data klinis sangat terbatas.";
+                    } else if (c < 30) {
+                        if (criteria >= 2) {
+                            return "Severe CKD (CrCl 15-29) & Memenuhi ≥2 Kriteria: Reduksi ke 2.5 mg dua kali sehari. Gunakan dengan sangat hati-hati.";
+                        } else {
+                            return "Severe CKD (CrCl 15-29): Pertimbangkan 2.5 - 5 mg dua kali sehari. Reduksi ke 2.5 mg BID bila pasien memenuhi ≥2 kriteria (Usia ≥80 th, BB ≤60 kg, SCr ≥1.5 mg/dL). Gunakan dengan hati-hati.";
+                        }
+                    } else {
+                        if (criteria >= 2) return "Dosis Reduksi (Memenuhi ≥2 kriteria: Usia ≥80, BB ≤60, SCr ≥1.5): 2.5 mg dua kali sehari.";
+                        return "Dosis Standar: 5 mg dua kali sehari. (Reduksi ke 2.5 mg BID wajib bila memenuhi ≥2 kriteria: Usia ≥80 th, BB ≤60 kg, SCr ≥1.5 mg/dL).";
+                    }
+                }
+            },
+            {
+                name: "Dabigatran (Pradaxa)", category: "OAC (DOAC/VKA)",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "KONTRAINDIKASI: Obat ini dialyzable (terdialisis). Sangat bahaya di HD.";
+                    const c = Number(crcl);
+                    if (c > 50) return "Dosis Standar: 150 mg dua kali sehari.";
+                    if (c >= 30) return "Dosis Reduksi: 110 mg dua kali sehari.";
+                    return "KONTRAINDIKASI: Sesuai label, jangan digunakan jika CrCl < 30.";
+                }
+            },
+            {
+                name: "Edoxaban (Lixiana)", category: "OAC (DOAC/VKA)",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "KONTRAINDIKASI: Jangan digunakan pada pasien Hemodialisa rutin.";
+                    const c = Number(crcl);
+                    if (c > 95) return "KONTRAINDIKASI KLINIS: Klirens terlalu cepat, efikasi sangat menurun. Gunakan DOAC lain (mis. Apixaban/Rivaroxaban).";
+                    if (c > 50) return "Dosis Standar: 60 mg sekali sehari.";
+                    if (c >= 15) return "Dosis Reduksi: 30 mg sekali sehari.";
+                    return "TIDAK DISARANKAN SECARA RUTIN: Hindari penggunaan (CrCl < 15).";
+                }
+            },
+            {
+                name: "Warfarin (VKA)", category: "OAC (DOAC/VKA)",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "TIDAK PERLU PENYESUAIAN DOSIS. Obat tidak terdialisis (ikatan protein >99%). NAMUN, dosis maintenance sering kali LEBIH RENDAH. Waspada risiko tinggi perdarahan, labilitas INR, & kalsifilaksis (calcific uremic arteriolopathy).";
+                    const c = Number(crcl);
+                    if (c >= 30) return "TIDAK PERLU PENYESUAIAN DOSIS GINJAL secara matematis (ekskresi hepatik). Titrasi murni berdasarkan target INR (2.0 - 3.0 atau sesuai indikasi).";
+                    return "TIDAK PERLU PENYESUAIAN DOSIS MATEMATIS. NAMUN, pada CKD berat (CrCl < 30), pasien sering butuh dosis pemeliharaan yang lebih rendah akibat perubahan aktivitas CYP450 dan ikatan protein. Awasi INR sangat ketat.";
+                }
+            },
+
+            // ==================== STATIN ====================
+            {
+                name: "Atorvastatin", category: "Statin",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    return "TIDAK PERLU PENYESUAIAN DOSIS. Pilihan statin teraman untuk CKD/HD (ekskresi dominan bilier/hepatik, sesuai panduan lipid).";
+                }
+            },
+            {
+                name: "Rosuvastatin", category: "Statin",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "Reduksi Dosis (Sesuai Label): Mulai 5 mg/hari. Dosis MAKSIMAL 10 mg/hari.";
+                    const c = Number(crcl);
+                    if (c >= 30) return "Dosis standar (hingga 40 mg/hari).";
+                    return "Reduksi Dosis (Sesuai Label): Mulai 5 mg/hari. Dosis MAKSIMAL 10 mg/hari (CrCl < 30).";
+                }
+            },
+            {
+                name: "Pravastatin", category: "Statin",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "Dosis Reduksi: Mulai inisiasi 10 mg/hari. Maksimal 20 mg/hari.";
+                    const c = Number(crcl);
+                    if (c >= 30) return "Dosis Standar (10-40 mg/hari). Relatif lebih aman dibanding Simvastatin.";
+                    return "Dosis Reduksi: Mulai inisiasi 10 mg/hari. Maksimal 20 mg/hari (CrCl < 30).";
+                }
+            },
+            {
+                name: "Simvastatin", category: "Statin",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "SANGAT TIDAK DISARANKAN: Risiko miopati sangat tinggi. Pertimbangkan ganti ke Atorvastatin atau Pravastatin.";
+                    const c = Number(crcl);
+                    if (c >= 30) return "Dosis standar.";
+                    return "Reduksi Dosis: Mulai 5 mg/hari (CrCl < 30). Sangat hati-hati risiko miopati.";
+                }
+            },
+
+            // ==================== ANTI-ARITMIA ====================
+            {
+                name: "Amiodarone", category: "Anti-Aritmia",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "TIDAK PERLU PENYESUAIAN DOSIS. Tidak terdialisis (ikatan protein tinggi). Hati-hati akumulasi dan interaksi tiroid/paru.";
+                    return "TIDAK PERLU PENYESUAIAN DOSIS GINJAL. Relatif aman di CKD berat. Titrasi sesuai protokol klinis standar.";
+                }
+            },
+            {
+                name: "Digoxin", category: "Anti-Aritmia",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "Dosis Reduksi Ekstrim: 0.125 mg diberikan 3 kali SEMINGGU. Diberikan SETELAH sesi HD selesai (Obat terdialisis minimal, namun volume distributif berubah). Pantau kadar!";
+                    const c = Number(crcl);
+                    if (c > 50) return "Dosis Standar pemeliharaan (0.125 - 0.25 mg/hari).";
+                    if (c >= 10) return "Kurangi dosis 50% ATAU berikan setiap 48 jam.";
+                    return "Kurangi dosis 75% ATAU berikan tiap 48-72 jam (CrCl < 10, profil mendekati HD).";
+                }
+            },
+
+            // ==================== ANTI-HF & DIURETIK ====================
+            {
+                name: "Furosemide (Oral)", category: "Anti-HF",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "Sering tidak efektif jika anuria. Pada residual renal function, butuh dosis sangat tinggi (80-240 mg/hari). Absorpsi oral ireguler. Evaluasi dry-weight via HD lebih utama.";
+                    const c = Number(crcl);
+                    if (c >= 50) return "Dosis Standar: 20-40 mg/hari. Titrasi euvolemia. Ceiling dose oral ~80 mg/hari.";
+                    if (c >= 20) return "Butuh Dosis Lebih Tinggi: Mulai 40-80 mg/hari. Ceiling dose oral meningkat ke ~160 mg/hari.";
+                    return "Butuh Dosis Sangat Tinggi. Ceiling dose oral ~160-240 mg/hari. Pertimbangkan rute IV jika kongesti berat (bioavailabilitas memburuk di CKD).";
+                }
+            },
+            {
+                name: "Furosemide IV", category: "Parenteral/IV",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "Seringkali tidak efektif pada Anuria. Evaluasi status volume untuk optimalisasi ultrafiltrasi HD.";
+                    const c = Number(crcl);
+                    if (c >= 30) return "Titrasi dosis sesuai respons (Urine output). Ceiling dose IV ~80-160 mg/dosis.";
+                    return "TIDAK PERLU REDUKSI. CKD berat butuh DOSIS LEBIH TINGGI untuk menembus ambang sekresi proksimal. Ceiling dose IV meningkat tajam (160-200 mg/dosis). Awas ototoksisitas.";
+                }
+            },
+            {
+                name: "Spironolactone", category: "Anti-HF",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "KONTRAINDIKASI: Risiko tinggi hiperkalemia intradialisis yang dapat fatal.";
+                    const c = Number(crcl);
+                    if (c > 50) return "Dosis Standar: 12.5 - 25 mg sekali sehari.";
+                    if (c >= 30) return "Dosis Reduksi: 12.5 mg sekali sehari / selang sehari. Awasi Kalium ketat.";
+                    return "KONTRAINDIKASI: Risiko hiperkalemia tinggi (CrCl < 30).";
+                }
+            },
+            {
+                name: "Sacubitril/Valsartan (Entresto)", category: "Anti-HF",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "Inisiasi dosis sangat rendah 24/26 mg dua kali sehari. Observasi hipotensi post-HD ketat.";
+                    const c = Number(crcl);
+                    if (c >= 30) return "Mulai dosis standar: 49/51 mg dua kali sehari.";
+                    return "Inisiasi dosis rendah: Mulai 24/26 mg dua kali sehari.";
+                }
+            },
+            {
+                name: "SGLT2i (Empagliflozin/Dapagliflozin)", category: "Anti-HF",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "TIDAK DIREKOMENDASIKAN UNTUK INISIASI. Jika pasien sebelumnya sudah rutin SGLT2i dan jatuh ke fase dialisis rutin, SEGERA HENTIKAN penggunaan.";
+                    const c = Number(state.egfr || crcl); // Often based on eGFR in guidelines
+                    if (c >= 25) return "10 mg sekali sehari (Sangat direkomendasikan untuk indikasi HF & progresi CKD).";
+                    if (c >= 20) return "10 mg/hari. Inisiasi baru Dapagliflozin tidak disarankan (FDA < 25), namun Empagliflozin masih diizinkan. Jika sudah dipakai sebelumnya, DAPAT DILANJUTKAN.";
+                    return "TIDAK DIREKOMENDASIKAN UNTUK INISIASI BARU. Namun, jika sebelumnya mentoleransi dengan baik (untuk indikasi HF/CKD), terapi DAPAT DILANJUTKAN hingga inisiasi dialisis.";
+                }
+            },
+            {
+                name: "Ivabradine (Coralan)", category: "Anti-HF",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "TIDAK DISARANKAN SECARA RUTIN: Data keamanan sangat terbatas pada pasien ESRD/HD.";
+                    const c = Number(crcl);
+                    if (c >= 15) return "TIDAK PERLU PENYESUAIAN DOSIS. Relatif aman (ekskresi dominan hepatik/CYP3A4).";
+                    return "TIDAK DISARANKAN SECARA RUTIN: Kurangnya data klinis keamanan untuk penggunaan pada CrCl < 15.";
+                }
+            },
+
+            // ==================== PARENTERAL / IV ====================
+            {
+                name: "Enoxaparin (LMWH)", category: "Parenteral/IV",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "KONTRAINDIKASI: Sangat berisiko akumulasi fatal. Alternatif: Ganti ke UFH (Heparin Unfractionated) atau Fondaparinux (jika dilarang UFH).";
+                    const c = Number(crcl);
+                    if (c >= 30) return "Dosis Standar (Terapi: 1 mg/kg/12 jam | Profilaksis: 40 mg/24 jam).";
+                    if (c >= 15) return "Dosis Reduksi (Terapi: 1 mg/kg/24 jam | Profilaksis: 30 mg/24 jam).";
+                    return "SANGAT TIDAK DISARANKAN: Risiko akumulasi tinggi (CrCl < 15). Pertimbangkan ganti ke UFH.";
+                }
+            },
+            {
+                name: "Heparin (Unfractionated/UFH)", category: "Parenteral/IV",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    return "TIDAK PERLU PENYESUAIAN DOSIS GINJAL. Pilihan utama dan paling aman untuk HD/CKD berat. Titrasi via aPTT/ACT.";
+                }
+            },
+            {
+                name: "Fondaparinux (Arixtra)", category: "Parenteral/IV",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "KONTRAINDIKASI: Ekskresi dominan ginjal, sangat berbahaya di HD. Alternatif: Ganti ke UFH.";
+                    const c = Number(crcl);
+                    if (c >= 50) return "Dosis Standar (misal: 2.5 mg SC/hari untuk profilaksis/ACS).";
+                    if (c >= 30) return "Gunakan dengan sangat hati-hati, amati perdarahan ketat.";
+                    return "KONTRAINDIKASI: Jangan digunakan (CrCl < 30). Ganti ke UFH.";
+                }
+            },
+            {
+                name: "Tirofiban (Aggrastat)", category: "Parenteral/IV",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "Dosis Reduksi 50%: Laju infus maintenance 0.075 mcg/kg/min.";
+                    const c = Number(crcl);
+                    if (c >= 60) return "Dosis Standar: Laju infus maintenance 0.15 mcg/kg/min.";
+                    return "Dosis Reduksi: Kurangi infus maintenance 50% menjadi 0.075 mcg/kg/min (CrCl < 60).";
+                }
+            },
+
+            // ==================== ANTI-DIABETIK ====================
+            {
+                name: "Metformin", category: "Anti-Diabetik",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "KONTRAINDIKASI: Risiko asidosis laktat sangat tinggi. Alternatif aman: Gunakan Linagliptin atau Insulin Basal-Bolus.";
+                    const c = Number(crcl);
+                    if (c >= 45) return "Dosis Standar. Evaluasi fungsi ginjal rutin 3-6 bulan.";
+                    if (c >= 30) return "Dosis Reduksi: Maksimal 1000 mg/hari. Jangan inisiasi baru pada stage ini.";
+                    return "KONTRAINDIKASI: Jangan digunakan (eGFR/CrCl < 30). Alternatif aman: Linagliptin atau Insulin.";
+                }
+            },
+            {
+                name: "Sitagliptin", category: "Anti-Diabetik",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "Dosis Reduksi Ekstrim: 25 mg sekali sehari. Diberikan SETELAH sesi HD selesai (Obat sebagian terdialisis).";
+                    const c = Number(crcl);
+                    if (c >= 50) return "Dosis Standar: 100 mg sekali sehari.";
+                    if (c >= 30) return "Dosis Reduksi: 50 mg sekali sehari.";
+                    return "Dosis Reduksi Ekstrim: 25 mg sekali sehari (CrCl < 30).";
+                }
+            },
+            {
+                name: "Linagliptin", category: "Anti-Diabetik",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    return "TIDAK PERLU PENYESUAIAN DOSIS. Sangat aman untuk semua stage CKD dan HD (Ekskresi dominan bilier/fekal).";
+                }
+            },
+            {
+                name: "GLP-1 RA (Semaglutide/Liraglutide)", category: "Anti-Diabetik",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "TIDAK DISARANKAN SECARA RUTIN: Data klinis sangat terbatas di ESRD. Efek samping GI (mual/muntah) berisiko memicu dehidrasi dan perburukan hemodinamik saat dialisis.";
+                    return "TIDAK PERLU PENYESUAIAN DOSIS GINJAL. Relatif aman, namun AWASI efek samping gastrointestinal akut yang dapat memicu hipovolemia/AKI prerenal.";
+                }
+            },
+            {
+                name: "Glibenclamide (Glyburide)", category: "Anti-Diabetik",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "KONTRAINDIKASI: Risiko hipoglikemia memanjang yang sangat fatal. Ganti ke Linagliptin/Insulin.";
+                    const c = Number(crcl);
+                    if (c > 50) return "Dosis Standar, namun hati-hati pada pasien lansia.";
+                    return "TIDAK DISARANKAN SECARA RUTIN: Hindari penggunaan pada CrCl < 50. Gunakan alternatif yang lebih aman.";
+                }
+            },
+            {
+                name: "Glimepiride / Gliclazide", category: "Anti-Diabetik",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "SANGAT TIDAK DISARANKAN: Risiko akumulasi memicu hipoglikemia tinggi. Ganti ke Linagliptin/Insulin.";
+                    const c = Number(crcl);
+                    if (c >= 30) return "Mulai dosis terendah (misal Glimepiride 1mg). Titrasi sangat hati-hati.";
+                    return "SANGAT TIDAK DISARANKAN: Risiko akumulasi metabolit aktif yang menyebabkan hipoglikemia memanjang.";
+                }
+            },
+            {
+                name: "Insulin (Semua Jenis)", category: "Anti-Diabetik",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "Kebutuhan insulin bervariasi (sering turun drastis). Pantau glukosa darah ketat, awasi hipoglikemia intradialisis.";
+                    const c = Number(crcl);
+                    if (c >= 50) return "Dosis Standar sesuai target glikemik.";
+                    if (c >= 10) return "Kurangi dosis 25% dari kebutuhan standar. Ginjal adalah tempat klirens utama insulin.";
+                    return "Kurangi dosis hingga 50%. Risiko hipoglikemia sangat tinggi akibat waktu paruh insulin memanjang (CrCl < 10).";
+                }
+            },
+
+            // ==================== METABOLIK ====================
+            {
+                name: "Allopurinol", category: "Metabolik",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "Mulai 50-100 mg. Diberikan SETELAH sesi HD selesai (Obat terdialisis). Pertimbangkan Febuxostat jika target tidak tercapai.";
+                    const c = Number(crcl);
+                    if (c >= 60) return "Dosis Standar: Mulai 100 mg, titrasi hingga 300 mg/hari.";
+                    if (c >= 30) return "Dosis Reduksi: Maksimal 200 mg/hari.";
+                    if (c >= 15) return "Dosis Reduksi: Maksimal 100 mg/hari.";
+                    return "Dosis Reduksi Ekstrim: Maksimal 50-100 mg/hari ATAU 100 mg selang sehari.";
+                }
+            },
+            {
+                name: "Febuxostat", category: "Metabolik",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "Dosis Standar (40-80 mg). Tidak terdialisis. NAMUN, berikan FLAG WARNING: Hati-hati peningkatan risiko mortalitas kardiovaskular dibanding Allopurinol.";
+                    const c = Number(crcl);
+                    if (c >= 30) return "Dosis Standar (40-80 mg/hari). Tidak perlu penyesuaian dosis. AWAS Risiko Kardiovaskular (sesuai FDA CARES trial).";
+                    return "Dosis Reduksi: Maksimal 40 mg/hari (CrCl < 30). Tetap waspadai risiko kardiovaskular/trombosis.";
+                }
+            },
+            {
+                name: "Colchicine", category: "Metabolik",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "KONTRAINDIKASI: Sangat toksik, hindari penggunaan untuk profilaksis maupun serangan akut pada HD.";
+                    const c = Number(crcl);
+                    if (c >= 30) return "Dosis Standar (Akut: 1.2 mg lalu 0.6 mg | Profilaksis: 0.6 mg 1-2x/hari).";
+                    return "Reduksi Dosis Akut (JANGAN ULANG DALAM 2 MINGGU). KONTRAINDIKASI untuk profilaksis rutin.";
+                }
+            },
+            {
+                name: "Fenofibrate", category: "Metabolik",
+                getDose: (crcl, hd) => {
+                    if (!crcl && !hd) return "Masukkan data pasien.";
+                    if (hd) return "KONTRAINDIKASI pada pasien dialisis rutin.";
+                    const c = Number(crcl);
+                    if (c >= 60) return "Dosis Standar.";
+                    if (c >= 30) return "Dosis Reduksi: Maksimal 48 mg/hari (atau sesuai sediaan terkecil).";
+                    return "KONTRAINDIKASI: Jangan digunakan (CrCl/eGFR < 30).";
+                }
+            }
+        ];
+
+        // DOM Elements
+        const DOM = {
+            inputAge: document.getElementById('inputAge'),
+            inputWeight: document.getElementById('inputWeight'),
+            inputScr: document.getElementById('inputScr'),
+            btnGenderM: document.getElementById('btnGenderM'),
+            btnGenderF: document.getElementById('btnGenderF'),
+            hdToggleBtn: document.getElementById('hdToggleBtn'),
+            hdToggleIconBg: document.getElementById('hdToggleIconBg'),
+            hdToggleText1: document.getElementById('hdToggleText1'),
+            hdToggleSwitch: document.getElementById('hdToggleSwitch'),
+            hdToggleKnob: document.getElementById('hdToggleKnob'),
+            crclValue: document.getElementById('crclValue'),
+            egfrValue: document.getElementById('egfrValue'),
+            stageBadge: document.getElementById('stageBadge'),
+            stageBar: document.getElementById('stageBar'),
+            stageDesc: document.getElementById('stageDesc'),
+            dialysisOverlay: document.getElementById('dialysisOverlay'),
+            searchInput: document.getElementById('searchInput'),
+            categoryContainer: document.getElementById('categoryContainer'),
+            drugListContainer: document.getElementById('drugListContainer')
+        };
+
+        // Calculations
+        function calculate() {
+            // CrCl
+            if (state.age && state.weight && state.scr && state.scr > 0) {
+                let val = ((140 - Number(state.age)) * Number(state.weight)) / (72 * Number(state.scr));
+                if (state.gender === 'F') val *= 0.85;
+                state.crcl = val.toFixed(1);
+            } else {
+                state.crcl = null;
+            }
+
+            // eGFR
+            if (state.age && state.scr && state.scr > 0) {
+                const k = state.gender === 'F' ? 0.7 : 0.9;
+                const a = state.gender === 'F' ? -0.241 : -0.302;
+                const scrNum = Number(state.scr);
+                const ageNum = Number(state.age);
+                
+                const min = Math.min(scrNum / k, 1);
+                const max = Math.max(scrNum / k, 1);
+                
+                let gfr = 142 * Math.pow(min, a) * Math.pow(max, -1.200) * Math.pow(0.9938, ageNum);
+                if (state.gender === 'F') gfr *= 1.012;
+                state.egfr = gfr.toFixed(1);
+            } else {
+                state.egfr = null;
+            }
+        }
+
+        function getCkdStageInfo() {
+            if (state.isDialysis) return { stage: 'G5D', desc: 'End-Stage / Dialysis', color: 'bg-rose-600', text: 'text-rose-600', w: 'w-full' };
+            if (!state.egfr) return { stage: '-', desc: 'Masukkan data', color: 'bg-slate-200', text: 'text-slate-400', w: 'w-0' };
+            
+            const val = Number(state.egfr);
+            if (val >= 90) return { stage: 'G1', desc: 'Normal / High', color: 'bg-emerald-500', text: 'text-emerald-600', w: 'w-1/6' };
+            if (val >= 60) return { stage: 'G2', desc: 'Mildly Decreased', color: 'bg-lime-500', text: 'text-lime-600', w: 'w-2/6' };
+            if (val >= 45) return { stage: 'G3a', desc: 'Mild-Mod Decreased', color: 'bg-yellow-400', text: 'text-yellow-600', w: 'w-3/6' };
+            if (val >= 30) return { stage: 'G3b', desc: 'Mod-Sev Decreased', color: 'bg-amber-500', text: 'text-amber-600', w: 'w-4/6' };
+            if (val >= 15) return { stage: 'G4', desc: 'Severely Decreased', color: 'bg-orange-500', text: 'text-orange-600', w: 'w-5/6' };
+            return { stage: 'G5', desc: 'Kidney Failure', color: 'bg-red-600', text: 'text-red-600', w: 'w-full' };
+        }
+
+        // Render Functions
+        function renderInputs() {
+            // Gender
+            if (state.gender === 'M') {
+                DOM.btnGenderM.className = "flex-1 py-2 text-xs font-bold rounded-md transition-all bg-white shadow text-indigo-600";
+                DOM.btnGenderF.className = "flex-1 py-2 text-xs font-bold rounded-md transition-all text-slate-500";
+            } else {
+                DOM.btnGenderM.className = "flex-1 py-2 text-xs font-bold rounded-md transition-all text-slate-500";
+                DOM.btnGenderF.className = "flex-1 py-2 text-xs font-bold rounded-md transition-all bg-white shadow text-pink-600";
+            }
+
+            // Dialysis Toggle Styling
+            if (state.isDialysis) {
+                DOM.hdToggleBtn.classList.replace('border-slate-200', 'border-rose-500');
+                DOM.hdToggleBtn.classList.replace('hover:border-indigo-300', 'bg-rose-50');
+                DOM.hdToggleIconBg.classList.replace('bg-slate-200', 'bg-rose-500');
+                DOM.hdToggleIconBg.classList.replace('text-slate-500', 'text-white');
+                DOM.hdToggleText1.classList.replace('text-slate-700', 'text-rose-700');
+                DOM.hdToggleSwitch.classList.replace('bg-slate-300', 'bg-rose-500');
+                DOM.hdToggleKnob.style.transform = 'translateX(24px)';
+                
+                // Disable inputs visually
+                DOM.inputAge.disabled = true;
+                DOM.inputWeight.disabled = true;
+                DOM.inputScr.disabled = true;
+                DOM.dialysisOverlay.classList.remove('hidden');
+            } else {
+                DOM.hdToggleBtn.classList.replace('border-rose-500', 'border-slate-200');
+                DOM.hdToggleBtn.classList.replace('bg-rose-50', 'hover:border-indigo-300');
+                DOM.hdToggleIconBg.classList.replace('bg-rose-500', 'bg-slate-200');
+                DOM.hdToggleIconBg.classList.replace('text-white', 'text-slate-500');
+                DOM.hdToggleText1.classList.replace('text-rose-700', 'text-slate-700');
+                DOM.hdToggleSwitch.classList.replace('bg-rose-500', 'bg-slate-300');
+                DOM.hdToggleKnob.style.transform = 'translateX(0)';
+
+                // Enable inputs
+                DOM.inputAge.disabled = false;
+                DOM.inputWeight.disabled = false;
+                DOM.inputScr.disabled = false;
+                DOM.dialysisOverlay.classList.add('hidden');
+            }
+        }
+
+        function renderResults() {
+            DOM.crclValue.innerText = state.crcl || '--';
+            DOM.egfrValue.innerText = state.egfr || '--';
+
+            const stageInfo = getCkdStageInfo();
+            
+            // Badge
+            DOM.stageBadge.className = `text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-md text-white ${stageInfo.color}`;
+            DOM.stageBadge.innerText = stageInfo.stage;
+            
+            // Bar
+            DOM.stageBar.className = `h-full transition-all duration-500 ${stageInfo.color} ${stageInfo.w}`;
+            
+            // Desc
+            DOM.stageDesc.className = `text-[10px] sm:text-[11px] font-medium mt-1.5 ${stageInfo.text}`;
+            DOM.stageDesc.innerText = stageInfo.desc;
+        }
+
+        function renderCategories() {
+            DOM.categoryContainer.innerHTML = `<i class="fa-solid fa-filter text-slate-400 text-xs mr-1 pl-1"></i>`;
+            categories.forEach(cat => {
+                const btn = document.createElement('button');
+                const isActive = state.activeCategory === cat;
+                
+                btn.className = `whitespace-nowrap px-3 sm:px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-bold transition-all border ${
+                    isActive 
+                    ? 'bg-slate-800 text-white border-slate-800 shadow-md' 
+                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                }`;
+                btn.innerText = cat;
+                btn.onclick = () => {
+                    state.activeCategory = cat;
+                    updateApp();
+                };
+                DOM.categoryContainer.appendChild(btn);
+            });
+        }
+
+        function renderDrugsList() {
+            const filtered = drugs.filter(d => {
+                const matchQuery = d.name.toLowerCase().includes(state.searchQuery.toLowerCase());
+                const matchCategory = state.activeCategory === "All" || d.category === state.activeCategory;
+                return matchQuery && matchCategory;
+            });
+
+            DOM.drugListContainer.innerHTML = '';
+
+            if (filtered.length === 0) {
+                DOM.drugListContainer.innerHTML = `
+                    <div class="p-12 flex flex-col items-center justify-center text-slate-400">
+                        <i class="fa-solid fa-database text-4xl mb-3 opacity-20"></i>
+                        <p class="font-medium text-sm text-center">Tidak ada obat dalam kategori "${state.activeCategory}" yang sesuai.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(drug => {
+                const doseText = drug.getDose(state.crcl, state.isDialysis);
+                
+                let alertLevel = 0;
+                let border = "border-transparent";
+                let bg = "hover:bg-slate-50";
+                let icon = `<i class="fa-solid fa-check-circle text-emerald-500 text-lg"></i>`;
+                let textStyle = "text-emerald-700";
+
+                // Deteksi kata kunci dengan sensitivitas yang ditingkatkan
+                const doseTextUpper = doseText.toUpperCase();
+                
+                if (doseTextUpper.includes("KONTRAINDIKASI") || doseTextUpper.includes("SANGAT TIDAK DISARANKAN")) {
+                    alertLevel = 2;
+                    border = "border-l-4 border-l-rose-500";
+                    bg = "bg-rose-50/50";
+                    icon = `<i class="fa-solid fa-shield-halved text-rose-500 text-lg"></i>`;
+                    textStyle = "text-rose-700 font-bold";
+                } else if (doseTextUpper.includes("REDUKSI") || doseTextUpper.includes("HATI-HATI") || doseTextUpper.includes("KURANGI") || doseTextUpper.includes("INISIASI") || doseTextUpper.includes("TIDAK DISARANKAN") || doseTextUpper.includes("PENGGUNAAN KHUSUS") || doseTextUpper.includes("FLAG WARNING")) {
+                    alertLevel = 1;
+                    border = "border-l-4 border-l-amber-400";
+                    bg = "bg-amber-50/30";
+                    icon = `<i class="fa-solid fa-triangle-exclamation text-amber-500 text-lg"></i>`;
+                    textStyle = "text-amber-700 font-semibold";
+                }
+
+                if (!state.crcl && !state.isDialysis) {
+                    icon = `<i class="fa-solid fa-circle-info text-slate-300 text-lg"></i>`;
+                    textStyle = "text-slate-500";
+                }
+
+                const isDialysisAlert = state.isDialysis && alertLevel > 0;
+                const highlightClass = isDialysisAlert ? 'bg-white/60 p-2 sm:p-2.5 rounded-lg border border-white/50 shadow-sm' : '';
+
+                const html = `
+                    <div class="p-4 sm:p-5 transition-colors ${bg} ${border}">
+                        <div class="flex flex-col md:flex-row md:items-start gap-3 sm:gap-4">
+                            <div class="w-full md:w-1/3">
+                                <h3 class="font-extrabold text-slate-800 text-sm sm:text-base">${drug.name}</h3>
+                                <span class="text-[9px] sm:text-[10px] uppercase tracking-wider font-bold px-2 py-1 sm:px-2.5 bg-slate-200 text-slate-600 rounded-md inline-block mt-1 sm:mt-1.5">
+                                    ${drug.category}
+                                </span>
+                            </div>
+                            <div class="w-full md:w-2/3 flex items-start gap-3">
+                                <div class="mt-0.5 flex-shrink-0 w-5 text-center">
+                                    ${icon}
+                                </div>
+                                <div class="text-xs sm:text-sm leading-relaxed ${textStyle} ${highlightClass}">
+                                    ${doseText}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                DOM.drugListContainer.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        function updateApp() {
+            calculate();
+            renderInputs();
+            renderResults();
+            renderCategories();
+            renderDrugsList();
+        }
+
+        // Event Listeners
+        DOM.inputAge.addEventListener('input', e => { state.age = e.target.value; updateApp(); });
+        DOM.inputWeight.addEventListener('input', e => { state.weight = e.target.value; updateApp(); });
+        DOM.inputScr.addEventListener('input', e => { state.scr = e.target.value; updateApp(); });
+        
+        DOM.btnGenderM.addEventListener('click', () => { state.gender = 'M'; updateApp(); });
+        DOM.btnGenderF.addEventListener('click', () => { state.gender = 'F'; updateApp(); });
+        
+        DOM.hdToggleBtn.addEventListener('click', () => { 
+            state.isDialysis = !state.isDialysis; 
+            updateApp(); 
+        });
+
+        DOM.searchInput.addEventListener('input', e => { 
+            state.searchQuery = e.target.value; 
+            renderDrugsList(); // Only need to re-render list
+        });
+
+        // Initial Render
+        updateApp();
+    </script>
+</body>
+</html>
