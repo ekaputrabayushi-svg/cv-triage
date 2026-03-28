@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#b91c1c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>STEMI Protocol App</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        body { -webkit-tap-highlight-color: transparent; }
+        .animate-fadeIn { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .pb-safe { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+        .pt-safe { padding-top: max(12px, env(safe-area-inset-top)); }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- Inline Icons (menggantikan lucide-react agar bisa jalan di 1 file HTML) ---
+        const IconActivity = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>;
+        const IconShieldAlert = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>;
+        const IconClipboardList = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M12 11h4"></path><path d="M12 16h4"></path><path d="M8 11h.01"></path><path d="M8 16h.01"></path></svg>;
+        const IconSyringe = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="18 2 22 6"></polyline><path d="M18 6L14 2"></path><path d="M14 6L6 14c-.3.3-.4.6-.5 1l-.5 3 3-.5c.4-.1.7-.2 1-.5L22 10"></path><path d="M2 22L8 16"></path><path d="M10 10l4 4"></path></svg>;
+        const IconHeartPulse = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"></path></svg>;
+        const IconStethoscope = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"></path><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"></path><circle cx="20" cy="10" r="2"></circle></svg>;
+        const IconAlertTriangle = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>;
+        const IconCheckCircle = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>;
+        const IconArrowLeft = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>;
+        const IconArrowRight = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>;
+        const IconInfo = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>;
+
+        const StemiProtocolApp = () => {
+            const [currentStep, setCurrentStep] = useState(1);
+            const [decisionState, setDecisionState] = useState({ icu: '', referral: '' });
+            
+            // Contraindications State
+            const [absoluteChecks, setAbsoluteChecks] = useState({});
+            const [relativeChecks, setRelativeChecks] = useState({});
+            const [hasAbsolute, setHasAbsolute] = useState(false);
+            const [hasRelative, setHasRelative] = useState(false);
+
+            // Preparation State
+            const [prepChecks, setPrepChecks] = useState({
+                sit: false, ivLines: false, monitor: false, ecgPre: false
+            });
+
+            // Reperfusion State
+            const [reperfusionChecks, setReperfusionChecks] = useState({});
+
+            const absoluteContraindications = [
+                "Perdarahan aktif atau diatesis perdarahan (kecuali menstruasi)",
+                "Dicurigai diseksi aorta",
+                "Trauma kepala tertutup atau trauma wajah yang signifikan dalam 3 bulan terakhir",
+                "Riwayat perdarahan intrakranial sebelumnya",
+                "Stroke iskemik dalam 3 bulan terakhir",
+                "Diketahui memiliki lesi vaskular serebral",
+                "Diketahui memiliki neoplasma intrakranial ganas"
+            ];
+
+            const relativeContraindications = [
+                "Penggunaan antikoagulan saat ini (termasuk agen baru)",
+                "Pungsi vaskular non-kompresibel",
+                "Operasi besar baru-baru ini (<3 minggu)",
+                "RJP traumatis atau berkepanjangan (>10 menit)",
+                "Perdarahan internal baru-baru ini (dalam 4 minggu) / Ulkus Peptikum aktif",
+                "Dicurigai Perikarditis",
+                "Penyakit Hati Lanjut / Kanker Metastasis Lanjut",
+                "Riwayat hipertensi kronis, berat, tidak terkontrol",
+                "Hipertensi berat tidak terkontrol saat presentasi (Sistolik >180 atau Diastolik >110)",
+                "Stroke Iskemik >3 bulan / kelainan intrakranial / Demensia",
+                "Kehamilan atau dalam 1 minggu pascapersalinan"
+            ];
+
+            const reperfusionSigns = [
+                "Resolusi nyeri dada > 50%",
+                "Resolusi elevasi ST > 50%",
+                "AIVR (Accelerated Idioventricular Rhythm)",
+                "Kenaikan dan penurunan enzim jantung yang cepat",
+                "Kondisi klinis yang stabil"
+            ];
+
+            useEffect(() => {
+                const isAbsolute = Object.values(absoluteChecks).some(val => val === true);
+                setHasAbsolute(isAbsolute);
+            }, [absoluteChecks]);
+
+            useEffect(() => {
+                const isRelative = Object.values(relativeChecks).some(val => val === true);
+                setHasRelative(isRelative);
+            }, [relativeChecks]);
+
+            const handleAbsoluteChange = (index) => {
+                setAbsoluteChecks(prev => ({ ...prev, [index]: !prev[index] }));
+            };
+
+            const handleRelativeChange = (index) => {
+                setRelativeChecks(prev => ({ ...prev, [index]: !prev[index] }));
+            };
+
+            const handleReperfusionChange = (index) => {
+                setReperfusionChecks(prev => ({ ...prev, [index]: !prev[index] }));
+            };
+
+            const getDecisionRecommendation = () => {
+                if (decisionState.icu === 'available') {
+                    return { text: "LANJUTKAN TROMBOLITIK di tempat (bila pasien setuju).", color: "bg-green-100 text-green-800 border-green-400" };
+                }
+                if (decisionState.icu === 'not_available' || decisionState.icu === 'pending') {
+                    if (decisionState.referral === 'accept') {
+                        return { text: "RUJUK untuk Primary PCI (jarak < 2 jam).", color: "bg-blue-100 text-blue-800 border-blue-400" };
+                    } else if (decisionState.referral === 'refuse') {
+                        return { text: "LANJUTKAN TROMBOLITIK di tempat (karena menolak rujuk).", color: "bg-yellow-100 text-yellow-800 border-yellow-400" };
+                    }
+                }
+                return null;
+            };
+
+            const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 6));
+            const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
+
+            const allPrepChecked = Object.values(prepChecks).every(val => val === true);
+
+            const steps = [
+                { id: 1, name: "Triage & Keputusan", icon: IconActivity },
+                { id: 2, name: "Skrining Kontraindikasi", icon: IconShieldAlert },
+                { id: 3, name: "Persiapan & SIT", icon: IconClipboardList },
+                { id: 4, name: "Prosedur Fibrinolitik", icon: IconSyringe },
+                { id: 5, name: "Evaluasi Reperfusi", icon: IconHeartPulse },
+                { id: 6, name: "Medikamentosa Lanjutan", icon: IconStethoscope },
+            ];
+
+            return (
+                <div className="min-h-screen bg-slate-50 font-sans pb-24">
+                    {/* Header */}
+                    <header className="bg-red-700 text-white p-4 shadow-md sticky top-0 z-20 pt-safe">
+                        <div className="max-w-md mx-auto">
+                            <div className="flex justify-between items-start mb-1">
+                                <div>
+                                    <div className="text-red-200 text-[10px] font-bold tracking-wider uppercase mb-0.5">
+                                        Part of CardiologyVault
+                                    </div>
+                                    <h1 className="text-xl font-bold flex items-center gap-1.5">
+                                        <IconHeartPulse className="h-6 w-6" />
+                                        STEMI Protocol
+                                    </h1>
+                                </div>
+                                <div className="bg-white/20 text-white px-2 py-1 rounded text-xs font-bold border border-red-500">
+                                    {currentStep} / 6
+                                </div>
+                            </div>
+                            <p className="text-red-100 text-[11px]">Developed by Bayushi Eka Putra, MD, FIHA</p>
+                        </div>
+                    </header>
+
+                    <main className="max-w-md mx-auto mt-4 px-3">
+                        {/* Progress Bar */}
+                        <div className="flex justify-between mb-6 overflow-x-auto pb-2 scrollbar-hide snap-x">
+                            {steps.map((step) => {
+                                const Icon = step.icon;
+                                const isActive = currentStep === step.id;
+                                const isPast = currentStep > step.id;
+                                return (
+                                    <div key={step.id} className="flex flex-col items-center min-w-[75px] cursor-pointer snap-center" onClick={() => setCurrentStep(step.id)}>
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 mb-1.5 transition-colors duration-300 ${isActive ? 'bg-red-600 border-red-600 text-white' : isPast ? 'bg-green-500 border-green-500 text-white' : 'bg-white border-slate-300 text-slate-400'}`}>
+                                            <Icon size={16} />
+                                        </div>
+                                        <span className={`text-[10px] leading-tight text-center font-medium px-1 ${isActive ? 'text-red-700' : 'text-slate-500'}`}>{step.name}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Step 1: Decision */}
+                        {currentStep === 1 && (
+                            <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-blue-500 animate-fadeIn">
+                                <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><IconActivity className="text-blue-500"/> Alur Keputusan ICU & Rujukan</h2>
+                                
+                                <div className="space-y-6">
+                                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                        <label className="block font-semibold mb-3">1. Ketersediaan ICU saat ini:</label>
+                                        <div className="space-y-2">
+                                            <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                                                <input type="radio" name="icu" className="w-5 h-5 text-blue-600" checked={decisionState.icu === 'available'} onChange={() => setDecisionState({...decisionState, icu: 'available'})} />
+                                                <span>ICU Tersedia</span>
+                                            </label>
+                                            <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                                                <input type="radio" name="icu" className="w-5 h-5 text-blue-600" checked={decisionState.icu === 'not_available'} onChange={() => setDecisionState({...decisionState, icu: 'not_available'})} />
+                                                <span>ICU Tidak Tersedia</span>
+                                            </label>
+                                            <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                                                <input type="radio" name="icu" className="w-5 h-5 text-blue-600" checked={decisionState.icu === 'pending'} onChange={() => setDecisionState({...decisionState, icu: 'pending'})} />
+                                                <span>Belum ada keputusan ICU &gt; 30 Menit</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    {(decisionState.icu === 'not_available' || decisionState.icu === 'pending') && (
+                                        <div className="bg-orange-50 p-4 rounded-lg border border-orange-200 animate-fadeIn">
+                                            <label className="block font-semibold mb-3">2. Keputusan Keluarga untuk Rujuk (Primary PCI &lt; 2 Jam):</label>
+                                            <div className="flex gap-4">
+                                                <label className="flex-1 flex items-center gap-3 p-3 border border-orange-300 rounded-lg bg-white cursor-pointer hover:bg-orange-100">
+                                                    <input type="radio" name="referral" className="w-5 h-5" checked={decisionState.referral === 'accept'} onChange={() => setDecisionState({...decisionState, referral: 'accept'})} />
+                                                    <span>Bersedia Rujuk</span>
+                                                </label>
+                                                <label className="flex-1 flex items-center gap-3 p-3 border border-orange-300 rounded-lg bg-white cursor-pointer hover:bg-orange-100">
+                                                    <input type="radio" name="referral" className="w-5 h-5" checked={decisionState.referral === 'refuse'} onChange={() => setDecisionState({...decisionState, referral: 'refuse'})} />
+                                                    <span>Menolak Rujuk</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {getDecisionRecommendation() && (
+                                        <div className={`p-4 rounded-lg border-2 font-bold text-lg flex items-start gap-3 animate-fadeIn ${getDecisionRecommendation().color}`}>
+                                            <IconInfo className="mt-1 flex-shrink-0" />
+                                            <div>
+                                                Kesan: {getDecisionRecommendation().text}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Step 2: Contraindications */}
+                        {currentStep === 2 && (
+                            <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-red-500 animate-fadeIn">
+                                <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><IconShieldAlert className="text-red-500"/> Skrining Kontraindikasi</h2>
+                                
+                                {hasAbsolute && (
+                                    <div className="bg-red-100 border-l-4 border-red-600 text-red-800 p-4 mb-6 rounded flex items-start gap-3 animate-pulse">
+                                        <IconAlertTriangle className="h-6 w-6 flex-shrink-0" />
+                                        <div>
+                                            <p className="font-bold text-lg">STOP! KONTRAINDIKASI ABSOLUT.</p>
+                                            <p>Pasien tidak boleh diberikan terapi Fibrinolitik. Pertimbangkan Rujuk untuk Primary PCI.</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {hasRelative && !hasAbsolute && (
+                                    <div className="bg-yellow-100 border-l-4 border-yellow-600 text-yellow-800 p-4 mb-6 rounded flex items-start gap-3 animate-pulse">
+                                        <IconAlertTriangle className="h-6 w-6 flex-shrink-0" />
+                                        <div>
+                                            <p className="font-bold text-lg">PERINGATAN: KONTRAINDIKASI RELATIF.</p>
+                                            <p>Evaluasi ketat rasio Risiko vs Manfaat. Terapi masih bisa dilanjutkan jika manfaat menyelamatkan nyawa jauh lebih besar.</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="mb-6">
+                                    <div className="bg-red-600 text-white px-4 py-2 rounded-t-lg font-bold">Kontraindikasi Absolut (Jika Ya = Batal)</div>
+                                    <div className="border border-red-200 rounded-b-lg p-2 bg-red-50/30">
+                                        {absoluteContraindications.map((item, idx) => (
+                                            <label key={`abs-${idx}`} className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors ${absoluteChecks[idx] ? 'bg-red-100 border-red-300 border' : 'hover:bg-slate-100'}`}>
+                                                <input type="checkbox" className="w-5 h-5 mt-0.5 accent-red-600" checked={absoluteChecks[idx] || false} onChange={() => handleAbsoluteChange(idx)} />
+                                                <span className={absoluteChecks[idx] ? 'font-bold text-red-800' : 'text-slate-700'}>{item}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div className="bg-yellow-500 text-white px-4 py-2 rounded-t-lg font-bold">Kontraindikasi Relatif (Risk vs Benefit)</div>
+                                    <div className="border border-yellow-200 rounded-b-lg p-2 bg-yellow-50/30">
+                                        {relativeContraindications.map((item, idx) => (
+                                            <label key={`rel-${idx}`} className="flex items-start gap-3 p-3 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
+                                                <input type="checkbox" className="w-5 h-5 mt-0.5 accent-yellow-600" checked={relativeChecks[idx] || false} onChange={() => handleRelativeChange(idx)} />
+                                                <span className={relativeChecks[idx] ? 'font-bold text-yellow-800' : 'text-slate-700'}>{item}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Step 3: Preparation */}
+                        {currentStep === 3 && (
+                            <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-indigo-500 animate-fadeIn">
+                                <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><IconClipboardList className="text-indigo-500"/> Persiapan & SIT</h2>
+                                <p className="text-slate-600 mb-6 border-b pb-4">Pastikan checklist di bawah ini terpenuhi sebelum memberikan agen lisis.</p>
+
+                                <div className="space-y-4">
+                                    <label className="flex items-start gap-4 p-4 border rounded-xl cursor-pointer hover:bg-indigo-50 transition-all">
+                                        <input type="checkbox" className="w-6 h-6 mt-1 accent-indigo-600" checked={prepChecks.sit} onChange={() => setPrepChecks({...prepChecks, sit: !prepChecks.sit})} />
+                                        <div>
+                                            <span className="font-bold block text-lg">SIT & Edukasi</span>
+                                            <span className="text-slate-600 text-sm">Edukasi keluarga risiko: Stroke Perdarahan, Perdarahan Saluran Cerna, hingga Meninggal.</span>
+                                        </div>
+                                    </label>
+
+                                    <label className="flex items-start gap-4 p-4 border rounded-xl cursor-pointer hover:bg-indigo-50 transition-all">
+                                        <input type="checkbox" className="w-6 h-6 mt-1 accent-indigo-600" checked={prepChecks.ivLines} onChange={() => setPrepChecks({...prepChecks, ivLines: !prepChecks.ivLines})} />
+                                        <div>
+                                            <span className="font-bold block text-lg">Akses Vena & Obat Standby</span>
+                                            <span className="text-slate-600 text-sm">Pasang 2 line IV. Standby: <b>Norepinefrin</b>.</span>
+                                        </div>
+                                    </label>
+
+                                    <label className="flex items-start gap-4 p-4 border rounded-xl cursor-pointer hover:bg-indigo-50 transition-all">
+                                        <input type="checkbox" className="w-6 h-6 mt-1 accent-indigo-600" checked={prepChecks.monitor} onChange={() => setPrepChecks({...prepChecks, monitor: !prepChecks.monitor})} />
+                                        <div>
+                                            <span className="font-bold block text-lg">Monitoring & Fasilitas</span>
+                                            <span className="text-slate-600 text-sm">Pasang Monitor Jantung. Siapkan troli kode biru (Code Blue). 1 perawat standby. Rawat ICU (jika ada).</span>
+                                        </div>
+                                    </label>
+
+                                    <label className="flex items-start gap-4 p-4 border rounded-xl cursor-pointer hover:bg-indigo-50 transition-all">
+                                        <input type="checkbox" className="w-6 h-6 mt-1 accent-indigo-600" checked={prepChecks.ecgPre} onChange={() => setPrepChecks({...prepChecks, ecgPre: !prepChecks.ecgPre})} />
+                                        <div>
+                                            <span className="font-bold block text-lg">EKG Pre-Trombolitik</span>
+                                            <span className="text-slate-600 text-sm">Rekam EKG ulang HANYA tepat sebelum pemberian Fibrinolitik dimulai.</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Step 4: Procedure */}
+                        {currentStep === 4 && (
+                            <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-teal-500 animate-fadeIn">
+                                <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><IconSyringe className="text-teal-500"/> Pelaksanaan Fibrinolitik</h2>
+                                
+                                <div className="bg-teal-50 border border-teal-200 rounded-xl p-4 mb-6">
+                                    <h3 className="text-lg font-bold text-teal-800 mb-3">Pilihan Agen & Dosis:</h3>
+                                    <div className="space-y-3">
+                                        <div className="bg-white p-3 rounded-lg border border-teal-100 shadow-sm">
+                                            <span className="font-bold text-teal-900 block text-lg">1. Streptokinase</span>
+                                            <p className="text-teal-800">1.5 Juta Unit dalam Piggyback <b>100cc NaCl 0.9%</b>. Diberikan perlahan dalam <b>30 - 60 menit</b>.</p>
+                                        </div>
+                                        <div className="bg-white p-3 rounded-lg border border-teal-100 shadow-sm">
+                                            <span className="font-bold text-teal-900 block text-lg">2. Alteplase (tPA)</span>
+                                            <p className="text-teal-800">Bolus 15 mg IV, lanjut drip 0.75 mg/kgBB dlm 30 mnt, lanjut drip 0.5 mg/kgBB dlm 60 mnt.</p>
+                                        </div>
+                                        <div className="bg-white p-3 rounded-lg border border-teal-100 shadow-sm">
+                                            <span className="font-bold text-teal-900 block text-lg">3. Tenecteplase (TNK-tPA)</span>
+                                            <p className="text-teal-800">Single bolus IV 5-10 detik (dosis disesuaikan BB: 30-50 mg).</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-xl">
+                                    <h4 className="font-bold text-red-700 flex items-center gap-2 mb-2"><IconAlertTriangle size={18}/> PERHATIAN KETAT:</h4>
+                                    <p className="text-red-800 font-medium">Hati-hati hipotensi (Tensi Turun) terutama pada pemberian Streptokinase!</p>
+                                    <ul className="list-disc pl-5 mt-2 text-red-700 space-y-1">
+                                        <li>Bila tensi turun, berikan drip lebih perlahan.</li>
+                                        <li>Bersiap loading cairan (NaCl 0.9%).</li>
+                                        <li>Pertimbangkan mulai titrasi <b>Norepinefrin</b>.</li>
+                                    </ul>
+                                </div>
+
+                                <div className="bg-slate-100 p-4 rounded-xl border border-slate-200">
+                                    <h4 className="font-bold text-slate-800 mb-3">Segera Pasca Agen Lisis Habis:</h4>
+                                    <div className="flex flex-col gap-3">
+                                        <div className="flex items-center gap-3 bg-white p-3 rounded-lg border">
+                                            <div className="bg-blue-100 text-blue-800 p-2 rounded-lg font-bold text-sm">Tindak 1</div>
+                                            <span className="font-medium text-sm">Antikoagulan: <b>Enoxaparin 30 mg IV Bolus</b> ATAU <b>Fondaparinux 2.5 mg IV Bolus</b>.</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 bg-white p-3 rounded-lg border">
+                                            <div className="bg-blue-100 text-blue-800 p-2 rounded-lg font-bold text-sm">Tindak 2</div>
+                                            <span className="font-medium text-sm">Rekam EKG evaluasi pertama pasca lisis selesai.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Step 5: Reperfusion Evaluation */}
+                        {currentStep === 5 && (
+                            <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-green-500 animate-fadeIn">
+                                <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><IconHeartPulse className="text-green-500"/> Evaluasi Reperfusi</h2>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                        <h3 className="font-bold text-slate-800 mb-3 border-b pb-2">Timeline Evaluasi</h3>
+                                        <ul className="space-y-4">
+                                            <li className="flex gap-3">
+                                                <IconCheckCircle className="text-green-600 flex-shrink-0" />
+                                                <span className="text-sm"><b>0 Menit:</b> EKG langsung setelah Fibrinolitik habis.</span>
+                                            </li>
+                                            <li className="flex gap-3">
+                                                <IconCheckCircle className="text-green-600 flex-shrink-0" />
+                                                <span className="text-sm"><b>Tahap Lanjut:</b> Mulai injeksi SC antikoagulan (<b>Enoxaparin</b> 1 mg/kgBB SC tiap 12 jam ATAU <b>Fondaparinux</b> 2.5 mg SC tiap 24 jam).</span>
+                                            </li>
+                                            <li className="flex gap-3">
+                                                <IconCheckCircle className="text-green-600 flex-shrink-0" />
+                                                <span className="text-sm"><b>60 Menit (1 Jam):</b> EKG Evaluasi kedua pasca Fibrinolitik.</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
+                                        <h3 className="font-bold text-blue-900 mb-3 border-b border-blue-200 pb-2">Indikator Klinis Reperfusi Sukses</h3>
+                                        <div className="space-y-2">
+                                            {reperfusionSigns.map((sign, idx) => (
+                                                <label key={`rep-${idx}`} className="flex items-center gap-3 p-2 hover:bg-blue-100 rounded-lg cursor-pointer">
+                                                    <input type="checkbox" className="w-5 h-5 accent-blue-600" checked={reperfusionChecks[idx] || false} onChange={() => handleReperfusionChange(idx)} />
+                                                    <span className="text-blue-900 text-sm font-medium">{sign}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-yellow-50 border border-yellow-300 p-4 rounded-xl text-center">
+                                    <h3 className="font-bold text-yellow-800 text-lg mb-1">Target Selanjutnya</h3>
+                                    <p className="text-yellow-900 text-sm">
+                                        Rujuk besok ke PCI CENTRE untuk pertimbangan <b>RESCUE PCI</b> (bila gagal) atau <b>Pharmacoinvasive PCI</b> (bila sukses).
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Step 6: Medications */}
+                        {currentStep === 6 && (
+                            <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-purple-500 animate-fadeIn">
+                                <h2 className="text-xl font-bold mb-6 flex items-center gap-2"><IconStethoscope className="text-purple-500"/> Medikamentosa & Q&A</h2>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm">
+                                        <h3 className="font-bold text-slate-800 mb-3 border-b pb-2">Loading Dose (IGD)</h3>
+                                        <ul className="list-disc pl-5 space-y-1 text-slate-700 text-sm">
+                                            <li><b>Clopidogrel:</b> 300 mg (atau 600 mg bila rencana PCI).</li>
+                                            <li><b>Aspirin:</b> 160-320 mg kunyah.</li>
+                                            <li><b>Antikoagulan:</b> Enoxaparin 30 mg IV ATAU Fondaparinux 2.5 mg IV.</li>
+                                        </ul>
+                                    </div>
+
+                                    <div className="bg-purple-50 p-4 rounded-xl border border-purple-200 shadow-sm">
+                                        <h3 className="font-bold text-purple-900 mb-3 border-b border-purple-200 pb-2">Terapi Lanjutan (Harian)</h3>
+                                        <ul className="list-disc pl-5 space-y-1 text-purple-800 font-medium text-sm">
+                                            <li>Lanjut Clopidogrel 1 x 75 mg.</li>
+                                            <li>Lanjut Aspirin 1 x 80-100 mg.</li>
+                                            <li>Atorvastatin 1 x 40 mg.</li>
+                                            <li>Pantoprazole 1 x 40 mg IV.</li>
+                                            <li>ISDN 3 x 5 mg (bila TD stabil).</li>
+                                            <li>Laktulosa sirup 1 x 1 C.</li>
+                                            <li>Diazepam 1 x 2.5 mg PO.</li>
+                                            <li><b>Antikoagulan:</b> Enoxaparin 1 mg/kgBB SC (tiap 12 jam) ATAU Fondaparinux 2.5 mg SC (tiap 24 jam) hingga 8 hari.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div className="mt-8 space-y-4">
+                                    <h3 className="font-bold text-lg text-slate-800 mb-2">Q&A Clinical Notes:</h3>
+                                    
+                                    <div className="bg-white border border-slate-300 rounded-lg p-4">
+                                        <h4 className="font-bold text-blue-700 mb-1">Q: Fondaparinux atau Enoxaparin?</h4>
+                                        <p className="text-slate-600 text-sm leading-relaxed">
+                                            <b>Jawaban:</b> Kedua antikoagulan valid untuk post-fibrinolitik. 
+                                            <br/><br/>• <b>Enoxaparin:</b> Bolus 30 mg IV, dilanjutkan dosis SC 1mg/kg tiap 12 jam. Disukai apabila pasien direncanakan akan segera di-PCI.
+                                            <br/>• <b>Fondaparinux:</b> Bolus 2.5 mg IV, dilanjutkan 2.5 mg SC tiap 24 jam. Sangat direkomendasikan karena risiko perdarahan lebih rendah, terutama jika menggunakan Streptokinase.
+                                        </p>
+                                    </div>
+
+                                    <div className="bg-white border border-slate-300 rounded-lg p-4">
+                                        <h4 className="font-bold text-blue-700 mb-1">Q: Bisa masuk ACE Inhibitor?</h4>
+                                        <p className="text-slate-600 text-sm leading-relaxed">
+                                            <b>Jawaban: BISA.</b> Captopril/Ramipril dianjurkan dimulai <b>dalam 24 jam pertama</b> pada pasien STEMI dengan LVEF &le; 40%, gagal jantung, atau infark anterior, ASALKAN tidak ada hipotensi (SBP &gt; 100 mmHg). Mulailah dengan dosis rendah.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                    </main>
+                    
+                    {/* Footer Navigation */}
+                    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 z-20 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] pb-safe">
+                        <div className="max-w-md mx-auto flex justify-between items-center gap-3">
+                            <button 
+                                onClick={prevStep} 
+                                disabled={currentStep === 1}
+                                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all text-sm ${currentStep === 1 ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 active:bg-slate-300'}`}
+                            >
+                                <IconArrowLeft size={18} /> Kembali
+                            </button>
+                            
+                            <button 
+                                onClick={nextStep} 
+                                disabled={currentStep === 6 || (currentStep === 2 && hasAbsolute) || (currentStep === 3 && !allPrepChecked)}
+                                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all text-sm ${currentStep === 6 || (currentStep === 2 && hasAbsolute) || (currentStep === 3 && !allPrepChecked) ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-red-600 text-white hover:bg-red-700 active:bg-red-800 shadow-md'}`}
+                            >
+                                {currentStep === 6 ? 'Selesai' : (currentStep === 2 && hasAbsolute) ? 'Tindakan Batal' : (currentStep === 3 && !allPrepChecked) ? 'Lengkapi Checklist' : 'Lanjut'} <IconArrowRight size={18} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<StemiProtocolApp />);
+    </script>
+</body>
+</html>
