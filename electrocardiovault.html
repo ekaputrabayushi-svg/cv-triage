@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElectroCardioVault Pro | Smart EKG Auto-Scribe</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        vault: {
+                            900: '#0f172a',
+                            800: '#1e293b',
+                            700: '#334155',
+                            accent: '#06b6d4',
+                            glow: '#22d3ee',
+                        }
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'ping-slow': 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            background-color: #020617; 
+            background-image: radial-gradient(circle at 50% 0%, #0f172a 0%, #020617 70%);
+            color: #f8fafc;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        select, input[type="text"], input[type="number"], textarea {
+            background-color: #1e293b;
+            border-color: #334155;
+            color: #f1f5f9;
+        }
+        select:focus, input[type="text"]:focus, input[type="number"]:focus {
+            border-color: #06b6d4;
+            box-shadow: 0 0 0 1px #06b6d4;
+            outline: none;
+        }
+        
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .modal-enter { animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* Heart Map SVG Animations */
+        .artery { transition: all 0.5s ease; }
+        .artery-glow { 
+            stroke: #ef4444; 
+            stroke-width: 4;
+            filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.8));
+            animation: pulse-red 1.5s infinite alternate;
+        }
+        @keyframes pulse-red {
+            0% { filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.5)); stroke-width: 3; }
+            100% { filter: drop-shadow(0 0 15px rgba(239, 68, 68, 1)); stroke-width: 5; }
+        }
+        
+        /* Tapper button animation */
+        .tap-active { transform: scale(0.95); background-color: #0891b2 !important; }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-6 lg:p-8 font-sans antialiased selection:bg-cyan-500 selection:text-white pb-20">
+
+    <!-- OVERLAY MODAL FOR VISUAL GUIDE -->
+    <div id="visualModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 hidden">
+        <div class="glass-panel w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden modal-enter border border-slate-700">
+            <div class="bg-slate-800/80 p-5 flex items-center justify-between border-b border-slate-700">
+                <div class="flex items-center space-x-3">
+                    <div id="modalIconContainer" class="p-2 rounded-lg bg-slate-900">
+                        <i data-lucide="activity" class="w-6 h-6 text-cyan-400"></i>
+                    </div>
+                    <h2 id="modalTitle" class="text-white text-lg font-bold tracking-wide">Visual Guide</h2>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white bg-slate-700/50 hover:bg-slate-700 rounded-full p-2 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <div class="w-full bg-[#0f172a] border border-slate-700 rounded-2xl overflow-hidden relative shadow-inner">
+                    <svg viewBox="0 0 500 200" class="w-full h-auto">
+                        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e293b" stroke-width="1"/></pattern>
+                        <rect width="100%" height="100%" fill="url(#grid)" />
+                        <g id="modalSvgContent"></g>
+                    </svg>
+                </div>
+                <div class="mt-5 text-sm text-slate-300 bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 flex items-start">
+                    <i data-lucide="info" class="w-5 h-5 text-cyan-500 mt-0.5 mr-3 flex-shrink-0"></i>
+                    <p id="modalDesc" class="leading-relaxed"></p>
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <button onclick="closeModal()" class="px-6 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-xl transition-colors">Tutup Visual</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto">
+        <!-- HEADER -->
+        <header class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
+            <div class="flex items-start md:items-center space-x-4">
+                <div class="p-3.5 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl shadow-lg shadow-cyan-900/40 relative group cursor-pointer flex-shrink-0 mt-1 md:mt-0">
+                    <div class="absolute inset-0 bg-cyan-400 opacity-20 group-hover:opacity-40 rounded-2xl blur-md transition-all"></div>
+                    <i data-lucide="heart-pulse" class="w-8 h-8 text-white relative z-10"></i>
+                </div>
+                <div class="flex flex-col">
+                    <div class="flex items-center flex-wrap gap-2 md:gap-3">
+                        <h1 class="text-2xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">ElectroCardio<span class="text-cyan-400">Vault</span></h1>
+                        <span class="px-2.5 py-0.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-[10px] md:text-xs font-black rounded-md uppercase tracking-widest shadow-lg shadow-cyan-500/20 transform -translate-y-0.5 md:-translate-y-1">PRO</span>
+                    </div>
+                    <p class="text-slate-400 text-xs md:text-sm font-medium flex items-center mt-1.5 flex-wrap gap-2">
+                        <span class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded text-[10px] md:text-xs border border-slate-700 uppercase tracking-wider font-semibold">Part of CardiologyVault</span> 
+                        <span class="flex items-center text-cyan-500/80"><span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse mr-1.5 hidden sm:inline-block"></span>AI-Assisted Interpretation</span>
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Profil Developer -->
+            <div class="text-left md:text-right bg-slate-800/40 px-4 py-2.5 rounded-xl border border-slate-700/50 backdrop-blur-sm shrink-0">
+                <p class="text-[10px] md:text-xs text-slate-400 tracking-wider uppercase font-semibold mb-0.5">Developed By</p>
+                <p class="text-sm text-cyan-100 font-bold flex items-center gap-1.5">
+                    <i data-lucide="code" class="w-4 h-4 text-cyan-500"></i>
+                    Bayushi Eka Putra, MD, FIHA
+                </p>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+            
+            <!-- LEFT COLUMN: SMART INSIGHTS & MAPPER -->
+            <div class="lg:col-span-4 space-y-6">
+                
+                <!-- CULPRIT LESION MAPPER -->
+                <div class="glass-panel rounded-3xl overflow-hidden border border-slate-700/60 shadow-xl">
+                    <div class="bg-slate-800/80 p-4 border-b border-slate-700/50 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <i data-lucide="map" class="w-5 h-5 text-rose-400"></i>
+                            <h2 class="text-slate-200 font-bold tracking-wide">Culprit Lesion Mapper</h2>
+                        </div>
+                        <span id="mapperStatus" class="text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-emerald-900/50 text-emerald-400 border border-emerald-800">No Ischemia</span>
+                    </div>
+                    <div class="p-6 flex flex-col items-center justify-center relative bg-[#0b1120]">
+                        <svg viewBox="0 0 200 220" class="w-48 h-auto drop-shadow-2xl">
+                            <path d="M100,200 C100,200 20,130 20,70 C20,30 60,10 100,50 C140,10 180,30 180,70 C180,130 100,200 100,200 Z" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+                            <path d="M80,30 C80,10 120,10 120,30" fill="none" stroke="#475569" stroke-width="8" stroke-linecap="round"/>
+                            <path id="pathRCA" d="M90,55 C70,60 40,80 40,120 C40,150 70,170 90,180" fill="none" stroke="#3b82f6" stroke-width="2.5" class="artery"/>
+                            <text id="labelRCA" x="20" y="110" class="text-[10px] font-mono fill-slate-500 font-bold transition-colors">RCA</text>
+                            <path id="pathLAD" d="M110,55 C120,70 110,120 100,190" fill="none" stroke="#3b82f6" stroke-width="2.5" class="artery"/>
+                            <text id="labelLAD" x="120" y="150" class="text-[10px] font-mono fill-slate-500 font-bold transition-colors">LAD</text>
+                            <path id="pathLCX" d="M115,60 C140,70 160,90 150,130" fill="none" stroke="#3b82f6" stroke-width="2.5" class="artery"/>
+                            <text id="labelLCX" x="160" y="100" class="text-[10px] font-mono fill-slate-500 font-bold transition-colors">LCx</text>
+                        </svg>
+                        <p id="mapperDesc" class="text-xs text-slate-400 text-center mt-4 h-8">Pilih segmen ST untuk melihat estimasi anatomi koroner yang terlibat.</p>
+                    </div>
+                </div>
+
+                <!-- AI PROTOCOL ALERT -->
+                <div id="redFlagPanel" class="hidden rounded-3xl overflow-hidden shadow-lg border-2 border-rose-500/50 bg-rose-950/30">
+                    <div class="bg-rose-900/50 p-4 flex items-center space-x-3">
+                        <i data-lucide="alert-triangle" class="w-6 h-6 text-rose-500 animate-pulse"></i>
+                        <h2 class="text-rose-100 font-bold tracking-wide">CLINICAL ALERT</h2>
+                    </div>
+                    <div class="p-5">
+                        <p id="redFlagText" class="text-rose-200 text-sm font-semibold leading-relaxed"></p>
+                    </div>
+                </div>
+
+                <!-- Quick Ref / QTc Info -->
+                <div class="glass-panel rounded-3xl overflow-hidden border border-slate-700/60">
+                    <div class="p-5 space-y-4 text-sm">
+                        <div class="flex items-start justify-between">
+                            <span class="text-slate-400 font-bold">Kalkulator QTc (Bazett)</span>
+                            <i data-lucide="calculator" class="w-4 h-4 text-cyan-500"></i>
+                        </div>
+                        <p class="text-xs text-slate-500">Masukkan nilai QT aktual (ms) pada form di sebelah kanan, QTc akan dihitung otomatis menyesuaikan HR. <br/><br/>Normal: L &lt; 440ms, P &lt; 460ms.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: FORM GENERATOR -->
+            <div class="lg:col-span-8 glass-panel rounded-3xl flex flex-col h-full overflow-hidden shadow-2xl border border-slate-700/60">
+                <div class="p-5 border-b border-slate-700/50 flex flex-col sm:flex-row sm:items-center justify-between bg-slate-800/60 gap-3">
+                    <h2 class="text-lg font-bold text-white flex items-center tracking-wide">
+                        <i data-lucide="cpu" class="w-5 h-5 mr-2 text-cyan-400"></i>
+                        Clinical Parameters
+                    </h2>
+                    <span class="text-xs text-cyan-200 bg-cyan-900/50 px-3 py-1.5 rounded-full border border-cyan-700 flex items-center w-fit font-mono">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse mr-2"></span> Auto-Sync Active
+                    </span>
+                </div>
+                
+                <form id="ekgForm" class="p-6 flex-grow grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 overflow-y-auto">
+                    
+                    <!-- Irama -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center">
+                            Irama Dasar
+                            <button type="button" onclick="triggerGuide('irama')" class="text-cyan-400 hover:text-cyan-300 transition-colors" title="Visual">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                        </label>
+                        <select id="irama" name="irama" class="w-full p-3 rounded-xl border appearance-none cursor-pointer">
+                            <option value="Sinus Rhythm">Sinus Rhythm</option>
+                            <option value="Sinus Arrhythmia">Sinus Arrhythmia</option>
+                            <option value="Sinus Tachycardia">Sinus Tachycardia</option>
+                            <option value="Sinus Bradycardia">Sinus Bradycardia</option>
+                            <option value="Atrial Fibrillation (AF)">Atrial Fibrillation (AF)</option>
+                            <option value="Atrial Flutter">Atrial Flutter</option>
+                            <option value="SVT">Supraventricular Tachycardia (SVT)</option>
+                            <option value="Ventricular Tachycardia (VT)">Ventricular Tachycardia (VT)</option>
+                            <option value="Ventricular Fibrillation (VF)">Ventricular Fibrillation (VF)</option>
+                            <option value="Asystole">Asystole</option>
+                        </select>
+                    </div>
+
+                    <!-- HR with TAPPER -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Heart Rate & Reguleritas</label>
+                        <div class="flex gap-2">
+                            <div class="relative w-1/3">
+                                <input type="number" id="hr" name="hr" value="75" class="w-full p-3 pl-4 rounded-xl border font-mono font-bold text-cyan-300" placeholder="BPM" />
+                            </div>
+                            <button type="button" id="tapBtn" onclick="tapBPM()" class="w-1/3 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center active:scale-95 shadow-inner">
+                                <i data-lucide="mouse-pointer-click" class="w-4 h-4 mb-0.5 text-cyan-400"></i>
+                                TAP BPM
+                            </button>
+                            <select id="reguler" name="reguler" class="w-1/3 p-3 rounded-xl border appearance-none cursor-pointer text-sm">
+                                <option value="Reguler">Reguler</option>
+                                <option value="Irreguler">Irreguler</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Aksis -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center">
+                            Aksis (I & aVF)
+                            <button type="button" onclick="triggerGuide('aksis')" class="text-amber-400 hover:text-amber-300 transition-colors">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                        </label>
+                        <select id="aksis" name="aksis" class="w-full p-3 rounded-xl border appearance-none cursor-pointer">
+                            <option value="Normoaxis">Normoaxis</option>
+                            <option value="LAD (Left Axis Deviation)">LAD (Left Axis Deviation)</option>
+                            <option value="RAD (Right Axis Deviation)">RAD (Right Axis Deviation)</option>
+                        </select>
+                    </div>
+
+                    <!-- Gelombang P -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center">
+                            Gelombang P
+                            <button type="button" onclick="triggerGuide('gelP')" class="text-violet-400 hover:text-violet-300 transition-colors">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                        </label>
+                        <select id="gelP" name="gelP" class="w-full p-3 rounded-xl border appearance-none cursor-pointer">
+                            <option value="Normal">Normal</option>
+                            <option value="P Mitrale (LAE)">P Mitrale (LAE / Lebar > 0.12s)</option>
+                            <option value="P Pulmonale (RAE)">P Pulmonale (RAE / Tinggi > 2.5mm)</option>
+                            <option value="Tidak terlihat / Absen">Tidak terlihat / Absen</option>
+                        </select>
+                    </div>
+
+                    <!-- PR Interval -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center">
+                            PR Interval
+                            <button type="button" onclick="triggerGuide('prInterval')" class="text-indigo-400 hover:text-indigo-300 transition-colors">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                        </label>
+                        <select id="prInterval" name="prInterval" class="w-full p-3 rounded-xl border appearance-none cursor-pointer">
+                            <option value="Normal (0.12 - 0.20s)">Normal (0.12 - 0.20s)</option>
+                            <option value="Memanjang (> 0.20s - AV Block)">Memanjang (> 0.20s - AV Block)</option>
+                            <option value="Memendek (< 0.12s - WPW)">Memendek (< 0.12s - WPW)</option>
+                        </select>
+                    </div>
+
+                    <!-- QRS Kompleks -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center">
+                            QRS Kompleks
+                            <button type="button" onclick="triggerGuide('qrs')" class="text-orange-400 hover:text-orange-300 transition-colors">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                        </label>
+                        <select id="qrs" name="qrs" class="w-full p-3 rounded-xl border appearance-none cursor-pointer">
+                            <option value="Normal / Sempit">Normal / Sempit (< 0.12s)</option>
+                            <option value="Lebar (> 0.12s) - BBB Suspect">Lebar (> 0.12s) - BBB Suspect</option>
+                            <option value="Kriteria LVH (+)">Kriteria LVH (+)</option>
+                        </select>
+                    </div>
+
+                    <!-- QT Interval & Auto QTc -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block">QT / QTc (Bazett)</label>
+                        <div class="flex gap-2">
+                            <div class="relative w-1/2">
+                                <input type="number" id="qt" name="qt" value="380" class="w-full p-3 rounded-xl border" placeholder="QT (ms)" />
+                                <span class="absolute right-3 top-3 text-xs text-slate-500 font-bold">ms</span>
+                            </div>
+                            <div class="relative w-1/2">
+                                <input type="text" id="qtc" name="qtc" readonly class="w-full p-3 rounded-xl border bg-slate-800/50 text-emerald-400 font-bold font-mono focus:border-slate-700 focus:shadow-none cursor-not-allowed" placeholder="QTc" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Segmen ST -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-rose-400 uppercase tracking-wider flex justify-between items-center">
+                            Segmen ST (Ischemia Marker)
+                            <button type="button" onclick="triggerGuide('st')" class="text-rose-400 hover:text-rose-300 transition-colors">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                        </label>
+                        <select id="st" name="st" class="w-full p-3 rounded-xl border border-slate-600 focus:border-rose-500 appearance-none cursor-pointer bg-slate-800">
+                            <option value="Isoelektrik (Normal)">Isoelektrik (Normal)</option>
+                            <option value="ST Elevasi (Anterior V1-V4)">ST Elevasi (Anterior V1-V4)</option>
+                            <option value="ST Elevasi (Inferior II, III, aVF)">ST Elevasi (Inferior II, III, aVF)</option>
+                            <option value="ST Elevasi (Lateral I, aVL, V5-V6)">ST Elevasi (Lateral I, aVL, V5-V6)</option>
+                            <option value="ST Depresi">ST Depresi (Ischemia)</option>
+                        </select>
+                    </div>
+
+                    <!-- Gelombang T -->
+                    <div class="space-y-2 md:col-span-2">
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center">
+                            Gelombang T
+                            <button type="button" onclick="triggerGuide('gelT')" class="text-cyan-400 hover:text-cyan-300 transition-colors">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                        </label>
+                        <select id="gelT" name="gelT" class="w-full p-3 rounded-xl border appearance-none cursor-pointer">
+                            <option value="Normal (Positif, asimetris)">Normal (Positif, asimetris)</option>
+                            <option value="T Inverted (Iskemia)">T Inverted (Ischemia)</option>
+                            <option value="Tall T (Hiperkalemia suspect)">Tall Peaked T (Hiperkalemia suspect)</option>
+                            <option value="Hyperacute T (Early STEMI)">Hyperacute T (Early STEMI suspect)</option>
+                            <option value="Flat T">Flat T</option>
+                        </select>
+                    </div>
+
+                    <!-- AI KESIMPULAN -->
+                    <div class="space-y-2 md:col-span-2 mt-2">
+                        <label class="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center justify-between">
+                            <span class="flex items-center"><i data-lucide="brain-circuit" class="w-4 h-4 mr-1.5 animate-pulse"></i> AI Auto-Conclusion</span>
+                        </label>
+                        <input type="text" id="kesimpulan" name="kesimpulan" class="w-full p-4 bg-cyan-950/30 border border-cyan-600/50 text-cyan-100 font-bold rounded-xl focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all shadow-inner" placeholder="Menganalisis..." />
+                    </div>
+                </form>
+
+                <!-- OUTPUT BOX -->
+                <div class="p-6 border-t border-slate-700/80 bg-[#0b1120] relative rounded-b-3xl">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+                        <h3 class="text-cyan-500 font-mono text-sm tracking-widest font-bold flex items-center">
+                            <i data-lucide="file-terminal" class="w-4 h-4 mr-2"></i> FINAL REPORT
+                        </h3>
+                        <button id="copyBtn" onclick="copyText()" class="flex items-center justify-center space-x-2 px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-bold rounded-xl shadow-[0_0_15px_rgba(8,145,178,0.5)] transition-all active:scale-95 w-full sm:w-auto">
+                            <i id="copyIcon" data-lucide="copy" class="w-4 h-4"></i>
+                            <span id="copyTextStr">Salin Laporan</span>
+                        </button>
+                    </div>
+                    
+                    <textarea id="outputText" readonly class="w-full h-72 bg-[#0f172a] text-cyan-50 p-5 rounded-2xl border border-slate-700/80 font-mono text-sm focus:outline-none resize-none shadow-inner leading-relaxed selection:bg-cyan-900"></textarea>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // DOM Elements
+        const form = document.getElementById('ekgForm');
+        const outputText = document.getElementById('outputText');
+        const inputKesimpulan = document.getElementById('kesimpulan');
+        const inputHR = document.getElementById('hr');
+        const inputQT = document.getElementById('qt');
+        const inputQTc = document.getElementById('qtc');
+        const inputs = form.querySelectorAll('input, select');
+        
+        // Mapper Elements
+        const pathLAD = document.getElementById('pathLAD');
+        const pathRCA = document.getElementById('pathRCA');
+        const pathLCX = document.getElementById('pathLCX');
+        const labelLAD = document.getElementById('labelLAD');
+        const labelRCA = document.getElementById('labelRCA');
+        const labelLCX = document.getElementById('labelLCX');
+        const mapperStatus = document.getElementById('mapperStatus');
+        const mapperDesc = document.getElementById('mapperDesc');
+
+        // Alert Elements
+        const redFlagPanel = document.getElementById('redFlagPanel');
+        const redFlagText = document.getElementById('redFlagText');
+
+        // --- FEATURE 1: DYNAMIC BPM TAPPER ---
+        let tapTimes = [];
+        window.tapBPM = function() {
+            const now = Date.now();
+            const btn = document.getElementById('tapBtn');
+            btn.classList.add('tap-active');
+            setTimeout(() => btn.classList.remove('tap-active'), 100);
+            if(tapTimes.length > 0 && (now - tapTimes[tapTimes.length-1]) > 3000) tapTimes = [];
+            tapTimes.push(now);
+            if(tapTimes.length > 5) tapTimes.shift();
+            if(tapTimes.length > 1) {
+                let diffs = [];
+                for(let i = 1; i < tapTimes.length; i++) diffs.push(tapTimes[i] - tapTimes[i-1]);
+                let avgDiff = diffs.reduce((a,b) => a+b, 0) / diffs.length;
+                let bpm = Math.round(60000 / avgDiff);
+                inputHR.value = bpm;
+                const maxDiff = Math.max(...diffs);
+                const minDiff = Math.min(...diffs);
+                if(tapTimes.length >= 4 && (maxDiff - minDiff) > 200) {
+                    document.getElementById('reguler').value = 'Irreguler';
+                } else {
+                    document.getElementById('reguler').value = 'Reguler';
+                }
+                updateOutput(inputHR);
+            }
+        };
+
+        // --- FEATURE 2 & 3: QTc CALCULATION & REPORT GENERATION ---
+        function calculateQTc(qt, hr) {
+            if(!qt || !hr || hr <= 0) return 0;
+            const rrSeconds = 60 / hr;
+            return Math.round(qt / Math.sqrt(rrSeconds));
+        }
+
+        function generateConclusion(data) {
+            let parts = [data.irama];
+            if (data.aksis.includes('LAD')) parts.push('LAD');
+            if (data.aksis.includes('RAD')) parts.push('RAD');
+            if (data.gelP.includes('Mitrale')) parts.push('LAE');
+            if (data.gelP.includes('Pulmonale')) parts.push('RAE');
+            if (data.prInterval.includes('Memanjang')) parts.push('1st Degree AV Block');
+            if (data.prInterval.includes('Memendek')) parts.push('Pre-excitation/WPW');
+            if (data.qrs.includes('Lebar')) parts.push('Intraventricular Conduction Delay / BBB');
+            if (data.qrs.includes('LVH')) parts.push('LVH');
+
+            let ischemiaParts = [];
+            let culprit = "";
+            if (data.st.includes('Elevasi')) {
+                if (data.st.includes('Anterior')) { ischemiaParts.push('Extensive Anterior STEMI'); culprit = "LAD"; }
+                else if (data.st.includes('Inferior')) { ischemiaParts.push('Inferior STEMI'); culprit = "RCA/LCx"; }
+                else if (data.st.includes('Lateral')) { ischemiaParts.push('Lateral STEMI'); culprit = "LCx/Diag"; }
+                else ischemiaParts.push('STEMI');
+            } else if (data.st.includes('Depresi')) {
+                ischemiaParts.push('Myocardial Ischemia / NSTEMI');
+            }
+            if (data.gelT.includes('Inverted') && !data.st.includes('Depresi')) ischemiaParts.push('Ischemic T-wave');
+            if (data.gelT.includes('Tall')) ischemiaParts.push('Suspect Hyperkalemia');
+            if (data.gelT.includes('Hyperacute')) ischemiaParts.push('Hyperacute T-wave (Early STEMI)');
+            if (ischemiaParts.length > 0) parts.push(ischemiaParts.join(' + '));
+            if(data.qtcVal > 460) parts.push(`Prolonged QTc (${data.qtcVal}ms)`);
+            let finalConclusion = parts.join(', ');
+            if (finalConclusion === 'Sinus Rhythm' && data.hr >= 60 && data.hr <= 100) finalConclusion = 'Normal Sinus Rhythm, Normal ECG';
+            return { text: finalConclusion, culprit: culprit };
+        }
+
+        // --- FEATURE 4: SMART PLANNER / MAPPER ---
+        function updateCoronaryMap(stValue) {
+            [pathLAD, pathRCA, pathLCX].forEach(p => { p.classList.remove('artery-glow'); p.setAttribute('stroke', '#3b82f6'); });
+            [labelLAD, labelRCA, labelLCX].forEach(l => { l.classList.remove('fill-red-400'); l.classList.add('fill-slate-500'); });
+            mapperStatus.className = "text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-slate-900/50 text-slate-400 border border-slate-800";
+            mapperStatus.textContent = "Assessing...";
+            mapperDesc.innerHTML = "Anatomi koroner dalam batas wajar berdasar EKG.";
+
+            if(stValue.includes('Anterior')) {
+                pathLAD.classList.add('artery-glow');
+                labelLAD.classList.replace('fill-slate-500', 'fill-red-400');
+                mapperStatus.className = "text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-rose-900/50 text-rose-400 border border-rose-800 animate-pulse";
+                mapperStatus.textContent = "LAD Occlusion Suspect";
+                mapperDesc.innerHTML = "ST Elevasi terdeteksi di V1-V4. Celah oklusi kemungkinan besar berada di <span class='text-rose-400 font-bold'>Left Anterior Descending (LAD)</span>.";
+            } else if (stValue.includes('Inferior')) {
+                pathRCA.classList.add('artery-glow');
+                labelRCA.classList.replace('fill-slate-500', 'fill-red-400');
+                mapperStatus.className = "text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-rose-900/50 text-rose-400 border border-rose-800 animate-pulse";
+                mapperStatus.textContent = "RCA Occlusion Suspect";
+                mapperDesc.innerHTML = "ST Elevasi terdeteksi di II, III, aVF. Celah oklusi kemungkinan di <span class='text-rose-400 font-bold'>Right Coronary Artery (RCA)</span> dominan, atau LCx.";
+            } else if (stValue.includes('Lateral')) {
+                pathLCX.classList.add('artery-glow');
+                labelLCX.classList.replace('fill-slate-500', 'fill-red-400');
+                mapperStatus.className = "text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-rose-900/50 text-rose-400 border border-rose-800 animate-pulse";
+                mapperStatus.textContent = "LCx Occlusion Suspect";
+                mapperDesc.innerHTML = "ST Elevasi terdeteksi di Lateral lead. Waspada keterlibatan <span class='text-rose-400 font-bold'>Left Circumflex (LCx)</span>.";
+            } else if (stValue.includes('Depresi')) {
+                 mapperStatus.className = "text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-amber-900/50 text-amber-400 border border-amber-800";
+                 mapperStatus.textContent = "Ischemia Detected";
+                 mapperDesc.innerHTML = "Tanda Iskemia terdeteksi. Evaluasi klinis untuk NSTEMI / UAP.";
+            } else {
+                 mapperStatus.className = "text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-emerald-900/50 text-emerald-400 border border-emerald-800";
+                 mapperStatus.textContent = "No Ischemia";
+            }
+        }
+
+        function checkRedFlags(data) {
+            redFlagPanel.classList.add('hidden');
+            let alertMsg = "";
+            if (data.st.includes('Elevasi')) alertMsg = `🚨 CODE STEMI DETECTED! <br/> Segera aktifkan protokol Reperfusi (Primary PCI). Target FMC to Guidewire crossing < 90 Menit.`;
+            else if (data.irama.includes('Ventricular Fibrillation') || data.irama.includes('Asystole') || data.irama.includes('VT')) alertMsg = `⚡ LETHAL ARRHYTHMIA! <br/> Cek nadi pasien segera. Mulai protokol ACLS / Resusitasi Jantung Paru & Siapkan Defibrillator.`;
+            else if (data.hr < 50 && data.prInterval.includes('Memanjang')) alertMsg = `⚠️ BRADYARRHYTHMIA + AV BLOCK. <br/> Pasien berisiko hemodinamik tidak stabil. Siapkan Atropine / Evaluasi kebutuhan Temporary Pacemaker (TPM).`;
+            if (alertMsg !== "") { redFlagText.innerHTML = alertMsg; redFlagPanel.classList.remove('hidden'); }
+        }
+
+        // --- MASTER UPDATE FUNCTION ---
+        function updateOutput(triggerEl) {
+            let data = {};
+            inputs.forEach(el => data[el.name] = el.value);
+            const hrNum = parseInt(data.hr) || 0;
+            const qtNum = parseInt(data.qt) || 0;
+            data.qtcVal = calculateQTc(qtNum, hrNum);
+            inputQTc.value = data.qtcVal > 0 ? `${data.qtcVal} ms` : '-';
+            const analysis = generateConclusion(data);
+            if (triggerEl && triggerEl.name !== 'kesimpulan') {
+                inputKesimpulan.value = analysis.text;
+                data.kesimpulan = analysis.text;
+            }
+            updateCoronaryMap(data.st);
+            checkRedFlags(data);
+
+            const text = `==================================================
+ELECTROCARDIOVAULT PRO - CARDIOLOGY REPORT
+==================================================
+Developed by    : Bayushi Eka Putra, MD, FIHA
+--------------------------------------------------
+[ PARAMETER EKG ]
+Irama Dasar     : ${data.irama}
+Heart Rate      : ${data.hr} bpm (${data.reguler})
+Aksis (I, aVF)  : ${data.aksis}
+Gelombang P     : ${data.gelP}
+PR Interval     : ${data.prInterval}
+QRS Kompleks    : ${data.qrs}
+Segmen ST       : ${data.st}
+Gelombang T     : ${data.gelT}
+QT / QTc        : ${qtNum} ms / ${data.qtcVal} ms
+--------------------------------------------------
+[ KESIMPULAN KLINIS ]
+=> ${data.kesimpulan}
+${analysis.culprit ? '\n[ SUSPECT CULPRIT LESION ]\n=> ' + analysis.culprit + ' Occlusion' : ''}
+==================================================`;
+            outputText.value = text;
+        }
+
+        inputs.forEach(el => {
+            el.addEventListener('input', (e) => updateOutput(e.target));
+            el.addEventListener('change', (e) => updateOutput(e.target));
+        });
+
+        updateOutput(document.getElementById('irama'));
+
+        // --- SVG DATA & MODAL LOGIC (FULL VERSION) ---
+        const guideData = {
+            normal: { title: "Anatomi Gelombang Normal", desc: "Irama sinus normal dengan gelombang P diikuti kompleks QRS sempit, ST isoelektrik, dan T positif.", color: "text-cyan-400", svg: `<path d="M 0 100 L 60 100 Q 80 80 100 100 L 140 100 L 155 130 L 180 30 L 205 130 L 220 100 L 280 100 Q 320 60 360 100 L 500 100" stroke="#06b6d4" stroke-width="3" fill="none" /><text x="75" y="70" class="text-sm fill-slate-300 font-bold">P</text><text x="165" y="20" class="text-sm fill-slate-300 font-bold">R</text><text x="135" y="150" class="text-sm fill-slate-300 font-bold">Q</text><text x="210" y="150" class="text-sm fill-slate-300 font-bold">S</text><text x="315" y="50" class="text-sm fill-slate-300 font-bold">T</text>` },
+            sinus_brady: { title: "Sinus Bradycardia", desc: "Irama sinus lambat (HR < 60x/menit). Jarak R-R lebar.", color: "text-blue-400", svg: `<path d="M 0 100 L 100 100 Q 120 80 140 100 L 220 100 L 235 130 L 260 30 L 285 130 L 300 100 L 380 100 Q 420 60 460 100 L 500 100" stroke="#3b82f6" stroke-width="3" fill="none" /><text x="245" y="20" class="text-sm fill-blue-400 font-bold">R-R Jauh (Lambat)</text>` },
+            sinus_tachy: { title: "Sinus Tachycardia", desc: "Irama sinus cepat (HR > 100x/menit). Jarak R-R rapat.", color: "text-amber-500", svg: `<path d="M 0 100 L 20 100 Q 30 80 40 100 L 60 100 L 70 130 L 90 30 L 110 130 L 120 100 L 140 100 Q 160 60 180 100 L 190 100 Q 200 80 210 100 L 230 100 L 240 130 L 260 30 L 280 130 L 290 100 L 310 100 Q 330 60 350 100 L 360 100 Q 370 80 380 100 L 400 100 L 410 130 L 430 30 L 450 130 L 460 100 L 480 100 Q 490 60 500 100" stroke="#f59e0b" stroke-width="3" fill="none" /><text x="245" y="20" class="text-sm fill-amber-500 font-bold">R-R Rapat (Cepat)</text>` },
+            sinus_arrhythmia: { title: "Sinus Arrhythmia", desc: "Variasi jarak R-R ireguler dipengaruhi pernapasan.", color: "text-teal-500", svg: `<path d="M 0 100 L 40 100 Q 50 80 60 100 L 75 100 L 80 130 L 90 30 L 100 130 L 105 100 L 120 100 Q 150 60 180 100 L 190 100 Q 200 80 210 100 L 225 100 L 230 130 L 240 30 L 250 130 L 255 100 L 270 100 Q 300 60 330 100 L 400 100 Q 410 80 420 100 L 435 100 L 440 130 L 450 30 L 460 130 L 465 100 L 480 100 Q 495 60 500 80" stroke="#14b8a6" stroke-width="3" fill="none" /><text x="175" y="20" class="text-sm fill-teal-400 font-bold">R-R Bervariasi</text>` },
+            svt: { title: "SVT", desc: "Sangat cepat dan reguler. P tertutup T.", color: "text-fuchsia-500", svg: `<path d="M 0 100 L 40 100 L 45 120 L 60 20 L 75 120 L 80 100 Q 95 60 110 100 L 130 100 L 135 120 L 150 20 L 165 120 L 170 100 Q 185 60 200 100 L 220 100 L 225 120 L 240 20 L 255 120 L 260 100 Q 275 60 290 100 L 310 100 L 315 120 L 330 20 L 345 120 L 350 100 Q 365 60 380 100 L 400 100 L 405 120 L 420 20 L 435 120 L 440 100 Q 455 60 470 100 L 490 100 L 495 120 L 500 70" stroke="#d946ef" stroke-width="3" fill="none" /><text x="145" y="15" class="text-sm fill-fuchsia-400 font-bold">Sempit & Sangat Cepat</text>` },
+            aflutter: { title: "Atrial Flutter", desc: "Sawtooth pattern (F-waves).", color: "text-pink-500", svg: `<path d="M 0 100 L 15 70 L 30 100 L 45 70 L 60 100 L 75 70 L 90 100 L 105 30 L 120 130 L 130 100 L 145 70 L 160 100 L 175 70 L 190 100 L 205 70 L 220 100 L 235 30 L 250 130 L 260 100 L 275 70 L 290 100 L 305 70 L 320 100 L 335 70 L 350 100 L 365 30 L 380 130 L 390 100 L 405 70 L 420 100 L 435 70 L 450 100 L 465 70 L 480 100 L 500 100" stroke="#ec4899" stroke-width="3" fill="none" /><text x="145" y="60" class="text-sm fill-pink-400 font-bold">Sawtooth</text>` },
+            af: { title: "Atrial Fibrillation (AF)", desc: "Ireguler, f-waves acak.", color: "text-rose-400", svg: `<path d="M 0 100 Q 10 95 20 100 T 40 100 Q 50 105 60 100 L 70 30 L 85 130 L 95 100 Q 110 90 125 100 T 155 100 Q 170 105 185 100 L 195 30 L 210 130 L 220 100 Q 240 90 260 100 T 300 100 Q 315 105 330 100 L 340 30 L 355 130 L 365 100 Q 380 90 395 100 T 425 100 Q 440 105 455 100 L 465 30 L 480 130 L 490 100 L 500 100" stroke="#f43f5e" stroke-width="3" fill="none" /><text x="120" y="70" class="text-sm fill-rose-400 font-bold">f waves (ireguler)</text>` },
+            vt: { title: "VT", desc: "QRS lebar, cepat, reguler.", color: "text-rose-500", svg: `<path d="M 0 100 Q 25 10 50 100 Q 75 190 100 100 Q 125 10 150 100 Q 175 190 200 100 Q 225 10 250 100 Q 275 190 300 100 Q 325 10 350 100 Q 375 190 400 100 Q 425 10 450 100 Q 475 190 500 100" stroke="#f43f5e" stroke-width="4" fill="none" /><text x="180" y="160" class="text-sm fill-rose-400 font-bold">Wide QRS</text>` },
+            vf: { title: "VF", desc: "Kacau, fatal.", color: "text-red-600", svg: `<path d="M 0 100 Q 20 40 40 120 T 90 60 T 140 150 T 180 50 T 230 130 T 270 20 T 320 160 T 360 40 T 410 140 T 450 60 T 500 100" stroke="#dc2626" stroke-width="3" fill="none" /><text x="160" y="180" class="text-sm fill-red-500 font-bold">Kacau</text>` },
+            asystole: { title: "Asystole", desc: "Flatline.", color: "text-slate-400", svg: `<path d="M 0 100 L 500 100" stroke="#94a3b8" stroke-width="3" fill="none" /><text x="210" y="85" class="text-sm fill-slate-400 font-bold">Flatline</text>` },
+            axis_norm: { title: "Normoaxis", desc: "I(+), aVF(+).", color: "text-cyan-400", svg: `<circle cx="250" cy="100" r="70" fill="none" stroke="#334155" stroke-width="2" stroke-dasharray="4 4" /><path d="M 170 100 L 330 100" stroke="#64748b" stroke-width="2" /><path d="M 250 20 L 250 180" stroke="#64748b" stroke-width="2" /><text x="340" y="105" class="text-xs font-bold fill-slate-400">I(+)</text><text x="240" y="195" class="text-xs font-bold fill-slate-400">aVF(+)</text><path d="M 250 100 L 295 145" stroke="#06b6d4" stroke-width="4" />` },
+            axis_lad: { title: "LAD", desc: "I(+), aVF(-).", color: "text-amber-500", svg: `<circle cx="250" cy="100" r="70" fill="none" stroke="#334155" stroke-width="2" stroke-dasharray="4 4" /><path d="M 170 100 L 330 100" stroke="#64748b" stroke-width="2" /><path d="M 250 20 L 250 180" stroke="#64748b" stroke-width="2" /><text x="340" y="105" class="text-xs font-bold fill-slate-400">I(+)</text><text x="240" y="15" class="text-xs font-bold fill-slate-400">aVF(-)</text><path d="M 250 100 L 295 55" stroke="#f59e0b" stroke-width="4" />` },
+            axis_rad: { title: "RAD", desc: "I(-), aVF(+).", color: "text-rose-500", svg: `<circle cx="250" cy="100" r="70" fill="none" stroke="#334155" stroke-width="2" stroke-dasharray="4 4" /><path d="M 170 100 L 330 100" stroke="#64748b" stroke-width="2" /><path d="M 250 20 L 250 180" stroke="#64748b" stroke-width="2" /><text x="140" y="105" class="text-xs font-bold fill-slate-400">I(-)</text><text x="240" y="195" class="text-xs font-bold fill-slate-400">aVF(+)</text><path d="M 250 100 L 205 145" stroke="#f43f5e" stroke-width="4" />` },
+            p_mitrale: { title: "P Mitrale (LAE)", desc: "M Shape.", color: "text-violet-400", svg: `<path d="M 0 100 L 150 100 C 160 40, 180 40, 190 85 C 200 40, 220 40, 230 100 L 320 100 L 500 100" stroke="#a78bfa" stroke-width="3" fill="none" /><text x="165" y="45" class="text-sm fill-violet-400 font-bold">P Mitrale</text>` },
+            p_pulmonale: { title: "P Pulmonale (RAE)", desc: "Tinggi & lancip.", color: "text-violet-400", svg: `<path d="M 0 100 L 150 100 Q 190 20 230 100 L 320 100 L 500 100" stroke="#a78bfa" stroke-width="3" fill="none" /><text x="160" y="30" class="text-sm fill-violet-400 font-bold">P Pulmonale</text>` },
+            p_absent: { title: "P Absen", desc: "Tanpa P.", color: "text-slate-400", svg: `<path d="M 0 100 L 500 100" stroke="#94a3b8" stroke-width="3" fill="none" />` },
+            pr_short: { title: "PR Pendek (WPW)", desc: "Delta wave.", color: "text-emerald-500", svg: `<path d="M 0 100 L 60 100 Q 80 80 100 100 Q 130 90 145 70 L 180 30 L 205 130 L 280 100 L 500 100" stroke="#10b981" stroke-width="3" fill="none" />` },
+            av_block: { title: "AV Block", desc: "PR > 0.20s.", color: "text-indigo-400", svg: `<path d="M 0 100 L 60 100 Q 80 80 100 100 L 200 100 L 215 130 L 240 30 L 265 130 L 280 100 L 500 100" stroke="#818cf8" stroke-width="3" fill="none" />` },
+            qrs_wide: { title: "QRS Lebar", desc: "> 0.12s.", color: "text-orange-500", svg: `<path d="M 0 100 L 150 100 L 180 10 L 210 150 L 240 10 L 270 100 L 500 100" stroke="#f97316" stroke-width="3" fill="none" />` },
+            qrs_lvh: { title: "LVH", desc: "Voltase tinggi.", color: "text-orange-500", svg: `<path d="M 0 100 L 200 100 L 230 10 L 250 190 L 260 100 L 500 100" stroke="#f97316" stroke-width="3" fill="none" />` },
+            st_elev: { title: "ST Elevasi", desc: "STEMI.", color: "text-amber-500", svg: `<path d="M 0 100 L 155 130 L 180 10 L 195 60 L 250 60 Q 290 60 330 100 L 500 100" stroke="#f59e0b" stroke-width="3" fill="none" />` },
+            st_dep: { title: "ST Depresi", desc: "Ischemia.", color: "text-blue-500", svg: `<path d="M 0 100 L 155 130 L 180 30 L 205 130 L 220 130 L 270 130 Q 310 130 350 100 L 500 100" stroke="#3b82f6" stroke-width="3" fill="none" />` },
+            tall_t: { title: "Tall T", desc: "Hiperkalemia.", color: "text-purple-400", svg: `<path d="M 0 100 L 280 100 L 320 15 L 350 100 L 500 100" stroke="#a855f7" stroke-width="3" fill="none" />` },
+            hyperacute_t: { title: "Hyperacute T", desc: "Early STEMI.", color: "text-rose-500", svg: `<path d="M 0 100 L 215 90 C 260 60, 290 15, 340 15 C 400 15, 420 100, 500 100" stroke="#f43f5e" stroke-width="3" fill="none" />` },
+            flat_t: { title: "Flat T", desc: "Hipokalemia.", color: "text-slate-400", svg: `<path d="M 0 100 L 280 100 Q 320 95 360 100 L 500 100" stroke="#94a3b8" stroke-width="3" fill="none" />` }
+        };
+
+        const modal = document.getElementById('visualModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalDesc = document.getElementById('modalDesc');
+        const modalSvgContent = document.getElementById('modalSvgContent');
+        const modalIconContainer = document.getElementById('modalIconContainer');
+
+        function getGuideKey(field, val) {
+            val = val.toLowerCase();
+            if (field === 'irama') {
+                if (val.includes('fibrillation') && val.includes('ventricular')) return 'vf';
+                if (val.includes('fibrillation')) return 'af';
+                if (val.includes('flutter')) return 'aflutter';
+                if (val === 'svt' || val.includes('supraventricular')) return 'svt';
+                if (val.includes('ventricular tachycardia') || val === 'vt') return 'vt';
+                if (val.includes('arrhythmia')) return 'sinus_arrhythmia';
+                if (val.includes('bradycardia')) return 'sinus_brady';
+                if (val.includes('tachycardia')) return 'sinus_tachy';
+                if (val.includes('asystole')) return 'asystole';
+            } else if (field === 'aksis') {
+                if (val.includes('lad')) return 'axis_lad';
+                if (val.includes('rad')) return 'axis_rad';
+                return 'axis_norm';
+            } else if (field === 'gelP') {
+                if (val.includes('mitrale')) return 'p_mitrale';
+                if (val.includes('pulmonale')) return 'p_pulmonale';
+                if (val.includes('absen')) return 'p_absent';
+            } else if (field === 'prInterval') {
+                if (val.includes('memanjang')) return 'av_block';
+                if (val.includes('memendek')) return 'pr_short';
+            } else if (field === 'qrs') {
+                if (val.includes('lebar')) return 'qrs_wide';
+                if (val.includes('lvh')) return 'qrs_lvh';
+            } else if (field === 'st') {
+                if (val.includes('elevasi')) return 'st_elev';
+                if (val.includes('depresi')) return 'st_dep';
+            } else if (field === 'gelT') {
+                if (val.includes('inverted')) return 'st_dep';
+                if (val.includes('hyperacute')) return 'hyperacute_t';
+                if (val.includes('tall')) return 'tall_t';
+                if (val.includes('flat')) return 'flat_t';
+            }
+            return 'normal';
+        }
+
+        window.triggerGuide = function(field) {
+            const val = document.getElementById(field).value;
+            const key = getGuideKey(field, val);
+            const guide = guideData[key] || guideData['normal'];
+            modalTitle.textContent = guide.title;
+            modalDesc.textContent = guide.desc;
+            let finalSvg = guide.svg;
+            if (!key.startsWith('axis')) finalSvg = `<path d="M 0 100 L 500 100" stroke="#334155" stroke-width="1" stroke-dasharray="4 4" />` + finalSvg;
+            modalSvgContent.innerHTML = finalSvg;
+            modalIconContainer.innerHTML = `<i data-lucide="activity" class="w-6 h-6 ${guide.color}"></i>`;
+            lucide.createIcons();
+            modal.classList.remove('hidden');
+        };
+
+        window.closeModal = () => modal.classList.add('hidden');
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        window.copyText = function() {
+            outputText.select();
+            document.execCommand('copy');
+            const copyStr = document.getElementById('copyTextStr');
+            const copyIcon = document.getElementById('copyIcon');
+            copyStr.textContent = 'Tersalin!';
+            copyIcon.setAttribute('data-lucide', 'check-circle');
+            lucide.createIcons();
+            setTimeout(() => {
+                copyStr.textContent = 'Salin Laporan';
+                copyIcon.setAttribute('data-lucide', 'copy');
+                lucide.createIcons();
+            }, 2000);
+        };
+    </script>
+</body>
+</html>
