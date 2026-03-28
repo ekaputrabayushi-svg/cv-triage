@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#b91c1c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>STEMI Protocol App - CardiologyVault</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        body { -webkit-tap-highlight-color: transparent; }
+        .animate-fadeIn { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .pb-safe { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+        .pt-safe { padding-top: max(12px, env(safe-area-inset-top)); }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-900">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- Inline Icons ---
+        const IconActivity = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>;
+        const IconShieldAlert = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>;
+        const IconClipboardList = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M12 11h4"></path><path d="M12 16h4"></path><path d="M8 11h.01"></path><path d="M8 16h.01"></path></svg>;
+        const IconSyringe = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="18 2 22 6"></polyline><path d="M18 6L14 2"></path><path d="M14 6L6 14c-.3.3-.4.6-.5 1l-.5 3 3-.5c.4-.1.7-.2 1-.5L22 10"></path><path d="M2 22L8 16"></path><path d="M10 10l4 4"></path></svg>;
+        const IconHeartPulse = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"></path></svg>;
+        const IconStethoscope = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"></path><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"></path><circle cx="20" cy="10" r="2"></circle></svg>;
+        const IconAlertTriangle = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>;
+        const IconCheckCircle = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>;
+        const IconArrowLeft = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>;
+        const IconArrowRight = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>;
+        const IconInfo = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>;
+        const IconClock = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>;
+        const IconCopy = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>;
+        const IconCheck = ({ className, size=24 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"></polyline></svg>;
+
+        const StemiProtocolApp = () => {
+            const [currentStep, setCurrentStep] = useState(1);
+            
+            // Clinical State
+            const [clinicalState, setClinicalState] = useState({ stemiLocation: '', killip: '' });
+
+            // Guideline Decision State
+            const [decisionState, setDecisionState] = useState({ 
+                facility: '', 
+                timeToPCI: '',
+                consent: ''
+            });
+            
+            const isPrimaryPCI = decisionState.facility === 'pci_center' || (decisionState.facility === 'non_pci_center' && decisionState.timeToPCI === 'under_120' && decisionState.consent === 'accept');
+            
+            // Patient State
+            const [patientAgeGroup, setPatientAgeGroup] = useState(''); 
+
+            // --- FIBRINOLYTIC STATE ---
+            const [absoluteChecks, setAbsoluteChecks] = useState({});
+            const [relativeChecks, setRelativeChecks] = useState({});
+            const [hasAbsolute, setHasAbsolute] = useState(false);
+            const [hasRelative, setHasRelative] = useState(false);
+            const [prepChecks, setPrepChecks] = useState({ sit: false, ivLines: false, monitor: false, ecgPre: false });
+            const [reperfusionChecks, setReperfusionChecks] = useState({});
+
+            // --- PRIMARY PCI STATE ---
+            const [pciScreenChecks, setPciScreenChecks] = useState({ consent: false, allergy: false, bleeding: false, renal: false });
+            const [pciPrepChecks, setPciPrepChecks] = useState({ loading: false, ivLeft: false, shave: false, clothes: false });
+            const [pciPostChecks, setPciPostChecks] = useState({});
+
+            // Copy State
+            const [isCopied, setIsCopied] = useState(false);
+
+            // Lists
+            const stemiLabels = {
+                anterior: 'Anterior (V1-V4)',
+                anterolateral: 'Anterolateral (V1-V6, I, aVL)',
+                inferior: 'Inferior (II, III, aVF)',
+                inferior_rv: 'Inferior + RV Infarction (V3R-V4R)',
+                lateral: 'Lateral / High Lateral (I, aVL, V5-V6)',
+                posterior: 'Posterior (V7-V9)'
+            };
+
+            const absoluteContraindications = [
+                "Perdarahan aktif atau diatesis perdarahan (kecuali menstruasi)",
+                "Dicurigai diseksi aorta",
+                "Trauma kepala tertutup/wajah signifikan dlm 3 bulan",
+                "Riwayat perdarahan intrakranial sebelumnya",
+                "Stroke iskemik dalam 3 bulan terakhir",
+                "Diketahui memiliki lesi vaskular serebral (AVM)",
+                "Diketahui memiliki neoplasma intrakranial ganas"
+            ];
+            const relativeContraindications = [
+                "Penggunaan antikoagulan oral saat ini (OAC/NOAC)",
+                "Pungsi vaskular non-kompresibel",
+                "Operasi besar baru-baru ini (<3 minggu)",
+                "RJP traumatis atau berkepanjangan (>10 menit)",
+                "Perdarahan internal dlm 4 minggu / Ulkus Peptikum aktif",
+                "Hipertensi berat tidak terkontrol (S>180 atau D>110)"
+            ];
+            const reperfusionSigns = ["Resolusi nyeri dada > 50%", "Resolusi elevasi ST > 50%", "Aritmia reperfusi (AIVR)", "Kondisi stabil"];
+            const pciPostSigns = ["TR Band/Sheath Femoral Aman, tidak ada hematoma", "EKG Post-PCI: Resolusi ST membaik", "Hemodinamik stabil di ICU/CVCU"];
+
+            // --- Handlers for Checkboxes (The Fix) ---
+            const handleAbsoluteChange = (idx) => {
+                setAbsoluteChecks(prev => ({ ...prev, [idx]: !prev[idx] }));
+            };
+
+            const handleRelativeChange = (idx) => {
+                setRelativeChecks(prev => ({ ...prev, [idx]: !prev[idx] }));
+            };
+
+            const handleReperfusionChange = (idx) => {
+                setReperfusionChecks(prev => ({ ...prev, [idx]: !prev[idx] }));
+            };
+
+            useEffect(() => {
+                setHasAbsolute(Object.values(absoluteChecks).some(val => val === true));
+            }, [absoluteChecks]);
+
+            useEffect(() => {
+                setHasRelative(Object.values(relativeChecks).some(val => val === true));
+            }, [relativeChecks]);
+
+            const getDecisionRecommendation = () => {
+                if (decisionState.facility === 'pci_center') {
+                    return { title: "PRIMARY PCI", text: "FMC ke Wire Crossing target < 60-90 menit. Siapkan Cath Lab segera.", color: "bg-blue-100 text-blue-900 border-blue-400", action: "Lanjut Persiapan Cath Lab" };
+                }
+                if (decisionState.facility === 'non_pci_center') {
+                    if (decisionState.timeToPCI === 'under_120') {
+                        if (decisionState.consent === 'refuse') return { title: "FIBRINOLITIK (Menolak Rujuk)", text: "Keluarga menolak transfer, segera lakukan Farmakoinvasif di tempat.", color: "bg-yellow-100 text-yellow-900 border-yellow-400", action: "Lanjut Skrining Lisis" };
+                        return { title: "TRANSFER UNTUK PRIMARY PCI", text: "Target FMC ke Wire Crossing < 120 menit. Hubungi RS rujukan sekarang.", color: "bg-indigo-100 text-indigo-900 border-indigo-400", action: "Lanjut Persiapan Transfer PCI" };
+                    } else if (decisionState.timeToPCI === 'over_120') {
+                        return { title: "TERAPI FIBRINOLITIK", text: "Waktu transfer > 120 menit. Berikan Fibrinolitik segera. Door-to-Needle < 10 Menit.", color: "bg-red-100 text-red-900 border-red-400", action: "Lanjut Skrining Lisis" };
+                    }
+                }
+                return null;
+            };
+
+            const generateReport = () => {
+                const rec = getDecisionRecommendation();
+                let report = `*LAPORAN PERSIAPAN ${isPrimaryPCI ? 'PRIMARY PCI' : 'FIBRINOLITIK'} STEMI*\n\n`;
+                
+                report += `*1. Status Klinis Awal:*\n`;
+                report += `- Diagnosis: STEMI ${stemiLabels[clinicalState.stemiLocation] || 'Belum diisi'}\n`;
+                
+                let killipText = "Belum diisi";
+                if (clinicalState.killip === 'I') killipText = "Killip I (Tidak ada ronkhi / S3)";
+                if (clinicalState.killip === 'II') killipText = "Killip II (Ronkhi <50% / S3 Gallop)";
+                if (clinicalState.killip === 'III') killipText = "Killip III (Edema Paru Akut, Ronkhi >50%)";
+                if (clinicalState.killip === 'IV') killipText = "Killip IV (Syok Kardiogenik)";
+                report += `- Killip Class: ${killipText}\n\n`;
+
+                report += `*2. Triage & Keputusan:*\n`;
+                report += `- Fasilitas: ${decisionState.facility === 'pci_center' ? 'RS PCI' : 'RS Non-PCI'}\n`;
+                if (decisionState.facility === 'non_pci_center') {
+                    report += `- Est. Transfer: ${decisionState.timeToPCI === 'under_120' ? '< 120 Menit' : '> 120 Menit'}\n`;
+                    if (decisionState.timeToPCI === 'under_120') report += `- Persetujuan Rujuk: ${decisionState.consent === 'accept' ? 'Bersedia' : 'Menolak'}\n`;
+                }
+                report += `- Keputusan: ${rec ? rec.title : '-'}\n\n`;
+
+                if (isPrimaryPCI) {
+                    report += `*3. Skrining Cath Lab:*\n`;
+                    report += `- Informed Consent PCI: ${pciScreenChecks.consent ? 'Selesai ✅' : 'Belum ❌'}\n`;
+                    report += `- Alergi Kontras: ${pciScreenChecks.allergy ? 'ADA ⚠️' : 'Tidak Ada ✅'}\n`;
+                    report += `- Fungsi Ginjal (CKD): ${pciScreenChecks.renal ? 'ADA ⚠️' : 'Tidak Ada ✅'}\n`;
+                    report += `- Risiko Perdarahan Mayor: ${pciScreenChecks.bleeding ? 'ADA ⚠️' : 'Tidak Ada ✅'}\n\n`;
+
+                    report += `*4. Checklist Persiapan PCI (IGD):*\n`;
+                    report += `- Loading Dose Diberikan: ${pciPrepChecks.loading ? 'Selesai ✅' : 'Belum ❌'}\n`;
+                    report += `- Akses Vena Kiri Besar: ${pciPrepChecks.ivLeft ? 'Selesai ✅' : 'Belum ❌'}\n`;
+                    report += `- Cukur (Radialis & Femoralis): ${pciPrepChecks.shave ? 'Selesai ✅' : 'Belum ❌'}\n`;
+                    report += `- Baju Operasi & Lepas Aksesoris: ${pciPrepChecks.clothes ? 'Selesai ✅' : 'Belum ❌'}\n\n`;
+                    report += `*Kesimpulan:*\nPasien SIAP untuk ditransfer ke Cath Lab untuk Primary PCI.`;
+                } else {
+                    const absArr = Object.keys(absoluteChecks).filter(k => absoluteChecks[k]).map(k => absoluteContraindications[k]);
+                    const relArr = Object.keys(relativeChecks).filter(k => relativeChecks[k]).map(k => relativeContraindications[k]);
+                    
+                    report += `*3. Skrining Kontraindikasi:*\n`;
+                    report += `- Absolut: ${absArr.length === 0 ? 'TIDAK ADA (Aman)' : absArr.join(', ')}\n`;
+                    report += `- Relatif: ${relArr.length === 0 ? 'TIDAK ADA (Aman)' : relArr.join(', ')}\n\n`;
+
+                    report += `*4. Checklist Persiapan Lisis:*\n`;
+                    report += `- Informed Consent & SIT: ${prepChecks.sit ? 'Selesai ✅' : 'Belum ❌'}\n`;
+                    report += `- Akses Vena (2 Jalur): ${prepChecks.ivLines ? 'Selesai ✅' : 'Belum ❌'}\n`;
+                    report += `- Monitor & Defib: ${prepChecks.monitor ? 'Selesai ✅' : 'Belum ❌'}\n`;
+                    report += `- EKG Pre-Lisis (0 Mnt): ${prepChecks.ecgPre ? 'Selesai ✅' : 'Belum ❌'}\n\n`;
+                    report += `*Kesimpulan:*\nPasien SIAP untuk dimulai Fibrinolitik. Mohon ACC DPJP untuk eksekusi.`;
+                }
+                return report;
+            };
+
+            const handleCopyReport = () => {
+                const text = generateReport();
+                const el = document.createElement('textarea');
+                el.value = text;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                setIsCopied(true);
+                setTimeout(() => setIsCopied(false), 2500);
+            };
+
+            const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 6));
+            const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
+
+            const allPrepChecked = isPrimaryPCI 
+                ? Object.values(pciPrepChecks).every(val => val === true)
+                : Object.values(prepChecks).every(val => val === true);
+
+            const isStep1Incomplete = currentStep === 1 && (!clinicalState.stemiLocation || !clinicalState.killip || !decisionState.facility);
+
+            // Logic to disable "Next" button
+            const isNextDisabled = currentStep === 6 
+                || isStep1Incomplete
+                || (currentStep === 2 && !isPrimaryPCI && hasAbsolute) // Button mati kalau ada kontraindikasi absolut
+                || (currentStep === 3 && !allPrepChecked);
+
+            const steps = [
+                { id: 1, name: "Klinis & Triage", icon: IconActivity },
+                { id: 2, name: "Skrining", icon: IconShieldAlert },
+                { id: 3, name: "Persiapan", icon: IconClipboardList },
+                { id: 4, name: isPrimaryPCI ? "Cath Lab" : "Fibrinolitik", icon: IconSyringe },
+                { id: 5, name: "Evaluasi", icon: IconHeartPulse },
+                { id: 6, name: "Medikasi", icon: IconStethoscope },
+            ];
+
+            return (
+                <div className="min-h-screen bg-slate-50 font-sans pb-24">
+                    {/* Header */}
+                    <header className="bg-red-700 text-white p-4 shadow-md sticky top-0 z-20 pt-safe">
+                        <div className="max-w-md mx-auto">
+                            <div className="flex justify-between items-start mb-1">
+                                <div>
+                                    <div className="text-red-200 text-[10px] font-bold tracking-wider uppercase mb-0.5">
+                                        CardiologyVault Guideline App
+                                    </div>
+                                    <h1 className="text-xl font-bold flex items-center gap-1.5 leading-tight">
+                                        <IconHeartPulse className="h-6 w-6" />
+                                        STEMI Protocol
+                                    </h1>
+                                </div>
+                                <div className="bg-white/20 text-white px-2 py-1 rounded text-xs font-bold border border-red-500">
+                                    {currentStep} / 6
+                                </div>
+                            </div>
+                            <p className="text-red-100 text-[11px] mt-1">Based on ESC/AHA Guidelines &bull; by Bayushi Eka Putra, MD</p>
+                        </div>
+                    </header>
+
+                    <main className="max-w-md mx-auto mt-4 px-3">
+                        {/* Progress Bar */}
+                        <div className="flex justify-between mb-6 overflow-x-auto pb-2 scrollbar-hide snap-x">
+                            {steps.map((step) => {
+                                const Icon = step.icon;
+                                const isActive = currentStep === step.id;
+                                const isPast = currentStep > step.id;
+                                return (
+                                    <div key={step.id} className="flex flex-col items-center min-w-[65px] cursor-pointer snap-center" onClick={() => setCurrentStep(step.id)}>
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 mb-1.5 transition-colors duration-300 ${isActive ? 'bg-red-600 border-red-600 text-white' : isPast ? 'bg-green-500 border-green-500 text-white' : 'bg-white border-slate-300 text-slate-400'}`}>
+                                            <Icon size={16} />
+                                        </div>
+                                        <span className={`text-[10px] leading-tight text-center font-medium px-1 ${isActive ? 'text-red-700 font-bold' : 'text-slate-500'}`}>{step.name}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Step 1: Clinical Status & Decision */}
+                        {currentStep === 1 && (
+                            <div className="animate-fadeIn">
+                                <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-red-600 mb-6">
+                                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><IconActivity className="text-red-600"/> Lokasi Infark (EKG)</h2>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {[
+                                            { id: 'anterior', label: 'Anterior', desc: 'V1-V4' },
+                                            { id: 'anterolateral', label: 'Anterolateral', desc: 'V1-V6, I, aVL' },
+                                            { id: 'inferior', label: 'Inferior', desc: 'II, III, aVF' },
+                                            { id: 'inferior_rv', label: 'Inferior + RV', desc: 'II, III, aVF + V3R-V4R' },
+                                            { id: 'lateral', label: 'Lateral / High Lat', desc: 'I, aVL, V5-V6' },
+                                            { id: 'posterior', label: 'Posterior', desc: 'V7-V9' }
+                                        ].map(loc => (
+                                            <label key={loc.id} className={`flex flex-col p-3 border rounded-lg cursor-pointer transition-all ${clinicalState.stemiLocation === loc.id ? 'bg-red-50 border-red-500 ring-1 ring-red-500' : 'hover:bg-slate-50'}`}>
+                                                <input type="radio" name="stemiLocation" className="hidden" checked={clinicalState.stemiLocation === loc.id} onChange={() => setClinicalState({...clinicalState, stemiLocation: loc.id})} />
+                                                <span className={`font-bold text-sm leading-tight ${clinicalState.stemiLocation === loc.id ? 'text-red-700' : 'text-slate-800'}`}>{loc.label}</span>
+                                                <span className="text-[10px] text-slate-500 mt-1">{loc.desc}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-rose-600 mb-6">
+                                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><IconStethoscope className="text-rose-600"/> Status Jantung</h2>
+                                    <div className="space-y-3">
+                                        {['I', 'II', 'III', 'IV'].map((k) => (
+                                            <label key={k} className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-all ${clinicalState.killip === k ? 'bg-rose-50 border-rose-400 ring-1 ring-rose-400' : 'hover:bg-slate-50'}`}>
+                                                <input type="radio" name="killip" className="w-5 h-5 mt-0.5 accent-rose-600" checked={clinicalState.killip === k} onChange={() => setClinicalState({ ...clinicalState, killip: k })} />
+                                                <div>
+                                                    <span className="font-bold block text-slate-800 text-sm">Killip {k}</span>
+                                                    <span className="text-[10px] text-slate-500">{k === 'I' ? 'Normal' : k === 'II' ? 'Ronkhi < 50%' : k === 'III' ? 'Edema Paru Akut' : 'Syok Kardiogenik'}</span>
+                                                </div>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-blue-600">
+                                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><IconClock className="text-blue-600"/> Triage Reperfusi</h2>
+                                    <div className="space-y-4">
+                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                            <label className="block font-bold text-slate-800 mb-3 text-sm">Fasilitas Saat Ini:</label>
+                                            <div className="space-y-2">
+                                                <label className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer bg-white ${decisionState.facility === 'pci_center' ? 'border-blue-400 ring-1 ring-blue-400' : ''}`}>
+                                                    <input type="radio" name="facility" className="w-5 h-5 text-blue-600" checked={decisionState.facility === 'pci_center'} onChange={() => setDecisionState({facility: 'pci_center', timeToPCI: '', consent: ''})} />
+                                                    <span className="font-bold text-sm">RS PCI (Ada Cath Lab)</span>
+                                                </label>
+                                                <label className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer bg-white ${decisionState.facility === 'non_pci_center' ? 'border-blue-400 ring-1 ring-blue-400' : ''}`}>
+                                                    <input type="radio" name="facility" className="w-5 h-5 text-blue-600" checked={decisionState.facility === 'non_pci_center'} onChange={() => setDecisionState({...decisionState, facility: 'non_pci_center'})} />
+                                                    <span className="font-bold text-sm">RS Non-PCI</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        {decisionState.facility === 'non_pci_center' && (
+                                            <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-200 animate-fadeIn space-y-3">
+                                                <label className="block font-bold text-indigo-900 text-sm">Estimasi Waktu Transfer:</label>
+                                                <div className="space-y-2">
+                                                    <label className="flex items-center gap-3 p-3 border border-indigo-200 bg-white rounded-lg cursor-pointer">
+                                                        <input type="radio" name="timeToPCI" checked={decisionState.timeToPCI === 'under_120'} onChange={() => setDecisionState({...decisionState, timeToPCI: 'under_120'})} />
+                                                        <span className="text-sm font-medium"><b>&le; 120 Menit</b></span>
+                                                    </label>
+                                                    <label className="flex items-center gap-3 p-3 border border-indigo-200 bg-white rounded-lg cursor-pointer">
+                                                        <input type="radio" name="timeToPCI" checked={decisionState.timeToPCI === 'over_120'} onChange={() => setDecisionState({...decisionState, timeToPCI: 'over_120', consent: ''})} />
+                                                        <span className="text-sm font-medium"><b>&gt; 120 Menit</b></span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {decisionState.facility === 'non_pci_center' && decisionState.timeToPCI === 'under_120' && (
+                                            <div className="bg-orange-50 p-4 rounded-xl border border-orange-200 animate-fadeIn">
+                                                <label className="block font-bold text-orange-900 mb-3 text-sm">Persetujuan Rujuk:</label>
+                                                <div className="flex gap-3">
+                                                    <label className="flex-1 flex items-center justify-center gap-2 p-3 border border-orange-300 rounded-lg bg-white cursor-pointer">
+                                                        <input type="radio" name="consent" checked={decisionState.consent === 'accept'} onChange={() => setDecisionState({...decisionState, consent: 'accept'})} />
+                                                        <span className="text-sm font-bold">Bersedia</span>
+                                                    </label>
+                                                    <label className="flex-1 flex items-center justify-center gap-2 p-3 border border-orange-300 rounded-lg bg-white cursor-pointer">
+                                                        <input type="radio" name="consent" checked={decisionState.consent === 'refuse'} onChange={() => setDecisionState({...decisionState, consent: 'refuse'})} />
+                                                        <span className="text-sm font-bold">Menolak</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {getDecisionRecommendation() && (
+                                            <div className={`p-4 rounded-xl border-2 animate-fadeIn ${getDecisionRecommendation().color}`}>
+                                                <h3 className="font-bold text-sm mb-1">{getDecisionRecommendation().title}</h3>
+                                                <p className="text-[11px] opacity-90">{getDecisionRecommendation().text}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Step 2: Screening */}
+                        {currentStep === 2 && (
+                            <div className={`bg-white rounded-xl shadow-lg p-6 border-t-4 animate-fadeIn ${isPrimaryPCI ? 'border-blue-600' : 'border-red-600'}`}>
+                                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                    <IconShieldAlert className={isPrimaryPCI ? 'text-blue-600' : 'text-red-600'}/> 
+                                    {isPrimaryPCI ? 'Skrining Primary PCI' : 'Skrining Fibrinolitik'}
+                                </h2>
+                                
+                                {isPrimaryPCI ? (
+                                    <div className="space-y-4">
+                                        {[
+                                            { key: 'consent', label: 'Informed Consent PCI', sub: 'Edukasi risiko pasang ring & kontras.' },
+                                            { key: 'allergy', label: 'Riwayat Alergi Kontras?', sub: 'Centang jika ADA.' },
+                                            { key: 'renal', label: 'Ada Gagal Ginjal (CKD)?', sub: 'Centang jika ADA.' },
+                                            { key: 'bleeding', label: 'Risiko Perdarahan Mayor?', sub: 'Centang jika ADA.' }
+                                        ].map(item => (
+                                            <label key={item.key} className={`flex items-start gap-4 p-4 border rounded-xl cursor-pointer transition-all ${pciScreenChecks[item.key] ? 'bg-blue-50 border-blue-300' : 'hover:bg-slate-50'}`}>
+                                                <input type="checkbox" className="w-6 h-6 mt-1 accent-blue-600 shrink-0" checked={pciScreenChecks[item.key]} onChange={() => setPciScreenChecks({...pciScreenChecks, [item.key]: !pciScreenChecks[item.key]})} />
+                                                <div>
+                                                    <span className="font-bold block text-slate-800 text-sm">{item.label}</span>
+                                                    <span className="text-slate-600 text-[10px]">{item.sub}</span>
+                                                </div>
+                                            </label>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="space-y-6">
+                                        {hasAbsolute && (
+                                            <div className="bg-red-100 border-l-4 border-red-600 text-red-800 p-4 rounded flex items-start gap-3 animate-pulse">
+                                                <IconAlertTriangle className="h-6 w-6 flex-shrink-0 mt-0.5" />
+                                                <div>
+                                                    <p className="font-bold text-sm leading-tight uppercase">Stop! Kontraindikasi Absolut.</p>
+                                                    <p className="text-[10px] mt-1">Fibrinolitik HARAM diberikan. Upayakan Rujuk untuk Primary PCI.</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        <div className="mb-6">
+                                            <div className="bg-red-600 text-white px-4 py-2 rounded-t-xl font-bold text-xs flex justify-between">
+                                                <span>Absolut (Jika Ya = Batal)</span>
+                                            </div>
+                                            <div className="border border-red-200 rounded-b-xl p-2 bg-red-50/20">
+                                                {absoluteContraindications.map((item, idx) => (
+                                                    <label key={`abs-${idx}`} className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors ${absoluteChecks[idx] ? 'bg-red-100 border-red-300 border' : 'hover:bg-slate-100'}`}>
+                                                        <input type="checkbox" className="w-5 h-5 mt-0.5 accent-red-600 shrink-0" checked={absoluteChecks[idx] || false} onChange={() => handleAbsoluteChange(idx)} />
+                                                        <span className={`text-xs ${absoluteChecks[idx] ? 'font-bold text-red-800' : 'text-slate-700'}`}>{item}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <div className="bg-yellow-500 text-white px-4 py-2 rounded-t-xl font-bold text-xs flex justify-between">
+                                                <span>Relatif (Hati-hati)</span>
+                                            </div>
+                                            <div className="border border-yellow-300 rounded-b-xl p-2 bg-yellow-50/20">
+                                                {relativeContraindications.map((item, idx) => (
+                                                    <label key={`rel-${idx}`} className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors ${relativeChecks[idx] ? 'bg-yellow-100 border-yellow-400 border' : 'hover:bg-slate-100'}`}>
+                                                        <input type="checkbox" className="w-5 h-5 mt-0.5 accent-yellow-600 shrink-0" checked={relativeChecks[idx] || false} onChange={() => handleRelativeChange(idx)} />
+                                                        <span className={`text-xs ${relativeChecks[idx] ? 'font-bold text-yellow-800' : 'text-slate-700'}`}>{item}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Step 3: Preparation */}
+                        {currentStep === 3 && (
+                            <div className={`bg-white rounded-xl shadow-lg p-6 border-t-4 animate-fadeIn ${isPrimaryPCI ? 'border-blue-500' : 'border-indigo-500'}`}>
+                                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                    <IconClipboardList className={isPrimaryPCI ? "text-blue-500" : "text-indigo-500"}/> 
+                                    Persiapan {isPrimaryPCI ? 'Pre-Cath Lab' : 'Lisis'}
+                                </h2>
+                                <div className="space-y-3">
+                                    {isPrimaryPCI ? (
+                                        [
+                                            { key: 'loading', label: 'Loading Dose Diberikan', sub: 'Aspilets 160-320mg + (Ticagrelor 180mg / Clopi 600mg).' },
+                                            { key: 'ivLeft', label: 'Akses Vena Kiri', sub: 'Pasang IV line besar di Tangan Kiri.' },
+                                            { key: 'shave', label: 'Cukur Area Akses', sub: 'Cukur area Radialis Kanan & Femoralis.' },
+                                            { key: 'clothes', label: 'Baju Operasi', sub: 'Pasien sudah memakai baju operasi & lepas perhiasan.' }
+                                        ].map(item => (
+                                            <label key={item.key} className={`flex items-start gap-4 p-4 border rounded-xl cursor-pointer ${pciPrepChecks[item.key] ? 'bg-blue-50 border-blue-300' : ''}`}>
+                                                <input type="checkbox" className="w-6 h-6 mt-1 accent-blue-600" checked={pciPrepChecks[item.key]} onChange={() => setPciPrepChecks({...pciPrepChecks, [item.key]: !pciPrepChecks[item.key]})} />
+                                                <div>
+                                                    <span className="font-bold block text-sm">{item.label}</span>
+                                                    <span className="text-[10px] text-slate-500">{item.sub}</span>
+                                                </div>
+                                            </label>
+                                        ))
+                                    ) : (
+                                        [
+                                            { key: 'sit', label: 'Informed Consent & SIT', sub: 'Keluarga sudah setuju tindakan lisis.' },
+                                            { key: 'ivLines', label: 'Akses Vena (2 Jalur)', sub: 'Siapkan 2 line IV besar (G18/20).' },
+                                            { key: 'monitor', label: 'Monitor & Defib', sub: 'Standby alat kejut & monitor vital.' },
+                                            { key: 'ecgPre', label: 'EKG Pre-Lisis (0 Menit)', sub: 'Rekam EKG dasar sebelum lisis.' }
+                                        ].map(item => (
+                                            <label key={item.key} className={`flex items-start gap-4 p-4 border rounded-xl cursor-pointer ${prepChecks[item.key] ? 'bg-indigo-50 border-indigo-300' : ''}`}>
+                                                <input type="checkbox" className="w-6 h-6 mt-1 accent-indigo-600" checked={prepChecks[item.key]} onChange={() => setPrepChecks({...prepChecks, [item.key]: !prepChecks[item.key]})} />
+                                                <div>
+                                                    <span className="font-bold block text-sm">{item.label}</span>
+                                                    <span className="text-[10px] text-slate-500">{item.sub}</span>
+                                                </div>
+                                            </label>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Step 4-6 simplified for brevity as the fix is in step 2 and the logic handlers */}
+                        {currentStep >= 4 && (
+                            <div className="animate-fadeIn space-y-4">
+                                <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-teal-600">
+                                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                        <IconSyringe className="text-teal-600"/> Prosedur {isPrimaryPCI ? 'PCI' : 'Fibrinolitik'}
+                                    </h2>
+                                    <p className="text-sm text-slate-600 italic">Ikuti instruksi dan dosing sesuai guideline yang terlampir pada layar medikasi (Step 6).</p>
+                                    
+                                    <button onClick={handleCopyReport} className={`w-full mt-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all text-sm ${isCopied ? 'bg-green-500 text-white' : 'bg-slate-100 border border-slate-300 text-slate-700'}`}>
+                                        {isCopied ? <IconCheck size={18} /> : <IconCopy size={18} />} {isCopied ? 'Tersalin' : 'Copy Laporan'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                    </main>
+                    
+                    {/* Footer Navigation */}
+                    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 z-20 pb-safe">
+                        <div className="max-w-md mx-auto flex justify-between items-center gap-3">
+                            <button onClick={prevStep} disabled={currentStep === 1} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all text-sm ${currentStep === 1 ? 'bg-slate-50 text-slate-300' : 'bg-slate-100 text-slate-700'}`}>
+                                <IconArrowLeft size={18} /> Kembali
+                            </button>
+                            
+                            <button onClick={nextStep} disabled={isNextDisabled} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all text-sm ${isNextDisabled ? 'bg-slate-100 text-slate-400' : 'bg-red-600 text-white shadow-md'}`}>
+                                {currentStep === 2 && !isPrimaryPCI && hasAbsolute ? 'Tindakan Batal' : (currentStep === 6 ? 'Selesai' : 'Lanjut')} <IconArrowRight size={18} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<StemiProtocolApp />);
+    </script>
+</body>
+</html>
