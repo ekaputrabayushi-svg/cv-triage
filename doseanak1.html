@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Dosis Kardio Anak</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Custom Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        /* Hide arrows on number input */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        /* Custom Scrollbar for chips */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 pb-24 font-sans min-h-screen">
+
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-teal-900 to-emerald-800 text-white p-6 shadow-lg rounded-b-2xl mb-6 sticky top-0 z-30">
+        <div class="max-w-3xl mx-auto">
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white/20 p-2 rounded-lg backdrop-blur-sm shadow-inner">
+                        <i data-lucide="heart-pulse" class="w-8 h-8 text-emerald-300"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-extrabold tracking-tight">Kalkulator Dosis Kardio Anak</h1>
+                        <p class="text-emerald-100 text-sm mt-0.5">Airway, Defib, RSI & Obat Resusitasi</p>
+                    </div>
+                </div>
+                <div class="text-right hidden sm:block">
+                    <p class="text-emerald-100 text-xs font-semibold bg-teal-950/50 px-3 py-1 rounded-full border border-teal-800/50 inline-block shadow-sm">CardiologyVault</p>
+                    <p class="text-emerald-200 text-[10px] mt-1 font-medium">Developed by Bayushi Eka Putra, MD, FIHA</p>
+                </div>
+            </div>
+            
+            <div class="bg-white/10 p-4 rounded-xl backdrop-blur-md border border-white/20 shadow-inner">
+                <div class="flex justify-between items-end mb-2">
+                    <label class="block text-sm font-semibold text-teal-50">
+                        Berat Badan Pasien (kg)
+                    </label>
+                    <button id="toggle-age-btn" class="text-xs text-emerald-200 hover:text-white flex items-center gap-1 transition-colors">
+                        <i data-lucide="calculator" class="w-3 h-3"></i> Estimasi via Umur
+                    </button>
+                </div>
+
+                <!-- Age Estimator (Hidden by default) -->
+                <div id="age-estimator-panel" class="hidden bg-teal-950/40 p-3 rounded-lg mb-3 border border-teal-800/50 transition-all">
+                    <p class="text-xs text-emerald-200 mb-2 font-medium">Formula APLS (Advanced Paediatric Life Support)</p>
+                    <div class="flex gap-2">
+                        <input type="number" id="age-input" placeholder="Usia..." class="w-full text-sm py-2 px-3 rounded text-slate-800 focus:ring-2 focus:ring-emerald-400 outline-none" min="0">
+                        <select id="age-unit" class="text-sm py-2 px-3 rounded text-slate-800 bg-white focus:ring-2 focus:ring-emerald-400 outline-none">
+                            <option value="years">Tahun (1-12 th)</option>
+                            <option value="months">Bulan (< 1 th)</option>
+                        </select>
+                        <button id="calc-age-btn" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded text-sm font-semibold transition-colors shadow-sm">Hitung</button>
+                    </div>
+                </div>
+
+                <!-- Main Weight Input -->
+                <div class="flex gap-2 relative">
+                    <input
+                        type="number"
+                        id="weight-input"
+                        placeholder="Masukkan BB..."
+                        class="w-full text-3xl font-extrabold py-3 px-4 rounded-lg text-slate-800 focus:ring-4 focus:ring-emerald-400 outline-none shadow-sm transition-shadow"
+                        step="0.1"
+                        min="0.1"
+                    />
+                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xl select-none">
+                        kg
+                    </span>
+                </div>
+
+                <!-- Quick Weight Chips -->
+                <div class="flex gap-2 mt-3 overflow-x-auto pb-1 no-scrollbar scroll-smooth">
+                    <button class="quick-weight shrink-0 text-xs bg-white/10 hover:bg-white/20 border border-white/20 text-white py-1 px-3 rounded-full transition-all" data-w="3">Neonatus (3kg)</button>
+                    <button class="quick-weight shrink-0 text-xs bg-white/10 hover:bg-white/20 border border-white/20 text-white py-1 px-3 rounded-full transition-all" data-w="5">1-2 Bln (5kg)</button>
+                    <button class="quick-weight shrink-0 text-xs bg-white/10 hover:bg-white/20 border border-white/20 text-white py-1 px-3 rounded-full transition-all" data-w="10">1 Thn (10kg)</button>
+                    <button class="quick-weight shrink-0 text-xs bg-white/10 hover:bg-white/20 border border-white/20 text-white py-1 px-3 rounded-full transition-all" data-w="15">3-4 Thn (15kg)</button>
+                    <button class="quick-weight shrink-0 text-xs bg-white/10 hover:bg-white/20 border border-white/20 text-white py-1 px-3 rounded-full transition-all" data-w="20">6 Thn (20kg)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-3xl mx-auto px-4">
+        <!-- Disclaimer Warning -->
+        <div class="bg-amber-50 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg flex items-start gap-3 shadow-sm">
+            <i data-lucide="alert-triangle" class="w-6 h-6 text-amber-600 shrink-0 mt-0.5"></i>
+            <div class="text-sm text-amber-900 leading-relaxed">
+                <strong>Perhatian Medis:</strong> Aplikasi ini dikembangkan murni sebagai alat bantu komputasi darurat dan tidak ditujukan untuk menggantikan penilaian klinis (<i>clinical judgement</i>) profesional. Keputusan medis akhir dan verifikasi dosis mutlak menjadi tanggung jawab klinisi yang bertugas. Pengembang dibebaskan dari segala bentuk kewajiban legal maupun medis atas insiden yang mungkin timbul akibat penggunaan aplikasi ini.
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="text-center py-16 flex flex-col items-center text-slate-400 animate-fade-in">
+            <div class="relative mb-4">
+                <i data-lucide="weight" class="w-20 h-20 opacity-20 text-emerald-700"></i>
+                <i data-lucide="arrow-up" class="w-8 h-8 absolute -top-2 -right-2 opacity-40 text-emerald-500 animate-bounce"></i>
+            </div>
+            <p class="text-lg font-medium text-slate-500">Kalkulator Siap Digunakan</p>
+            <p class="text-sm mt-2">Masukkan berat badan (kg) pasien di atas<br/>untuk melihat hasil kalkulasi instan.</p>
+        </div>
+
+        <!-- Results Container (Hidden by default) -->
+        <div id="results-container" class="space-y-6 hidden">
+            
+            <!-- Alat, Cairan & Defib Section -->
+            <div class="space-y-4 animate-fade-in" style="animation-delay: 0ms;">
+                <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2 border-b-2 border-slate-200 pb-2">
+                    <i data-lucide="settings" class="w-5 h-5 text-teal-600"></i> Alat, Cairan & Defibrilasi
+                </h2>
+                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" id="equipment-cards">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+
+            <!-- SEARCH & FILTER SECTION (NEW) -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 sticky top-48 z-10 animate-fade-in" style="animation-delay: 100ms;">
+                <div class="relative mb-3">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i data-lucide="search" class="w-5 h-5 text-slate-400"></i>
+                    </div>
+                    <input type="text" id="search-drug" class="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm transition-all" placeholder="Cari nama obat (cth: amiodaron, epinefrin...)">
+                </div>
+                <div class="flex flex-wrap gap-2" id="category-filters">
+                    <!-- Filter chips injected via JS -->
+                </div>
+            </div>
+
+            <!-- Drugs Section -->
+            <div id="drugs-container" class="space-y-6 pb-10">
+                <!-- Injected via JS -->
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Floating Copy Button -->
+    <button id="copy-btn" class="hidden fixed bottom-6 right-6 bg-emerald-600 hover:bg-emerald-700 text-white p-4 rounded-full shadow-2xl flex items-center justify-center gap-2 transition-transform transform hover:scale-105 z-50 group">
+        <i data-lucide="copy" class="w-6 h-6"></i>
+        <span class="hidden group-hover:block font-semibold text-sm pr-2 whitespace-nowrap">Salin Ringkasan</span>
+    </button>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-24 right-6 bg-slate-800 text-white px-4 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2">
+        <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>
+        <span class="text-sm font-medium">Berhasil disalin ke clipboard!</span>
+    </div>
+
+    <script>
+        // Inisialisasi ikon
+        lucide.createIcons();
+
+        // Data Obat-obatan (Lengkap Sekali)
+        const drugs = [
+            // --- EMERGENCY / RESUSCITATION ---
+            {
+                id: 'epi_bolus', name: 'Epinefrin (Adrenalin) 1:10.000', category: 'Resusitasi & Emergensi',
+                icon: 'activity', iconColor: 'text-red-500', route: 'IV/IO',
+                doseGuide: '0.01 mg/kg (0.1 mL/kg). Maks: 1 mg.',
+                calculate: (w) => {
+                    const dose = Math.min(w * 0.01, 1);
+                    const volume = Math.min(w * 0.1, 10);
+                    return `${dose.toFixed(2)} mg (${volume.toFixed(1)} mL)`;
+                },
+                notes: 'Ulangi tiap 3-5 menit selama RJP. Sediaan: 1 mg dlm 10 mL.',
+                preparation: 'Ambil 1 mL sediaan 1:1.000 (1 mg/mL) + 9 mL NaCl 0.9% = 10 mL larutan (Konsentrasi: 0.1 mg/mL atau 1:10.000).'
+            },
+            {
+                id: 'atropine', name: 'Atropin', category: 'Resusitasi & Emergensi',
+                icon: 'activity', iconColor: 'text-red-500', route: 'IV/IO',
+                doseGuide: '0.02 mg/kg. Min: 0.1 mg, Maks: 0.5 mg.',
+                calculate: (w) => {
+                    let dose = w * 0.02;
+                    if (dose < 0.1) dose = 0.1;
+                    if (dose > 0.5) dose = 0.5;
+                    return `${dose.toFixed(2)} mg`;
+                },
+                notes: 'Bradikardia akibat tonus vagal. Bukan untuk bradikardia hipoksia.',
+                preparation: 'Sediaan umum 0.25 mg/mL. Dapat diberikan langsung tanpa pengenceran.'
+            },
+
+            // --- ANTI-ARRHYTHMICS ---
+            {
+                id: 'amiodarone', name: 'Amiodaron', category: 'Anti-Aritmia',
+                icon: 'heart-crack', iconColor: 'text-rose-500', route: 'IV/IO',
+                doseGuide: '5 mg/kg bolus (VF/pVT) / lambat 20-60 mnt (SVT/VT nadi).',
+                calculate: (w) => {
+                    const dose = Math.min(w * 5, 300);
+                    return `${dose.toFixed(1)} mg`;
+                },
+                notes: 'Bisa diulang hingga total 15 mg/kg (Maks 300mg/dosis). Hati-hati hipotensi.',
+                preparation: 'Encerkan 1 ampul (150 mg/3 mL) dengan D5W. Misal: 3 mL obat + 17 mL D5W = 20 mL (Konsentrasi 7.5 mg/mL). Berikan IV lambat.'
+            },
+            {
+                id: 'adenosine', name: 'Adenosin', category: 'Anti-Aritmia',
+                icon: 'zap', iconColor: 'text-rose-500', route: 'IV/IO',
+                doseGuide: 'Dosis 1: 0.1 mg/kg (Maks: 6 mg). Dosis 2: 0.2 mg/kg.',
+                calculate: (w) => {
+                    const dose1 = Math.min(w * 0.1, 6);
+                    const dose2 = Math.min(w * 0.2, 12);
+                    return `Dosis 1: ${dose1.toFixed(1)} mg<br><span class="text-sm font-normal text-teal-700">Dosis 2: ${dose2.toFixed(1)} mg (Maks 12mg)</span>`;
+                },
+                notes: 'Berikan secara rapid push (sangat cepat) diikuti flush NaCl 5-10cc.',
+                preparation: 'Sediaan umum 6 mg/2 mL. Tidak perlu diencerkan. Eksekusi cepat melalui IV line paling proksimal.'
+            },
+            {
+                id: 'lidocaine', name: 'Lidokain 2%', category: 'Anti-Aritmia',
+                icon: 'heart-crack', iconColor: 'text-rose-500', route: 'IV/IO',
+                doseGuide: 'Bolus: 1 mg/kg. Rumatan: 20-50 mcg/kg/menit.',
+                calculate: (w) => {
+                    const bolus = w * 1;
+                    const minDrip = (w * 20 * 60) / 2000; // if mixed 100mg in 50cc (2mg/ml)
+                    const maxDrip = (w * 50 * 60) / 2000;
+                    return `Bolus: ${bolus.toFixed(1)} mg<br><span class="text-sm font-normal text-teal-700">Pump Maint: ${minDrip.toFixed(1)} - ${maxDrip.toFixed(1)} cc/jam</span>`;
+                },
+                notes: 'Alternatif amiodaron untuk VF/pVT. Awas toksisitas SSP.',
+                preparation: 'Bolus: Ambil dari sediaan 2% (20 mg/mL) encerkan jadi 10 mg/mL. Maint Pump: 100 mg dalam 50 cc D5W (Konsentrasi 2000 mcg/mL).'
+            },
+            {
+                id: 'procainamide', name: 'Prokainamid', category: 'Anti-Aritmia',
+                icon: 'heart-crack', iconColor: 'text-rose-500', route: 'IV/IO',
+                doseGuide: '15 mg/kg IV loading (berikan dalam 30-60 menit).',
+                calculate: (w) => {
+                    return `${(w * 15).toFixed(1)} mg`;
+                },
+                notes: 'Hentikan jika hipotensi, QRS memanjang >50%, atau aritmia hilang.',
+                preparation: 'Encerkan dosis dalam 20-50 mL D5W, berikan perlahan via syringe pump dalam 30-60 menit.'
+            },
+            {
+                id: 'verapamil', name: 'Verapamil', category: 'Anti-Aritmia',
+                icon: 'heart-crack', iconColor: 'text-rose-500', route: 'IV',
+                doseGuide: '0.1 - 0.2 mg/kg lambat dalam 2 menit. (Maks 5 mg).',
+                calculate: (w) => {
+                    const dose = Math.min(w * 0.1, 5);
+                    const doseMax = Math.min(w * 0.2, 5);
+                    return `${dose.toFixed(1)} - ${doseMax.toFixed(1)} mg`;
+                },
+                notes: 'KONTRAINDIKASI untuk bayi < 1 tahun, heart failure, atau wide complex takikardi.',
+                preparation: 'Sediaan 5 mg/2 mL (2.5 mg/mL). Berikan langsung pelan-pelan sambil pantau EKG dan TD.'
+            },
+            {
+                id: 'esmolol', name: 'Esmolol', category: 'Anti-Aritmia',
+                icon: 'heart-crack', iconColor: 'text-rose-500', route: 'IV/IO',
+                doseGuide: 'Load: 500 mcg/kg (1 mnt). Maint: 50-200 mcg/kg/mnt.',
+                calculate: (w) => {
+                    const load = w * 500 / 1000; // in mg
+                    const minMaint = (w * 50 * 60) / 10000; // prep 500mg/50cc -> 10,000 mcg/ml
+                    const maxMaint = (w * 200 * 60) / 10000;
+                    return `Load: ${load.toFixed(1)} mg<br><span class="text-sm font-normal text-teal-700">Pump Maint: ${minMaint.toFixed(1)} - ${maxMaint.toFixed(1)} cc/jam</span>`;
+                },
+                notes: 'Ultra-short acting beta blocker. Sangat baik untuk SVT refrakter/takikardia simpatetik.',
+                preparation: 'Sediaan ampul 100 mg/10 mL. Untuk Pump Maint: 500 mg dalam 50 cc D5W (10 mg/mL atau 10,000 mcg/mL).'
+            },
+
+            // --- FLUIDS & ELECTROLYTES ---
+            {
+                id: 'fluid_bolus', name: 'Bolus Cairan (RL/NaCl 0.9%)', category: 'Cairan & Elektrolit',
+                icon: 'droplets', iconColor: 'text-cyan-500', route: 'IV/IO',
+                doseGuide: 'Syok Kardiogenik: 5-10 cc/kg. Syok lain: 10-20 cc/kg.',
+                calculate: (w) => {
+                    return `Kardio: ${(w * 5).toFixed(0)} - ${(w * 10).toFixed(0)} mL<br><span class="text-sm font-normal text-teal-700">Non-Kardio: ${(w * 20).toFixed(0)} mL (Rapid)</span>`;
+                },
+                notes: 'Auskultasi paru (ronki) dan raba hepar sebelum/sesudah bolus.',
+                preparation: 'Gunakan spuit besar (20-50 cc) di-push manual atau pressure bag untuk loading cepat. Syok kardiogenik pelan (10-20 menit).'
+            },
+            {
+                id: 'calcium_gluc', name: 'Kalsium Glukonas 10%', category: 'Cairan & Elektrolit',
+                icon: 'flask-conical', iconColor: 'text-cyan-500', route: 'IV/IO',
+                doseGuide: '60 mg/kg (0.6 mL/kg dari sediaan 10%).',
+                calculate: (w) => {
+                    const vol = w * 0.6;
+                    return `${(w * 60).toFixed(0)} mg (${vol.toFixed(1)} mL)`;
+                },
+                notes: 'Henti jantung dg hipokalsemia/hiperkalemia, atau toksisitas CCB.',
+                preparation: 'Sediaan 10% (100 mg/mL). WAJIB diencerkan 1:1 atau lebih dengan NaCl 0.9% atau D5W. Berikan IV lambat.'
+            },
+            {
+                id: 'calcium_chloride', name: 'Kalsium Klorida (CaCl2) 10%', category: 'Cairan & Elektrolit',
+                icon: 'flask-conical', iconColor: 'text-cyan-500', route: 'IV/IO',
+                doseGuide: '20 mg/kg (0.2 mL/kg dari sediaan 10%).',
+                calculate: (w) => {
+                    const vol = w * 0.2;
+                    return `${(w * 20).toFixed(0)} mg (${vol.toFixed(1)} mL)`;
+                },
+                notes: '3x lebih poten dari Ca-Glukonas. Harus melalui Central Line (iritan kuat).',
+                preparation: 'Sediaan 10% (100 mg/mL). Sebaiknya via CVC, injeksi pelan saat emergensi.'
+            },
+            {
+                id: 'sodium_bicarb', name: 'Natrium Bikarbonat 8.4%', category: 'Cairan & Elektrolit',
+                icon: 'flask-conical', iconColor: 'text-cyan-500', route: 'IV/IO',
+                doseGuide: '1 mEq/kg (1 mL/kg dari sediaan 8.4%).',
+                calculate: (w) => {
+                    return `${(w * 1).toFixed(1)} mEq (${(w * 1).toFixed(1)} mL)`;
+                },
+                notes: 'Pastikan ventilasi adekuat (agar CO2 bisa keluar).',
+                preparation: 'Neonatus/bayi < 2 tahun, WAJIB diencerkan 1:1 dengan Aqua Bidest (menjadi 4.2% / 0.5 mEq/mL) cegah perdarahan intrakranial.'
+            },
+            {
+                id: 'mgso4', name: 'Magnesium Sulfat 20%', category: 'Cairan & Elektrolit',
+                icon: 'flask-conical', iconColor: 'text-cyan-500', route: 'IV/IO',
+                doseGuide: '25 - 50 mg/kg (Torsades de Pointes/Asma). Maks 2g.',
+                calculate: (w) => {
+                    const min = Math.min(w * 25, 2000);
+                    const max = Math.min(w * 50, 2000);
+                    return `${min.toFixed(0)} - ${max.toFixed(0)} mg`;
+                },
+                notes: 'Berikan dalam 10-20 menit. (Sediaan 20% = 200mg/mL).',
+                preparation: 'Ambil dosis, encerkan dalam 10-50 mL D5W atau NaCl 0.9%. Berikan via IV drips lambat.'
+            },
+            {
+                id: 'kcl', name: 'Potassium Chloride (KCl)', category: 'Cairan & Elektrolit',
+                icon: 'flask-conical', iconColor: 'text-cyan-500', route: 'IV Drip',
+                doseGuide: 'Koreksi: 0.5 - 1 mEq/kg/dosis IV lambat (Maks rate: 0.5 mEq/kg/jam).',
+                calculate: (w) => {
+                    const vol = w * 0.5; // based on 1mEq/mL typical stock, dose 0.5mEq/kg
+                    return `${(w * 0.5).toFixed(1)} - ${(w * 1).toFixed(1)} mEq`;
+                },
+                notes: 'Hanya jika diuresis ada. WAJIB pakai infus pump. Fatal jika didorong.',
+                preparation: 'Sediaan flakon 25 mEq/25 mL (1 mEq/mL) atau 7.46%. Maksimal konsentrasi IV perifer 40-60 mEq/L. IV sentral bisa lebih pekat.'
+            },
+
+            // --- SEDATION & INTUBATION (RSI) ---
+            {
+                id: 'ketamine', name: 'Ketamin', category: 'Sedasi & Intubasi (RSI)',
+                icon: 'brain', iconColor: 'text-purple-500', route: 'IV/IO',
+                doseGuide: '1 - 2 mg/kg.',
+                calculate: (w) => { return `${(w * 1).toFixed(1)} - ${(w * 2).toFixed(1)} mg`; },
+                notes: 'Pilihan baik untuk anak dgn asma/syok (mempertahankan TD). Awas sekresi berlebih.',
+                preparation: 'Sediaan 50 mg/mL atau 100 mg/mL. Ambil 100 mg (1 mL) + 9 mL NaCl = 10 mL (10 mg/mL).'
+            },
+            {
+                id: 'midazolam', name: 'Midazolam', category: 'Sedasi & Intubasi (RSI)',
+                icon: 'brain', iconColor: 'text-purple-500', route: 'IV/IO',
+                doseGuide: '0.1 - 0.2 mg/kg. Maks: 5 mg.',
+                calculate: (w) => {
+                    const max = Math.min(w * 0.2, 5);
+                    return `${(w * 0.1).toFixed(2)} - ${max.toFixed(2)} mg`;
+                },
+                notes: 'Hati-hati dapat menyebabkan depresi napas dan hipotensi.',
+                preparation: 'Sediaan 5 mg/5 mL (1 mg/mL) atau 15 mg/3 mL (5 mg/mL). Encerkan jadi 1 mg/mL untuk dosis presisi.'
+            },
+            {
+                id: 'fentanyl', name: 'Fentanil', category: 'Sedasi & Intubasi (RSI)',
+                icon: 'brain', iconColor: 'text-purple-500', route: 'IV/IO',
+                doseGuide: '1 - 2 mcg/kg/dosis.',
+                calculate: (w) => { return `${(w * 1).toFixed(1)} - ${(w * 2).toFixed(1)} mcg`; },
+                notes: 'Analgesik poten. Bolus terlalu cepat bisa sebabkan chest wall rigidity.',
+                preparation: 'Sediaan ampul 100 mcg/2 mL (50 mcg/mL) atau 500 mcg/10 mL. Untuk anak kecil encerkan 1 mL (50 mcg) + 4 mL NaCl = 10 mcg/mL.'
+            },
+            {
+                id: 'rocuronium', name: 'Rokuronium', category: 'Sedasi & Intubasi (RSI)',
+                icon: 'syringe', iconColor: 'text-purple-500', route: 'IV/IO',
+                doseGuide: '1 mg/kg untuk intubasi RSI.',
+                calculate: (w) => { return `${(w * 1).toFixed(1)} mg`; },
+                notes: 'Pelumpuh otot non-depolarisasi. Onset 45-60 detik.',
+                preparation: 'Sediaan 50 mg/5 mL (10 mg/mL). Berikan langsung IV bolus cepat.'
+            },
+            {
+                id: 'propofol', name: 'Propofol 1%', category: 'Sedasi & Intubasi (RSI)',
+                icon: 'brain', iconColor: 'text-purple-500', route: 'IV/IO',
+                doseGuide: '1 - 3 mg/kg IV titrasi.',
+                calculate: (w) => { return `${(w * 1).toFixed(1)} - ${(w * 3).toFixed(1)} mg`; },
+                notes: 'Kontraindikasi relatif jika syok hemodinamik (menyebabkan hipotensi & inotropik negatif).',
+                preparation: 'Sediaan 1% = 10 mg/mL. Berikan langsung tanpa pengenceran, injeksi nyeri (bisa campur sedikit lidokain).'
+            },
+            {
+                id: 'dexmedetomidine', name: 'Dexmedetomidine (Precedex)', category: 'Sedasi & Intubasi (RSI)',
+                icon: 'brain', iconColor: 'text-purple-500', route: 'IV Drip',
+                doseGuide: 'Load: 0.5-1 mcg/kg (10 mnt). Maint: 0.2-1 mcg/kg/jam.',
+                calculate: (w) => {
+                    const load = w * 0.5;
+                    const minMaint = (w * 0.2) / 4; // if prep 200mcg/50cc -> 4mcg/ml
+                    const maxMaint = (w * 1) / 4;
+                    return `Load: ${load.toFixed(1)} mcg<br><span class="text-sm font-normal text-teal-700">Pump Maint: ${minMaint.toFixed(2)} - ${maxMaint.toFixed(2)} cc/jam</span>`;
+                },
+                notes: 'Sedasi tanpa depresi napas. Awas bradikardia & hipotensi.',
+                preparation: 'Sediaan 200 mcg/2 mL. Campur 1 ampul dalam 48 mL NaCl (total 50 mL). Konsentrasi: 4 mcg/mL.'
+            },
+
+            // --- INOTROPES / VASOACTIVE (INFUSIONS) ---
+            {
+                id: 'dopamine', name: 'Dopamin (Infus)', category: 'Inotropik / Vasoaktif (Infus)',
+                icon: 'git-merge', iconColor: 'text-emerald-500', route: 'IV/IO Kontinu',
+                doseGuide: '2 - 20 mcg/kg/menit',
+                calculate: (w) => {
+                    const minCc = (w * 2 * 60) / 4000;
+                    const maxCc = (w * 20 * 60) / 4000;
+                    return `${(w * 2).toFixed(1)} - ${(w * 20).toFixed(1)} mcg/mnt<br><span class="text-sm font-normal text-teal-700">Pump: ${minCc.toFixed(1)} - ${maxCc.toFixed(1)} cc/jam</span>`;
+                },
+                notes: 'Reseptor dopaminergik (rendah), beta-1 (sedang), alpha-1 (tinggi).',
+                preparation: 'Masukkan 1 ampul (200 mg) ke spuit 50 cc, genapkan D5W/NaCl 0.9% 50 cc. (Konsentrasi: 4.000 mcg/mL).'
+            },
+            {
+                id: 'dobutamine', name: 'Dobutamin (Infus)', category: 'Inotropik / Vasoaktif (Infus)',
+                icon: 'git-merge', iconColor: 'text-emerald-500', route: 'IV/IO Kontinu',
+                doseGuide: '2 - 20 mcg/kg/menit',
+                calculate: (w) => {
+                    const minCc = (w * 2 * 60) / 5000;
+                    const maxCc = (w * 20 * 60) / 5000;
+                    return `${(w * 2).toFixed(1)} - ${(w * 20).toFixed(1)} mcg/mnt<br><span class="text-sm font-normal text-teal-700">Pump: ${minCc.toFixed(1)} - ${maxCc.toFixed(1)} cc/jam</span>`;
+                },
+                notes: 'Inotropik murni, awas hipotensi akibat vasodilatasi perifer sekunder.',
+                preparation: 'Masukkan 1 ampul (250 mg) ke spuit 50 cc, genapkan D5W/NaCl 0.9% 50 cc. (Konsentrasi: 5.000 mcg/mL).'
+            },
+            {
+                id: 'milrinone', name: 'Milrinon (Infus)', category: 'Inotropik / Vasoaktif (Infus)',
+                icon: 'git-merge', iconColor: 'text-emerald-500', route: 'IV/IO Kontinu',
+                doseGuide: 'Load: 50 mcg/kg (10-60 mnt). Maint: 0.25-0.75 mcg/kg/mnt.',
+                calculate: (w) => {
+                    const minCc = (w * 0.25 * 60) / 200;
+                    const maxCc = (w * 0.75 * 60) / 200;
+                    return `Load: ${(w * 50).toFixed(0)} mcg<br><span class="text-sm font-normal text-teal-700">Pump Maint: ${minCc.toFixed(1)} - ${maxCc.toFixed(1)} cc/jam</span>`;
+                },
+                notes: 'Inodilator (Inotropik + Vasodilator). Sering dipakai paska operasi jantung.',
+                preparation: 'Ambil 1 ampul (10 mg/10 cc) masukkan ke spuit 50 cc, tambah 40 cc D5W (total 50 cc). (Konsentrasi: 200 mcg/mL).'
+            },
+            {
+                id: 'epi_infusion', name: 'Epinefrin (Infus)', category: 'Inotropik / Vasoaktif (Infus)',
+                icon: 'git-merge', iconColor: 'text-emerald-500', route: 'IV/IO Kontinu',
+                doseGuide: '0.01 - 1 mcg/kg/menit',
+                calculate: (w) => {
+                    const minCc = (w * 0.01 * 60) / 20;
+                    const maxCc = (w * 1 * 60) / 20;
+                    return `${(w * 0.01).toFixed(2)} - ${(w * 1).toFixed(2)} mcg/mnt<br><span class="text-sm font-normal text-teal-700">Pump: ${minCc.toFixed(2)} - ${maxCc.toFixed(1)} cc/jam</span>`;
+                },
+                notes: 'Dosis <0.3: Beta-1 (inotropik). >0.3: Alpha (vasopresor kuat).',
+                preparation: 'Ambil 1 ampul (1 mg/mL), masuk spuit 50 cc, tambah 49 cc D5W/NaCl 0.9%. (Konsentrasi: 20 mcg/mL).'
+            },
+            {
+                id: 'norepinephrine', name: 'Norepinefrin (Vascon)', category: 'Inotropik / Vasoaktif (Infus)',
+                icon: 'git-merge', iconColor: 'text-emerald-500', route: 'IV/IO Kontinu',
+                doseGuide: '0.05 - 1 mcg/kg/menit',
+                calculate: (w) => {
+                    const minCc = (w * 0.05 * 60) / 80; // prep 4mg in 50cc -> 80mcg/ml
+                    const maxCc = (w * 1 * 60) / 80;
+                    return `${(w * 0.05).toFixed(2)} - ${(w * 1).toFixed(2)} mcg/mnt<br><span class="text-sm font-normal text-teal-700">Pump: ${minCc.toFixed(2)} - ${maxCc.toFixed(1)} cc/jam</span>`;
+                },
+                notes: 'Vasopresor poten pilihan utama syok vasodilatori (sepsis) pasca-resusitasi cairan.',
+                preparation: 'Ambil 1 ampul (4 mg/4 mL), masuk spuit 50 cc, genapkan dg D5W/NaCl. (Konsentrasi: 80 mcg/mL).'
+            },
+
+            // --- HEART FAILURE / VASODILATORS / ORAL ---
+            {
+                id: 'furosemide', name: 'Furosemid', category: 'Gagal Jantung / Vasodilator',
+                icon: 'pill', iconColor: 'text-teal-500', route: 'IV/PO',
+                doseGuide: '1 - 2 mg/kg/dosis. Tiap 6-12 jam.',
+                calculate: (w) => { return `${(w * 1).toFixed(1)} - ${(w * 2).toFixed(1)} mg / dosis`; },
+                notes: 'Maks 6 mg/kg/hari. Pantau hipokalemia. IV onset cepat (5 mnt).',
+                preparation: 'Ampul: 20 mg/2 mL (10 mg/mL), IV pelan. PO: Tablet 40 mg diracik puyer.'
+            },
+            {
+                id: 'spironolactone', name: 'Spironolakton', category: 'Gagal Jantung / Vasodilator',
+                icon: 'pill', iconColor: 'text-teal-500', route: 'PO',
+                doseGuide: '1 - 3 mg/kg/hari. Dibagi 1-2 dosis.',
+                calculate: (w) => { return `${(w * 1).toFixed(1)} - ${(w * 3).toFixed(1)} mg / HARI`; },
+                notes: 'Diuretik hemat kalium. Bermanfaat untuk remodeling ventrikel.',
+                preparation: 'Tablet 25 mg atau 100 mg. Dihaluskan/diracik puyer sesuai dosis.'
+            },
+            {
+                id: 'captopril', name: 'Kaptopril', category: 'Gagal Jantung / Vasodilator',
+                icon: 'pill', iconColor: 'text-teal-500', route: 'PO',
+                doseGuide: 'Bayi: 0.1-0.5 mg/kg/dosis. Anak: 0.3-0.5 mg/kg/dosis. (Tiap 8 jam)',
+                calculate: (w) => { return `${(w * 0.1).toFixed(2)} - ${(w * 0.5).toFixed(2)} mg / dosis`; },
+                notes: 'ACE Inhibitor. Test dose kecil dulu, awas hipotensi first-dose effect.',
+                preparation: 'Tablet 12.5 mg atau 25 mg diramu. Berikan 1 jam sebelum / 2 jam sesudah makan.'
+            },
+            {
+                id: 'digoxin', name: 'Digoxin (Rumatan)', category: 'Gagal Jantung / Vasodilator',
+                icon: 'pill', iconColor: 'text-teal-500', route: 'PO',
+                doseGuide: '5 - 10 mcg/kg/hari. Dibagi 2 dosis.',
+                calculate: (w) => { return `${(w * 5).toFixed(1)} - ${(w * 10).toFixed(1)} mcg / HARI`; },
+                notes: 'Cek EKG berkala. Rentan toksisitas jika hipokalemia (muntah-muntah/diare).',
+                preparation: 'Tablet 0.25 mg (250 mcg). Diracik ketat karena therapeutic window sempit.'
+            },
+            {
+                id: 'nitroprusside', name: 'Sodium Nitroprusid (SNP)', category: 'Gagal Jantung / Vasodilator',
+                icon: 'git-merge', iconColor: 'text-teal-500', route: 'IV Drip',
+                doseGuide: '0.5 - 8 mcg/kg/menit (Titrasi)',
+                calculate: (w) => {
+                    const minCc = (w * 0.5 * 60) / 1000; // 50mg/50cc -> 1000mcg/ml
+                    const maxCc = (w * 8 * 60) / 1000;
+                    return `${(w * 0.5).toFixed(1)} - ${(w * 8).toFixed(1)} mcg/mnt<br><span class="text-sm font-normal text-teal-700">Pump: ${minCc.toFixed(2)} - ${maxCc.toFixed(1)} cc/jam</span>`;
+                },
+                notes: 'Arterial & venous vasodilator. Awas toksisitas sianida jika dipakai >48 jam dosis tinggi.',
+                preparation: 'Sediaan 50 mg. Larutkan ke 50 mL D5W (1000 mcg/mL). HARUS dilindungi dari cahaya (bungkus aluminium foil).'
+            },
+            {
+                id: 'nitroglycerin', name: 'Nitrogliserin (NTG)', category: 'Gagal Jantung / Vasodilator',
+                icon: 'git-merge', iconColor: 'text-teal-500', route: 'IV Drip',
+                doseGuide: '0.25 - 5 mcg/kg/menit (Titrasi)',
+                calculate: (w) => {
+                    const minCc = (w * 0.25 * 60) / 100; // 5mg/50cc -> 100mcg/ml
+                    const maxCc = (w * 5 * 60) / 100;
+                    return `${(w * 0.25).toFixed(2)} - ${(w * 5).toFixed(1)} mcg/mnt<br><span class="text-sm font-normal text-teal-700">Pump: ${minCc.toFixed(2)} - ${maxCc.toFixed(1)} cc/jam</span>`;
+                },
+                notes: 'Venodilator (terutama). Menurunkan preload. Hindari pada RV Infark / preload dependent.',
+                preparation: 'Ambil 1 ampul (5 mg/5mL) atau 5 mg/10mL, masuk spuit 50 cc, genapkan D5W/NaCl. (Konsentrasi: 100 mcg/mL).'
+            },
+
+            // --- ANTICOAGULANT / ANTIPLATELET ---
+            {
+                id: 'heparin_iv', name: 'Heparin (Unfractionated)', category: 'Antikoagulan',
+                icon: 'test-tube', iconColor: 'text-blue-500', route: 'IV',
+                doseGuide: 'Bolus: 50-100 U/kg. Maint: 10-25 U/kg/jam.',
+                calculate: (w) => {
+                    const bolus = w * 75; // average bolus
+                    const minMaint = (w * 10) / 100; // 5000U/50cc -> 100U/ml
+                    const maxMaint = (w * 25) / 100;
+                    return `Bolus: ${bolus.toFixed(0)} Unit<br><span class="text-sm font-normal text-teal-700">Pump Maint: ${minMaint.toFixed(1)} - ${maxMaint.toFixed(1)} cc/jam</span>`;
+                },
+                notes: 'Titrasi dosis maintenance berdasarkan target aPTT (umumnya 1.5 - 2.5x nilai kontrol).',
+                preparation: 'Bolus diencerkan secukupnya. Pump Maint: 5.000 Unit heparin masukkan ke 50 mL NaCl (Konsentrasi: 100 Unit/mL).'
+            },
+            {
+                id: 'aspirin', name: 'Aspirin (Asam Asetilsalisilat)', category: 'Antikoagulan',
+                icon: 'pill', iconColor: 'text-blue-500', route: 'PO',
+                doseGuide: 'Antiplatelet: 3 - 5 mg/kg/hari. Kawasaki (Akut): 80-100 mg/kg/hari.',
+                calculate: (w) => {
+                    return `Maint/Shunt: ${(w * 3).toFixed(0)} - ${(w * 5).toFixed(0)} mg/hari<br><span class="text-sm font-normal text-teal-700">Kawasaki Akut: ${(w * 80).toFixed(0)} - ${(w * 100).toFixed(0)} mg/hari</span>`;
+                },
+                notes: 'Berikan setelah makan untuk cegah iritasi lambung. Awas sindrom Reye jika ada infeksi virus (Varicella/Flu).',
+                preparation: 'Tablet 80 mg (sering sediaan kunyah) atau 100 mg. Disesuaikan dan diracik puyer.'
+            },
+
+            // --- SPECIALTY ---
+            {
+                id: 'pge1', name: 'Prostaglandin E1 (Alprostadil)', category: 'Obat Khusus & Lainnya',
+                icon: 'heart-pulse', iconColor: 'text-pink-500', route: 'IV/Umbilikal',
+                doseGuide: 'Awal: 0.05-0.1 mcg/kg/mnt. Rumatan: 0.01-0.025 mcg/kg/mnt.',
+                calculate: (w) => {
+                    const minCcAwal = (w * 0.05 * 60) / 10;
+                    const maxCcAwal = (w * 0.1 * 60) / 10;
+                    const maintCc = (w * 0.01 * 60) / 10;
+                    return `Awal: ${minCcAwal.toFixed(2)} - ${maxCcAwal.toFixed(2)} cc/jam<br><span class="text-sm font-normal text-teal-700">Rumatan: ${maintCc.toFixed(2)} cc/jam</span>`;
+                },
+                notes: 'Wajib intubasi stand-by (risiko apnea). Bikin PDA tetap paten.',
+                preparation: 'Sediaan 500 mcg/1 mL, campur 49 cc D5W/NaCl (Konsentrasi: 10 mcg/mL). Berikan line tersendiri.'
+            },
+            {
+                id: 'paracetamol', name: 'Parasetamol', category: 'Obat Khusus & Lainnya',
+                icon: 'thermometer', iconColor: 'text-orange-500', route: 'PO/IV',
+                doseGuide: '10 - 15 mg/kg/dosis. Tiap 4-6 jam.',
+                calculate: (w) => {
+                    const min = Math.min(w * 10, 1000);
+                    const max = Math.min(w * 15, 1000);
+                    return `${min.toFixed(0)} - ${max.toFixed(0)} mg / dosis`;
+                },
+                notes: 'Maksimal 60 mg/kg/hari atau 4000 mg/hari.',
+                preparation: 'Sediaan IV: 10 mg/mL (Infus). PO: Sirup 120 mg/5 mL atau Drops 60 mg/0.6 mL.'
+            }
+        ];
+
+        const categories = [...new Set(drugs.map(d => d.category))];
+        const inputEl = document.getElementById('weight-input');
+        const emptyStateEl = document.getElementById('empty-state');
+        const resultsContainerEl = document.getElementById('results-container');
+        const equipmentCardsEl = document.getElementById('equipment-cards');
+        const drugsContainerEl = document.getElementById('drugs-container');
+        const copyBtn = document.getElementById('copy-btn');
+        const searchInput = document.getElementById('search-drug');
+        const categoryFiltersEl = document.getElementById('category-filters');
+        
+        let currentWeight = 0;
+        let activeCategory = 'Semua';
+        let searchQuery = '';
+
+        // UI Interactions for Top Header
+        document.getElementById('toggle-age-btn').addEventListener('click', () => {
+            const panel = document.getElementById('age-estimator-panel');
+            panel.classList.toggle('hidden');
+        });
+
+        document.getElementById('calc-age-btn').addEventListener('click', () => {
+            const age = parseFloat(document.getElementById('age-input').value);
+            const unit = document.getElementById('age-unit').value;
+            if(!age || age <= 0) return;
+
+            let estWeight = 0;
+            if(unit === 'months') {
+                estWeight = (age / 2) + 4;
+            } else {
+                if(age >= 1 && age <= 5) estWeight = (age * 2) + 8;
+                else if(age > 5 && age <= 12) estWeight = (age * 3) + 7;
+                else estWeight = (age * 3) + 7;
+            }
+            inputEl.value = estWeight.toFixed(1);
+            inputEl.dispatchEvent(new Event('input'));
+        });
+
+        document.querySelectorAll('.quick-weight').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const w = parseFloat(e.target.getAttribute('data-w'));
+                inputEl.value = w;
+                inputEl.dispatchEvent(new Event('input'));
+            });
+        });
+
+        // Initialize Filter Chips
+        function renderFilterChips() {
+            let html = `<button class="filter-chip px-3 py-1.5 rounded-full text-xs font-semibold transition-colors bg-emerald-600 text-white shadow-sm" data-cat="Semua">Semua</button>`;
+            categories.forEach(cat => {
+                html += `<button class="filter-chip px-3 py-1.5 rounded-full text-xs font-semibold transition-colors bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200" data-cat="${cat}">${cat}</button>`;
+            });
+            categoryFiltersEl.innerHTML = html;
+
+            document.querySelectorAll('.filter-chip').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    // Reset active states
+                    document.querySelectorAll('.filter-chip').forEach(b => {
+                        b.className = "filter-chip px-3 py-1.5 rounded-full text-xs font-semibold transition-colors bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200";
+                    });
+                    // Set clicked to active
+                    e.target.className = "filter-chip px-3 py-1.5 rounded-full text-xs font-semibold transition-colors bg-emerald-600 text-white shadow-sm";
+                    
+                    activeCategory = e.target.getAttribute('data-cat');
+                    renderDrugs(currentWeight);
+                });
+            });
+        }
+        renderFilterChips();
+
+        // Search Listener
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value.toLowerCase();
+            renderDrugs(currentWeight);
+        });
+
+        // Main Weight Input Listener
+        inputEl.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            if (isNaN(val) || val <= 0) {
+                emptyStateEl.style.display = 'flex';
+                resultsContainerEl.style.display = 'none';
+                copyBtn.classList.add('hidden');
+                currentWeight = 0;
+            } else {
+                currentWeight = val;
+                emptyStateEl.style.display = 'none';
+                resultsContainerEl.style.display = 'block';
+                copyBtn.classList.remove('hidden');
+                
+                renderEquipment(val);
+                renderDrugs(val);
+                lucide.createIcons();
+            }
+        });
+
+        function calcHollidaySegar(w) {
+            let daily = 0;
+            if (w <= 10) daily = w * 100;
+            else if (w > 10 && w <= 20) daily = 1000 + ((w - 10) * 50);
+            else daily = 1500 + ((w - 20) * 20);
+            return { daily: daily, hourly: daily / 24 };
+        }
+
+        function renderEquipment(w) {
+            let ett, lma, blade;
+            
+            // LMA
+            if (w < 5) lma = "1";
+            else if (w >= 5 && w < 10) lma = "1.5";
+            else if (w >= 10 && w < 20) lma = "2";
+            else if (w >= 20 && w < 30) lma = "2.5";
+            else if (w >= 30 && w < 50) lma = "3";
+            else lma = "4";
+
+            // ETT & Blade
+            if (w < 1) { ett = "2.5"; blade = "0 (Lurus)"; }
+            else if (w >= 1 && w < 3) { ett = "3.0"; blade = "0 (Lurus)"; }
+            else if (w >= 3 && w < 5) { ett = "3.5"; blade = "1 (Lurus)"; }
+            else if (w >= 5 && w < 10) { ett = "4.0"; blade = "1 (Lurus)"; }
+            else if (w >= 10 && w < 15) { ett = "4.5"; blade = "2 (Lurus/Lengkung)"; }
+            else if (w >= 15 && w < 20) { ett = "5.0"; blade = "2 (Lengkung)"; }
+            else if (w >= 20 && w < 30) { ett = "5.5"; blade = "2-3 (Lengkung)"; }
+            else if (w >= 30 && w < 40) { ett = "6.0"; blade = "3 (Lengkung)"; }
+            else { ett = "6.5-7.0"; blade = "3-4 (Lengkung)"; }
+
+            let depth = ett.includes('-') ? "18-21" : (parseFloat(ett) * 3).toFixed(1);
+            
+            // Defib
+            const defibSync = `${(w * 0.5).toFixed(1)} - ${(w * 1).toFixed(1)} J`;
+            const defibUnsync1 = `${w * 2} J`;
+            const defibUnsync2 = `${w * 4} J`;
+
+            // Fluid
+            const fluid = calcHollidaySegar(w);
+
+            equipmentCardsEl.innerHTML = `
+                <!-- Airway Card -->
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition-all h-full">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="bg-teal-100 p-2 rounded-lg"><i data-lucide="stethoscope" class="w-5 h-5 text-teal-600"></i></div>
+                        <h3 class="font-bold text-lg text-slate-800">Airway & Napas</h3>
+                    </div>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between border-b border-slate-100 pb-2">
+                            <span class="text-slate-600">ETT (Uncuffed)</span><span class="font-bold text-teal-700">${ett} mm</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-100 pb-2">
+                            <span class="text-slate-600">Kedalaman (Bibir)</span><span class="font-bold text-teal-700">${depth} cm</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-100 pb-2">
+                            <span class="text-slate-600">LMA Size</span><span class="font-bold text-teal-700">${lma}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-600">Blade</span><span class="font-bold text-teal-700">${blade}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Defib Card -->
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition-all h-full">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="bg-amber-100 p-2 rounded-lg"><i data-lucide="zap" class="w-5 h-5 text-amber-600"></i></div>
+                        <h3 class="font-bold text-lg text-slate-800">Kardioversi & Defib</h3>
+                    </div>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between border-b border-slate-100 pb-2">
+                            <span class="text-slate-600">Defib (Shock 1)</span><span class="font-bold text-amber-600 text-base">${defibUnsync1}</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-100 pb-2">
+                            <span class="text-slate-600">Defib (Shock 2+)</span><span class="font-bold text-amber-600 text-base">${defibUnsync2}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-600">Kardioversi (SVT)</span><span class="font-bold text-amber-600">${defibSync}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fluids Card -->
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition-all h-full sm:col-span-2 lg:col-span-1">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="bg-cyan-100 p-2 rounded-lg"><i data-lucide="droplet" class="w-5 h-5 text-cyan-600"></i></div>
+                        <h3 class="font-bold text-lg text-slate-800">Cairan Rumatan</h3>
+                    </div>
+                    <div class="space-y-3 text-sm">
+                        <p class="text-xs text-slate-500 mb-2 italic">Metode Holliday-Segar</p>
+                        <div class="flex justify-between border-b border-slate-100 pb-2">
+                            <span class="text-slate-600">Total 24 Jam</span><span class="font-bold text-cyan-700">${fluid.daily.toFixed(0)} mL</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-600">Tetesan per Jam</span><span class="font-bold text-cyan-700 text-base">${fluid.hourly.toFixed(1)} cc/jam</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderDrugs(w) {
+            let html = '';
+            let filteredCategories = activeCategory === 'Semua' ? categories : [activeCategory];
+            let itemsRendered = 0;
+
+            filteredCategories.forEach(category => {
+                // Filter drugs by category AND search query
+                const categoryDrugs = drugs.filter(d => {
+                    const matchCat = d.category === category;
+                    const matchSearch = d.name.toLowerCase().includes(searchQuery) || (d.notes && d.notes.toLowerCase().includes(searchQuery));
+                    return matchCat && matchSearch;
+                });
+
+                if (categoryDrugs.length === 0) return;
+
+                html += `
+                    <div class="space-y-4">
+                        <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2 border-b-2 border-slate-200 pb-2 mt-4">
+                            ${category}
+                        </h2>
+                        <div class="grid gap-4 sm:grid-cols-2">
+                `;
+
+                categoryDrugs.forEach(drug => {
+                    itemsRendered++;
+                    const calculatedDose = drug.calculate(w);
+                    let notesHtml = '';
+                    if (drug.notes) {
+                        notesHtml = `
+                            <div class="mt-3 text-xs text-slate-500 bg-slate-50 p-2 rounded border border-slate-100">
+                                <strong>Info:</strong> ${drug.notes}
+                            </div>
+                        `;
+                    }
+                    
+                    let prepHtml = '';
+                    if (drug.preparation) {
+                        prepHtml = `
+                            <div class="mt-2 text-[11px] leading-relaxed text-slate-600 bg-teal-50/50 p-2.5 rounded border border-teal-100/50">
+                                <div class="flex items-center gap-1.5 font-semibold text-teal-800 mb-1">
+                                    <i data-lucide="flask-conical" class="w-3.5 h-3.5 text-teal-500"></i> Persiapan / Pencairan:
+                                </div>
+                                ${drug.preparation}
+                            </div>
+                        `;
+                    }
+
+                    html += `
+                        <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 hover:shadow-md hover:border-emerald-300 transition-all flex flex-col justify-between group">
+                            <div>
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="bg-slate-50 p-2 rounded-lg group-hover:bg-emerald-50 transition-colors">
+                                            <i data-lucide="${drug.icon}" class="w-6 h-6 ${drug.iconColor}"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-bold text-base text-slate-800 leading-tight">${drug.name}</h3>
+                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600 uppercase mt-1 inline-block">${drug.route}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-emerald-50/50 rounded-lg p-3 mb-3 border border-emerald-100/50">
+                                    <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1 block">Dosis Dihitung</span>
+                                    <div class="text-lg font-bold text-teal-900 leading-tight">
+                                        ${calculatedDose}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-sm text-slate-600">
+                                <p class="text-xs"><span class="font-semibold text-slate-700">Dosis Basis:</span> ${drug.doseGuide}</p>
+                                ${notesHtml}
+                                ${prepHtml}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (itemsRendered === 0) {
+                html = `
+                    <div class="text-center py-10 text-slate-400">
+                        <i data-lucide="search-x" class="w-12 h-12 mx-auto mb-3 opacity-30"></i>
+                        <p>Tidak ada obat yang cocok dengan pencarian Anda.</p>
+                    </div>
+                `;
+            }
+
+            drugsContainerEl.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        // Copy functionality (For EMR / WhatsApp)
+        copyBtn.addEventListener('click', () => {
+            if(currentWeight <= 0) return;
+            
+            // Build text string
+            let text = `*KALKULATOR DOSIS ANAK*\n`;
+            text += `BB Pasien: ${currentWeight} kg\n\n`;
+            
+            // Re-calculate to build string easily
+            const fluid = calcHollidaySegar(currentWeight);
+            text += `*ALAT & CAIRAN*\n`;
+            text += `- ETT: ${currentWeight < 1 ? '2.5' : currentWeight < 3 ? '3.0' : currentWeight < 5 ? '3.5' : currentWeight < 10 ? '4.0' : currentWeight < 15 ? '4.5' : currentWeight < 20 ? '5.0' : currentWeight < 30 ? '5.5' : currentWeight < 40 ? '6.0' : '6.5-7.0'} mm\n`;
+            text += `- Defib Shock 1: ${currentWeight * 2} J\n`;
+            text += `- Cairan Maint: ${fluid.hourly.toFixed(1)} cc/jam\n\n`;
+
+            text += `*OBAT RESUSITASI UTAMA*\n`;
+            const emDrugs = drugs.filter(d => ['epi_bolus', 'amiodarone', 'fluid_bolus'].includes(d.id));
+            emDrugs.forEach(d => {
+                // Strip HTML tags from calculation
+                let doseStr = d.calculate(currentWeight).replace(/<[^>]*>?/gm, ' ');
+                text += `- ${d.name}: ${doseStr}\n`;
+            });
+
+            text += `\n_Dihitung dengan CardiologyVault_`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                // Show toast
+                const toast = document.getElementById('toast');
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                }, 3000);
+            });
+        });
+
+    </script>
+</body>
+</html>
