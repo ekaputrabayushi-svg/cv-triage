@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Simulator JVP Waveform Interaktif</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Mencegah highlight teks saat menggeser slider/kurva di HP */
+        .no-select {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        /* Menyembunyikan scrollbar untuk area horizontal scroll */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Animasi khusus untuk aliran darah dan getaran atrium */
+        @keyframes flowDown {
+            0% { transform: translateY(-50%) translateX(-50%); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(50%) translateX(-50%); opacity: 0; }
+        }
+        @keyframes flowUp {
+            0% { transform: translateY(50%) translateX(-50%); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(-50%) translateX(-50%); opacity: 0; }
+        }
+        @keyframes fibrillate {
+            0% { transform: scale(1); background-color: #2563eb; } /* blue-600 */
+            25% { transform: scale(0.98) translateX(-1px); background-color: #60a5fa; } /* blue-400 */
+            50% { transform: scale(1.02) translateX(1px); background-color: #1d4ed8; } /* blue-700 */
+            75% { transform: scale(0.99) translateX(1px); background-color: #60a5fa; }
+            100% { transform: scale(1); background-color: #2563eb; }
+        }
+        .anim-flow-down { animation: flowDown 1s infinite; }
+        .anim-flow-up { animation: flowUp 0.8s infinite; }
+        .anim-fibrillate { animation: fibrillate 0.2s infinite; }
+        
+        /* Transisi mekanik jantung yang mulus */
+        .heart-part { transition: all 0.3s ease-in-out; }
+        
+        /* Slider Styling Premium (Cool Cyan Theme) */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: #06b6d4; /* cyan-500 */
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.6);
+            border: 2px solid #0f172a;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: #334155; /* slate-700 */
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-[#0b1121] text-slate-300 font-sans antialiased pb-6 no-select min-h-screen selection:bg-cyan-900 selection:text-cyan-50">
+
+<div class="max-w-4xl mx-auto p-2 md:p-4 space-y-3 md:space-y-4">
+
+    <!-- Header Baru: Rapi, Lega, Terstruktur (Dark Glassmorphism) -->
+    <div class="bg-slate-800/80 backdrop-blur-xl p-4 md:p-6 rounded-2xl shadow-lg border border-slate-700/50 flex flex-col gap-4 relative overflow-hidden">
+        <!-- Dekorasi Cahaya Halus di Latar -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+        <!-- Bagian Credits & Judul Utama -->
+        <div class="flex flex-col gap-3 relative z-10">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="px-3 py-1 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-[10px] md:text-xs font-bold rounded-full tracking-widest uppercase shadow-sm">CardiologyVault</span>
+                <span class="text-[11px] md:text-xs text-slate-400 font-medium bg-slate-900/50 px-3 py-1 rounded-full border border-slate-700/50 shadow-sm">
+                    Developed by <span class="text-cyan-400 font-bold">Bayushi Eka Putra, MD, FIHA.</span>
+                </span>
+            </div>
+            
+            <h1 class="text-xl md:text-2xl lg:text-3xl font-extrabold text-white flex items-center gap-2 mt-1 drop-shadow-md">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+                Simulator JVP Hemodynamics
+            </h1>
+        </div>
+        
+        <!-- Garis Pemisah Tipis -->
+        <div class="w-full h-px bg-slate-700/60 relative z-10"></div>
+
+        <!-- Pilihan Kasus sebagai Sub-bagian -->
+        <div class="flex flex-col gap-2 relative z-10">
+            <span class="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-wider">Pilih Variasi Kurva:</span>
+            <div id="pathology-buttons" class="flex gap-2 w-full overflow-x-auto pb-2 hide-scrollbar snap-x">
+                <!-- Buttons dinamis di-generate via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Layout (Super Compact) -->
+    <div class="bg-slate-800/90 backdrop-blur-md p-3 md:p-5 rounded-2xl shadow-xl border border-slate-700/50 flex flex-col">
+        <h2 class="text-base font-bold text-white mb-2 flex justify-between items-center">
+            <span>Kurva JVP: <span id="current-pathology-name" class="text-cyan-400 drop-shadow-sm">Normal JVP</span></span>
+        </h2>
+
+        <!-- Area Kanvas Kurva & Overlay Jantung -->
+        <div id="svg-container" class="relative w-full h-[200px] sm:h-[240px] md:h-[300px] bg-[#050812] rounded-xl border border-slate-700 overflow-hidden cursor-crosshair touch-none shadow-[inset_0_4px_30px_rgba(0,0,0,0.8)]">
+            
+            <!-- viewBox disesuaikan agar tidak ada ruang terbuang di atas/bawah -->
+            <svg viewBox="0 0 200 120" class="w-full h-full overflow-visible pointer-events-none">
+                <defs>
+                    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="1.5" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                    <!-- Gradient Cool Cyan-Blue-Indigo -->
+                    <linearGradient id="jvp-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#22d3ee" />   <!-- cyan-400 -->
+                        <stop offset="50%" stop-color="#3b82f6" />  <!-- blue-500 -->
+                        <stop offset="100%" stop-color="#6366f1" /> <!-- indigo-500 -->
+                    </linearGradient>
+                </defs>
+
+                <!-- Grid Lines (Lebih gelap) -->
+                <line x1="0" y1="20" x2="200" y2="20" stroke="#1e293b" stroke-width="0.5" stroke-dasharray="2,2" />
+                <line x1="0" y1="40" x2="200" y2="40" stroke="#1e293b" stroke-width="0.5" stroke-dasharray="2,2" />
+                <line x1="0" y1="60" x2="200" y2="60" stroke="#1e293b" stroke-width="0.5" stroke-dasharray="2,2" />
+                <line x1="0" y1="80" x2="200" y2="80" stroke="#1e293b" stroke-width="0.5" stroke-dasharray="2,2" />
+                <line x1="0" y1="100" x2="200" y2="100" stroke="#1e293b" stroke-width="0.5" stroke-dasharray="2,2" />
+                
+                <!-- Garis Base EKG -->
+                <line x1="0" y1="110" x2="200" y2="110" stroke="#10b981" stroke-width="0.3" opacity="0.4" />
+                
+                <!-- KURVA EKG REFERENSI -->
+                <path d="M 0 110 L 26 110 C 30 103, 42 103, 46 110 L 55 110 L 58 113 L 62 90 L 66 113 L 69 110 L 115 110 C 125 100, 155 100, 165 110 L 200 110" 
+                      fill="none" stroke="#10b981" stroke-width="1" stroke-linejoin="round" opacity="0.8" />
+                
+                <text x="36" y="118" font-size="4" fill="#34d399" text-anchor="middle" font-weight="bold" opacity="0.8">P</text>
+                <text x="62" y="118" font-size="4" fill="#34d399" text-anchor="middle" font-weight="bold" opacity="0.8">QRS</text>
+                <text x="145" y="118" font-size="4" fill="#34d399" text-anchor="middle" font-weight="bold" opacity="0.8">T</text>
+                
+                <!-- Garis Kurva Utama JVP -->
+                <path id="jvp-path" d="" fill="none" stroke="url(#jvp-gradient)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)" class="transition-all duration-300"></path>
+
+                <!-- Group Indikator Titik -->
+                <g id="jvp-points"></g>
+
+                <!-- Garis Waktu Merah & Dot (Tetap Rose untuk High Contrast Alert) -->
+                <line id="playhead-line" x1="0" y1="0" x2="0" y2="120" stroke="#f43f5e" stroke-width="0.8" opacity="0.9" />
+                <circle id="playhead-dot" cx="0" cy="0" r="2.5" fill="#f43f5e" stroke="#ffffff" stroke-width="1" filter="url(#glow)" />
+            </svg>
+
+            <!-- FLOATING OVERLAY: Mekanika Jantung Kanan -->
+            <div class="absolute top-1 right-1 md:top-3 md:right-3 pointer-events-none origin-top-right scale-[0.35] sm:scale-[0.45] md:scale-[0.6] bg-[#0f172a]/80 backdrop-blur-lg p-5 rounded-3xl border border-slate-700 shadow-2xl flex flex-col items-center justify-center">
+                
+                <div class="absolute -top-3 bg-slate-800 text-cyan-300 text-[11px] font-bold px-4 py-1.5 rounded-full shadow-[0_0_15px_rgba(6,182,212,0.3)] border border-cyan-500/50 tracking-widest uppercase flex items-center gap-1">
+                    Jantung Kanan
+                </div>
+
+                <div class="relative w-40 md:w-48 h-56 flex flex-col items-center mt-2">
+                    <div id="vein-fill" class="absolute top-[-24px] w-8 h-[30%] bg-blue-400/20 rounded-b-full heart-part"></div>
+                    
+                    <div id="heart-ra" class="w-28 md:w-32 rounded-t-full flex items-center justify-center border-4 border-blue-500/30 heart-part h-24 bg-blue-600/60 relative z-10">
+                        <span class="text-white font-extrabold opacity-90 text-2xl tracking-widest drop-shadow-md">RA</span>
+                    </div>
+
+                    <div class="w-20 md:w-24 h-4 flex justify-between px-2 relative z-20">
+                        <div id="tv-left" class="w-8 md:w-10 h-1.5 bg-slate-300 origin-left heart-part rounded-full shadow-[0_0_5px_rgba(255,255,255,0.5)]"></div>
+                        <div id="tv-right" class="w-8 md:w-10 h-1.5 bg-slate-300 origin-right heart-part rounded-full shadow-[0_0_5px_rgba(255,255,255,0.5)]"></div>
+                    </div>
+
+                    <div id="heart-rv" class="w-36 md:w-40 rounded-b-full flex items-end justify-center pb-6 border-4 border-cyan-500/30 heart-part h-28 bg-cyan-600/60 relative z-10">
+                        <span class="text-white font-extrabold opacity-90 text-2xl tracking-widest drop-shadow-md">RV</span>
+                    </div>
+
+                    <div id="flow-arrow-down" class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-cyan-200 anim-flow-down z-30 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+                    </div>
+                    <div id="flow-arrow-up" class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-rose-400 anim-flow-up z-30 drop-shadow-[0_0_8px_rgba(244,63,94,0.8)]">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Player Controls & Info Cards -->
+        <div class="mt-3 flex flex-col gap-3">
+            <!-- Kontrol Utama -->
+            <div class="flex items-center gap-3 bg-slate-900/60 p-2 md:p-3 rounded-xl border border-slate-700/60">
+                <button id="btn-play" class="flex-shrink-0 w-10 h-10 md:w-12 md:h-12 bg-cyan-600 text-white rounded-full flex items-center justify-center hover:bg-cyan-500 transition shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+                    <svg id="icon-play" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" class="ml-1"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    <svg id="icon-pause" class="hidden" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                </button>
+
+                <button id="btn-sound" class="flex-shrink-0 w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center transition border bg-slate-800 text-slate-400 border-slate-600 hover:bg-slate-700 hover:text-cyan-400">
+                    <svg id="icon-vol-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+                    <svg id="icon-vol-on" class="hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                </button>
+
+                <input id="time-slider" type="range" min="0" max="100" step="0.2" value="0" class="w-full appearance-none bg-transparent" />
+            </div>
+            
+            <!-- Grid Info: Pathology & Phase Details -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <!-- Panel Patologi -->
+                <div class="bg-blue-900/20 p-3 rounded-xl border border-blue-500/20 flex flex-col justify-center min-h-[70px]">
+                    <p class="text-xs text-slate-300 font-medium leading-relaxed flex items-start gap-2">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 flex-shrink-0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        <span id="pathology-desc">Memuat deskripsi...</span>
+                    </p>
+                </div>
+
+                <!-- Panel Fase -->
+                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700 flex flex-col justify-center min-h-[70px]">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span id="phase-badge" class="inline-flex items-center justify-center w-6 h-6 rounded-full font-bold text-white bg-slate-700 text-[10px] shadow-[0_0_8px_rgba(0,0,0,0.5)]">-</span>
+                        <h3 id="phase-title" class="font-bold text-white text-sm">Fase Transisi</h3>
+                    </div>
+                    <p id="phase-desc" class="text-slate-400 text-xs leading-relaxed">Geser slider atau putar animasi untuk melihat fase.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aturan Alfabetis Fundamental (Dark Card) -->
+    <div class="bg-slate-800/90 backdrop-blur-md p-3 md:p-5 rounded-2xl shadow-lg border border-slate-700/50">
+        <h3 class="font-bold text-white mb-3 text-sm flex items-center gap-1.5">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
+            Formula Fundamental JVP
+        </h3>
+        <div class="flex md:grid md:grid-cols-5 gap-3 overflow-x-auto snap-x hide-scrollbar pb-1">
+            <div class="min-w-[140px] md:min-w-0 bg-slate-900/50 p-3 rounded-xl border border-slate-700 snap-center hover:border-cyan-500/50 transition-colors">
+                <strong class="text-cyan-400 text-lg block leading-none mb-1 drop-shadow-sm">A</strong>
+                <span class="text-slate-200 block mb-0.5 font-bold text-[11px]">Atrial Kick</span>
+                <span class="text-slate-400 text-[10px] leading-tight block">Kontraksi atrium. Hilang di AF, raksasa di TS/CHB.</span>
+            </div>
+            <div class="min-w-[140px] md:min-w-0 bg-slate-900/50 p-3 rounded-xl border border-slate-700 snap-center hover:border-cyan-500/50 transition-colors">
+                <strong class="text-cyan-400 text-lg block leading-none mb-1 drop-shadow-sm">C</strong>
+                <span class="text-slate-200 block mb-0.5 font-bold text-[11px]">Closure (Valve)</span>
+                <span class="text-slate-400 text-[10px] leading-tight block">Katup trikuspid tertutup & menonjol ke atas.</span>
+            </div>
+            <div class="min-w-[140px] md:min-w-0 bg-slate-900/50 p-3 rounded-xl border border-slate-700 snap-center hover:border-cyan-500/50 transition-colors">
+                <strong class="text-cyan-400 text-lg block leading-none mb-1 drop-shadow-sm">X</strong>
+                <span class="text-slate-200 block mb-0.5 font-bold text-[11px]">X-Descent (RelaX)</span>
+                <span class="text-slate-400 text-[10px] leading-tight block">Relaksasi atrium. Hilang saat TR berat.</span>
+            </div>
+            <div class="min-w-[140px] md:min-w-0 bg-slate-900/50 p-3 rounded-xl border border-slate-700 snap-center hover:border-cyan-500/50 transition-colors">
+                <strong class="text-cyan-400 text-lg block leading-none mb-1 drop-shadow-sm">V</strong>
+                <span class="text-slate-200 block mb-0.5 font-bold text-[11px]">Venous fill</span>
+                <span class="text-slate-400 text-[10px] leading-tight block">Atrium terisi pasif saat katup tertutup.</span>
+            </div>
+            <div class="min-w-[140px] md:min-w-0 bg-slate-900/50 p-3 rounded-xl border border-slate-700 snap-center hover:border-cyan-500/50 transition-colors">
+                <strong class="text-cyan-400 text-lg block leading-none mb-1 drop-shadow-sm">Y</strong>
+                <span class="text-slate-200 block mb-0.5 font-bold text-[11px]">Y-Descent (Yield)</span>
+                <span class="text-slate-400 text-[10px] leading-tight block">Katup terbuka, kosong cepat. Turun curam di CP.</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- SCRIPT LOGIKA SIMULATOR -->
+<script>
+    const pathologies = {
+        normal: {
+            id: 'normal', name: 'Normal JVP',
+            description: 'Gelombang normal (3 puncak positif: a, c, v dan 2 lembah: x, y).',
+            narration: 'Pada kondisi normal, kurva J V P memiliki tiga puncak dan dua lembah. Gelombang "a" terjadi karena atrium kanan berkontraksi, mendorong darah ke ventrikel. Kemudian katup trikuspid menutup rapat. Saat ventrikel kanan berkontraksi kuat, katup ini sedikit menonjol ke atas menuju atrium, menciptakan gelombang "c". Setelah itu, atrium mengalami relaksasi total, sehingga tekanan turun drastis membentuk turunan "x". Sambil katup tertutup, darah dari tubuh terus mengisi atrium, menaikkan tekanan secara perlahan membentuk gelombang "v". Akhirnya, katup trikuspid terbuka lagi, darah jatuh cepat ke ventrikel, dan tekanan kembali merosot membentuk turunan "y".',
+            points: [
+                { x: 0, y: 30 }, { x: 10, y: 30 }, 
+                { x: 20, y: 65, label: 'a', phase: 'a' }, 
+                { x: 26, y: 40 }, 
+                { x: 32, y: 50, label: 'c', phase: 'c' }, 
+                { x: 45, y: 15, label: 'x', phase: 'x' }, 
+                { x: 60, y: 20 }, 
+                { x: 75, y: 55, label: 'v', phase: 'v' }, 
+                { x: 88, y: 10, label: 'y', phase: 'y' }, 
+                { x: 100, y: 30 }
+            ]
+        },
+        ts: {
+            id: 'ts', name: 'Giant A Wave',
+            description: 'Gelombang "a" raksasa & turunan "y" lambat akibat obstruksi Tricuspid Stenosis.',
+            narration: 'Pada Stenosis Trikuspid, pembukaan katup menjadi sempit dan kaku. Atrium kanan harus berkontraksi jauh lebih kuat dari biasanya untuk mendorong darah melewati celah sempit tersebut. Ini menghasilkan gelombang "a" raksasa atau Giant A Wave pada kurva J V P. Selain itu, karena darah mengalir lambat dan sulit masuk ke ventrikel, pengosongan atrium ikut terhambat, sehingga turunan "y" menjadi sangat lambat dan melandai.',
+            points: [
+                { x: 0, y: 30 }, { x: 10, y: 30 }, 
+                { x: 20, y: 95, label: 'Giant a', phase: 'giant-a' }, 
+                { x: 26, y: 40 }, 
+                { x: 32, y: 50, label: 'c', phase: 'c' }, 
+                { x: 45, y: 15, label: 'x', phase: 'x' }, 
+                { x: 60, y: 20 }, 
+                { x: 75, y: 55, label: 'v', phase: 'v' }, 
+                { x: 92, y: 40, label: 'y (landai)', phase: 'y-slow' }, 
+                { x: 100, y: 30 }
+            ]
+        },
+        tr: {
+            id: 'tr', name: 'Tricuspid Regurgitasi',
+            description: 'Gelombang c-v besar bergabung, hilangnya turunan x. Darah menyemprot balik ke RA.',
+            narration: 'Pada kasus Regurgitasi Trikuspid, katup tidak bisa menutup dengan rapat. Akibatnya, saat ventrikel kanan memompa, sebagian darah justru bocor dan menyemprot kembali ke atas menuju atrium kanan. Kebocoran ini membuat atrium kanan langsung penuh seketika saat fase sistol. Inilah alasan mengapa turunan "x" yang normalnya turun menjadi hilang, karena tekanan di atrium justru melonjak drastis akibat kebocoran ini. Gelombang "c" dan "v" akhirnya melebur menjadi satu gelombang regurgitasi raksasa yang tidak terputus.',
+            points: [
+                { x: 0, y: 30 }, { x: 10, y: 30 }, 
+                { x: 20, y: 65, label: 'a', phase: 'a' }, 
+                { x: 26, y: 45 }, 
+                { x: 55, y: 85, label: 'c-v', phase: 'c-v' }, 
+                { x: 75, y: 80 }, 
+                { x: 88, y: 15, label: 'y', phase: 'y' }, 
+                { x: 100, y: 30 }
+            ]
+        },
+        af: {
+            id: 'af', name: 'Atrial Fibrilasi',
+            description: 'Hilangnya gelombang "a", digantikan oleh gelombang getaran fibrilasi (f).',
+            narration: 'Pada Fibrilasi Atrium, otot atrium kehilangan kemampuan untuk berkontraksi secara terkoordinasi. Atrium hanya bergetar kacau. Karena tidak ada kontraksi yang solid, maka gelombang "a" atau atrial kick menghilang sama sekali dari kurva. Sebagai gantinya, Anda melihat undulasi kecil atau gelombang "f" yang acak di dasar kurva. Turunan "x" juga sering kali menjadi dangkal karena tidak ada relaksasi atrium yang efektif.',
+            points: [
+                { x: 0, y: 30 }, 
+                { x: 4, y: 38 }, { x: 8, y: 22 }, { x: 12, y: 36 }, { x: 16, y: 24 }, { x: 20, y: 34 }, { x: 25, y: 28 }, 
+                { x: 32, y: 50, label: 'c', phase: 'c' }, 
+                { x: 45, y: 30, label: 'x', phase: 'x' }, 
+                { x: 60, y: 30 }, 
+                { x: 75, y: 55, label: 'v', phase: 'v' }, 
+                { x: 88, y: 15, label: 'y', phase: 'y' }, 
+                { x: 100, y: 30 }
+            ]
+        },
+        cp: {
+            id: 'cp', name: 'Constrictive Pericard.',
+            description: 'Turunan x & y sangat curam (tanda Friedreich). Pola W / M dominan.',
+            narration: 'Pada Perikarditis Konstriktif, selubung perikardium menjadi kaku dan keras seperti cangkang. Saat katup trikuspid terbuka, darah jatuh dan mengosongkan atrium kanan dengan luar biasa cepat, menciptakan turunan "y" yang sangat curam dan dalam. Namun, pengisian ventrikel ini terhenti mendadak karena jantung membentur dinding perikardium yang kaku. Pola turunan "x" dan "y" yang sama-sama curam ini membentuk pola "W" atau tanda Friedreich yang sangat khas.',
+            points: [
+                { x: 0, y: 40 }, { x: 10, y: 40 }, 
+                { x: 20, y: 75, label: 'a', phase: 'a' }, 
+                { x: 25, y: 50 }, 
+                { x: 32, y: 60, label: 'c', phase: 'c' }, 
+                { x: 45, y: 5, label: 'x', phase: 'x' }, 
+                { x: 60, y: 30 }, 
+                { x: 75, y: 75, label: 'v', phase: 'v' }, 
+                { x: 88, y: 5, label: 'y', phase: 'y' }, 
+                { x: 100, y: 40 }
+            ]
+        },
+        cannon: {
+            id: 'cannon', name: 'Cannon A Wave',
+            description: 'Gelombang "a" ekstrim karena atrium kontraksi saat katup tertutup rapat (AV Block).',
+            narration: 'Kondisi ini menampilkan Gelombang A Meriam. Terjadi pada kasus disosiasi atrio-ventrikuler seperti Blok Jantung Total. Atrium kanan berkontraksi secara normal, namun ia berkontraksi tepat saat katup trikuspid sedang tertutup rapat karena ventrikel juga sedang fase sistol. Karena katup terkunci, seluruh volume dan tekanan kontraksi atrium ini memantul kuat balik ke arah vena jugularis, menghasilkan gelombang "a" yang sangat raksasa dan menghentak leher.',
+            points: [
+                { x: 0, y: 30 }, { x: 10, y: 30 }, 
+                { x: 20, y: 100, label: 'a', phase: 'cannon-a' },
+                { x: 26, y: 30 }, 
+                { x: 32, y: 45, label: 'c', phase: 'c' }, 
+                { x: 45, y: 15, label: 'x', phase: 'x' }, 
+                { x: 60, y: 20 }, 
+                { x: 75, y: 50, label: 'v', phase: 'v' }, 
+                { x: 88, y: 10, label: 'y', phase: 'y' }, 
+                { x: 100, y: 30 }
+            ]
+        }
+    };
+
+    const phaseDetails = {
+        'a': { title: 'Gel. a (Kontraksi)', text: 'Kontraksi Atrium Kanan mendorong sisa darah ke Ventrikel.', tvState: 'open', raState: 'contracting', rvState: 'filling', bloodFlow: 'down' },
+        'giant-a': { title: 'Giant a Wave', text: 'Atrium kontraksi sangat kuat melawan katup trikuspid kaku.', tvState: 'narrow', raState: 'contracting-hard', rvState: 'filling-slow', bloodFlow: 'down' },
+        'cannon-a': { title: 'CANNON a Wave!', text: 'Atrium kontraksi berlawanan arah dengan Katup Trikuspid tertutup!', tvState: 'closed', raState: 'contracting-hard', rvState: 'contracting', bloodFlow: 'bounce-back' },
+        'c': { title: 'Gel. c (Katup Menonjol)', text: 'Ventrikel sistol. Katup trikuspid tertutup rapat & menonjol.', tvState: 'closed-bulge', raState: 'filling', rvState: 'contracting', bloodFlow: 'none' },
+        'x': { title: 'Turunan x (Relaksasi)', text: 'Relaksasi atrium. Dasarnya ditarik ke bawah oleh ventrikel.', tvState: 'closed-pulled', raState: 'relaxing', rvState: 'ejecting', bloodFlow: 'vein' },
+        'v': { title: 'Gel. v (Isi Vena)', text: 'Darah dari tubuh mengisi atrium pasif sementara katup tertutup.', tvState: 'closed', raState: 'full', rvState: 'relaxing', bloodFlow: 'vein' },
+        'y': { title: 'Turunan y (Kosong Cepat)', text: 'Katup terbuka. Darah seketika jatuh bebas ke ventrikel kanan.', tvState: 'open', raState: 'emptying', rvState: 'rapid-filling', bloodFlow: 'down' },
+        'y-slow': { title: 'Turunan y Melandai', text: 'Darah terhambat mengalir lambat melewati katup kaku.', tvState: 'narrow', raState: 'emptying-slow', rvState: 'filling-slow', bloodFlow: 'down' },
+        'c-v': { title: 'Gel. c-v (Regurgitasi)', text: 'Katup Trikuspid bocor! Darah terpompa balik ke atrium.', tvState: 'leaking', raState: 'expanding', rvState: 'contracting', bloodFlow: 'up' },
+        'f': { title: 'Gel. f (Fibrilasi)', text: 'Atrium bergetar acak tanpa kontraksi efektif (gel. a hilang).', tvState: 'open', raState: 'fibrillating', rvState: 'filling', bloodFlow: 'down' },
+        'idle': { title: 'Fase Transisi', text: 'Tekanan stabil sesaat sebelum siklus berikutnya dimulai.', tvState: 'closed', raState: 'normal', rvState: 'normal', bloodFlow: 'none' }
+    };
+
+    let currentPathId = 'normal';
+    let time = 0;
+    let isPlaying = false;
+    let isSoundEnabled = false;
+    let isDragging = false;
+    let animationFrameId;
+    
+    const SCALEX = 2; // viewBox width 200 vs time 100
+
+    const dom = {
+        buttonsContainer: document.getElementById('pathology-buttons'),
+        pathName: document.getElementById('current-pathology-name'),
+        pathologyDesc: document.getElementById('pathology-desc'),
+        jvpPath: document.getElementById('jvp-path'),
+        jvpPoints: document.getElementById('jvp-points'),
+        playheadLine: document.getElementById('playhead-line'),
+        playheadDot: document.getElementById('playhead-dot'),
+        btnPlay: document.getElementById('btn-play'),
+        iconPlay: document.getElementById('icon-play'),
+        iconPause: document.getElementById('icon-pause'),
+        btnSound: document.getElementById('btn-sound'),
+        iconVolOff: document.getElementById('icon-vol-off'),
+        iconVolOn: document.getElementById('icon-vol-on'),
+        timeSlider: document.getElementById('time-slider'),
+        svgContainer: document.getElementById('svg-container'),
+        
+        heartRA: document.getElementById('heart-ra'),
+        heartRV: document.getElementById('heart-rv'),
+        tvLeft: document.getElementById('tv-left'),
+        tvRight: document.getElementById('tv-right'),
+        veinFill: document.getElementById('vein-fill'),
+        flowDown: document.getElementById('flow-arrow-down'),
+        flowUp: document.getElementById('flow-arrow-up'),
+        
+        phaseBadge: document.getElementById('phase-badge'),
+        phaseTitle: document.getElementById('phase-title'),
+        phaseDesc: document.getElementById('phase-desc')
+    };
+
+    function init() {
+        createPathologyButtons();
+        bindEvents();
+        renderScene();
+    }
+
+    function createPathologyButtons() {
+        dom.buttonsContainer.innerHTML = '';
+        Object.values(pathologies).forEach(path => {
+            const btn = document.createElement('button');
+            btn.innerText = path.name;
+            // Update class for cool dark theme buttons
+            btn.className = `px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap border ${currentPathId === path.id ? 'bg-cyan-600 text-white shadow-[0_0_10px_rgba(6,182,212,0.4)] border-cyan-400' : 'bg-slate-800/80 text-slate-400 border-slate-700 hover:bg-slate-700 hover:text-white'}`;
+            btn.onclick = () => {
+                currentPathId = path.id;
+                time = 0;
+                createPathologyButtons();
+                stopNarration();
+                if (isPlaying) speakNarration(pathologies[currentPathId].narration);
+                renderScene();
+            };
+            dom.buttonsContainer.appendChild(btn);
+        });
+    }
+
+    function speakNarration(text) {
+        if (!isSoundEnabled || !window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'id-ID';
+        utterance.rate = 0.95; 
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function stopNarration() {
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+    }
+
+    function renderScene() {
+        const data = pathologies[currentPathId];
+        dom.pathName.innerText = data.name;
+        dom.pathologyDesc.innerText = data.description;
+        
+        let d = `M ${data.points[0].x * SCALEX} ${100 - data.points[0].y}`;
+        for (let i = 1; i < data.points.length; i++) {
+            const prev = data.points[i - 1];
+            const curr = data.points[i];
+            const cx1 = (prev.x + (curr.x - prev.x) / 2) * SCALEX;
+            const cy1 = 100 - prev.y;
+            const cx2 = (prev.x + (curr.x - prev.x) / 2) * SCALEX;
+            const cy2 = 100 - curr.y;
+            d += ` C ${cx1} ${cy1}, ${cx2} ${cy2}, ${curr.x * SCALEX} ${100 - curr.y}`;
+        }
+        dom.jvpPath.setAttribute('d', d);
+
+        dom.jvpPoints.innerHTML = '';
+        data.points.filter(p => p.label).forEach(p => {
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', p.x * SCALEX);
+            circle.setAttribute('cy', 100 - p.y);
+            circle.setAttribute('r', '2');
+            circle.setAttribute('fill', '#0f172a');
+            circle.setAttribute('stroke', '#22d3ee'); // cyan-400
+            circle.setAttribute('stroke-width', '1');
+            dom.jvpPoints.appendChild(circle);
+
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', p.x * SCALEX);
+            text.setAttribute('y', 100 - p.y - 5);
+            text.setAttribute('font-size', '5');
+            text.setAttribute('font-weight', 'bold');
+            text.setAttribute('fill', '#e2e8f0'); // slate-200 for better contrast on dark
+            text.setAttribute('text-anchor', 'middle');
+            text.textContent = p.label;
+            dom.jvpPoints.appendChild(text);
+        });
+
+        dom.jvpPath.getBoundingClientRect(); 
+        updatePlayhead();
+    }
+
+    function getCurrentPhase() {
+        if (currentPathId === 'tr' && time >= 30 && time <= 80) return 'c-v';
+        if (currentPathId === 'af' && time < 26) return 'f'; 
+        if (currentPathId === 'cannon' && time >= 15 && time < 26) return 'cannon-a';
+        
+        if (currentPathId === 'ts') {
+            if (time >= 15 && time < 26) return 'giant-a';
+            if (time >= 82 && time < 95) return 'y-slow';
+        }
+
+        if (time >= 15 && time < 26) return 'a';
+        if (time >= 26 && time < 38) return 'c';
+        if (time >= 38 && time < 60) return 'x';
+        if (time >= 60 && time < 82) return 'v';
+        if (time >= 82 && time < 95) return 'y';
+        return 'idle';
+    }
+
+    function getExactYOnPath(targetX) {
+        const path = dom.jvpPath;
+        const totalLength = path.getTotalLength();
+        if (totalLength === 0) return 100; 
+        
+        let start = 0, end = totalLength, pt;
+        for (let i = 0; i < 20; i++) {
+            const mid = (start + end) / 2;
+            pt = path.getPointAtLength(mid);
+            if (pt.x < targetX) start = mid; else end = mid;
+        }
+        return pt ? pt.y : 100;
+    }
+
+    function updatePlayhead() {
+        const svgTargetX = time * SCALEX;
+        dom.playheadLine.setAttribute('x1', svgTargetX);
+        dom.playheadLine.setAttribute('x2', svgTargetX);
+        
+        const exactYPos = getExactYOnPath(svgTargetX);
+        dom.playheadDot.setAttribute('cx', svgTargetX);
+        dom.playheadDot.setAttribute('cy', exactYPos);
+        dom.timeSlider.value = time;
+
+        const phaseKey = getCurrentPhase();
+        const info = phaseDetails[phaseKey] || phaseDetails['idle'];
+
+        dom.phaseBadge.textContent = phaseKey === 'idle' ? '-' : (phaseKey.includes('a') ? 'A!' : phaseKey.toUpperCase());
+        // Cool color assignments for badges
+        let badgeColor = 'bg-slate-700';
+        if (phaseKey !== 'idle') {
+            if (phaseKey.includes('a') || phaseKey === 'c-v') badgeColor = 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)] text-white';
+            else badgeColor = 'bg-cyan-600 shadow-[0_0_8px_rgba(6,182,212,0.6)] text-white';
+        }
+        
+        dom.phaseBadge.className = `inline-flex items-center justify-center w-6 h-6 rounded-full font-bold text-[10px] ${badgeColor}`;
+        dom.phaseTitle.textContent = info.title;
+        dom.phaseDesc.textContent = info.text;
+
+        updateHeartVisuals(info);
+    }
+
+    function updateHeartVisuals(info) {
+        // Updated colors for dark theme: RA=Blue, RV=Cyan
+        let raClass = "w-28 md:w-32 rounded-t-full flex items-center justify-center border-4 border-blue-500/30 heart-part relative z-10 ";
+        let rvClass = "w-36 md:w-40 rounded-b-full flex items-end justify-center pb-6 border-4 border-cyan-500/30 heart-part relative z-10 ";
+        let tvLeftTransform = "", tvRightTransform = "";
+        let tvBg = "bg-slate-200";
+
+        // RA States
+        if(info.raState === 'contracting') raClass += "h-16 bg-blue-700 scale-95 shadow-[0_0_20px_rgba(37,99,235,0.6)]";
+        else if(info.raState === 'contracting-hard') raClass += "h-12 bg-blue-800 scale-90 border-blue-400 shadow-[0_0_25px_rgba(30,64,175,0.8)]";
+        else if(info.raState === 'relaxing') raClass += "h-24 bg-blue-500/30";
+        else if(info.raState === 'full') raClass += "h-28 bg-blue-600 scale-105 shadow-[0_0_20px_rgba(59,130,246,0.4)]";
+        else if(info.raState === 'emptying') raClass += "h-20 bg-blue-500/40";
+        else if(info.raState === 'emptying-slow') raClass += "h-24 bg-blue-600/50"; 
+        else if(info.raState === 'expanding') raClass += "h-32 bg-rose-600/60 scale-110 shadow-[0_0_20px_rgba(225,29,72,0.5)] border-rose-500/50";
+        else if(info.raState === 'fibrillating') raClass += "h-22";
+        else raClass += "h-24 bg-blue-600/60";
+
+        if (currentPathId === 'af') raClass += " anim-fibrillate";
+
+        // RV States
+        if(info.rvState === 'filling') rvClass += "h-32 bg-cyan-500/80 shadow-[0_0_15px_rgba(6,182,212,0.4)]";
+        else if(info.rvState === 'rapid-filling') rvClass += "h-36 bg-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.6)]";
+        else if(info.rvState === 'filling-slow') rvClass += "h-30 bg-cyan-600/70"; 
+        else if(info.rvState === 'contracting' || info.rvState === 'ejecting') rvClass += "h-20 bg-cyan-700 scale-95 shadow-[0_0_20px_rgba(14,116,144,0.6)] border-cyan-400";
+        else if(info.rvState === 'relaxing') rvClass += "h-28 bg-cyan-500/30";
+        else rvClass += "h-28 bg-cyan-600/60";
+
+        if(info.tvState === 'open') { tvLeftTransform = "rotate(45deg)"; tvRightTransform = "rotate(-45deg)"; }
+        else if (info.tvState === 'narrow') { tvLeftTransform = "rotate(15deg)"; tvRightTransform = "rotate(-15deg)"; }
+        else if(info.tvState === 'closed-bulge') { tvLeftTransform = "translateY(-6px) rotate(-10deg)"; tvRightTransform = "translateY(-6px) rotate(10deg)"; }
+        else if(info.tvState === 'closed-pulled') { tvLeftTransform = "translateY(8px)"; tvRightTransform = "translateY(8px)"; }
+        else if(info.tvState === 'leaking') { tvLeftTransform = "rotate(-40deg)"; tvRightTransform = "rotate(40deg)"; tvBg = "bg-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.8)]"; }
+
+        dom.heartRA.className = raClass;
+        dom.heartRV.className = rvClass;
+        
+        dom.tvLeft.style.transform = tvLeftTransform;
+        dom.tvLeft.className = `w-8 md:w-10 h-1.5 origin-left heart-part rounded-full shadow-[0_0_5px_rgba(255,255,255,0.5)] ${tvBg}`;
+        dom.tvRight.style.transform = tvRightTransform;
+        dom.tvRight.className = `w-8 md:w-10 h-1.5 origin-right heart-part rounded-full shadow-[0_0_5px_rgba(255,255,255,0.5)] ${tvBg}`;
+
+        dom.veinFill.className = `absolute top-[-24px] w-8 bg-blue-400/20 rounded-b-full heart-part ${info.bloodFlow === 'vein' || info.bloodFlow === 'bounce-back' ? 'h-[40%] opacity-100 shadow-[0_0_15px_rgba(96,165,250,0.3)]' : 'h-[30%] opacity-30'}`;
+        if(info.bloodFlow === 'bounce-back') dom.veinFill.classList.add('bg-rose-500/60', 'shadow-[0_0_20px_rgba(244,63,94,0.5)]');
+
+        dom.flowDown.classList.toggle('hidden', !info.bloodFlow.includes('down'));
+        dom.flowUp.classList.toggle('hidden', info.bloodFlow !== 'up' && info.bloodFlow !== 'bounce-back');
+    }
+
+    function tick() {
+        if (!isPlaying) return;
+        time += 0.35; 
+        if (time >= 100) time = 0;
+        updatePlayhead();
+        animationFrameId = requestAnimationFrame(tick);
+    }
+
+    function togglePlay() {
+        isPlaying = !isPlaying;
+        if (isPlaying) {
+            dom.iconPlay.classList.add('hidden');
+            dom.iconPause.classList.remove('hidden');
+            if (time === 0 || time >= 99) speakNarration(pathologies[currentPathId].narration);
+            tick();
+        } else {
+            dom.iconPlay.classList.remove('hidden');
+            dom.iconPause.classList.add('hidden');
+            cancelAnimationFrame(animationFrameId);
+            stopNarration();
+        }
+    }
+
+    function bindEvents() {
+        dom.btnPlay.addEventListener('click', togglePlay);
+        dom.btnSound.addEventListener('click', () => {
+            isSoundEnabled = !isSoundEnabled;
+            if (isSoundEnabled) {
+                dom.btnSound.classList.replace('bg-slate-800', 'bg-cyan-900/50');
+                dom.btnSound.classList.replace('text-slate-400', 'text-cyan-400');
+                dom.btnSound.classList.replace('border-slate-600', 'border-cyan-700');
+                dom.iconVolOff.classList.add('hidden');
+                dom.iconVolOn.classList.remove('hidden');
+                if (isPlaying) speakNarration(pathologies[currentPathId].narration);
+            } else {
+                dom.btnSound.classList.replace('bg-cyan-900/50', 'bg-slate-800');
+                dom.btnSound.classList.replace('text-cyan-400', 'text-slate-400');
+                dom.btnSound.classList.replace('border-cyan-700', 'border-slate-600');
+                dom.iconVolOff.classList.remove('hidden');
+                dom.iconVolOn.classList.add('hidden');
+                stopNarration();
+            }
+        });
+
+        dom.timeSlider.addEventListener('input', (e) => {
+            time = parseFloat(e.target.value);
+            if (isPlaying) togglePlay(); 
+            stopNarration();
+            updatePlayhead();
+        });
+
+        const handleInteraction = (clientX) => {
+            const rect = dom.svgContainer.getBoundingClientRect();
+            let x = clientX - rect.left;
+            let percentage = (x / rect.width) * 100;
+            time = Math.max(0, Math.min(100, percentage));
+            if (isPlaying) togglePlay(); 
+            stopNarration();
+            updatePlayhead();
+        };
+
+        dom.svgContainer.addEventListener('mousedown', (e) => { isDragging = true; handleInteraction(e.clientX); });
+        window.addEventListener('mousemove', (e) => { if (isDragging) handleInteraction(e.clientX); });
+        window.addEventListener('mouseup', () => { isDragging = false; });
+        dom.svgContainer.addEventListener('touchstart', (e) => { isDragging = true; handleInteraction(e.touches[0].clientX); e.preventDefault(); });
+        window.addEventListener('touchmove', (e) => { if (isDragging) handleInteraction(e.touches[0].clientX); }, { passive: false });
+        window.addEventListener('touchend', () => { isDragging = false; });
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>
