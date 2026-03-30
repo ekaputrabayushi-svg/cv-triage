@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Simulator JVP Waveform Interaktif</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Mencegah highlight teks saat menggeser slider/kurva di HP */
+        .no-select {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        /* Animasi khusus untuk aliran darah dan getaran atrium */
+        @keyframes flowDown {
+            0% { transform: translateY(-50%) translateX(-50%); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(50%) translateX(-50%); opacity: 0; }
+        }
+        @keyframes flowUp {
+            0% { transform: translateY(50%) translateX(-50%); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(-50%) translateX(-50%); opacity: 0; }
+        }
+        @keyframes fibrillate {
+            0% { transform: scale(1); background-color: #4f46e5; }
+            25% { transform: scale(0.98) translateX(-1px); background-color: #818cf8; }
+            50% { transform: scale(1.02) translateX(1px); background-color: #4338ca; }
+            75% { transform: scale(0.99) translateX(1px); background-color: #818cf8; }
+            100% { transform: scale(1); background-color: #4f46e5; }
+        }
+        .anim-flow-down { animation: flowDown 1s infinite; }
+        .anim-flow-up { animation: flowUp 0.8s infinite; }
+        .anim-fibrillate { animation: fibrillate 0.2s infinite; }
+        
+        /* Transisi mekanik jantung yang mulus */
+        .heart-part { transition: all 0.3s ease-in-out; }
+        
+        /* Slider Styling Premium */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #f43f5e;
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 0 10px rgba(244, 63, 94, 0.5);
+            border: 2px solid white;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #e2e8f0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-800 font-sans antialiased pb-20 no-select min-h-screen">
+
+<div class="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
+
+    <!-- Header -->
+    <div class="bg-white/80 backdrop-blur-md p-5 md:p-6 rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <div class="flex flex-wrap items-center gap-2 mb-2">
+                <span class="inline-block px-3 py-1 bg-gradient-to-r from-teal-500 to-emerald-500 text-white text-[10px] font-bold rounded-full tracking-wider uppercase shadow-sm">CardiologyVault</span>
+                <span class="text-[11px] md:text-xs text-slate-500 font-medium bg-slate-100/80 px-2 py-1 rounded-md border border-slate-200">
+                    Developed by <span class="text-indigo-700 font-bold">Bayushi Eka Putra, MD, FIHA.</span>
+                </span>
+            </div>
+            <h1 class="text-xl md:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-900 to-slate-700 flex items-center gap-2">
+                <!-- Activity Icon -->
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#grad1)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <defs>
+                        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#312e81;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#0f766e;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+                Simulator JVP Hemodynamics
+            </h1>
+            <p class="text-slate-500 text-sm mt-1 font-medium">Interactive Waveform & Right Heart Dynamics</p>
+        </div>
+        
+        <!-- Pilihan Kasus -->
+        <div id="pathology-buttons" class="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 hide-scrollbar py-1">
+            <!-- Buttons dinamis di-generate via JS -->
+        </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Kolom Kiri: Kurva & Kontrol -->
+        <div class="bg-white/90 backdrop-blur p-5 md:p-6 rounded-3xl shadow-xl shadow-slate-200/40 border border-white flex flex-col">
+            <h2 class="text-lg font-bold text-slate-800 mb-4 flex justify-between items-center">
+                <span>Kurva JVP: <span id="current-pathology-name" class="text-indigo-600">Normal JVP</span></span>
+            </h2>
+
+            <!-- Area Kanvas Kurva (Interaktif - TEMA ICU MONITOR) -->
+            <div id="svg-container" class="relative w-full aspect-video bg-[#0f172a] rounded-2xl border-2 border-slate-800 overflow-hidden cursor-crosshair touch-none shadow-[inset_0_4px_20px_rgba(0,0,0,0.5)]">
+                
+                <!-- ViewBox disesuaikan lebarnya (0 to 200) tanpa preserveAspectRatio agar text tidak ditarik -->
+                <svg viewBox="0 -10 200 125" class="w-full h-full overflow-visible pointer-events-none">
+                    <defs>
+                        <!-- Efek Cahaya (Glow) untuk kurva utama -->
+                        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="1.5" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                        </filter>
+
+                        <!-- Gradien Warna Kurva JVP -->
+                        <linearGradient id="jvp-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#0ea5e9" />
+                            <stop offset="50%" stop-color="#38bdf8" />
+                            <stop offset="100%" stop-color="#818cf8" />
+                        </linearGradient>
+                    </defs>
+
+                    <!-- Grid Lines (Subtle) -->
+                    <line x1="0" y1="20" x2="200" y2="20" stroke="#334155" stroke-width="0.5" stroke-dasharray="2,2" />
+                    <line x1="0" y1="40" x2="200" y2="40" stroke="#334155" stroke-width="0.5" stroke-dasharray="2,2" />
+                    <line x1="0" y1="60" x2="200" y2="60" stroke="#334155" stroke-width="0.5" stroke-dasharray="2,2" />
+                    <line x1="0" y1="80" x2="200" y2="80" stroke="#334155" stroke-width="0.5" stroke-dasharray="2,2" />
+                    
+                    <!-- Garis Base EKG -->
+                    <line x1="0" y1="105" x2="200" y2="105" stroke="#10b981" stroke-width="0.3" opacity="0.3" />
+                    
+                    <!-- KURVA EKG REFERENSI (Digambar manual presisi dengan event JVP) -->
+                    <!-- P-wave di x=36 (mendahului a-wave), QRS di x=62 (mendahului c-wave), T-wave di x=140 -->
+                    <path d="M 0 105 L 26 105 C 30 98, 42 98, 46 105 L 55 105 L 58 108 L 62 85 L 66 108 L 69 105 L 115 105 C 125 95, 155 95, 165 105 L 200 105" 
+                          fill="none" stroke="#22c55e" stroke-width="1.2" stroke-linejoin="round" />
+                    
+                    <!-- Labels EKG -->
+                    <text x="36" y="115" font-size="5" fill="#4ade80" text-anchor="middle" font-weight="bold" opacity="0.8">P</text>
+                    <text x="62" y="115" font-size="5" fill="#4ade80" text-anchor="middle" font-weight="bold" opacity="0.8">QRS</text>
+                    <text x="145" y="115" font-size="5" fill="#4ade80" text-anchor="middle" font-weight="bold" opacity="0.8">T</text>
+                    
+                    <!-- Garis Kurva Utama JVP -->
+                    <!-- Menggunakan Gradien, Fill None, Linecap Round, dan Filter Glow -->
+                    <path id="jvp-path" d="" fill="none" stroke="url(#jvp-gradient)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)" class="transition-all duration-300"></path>
+
+                    <!-- Group Indikator Titik (A, C, X, dsb) dinamis -->
+                    <g id="jvp-points"></g>
+
+                    <!-- Garis Waktu Merah & Dot Merah -->
+                    <line id="playhead-line" x1="0" y1="-10" x2="0" y2="125" stroke="#f43f5e" stroke-width="0.8" opacity="0.8" />
+                    <!-- Dot diubah jadi lebih mewah dengan stroke putih -->
+                    <circle id="playhead-dot" cx="0" cy="0" r="3" fill="#f43f5e" stroke="#ffffff" stroke-width="1" class="shadow-lg" />
+                </svg>
+            </div>
+            <p class="text-xs text-center text-slate-400 mt-2 font-medium italic">Gunakan jari atau mouse untuk menggeser kurva secara langsung.</p>
+
+            <!-- Player Controls -->
+            <div class="mt-4 flex flex-col gap-4">
+                <div class="flex items-center gap-3 md:gap-4">
+                    <button id="btn-play" class="flex-shrink-0 w-14 h-14 bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white rounded-full flex items-center justify-center hover:from-indigo-700 hover:to-indigo-600 transition shadow-lg shadow-indigo-200">
+                        <!-- Play Icon -->
+                        <svg id="icon-play" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" stroke="none" class="ml-1"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        <!-- Pause Icon (hidden default) -->
+                        <svg id="icon-pause" class="hidden" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                    </button>
+
+                    <button id="btn-sound" class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition shadow-md border bg-white text-indigo-400 border-indigo-100 hover:bg-indigo-50 hover:text-indigo-600">
+                        <!-- Volume X Icon -->
+                        <svg id="icon-vol-off" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+                        <!-- Volume On Icon -->
+                        <svg id="icon-vol-on" class="hidden" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                    </button>
+
+                    <input id="time-slider" type="range" min="0" max="100" step="0.2" value="0" class="w-full appearance-none bg-transparent" />
+                </div>
+                
+                <!-- Box Keterangan Kasus -->
+                <div class="bg-gradient-to-r from-indigo-50/50 to-teal-50/50 p-4 md:p-5 rounded-2xl text-sm text-slate-700 mt-2 border border-indigo-100/50 shadow-sm">
+                    <p class="flex items-start gap-3">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-600 mt-0.5 flex-shrink-0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        <span id="pathology-desc" class="font-medium leading-relaxed">Memuat deskripsi...</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kolom Kanan: Simulator Mekanik Jantung & Penjelasan -->
+        <div class="bg-white/90 backdrop-blur p-5 md:p-6 rounded-3xl shadow-xl shadow-slate-200/40 border border-white flex flex-col">
+            <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <!-- HeartPulse Icon -->
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-rose-500"><path d="M19 14l-7 7m0 0l-7-7m7 7V3"></path><path d="M3.5 12h3l2-6 3 13 2-7 3 3h3"></path></svg>
+                Mekanika Jantung Kanan
+            </h2>
+
+            <!-- Jantung Visualizer (Dark Theme menyelaraskan chart) -->
+            <div class="flex-grow flex items-center justify-center bg-[#0f172a] rounded-2xl p-6 relative overflow-hidden min-h-[260px] md:min-h-[300px] shadow-[inset_0_4px_20px_rgba(0,0,0,0.5)] border-2 border-slate-800">
+                
+                <!-- Vena Darah -->
+                <div id="vein-fill" class="absolute top-0 w-8 h-1/4 bg-sky-400/30 rounded-b-full heart-part"></div>
+                
+                <div class="relative w-40 md:w-48 h-56 flex flex-col items-center">
+                    
+                    <!-- Atrium Kanan (RA) -->
+                    <div id="heart-ra" class="w-28 md:w-32 rounded-t-full flex items-center justify-center border-4 border-indigo-400/30 heart-part h-24 bg-indigo-500/60">
+                        <span class="text-white font-bold opacity-80 text-lg tracking-widest">RA</span>
+                    </div>
+
+                    <!-- Katup Trikuspid (TV) -->
+                    <div class="w-20 md:w-24 h-4 flex justify-between px-2 relative z-10">
+                        <div id="tv-left" class="w-8 md:w-10 h-1 bg-slate-200 origin-left heart-part rounded-full"></div>
+                        <div id="tv-right" class="w-8 md:w-10 h-1 bg-slate-200 origin-right heart-part rounded-full"></div>
+                    </div>
+
+                    <!-- Ventrikel Kanan (RV) -->
+                    <div id="heart-rv" class="w-36 md:w-40 rounded-b-full flex items-end justify-center pb-6 border-4 border-teal-400/30 heart-part h-28 bg-teal-500/60">
+                        <span class="text-white font-bold opacity-80 text-lg tracking-widest">RV</span>
+                    </div>
+
+                    <!-- Panah Aliran Darah -->
+                    <div id="flow-arrow-down" class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white anim-flow-down">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+                    </div>
+                    <div id="flow-arrow-up" class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-rose-400 anim-flow-up">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Panel Penjelasan Fase -->
+            <div class="mt-4 bg-slate-50 border border-slate-100 rounded-2xl p-4 md:p-5 min-h-[140px] shadow-sm">
+                <div class="flex items-center gap-3 mb-3">
+                    <span id="phase-badge" class="inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-white bg-slate-300 shadow-sm">-</span>
+                    <h3 id="phase-title" class="font-bold text-slate-800 text-base md:text-lg">Fase Transisi</h3>
+                </div>
+                <p id="phase-desc" class="text-slate-600 text-sm md:text-base font-medium leading-relaxed">Geser slider atau putar animasi untuk melihat detail fase.</p>
+            </div>
+            
+        </div>
+
+    </div>
+
+    <!-- Aturan Alfabetis Fundamental -->
+    <div class="bg-white/90 backdrop-blur p-5 md:p-6 rounded-3xl shadow-xl shadow-slate-200/40 border border-white">
+        <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-lg">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
+            Formula Fundamental JVP (a-c-x-v-y)
+        </h3>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-center text-sm">
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:shadow-md transition-shadow">
+                <strong class="text-indigo-700 text-2xl block mb-1">A</strong>
+                <span class="text-slate-800 block mb-1 font-bold">Atrial Kick</span>
+                <span class="text-slate-500 text-xs leading-relaxed">Kontraksi atrium. Hilang di AF, raksasa (Giant/Cannon) di TS/CHB/RVH.</span>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:shadow-md transition-shadow">
+                <strong class="text-indigo-700 text-2xl block mb-1">C</strong>
+                <span class="text-slate-800 block mb-1 font-bold">Closure (Valve)</span>
+                <span class="text-slate-500 text-xs leading-relaxed">Katup trikuspid tertutup rapat & menonjol saat kontraksi ventrikel.</span>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:shadow-md transition-shadow">
+                <strong class="text-indigo-700 text-2xl block mb-1">X</strong>
+                <span class="text-slate-800 block mb-1 font-bold">X-Descent (RelaX)</span>
+                <span class="text-slate-500 text-xs leading-relaxed">Relaksasi atrium & dasar katup tertarik. Hilang di TR berat.</span>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:shadow-md transition-shadow">
+                <strong class="text-indigo-700 text-2xl block mb-1">V</strong>
+                <span class="text-slate-800 block mb-1 font-bold">Venous fill</span>
+                <span class="text-slate-500 text-xs leading-relaxed">Pengisian atrium saat katup tertutup. Membesar jadi gelombang c-v di TR.</span>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:shadow-md transition-shadow">
+                <strong class="text-indigo-700 text-2xl block mb-1">Y</strong>
+                <span class="text-slate-800 block mb-1 font-bold">Y-Descent (Yield)</span>
+                <span class="text-slate-500 text-xs leading-relaxed">Katup terbuka, pengosongan cepat. Turun tajam pada Constrictive Pericarditis. Melandai pada TS.</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- SCRIPT LOGIKA SIMULATOR -->
+<script>
+    // --- DATABASE PATOLOGI ---
+    const pathologies = {
+        normal: {
+            id: 'normal', name: 'Normal JVP',
+            description: 'Gelombang JVP normal terdiri dari 3 puncak positif (a, c, v) dan 2 lembah negatif (x, y).',
+            narration: 'Pada kondisi normal, kurva J V P memiliki tiga puncak dan dua lembah. Gelombang "a" terjadi karena atrium kanan berkontraksi, mendorong darah ke ventrikel. Kemudian katup trikuspid menutup rapat. Saat ventrikel kanan berkontraksi kuat, katup ini sedikit menonjol ke atas menuju atrium, menciptakan gelombang "c". Setelah itu, atrium mengalami relaksasi total, sehingga tekanan turun drastis membentuk turunan "x". Sambil katup tertutup, darah dari tubuh terus mengisi atrium, menaikkan tekanan secara perlahan membentuk gelombang "v". Akhirnya, katup trikuspid terbuka lagi, darah jatuh cepat ke ventrikel, dan tekanan kembali merosot membentuk turunan "y".',
+            points: [
+                { x: 0, y: 30 }, { x: 10, y: 30 }, 
+                { x: 20, y: 65, label: 'a', phase: 'a' }, 
+                { x: 26, y: 40 }, 
+                { x: 32, y: 50, label: 'c', phase: 'c' }, 
+                { x: 45, y: 15, label: 'x', phase: 'x' }, 
+                { x: 60, y: 20 }, 
+                { x: 75, y: 55, label: 'v', phase: 'v' }, 
+                { x: 88, y: 10, label: 'y', phase: 'y' }, 
+                { x: 100, y: 30 }
+            ]
+        },
+        ts: {
+            id: 'ts', name: 'Giant A Wave (TS)',
+            description: 'Gelombang "a" raksasa (Giant a wave) dan turunan "y" yang melandai lambat akibat obstruksi aliran masuk ventrikel pada Tricuspid Stenosis.',
+            narration: 'Pada Stenosis Trikuspid, pembukaan katup menjadi sempit dan kaku. Atrium kanan harus berkontraksi jauh lebih kuat dari biasanya untuk mendorong darah melewati celah sempit tersebut. Ini menghasilkan gelombang "a" raksasa atau Giant A Wave pada kurva J V P. Selain itu, karena darah mengalir lambat dan sulit masuk ke ventrikel, pengosongan atrium ikut terhambat, sehingga turunan "y" menjadi sangat lambat dan melandai.',
+            points: [
+                { x: 0, y: 30 }, { x: 10, y: 30 }, 
+                { x: 20, y: 95, label: 'Giant a', phase: 'giant-a' }, 
+                { x: 26, y: 40 }, 
+                { x: 32, y: 50, label: 'c', phase: 'c' }, 
+                { x: 45, y: 15, label: 'x', phase: 'x' }, 
+                { x: 60, y: 20 }, 
+                { x: 75, y: 55, label: 'v', phase: 'v' }, 
+                { x: 92, y: 40, label: 'y (landai)', phase: 'y-slow' }, 
+                { x: 100, y: 30 }
+            ]
+        },
+        tr: {
+            id: 'tr', name: 'Tricuspid Regurgitasi',
+            description: 'Gelombang c-v besar yang bergabung, dan hilangnya turunan x. Darah kembali menyemprot ke RA saat RV kontraksi.',
+            narration: 'Pada kasus Regurgitasi Trikuspid, katup tidak bisa menutup dengan rapat. Akibatnya, saat ventrikel kanan memompa, sebagian darah justru bocor dan menyemprot kembali ke atas menuju atrium kanan. Kebocoran ini membuat atrium kanan langsung penuh seketika saat fase sistol. Inilah alasan mengapa turunan "x" yang normalnya turun menjadi hilang, karena tekanan di atrium justru melonjak drastis akibat kebocoran ini. Gelombang "c" dan "v" akhirnya melebur menjadi satu gelombang regurgitasi raksasa yang tidak terputus.',
+            points: [
+                { x: 0, y: 30 }, { x: 10, y: 30 }, 
+                { x: 20, y: 65, label: 'a', phase: 'a' }, 
+                { x: 26, y: 45 }, 
+                { x: 55, y: 85, label: 'c-v', phase: 'c-v' }, 
+                { x: 75, y: 80 }, 
+                { x: 88, y: 15, label: 'y', phase: 'y' }, 
+                { x: 100, y: 30 }
+            ]
+        },
+        af: {
+            id: 'af', name: 'Atrial Fibrilasi',
+            description: 'Hilangnya gelombang "a" karena tidak ada kontraksi atrium yang terorganisir, digantikan oleh gelombang fibrilasi (f) yang berantakan.',
+            narration: 'Pada Fibrilasi Atrium, otot atrium kehilangan kemampuan untuk berkontraksi secara terkoordinasi. Atrium hanya bergetar kacau. Karena tidak ada kontraksi yang solid, maka gelombang "a" atau atrial kick menghilang sama sekali dari kurva. Sebagai gantinya, Anda melihat undulasi kecil atau gelombang "f" yang acak di dasar kurva. Turunan "x" juga sering kali menjadi dangkal karena tidak ada relaksasi atrium yang efektif.',
+            points: [
+                { x: 0, y: 30 }, 
+                { x: 4, y: 38 }, { x: 8, y: 22 }, { x: 12, y: 36 }, { x: 16, y: 24 }, { x: 20, y: 34 }, { x: 25, y: 28 }, 
+                { x: 32, y: 50, label: 'c', phase: 'c' }, 
+                { x: 45, y: 30, label: 'x', phase: 'x' }, 
+                { x: 60, y: 30 }, 
+                { x: 75, y: 55, label: 'v', phase: 'v' }, 
+                { x: 88, y: 15, label: 'y', phase: 'y' }, 
+                { x: 100, y: 30 }
+            ]
+        },
+        cp: {
+            id: 'cp', name: 'Constrictive Pericarditis',
+            description: 'Turunan x dan y yang sangat curam dan dalam (tanda Friedreich). Pola kurva sering membentuk huruf "W" atau "M".',
+            narration: 'Pada Perikarditis Konstriktif, selubung perikardium menjadi kaku dan keras seperti cangkang. Saat katup trikuspid terbuka, darah jatuh dan mengosongkan atrium kanan dengan luar biasa cepat, menciptakan turunan "y" yang sangat curam dan dalam. Namun, pengisian ventrikel ini terhenti mendadak karena jantung membentur dinding perikardium yang kaku. Pola turunan "x" dan "y" yang sama-sama curam ini membentuk pola "W" atau tanda Friedreich yang sangat khas.',
+            points: [
+                { x: 0, y: 40 }, { x: 10, y: 40 }, 
+                { x: 20, y: 75, label: 'a', phase: 'a' }, 
+                { x: 25, y: 50 }, 
+                { x: 32, y: 60, label: 'c', phase: 'c' }, 
+                { x: 45, y: 5, label: 'x', phase: 'x' }, 
+                { x: 60, y: 30 }, 
+                { x: 75, y: 75, label: 'v', phase: 'v' }, 
+                { x: 88, y: 5, label: 'y', phase: 'y' }, 
+                { x: 100, y: 40 }
+            ]
+        },
+        cannon: {
+            id: 'cannon', name: 'Cannon A Wave',
+            description: 'Gelombang "a" yang sangat tinggi akibat atrium berkontraksi saat katup trikuspid masih tertutup rapat (misal pada AV Block Total).',
+            narration: 'Kondisi ini menampilkan Gelombang A Meriam. Terjadi pada kasus disosiasi atrio-ventrikuler seperti Blok Jantung Total. Atrium kanan berkontraksi secara normal, namun ia berkontraksi tepat saat katup trikuspid sedang tertutup rapat karena ventrikel juga sedang fase sistol. Karena katup terkunci, seluruh volume dan tekanan kontraksi atrium ini memantul kuat balik ke arah vena jugularis, menghasilkan gelombang "a" yang sangat raksasa dan menghentak leher.',
+            points: [
+                { x: 0, y: 30 }, { x: 10, y: 30 }, 
+                { x: 20, y: 100, label: 'a', phase: 'cannon-a' },
+                { x: 26, y: 30 }, 
+                { x: 32, y: 45, label: 'c', phase: 'c' }, 
+                { x: 45, y: 15, label: 'x', phase: 'x' }, 
+                { x: 60, y: 20 }, 
+                { x: 75, y: 50, label: 'v', phase: 'v' }, 
+                { x: 88, y: 10, label: 'y', phase: 'y' }, 
+                { x: 100, y: 30 }
+            ]
+        }
+    };
+
+    // --- FASE DETAIL (Fisiologi Jantung) ---
+    const phaseDetails = {
+        'a': { title: 'Gelombang a (Kontraksi)', text: 'Kontraksi Atrium Kanan mendorong darah terakhir ke Ventrikel. Tekanan vena sedikit naik.', tvState: 'open', raState: 'contracting', rvState: 'filling', bloodFlow: 'down' },
+        'giant-a': { title: 'Giant a Wave (Stenosis)', text: 'Atrium berkontraksi sangat kuat melawan katup trikuspid yang kaku/menyempit. Tekanan melonjak tinggi!', tvState: 'narrow', raState: 'contracting-hard', rvState: 'filling-slow', bloodFlow: 'down' },
+        'cannon-a': { title: 'CANNON a Wave!', text: 'Atrium berkontraksi berlawanan arah dengan Katup Trikuspid yang tertutup. Tekanan raksasa memantul ke Vena Jugularis!', tvState: 'closed', raState: 'contracting-hard', rvState: 'contracting', bloodFlow: 'bounce-back' },
+        'c': { title: 'Gelombang c (Katup Menonjol)', text: 'Ventrikel kanan berkontraksi penuh. Katup trikuspid tertutup rapat dan menonjol (bulging) balik ke atas (Atrium).', tvState: 'closed-bulge', raState: 'filling', rvState: 'contracting', bloodFlow: 'none' },
+        'x': { title: 'Turunan x (Relaksasi)', text: 'Relaksasi atrium (diastol atrium). Dasarnya ditarik ke bawah oleh ventrikel yang berkontraksi. Tekanan merosot turun.', tvState: 'closed-pulled', raState: 'relaxing', rvState: 'ejecting', bloodFlow: 'vein' },
+        'v': { title: 'Gelombang v (Pengisian Vena)', text: 'Darah dari tubuh mengisi atrium pasif sementara katup trikuspid masih tertutup, menaikkan tekanan.', tvState: 'closed', raState: 'full', rvState: 'relaxing', bloodFlow: 'vein' },
+        'y': { title: 'Turunan y (Pengosongan Cepat)', text: 'Katup trikuspid terbuka! Darah seketika jatuh bebas ke ventrikel kanan, membuang tekanan secara drastis.', tvState: 'open', raState: 'emptying', rvState: 'rapid-filling', bloodFlow: 'down' },
+        'y-slow': { title: 'Turunan y Melandai', text: 'Darah terhambat mengalir melewati katup kaku. Pengosongan atrium berjalan sangat lambat dan melandai.', tvState: 'narrow', raState: 'emptying-slow', rvState: 'filling-slow', bloodFlow: 'down' },
+        'c-v': { title: 'Gelombang c-v (Kebocoran/Regurgitasi)', text: 'Katup Trikuspid bocor parah! Darah terpompa balik dari ventrikel ke atrium saat sistol. Menggabungkan gelombang c & v jadi raksasa.', tvState: 'leaking', raState: 'expanding', rvState: 'contracting', bloodFlow: 'up' },
+        'f': { title: 'Gelombang f (Fibrilasi Atrium)', text: 'Atrium bergetar cepat dan acak. Tidak ada kontraksi efektif (gelombang a hilang sama sekali).', tvState: 'open', raState: 'fibrillating', rvState: 'filling', bloodFlow: 'down' },
+        'idle': { title: 'Fase Transisi', text: 'Tekanan kembali stabil sesaat sebelum siklus berikutnya dimulai.', tvState: 'closed', raState: 'normal', rvState: 'normal', bloodFlow: 'none' }
+    };
+
+    // --- STATE VARIABLES ---
+    let currentPathId = 'normal';
+    let time = 0; // 0 to 100
+    let isPlaying = false;
+    let isSoundEnabled = false;
+    let isDragging = false;
+    let animationFrameId;
+    
+    // Scale X untuk mengubah koordinat data X (0-100) menjadi viewBox X (0-200)
+    const SCALEX = 2; 
+
+    // --- DOM ELEMENTS ---
+    const dom = {
+        buttonsContainer: document.getElementById('pathology-buttons'),
+        pathName: document.getElementById('current-pathology-name'),
+        pathologyDesc: document.getElementById('pathology-desc'),
+        jvpPath: document.getElementById('jvp-path'),
+        jvpPoints: document.getElementById('jvp-points'),
+        playheadLine: document.getElementById('playhead-line'),
+        playheadDot: document.getElementById('playhead-dot'),
+        btnPlay: document.getElementById('btn-play'),
+        iconPlay: document.getElementById('icon-play'),
+        iconPause: document.getElementById('icon-pause'),
+        btnSound: document.getElementById('btn-sound'),
+        iconVolOff: document.getElementById('icon-vol-off'),
+        iconVolOn: document.getElementById('icon-vol-on'),
+        timeSlider: document.getElementById('time-slider'),
+        svgContainer: document.getElementById('svg-container'),
+        
+        // Jantung
+        heartRA: document.getElementById('heart-ra'),
+        heartRV: document.getElementById('heart-rv'),
+        tvLeft: document.getElementById('tv-left'),
+        tvRight: document.getElementById('tv-right'),
+        veinFill: document.getElementById('vein-fill'),
+        flowDown: document.getElementById('flow-arrow-down'),
+        flowUp: document.getElementById('flow-arrow-up'),
+        
+        // Teks Fase
+        phaseBadge: document.getElementById('phase-badge'),
+        phaseTitle: document.getElementById('phase-title'),
+        phaseDesc: document.getElementById('phase-desc')
+    };
+
+    // --- INISIALISASI ---
+    function init() {
+        createPathologyButtons();
+        bindEvents();
+        renderScene();
+    }
+
+    // Buat Tombol Kasus Penyakit
+    function createPathologyButtons() {
+        dom.buttonsContainer.innerHTML = '';
+        Object.values(pathologies).forEach(path => {
+            const btn = document.createElement('button');
+            btn.innerText = path.name;
+            btn.className = `px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap border ${currentPathId === path.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 border-indigo-600 scale-105' : 'bg-white text-indigo-900 border-indigo-100 hover:bg-slate-50 hover:border-slate-300'}`;
+            btn.onclick = () => {
+                currentPathId = path.id;
+                time = 0;
+                createPathologyButtons(); // Update styles
+                stopNarration();
+                if (isPlaying) {
+                    speakNarration(pathologies[currentPathId].narration);
+                }
+                renderScene();
+            };
+            dom.buttonsContainer.appendChild(btn);
+        });
+    }
+
+    // --- AUDIO NARRATION (Text-to-Speech) ---
+    function speakNarration(text) {
+        if (!isSoundEnabled || !window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'id-ID';
+        utterance.rate = 0.95; 
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function stopNarration() {
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+    }
+
+    // --- ENGINE RENDER UTAMA ---
+    function renderScene() {
+        const data = pathologies[currentPathId];
+        dom.pathName.innerText = data.name;
+        dom.pathologyDesc.innerText = data.description;
+        
+        // 1. Gambar Path SVG (Kurva Mulus Bezier, X discaling x2)
+        let d = `M ${data.points[0].x * SCALEX} ${100 - data.points[0].y}`;
+        for (let i = 1; i < data.points.length; i++) {
+            const prev = data.points[i - 1];
+            const curr = data.points[i];
+            const cx1 = (prev.x + (curr.x - prev.x) / 2) * SCALEX;
+            const cy1 = 100 - prev.y;
+            const cx2 = (prev.x + (curr.x - prev.x) / 2) * SCALEX;
+            const cy2 = 100 - curr.y;
+            d += ` C ${cx1} ${cy1}, ${cx2} ${cy2}, ${curr.x * SCALEX} ${100 - curr.y}`;
+        }
+        dom.jvpPath.setAttribute('d', d);
+
+        // 2. Gambar Titik dan Teks Label SVG
+        dom.jvpPoints.innerHTML = '';
+        data.points.filter(p => p.label).forEach(p => {
+            // Circle Hollow Premium
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', p.x * SCALEX);
+            circle.setAttribute('cy', 100 - p.y);
+            circle.setAttribute('r', '2.5');
+            circle.setAttribute('fill', '#0f172a'); // Warna background chart
+            circle.setAttribute('stroke', '#38bdf8'); // Warna curve border
+            circle.setAttribute('stroke-width', '1.5');
+            dom.jvpPoints.appendChild(circle);
+
+            // Text Label Emas
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', p.x * SCALEX);
+            text.setAttribute('y', 100 - p.y - 7);
+            text.setAttribute('font-size', '6');
+            text.setAttribute('font-weight', 'bold');
+            text.setAttribute('fill', '#fbbf24'); // Amber 400 (Gold)
+            text.setAttribute('text-anchor', 'middle');
+            text.textContent = p.label;
+            dom.jvpPoints.appendChild(text);
+        });
+
+        // Paksa browser me-render SVG agar getTotalLength bisa dibaca dengan benar
+        dom.jvpPath.getBoundingClientRect();
+
+        updatePlayhead();
+    }
+
+    // Identifikasi Fase Jantung Berdasarkan Waktu (X)
+    function getCurrentPhase() {
+        if (currentPathId === 'tr' && time >= 30 && time <= 80) return 'c-v';
+        if (currentPathId === 'af' && time < 26) return 'f'; 
+        if (currentPathId === 'cannon' && time >= 15 && time < 26) return 'cannon-a';
+        
+        if (currentPathId === 'ts') {
+            if (time >= 15 && time < 26) return 'giant-a';
+            if (time >= 82 && time < 95) return 'y-slow';
+        }
+
+        if (time >= 15 && time < 26) return 'a';
+        if (time >= 26 && time < 38) return 'c';
+        if (time >= 38 && time < 60) return 'x';
+        if (time >= 60 && time < 82) return 'v';
+        if (time >= 82 && time < 95) return 'y';
+        return 'idle';
+    }
+
+    // --- FIX ALGORITMA: Cari posisi Y tepat pada garis Bezier SVG menggunakan Binary Search ---
+    function getExactYOnPath(targetX) {
+        const path = dom.jvpPath;
+        const totalLength = path.getTotalLength();
+        if (totalLength === 0) return 100; 
+        
+        let start = 0;
+        let end = totalLength;
+        let pt;
+
+        // Binary search untuk mencari y berdasarkan x yang telah di-scale
+        for (let i = 0; i < 25; i++) {
+            const mid = (start + end) / 2;
+            pt = path.getPointAtLength(mid);
+            if (pt.x < targetX) {
+                start = mid;
+            } else {
+                end = mid;
+            }
+        }
+        return pt ? pt.y : 100;
+    }
+
+    // Update Playhead & Mekanika Jantung
+    function updatePlayhead() {
+        // Terapkan scaling X untuk target SVG
+        const svgTargetX = time * SCALEX;
+        
+        dom.playheadLine.setAttribute('x1', svgTargetX);
+        dom.playheadLine.setAttribute('x2', svgTargetX);
+        
+        const exactYPos = getExactYOnPath(svgTargetX);
+        dom.playheadDot.setAttribute('cx', svgTargetX);
+        dom.playheadDot.setAttribute('cy', exactYPos);
+        dom.timeSlider.value = time;
+
+        // Update Info Text & Mekanik Jantung
+        const phaseKey = getCurrentPhase();
+        const info = phaseDetails[phaseKey] || phaseDetails['idle'];
+
+        // Teks Badge & Deskripsi
+        dom.phaseBadge.textContent = phaseKey === 'idle' ? '-' : (phaseKey.includes('a') ? 'A!' : phaseKey.toUpperCase());
+        dom.phaseBadge.className = `inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-white shadow-sm transition-colors ${phaseKey !== 'idle' ? (phaseKey.includes('a') || phaseKey === 'c-v' ? 'bg-rose-500' : 'bg-teal-500') : 'bg-slate-300'}`;
+        dom.phaseTitle.textContent = info.title;
+        dom.phaseDesc.textContent = info.text;
+
+        // Update Gaya Jantung
+        updateHeartVisuals(info);
+    }
+
+    function updateHeartVisuals(info) {
+        // Reset base classes
+        let raClass = "w-28 md:w-32 rounded-t-full flex items-center justify-center border-4 border-indigo-400/30 heart-part ";
+        let rvClass = "w-36 md:w-40 rounded-b-full flex items-end justify-center pb-6 border-4 border-teal-400/30 heart-part ";
+        let tvLeftTransform = "";
+        let tvRightTransform = "";
+        let tvBg = "bg-slate-200"; // Trikuspid base color disesuaikan dark mode
+
+        // RA Logic
+        if(info.raState === 'contracting') raClass += "h-16 bg-indigo-600 scale-95 shadow-[0_0_20px_rgba(79,70,229,0.4)]";
+        else if(info.raState === 'contracting-hard') raClass += "h-12 bg-indigo-700 scale-90 border-indigo-400 shadow-[0_0_25px_rgba(67,56,202,0.8)]";
+        else if(info.raState === 'relaxing') raClass += "h-24 bg-indigo-400/40";
+        else if(info.raState === 'full') raClass += "h-28 bg-indigo-500 scale-105 shadow-[0_0_20px_rgba(99,102,241,0.2)]";
+        else if(info.raState === 'emptying') raClass += "h-20 bg-indigo-400/30";
+        else if(info.raState === 'emptying-slow') raClass += "h-24 bg-indigo-500/50"; 
+        else if(info.raState === 'expanding') raClass += "h-32 bg-rose-500/60 scale-110 shadow-[0_0_20px_rgba(244,63,94,0.5)]";
+        else if(info.raState === 'fibrillating') raClass += "h-22";
+        else raClass += "h-24 bg-indigo-500/60";
+
+        // Fitur khusus AF: Atrium bergetar terus-menerus sepanjang seluruh siklus
+        if (currentPathId === 'af') {
+            raClass += " anim-fibrillate";
+        }
+
+        // RV Logic
+        if(info.rvState === 'filling') rvClass += "h-32 bg-teal-500/80 shadow-[0_0_15px_rgba(20,184,166,0.3)]";
+        else if(info.rvState === 'rapid-filling') rvClass += "h-36 bg-teal-500 shadow-[0_0_20px_rgba(20,184,166,0.4)]";
+        else if(info.rvState === 'filling-slow') rvClass += "h-30 bg-teal-500/70"; 
+        else if(info.rvState === 'contracting' || info.rvState === 'ejecting') rvClass += "h-20 bg-teal-700 scale-95 shadow-[0_0_20px_rgba(15,118,110,0.6)]";
+        else if(info.rvState === 'relaxing') rvClass += "h-28 bg-teal-400/30";
+        else rvClass += "h-28 bg-teal-500/60";
+
+        // Katup Trikuspid Logic
+        if(info.tvState === 'open') {
+            tvLeftTransform = "rotate(45deg)"; tvRightTransform = "rotate(-45deg)";
+        } else if (info.tvState === 'narrow') {
+            tvLeftTransform = "rotate(15deg)"; tvRightTransform = "rotate(-15deg)";
+        } else if(info.tvState === 'closed-bulge') {
+            tvLeftTransform = "translateY(-6px) rotate(-10deg)"; tvRightTransform = "translateY(-6px) rotate(10deg)";
+        } else if(info.tvState === 'closed-pulled') {
+            tvLeftTransform = "translateY(8px)"; tvRightTransform = "translateY(8px)";
+        } else if(info.tvState === 'leaking') {
+            tvLeftTransform = "rotate(-40deg)"; tvRightTransform = "rotate(40deg)"; tvBg = "bg-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.8)]";
+        }
+
+        dom.heartRA.className = raClass;
+        dom.heartRV.className = rvClass;
+        
+        dom.tvLeft.style.transform = tvLeftTransform;
+        dom.tvLeft.className = `w-8 md:w-10 h-1 origin-left heart-part rounded-full ${tvBg}`;
+        dom.tvRight.style.transform = tvRightTransform;
+        dom.tvRight.className = `w-8 md:w-10 h-1 origin-right heart-part rounded-full ${tvBg}`;
+
+        // Aliran Darah & Vena
+        dom.veinFill.className = `absolute top-0 w-8 bg-sky-400/30 rounded-b-full heart-part ${info.bloodFlow === 'vein' || info.bloodFlow === 'bounce-back' ? 'h-1/3 opacity-100 shadow-[0_0_15px_rgba(56,189,248,0.3)]' : 'h-1/4 opacity-30'}`;
+        if(info.bloodFlow === 'bounce-back') dom.veinFill.classList.add('bg-rose-500/60', 'shadow-[0_0_20px_rgba(244,63,94,0.5)]');
+
+        dom.flowDown.classList.toggle('hidden', !info.bloodFlow.includes('down'));
+        dom.flowUp.classList.toggle('hidden', info.bloodFlow !== 'up' && info.bloodFlow !== 'bounce-back');
+    }
+
+    // --- ANIMATION LOOP ---
+    function tick() {
+        if (!isPlaying) return;
+        
+        time += 0.35; // Kecepatan animasi diturunkan sedikit agar lebih elegan
+        if (time >= 100) {
+            time = 0; // Loop kembali
+        }
+        updatePlayhead();
+        animationFrameId = requestAnimationFrame(tick);
+    }
+
+    function togglePlay() {
+        isPlaying = !isPlaying;
+        
+        // Update UI Button
+        if (isPlaying) {
+            dom.iconPlay.classList.add('hidden');
+            dom.iconPause.classList.remove('hidden');
+            
+            // Trigger Audio jika nyala & mulai dari awal/akhir
+            if (time === 0 || time >= 99) {
+                speakNarration(pathologies[currentPathId].narration);
+            }
+            
+            tick();
+        } else {
+            dom.iconPlay.classList.remove('hidden');
+            dom.iconPause.classList.add('hidden');
+            cancelAnimationFrame(animationFrameId);
+            stopNarration();
+        }
+    }
+
+    // --- EVENT LISTENERS ---
+    function bindEvents() {
+        // Tombol Play & Sound
+        dom.btnPlay.addEventListener('click', togglePlay);
+        
+        dom.btnSound.addEventListener('click', () => {
+            isSoundEnabled = !isSoundEnabled;
+            if (isSoundEnabled) {
+                dom.btnSound.classList.replace('bg-white', 'bg-teal-100');
+                dom.btnSound.classList.replace('text-indigo-400', 'text-teal-700');
+                dom.btnSound.classList.replace('border-indigo-100', 'border-teal-200');
+                dom.iconVolOff.classList.add('hidden');
+                dom.iconVolOn.classList.remove('hidden');
+                if (isPlaying) speakNarration(pathologies[currentPathId].narration);
+            } else {
+                dom.btnSound.classList.replace('bg-teal-100', 'bg-white');
+                dom.btnSound.classList.replace('text-teal-700', 'text-indigo-400');
+                dom.btnSound.classList.replace('border-teal-200', 'border-indigo-100');
+                dom.iconVolOff.classList.remove('hidden');
+                dom.iconVolOn.classList.add('hidden');
+                stopNarration();
+            }
+        });
+
+        // Slider Bawah
+        dom.timeSlider.addEventListener('input', (e) => {
+            time = parseFloat(e.target.value);
+            if (isPlaying) togglePlay(); // Auto pause
+            stopNarration();
+            updatePlayhead();
+        });
+
+        // Interaksi Geser SVG (Mouse & Touch)
+        const handleInteraction = (clientX) => {
+            const rect = dom.svgContainer.getBoundingClientRect();
+            let x = clientX - rect.left;
+            let percentage = (x / rect.width) * 100;
+            time = Math.max(0, Math.min(100, percentage));
+            
+            if (isPlaying) togglePlay(); // Auto pause saat ditarik
+            stopNarration();
+            updatePlayhead();
+        };
+
+        // Mouse Events
+        dom.svgContainer.addEventListener('mousedown', (e) => { isDragging = true; handleInteraction(e.clientX); });
+        window.addEventListener('mousemove', (e) => { if (isDragging) handleInteraction(e.clientX); });
+        window.addEventListener('mouseup', () => { isDragging = false; });
+
+        // Touch Events (Smartphone)
+        dom.svgContainer.addEventListener('touchstart', (e) => { 
+            isDragging = true; 
+            handleInteraction(e.touches[0].clientX); 
+            e.preventDefault(); 
+        });
+        window.addEventListener('touchmove', (e) => { 
+            if (isDragging) {
+                handleInteraction(e.touches[0].clientX);
+            }
+        }, { passive: false });
+        window.addEventListener('touchend', () => { isDragging = false; });
+    }
+
+    // Jalankan Simulator
+    window.onload = init;
+
+</script>
+</body>
+</html>
