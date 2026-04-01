@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ResusEngine CDSS - CardiologyVault</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+        :root {
+            --neon-blue: #3b82f6;
+            --neon-purple: #a855f7;
+            --neon-emerald: #10b981;
+            --neon-rose: #f43f5e;
+            --neon-cyan: #06b6d4;
+            --neon-orange: #f97316;
+            --bg-dark: #020617;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            background-image: 
+                linear-gradient(rgba(30, 41, 59, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(30, 41, 59, 0.3) 1px, transparent 1px);
+            background-size: 30px 30px;
+            background-position: center center;
+            color: #e2e8f0;
+        }
+
+        .font-mono-num {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            15% { transform: scale(1.15); }
+            30% { transform: scale(1); }
+            45% { transform: scale(1.15); }
+            60% { transform: scale(1); }
+        }
+        .animate-heartbeat {
+            animation: heartbeat 1.5s infinite;
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); opacity: 0; }
+            50% { opacity: 0.5; }
+            100% { transform: translateY(100%); opacity: 0; }
+        }
+        .scanner::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 10px;
+            background: linear-gradient(to bottom, transparent, var(--neon-blue), transparent);
+            animation: scanline 3s linear infinite;
+            pointer-events: none;
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+            position: relative;
+            z-index: 10;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: #cbd5e1;
+            cursor: pointer;
+            margin-top: -7px;
+            box-shadow: 0 0 10px rgba(255,255,255,0.2);
+            border: 2px solid #0f172a;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(51, 65, 85, 0.5);
+            border-radius: 2px;
+        }
+        input[type=range]:focus { outline: none; }
+
+        .drug-active input[type=range]::-webkit-slider-runnable-track { background: rgba(168, 85, 247, 0.4); }
+        .drug-active input[type=range]::-webkit-slider-thumb {
+            background: var(--neon-purple);
+            box-shadow: 0 0 15px var(--neon-purple);
+        }
+        
+        .timeline-line::before {
+            content: '';
+            position: absolute;
+            top: 40px; left: 31px; bottom: -20px;
+            width: 2px;
+            background: linear-gradient(to bottom, rgba(56, 189, 248, 0.3), transparent);
+            z-index: 0;
+        }
+        .step-item:last-child .timeline-line::before { display: none; }
+
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        .drug-inactive {
+            opacity: 0.5;
+            filter: grayscale(100%);
+            transition: all 0.3s ease;
+        }
+        .drug-inactive:hover {
+            opacity: 0.8;
+            filter: grayscale(50%);
+        }
+
+        /* Hide scrollbar for the timer container on mobile but keep functionality */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="pb-6 selection:bg-blue-500/30">
+
+    <div class="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+
+    <div class="max-w-md md:max-w-2xl lg:max-w-7xl mx-auto p-2 md:p-4 space-y-3 relative z-10">
+        
+        <!-- NEW UNIFIED HEADER -->
+        <header class="glass-panel rounded-2xl p-3 md:p-4 flex flex-col xl:flex-row items-center justify-between gap-4 relative overflow-hidden scanner border-t border-t-blue-500/30">
+            
+            <!-- IDENTITY ZONE (Kiri) -->
+            <div class="flex items-center gap-3 w-full xl:w-auto">
+                <!-- Icon/Logo -->
+                <div class="relative flex-shrink-0">
+                    <div class="absolute inset-0 bg-blue-500 rounded-xl blur-md opacity-40 animate-pulse"></div>
+                    <div class="p-2.5 bg-slate-900 border border-blue-500/50 rounded-xl relative">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400 animate-heartbeat"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                    </div>
+                </div>
+                
+                <!-- Teks & Badge -->
+                <div class="flex flex-col justify-center">
+                    <div class="flex items-center gap-2 mb-1">
+                        <h1 class="text-xl md:text-2xl font-bold text-white tracking-wider leading-none">Resus<span class="text-blue-500">Engine</span></h1>
+                        <span class="px-1.5 py-0.5 rounded text-[8px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 uppercase tracking-widest shadow-[0_0_10px_rgba(59,130,246,0.2)]">Online</span>
+                    </div>
+                    <!-- Subtitle Elegan Sebaris -->
+                    <div class="flex items-center flex-wrap gap-1.5 text-[9px] md:text-[10px] text-slate-400 font-medium tracking-wide">
+                        <span class="text-slate-300 font-bold">Part of CardiologyVault</span>
+                        <span class="w-1 h-1 rounded-full bg-slate-600 hidden sm:block"></span>
+                        <span class="hidden sm:block">Developed by Dr. Bayushi Eka Putra, FIHA</span>
+                        <span class="sm:hidden w-full text-[8px]">By Dr. Bayushi Eka Putra, FIHA</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTROL DECK ZONE (Kanan) -->
+            <div class="flex items-center bg-slate-900/80 border border-slate-700/60 rounded-xl p-1.5 w-full xl:w-auto shadow-inner overflow-x-auto hide-scrollbar">
+                
+                <!-- Label Vertikal (Estetika HUD) -->
+                <div class="hidden md:flex flex-col items-end justify-center px-3 border-r border-slate-700/50">
+                    <span class="text-[7px] text-slate-500 uppercase tracking-widest font-bold leading-tight">Action</span>
+                    <span class="text-[9px] text-slate-400 uppercase tracking-widest font-bold leading-tight">Timers</span>
+                </div>
+                
+                <!-- Modul Timers -->
+                <div class="flex items-center gap-1.5 px-1.5 md:px-3">
+                    
+                    <!-- Cairan -->
+                    <button id="timer-btn-fluid" onclick="toggleTimer('fluid')" class="flex flex-col items-center justify-center bg-slate-950/50 hover:bg-slate-800 border border-slate-800 rounded-lg px-2 py-1.5 min-w-[64px] md:min-w-[72px] transition-all relative group cursor-pointer" title="Start/Stop Timer Cairan">
+                        <div class="flex items-center gap-1 mb-0.5">
+                            <div id="timer-dot-fluid" class="w-1.5 h-1.5 rounded-full bg-slate-600 shadow-[0_0_2px_#000]"></div>
+                            <span id="timer-lbl-fluid" class="text-[7px] md:text-[8px] font-bold text-slate-500 tracking-wider">CAIRAN</span>
+                        </div>
+                        <span id="timer-val-fluid" class="font-mono-num text-[11px] md:text-[12px] text-slate-400 font-bold tracking-wider">00:00</span>
+                    </button>
+                    
+                    <!-- Norepi -->
+                    <button id="timer-btn-norepi" onclick="toggleTimer('norepi')" class="flex flex-col items-center justify-center bg-slate-950/50 hover:bg-slate-800 border border-slate-800 rounded-lg px-2 py-1.5 min-w-[64px] md:min-w-[72px] transition-all relative group cursor-pointer" title="Start/Stop Timer Norepinephrine">
+                        <div class="flex items-center gap-1 mb-0.5">
+                            <div id="timer-dot-norepi" class="w-1.5 h-1.5 rounded-full bg-slate-600 shadow-[0_0_2px_#000]"></div>
+                            <span id="timer-lbl-norepi" class="text-[7px] md:text-[8px] font-bold text-slate-500 tracking-wider">NOREPI</span>
+                        </div>
+                        <span id="timer-val-norepi" class="font-mono-num text-[11px] md:text-[12px] text-slate-400 font-bold tracking-wider">00:00</span>
+                    </button>
+
+                    <!-- Dobu -->
+                    <button id="timer-btn-dobu" onclick="toggleTimer('dobu')" class="flex flex-col items-center justify-center bg-slate-950/50 hover:bg-slate-800 border border-slate-800 rounded-lg px-2 py-1.5 min-w-[64px] md:min-w-[72px] transition-all relative group cursor-pointer" title="Start/Stop Timer Dobutamine">
+                        <div class="flex items-center gap-1 mb-0.5">
+                            <div id="timer-dot-dobu" class="w-1.5 h-1.5 rounded-full bg-slate-600 shadow-[0_0_2px_#000]"></div>
+                            <span id="timer-lbl-dobu" class="text-[7px] md:text-[8px] font-bold text-slate-500 tracking-wider">DOBU</span>
+                        </div>
+                        <span id="timer-val-dobu" class="font-mono-num text-[11px] md:text-[12px] text-slate-400 font-bold tracking-wider">00:00</span>
+                    </button>
+
+                </div>
+
+                <!-- Pemisah Garis Vertikal -->
+                <div class="w-px h-8 bg-slate-700/50 mx-1"></div>
+
+                <!-- Tombol Reset Pasien -->
+                <button onclick="resetApp()" class="flex items-center justify-center gap-1.5 bg-slate-950/30 hover:bg-rose-900/40 border border-transparent hover:border-rose-500/50 rounded-lg px-3 py-1.5 transition-all group h-full flex-shrink-0" title="Reset Semua Data Pasien & Timer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-500 group-hover:text-rose-400 group-active:-rotate-180 transition-all duration-500"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    <span class="hidden sm:inline-block text-[9px] font-bold text-slate-500 group-hover:text-rose-400 tracking-widest transition-colors">RESET</span>
+                </button>
+
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 md:gap-4">
+            
+            <!-- Left Column: Patient Assessment -->
+            <div class="lg:col-span-4 space-y-3">
+                <div class="glass-panel p-3 md:p-4 rounded-2xl relative overflow-hidden">
+                    
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-sm font-bold text-white flex items-center tracking-wide">
+                            <span class="w-1.5 h-4 bg-blue-500 rounded-full mr-2 shadow-[0_0_10px_rgba(59,130,246,0.8)]"></span>
+                            PARAMETER PASIEN
+                        </h2>
+                        <!-- Tombol Panduan -->
+                        <button onclick="toggleGuide()" class="text-[9px] bg-slate-800 text-blue-400 px-2 py-1 rounded border border-slate-600 flex items-center gap-1 hover:bg-slate-700 transition-colors shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                            PANDUAN
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-3 relative z-10">
+                        <!-- Weight Input -->
+                        <div class="bg-slate-900/50 p-2.5 rounded-xl border border-slate-700/50 flex justify-between items-center">
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Berat Badan (kg)</label>
+                            <div class="flex items-center">
+                                <input type="number" id="input-weight" value="70" min="10" max="250" class="w-16 bg-transparent text-xl text-right font-mono-num font-bold text-white focus:outline-none focus:text-blue-400 transition-colors" />
+                            </div>
+                        </div>
+
+                        <!-- Toggles -->
+                        <div class="space-y-2.5">
+                            <!-- Congestion -->
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-widest flex items-center justify-between">
+                                    <span class="flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5 text-cyan-400"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>
+                                        Kongesti Paru (Fluid)
+                                    </span>
+                                </label>
+                                <div class="flex p-0.5 bg-slate-900 rounded-lg border border-slate-700 relative">
+                                    <button id="btn-cong-no" class="flex-1 py-1.5 px-1 rounded-md text-[11px] font-bold transition-all duration-300 flex flex-col items-center gap-0.5 active-btn bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+                                        <span>Clear / Dry</span>
+                                    </button>
+                                    <button id="btn-cong-yes" class="flex-1 py-1.5 px-1 rounded-md text-[11px] font-bold transition-all duration-300 flex flex-col items-center gap-0.5 text-slate-500 hover:text-slate-300 border border-transparent">
+                                        <span>Edema / Wet</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Perfusion -->
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-widest flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5 text-rose-400"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                                    Perfusi Perifer
+                                </label>
+                                <div class="flex p-0.5 bg-slate-900 rounded-lg border border-slate-700">
+                                    <button id="btn-perf-good" class="flex-1 py-1.5 px-1 rounded-md text-[11px] font-bold transition-all duration-300 flex flex-col items-center gap-0.5 text-slate-500 hover:text-slate-300 border border-transparent">
+                                        <span>Warm</span>
+                                    </button>
+                                    <button id="btn-perf-poor" class="flex-1 py-1.5 px-1 rounded-md text-[11px] font-bold transition-all duration-300 flex flex-col items-center gap-0.5 active-btn bg-rose-500/20 text-rose-300 border border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.2)]">
+                                        <span>Cold</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MAP & HR -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="bg-slate-900/50 p-2 rounded-xl border border-slate-700/50">
+                                <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase tracking-widest">MAP</label>
+                                <select id="input-map" class="w-full bg-slate-800 p-1 rounded text-xs text-white font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer border border-slate-700">
+                                    <option value="<65" class="text-rose-400" selected>&lt; 65</option>
+                                    <option value=">=65" class="text-emerald-400">&ge; 65</option>
+                                </select>
+                            </div>
+                            <div class="bg-slate-900/50 p-2 rounded-xl border border-slate-700/50">
+                                <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase tracking-widest">Heart Rate</label>
+                                <select id="input-hr" class="w-full bg-slate-800 p-1 rounded text-xs text-white font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer border border-slate-700">
+                                    <option value="brady" class="text-blue-400">&lt; 50</option>
+                                    <option value="normal" selected class="text-emerald-400">50 - 100</option>
+                                    <option value="tachy" class="text-orange-400">&gt; 100</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Compact Stevenson Matrix -->
+                        <div class="bg-slate-900/50 p-2 rounded-xl border border-slate-700/50 flex items-center justify-between">
+                            <div>
+                                <label class="block text-[9px] font-bold text-slate-400 mb-0.5 uppercase tracking-widest">Profil Klinis</label>
+                                <div class="text-[10px] text-slate-300 font-medium leading-tight">Matriks<br>Stevenson</div>
+                            </div>
+                            <div class="relative w-20 h-20 grid grid-cols-2 grid-rows-2 gap-0.5 bg-slate-800 p-1 rounded-lg border border-slate-700 shadow-inner">
+                                <div class="absolute inset-y-0 left-1/2 w-px bg-slate-700 -translate-x-1/2 z-0"></div>
+                                <div class="absolute inset-x-0 top-1/2 h-px bg-slate-700 -translate-y-1/2 z-0"></div>
+                                
+                                <div id="mini-quad-warm-dry" class="relative z-10 rounded flex items-center justify-center font-bold text-[8px] transition-all duration-300 text-center leading-none">I<br>Warm<br>Dry</div>
+                                <div id="mini-quad-warm-wet" class="relative z-10 rounded flex items-center justify-center font-bold text-[8px] transition-all duration-300 text-center leading-none">II<br>Warm<br>Wet</div>
+                                <div id="mini-quad-cold-dry" class="relative z-10 rounded flex items-center justify-center font-bold text-[8px] transition-all duration-300 text-center leading-none">III<br>Cold<br>Dry</div>
+                                <div id="mini-quad-cold-wet" class="relative z-10 rounded flex items-center justify-center font-bold text-[8px] transition-all duration-300 text-center leading-none">IV<br>Cold<br>Wet</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Brain Engine & Calculator -->
+            <div class="lg:col-span-8 space-y-3">
+                
+                <!-- Algorithm Output Box -->
+                <div class="glass-panel p-4 rounded-2xl border border-emerald-500/30 relative overflow-hidden bg-gradient-to-br from-slate-900/80 to-emerald-900/10 shadow-[0_0_30px_rgba(16,185,129,0.05)]">
+                    
+                    <div class="flex flex-col mb-4 border-b border-slate-700/50 pb-3">
+                        <div class="flex items-center space-x-2 mb-1.5">
+                            <span class="relative flex h-2.5 w-2.5">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                            </span>
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Diagnosis Engine</span>
+                        </div>
+                        <h2 id="out-shock-type" class="text-lg md:text-xl font-bold text-white leading-tight">Memuat...</h2>
+                    </div>
+
+                    <div class="space-y-0 relative pl-1" id="steps-container">
+                        <!-- Steps injected here -->
+                    </div>
+                </div>
+
+                <!-- Smart Calculator -->
+                <div class="glass-panel p-4 rounded-2xl relative overflow-hidden">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
+                        <h2 class="text-sm font-bold text-white flex items-center tracking-wide">
+                            <span class="w-1.5 h-4 bg-purple-500 rounded-full mr-2 shadow-[0_0_10px_rgba(168,85,247,0.8)]"></span>
+                            KALKULATOR SYRINGE PUMP
+                        </h2>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="drugs-container">
+                        <!-- Drug cards injected here -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="mt-4 md:mt-6 text-center pt-4 pb-2 relative z-10">
+            <p class="text-[9px] md:text-[10px] text-slate-500 max-w-3xl mx-auto leading-relaxed px-4 font-mono-num">
+                <span class="text-rose-500 font-bold">WARNING:</span> Alat bantu keputusan klinis berbasis pedoman. Keputusan akhir WAJIB disesuaikan klinis langsung & protokol RS.
+            </p>
+        </div>
+
+    </div>
+
+    <!-- Modal Panduan Klinis (Hidden by default) -->
+    <div id="guide-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-slate-900 border border-slate-700 p-4 rounded-2xl w-full max-w-sm shadow-2xl relative transform scale-95 transition-transform duration-300" id="guide-modal-content">
+            <h3 class="text-white font-bold text-sm mb-3 flex items-center">
+                <span class="w-1.5 h-4 bg-blue-500 rounded-full mr-2 shadow-[0_0_10px_rgba(59,130,246,0.8)]"></span>
+                Panduan Triage Klinis
+            </h3>
+            
+            <div class="space-y-2.5 text-[11px] text-slate-300">
+                <!-- COLD Guide -->
+                <div class="bg-slate-800/50 p-2.5 rounded-lg border border-slate-700">
+                    <span class="font-bold text-rose-400 flex items-center gap-1.5 mb-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                        COLD (Syok / Hipoperfusi)
+                    </span>
+                    <p class="leading-relaxed">Akral dingin & basah, CRT > 2 detik, nadi lemah/halus, urin sedikit (oliguria), laktat ↑, penurunan kesadaran.</p>
+                </div>
+                <!-- WARM Guide -->
+                <div class="bg-slate-800/50 p-2.5 rounded-lg border border-slate-700">
+                    <span class="font-bold text-emerald-400 flex items-center gap-1.5 mb-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M2 12h2"/><path d="m4.93 19.07 1.41-1.41"/><path d="M12 20v2"/><path d="m19.07 19.07-1.41-1.41"/><path d="M20 12h2"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                        WARM (Perfusi Baik)
+                    </span>
+                    <p class="leading-relaxed">Akral hangat & kemerahan (pink), CRT < 2 detik, nadi teraba kuat dan penuh.</p>
+                </div>
+                <!-- WET Guide -->
+                <div class="bg-slate-800/50 p-2.5 rounded-lg border border-slate-700">
+                    <span class="font-bold text-cyan-400 flex items-center gap-1.5 mb-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>
+                        WET (Kongesti / Overload)
+                    </span>
+                    <p class="leading-relaxed">Terdengar ronki basah (rales) di paru, JVP meningkat, edema tungkai, PND / sesak saat telentang (ortopnea).</p>
+                </div>
+                <!-- DRY Guide -->
+                <div class="bg-slate-800/50 p-2.5 rounded-lg border border-slate-700">
+                    <span class="font-bold text-slate-400 flex items-center gap-1.5 mb-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                        DRY (Volume Aman)
+                    </span>
+                    <p class="leading-relaxed">Suara napas bersih, JVP normal, tidak ada tanda-tanda penumpukan cairan.</p>
+                </div>
+            </div>
+            
+            <button onclick="toggleGuide()" class="w-full mt-3 bg-blue-600/20 text-blue-300 border border-blue-500/50 hover:bg-blue-600 hover:text-white py-2 rounded-lg font-bold text-xs transition-colors">Tutup Panduan</button>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        // State
+        const state = {
+            weight: 70,
+            map: '<65',
+            congestion: 'no', 
+            perfusion: 'poor', 
+            hr: 'normal',
+            drugs: {
+                norepinephrine: { active: false, dose: 0.05 },
+                dobutamine: { active: false, dose: 5.0 },
+                dopamine: { active: false, dose: 5.0 },
+                epinephrine: { active: false, dose: 0.05 }
+            }
+        };
+
+        // Editable Concentrations and Settings
+        const drugConfig = {
+            norepinephrine: { id: 'norepinephrine', mg: 4, ml: 50, name: 'Norepinephrine', unit: 'mcg/kg/mnt', step: 0.01, max: 1.0, color: 'blue' },
+            dobutamine: { id: 'dobutamine', mg: 250, ml: 50, name: 'Dobutamine', unit: 'mcg/kg/mnt', step: 0.5, max: 20, color: 'purple' },
+            dopamine: { id: 'dopamine', mg: 200, ml: 50, name: 'Dopamine', unit: 'mcg/kg/mnt', step: 0.5, max: 20, color: 'emerald' },
+            epinephrine: { id: 'epinephrine', mg: 4, ml: 50, name: 'Epinephrine', unit: 'mcg/kg/mnt', step: 0.01, max: 1.0, color: 'orange' },
+        };
+
+        // UI Elements
+        const elWeight = document.getElementById('input-weight');
+        const elMap = document.getElementById('input-map');
+        const elHr = document.getElementById('input-hr');
+        const btnCongNo = document.getElementById('btn-cong-no');
+        const btnCongYes = document.getElementById('btn-cong-yes');
+        const btnPerfGood = document.getElementById('btn-perf-good');
+        const btnPerfPoor = document.getElementById('btn-perf-poor');
+        
+        const outShockType = document.getElementById('out-shock-type');
+        const stepsContainer = document.getElementById('steps-container');
+        const drugsContainer = document.getElementById('drugs-container');
+
+        // Initialize Listeners
+        function initListeners() {
+            elWeight.addEventListener('input', (e) => {
+                state.weight = parseFloat(e.target.value) || 70;
+                renderDrugs(); // Recalculate without changing algo
+            });
+            elMap.addEventListener('change', (e) => { state.map = e.target.value; runEngine(); });
+            elHr.addEventListener('change', (e) => { state.hr = e.target.value; runEngine(); });
+
+            btnCongNo.addEventListener('click', () => { setToggle('congestion', 'no'); });
+            btnCongYes.addEventListener('click', () => { setToggle('congestion', 'yes'); });
+            btnPerfGood.addEventListener('click', () => { setToggle('perfusion', 'good'); });
+            btnPerfPoor.addEventListener('click', () => { setToggle('perfusion', 'poor'); });
+        }
+
+        // --- TAMBAHAN KODE YANG HILANG SEBELUMNYA ---
+        function setToggle(type, val) {
+            state[type] = val;
+            
+            // Visual Update
+            if (type === 'congestion') {
+                updateButtonStyles(btnCongNo, btnCongYes, val === 'no', 'cyan');
+            } else {
+                updateButtonStyles(btnPerfGood, btnPerfPoor, val === 'good', val === 'good' ? 'emerald' : 'rose');
+            }
+            
+            runEngine();
+        }
+
+        function updateButtonStyles(btn1, btn2, isBtn1Active, colorClass) {
+            // Ditulis penuh agar stabil dirender oleh Tailwind
+            const styles = {
+                cyan: 'flex-1 py-1.5 px-1 rounded-md text-[11px] font-bold transition-all duration-300 flex flex-col items-center gap-0.5 active-btn bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-md',
+                rose: 'flex-1 py-1.5 px-1 rounded-md text-[11px] font-bold transition-all duration-300 flex flex-col items-center gap-0.5 active-btn bg-rose-500/20 text-rose-300 border border-rose-500/50 shadow-md',
+                emerald: 'flex-1 py-1.5 px-1 rounded-md text-[11px] font-bold transition-all duration-300 flex flex-col items-center gap-0.5 active-btn bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-md',
+                inactive: 'flex-1 py-1.5 px-1 rounded-md text-[11px] font-bold transition-all duration-300 flex flex-col items-center gap-0.5 text-slate-500 hover:text-slate-300 border border-transparent'
+            };
+
+            if (isBtn1Active) {
+                btn1.className = styles[colorClass];
+                btn2.className = styles.inactive;
+            } else {
+                const c2 = btn2.id.includes('cong') ? 'cyan' : 'rose';
+                btn2.className = styles[c2];
+                btn1.className = styles.inactive;
+            }
+        }
+        // --- AKHIR TAMBAHAN ---
+
+        // Fungsi Buka/Tutup Modal Panduan
+        window.toggleGuide = function() {
+            const modal = document.getElementById('guide-modal');
+            const content = document.getElementById('guide-modal-content');
+            
+            if (modal.classList.contains('opacity-0')) {
+                // Buka Modal
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            } else {
+                // Tutup Modal
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                content.classList.remove('scale-100');
+                content.classList.add('scale-95');
+            }
+        };
+
+        // --- TAMBAHAN: FUNGSI MULTI-TIMER (NEW STYLES) ---
+        const timerConfigs = {
+            fluid: {
+                id: 'fluid', seconds: 0, interval: null,
+                defaultBtn: 'flex flex-col items-center justify-center bg-slate-950/50 hover:bg-slate-800 border border-slate-800 rounded-lg px-2 py-1.5 min-w-[64px] md:min-w-[72px] transition-all relative group cursor-pointer',
+                activeBtn: 'flex flex-col items-center justify-center bg-cyan-900/30 border border-cyan-500/50 rounded-lg px-2 py-1.5 min-w-[64px] md:min-w-[72px] transition-all relative shadow-[0_0_10px_rgba(6,182,212,0.2)] cursor-pointer',
+                defaultDot: 'w-1.5 h-1.5 rounded-full bg-slate-600 shadow-[0_0_2px_#000]',
+                activeDot: 'w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_5px_#22d3ee]',
+                defaultText: 'text-[7px] md:text-[8px] font-bold text-slate-500 tracking-wider',
+                activeText: 'text-[7px] md:text-[8px] font-bold text-cyan-400 tracking-wider',
+                defaultVal: 'font-mono-num text-[11px] md:text-[12px] text-slate-400 font-bold tracking-wider',
+                activeVal: 'font-mono-num text-[11px] md:text-[12px] text-cyan-300 font-bold tracking-wider'
+            },
+            norepi: {
+                id: 'norepi', seconds: 0, interval: null,
+                defaultBtn: 'flex flex-col items-center justify-center bg-slate-950/50 hover:bg-slate-800 border border-slate-800 rounded-lg px-2 py-1.5 min-w-[64px] md:min-w-[72px] transition-all relative group cursor-pointer',
+                activeBtn: 'flex flex-col items-center justify-center bg-blue-900/30 border border-blue-500/50 rounded-lg px-2 py-1.5 min-w-[64px] md:min-w-[72px] transition-all relative shadow-[0_0_10px_rgba(59,130,246,0.2)] cursor-pointer',
+                defaultDot: 'w-1.5 h-1.5 rounded-full bg-slate-600 shadow-[0_0_2px_#000]',
+                activeDot: 'w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse shadow-[0_0_5px_#3b82f6]',
+                defaultText: 'text-[7px] md:text-[8px] font-bold text-slate-500 tracking-wider',
+                activeText: 'text-[7px] md:text-[8px] font-bold text-blue-400 tracking-wider',
+                defaultVal: 'font-mono-num text-[11px] md:text-[12px] text-slate-400 font-bold tracking-wider',
+                activeVal: 'font-mono-num text-[11px] md:text-[12px] text-blue-300 font-bold tracking-wider'
+            },
+            dobu: {
+                id: 'dobu', seconds: 0, interval: null,
+                defaultBtn: 'flex flex-col items-center justify-center bg-slate-950/50 hover:bg-slate-800 border border-slate-800 rounded-lg px-2 py-1.5 min-w-[64px] md:min-w-[72px] transition-all relative group cursor-pointer',
+                activeBtn: 'flex flex-col items-center justify-center bg-purple-900/30 border border-purple-500/50 rounded-lg px-2 py-1.5 min-w-[64px] md:min-w-[72px] transition-all relative shadow-[0_0_10px_rgba(168,85,247,0.2)] cursor-pointer',
+                defaultDot: 'w-1.5 h-1.5 rounded-full bg-slate-600 shadow-[0_0_2px_#000]',
+                activeDot: 'w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse shadow-[0_0_5px_#a855f7]',
+                defaultText: 'text-[7px] md:text-[8px] font-bold text-slate-500 tracking-wider',
+                activeText: 'text-[7px] md:text-[8px] font-bold text-purple-400 tracking-wider',
+                defaultVal: 'font-mono-num text-[11px] md:text-[12px] text-slate-400 font-bold tracking-wider',
+                activeVal: 'font-mono-num text-[11px] md:text-[12px] text-purple-300 font-bold tracking-wider'
+            }
+        };
+
+        window.toggleTimer = function(id) {
+            const t = timerConfigs[id];
+            const btn = document.getElementById(`timer-btn-${id}`);
+            const display = document.getElementById(`timer-val-${id}`);
+            const dot = document.getElementById(`timer-dot-${id}`);
+            const lbl = document.getElementById(`timer-lbl-${id}`);
+
+            if (t.interval) {
+                // Pause Timer
+                clearInterval(t.interval);
+                t.interval = null;
+                btn.className = t.defaultBtn;
+                dot.className = t.defaultDot;
+                lbl.className = t.defaultText;
+                display.className = t.defaultVal;
+            } else {
+                // Start Timer
+                btn.className = t.activeBtn;
+                dot.className = t.activeDot;
+                lbl.className = t.activeText;
+                display.className = t.activeVal;
+
+                t.interval = setInterval(() => {
+                    t.seconds++;
+                    const m = Math.floor(t.seconds / 60).toString().padStart(2, '0');
+                    const s = (t.seconds % 60).toString().padStart(2, '0');
+                    display.innerText = `${m}:${s}`;
+                }, 1000);
+            }
+        };
+        // --- AKHIR TAMBAHAN TIMER ---
+
+        // --- TAMBAHAN: FUNGSI RESET APLIKASI ---
+        window.resetApp = function() {
+            // 1. Reset State ke Default
+            state.weight = 70;
+            state.map = '<65';
+            state.congestion = 'no';
+            state.perfusion = 'poor';
+            state.hr = 'normal';
+            
+            // 2. Reset Dosis & Status Obat
+            Object.keys(state.drugs).forEach(key => {
+                state.drugs[key].active = false;
+                if (key === 'norepinephrine' || key === 'epinephrine') {
+                    state.drugs[key].dose = 0.05;
+                } else {
+                    state.drugs[key].dose = 5.0;
+                }
+            });
+
+            // 3. Reset Input UI
+            elWeight.value = 70;
+            elMap.value = '<65';
+            elHr.value = 'normal';
+            
+            // 4. Reset Tampilan Tombol Parameter
+            updateButtonStyles(btnCongNo, btnCongYes, true, 'cyan'); // Default: Clear/Dry
+            updateButtonStyles(btnPerfGood, btnPerfPoor, false, 'rose'); // Default: Cold (Poor)
+
+            // 5. Reset Multi-Timers
+            Object.keys(timerConfigs).forEach(id => {
+                const t = timerConfigs[id];
+                if (t.interval) {
+                    clearInterval(t.interval);
+                    t.interval = null;
+                }
+                t.seconds = 0;
+                document.getElementById(`timer-val-${id}`).innerText = '00:00';
+                document.getElementById(`timer-btn-${id}`).className = t.defaultBtn;
+                document.getElementById(`timer-dot-${id}`).className = t.defaultDot;
+                document.getElementById(`timer-lbl-${id}`).className = t.defaultText;
+                document.getElementById(`timer-val-${id}`).className = t.defaultVal;
+            });
+
+            // 6. Jalankan Ulang Engine dengan parameter awal
+            runEngine();
+        };
+        // --- AKHIR TAMBAHAN ---
+
+        // Logic Engine
+        function runEngine() {
+            let type = '';
+            let s1 = '';
+            let s2 = '';
+            let s3 = '';
+            let activeDrugs = { norepinephrine: false, dobutamine: false, dopamine: false, epinephrine: false };
+
+            if (state.congestion === 'yes') {
+                type = 'Kardiogenik / Dekompensasi Kordis';
+                s1 = 'HINDARI Loading Cairan. Restriksi cairan & pertimbangkan Diuretik IV (Furosemide) jika MAP aman.';
+                if (state.map === '<65') {
+                    s2 = 'Mulai Norepinephrine (lini pertama) untuk mengamankan MAP > 65 mmHg.';
+                    s3 = 'Mulai Dobutamine BERSAMAAN (ON TOP OF Norepi) untuk mengatasi pump failure (inotropik).';
+                    activeDrugs.norepinephrine = true;
+                    activeDrugs.dobutamine = true; 
+                    
+                    if (state.perfusion === 'poor') {
+                        s3 += ' Jika profil sangat COLD (Laktat ↑) & hemodinamik refrakter, siapkan Epinephrine.';
+                        activeDrugs.epinephrine = true; 
+                    }
+                } else { 
+                    s2 = 'MAP aman. Pertimbangkan Vasodilator (Nitrogliserin) untuk menurunkan afterload.';
+                    if (state.perfusion === 'poor') {
+                        s3 = 'Mulai Dobutamine HATI-HATI. Waspada efek vasodilatasi (β2). Jika MAP drop < 65, segera tambahkan Norepinephrine!';
+                        activeDrugs.dobutamine = true;
+                    } else {
+                        s3 = 'Lanjutkan diuresis & monitoring ketat klinis (target UO > 0.5 cc/kg/jam).';
+                    }
+                }
+            } else {
+                if (state.map === '<65' || state.perfusion === 'poor') {
+                    type = 'Hipovolemik / Distributif (cth: Sepsis)';
+                    s1 = 'Fluid Challenge (Kristaloid 500ml-1000ml / 30cc/kgBB dalam 3-1 jam). Nilai respon cairan.';
+                    s2 = 'Jika MAP menetap < 65 pasca resusitasi cairan, mulai Norepinephrine segera.';
+                    activeDrugs.norepinephrine = true;
+                    if (state.perfusion === 'poor' && state.map === '<65') {
+                        s3 = 'Jika disfungsi miokard dicurigai, tambahkan Dobutamine. Gunakan Epinephrine jika syok refrakter.';
+                        activeDrugs.dobutamine = true;
+                        activeDrugs.epinephrine = true; 
+                    } else if (state.perfusion === 'poor') {
+                        s3 = 'Jika disfungsi miokard persisten walau MAP > 65, tambahkan Dobutamine.';
+                        activeDrugs.dobutamine = true;
+                    }
+                } else {
+                    type = 'Normal / Hemodinamik Stabil';
+                    s1 = 'Euvolemik & Perfusi Baik. Berikan maintenance cairan rutin sesuai kebutuhan.';
+                    s2 = 'Observasi klinis & re-evaluasi berkala tiap shift.';
+                    s3 = '-';
+                }
+            }
+
+            // Override bradikardia
+            if (state.hr === 'brady' && state.map === '<65') {
+                type += ' + Bradikardia Simtomatik';
+                s2 = 'Prioritas: Pacing (TPM/TCP) & Atropin 1mg IV. Jembatan farmakologis: Dopamine ATAU Epinephrine drip.';
+                s3 = 'Jika Pacing terpasang (HR aman), KEMBALI evaluasi kebutuhan Norepi/Dobutamine sesuai profil cairan.';
+                activeDrugs.dopamine = true;
+                activeDrugs.epinephrine = true; 
+                activeDrugs.norepinephrine = true; // Still available as backup
+            }
+
+            // Update state & UI
+            outShockType.innerText = type;
+            
+            // Only update activation status, don't reset doses unless completely switching algorithms
+            Object.keys(activeDrugs).forEach(drug => {
+                state.drugs[drug].active = activeDrugs[drug];
+            });
+
+            updateMiniMatrix();
+            renderSteps(s1, s2, s3);
+            renderDrugs();
+        }
+
+        function updateMiniMatrix() {
+            const quads = ['warm-dry', 'warm-wet', 'cold-dry', 'cold-wet'];
+            quads.forEach(q => {
+                const el = document.getElementById(`mini-quad-${q}`);
+                if(el) el.className = "relative z-10 rounded flex items-center justify-center font-bold text-[8px] md:text-[9px] transition-all duration-500 text-slate-600 bg-transparent border border-transparent text-center leading-none";
+            });
+            
+            let activeQuad = '';
+            if (state.perfusion === 'good' && state.congestion === 'no') activeQuad = 'warm-dry';
+            if (state.perfusion === 'good' && state.congestion === 'yes') activeQuad = 'warm-wet';
+            if (state.perfusion === 'poor' && state.congestion === 'no') activeQuad = 'cold-dry';
+            if (state.perfusion === 'poor' && state.congestion === 'yes') activeQuad = 'cold-wet';
+
+            const activeEl = document.getElementById(`mini-quad-${activeQuad}`);
+            if(activeEl) {
+                if (activeQuad === 'warm-dry') activeEl.className = "relative z-10 rounded flex items-center justify-center font-bold text-[8px] md:text-[9px] transition-all duration-500 bg-emerald-500/20 text-emerald-300 border border-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.3)] text-center leading-none";
+                else if (activeQuad === 'cold-wet') activeEl.className = "relative z-10 rounded flex items-center justify-center font-bold text-[8px] md:text-[9px] transition-all duration-500 bg-rose-500/20 text-rose-300 border border-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.3)] animate-pulse text-center leading-none";
+                else activeEl.className = "relative z-10 rounded flex items-center justify-center font-bold text-[8px] md:text-[9px] transition-all duration-500 bg-yellow-500/20 text-yellow-300 border border-yellow-400 shadow-[0_0_10px_rgba(234,179,8,0.3)] text-center leading-none";
+            }
+        }
+
+        function renderSteps(s1, s2, s3) {
+            let stepsHtml = '';
+            const stepsArray = [s1, s2, s3].filter(s => s && s !== '-');
+            
+            stepsArray.forEach((step, index) => {
+                const colors = ['text-blue-400 bg-blue-500/20 border-blue-500/50', 'text-purple-400 bg-purple-500/20 border-purple-500/50', 'text-rose-400 bg-rose-500/20 border-rose-500/50'];
+                const glow = ['shadow-[0_0_10px_rgba(59,130,246,0.3)]', 'shadow-[0_0_10px_rgba(168,85,247,0.3)]', 'shadow-[0_0_10px_rgba(244,63,94,0.3)]'];
+                
+                stepsHtml += `
+                <div class="relative pb-3 last:pb-0 step-item">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 w-6 h-6 rounded-lg flex items-center justify-center font-bold text-[11px] mr-3 border z-10 ${colors[index]} ${glow[index]}">
+                            ${index + 1}
+                        </div>
+                        <div class="pt-0.5">
+                            <p class="text-slate-200 text-[11px] leading-relaxed font-medium">${step}</p>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            stepsContainer.innerHTML = stepsHtml;
+        }
+
+        // Calculator Logic
+        function calcRate(drugId) {
+            const config = drugConfig[drugId];
+            const dose = state.drugs[drugId].dose;
+            
+            // Formula: Rate (ml/hr) = (Dose(mcg/kg/min) * Weight(kg) * 60) / Concentration(mcg/ml)
+            const concMcgMl = (config.mg * 1000) / config.ml;
+            
+            if (concMcgMl === 0) return "0.0";
+            
+            const rateMlHr = (dose * state.weight * 60) / concMcgMl;
+            return rateMlHr.toFixed(1);
+        }
+
+        window.updateDrugSetting = function(drugId, field, value) {
+            const val = parseFloat(value);
+            if (!isNaN(val) && val > 0) {
+                drugConfig[drugId][field] = val;
+                renderDrugs();
+            }
+        };
+
+        window.adjustDose = function(drugId, direction) {
+            const config = drugConfig[drugId];
+            let currentDose = state.drugs[drugId].dose;
+            
+            // Precision fix for JS floating point
+            let newDose = Math.round((currentDose + (direction * config.step)) * 100) / 100;
+            
+            if (newDose >= 0 && newDose <= config.max) {
+                state.drugs[drugId].dose = newDose;
+                // Force active if adjusting dose up from 0
+                if (newDose > 0) state.drugs[drugId].active = true;
+                if (newDose === 0) state.drugs[drugId].active = false;
+                renderDrugs();
+            }
+        };
+
+        window.toggleDrug = function(drugId) {
+            state.drugs[drugId].active = !state.drugs[drugId].active;
+            renderDrugs();
+        };
+
+        window.handleSlider = function(drugId, value) {
+            state.drugs[drugId].dose = parseFloat(value);
+            if (state.drugs[drugId].dose > 0) {
+                state.drugs[drugId].active = true;
+            }
+            renderDrugs();
+        };
+
+        function renderDrugs() {
+            let html = '';
+            const activeClassMap = {
+                blue: 'bg-blue-500/10 border-blue-500/40 shadow-[0_0_10px_rgba(59,130,246,0.1)]',
+                purple: 'bg-purple-500/10 border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.1)]',
+                emerald: 'bg-emerald-500/10 border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.1)]',
+                orange: 'bg-orange-500/10 border-orange-500/40 shadow-[0_0_10px_rgba(249,115,22,0.1)]'
+            };
+            
+            const toggleColorMap = {
+                blue: 'bg-blue-500', purple: 'bg-purple-500', emerald: 'bg-emerald-500', orange: 'bg-orange-500'
+            };
+
+            Object.values(drugConfig).forEach(drug => {
+                const isActive = state.drugs[drug.id].active;
+                const dose = state.drugs[drug.id].dose;
+                const rate = calcRate(drug.id);
+                
+                const cardBase = "p-3 rounded-xl border transition-all duration-300 relative overflow-hidden flex flex-col gap-2.5";
+                const cardActive = isActive ? activeClassMap[drug.color] : "bg-slate-900/40 border-slate-700/50 drug-inactive";
+                const activeToggleColor = isActive ? toggleColorMap[drug.color] : '';
+                
+                html += `
+                <div class="${cardBase} ${cardActive}">
+                    <!-- Header Row -->
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xs font-bold text-white flex items-center">
+                            ${drug.name}
+                        </h3>
+                        <!-- Toggle Switch -->
+                        <div class="cursor-pointer" onclick="toggleDrug('${drug.id}')">
+                            <div class="w-8 h-4 bg-slate-700 rounded-full relative transition-colors duration-300 ${activeToggleColor}">
+                                <div class="w-3 h-3 bg-white rounded-full absolute top-0.5 left-0.5 transition-transform duration-300 ${isActive ? 'translate-x-4' : ''}"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Concentration Settings -->
+                    <div class="flex items-center space-x-1.5">
+                        <input type="number" value="${drug.mg}" onchange="updateDrugSetting('${drug.id}', 'mg', this.value)" class="w-10 bg-slate-800 border border-slate-600 rounded text-center text-[10px] font-mono-num text-slate-300 focus:outline-none focus:border-blue-500 py-0.5">
+                        <span class="text-[9px] text-slate-400 font-bold">mg /</span>
+                        <input type="number" value="${drug.ml}" onchange="updateDrugSetting('${drug.id}', 'ml', this.value)" class="w-10 bg-slate-800 border border-slate-600 rounded text-center text-[10px] font-mono-num text-slate-300 focus:outline-none focus:border-blue-500 py-0.5">
+                        <span class="text-[9px] text-slate-400 font-bold">cc</span>
+                    </div>
+
+                    <!-- Dose Control & Output -->
+                    <div class="bg-slate-950/40 rounded-lg p-2 border border-slate-800/50">
+                        <div class="flex justify-between items-end mb-2">
+                            <div class="flex items-center space-x-2 drug-active w-1/2">
+                                <button onclick="adjustDose('${drug.id}', -1)" class="w-6 h-6 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-slate-300 hover:bg-slate-700 active:scale-90 transition-transform text-xs leading-none">-</button>
+                                <input type="range" min="0" max="${drug.max}" step="${drug.step}" value="${dose}" oninput="handleSlider('${drug.id}', this.value)" class="flex-1 min-w-0">
+                                <button onclick="adjustDose('${drug.id}', 1)" class="w-6 h-6 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-slate-300 hover:bg-slate-700 active:scale-90 transition-transform text-xs leading-none">+</button>
+                            </div>
+                            <div class="text-right pl-2">
+                                <div class="text-[9px] text-slate-500 font-bold leading-none mb-0.5">Dosis (${drug.unit})</div>
+                                <span class="text-sm font-bold font-mono-num ${isActive ? 'text-' + drug.color + '-400' : 'text-slate-400'}">${dose.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Rate Output -->
+                        <div class="pt-2 border-t border-slate-800 flex justify-between items-center">
+                            <span class="text-[10px] font-bold text-slate-400">Rate Pump:</span>
+                            <div class="flex items-baseline space-x-1">
+                                <span class="text-lg font-bold font-mono-num ${isActive ? 'text-white' : 'text-slate-500'}">${rate}</span>
+                                <span class="text-[10px] font-bold ${isActive ? 'text-slate-300' : 'text-slate-600'}">cc/jam</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            });
+
+            drugsContainer.innerHTML = html;
+        }
+
+        // Bootstrap App
+        initListeners();
+        runEngine();
+    </script>
+</body>
+</html>
