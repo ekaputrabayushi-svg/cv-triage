@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OasisLytes - CardiologyVault</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .tab-btn.active {
+            background-image: linear-gradient(to right, #f59e0b, #f97316);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.2), 0 2px 4px -1px rgba(249, 115, 22, 0.1);
+            transform: scale(1.02);
+        }
+        .tab-btn.inactive { color: #78716c; }
+        .tab-btn.inactive:hover { background-color: rgba(254, 243, 199, 0.5); color: #b45309; }
+        .ca-btn.active-ionized { background-color: white; color: #d97706; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        .ca-btn.active-total { background-color: white; color: #ea580c; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        .ca-btn.inactive { color: #a8a29e; }
+        
+        /* Toast animation */
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .toast-animate { animation: slideUp 0.3s ease-out forwards; }
+        
+        @keyframes pulse-red {
+            0%, 100% { opacity: 1; color: #dc2626; }
+            50% { opacity: 0.7; color: #991b1b; }
+        }
+        .animate-pulse-red { animation: pulse-red 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-[#FDF8EE] via-[#FDEBD0] to-[#F5E8D0] text-stone-800 min-h-screen selection:bg-amber-200">
+
+    <div class="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
+        
+        <!-- Header -->
+        <div class="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl shadow-amber-900/5 border border-white/50 p-5 md:p-6 flex flex-col md:flex-row items-center justify-between gap-5">
+            <div class="flex items-center gap-4 w-full md:w-auto">
+                <div class="p-3.5 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-2xl shadow-lg shadow-orange-500/30 flex-shrink-0">
+                    <i data-lucide="sun" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-amber-600 to-orange-600 tracking-tight">
+                        OasisLytes
+                    </h1>
+                    <div class="mt-0.5 flex flex-col">
+                        <span class="text-[10px] md:text-[11px] font-bold text-amber-900/60 tracking-widest uppercase">Part of CardiologyVault</span>
+                        <span class="text-[9px] font-bold text-amber-900/40 tracking-widest uppercase">Dev: Bayushi Eka Putra, MD, FIHA</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex gap-3 bg-white/60 p-2.5 rounded-2xl border border-amber-100 shadow-inner w-full md:w-auto justify-center">
+                <div class="flex flex-col px-2 w-1/2 md:w-auto relative">
+                    <label class="text-[10px] md:text-[11px] font-bold text-stone-400 uppercase tracking-wider mb-1 flex items-center gap-1"><i data-lucide="scale" class="w-3 h-3"></i> Berat (kg)</label>
+                    <input type="number" id="inp-weight" value="50" inputmode="decimal" class="w-full md:w-20 px-3 py-2 bg-white/80 rounded-xl border border-transparent focus:ring-2 focus:ring-amber-400 outline-none transition font-semibold text-stone-700 shadow-sm text-center md:text-left" oninput="calculateAll()">
+                    <!-- Weight Validation Warning -->
+                    <div id="warn-weight" class="hidden absolute top-full left-0 mt-1 w-[120px] bg-red-100 text-red-700 text-[9px] p-1.5 rounded shadow border border-red-200 z-10 font-bold leading-tight">
+                        BB harus valid (>0)
+                    </div>
+                </div>
+                <div class="w-px bg-amber-200/50 my-2"></div>
+                <div class="flex flex-col px-2 w-1/2 md:w-auto">
+                    <label class="text-[10px] md:text-[11px] font-bold text-stone-400 uppercase tracking-wider mb-1 text-center md:text-left">Gender</label>
+                    <select id="inp-gender" class="w-full md:w-28 px-2 md:px-3 py-2 bg-white/80 rounded-xl border-none focus:ring-2 focus:ring-amber-400 outline-none transition font-semibold text-stone-700 shadow-sm text-center md:text-left appearance-none" onchange="calculateAll()">
+                        <option value="male">Laki-laki</option>
+                        <option value="female">Perempuan</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="flex overflow-x-auto bg-white/60 backdrop-blur-md rounded-2xl shadow-sm border border-white/50 p-1.5 hide-scrollbar scroll-smooth snap-x">
+            <button onclick="setTab('albumin')" id="btn-tab-albumin" class="tab-btn inactive flex-1 min-w-[120px] flex items-center justify-center gap-2 whitespace-nowrap py-3 px-3 rounded-xl text-sm font-bold transition-all duration-300 snap-center"><i data-lucide="droplet" class="w-4 h-4"></i> Albumin</button>
+            <button onclick="setTab('natrium')" id="btn-tab-natrium" class="tab-btn active flex-1 min-w-[120px] flex items-center justify-center gap-2 whitespace-nowrap py-3 px-3 rounded-xl text-sm font-bold transition-all duration-300 snap-center"><i data-lucide="activity" class="w-4 h-4"></i> Natrium</button>
+            <button onclick="setTab('kalium')" id="btn-tab-kalium" class="tab-btn inactive flex-1 min-w-[120px] flex items-center justify-center gap-2 whitespace-nowrap py-3 px-3 rounded-xl text-sm font-bold transition-all duration-300 snap-center"><i data-lucide="heart-pulse" class="w-4 h-4"></i> Kalium</button>
+            <button onclick="setTab('magnesium')" id="btn-tab-magnesium" class="tab-btn inactive flex-1 min-w-[120px] flex items-center justify-center gap-2 whitespace-nowrap py-3 px-3 rounded-xl text-sm font-bold transition-all duration-300 snap-center"><i data-lucide="zap" class="w-4 h-4"></i> Magnesium</button>
+            <button onclick="setTab('kalsium')" id="btn-tab-kalsium" class="tab-btn inactive flex-1 min-w-[120px] flex items-center justify-center gap-2 whitespace-nowrap py-3 px-3 rounded-xl text-sm font-bold transition-all duration-300 snap-center"><i data-lucide="flame" class="w-4 h-4"></i> Kalsium</button>
+            <button onclick="setTab('fosfat')" id="btn-tab-fosfat" class="tab-btn inactive flex-1 min-w-[120px] flex items-center justify-center gap-2 whitespace-nowrap py-3 px-3 rounded-xl text-sm font-bold transition-all duration-300 snap-center"><i data-lucide="sun" class="w-4 h-4"></i> Fosfat</button>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-xl shadow-amber-900/5 border border-white/50 p-5 md:p-8 min-h-[420px]">
+            
+            <!-- ALBUMIN TAB -->
+            <div id="content-albumin" class="tab-content hidden animate-[fadeIn_0.5s_ease-in-out]">
+                <h2 class="text-xl md:text-2xl font-extrabold flex items-center gap-2 text-stone-800 mb-6 md:mb-8">
+                    <span class="text-amber-500"><i data-lucide="droplet" class="w-6 h-6"></i></span> Status Albumin
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                    <div class="space-y-4">
+                        <div class="bg-amber-50/50 p-4 rounded-2xl border border-amber-100/50 relative">
+                            <label class="block text-xs font-bold text-amber-900/60 mb-2 uppercase tracking-wider">Lab Albumin (g/dL)</label>
+                            <input type="number" step="0.1" inputmode="decimal" id="inp-lab-alb" value="2.5" oninput="calculateAll()" class="w-full px-4 py-3 text-lg font-semibold rounded-xl border-none focus:ring-2 focus:ring-amber-400 shadow-sm outline-none transition bg-white" />
+                            <p id="warn-inp-lab-alb" class="hidden text-[10px] text-red-500 font-bold mt-1.5 flex items-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3"></i> Nilai ekstrem, cek validitas lab!</p>
+                        </div>
+                        <div class="bg-amber-50/50 p-4 rounded-2xl border border-amber-100/50">
+                            <label class="block text-xs font-bold text-amber-900/60 mb-2 uppercase tracking-wider">Target Albumin (g/dL)</label>
+                            <input type="number" step="0.1" inputmode="decimal" id="inp-target-alb" value="3.5" oninput="calculateAll()" class="w-full px-4 py-3 text-lg font-semibold rounded-xl border-none focus:ring-2 focus:ring-amber-400 shadow-sm outline-none transition bg-white" />
+                        </div>
+                    </div>
+                    <div class="space-y-4 flex flex-col justify-between" id="view-alb-hypo">
+                        <div class="bg-gradient-to-br from-amber-50 to-orange-50 p-6 rounded-[2rem] border border-amber-200/50 relative overflow-hidden">
+                            <h3 class="text-xs font-bold text-amber-800/60 uppercase tracking-wider mb-2">Total Kebutuhan</h3>
+                            <div class="text-4xl font-extrabold text-orange-600 mb-4">
+                                <span id="out-alb-grams">0.0</span> <span class="text-lg font-bold text-amber-700/60">gram</span>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center bg-white/80 p-3 rounded-xl border border-white text-xs">
+                                    <span>Albumin 20% (100cc)</span>
+                                    <span class="font-bold text-orange-600"><span id="out-alb-20">0.0</span> flacon</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-white/80 p-3 rounded-xl border border-white text-xs">
+                                    <span>Albumin 25% (100cc)</span>
+                                    <span class="font-bold text-orange-600"><span id="out-alb-25">0.0</span> flacon</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-amber-100/30 p-4 rounded-2xl border border-amber-200/50 text-[11px] text-amber-900/70">
+                            <p class="font-bold uppercase mb-1">Tips Pemberian:</p>
+                            <p>Laju infus: 1-2 mL/menit. Jangan diencerkan. Jangan campur dalam selang yang sama dengan TPN/Lemak.</p>
+                        </div>
+                    </div>
+                    <div class="space-y-4 hidden flex-col justify-center" id="view-alb-hyper">
+                        <div class="bg-green-50 p-6 rounded-[2rem] border border-green-200/50 text-center">
+                            <i data-lucide="check-circle" class="w-12 h-12 text-green-500 mx-auto mb-3"></i>
+                            <h3 class="text-sm font-bold text-green-800 uppercase tracking-wider mb-2">Nilai Lab di Atas Target</h3>
+                            <p class="text-xs text-green-700/80">Tidak ada indikasi defisit albumin. Hiperalbuminemia umumnya disebabkan oleh dehidrasi/hemokonsentrasi berat. Evaluasi status volume cairan pasien.</p>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="copyData('albumin')" class="mt-6 w-full py-3.5 bg-stone-800 hover:bg-stone-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98]">
+                    <i data-lucide="copy" class="w-4 h-4"></i> Salin Instruksi Albumin
+                </button>
+            </div>
+
+            <!-- NATRIUM TAB -->
+            <div id="content-natrium" class="tab-content block animate-[fadeIn_0.5s_ease-in-out]">
+                <h2 class="text-xl md:text-2xl font-extrabold flex items-center gap-2 text-stone-800 mb-6 md:mb-8" id="title-natrium">
+                    <span class="text-orange-500"><i data-lucide="activity" class="w-6 h-6"></i></span> Status Natrium
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                    <!-- Kolom Input -->
+                    <div class="space-y-4 md:space-y-5">
+                        <div class="bg-stone-50/80 p-4 rounded-2xl border border-stone-200 relative">
+                            <label class="block text-xs md:text-sm font-bold text-stone-700 mb-2 uppercase tracking-wider">Lab Natrium (mEq/L)</label>
+                            <input type="number" inputmode="decimal" id="inp-lab-na" value="121" oninput="calculateAll()" class="w-full px-4 md:px-5 py-3 text-lg font-bold rounded-xl border-none focus:ring-2 focus:ring-orange-400 shadow-sm outline-none transition bg-white" />
+                            <p id="warn-inp-lab-na" class="hidden text-[10px] text-red-500 font-bold mt-1.5 flex items-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3"></i> Nilai ekstrem, cek validitas lab!</p>
+                        </div>
+                        
+                        <!-- Status Badge (Auto Detect) -->
+                        <div id="badge-na-status" class="w-full text-center py-2 px-4 rounded-xl font-black text-sm uppercase tracking-widest border transition-colors">
+                            HIPONATREMIA
+                        </div>
+
+                        <!-- Target input hanya tampil untuk Hiponatremia -->
+                        <div class="bg-orange-50/50 p-4 rounded-2xl border border-orange-100/50" id="inp-na-target-container">
+                            <label class="block text-xs md:text-sm font-bold text-orange-900/60 mb-1 uppercase tracking-wider">Target Kenaikan 24 Jam (Max 8-10)</label>
+                            <div class="flex items-center gap-2">
+                                <input type="number" inputmode="decimal" id="inp-target-na-24" value="8" oninput="calculateAll()" class="w-full px-4 md:px-5 py-3 text-lg font-semibold rounded-xl border-none focus:ring-2 focus:ring-orange-400 shadow-sm outline-none transition bg-white" />
+                                <span class="font-bold text-orange-800/40">mEq</span>
+                            </div>
+                            <p class="text-[10px] text-orange-700/60 mt-2 italic">*Penting untuk cegah Osmotic Demyelination Syndrome (ODS).</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Kolom Output Dinamis -->
+                    <div class="space-y-4 md:space-y-5 relative">
+                        
+                        <!-- VIEW: HIPONATREMIA -->
+                        <div id="view-na-hypo" class="block space-y-4">
+                            <div class="bg-white p-5 rounded-[2rem] border border-amber-100 shadow-sm">
+                                <h3 class="text-[11px] md:text-xs font-bold text-stone-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                    <i data-lucide="zap" class="w-4 h-4 text-orange-400"></i> Prediksi Adrogue-Madias (per Liter)
+                                </h3>
+                                <div class="space-y-3">
+                                    <!-- NaCl 3% -->
+                                    <div class="bg-gradient-to-br from-orange-50 to-amber-50 p-4 rounded-2xl border border-orange-200">
+                                        <div class="flex justify-between items-center mb-3">
+                                            <span class="text-sm font-extrabold text-orange-800">NaCl 3% (Hipertonik)</span>
+                                            <span class="text-lg font-black text-orange-600">+<span id="out-adrogue-3">0.00</span></span>
+                                        </div>
+                                        <div class="bg-white/60 p-3 rounded-xl border border-white space-y-2">
+                                            <div class="flex justify-between text-[11px]">
+                                                <span class="font-bold text-stone-500">Vol Total 24 Jam:</span>
+                                                <span class="font-black text-orange-700"><span id="out-vol-3">0</span> mL</span>
+                                            </div>
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-[10px] font-black text-stone-400 uppercase">Laju Syringe Pump:</span>
+                                                <span class="px-3 py-1 bg-orange-600 text-white rounded-lg font-black text-sm"><span id="out-rate-3">0.0</span> mL/jam</span>
+                                            </div>
+                                            <p id="warn-rate-high" class="hidden text-[10px] text-red-600 font-extrabold leading-tight mt-1 bg-red-100 p-1.5 rounded text-right">⚠️ Laju infus sangat tinggi (>50 mL/jam). Cek target ulang!</p>
+                                        </div>
+                                    </div>
+                                    <!-- NaCl 0.9% -->
+                                    <div class="bg-stone-50 p-4 rounded-2xl border border-stone-200">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-sm font-bold text-stone-700">NaCl 0.9% (NS)</span>
+                                            <span class="text-base font-extrabold text-amber-600">+<span id="out-adrogue-09">0.00</span></span>
+                                        </div>
+                                        <div class="flex justify-between text-[10px] text-stone-500 font-bold uppercase">
+                                            <span>Laju Infus 24 Jam:</span>
+                                            <span><span id="out-rate-09">0.0</span> mL/jam</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- VIEW: HIPERNATREMIA -->
+                        <div id="view-na-hyper" class="hidden space-y-4">
+                            <div class="bg-red-50 p-6 rounded-[2rem] border border-red-200 shadow-sm relative overflow-hidden">
+                                <h3 class="text-xs font-bold text-red-800/60 uppercase tracking-wider mb-2">Free Water Deficit (FWD)</h3>
+                                <div class="text-4xl font-extrabold text-red-600 mb-4">
+                                    <span id="out-fwd">0.0</span> <span class="text-lg font-bold text-red-700/60">Liter</span>
+                                </div>
+                                <div class="space-y-3 mt-4">
+                                    <div class="bg-white/80 p-3 rounded-xl border border-red-100 text-[11px] leading-relaxed">
+                                        <p class="font-bold text-red-900 mb-1">Rekomendasi Cairan:</p>
+                                        <p class="text-stone-700">Pilihan utama: <strong>D5W</strong> (Enteral/IV) atau <strong>NaCl 0.45%</strong>.</p>
+                                    </div>
+                                    <div class="bg-white/80 p-3 rounded-xl border border-red-100 text-[11px] leading-relaxed">
+                                        <p class="font-bold text-red-900 mb-1">Batas Penurunan (Koreksi Aman):</p>
+                                        <p class="text-stone-700">Turunkan Na maksimal <strong>10 mEq dalam 24 jam</strong> (Mencegah Edema Serebri).</p>
+                                        <p class="text-stone-700 mt-1 font-bold text-red-600">Estimasi Laju Penggantian FWD: <span id="out-fwd-rate" class="px-2 py-0.5 bg-red-100 rounded">0</span> mL/jam</p>
+                                        <p class="text-[9px] text-stone-500 italic mt-0.5">*Ditambah cairan maintenance harian &amp; ongoing loss.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- VIEW: NORMAL NA -->
+                        <div id="view-na-normal" class="hidden space-y-4 h-full flex flex-col justify-center items-center text-center p-8 bg-green-50 rounded-[2rem] border border-green-200/50">
+                            <i data-lucide="check-circle" class="w-12 h-12 text-green-500 mb-3"></i>
+                            <h3 class="text-sm font-bold text-green-800 uppercase tracking-wider mb-2">Natrium Normal (135 - 145 mEq/L)</h3>
+                            <p class="text-xs text-green-700/80">Tidak ada indikasi koreksi elektrolit agresif. Pertahankan balance cairan (maintenance).</p>
+                        </div>
+
+                    </div>
+                </div>
+                <button onclick="copyData('natrium')" class="mt-6 w-full py-3.5 bg-stone-800 hover:bg-stone-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98]">
+                    <i data-lucide="copy" class="w-4 h-4"></i> Salin Instruksi Natrium
+                </button>
+            </div>
+
+            <!-- KALIUM TAB -->
+            <div id="content-kalium" class="tab-content hidden animate-[fadeIn_0.5s_ease-in-out]">
+                <h2 class="text-xl md:text-2xl font-extrabold flex items-center gap-2 text-stone-800 mb-6">
+                    <span class="text-amber-600"><i data-lucide="heart-pulse" class="w-6 h-6"></i></span> Status Kalium
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div class="bg-stone-50/80 p-4 rounded-2xl border border-stone-200 relative">
+                            <label class="block text-xs font-bold mb-2 uppercase tracking-wider text-stone-700">Lab Kalium (mEq/L)</label>
+                            <input type="number" step="0.1" inputmode="decimal" id="inp-lab-k" value="3.3" oninput="calculateAll()" class="w-full px-4 py-3 text-lg font-bold rounded-xl border-none focus:ring-2 focus:ring-amber-400 bg-white" />
+                            <p id="warn-inp-lab-k" class="hidden text-[10px] text-red-500 font-bold mt-1.5 flex items-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3"></i> Nilai ekstrem, cek validitas lab!</p>
+                        </div>
+                        
+                        <div id="badge-k-status" class="w-full text-center py-2 px-4 rounded-xl font-black text-sm uppercase tracking-widest border transition-colors">
+                            HIPOKALEMIA
+                        </div>
+
+                        <!-- Target K (Hanya untuk Hipokalemia) -->
+                        <div class="bg-amber-50/50 p-4 rounded-2xl border border-amber-100/50" id="inp-k-target-container">
+                            <label class="block text-xs font-bold mb-2 uppercase tracking-wider text-amber-900/60">Target Kalium (mEq/L)</label>
+                            <input type="number" step="0.1" inputmode="decimal" id="inp-target-k" value="4.5" oninput="calculateAll()" class="w-full px-4 py-3 text-lg font-semibold rounded-xl border-none focus:ring-2 focus:ring-amber-400 bg-white" />
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 flex flex-col relative">
+                        
+                        <!-- VIEW: HIPOKALEMIA -->
+                        <div id="view-k-hypo" class="block space-y-4 flex-grow flex flex-col">
+                            <div class="bg-gradient-to-br from-amber-50 to-orange-50 p-6 rounded-[2rem] border border-amber-200/50 shadow-inner">
+                                <h3 class="text-xs font-bold text-amber-800/60 uppercase tracking-wider mb-2">Total Defisit Kalium</h3>
+                                <div class="text-4xl font-extrabold text-orange-600 mb-2">
+                                    <span id="out-k-deficit">0.0</span> <span class="text-lg font-bold text-amber-700/50">mEq</span>
+                                </div>
+                                <div class="bg-white/60 p-2.5 rounded-xl border border-amber-200 text-[11px] text-amber-900 font-medium">
+                                    <span class="font-bold text-amber-700"><i data-lucide="shield-alert" class="w-3.5 h-3.5 inline"></i> Berikan Bertahap:</span> Evaluasi klinis (misal berikan separuh awal), lalu cek ulang lab mencegah hiperkalemia iatrogenik.
+                                </div>
+                            </div>
+                            <div class="bg-white p-4 rounded-2xl border border-stone-100 shadow-sm space-y-2 flex-grow">
+                                <div class="flex justify-between text-xs font-bold">
+                                    <span class="text-stone-400 uppercase">Laju Perifer:</span>
+                                    <span class="text-amber-600">Max 10 mEq/jam</span>
+                                </div>
+                                <div class="flex justify-between text-xs font-bold">
+                                    <span class="text-stone-400 uppercase">Laju Sentral:</span>
+                                    <span class="text-orange-600">Max 20-40 mEq/jam*</span>
+                                </div>
+                                <p class="text-[10px] text-red-700/60 italic mb-2">*Wajib Cardiac Monitor (EKG kontinu) jika laju > 10 mEq/jam.</p>
+                                
+                                <div class="border border-red-500 rounded-lg p-2.5 bg-red-50">
+                                    <p class="font-black text-red-600 uppercase text-xs animate-pulse-red mb-1 flex items-center gap-1.5"><i data-lucide="alert-octagon" class="w-4 h-4"></i> Peringatan Fatal: NEVER BOLUS!</p>
+                                    <p class="text-[10px] text-red-700 font-bold leading-tight">Pemberian KCl secara bolus langsung ke pembuluh darah BISA LANGSUNG MENYEBABKAN HENTI JANTUNG (CARDIAC ARREST) & KEMATIAN!</p>
+                                </div>
+
+                                <div class="text-[10px] space-y-1.5 text-stone-600 mt-2">
+                                    <p><span class="font-bold text-stone-800">Sediaan Umum:</span> 1 Flacon KCl 7.46% = 25 mL = 25 mEq.</p>
+                                    
+                                    <div class="bg-amber-50 p-2 rounded border border-amber-200 mt-2">
+                                        <span class="font-bold text-amber-900">Contoh Resep Perifer (Paling Aman di Ruangan):</span><br>
+                                        1 Flacon KCl (25 mEq) + <strong>500 cc</strong> NaCl 0.9%, drip lambat <strong>12-24 jam</strong> (sangat aman &amp; tidak perih).<br>
+                                        <em class="text-red-600 text-[9.5px] font-medium leading-tight inline-block mt-1">*Catatan: Meski batas teoritis maksimal perifer adalah 10 mEq/jam, laju secepat itu sering memicu flebitis. Drip 24 jam adalah pilihan teraman untuk non-emergensi.</em>
+                                    </div>
+                                    
+                                    <div class="bg-orange-50 p-2 rounded border border-orange-200 mt-1">
+                                        <span class="font-bold text-orange-900">Contoh Resep Sentral (CVC / Syringe Pump):</span><br>
+                                        1-2 Flacon KCl dilarutkan dlm 50-100 cc NaCl 0.9% via <strong>Syringe Pump</strong>. Laju disesuaikan target (Max 20 mEq/jam).<br>
+                                        <em class="text-red-600 text-[9.5px] font-medium leading-tight inline-block mt-1">*Konsentrasi tinggi/pekat HANYA BOLEH via CVC / Vena Sentral + Monitor EKG.</em>
+                                    </div>
+
+                                    <p class="text-[10px] font-bold text-red-600 mt-1">Pelarut WAJIB NaCl 0.9%. Dilarang menggunakan Asering/RL (mengandung K/Ca) atau Dextrose (K masuk sel).</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Kalkulator Infus K -->
+                            <div class="bg-amber-100/50 p-4 rounded-xl border border-amber-200 shadow-sm mt-2">
+                                <h5 class="text-[10px] font-black text-amber-900 uppercase mb-3 flex items-center gap-1.5"><i data-lucide="timer" class="w-4 h-4 text-amber-600"></i> Kalkulator Laju Pelarutan Kalium</h5>
+                                <div class="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                                    <div class="sm:col-span-3 space-y-2">
+                                        <div class="flex justify-between items-center bg-white p-1.5 rounded border border-amber-100 shadow-sm">
+                                            <label class="text-[9px] font-bold uppercase text-stone-500 pl-1">Volume (mL)</label>
+                                            <input type="number" id="inp-k-vol" value="500" class="w-16 p-1 text-center text-xs font-bold rounded bg-amber-50 border-none focus:ring-1 focus:ring-amber-400" oninput="calcInfus('k')">
+                                        </div>
+                                        <div class="flex justify-between items-center bg-white p-1.5 rounded border border-amber-100 shadow-sm">
+                                            <label class="text-[9px] font-bold uppercase text-stone-500 pl-1">Waktu (Jam)</label>
+                                            <input type="number" id="inp-k-time" value="24" class="w-16 p-1 text-center text-xs font-bold rounded bg-amber-50 border-none focus:ring-1 focus:ring-amber-400" oninput="calcInfus('k')">
+                                        </div>
+                                        <div class="flex justify-between items-center bg-white p-1.5 rounded border border-amber-100 shadow-sm">
+                                            <label class="text-[9px] font-bold uppercase text-stone-500 pl-1">Tetesan</label>
+                                            <select id="inp-k-drop" class="w-[85px] p-1 text-[9px] font-bold rounded bg-amber-50 border-none focus:ring-1 focus:ring-amber-400 text-right" onchange="calcInfus('k')">
+                                                <option value="20">Makro 20</option>
+                                                <option value="15">Makro 15</option>
+                                                <option value="60">Mikro 60</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="sm:col-span-2 flex flex-row sm:flex-col gap-2">
+                                        <div class="flex-1 bg-stone-800 text-white p-2 rounded-lg text-center flex flex-col justify-center shadow-inner">
+                                            <p class="text-[8px] uppercase text-stone-400 mb-0.5">Pump</p>
+                                            <p class="text-base font-black leading-none"><span id="out-k-pump">0.0</span> <span class="text-[8px] font-normal">mL/j</span></p>
+                                        </div>
+                                        <div class="flex-1 bg-white border border-stone-200 p-2 rounded-lg text-center flex flex-col justify-center shadow-sm">
+                                            <p class="text-[8px] uppercase text-stone-500 mb-0.5">Drip</p>
+                                            <p class="text-base font-black leading-none text-stone-800"><span id="out-k-drop">0</span> <span class="text-[8px] font-normal">tpm</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- VIEW: HIPERKALEMIA -->
+                        <div id="view-k-hyper" class="hidden space-y-4 flex-grow flex flex-col">
+                            <div class="bg-red-50 p-5 rounded-[2rem] border border-red-200 shadow-sm flex-grow space-y-4">
+                                <h3 class="text-xs font-extrabold text-red-800 uppercase tracking-wider border-b border-red-200 pb-2 flex items-center gap-2"><i data-lucide="alert-triangle" class="w-4 h-4"></i> Protokol Kegawatan Hiperkalemia</h3>
+                                
+                                <div class="space-y-3">
+                                    <div class="bg-white/90 p-3 rounded-xl border border-red-100">
+                                        <p class="text-[11px] font-black text-red-700 uppercase mb-1">1. Stabilisasi Membran Miokard</p>
+                                        <p class="text-[11px] text-stone-700 leading-snug"><strong>Calcium Gluconate 10%</strong>: 1 ampul (10 mL) IV pelan selama 2-3 menit. Ulangi dlm 5 mnt jika EKG belum membaik. <em class="text-red-600">(Wajib jika ada perubahan EKG)</em>.</p>
+                                    </div>
+                                    <div class="bg-white/90 p-3 rounded-xl border border-red-100">
+                                        <p class="text-[11px] font-black text-orange-700 uppercase mb-1">2. Shifting Intraseluler</p>
+                                        <ul class="text-[11px] text-stone-700 list-disc pl-4 space-y-1">
+                                            <li><strong>Insulin + Dextrose</strong>: 10 IU Regular Insulin + 50 mL D40% IV bolus.</li>
+                                            <li><strong>B2 Agonis</strong>: Salbutamol nebulisasi (10-20 mg).</li>
+                                            <li><strong>Bikarbonat</strong>: Pertimbangkan jika ada asidosis metabolik penyerta.</li>
+                                        </ul>
+                                    </div>
+                                    <div class="bg-white/90 p-3 rounded-xl border border-red-100">
+                                        <p class="text-[11px] font-black text-stone-700 uppercase mb-1">3. Eliminasi Kalium</p>
+                                        <p class="text-[11px] text-stone-700 leading-snug">Loop Diuretik (Furosemide), Kalitake/Kalimate (Pengikat K Gastrointestinal), atau <strong>Hemodialisis</strong> (untuk kasus refrakter/oliguria).</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- VIEW: NORMAL K -->
+                        <div id="view-k-normal" class="hidden h-full flex flex-col justify-center items-center text-center p-8 bg-green-50 rounded-[2rem] border border-green-200/50 flex-grow">
+                            <i data-lucide="check-circle" class="w-12 h-12 text-green-500 mb-3"></i>
+                            <h3 class="text-sm font-bold text-green-800 uppercase tracking-wider mb-2">Kalium Normal (3.5 - 5.0 mEq/L)</h3>
+                            <p class="text-xs text-green-700/80">Kadar Kalium dalam batas target. Tidak ada indikasi intervensi elektrolit.</p>
+                        </div>
+
+                    </div>
+                </div>
+                <button onclick="copyData('kalium')" class="mt-6 w-full py-3.5 bg-stone-800 hover:bg-stone-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98]">
+                    <i data-lucide="copy" class="w-4 h-4"></i> Salin Instruksi Kalium
+                </button>
+            </div>
+
+            <!-- MAGNESIUM TAB -->
+            <div id="content-magnesium" class="tab-content hidden animate-[fadeIn_0.5s_ease-in-out]">
+                <h2 class="text-xl md:text-2xl font-extrabold flex items-center gap-2 text-stone-800 mb-6">
+                    <span class="text-amber-500"><i data-lucide="zap" class="w-6 h-6"></i></span> Status Magnesium
+                </h2>
+                <div class="max-w-2xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div class="bg-stone-50/80 p-6 rounded-2xl border border-stone-200 text-center relative">
+                            <label class="block text-xs font-bold mb-3 uppercase tracking-wider text-stone-700">Lab Magnesium (mg/dL)</label>
+                            <input type="number" step="0.1" inputmode="decimal" id="inp-lab-mg" value="1.4" oninput="calculateAll()" class="w-32 px-4 py-3 text-2xl text-center font-extrabold rounded-xl border-none focus:ring-2 focus:ring-amber-400 bg-white" />
+                            <p id="warn-inp-lab-mg" class="hidden text-[10px] text-red-500 font-bold mt-2 flex items-center justify-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3"></i> Nilai ekstrem!</p>
+                        </div>
+                        <div id="box-mg-guideline" class="p-5 rounded-2xl shadow-lg transition-colors bg-amber-500 text-white">
+                            <h3 class="text-[10px] font-bold uppercase mb-2 flex items-center gap-2 opacity-80"><i data-lucide="activity" class="w-4 h-4"></i> Rekomendasi Tatalaksana</h3>
+                            <p id="out-mg-guideline" class="text-sm font-bold leading-snug">Memproses...</p>
+                        </div>
+                    </div>
+                    <div class="bg-stone-50 p-5 rounded-2xl border border-stone-200 space-y-4">
+                        <h4 id="title-mg-procedure" class="text-[10px] font-black text-stone-400 uppercase flex items-center gap-1.5"><i data-lucide="info" class="w-3.5 h-3.5"></i> Prosedur MgSO4 (Untuk Hipomagnesemia)</h4>
+                        <div id="out-mg-procedure" class="text-[11px] leading-relaxed text-stone-600 space-y-2">
+                            <p><span class="font-bold">Sediaan:</span> MgSO4 20% (1g=5mL) atau 40% (1g=2.5mL).</p>
+                            <p><span class="font-bold">Pelarut:</span> Wajib dilarutkan. Jangan bolus murni.</p>
+                            <p><span class="font-bold">Contoh Resep (4g):</span> 10 mL MgSO4 40% dilarutkan dlm 100 cc NaCl 0.9%, drip habis dalam 4 jam (1g/jam).</p>
+                            <p><span class="font-bold text-orange-600">Monitoring:</span> Wajib cek Refleks Patella, RR >16x/mnt, dan Produksi Urin >0.5cc/kg/jam selama infus.</p>
+                        </div>
+                        
+                        <!-- Kalkulator Infus Mg -->
+                        <div id="calc-mg-infus" class="hidden bg-stone-100 p-4 rounded-xl border border-stone-200 shadow-inner mt-3">
+                            <h5 class="text-[10px] font-black text-stone-600 uppercase mb-3 flex items-center gap-1.5"><i data-lucide="timer" class="w-4 h-4"></i> Kalkulator Laju Pelarutan MgSO4</h5>
+                            <div class="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                                <div class="sm:col-span-3 space-y-2">
+                                    <div class="flex justify-between items-center bg-white p-1.5 rounded border border-stone-100 shadow-sm">
+                                        <label class="text-[9px] font-bold uppercase text-stone-500 pl-1">Volume (mL)</label>
+                                        <input type="number" id="inp-mg-vol" value="100" class="w-16 p-1 text-center text-xs font-bold rounded bg-stone-50 border-none focus:ring-1 focus:ring-amber-400" oninput="calcInfus('mg')">
+                                    </div>
+                                    <div class="flex justify-between items-center bg-white p-1.5 rounded border border-stone-100 shadow-sm">
+                                        <label class="text-[9px] font-bold uppercase text-stone-500 pl-1">Waktu (Jam)</label>
+                                        <input type="number" id="inp-mg-time" value="4" class="w-16 p-1 text-center text-xs font-bold rounded bg-stone-50 border-none focus:ring-1 focus:ring-amber-400" oninput="calcInfus('mg')">
+                                    </div>
+                                    <div class="flex justify-between items-center bg-white p-1.5 rounded border border-stone-100 shadow-sm">
+                                        <label class="text-[9px] font-bold uppercase text-stone-500 pl-1">Tetesan</label>
+                                        <select id="inp-mg-drop" class="w-[85px] p-1 text-[9px] font-bold rounded bg-stone-50 border-none focus:ring-1 focus:ring-amber-400 text-right" onchange="calcInfus('mg')">
+                                            <option value="20">Makro 20</option>
+                                            <option value="15">Makro 15</option>
+                                            <option value="60">Mikro 60</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="sm:col-span-2 flex flex-row sm:flex-col gap-2">
+                                    <div class="flex-1 bg-stone-800 text-white p-2 rounded-lg text-center flex flex-col justify-center shadow-inner">
+                                        <p class="text-[8px] uppercase text-stone-400 mb-0.5">Pump</p>
+                                        <p class="text-base font-black leading-none"><span id="out-mg-pump">0.0</span> <span class="text-[8px] font-normal">mL/j</span></p>
+                                    </div>
+                                    <div class="flex-1 bg-white border border-stone-200 p-2 rounded-lg text-center flex flex-col justify-center shadow-sm">
+                                        <p class="text-[8px] uppercase text-stone-500 mb-0.5">Drip</p>
+                                        <p class="text-base font-black leading-none text-stone-800"><span id="out-mg-drop">0</span> <span class="text-[8px] font-normal">tpm</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="copyData('magnesium')" class="mt-6 w-full py-3.5 bg-stone-800 hover:bg-stone-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98]">
+                    <i data-lucide="copy" class="w-4 h-4"></i> Salin Instruksi Magnesium
+                </button>
+            </div>
+
+            <!-- KALSIUM TAB -->
+            <div id="content-kalsium" class="tab-content hidden animate-[fadeIn_0.5s_ease-in-out]">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <h2 class="text-xl md:text-2xl font-extrabold flex items-center gap-2 text-stone-800">
+                        <span class="text-amber-500"><i data-lucide="flame" class="w-6 h-6"></i></span> Status Kalsium
+                    </h2>
+                    <div class="flex bg-stone-100 p-1 rounded-xl">
+                        <button onclick="setCaType('ionized')" id="btn-ca-ionized" class="ca-btn active-ionized px-4 py-2 text-xs font-bold uppercase rounded-lg transition-all">Ionized</button>
+                        <button onclick="setCaType('total')" id="btn-ca-total" class="ca-btn inactive px-4 py-2 text-xs font-bold uppercase rounded-lg transition-all">Total</button>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-6">
+                        <!-- IONIZED VIEW -->
+                        <div id="view-ca-ionized" class="block space-y-4">
+                            <div class="bg-stone-50/80 p-5 rounded-2xl border border-stone-200 text-center relative">
+                                <label class="block text-xs font-bold mb-1 uppercase tracking-wider text-stone-700">Lab Ionized Ca <span class="text-red-600 font-black">(mg/dL)</span></label>
+                                <p class="text-[9px] text-stone-500 font-bold mb-3 italic">Konversi: 1 mmol/L &approx; 4 mg/dL</p>
+                                <input type="number" step="0.1" inputmode="decimal" id="inp-lab-ca" value="3.2" oninput="calculateAll()" class="w-32 px-4 py-3 text-2xl text-center font-extrabold rounded-xl border-none focus:ring-2 focus:ring-amber-400 bg-white" />
+                                <p id="warn-inp-lab-ca" class="hidden text-[10px] text-red-500 font-bold mt-2 flex items-center justify-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3"></i> Ekstrem. Pastikan satuan mg/dL!</p>
+                            </div>
+                            <div id="box-ca-guideline" class="p-5 rounded-2xl text-white shadow-lg bg-orange-500 transition-colors">
+                                <p id="out-ca-guideline" class="text-sm font-bold leading-snug">Memproses...</p>
+                            </div>
+                        </div>
+                        <!-- TOTAL VIEW -->
+                        <div id="view-ca-total" class="hidden space-y-4">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="bg-stone-50/80 p-4 rounded-2xl text-center border border-stone-200 relative">
+                                    <label class="block text-[10px] font-bold mb-2 uppercase text-stone-700">Total Ca</label>
+                                    <input type="number" step="0.1" id="inp-lab-totalca" value="7.2" oninput="calculateAll()" class="w-full px-2 py-2 text-lg text-center font-bold rounded-lg border-none bg-white" />
+                                    <p id="warn-inp-lab-totalca" class="hidden text-[9px] text-red-500 font-bold mt-1">⚠️ Ekstrem!</p>
+                                </div>
+                                <div class="bg-stone-50/80 p-4 rounded-2xl text-center border border-stone-200">
+                                    <label class="block text-[10px] font-bold mb-2 uppercase text-stone-700">Albumin</label>
+                                    <input type="number" step="0.1" id="inp-lab-alb-ca" value="2.5" oninput="calculateAll()" class="w-full px-2 py-2 text-lg text-center font-bold rounded-lg border-none bg-white" />
+                                </div>
+                            </div>
+                            <div class="bg-white p-4 rounded-2xl border border-stone-200 text-center shadow-sm">
+                                <p class="text-[10px] text-stone-400 uppercase font-black">Corrected Calcium</p>
+                                <p class="text-2xl font-black text-stone-700"><span id="out-corrected-ca">0.00</span> mg/dL</p>
+                            </div>
+                            <div id="box-total-ca-act" class="p-5 rounded-2xl text-white shadow-lg bg-amber-600 transition-colors">
+                                <p id="out-total-ca-act" class="text-sm font-bold">Memproses...</p>
+                                <span id="out-total-ca-freq" class="inline-block mt-2 bg-black/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ADMIN GUIDE -->
+                    <div class="bg-stone-50 p-5 rounded-2xl border border-stone-200 space-y-4">
+                        <h4 id="title-ca-procedure" class="text-[10px] font-black text-stone-400 uppercase flex items-center gap-1.5"><i data-lucide="info" class="w-3.5 h-3.5"></i> Prosedur Kalsium</h4>
+                        <div id="out-ca-procedure" class="text-[11px] leading-relaxed text-stone-600 space-y-2">
+                            <p><span class="font-bold">Sediaan:</span> Calcium Gluconate 10% (1 ampul = 10 mL = ~93 mg Elemental Ca).</p>
+                            <p><span class="font-bold">Contoh Resep Praktis:</span> 1 Ampul (10 mL) dilarutkan dlm 100 cc NaCl 0.9% atau D5W, drip lambat habis dlm 30-60 menit.</p>
+                            <p><span class="font-bold">Kecepatan Max:</span> 1-2 gram (10-20 mL) per jam drip lambat.</p>
+                            <p><span class="font-bold text-red-600 uppercase">Inkompatibilitas:</span> Jangan gabung dengan Bikarbonat atau Fosfat (kristalisasi).</p>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="copyData('kalsium')" class="mt-6 w-full py-3.5 bg-stone-800 hover:bg-stone-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98]">
+                    <i data-lucide="copy" class="w-4 h-4"></i> Salin Instruksi Kalsium
+                </button>
+            </div>
+
+            <!-- FOSFAT TAB -->
+            <div id="content-fosfat" class="tab-content hidden animate-[fadeIn_0.5s_ease-in-out]">
+                <h2 class="text-xl md:text-2xl font-extrabold flex items-center gap-2 text-stone-800 mb-6">
+                    <span class="text-orange-500"><i data-lucide="sun" class="w-6 h-6"></i></span> Status Fosfat
+                </h2>
+                <div class="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div class="bg-stone-50/80 p-6 rounded-2xl border border-stone-200 text-center relative">
+                            <label class="block text-xs font-bold mb-3 uppercase tracking-wider text-stone-700">Lab Fosfor (mg/dL)</label>
+                            <input type="number" step="0.1" inputmode="decimal" id="inp-lab-phos" value="1.8" oninput="calculateAll()" class="w-32 px-4 py-3 text-2xl text-center font-extrabold rounded-xl border-none focus:ring-2 focus:ring-orange-400 bg-white" />
+                            <p id="warn-inp-lab-phos" class="hidden text-[10px] text-red-500 font-bold mt-2 flex items-center justify-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3"></i> Nilai ekstrem!</p>
+                        </div>
+                        <div id="box-phos-guideline" class="p-5 rounded-2xl text-white shadow-lg bg-gradient-to-r from-orange-400 to-amber-500 space-y-2 transition-colors">
+                            <h3 class="text-[10px] font-bold text-white/80 uppercase">Rekomendasi Tatalaksana</h3>
+                            <p id="out-phos-guideline" class="text-sm font-bold leading-snug">Memproses...</p>
+                            <div id="warn-phos-disclaimer" class="bg-white/20 p-2 rounded text-[10px] font-bold mt-2 border border-white/30">
+                                ⚠️ Sesuaikan ulang dosis empiris IV ini dengan protokol lokal RS Anda!
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-stone-50 p-5 rounded-2xl border border-stone-200 space-y-4">
+                        <h4 id="title-phos-procedure" class="text-[10px] font-black text-stone-400 uppercase flex items-center gap-1.5"><i data-lucide="info" class="w-3.5 h-3.5"></i> Prosedur IV Phos (Hipofosfatemia)</h4>
+                        <div id="out-phos-procedure" class="text-[11px] leading-relaxed text-stone-600 space-y-2">
+                            <p><span class="font-bold">Pemilihan:</span> 
+                                <br>• Gunakan <strong>K-Phos</strong> jika K+ < 4.0 mEq/L
+                                <br>• Gunakan <strong>Na-Phos</strong> jika K+ > 4.0 mEq/L
+                            </p>
+                            <p><span class="font-bold">Contoh Resep Praktis:</span> Larutkan dosis anjuran ke dlm 250 cc NaCl 0.9%.</p>
+                            <p><span class="font-bold">Kecepatan:</span> Drip lambat selama 4-6 jam. Jangan melebihi laju 7.5 mmol/jam.</p>
+                            <p><span class="font-bold text-red-600 uppercase">Perhatian:</span> Cek Magnesium & Kalsium sebelum koreksi (risiko presipitasi & hipokalsemia).</p>
+                        </div>
+
+                        <!-- Kalkulator Infus Phos -->
+                        <div id="calc-phos-infus" class="hidden bg-stone-100 p-4 rounded-xl border border-stone-200 shadow-inner mt-3">
+                            <h5 class="text-[10px] font-black text-stone-600 uppercase mb-3 flex items-center gap-1.5"><i data-lucide="timer" class="w-4 h-4"></i> Kalkulator Laju Pelarutan Fosfat</h5>
+                            <div class="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                                <div class="sm:col-span-3 space-y-2">
+                                    <div class="flex justify-between items-center bg-white p-1.5 rounded border border-stone-100 shadow-sm">
+                                        <label class="text-[9px] font-bold uppercase text-stone-500 pl-1">Volume (mL)</label>
+                                        <input type="number" id="inp-phos-vol" value="250" class="w-16 p-1 text-center text-xs font-bold rounded bg-stone-50 border-none focus:ring-1 focus:ring-amber-400" oninput="calcInfus('phos')">
+                                    </div>
+                                    <div class="flex justify-between items-center bg-white p-1.5 rounded border border-stone-100 shadow-sm">
+                                        <label class="text-[9px] font-bold uppercase text-stone-500 pl-1">Waktu (Jam)</label>
+                                        <input type="number" id="inp-phos-time" value="6" class="w-16 p-1 text-center text-xs font-bold rounded bg-stone-50 border-none focus:ring-1 focus:ring-amber-400" oninput="calcInfus('phos')">
+                                    </div>
+                                    <div class="flex justify-between items-center bg-white p-1.5 rounded border border-stone-100 shadow-sm">
+                                        <label class="text-[9px] font-bold uppercase text-stone-500 pl-1">Tetesan</label>
+                                        <select id="inp-phos-drop" class="w-[85px] p-1 text-[9px] font-bold rounded bg-stone-50 border-none focus:ring-1 focus:ring-amber-400 text-right" onchange="calcInfus('phos')">
+                                            <option value="20">Makro 20</option>
+                                            <option value="15">Makro 15</option>
+                                            <option value="60">Mikro 60</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="sm:col-span-2 flex flex-row sm:flex-col gap-2">
+                                    <div class="flex-1 bg-stone-800 text-white p-2 rounded-lg text-center flex flex-col justify-center shadow-inner">
+                                        <p class="text-[8px] uppercase text-stone-400 mb-0.5">Pump</p>
+                                        <p class="text-base font-black leading-none"><span id="out-phos-pump">0.0</span> <span class="text-[8px] font-normal">mL/j</span></p>
+                                    </div>
+                                    <div class="flex-1 bg-white border border-stone-200 p-2 rounded-lg text-center flex flex-col justify-center shadow-sm">
+                                        <p class="text-[8px] uppercase text-stone-500 mb-0.5">Drip</p>
+                                        <p class="text-base font-black leading-none text-stone-800"><span id="out-phos-drop">0</span> <span class="text-[8px] font-normal">tpm</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <button onclick="copyData('fosfat')" class="mt-6 w-full py-3.5 bg-stone-800 hover:bg-stone-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98]">
+                    <i data-lucide="copy" class="w-4 h-4"></i> Salin Instruksi Fosfat
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="mt-8 mb-4 px-4 text-center">
+            <p class="text-[10px] md:text-xs text-amber-900/40 font-medium">
+                <strong>Disclaimer Medis:</strong> Aplikasi OasisLytes dibuat hanya sebagai alat bantu edukasi klinis. Keputusan akhir (termasuk dosis spesifik obat) tetap merupakan wewenang penuh Dokter Penanggung Jawab Pelayanan (DPJP).
+            </p>
+        </div>
+
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-copy" class="fixed bottom-6 right-6 bg-stone-800 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 hidden z-50">
+        <i data-lucide="check-circle-2" class="w-5 h-5 text-green-400"></i>
+        <span class="font-bold text-sm">Instruksi Berhasil Disalin!</span>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        let activeTab = 'natrium';
+        let caType = 'ionized';
+
+        function getNum(id) { return parseFloat(document.getElementById(id).value) || 0; }
+        function setText(id, text) { 
+            const el = document.getElementById(id);
+            if(el) el.innerText = text; 
+        }
+        function toggleClasses(id, addCls, remCls) {
+            const el = document.getElementById(id);
+            if(el) { el.classList.add(...addCls); el.classList.remove(...remCls); }
+        }
+
+        // Helper untuk memvalidasi angka ekstrem
+        function validatePlausible(id, min, max) {
+            const val = getNum(id);
+            const warnEl = document.getElementById('warn-' + id);
+            if (warnEl) {
+                if (val !== 0 && (val < min || val > max)) warnEl.classList.remove('hidden');
+                else warnEl.classList.add('hidden');
+            }
+            return val;
+        }
+
+        function setTab(tabId) {
+            activeTab = tabId;
+            const tabs = ['albumin', 'natrium', 'kalium', 'magnesium', 'kalsium', 'fosfat'];
+            tabs.forEach(t => {
+                const content = document.getElementById('content-' + t);
+                const btn = document.getElementById('btn-tab-' + t);
+                
+                if(content) content.classList.toggle('hidden', t !== tabId);
+                if(btn) {
+                    btn.classList.toggle('active', t === tabId);
+                    btn.classList.toggle('inactive', t !== tabId);
+                }
+            });
+        }
+
+        function setCaType(type) {
+            caType = type;
+            document.getElementById('view-ca-ionized').classList.toggle('hidden', type !== 'ionized');
+            document.getElementById('view-ca-total').classList.toggle('hidden', type !== 'total');
+            
+            document.getElementById('btn-ca-ionized').classList.toggle('active-ionized', type === 'ionized');
+            document.getElementById('btn-ca-ionized').classList.toggle('inactive', type !== 'ionized');
+            document.getElementById('btn-ca-total').classList.toggle('active-total', type === 'total');
+            document.getElementById('btn-ca-total').classList.toggle('inactive', type !== 'total');
+        }
+
+        function calculateAll() {
+            const weightInputEl = document.getElementById('inp-weight');
+            const weightWarning = document.getElementById('warn-weight');
+            const weight = getNum('inp-weight');
+            
+            // 1. HARD VALIDATION: BB <= 0
+            if (weight <= 0 || isNaN(weight)) {
+                weightInputEl.classList.add('ring-2', 'ring-red-500', 'border-red-500');
+                weightWarning.classList.remove('hidden');
+                return; // Early Exit
+            } else {
+                weightInputEl.classList.remove('ring-2', 'ring-red-500', 'border-red-500');
+                weightWarning.classList.add('hidden');
+            }
+
+            const gender = document.getElementById('inp-gender').value;
+            const tbwFactor = gender === 'male' ? 0.6 : 0.5;
+            const tbw = weight * tbwFactor;
+
+            // ================== ALBUMIN ==================
+            const labAlb = validatePlausible('inp-lab-alb', 0.5, 6.0);
+            const targetAlb = getNum('inp-target-alb');
+            if (labAlb >= targetAlb) {
+                document.getElementById('view-alb-hypo').classList.add('hidden');
+                document.getElementById('view-alb-hyper').classList.remove('hidden');
+                document.getElementById('view-alb-hyper').classList.add('flex');
+            } else {
+                document.getElementById('view-alb-hyper').classList.add('hidden');
+                document.getElementById('view-alb-hyper').classList.remove('flex');
+                document.getElementById('view-alb-hypo').classList.remove('hidden');
+                const deltaAlb = targetAlb - labAlb;
+                const albGrams = deltaAlb * weight * 0.8;
+                setText('out-alb-grams', albGrams.toFixed(1));
+                setText('out-alb-20', (albGrams / 20).toFixed(1));
+                setText('out-alb-25', (albGrams / 25).toFixed(1));
+            }
+
+            // ================== NATRIUM ==================
+            const labNa = validatePlausible('inp-lab-na', 100, 180);
+            const viewNaHypo = document.getElementById('view-na-hypo');
+            const viewNaHyper = document.getElementById('view-na-hyper');
+            const viewNaNormal = document.getElementById('view-na-normal');
+            const badgeNa = document.getElementById('badge-na-status');
+            const inpNaTarget = document.getElementById('inp-na-target-container');
+
+            viewNaHypo.classList.add('hidden');
+            viewNaHyper.classList.add('hidden');
+            viewNaNormal.classList.add('hidden');
+            inpNaTarget.classList.add('hidden');
+
+            if (labNa < 135) {
+                viewNaHypo.classList.remove('hidden');
+                inpNaTarget.classList.remove('hidden');
+                badgeNa.innerText = "HIPONATREMIA";
+                badgeNa.className = "w-full text-center py-2 px-4 rounded-xl font-black text-sm uppercase tracking-widest border transition-colors bg-orange-100 text-orange-700 border-orange-200";
+                
+                const targetDelta24 = getNum('inp-target-na-24');
+                const adrogue09 = (154 - labNa) / (tbw + 1);
+                const adrogue3 = (513 - labNa) / (tbw + 1);
+                setText('out-adrogue-09', adrogue09.toFixed(2));
+                setText('out-adrogue-3', adrogue3.toFixed(2));
+                const vol3 = (targetDelta24 / adrogue3) * 1000;
+                const vol09 = (targetDelta24 / adrogue09) * 1000;
+                setText('out-vol-3', Math.round(vol3));
+                
+                const rate3 = vol3 / 24;
+                setText('out-rate-3', rate3.toFixed(1));
+                setText('out-rate-09', (vol09 / 24).toFixed(1));
+                
+                const warnRateHigh = document.getElementById('warn-rate-high');
+                if(warnRateHigh) {
+                    if(rate3 > 50) warnRateHigh.classList.remove('hidden');
+                    else warnRateHigh.classList.add('hidden');
+                }
+            } else if (labNa > 145) {
+                viewNaHyper.classList.remove('hidden');
+                badgeNa.innerText = "HIPERNATREMIA";
+                badgeNa.className = "w-full text-center py-2 px-4 rounded-xl font-black text-sm uppercase tracking-widest border transition-colors bg-red-100 text-red-700 border-red-200";
+                
+                const fwd = tbw * ((labNa / 140) - 1); // Free Water Deficit
+                setText('out-fwd', fwd.toFixed(2));
+                // Target correction: max 10 mEq/day. Usually replaced over 48-72 hours.
+                // Estimating rate to give total FWD evenly over 48 hours as a safe baseline, + maintenance not included here.
+                const fwdMl = fwd * 1000;
+                setText('out-fwd-rate', (fwdMl / 48).toFixed(1)); 
+            } else {
+                viewNaNormal.classList.remove('hidden');
+                badgeNa.innerText = "NORMAL";
+                badgeNa.className = "w-full text-center py-2 px-4 rounded-xl font-black text-sm uppercase tracking-widest border transition-colors bg-green-100 text-green-700 border-green-200";
+            }
+
+            // ================== KALIUM ==================
+            const labK = validatePlausible('inp-lab-k', 1.0, 9.0);
+            const viewKHypo = document.getElementById('view-k-hypo');
+            const viewKHyper = document.getElementById('view-k-hyper');
+            const viewKNormal = document.getElementById('view-k-normal');
+            const badgeK = document.getElementById('badge-k-status');
+            const inpKTarget = document.getElementById('inp-k-target-container');
+
+            viewKHypo.classList.add('hidden');
+            viewKHyper.classList.add('hidden');
+            viewKNormal.classList.add('hidden');
+            inpKTarget.classList.add('hidden');
+
+            if (labK < 3.5) {
+                viewKHypo.classList.remove('hidden');
+                inpKTarget.classList.remove('hidden');
+                badgeK.innerText = "HIPOKALEMIA";
+                badgeK.className = "w-full text-center py-2 px-4 rounded-xl font-black text-sm uppercase tracking-widest border transition-colors bg-amber-100 text-amber-700 border-amber-200";
+                
+                const targetK = getNum('inp-target-k');
+                const kDeficit = weight * 0.3 * Math.max(0, targetK - labK);
+                setText('out-k-deficit', kDeficit.toFixed(1));
+            } else if (labK > 5.0) {
+                viewKHyper.classList.remove('hidden');
+                badgeK.innerText = "HIPERKALEMIA";
+                badgeK.className = "w-full text-center py-2 px-4 rounded-xl font-black text-sm uppercase tracking-widest border transition-colors bg-red-100 text-red-700 border-red-200";
+            } else {
+                viewKNormal.classList.remove('hidden');
+                badgeK.innerText = "NORMAL";
+                badgeK.className = "w-full text-center py-2 px-4 rounded-xl font-black text-sm uppercase tracking-widest border transition-colors bg-green-100 text-green-700 border-green-200";
+            }
+
+            // ================== MAGNESIUM ==================
+            const labMg = validatePlausible('inp-lab-mg', 0.5, 6.0);
+            const boxMg = document.getElementById('box-mg-guideline');
+            const titleMg = document.getElementById('title-mg-procedure');
+            const procMg = document.getElementById('out-mg-procedure');
+            const calcMgInfus = document.getElementById('calc-mg-infus');
+            
+            calcMgInfus.classList.add('hidden'); // Sembunyikan default
+            
+            if (labMg < 1.7) {
+                calcMgInfus.classList.remove('hidden'); // Munculkan kalkulator saat hipo
+                toggleClasses('box-mg-guideline', ['bg-orange-500'], ['bg-red-600', 'bg-green-500']);
+                titleMg.innerHTML = `<i data-lucide="info" class="w-3.5 h-3.5"></i> Prosedur MgSO4 (Hipomagnesemia)`;
+                procMg.innerHTML = `<p><span class="font-bold">Sediaan:</span> MgSO4 20% (1g=5mL) atau 40% (1g=2.5mL).</p>
+                                    <p><span class="font-bold">Pelarut:</span> Wajib dilarutkan. Jangan bolus murni.</p>
+                                    <p><span class="font-bold">Contoh Resep (4g):</span> 10 mL MgSO4 40% dilarutkan dlm 100 cc NaCl 0.9%, drip habis dalam 4 jam (1g/jam).</p>
+                                    <p><span class="font-bold text-orange-600">Monitoring:</span> Wajib cek Refleks Patella, RR >16x/mnt, dan Produksi Urin >0.5cc/kg/jam selama infus.</p>`;
+                if (labMg < 1.3) setText('out-mg-guideline', "Defisit Berat: Berikan 8 gram IV dlm 8 jam. Cek ulang level Mg 6 jam setelah infus selesai.");
+                else setText('out-mg-guideline', "Defisit Ringan: Berikan 4 gram IV dlm 4 jam. Cek ulang level Mg pada lab pagi berikutnya.");
+            } else if (labMg > 2.5) {
+                toggleClasses('box-mg-guideline', ['bg-red-600'], ['bg-orange-500', 'bg-green-500']);
+                titleMg.innerHTML = `<i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Tatalaksana Hipermagnesemia`;
+                procMg.innerHTML = `<ul class="list-disc pl-4 space-y-1">
+                                        <li>Hentikan <strong>semua</strong> sumber Magnesium (termasuk antasida/pencahar).</li>
+                                        <li>Berikan <strong>Calcium Gluconate 10%</strong> 1-2 ampul IV lambat (sbg antagonis jantung) jika ada aritmia/henti napas.</li>
+                                        <li>Pemberian Loop Diuretic (Furosemide) + hidrasi agresif NaCl 0.9% untuk eliminasi Mg.</li>
+                                        <li><strong>Hemodialisis</strong> indikasi pada perburukan fungsi ginjal berat atau kasus mematikan.</li>
+                                    </ul>`;
+                setText('out-mg-guideline', "Hipermagnesemia! Segera hentikan suplementasi Mg dan siapkan Calcium Gluconate sebagai antidotum jika bergejala (hilang refleks/apnea).");
+            } else {
+                toggleClasses('box-mg-guideline', ['bg-green-500'], ['bg-orange-500', 'bg-red-600']);
+                titleMg.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i> Status Magnesium`;
+                procMg.innerHTML = `<p>Nilai Magnesium dalam batas normal (1.7 - 2.5 mg/dL).</p>`;
+                setText('out-mg-guideline', "Normal. Tidak diperlukan koreksi Magnesium.");
+            }
+
+            // ================== KALSIUM ==================
+            const labCa = validatePlausible('inp-lab-ca', 1.0, 8.0);
+            const labTotalCa = validatePlausible('inp-lab-totalca', 3.0, 18.0);
+            const albForCa = getNum('inp-lab-alb-ca');
+            const corrCa = labTotalCa + 0.8 * (4.0 - albForCa);
+            setText('out-corrected-ca', corrCa.toFixed(2));
+            
+            const boxCaIon = document.getElementById('box-ca-guideline');
+            const boxCaTot = document.getElementById('box-total-ca-act');
+            const titleCa = document.getElementById('title-ca-procedure');
+            const procCa = document.getElementById('out-ca-procedure');
+
+            // Evaluasi berbasis tipe yang dipilih (Hipo vs Hyper)
+            let isHyperCa = false;
+            let isHypoCa = false;
+            let isNormalCa = false;
+
+            if (caType === 'ionized') {
+                if (labCa < 4.5) isHypoCa = true;
+                else if (labCa > 5.6) isHyperCa = true;
+                else isNormalCa = true;
+                
+                if (isHypoCa) {
+                    toggleClasses('box-ca-guideline', ['bg-orange-500'], ['bg-red-600', 'bg-green-500']);
+                    if (labCa < 2.5) setText('out-ca-guideline', "Sangat Rendah: Berikan 10g Calcium Gluconate IV & hubungi DPJP. Cek ulang 4 jam kemudian.");
+                    else if (labCa <= 2.9) setText('out-ca-guideline', "Berikan 8g Calcium Gluconate IV. Cek ulang 4 jam kemudian.");
+                    else if (labCa <= 3.4) setText('out-ca-guideline', "Berikan 6g Calcium Gluconate IV. Cek ulang 4 jam kemudian.");
+                    else setText('out-ca-guideline', "Berikan 4g Calcium Gluconate IV. Cek ulang dengan lab pagi berikutnya.");
+                } else if (isHyperCa) {
+                    toggleClasses('box-ca-guideline', ['bg-red-600'], ['bg-orange-500', 'bg-green-500']);
+                    setText('out-ca-guideline', "HIPERKALSEMIA: Lakukan hidrasi agresif dengan NaCl 0.9%.");
+                } else {
+                    toggleClasses('box-ca-guideline', ['bg-green-500'], ['bg-orange-500', 'bg-red-600']);
+                    setText('out-ca-guideline', "Normal. (Kadar target: 4.5 - 5.6 mg/dL)");
+                }
+            } else {
+                if (corrCa < 8.5) isHypoCa = true;
+                else if (corrCa > 10.5) isHyperCa = true;
+                else isNormalCa = true;
+
+                setText('out-total-ca-freq', "");
+                if (isHypoCa) {
+                    toggleClasses('box-total-ca-act', ['bg-amber-600'], ['bg-red-600', 'bg-green-500']);
+                    if (corrCa < 7.0) { setText('out-total-ca-act', "Kalsium IV, lalu tappering ke 1000mg PO 3x."); setText('out-total-ca-freq', "Re-check: 1-4 Hari"); }
+                    else if (corrCa < 7.5) { setText('out-total-ca-act', "Berikan 1000mg Kalsium PO 3x sehari."); setText('out-total-ca-freq', "Re-check: 1-2 Minggu"); }
+                    else { setText('out-total-ca-act', "Berikan 500mg Kalsium PO 3x sehari."); setText('out-total-ca-freq', "Re-check: Bulanan"); }
+                } else if (isHyperCa) {
+                    toggleClasses('box-total-ca-act', ['bg-red-600'], ['bg-amber-600', 'bg-green-500']);
+                    setText('out-total-ca-act', "HIPERKALSEMIA: Lakukan hidrasi agresif dengan NaCl 0.9%.");
+                } else {
+                    toggleClasses('box-total-ca-act', ['bg-green-500'], ['bg-amber-600', 'bg-red-600']);
+                    setText('out-total-ca-act', "Normal. (Target: 8.5 - 10.5 mg/dL)");
+                }
+            }
+
+            // Ganti prosedur Ca berdasarkan state
+            if (isHyperCa) {
+                titleCa.innerHTML = `<i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Protokol Hiperkalsemia`;
+                procCa.innerHTML = `<ul class="list-disc pl-4 space-y-1">
+                                        <li><strong>Hidrasi Agresif</strong>: NaCl 0.9% 200-300 mL/jam (pantau overload volume cairan).</li>
+                                        <li><strong>Loop Diuretic</strong>: Furosemide diberikan <em>HANYA SETELAH</em> pasien normovolemia. Hindari thiazide (menahan kalsium).</li>
+                                        <li><strong>Bisfosfonat</strong>: (Pamidronate/Zoledronate) indikasi untuk hiperkalsemia akibat malignansi.</li>
+                                        <li>Hemodialisis: Pada pasien CKD anuria.</li>
+                                    </ul>`;
+            } else if (isHypoCa) {
+                titleCa.innerHTML = `<i data-lucide="info" class="w-3.5 h-3.5"></i> Prosedur Kalsium IV (Hipokalsemia)`;
+                procCa.innerHTML = `<p><span class="font-bold">Sediaan:</span> Calcium Gluconate 10% (1 ampul = 10 mL = ~93 mg Elemental Ca).</p>
+                                    <p><span class="font-bold">Contoh Resep Praktis:</span> 1 Ampul (10 mL) dilarutkan dlm 100 cc NaCl 0.9% atau D5W, drip lambat habis dlm 30-60 menit.</p>
+                                    <p><span class="font-bold">Kecepatan Max:</span> 1-2 gram (10-20 mL) per jam drip lambat.</p>
+                                    <p><span class="font-bold text-red-600 uppercase">Inkompatibilitas:</span> Jangan gabung dengan Bikarbonat atau Fosfat (kristalisasi).</p>`;
+            } else {
+                titleCa.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i> Status Kalsium`;
+                procCa.innerHTML = `<p>Tidak ada indikasi koreksi elektrolit khusus.</p>`;
+            }
+
+            // ================== FOSFAT ==================
+            const labPhos = validatePlausible('inp-lab-phos', 0.5, 15.0);
+            const boxPhos = document.getElementById('box-phos-guideline');
+            const warnPhos = document.getElementById('warn-phos-disclaimer');
+            const titlePhos = document.getElementById('title-phos-procedure');
+            const procPhos = document.getElementById('out-phos-procedure');
+            const calcPhosInfus = document.getElementById('calc-phos-infus');
+
+            calcPhosInfus.classList.add('hidden'); // Sembunyikan default
+
+            if (labPhos < 2.5) {
+                calcPhosInfus.classList.remove('hidden'); // Munculkan kalkulator saat hipo
+                boxPhos.className = "p-5 rounded-2xl text-white shadow-lg bg-orange-500 space-y-2 transition-colors";
+                warnPhos.classList.remove('hidden');
+                titlePhos.innerHTML = `<i data-lucide="info" class="w-3.5 h-3.5"></i> Prosedur IV Phos (Hipofosfatemia)`;
+                procPhos.innerHTML = `<p><span class="font-bold">Pemilihan:</span> K-Phos jika K+ < 4.0 mEq/L. Na-Phos jika K+ > 4.0 mEq/L.</p>
+                                      <p><span class="font-bold">Contoh Resep Praktis:</span> Larutkan dosis anjuran ke dlm 250 cc NaCl 0.9%.</p>
+                                      <p><span class="font-bold">Kecepatan:</span> Drip lambat 4-6 jam. Jangan > 7.5 mmol/jam.</p>
+                                      <p><span class="font-bold text-red-600 uppercase">Perhatian:</span> Cek Magnesium & Kalsium sebelum koreksi (risiko presipitasi & hipokalsemia).</p>`;
+                if (labPhos < 1.6) setText('out-phos-guideline', "Berikan 45 mmol KPhos/NaPhos IV. Cek ulang 6 jam kemudian.");
+                else if (labPhos <= 1.9) setText('out-phos-guideline', "Berikan 30 mmol IV ATAU K-Phos Neutral 2 tab PO q4h x 4.");
+                else setText('out-phos-guideline', "Berikan 15 mmol IV ATAU K-Phos Neutral 2 tab PO q4h x 3.");
+            } else if (labPhos > 4.5) {
+                boxPhos.className = "p-5 rounded-2xl text-white shadow-lg bg-red-600 space-y-2 transition-colors";
+                warnPhos.classList.add('hidden');
+                titlePhos.innerHTML = `<i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Tatalaksana Hiperfosfatemia`;
+                procPhos.innerHTML = `<ul class="list-disc pl-4 space-y-1">
+                                        <li><strong>Dietary Restriction:</strong> Batasi makanan kaya fosfor (susu, keju, daging proses).</li>
+                                        <li><strong>Phosphate Binders:</strong> Berikan obat pengikat fosfat BERSAMAAN dengan makan (contoh: Calcium Carbonate, Sevelamer).</li>
+                                        <li>Hindari pemberian preparat kalsium sembarangan jika produk kalsium-fosfor (Ca x P) > 55 (risiko kalsifikasi ektopik).</li>
+                                        <li><strong>Dialisis:</strong> Pada pasien gagal ginjal berat.</li>
+                                      </ul>`;
+                setText('out-phos-guideline', "Hiperfosfatemia. Restriksi diet & berikan Phosphate Binders (pengikat fosfat).");
+            } else {
+                boxPhos.className = "p-5 rounded-2xl text-white shadow-lg bg-green-500 space-y-2 transition-colors";
+                warnPhos.classList.add('hidden');
+                titlePhos.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i> Status Fosfat`;
+                procPhos.innerHTML = `<p>Nilai Fosfat dalam batas normal (2.5 - 4.5 mg/dL).</p>`;
+                setText('out-phos-guideline', "Normal. Tidak diperlukan koreksi.");
+            }
+
+            lucide.createIcons();
+            
+            // Re-calculate mini-infusion calculatores
+            calcInfus('k');
+            calcInfus('mg');
+            calcInfus('phos');
+        }
+
+        function calcInfus(type) {
+            const vol = getNum(`inp-${type}-vol`);
+            const time = getNum(`inp-${type}-time`);
+            const dropFactor = getNum(`inp-${type}-drop`);
+
+            if (time > 0 && vol >= 0) {
+                // Pump: mL/jam
+                const pumpRate = vol / time;
+                setText(`out-${type}-pump`, pumpRate.toFixed(1));
+                
+                // Manual Drip: (Volume * FaktorTetes) / (Waktu dalam menit)
+                const dropRate = (vol * dropFactor) / (time * 60);
+                setText(`out-${type}-drop`, Math.round(dropRate));
+            } else {
+                setText(`out-${type}-pump`, "0.0");
+                setText(`out-${type}-drop`, "0");
+            }
+        }
+
+        // Fungsi Helper untuk menyalin format laju infus
+        function getInfusCopyText(type) {
+            const vol = getNum(`inp-${type}-vol`);
+            const time = getNum(`inp-${type}-time`);
+            const pump = document.getElementById(`out-${type}-pump`).innerText;
+            const drop = document.getElementById(`out-${type}-drop`).innerText;
+            const dropSelect = document.getElementById(`inp-${type}-drop`);
+            const dropName = dropSelect.options[dropSelect.selectedIndex].text;
+            
+            return `\n\n[LAJU PEMBERIAN PELARUT CAIRAN]
+- Total Volume: ${vol} mL | Target Waktu: ${time} Jam
+- Laju Syringe/Infus Pump: ${pump} mL/jam
+- Laju Manual Drip (${dropName}): ${drop} TPM`;
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast-copy');
+            toast.classList.remove('hidden');
+            toast.classList.add('toast-animate');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+                toast.classList.remove('toast-animate');
+            }, 3000);
+        }
+
+        function copyData(tab) {
+            const bb = document.getElementById('inp-weight').value;
+            if (bb <= 0 || isNaN(bb)) {
+                alert("Mohon masukkan berat badan pasien yang valid sebelum menyalin instruksi.");
+                return;
+            }
+
+            const gender = document.getElementById('inp-gender').value === 'male' ? 'Laki-laki' : 'Perempuan';
+            let copyText = "";
+
+            if (tab === 'albumin') {
+                const labAlb = getNum('inp-lab-alb');
+                const targetAlb = getNum('inp-target-alb');
+                if (labAlb >= targetAlb) {
+                    copyText = `[STATUS ALBUMIN]
+Data Pasien: BB ${bb} kg (${gender})
+Lab Albumin: ${labAlb} g/dL (Target: ${targetAlb} g/dL)
+
+STATUS: HIPERALBUMINEMIA / NORMAL
+Tidak ada indikasi defisit albumin. Nilai lab di atas target. Evaluasi status hidrasi pasien (kemungkinan hemokonsentrasi).`;
+                } else {
+                    copyText = `[KOREKSI ALBUMIN (HIPOALBUMINEMIA)]
+Data Pasien: BB ${bb} kg (${gender})
+Lab Albumin: ${labAlb} g/dL (Target: ${targetAlb} g/dL)
+
+TOTAL KEBUTUHAN: ${document.getElementById('out-alb-grams').innerText} gram
+• Opsi A: Albumin 20% (100cc) = ${document.getElementById('out-alb-20').innerText} flacon
+• Opsi B: Albumin 25% (100cc) = ${document.getElementById('out-alb-25').innerText} flacon
+
+Instruksi Pemberian:
+- Laju infus: 1-2 mL/menit.
+- Jangan diencerkan & jangan dicampur dalam selang yang sama dengan TPN/Lemak.`;
+                }
+            
+            } else if (tab === 'natrium') {
+                const labNa = getNum('inp-lab-na');
+                if (labNa < 135) {
+                    const rate3 = parseFloat(document.getElementById('out-rate-3').innerText);
+                    const warnNote = rate3 > 50 ? "\n⚠️ PERHATIAN MEDIS: Laju Syringe Pump melebihi 50 mL/jam. Harap evaluasi ulang batas kecepatan di unit Anda!" : "";
+                    copyText = `[KOREKSI HIPONATREMIA]
+Data Pasien: BB ${bb} kg (${gender})
+Lab Natrium: ${labNa} mEq/L
+Target Kenaikan 24 Jam: +${document.getElementById('inp-target-na-24').value} mEq
+
+OPSI 1: NaCl 3% (Hipertonik)
+• Prediksi kenaikan Na per 1L: +${document.getElementById('out-adrogue-3').innerText} mEq
+• Kebutuhan Volume 24 Jam: ${document.getElementById('out-vol-3').innerText} mL
+• Laju Syringe Pump: ${document.getElementById('out-rate-3').innerText} mL/jam ${warnNote}
+
+OPSI 2: NaCl 0.9% (Normal Saline)
+• Prediksi kenaikan Na per 1L: +${document.getElementById('out-adrogue-09').innerText} mEq
+• Laju Infus 24 Jam: ${document.getElementById('out-rate-09').innerText} mL/jam
+
+⚠️ PERINGATAN (MENCEGAH ODS):
+- Dilarang menaikkan Na > 8-10 mEq/L dalam 24 jam. Wajib cek lab Na serial tiap 4-6 jam.`;
+                } else if (labNa > 145) {
+                    copyText = `[TATALAKSANA HIPERNATREMIA]
+Data Pasien: BB ${bb} kg (${gender})
+Lab Natrium: ${labNa} mEq/L
+
+DEFISIT AIR BEBAS (FREE WATER DEFICIT): ${document.getElementById('out-fwd').innerText} Liter
+
+Rekomendasi Cairan:
+- Gunakan D5W (Enteral/IV) atau NaCl 0.45%.
+- Estimasi kecepatan penggantian defisit: ${document.getElementById('out-fwd-rate').innerText} mL/jam (untuk dihabiskan merata dalam 48 jam). Catatan: Belum termasuk maintenance harian dan ongoing loss.
+
+⚠️ PERINGATAN (MENCEGAH EDEMA SEREBRI):
+- Turunkan Natrium perlahan, maksimal 10 mEq dalam 24 jam.`;
+                } else {
+                    copyText = `[STATUS NATRIUM]
+Data Pasien: BB ${bb} kg (${gender})
+Lab Natrium: ${labNa} mEq/L
+
+STATUS: NORMAL (135 - 145 mEq/L). Pertahankan cairan maintenance.`;
+                }
+            
+            } else if (tab === 'kalium') {
+                const labK = getNum('inp-lab-k');
+                if (labK < 3.5) {
+                    copyText = `[KOREKSI HIPOKALEMIA]
+Data Pasien: BB ${bb} kg (${gender})
+Lab Kalium: ${labK} mEq/L (Target: ${document.getElementById('inp-target-k').value} mEq/L)
+
+TOTAL DEFISIT KALIUM: ${document.getElementById('out-k-deficit').innerText} mEq
+
+STRATEGI PEMBERIAN (BERTAHAP):
+- Berikan bertahap (misal 50% awal), lalu re-check.
+- Batas Laju Perifer: Max 10 mEq/jam (Teoritis)
+- Batas Laju Sentral (CVC): Max 20-40 mEq/jam (Wajib EKG kontinu jika >10 mEq/jam)
+
+CONTOH PRAKTIS RESEP:
+- Sediaan Umum: 1 Flacon KCl 7.46% = 25 mL = 25 mEq.
+- Perifer (Paling Aman): 1 Flacon KCl (25 mEq) dilarutkan dlm 500 cc NaCl 0.9%, drip lambat 12-24 jam. (Sangat direkomendasikan untuk mencegah flebitis/nyeri hebat di ruangan biasa).
+- Sentral (CVC): 1-2 Flacon KCl dilarutkan dlm 50-100 cc NaCl 0.9% via Syringe Pump. Laju sesuaikan target (Max 20 mEq/jam).
+
+⚠️ PENGINGAT FATAL: NEVER BOLUS! 
+Pemberian KCl secara bolus langsung ke pembuluh darah BISA LANGSUNG MENYEBABKAN HENTI JANTUNG (CARDIAC ARREST) & KEMATIAN! 
+Pelarut WAJIB NaCl 0.9%. Dilarang menggunakan Asering/RL (mengandung K/Ca) atau Dextrose (K masuk sel). Jangan larutkan 25 mEq dlm 100 cc untuk vena perifer krn pasti memicu flebitis/nyeri.`;
+                    
+                    // Tambahkan hasil perhitungan Laju Pelarutan
+                    copyText += getInfusCopyText('k');
+                    
+                } else if (labK > 5.0) {
+                    copyText = `[TATALAKSANA HIPERKALEMIA]
+Data Pasien: BB ${bb} kg (${gender})
+Lab Kalium: ${labK} mEq/L
+
+PROTOKOL KEGAWATAN:
+1. Stabilisasi Membran Miokard: Calcium Gluconate 10% (1 ampul IV lambat 2-3 menit). Wajib jika ada kelainan EKG.
+2. Shifting Intraseluler: 10 IU Regular Insulin + 50 mL D40% IV bolus. Tambahkan nebulisasi Salbutamol (jika tidak takikardi berat).
+3. Eliminasi Kalium: Loop Diuretik (Furosemide), Kalitake/Kalimate (Pengikat K), atau Hemodialisis (pada AKI/CKD anuria).`;
+                } else {
+                    copyText = `[STATUS KALIUM]
+Lab Kalium: ${labK} mEq/L
+STATUS: NORMAL (3.5 - 5.0 mEq/L). Tidak ada indikasi koreksi.`;
+                }
+            
+            } else if (tab === 'magnesium') {
+                const labMg = getNum('inp-lab-mg');
+                if (labMg < 1.7) {
+                    copyText = `[KOREKSI HIPOMAGNESEMIA]
+Lab Magnesium: ${labMg} mg/dL
+REKOMENDASI: ${document.getElementById('out-mg-guideline').innerText}
+
+CONTOH PRAKTIS PEMBERIAN MgSO4:
+- Sediaan: MgSO4 20% (1g=5mL) atau 40% (1g=2.5mL).
+- Resep 4g: 10 mL MgSO4 40% dilarutkan dlm 100 cc NaCl 0.9%, drip habis dlm 4 jam.
+- Kecepatan aman: 1 gram/jam.
+- Monitoring: Wajib cek Refleks Patella, RR >16x/mnt, dan Produksi Urin >0.5cc/kg/jam.`;
+                    
+                    // Tambahkan hasil perhitungan Laju Pelarutan
+                    copyText += getInfusCopyText('mg');
+                    
+                } else if (labMg > 2.5) {
+                    copyText = `[TATALAKSANA HIPERMAGNESEMIA]
+Lab Magnesium: ${labMg} mg/dL
+REKOMENDASI: ${document.getElementById('out-mg-guideline').innerText}
+
+Prosedur Penanganan:
+- Hentikan SEMUA sumber Magnesium segera.
+- Calcium Gluconate 10% IV (sebagai antidotum jantung/napas jika bergejala).
+- Hidrasi agresif dengan NaCl 0.9% + Furosemide untuk membuang Mg dari ginjal.`;
+                } else {
+                    copyText = `[STATUS MAGNESIUM]
+Lab Magnesium: ${labMg} mg/dL. NORMAL (1.7 - 2.5 mg/dL).`;
+                }
+            
+            } else if (tab === 'kalsium') {
+                let status = "NORMAL";
+                let guidelineText = document.getElementById('out-ca-guideline').innerText;
+                let procText = "";
+
+                if (caType === 'ionized') {
+                    const labCa = getNum('inp-lab-ca');
+                    if(labCa < 4.5) { status = "HIPOKALSEMIA"; } else if (labCa > 5.6) { status = "HIPERKALSEMIA"; }
+                    copyText = `[STATUS KALSIUM - IONIZED]\nLab Ionized Ca: ${labCa} mg/dL\nSTATUS: ${status}\nREKOMENDASI: ${guidelineText}`;
+                } else {
+                    const labTotalCa = getNum('inp-lab-totalca');
+                    const corrCa = document.getElementById('out-corrected-ca').innerText;
+                    guidelineText = `${document.getElementById('out-total-ca-act').innerText} (${document.getElementById('out-total-ca-freq').innerText})`;
+                    if(corrCa < 8.5) { status = "HIPOKALSEMIA"; } else if (corrCa > 10.5) { status = "HIPERKALSEMIA"; }
+                    copyText = `[STATUS KALSIUM - TOTAL]\nLab Total Ca: ${labTotalCa} mg/dL | Albumin: ${document.getElementById('inp-lab-alb-ca').value} g/dL\nCorrected Calcium: ${corrCa} mg/dL\nSTATUS: ${status}\nREKOMENDASI: ${guidelineText}`;
+                }
+                
+                if (status === "HIPOKALSEMIA") {
+                    copyText += `\n\nCONTOH PRAKTIS IV CALCIUM GLUCONATE 10%:
+- Sediaan: 1 Ampul = 10 mL (~93 mg Elemental Ca).
+- Resep Praktis: 1 Ampul (10 mL) dilarutkan dlm 100 cc NaCl 0.9% atau D5W, drip lambat habis dlm 30-60 menit.
+- Kecepatan Maksimal: 1-2 gram (10-20 mL) per jam drip.
+- INKOMPATIBILITAS: Jangan dicampur 1 line dengan Bikarbonat atau Fosfat (kristalisasi).`;
+                } else if (status === "HIPERKALSEMIA") {
+                    copyText += `\n\nInstruksi Tatalaksana Hiperkalsemia:
+- Hidrasi Agresif (NaCl 0.9%). Loop Diuretik (Furosemide) HANYA setelah rehidrasi adekuat. Bisfosfonat indikasi jika ada malignansi.`;
+                }
+            
+            } else if (tab === 'fosfat') {
+                const labPhos = getNum('inp-lab-phos');
+                if (labPhos < 2.5) {
+                    copyText = `[KOREKSI HIPOFOSFATEMIA]
+Lab Fosfor: ${labPhos} mg/dL
+REKOMENDASI: ${document.getElementById('out-phos-guideline').innerText}
+
+CONTOH PRAKTIS PEMBERIAN IV PHOS:
+- Pemilihan Sediaan: Gunakan K-Phos jika K+ < 4.0. Gunakan Na-Phos jika K+ > 4.0.
+- Resep Praktis: Larutkan dosis anjuran ke dalam 250 cc NaCl 0.9%.
+- Kecepatan: Drip lambat selama 4-6 jam, maksimal 7.5 mmol/jam. 
+- Perhatian: Cek Ca dan Mg sebelum koreksi.`;
+                    
+                    // Tambahkan hasil perhitungan Laju Pelarutan
+                    copyText += getInfusCopyText('phos');
+                    
+                } else if (labPhos > 4.5) {
+                    copyText = `[TATALAKSANA HIPERFOSFATEMIA]
+Lab Fosfor: ${labPhos} mg/dL
+REKOMENDASI: ${document.getElementById('out-phos-guideline').innerText}
+
+Instruksi Penanganan:
+- Batasi asupan fosfat (diet restriksi).
+- Berikan Phosphate Binders BERSAMAAN DENGAN MAKAN (misal: CaCO3, Sevelamer). Hemodialisis jika indikasi berat.`;
+                } else {
+                    copyText = `[STATUS FOSFAT]
+Lab Fosfor: ${labPhos} mg/dL. NORMAL (2.5 - 4.5 mg/dL).`;
+                }
+            } else if (tab === 'infus') {
+                const vol = document.getElementById('inp-inf-vol').value;
+                const time = document.getElementById('inp-inf-time').value;
+                const pump = document.getElementById('out-inf-pump').innerText;
+                const drop = document.getElementById('out-inf-drop').innerText;
+                const dropFactor = document.getElementById('inp-inf-drop').options[document.getElementById('inp-inf-drop').selectedIndex].text;
+                
+                copyText = `[INSTRUKSI LAJU PEMBERIAN CAIRAN/OBAT]
+- Volume Cairan/Pelarut: ${vol} mL
+- Target Waktu: ${time} Jam
+
+OPSI 1: VIA SYRINGE PUMP / INFUS PUMP
+=> Kecepatan Laju: ${pump} mL/jam
+
+OPSI 2: VIA MANUAL DRIP
+=> Faktor Tetes: ${dropFactor}
+=> Kecepatan Tetesan: ${drop} Tetes Per Menit (TPM)`;
+            }
+
+            const textArea = document.createElement("textarea");
+            textArea.value = copyText;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast();
+            } catch (err) {
+                console.error('Failed to copy', err);
+                alert("Gagal menyalin teks.");
+            }
+            document.body.removeChild(textArea);
+        }
+
+        window.onload = () => { calculateAll(); }
+    </script>
+</body>
+</html>
