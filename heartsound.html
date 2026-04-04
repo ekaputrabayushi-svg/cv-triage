@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Heart Sound Simulator Pro - CardiologyVault</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            /* Latar belakang soft dark navy/slate yang sangat menyejukkan mata */
+            background: linear-gradient(145deg, #0f172a 0%, #172033 50%, #1e293b 100%);
+            color: #e2e8f0; /* Soft off-white, tidak pure white */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Soft Glassmorphism - Lebih transparan dan blur halus */
+        .glass-soft {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Pastel Glow - Tidak silau */
+        .glow-cyan-soft { text-shadow: 0 0 8px rgba(34, 211, 238, 0.4); }
+        .glow-emerald-soft { text-shadow: 0 0 8px rgba(52, 211, 153, 0.4); }
+        .glow-indigo-soft { text-shadow: 0 0 8px rgba(129, 140, 248, 0.4); }
+        
+        #monitor-container {
+            position: relative;
+            width: 100%;
+            height: 280px;
+            border-radius: 1.25rem;
+            overflow: hidden;
+            background-color: rgba(15, 23, 42, 0.6);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+            border: 1px solid rgba(148, 163, 184, 0.08);
+        }
+
+        canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            mix-blend-mode: screen; 
+        }
+
+        /* Tombol Selector yang Soft */
+        .condition-btn {
+            transition: all 0.3s ease;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.05);
+            color: #94a3b8;
+        }
+        .condition-btn.active {
+            background: rgba(56, 189, 248, 0.1);
+            border-color: rgba(56, 189, 248, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.05);
+        }
+        .condition-btn.active .name-label {
+            color: #38bdf8; /* Light sky blue */
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center pb-8">
+
+    <!-- Header Section -->
+    <header class="w-full max-w-lg glass-soft sticky top-0 z-30 px-5 py-4 border-b border-slate-700/50">
+        <div class="flex flex-col items-center text-center">
+            <h1 class="text-xl font-bold text-slate-100 flex items-center gap-2 drop-shadow-sm">
+                <i data-lucide="activity" class="w-5 h-5 text-sky-400"></i>
+                Heart Sound Simulator <span class="text-sky-400 font-light">Pro</span>
+            </h1>
+            <p class="text-[11px] text-slate-400 font-mono mt-1.5 tracking-wide">Developed by Bayushi Eka Putra, MD, FIHA</p>
+            <div class="mt-2 px-3 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20">
+                <span class="text-[8px] font-bold text-indigo-300 uppercase tracking-[0.2em]">Part of CardiologyVault</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full max-w-lg flex-1 flex flex-col gap-5 p-4 mt-2 relative z-10">
+        
+        <!-- PCG/ECG Monitor -->
+        <div id="monitor-container">
+            <canvas id="bg-canvas" width="720" height="280"></canvas>
+            <canvas id="trace-canvas" width="720" height="280"></canvas>
+
+            <div class="absolute top-3 left-3 z-20 flex items-center gap-2 glass-soft px-3 py-1.5 rounded-full">
+                <div id="status-dot" class="w-2 h-2 rounded-full bg-slate-600 transition-all duration-300"></div>
+                <span id="status-text" class="text-[10px] font-mono text-slate-400">STANDBY</span>
+            </div>
+
+            <div class="absolute left-3 top-[25%] z-20 text-[10px] font-semibold text-emerald-400/70 tracking-widest glow-emerald-soft">EKG</div>
+            <div class="absolute left-3 top-[70%] z-20 text-[10px] font-semibold text-sky-400/70 tracking-widest glow-cyan-soft">PCG</div>
+
+            <!-- Mini Auscultation Map -->
+            <div class="absolute top-3 right-3 z-20 w-20 h-24 glass-soft rounded-xl flex items-center justify-center shadow-lg">
+                <div class="relative w-full h-full" id="auscultation-map">
+                    <div class="absolute left-1/2 top-2 bottom-2 w-0.5 -translate-x-1/2 bg-slate-700/30 rounded-full"></div>
+                </div>
+                <div id="map-label" class="absolute bottom-[-8px] left-1/2 -translate-x-1/2 text-[8px] font-bold text-sky-100 bg-slate-800 px-2.5 py-0.5 rounded-full whitespace-nowrap border border-sky-500/20 shadow-sm">SEMUA</div>
+            </div>
+
+            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
+                <button id="play-btn" class="flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-sm transition-all active:scale-95 bg-slate-800 text-sky-400 border border-sky-500/30 hover:bg-slate-700 hover:text-sky-300 shadow-lg">
+                    <i data-lucide="play" class="w-4 h-4 fill-current" id="play-icon"></i>
+                    <span id="play-text">Putar Suara</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Pathology Selector -->
+        <div class="flex overflow-x-auto gap-3 pb-2 hide-scrollbar snap-x shrink-0" id="condition-list">
+            <!-- Injected via JS -->
+        </div>
+
+        <!-- Info Card (Soft pastel theme) -->
+        <div class="glass-soft rounded-2xl p-5 flex-1 flex flex-col gap-4">
+            <div class="flex gap-3 items-start mb-1">
+                <div class="p-2 rounded-xl bg-slate-800/50 border border-slate-700/50">
+                    <i data-lucide="stethoscope" class="w-5 h-5 text-sky-400"></i>
+                </div>
+                <div>
+                    <h2 id="info-title" class="text-base font-bold text-slate-100 leading-tight">Normal (S1-S2)</h2>
+                    <div class="text-[11px] text-slate-400 font-medium flex items-center gap-1.5 mt-1">
+                        <i data-lucide="map-pin" class="w-3 h-3 text-slate-500"></i> 
+                        <span id="info-location">S1 jelas di Apeks. S2 jelas di Basis Jantung.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="bg-slate-900/40 rounded-xl p-4 border border-slate-800/50">
+                    <h3 class="text-[10px] font-bold text-indigo-300/80 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                        <i data-lucide="book-open" class="w-3.5 h-3.5 opacity-70"></i> Patofisiologi
+                    </h3>
+                    <p id="info-patho" class="text-[11px] text-slate-300 leading-relaxed text-justify">
+                        S1 akibat penutupan katup atrioventrikular. S2 akibat penutupan katup semilunar.
+                    </p>
+                </div>
+                <div class="bg-slate-900/40 rounded-xl p-4 border border-slate-800/50">
+                    <h3 class="text-[10px] font-bold text-emerald-300/80 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                        <i data-lucide="waveform" class="w-3.5 h-3.5 opacity-70"></i> Karakteristik
+                    </h3>
+                    <p id="info-char" class="text-[11px] text-slate-300 leading-relaxed text-justify">
+                        Jarak S1 ke S2 lebih pendek dari S2 ke S1. S1 bernada lebih rendah.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        // --- Data Suara Jantung Lengkap (IPASS Theory + Additional) ---
+        const HEART_CONDITIONS = [
+            {
+                id: 'normal', name: 'Normal (S1-S2)', shortDesc: 'Fisiologis dasar',
+                patho: 'S1 terjadi akibat penutupan katup atrioventrikular (Mitral & Trikuspid) di awal sistol. S2 akibat penutupan katup semilunar (Aorta & Pulmonal) di awal diastol.',
+                location: 'S1 paling jelas di Apeks. S2 paling jelas di Basis Jantung.', auscultationPoint: 'all',
+                characteristics: 'Jarak S1 ke S2 (sistol) lebih pendek daripada S2 ke S1 (diastol).'
+            },
+            {
+                id: 'as', name: 'Aortic Stenosis (AS)', shortDesc: 'Murmur Ejeksi Sistolik',
+                patho: 'Penyempitan katup aorta menghambat ejeksi ventrikel kiri.',
+                location: 'Area Aorta (ICS II Kanan), menjalar ke karotis.', auscultationPoint: 'aortic',
+                characteristics: 'Murmur ejeksi sistolik (Crescendo-Decrescendo / diamond shape). Kasar (harsh).'
+            },
+            {
+                id: 'mr', name: 'Mitral Regurgitation', shortDesc: 'Murmur Pansistolik',
+                patho: 'Katup mitral tidak menutup rapat, darah kembali ke atrium kiri sepanjang sistol.',
+                location: 'Apeks (Area Mitral), menjalar ke aksila kiri.', auscultationPoint: 'mitral',
+                characteristics: 'Murmur pansistolik/holosistolik, konstan dari S1 hingga S2. Tipe blowing.'
+            },
+            {
+                id: 'vsd', name: 'Ventricular Septal Defect', shortDesc: 'Murmur Pansistolik',
+                patho: 'Defek pada septum ventrikel. Darah mengalir dari ventrikel kiri ke kanan sepanjang sistol (Left-to-right shunt).',
+                location: 'Tepi Kiri Sternum Bawah (LLSB / Area Trikuspid).', auscultationPoint: 'tricuspid',
+                characteristics: 'Murmur pansistolik/holosistolik yang keras dan kasar (harsh). Sering disertai thrill.'
+            },
+            {
+                id: 'asd', name: 'Atrial Septal Defect', shortDesc: 'Flow Murmur + Fixed Split',
+                patho: 'Shunt dari atrium kiri ke kanan menyebabkan volume overload di ventrikel kanan dan peningkatan aliran melewati katup pulmonal.',
+                location: 'Area Pulmonal (ICS II Kiri).', auscultationPoint: 'pulmonic',
+                characteristics: 'Murmur ejeksi sistolik halus (akibat hiperflow pulmonal) disertai pemecahan S2 yang menetap (Fixed split S2) pada fase inspirasi maupun ekspirasi.'
+            },
+            {
+                id: 'mvp', name: 'Mitral Valve Prolapse', shortDesc: 'Click + Late Systolic',
+                patho: 'Kelemahan korda tendinea/katup menyebabkan katup prolaps ke atrium kiri saat tekanan sistolik memuncak (timbul click), diikuti kebocoran parsial (murmur).',
+                location: 'Apeks (Area Mitral).', auscultationPoint: 'mitral',
+                characteristics: 'Terdengar Mid-Systolic Click yang tajam, diikuti murmur late-systolic crescendo yang berlanjut hingga S2.'
+            },
+            {
+                id: 'ms', name: 'Mitral Stenosis (MS)', shortDesc: 'Mid-to-Late Diastolic',
+                patho: 'Penyempitan katup mitral menghambat pengisian ventrikel kiri di pertengahan hingga akhir diastol.',
+                location: 'Apeks (Gunakan Bell, posisi miring kiri).', auscultationPoint: 'mitral',
+                characteristics: 'Murmur mid-to-late diastolic, bernada rendah (rumble). Terdapat gap sesaat setelah S2, kemudian decrescendo dan diakhiri presystolic crescendo (akibat atrial kick).'
+            },
+            {
+                id: 'ts', name: 'Tricuspid Stenosis (TS)', shortDesc: 'Mid-to-Late Diastolic',
+                patho: 'Penyempitan katup trikuspid menghambat pengisian ventrikel kanan.',
+                location: 'Lower Left Sternal Border (Area Trikuspid).', auscultationPoint: 'tricuspid',
+                characteristics: 'Mirip MS (mid-to-late diastolic rumble), tapi letaknya di batas bawah sternum dan intensitasnya meningkat saat inspirasi.'
+            },
+            {
+                id: 'ar', name: 'Aortic Regurgitation', shortDesc: 'Early Diastolic',
+                patho: 'Katup aorta inkompeten, darah kembali ke ventrikel kiri dari aorta di awal diastol.',
+                location: 'Area Aorta (ICS II Kanan) & LSB (Erb\'s Point).', auscultationPoint: 'aortic',
+                characteristics: 'Murmur early diastolic decrescendo. Bernada tinggi (high-pitch, blowing).'
+            },
+            {
+                id: 'pr', name: 'Pulmonic Regurgitation', shortDesc: 'Early Diastolic',
+                patho: 'Katup pulmonal bocor (sering akibat hipertensi pulmonal berat / Graham Steell murmur).',
+                location: 'Area Pulmonal (ICS II Kiri).', auscultationPoint: 'pulmonic',
+                characteristics: 'Murmur early diastolic decrescendo (mirip AR), terdengar dominan di basis kiri atas. Meningkat saat inspirasi.'
+            },
+            {
+                id: 'pda', name: 'Patent Ductus Arteriosus', shortDesc: 'Murmur Kontinu',
+                patho: 'Saluran duktus arteriosus persisten. Gradien tekanan dari Aorta ke A.Pulmonalis terjadi terus menerus menyelimuti siklus jantung.',
+                location: 'Infraclavicular kiri / Area Pulmonal.', auscultationPoint: 'pulmonic',
+                characteristics: 'Murmur machinery kontinu tulen tanpa gap. Meliputi sistol dan diastol penuh, dan intensitasnya memuncak tepat pada bunyi S2.'
+            },
+            {
+                id: 'to_and_fro', name: 'To-and-Fro Murmur', shortDesc: 'Systolic + Diastolic',
+                patho: 'Gabungan stenosis dan regurgitasi pada satu katup (misal: AS + AR secara bersamaan).',
+                location: 'Area Aorta (ICS II Kanan).', auscultationPoint: 'aortic',
+                characteristics: 'Murmur ejeksi sistolik (diamond) diikuti murmur early diastolic (decrescendo), dengan jeda singkat/lekukan di S2. Berbeda dengan bunyi kontinu PDA.'
+            },
+            {
+                id: 's3', name: 'S3 Gallop', shortDesc: 'Awal Diastol',
+                patho: 'Deselerasi tiba-tiba darah ke ventrikel yang dilatasi. Fisiologis di anak, patologis (Volume Overload/CHF) di dewasa.',
+                location: 'Apeks (Gunakan Bell).', auscultationPoint: 'mitral',
+                characteristics: 'Irama derap "Ken-tuck-y" (S1-S2-S3) bernada rendah.'
+            },
+            {
+                id: 's4', name: 'S4 Gallop', shortDesc: 'Akhir Diastol',
+                patho: 'Atrial kick melawan ventrikel yang kaku/hipertrofi (Pressure Overload, misal Hipertensi).',
+                location: 'Apeks (Gunakan Bell).', auscultationPoint: 'mitral',
+                characteristics: 'Irama derap "Ten-nes-see" (S4-S1-S2). Selalu patologis.'
+            },
+            {
+                id: 'summation', name: 'Summation Gallop', shortDesc: 'Mid Diastol',
+                patho: 'S3 dan S4 terjadi sangat berdekatan atau bersamaan, biasanya tercetus saat laju jantung meningkat (takikardia).',
+                location: 'Apeks / Mid-Prekordial.', auscultationPoint: 'mitral',
+                characteristics: 'Bunyi ekstra tunggal yang sangat keras di pertengahan diastol, merupakan gabungan suara S3 dan S4 yang bertumpuk.'
+            },
+            {
+                id: 'pericardial_rub', name: 'Pericardial Friction Rub', shortDesc: '3 Komponen Gesekan',
+                patho: 'Gesekan antara lapisan viseral dan parietal perikardium yang meradang (perikarditis) selama gerakan siklus jantung.',
+                location: 'Tepi Kiri Sternum Bawah (LLSB). Paling jelas saat pasien duduk condong ke depan dan menahan napas saat ekspirasi.', auscultationPoint: 'tricuspid',
+                characteristics: 'Bunyi kasar, menggores (scratchy/grating) bernada tinggi seperti gesekan kulit/ampelas. Klasik memiliki 3 komponen: presistolik, sistolik ventrikel, dan diastolik awal.'
+            }
+        ];
+
+        const AUSCULTATION_POINTS = [
+            { id: 'aortic', name: 'A', x: 35, y: 35 },
+            { id: 'pulmonic', name: 'P', x: 65, y: 35 },
+            { id: 'tricuspid', name: 'T', x: 55, y: 65 },
+            { id: 'mitral', name: 'M', x: 75, y: 75 },
+        ];
+
+        // --- Audio Engine ---
+        class HeartAudioEngine {
+            constructor() {
+                this.audioCtx = null;
+                this.isPlaying = false;
+                this.bpm = 60;
+                this.nextNoteTime = 0.0;
+                this.timerID = null;
+                this.lookahead = 25.0; 
+                this.scheduleAheadTime = 0.1; 
+                this.currentCondition = 'normal';
+            }
+
+            init() {
+                if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+            }
+
+            setCondition(conditionId) { this.currentCondition = conditionId; }
+            nextNote() { this.nextNoteTime += 60.0 / this.bpm; }
+
+            playTone(time, freq, duration, vol, type='sine', lpFreq=150) {
+                const osc = this.audioCtx.createOscillator();
+                const gain = this.audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, time);
+                
+                gain.gain.setValueAtTime(0, time);
+                if(type === 'sine') {
+                    gain.gain.linearRampToValueAtTime(vol, time + 0.01);
+                    gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+                } else { // Click sound
+                    gain.gain.linearRampToValueAtTime(vol, time + 0.005);
+                    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.02);
+                }
+
+                osc.connect(gain);
+                
+                if (lpFreq) {
+                    const filter = this.audioCtx.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.value = lpFreq;
+                    gain.connect(filter);
+                    filter.connect(this.audioCtx.destination);
+                } else {
+                    gain.connect(this.audioCtx.destination);
+                }
+
+                osc.start(time);
+                osc.stop(time + duration);
+            }
+
+            playNoise(time, duration, type, vol, pitch = 'medium') {
+                const bufferSize = this.audioCtx.sampleRate * duration;
+                const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                
+                const noise = this.audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                
+                const filter = this.audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                if (pitch === 'low') { filter.frequency.value = 150; filter.Q.value = 1.5; } 
+                else if (pitch === 'high') { filter.frequency.value = 600; filter.Q.value = 1.0; } 
+                else if (pitch === 'scratchy') { filter.frequency.value = 800; filter.Q.value = 2.5; } // Filter khusus untuk tekstur kasar gesekan
+                else { filter.frequency.value = 350; filter.Q.value = 1.2; }
+
+                const gain = this.audioCtx.createGain();
+
+                if (type === 'diamond') { 
+                    gain.gain.setValueAtTime(0, time);
+                    gain.gain.linearRampToValueAtTime(vol, time + duration / 2);
+                    gain.gain.linearRampToValueAtTime(0.001, time + duration);
+                } else if (type === 'plateau') { 
+                    gain.gain.setValueAtTime(0, time);
+                    gain.gain.linearRampToValueAtTime(vol * 0.8, time + 0.02);
+                    gain.gain.setValueAtTime(vol * 0.8, time + duration - 0.02);
+                    gain.gain.linearRampToValueAtTime(0.001, time + duration);
+                } else if (type === 'decrescendo') { 
+                    gain.gain.setValueAtTime(0, time);
+                    gain.gain.linearRampToValueAtTime(vol, time + 0.02);
+                    gain.gain.linearRampToValueAtTime(0.001, time + duration);
+                } else if (type === 'crescendo') {
+                    gain.gain.setValueAtTime(0.001, time);
+                    gain.gain.exponentialRampToValueAtTime(vol, time + duration - 0.02);
+                    gain.gain.linearRampToValueAtTime(0, time + duration);
+                } else if (type === 'mid-late-rumble') { 
+                    // Terdapat gap awal, rumble decrescendo lambat, lalu presystolic crescendo (MS/TS)
+                    gain.gain.setValueAtTime(0, time);
+                    gain.gain.linearRampToValueAtTime(vol * 0.5, time + 0.05);
+                    gain.gain.linearRampToValueAtTime(vol * 0.2, time + duration * 0.6);
+                    gain.gain.linearRampToValueAtTime(vol * 0.8, time + duration - 0.05);
+                    gain.gain.linearRampToValueAtTime(0, time + duration);
+                } else if (type === 'continuous') { 
+                    // Menyambung utuh tanpa putus. Peak di S2 (sekitar 0.35 dtk dari S1)
+                    gain.gain.setValueAtTime(vol * 0.3, time);
+                    gain.gain.linearRampToValueAtTime(vol, time + 0.35); 
+                    gain.gain.linearRampToValueAtTime(vol * 0.3, time + duration);
+                } else if (type === 'scratchy') {
+                    // Amplop tajam dan kasar
+                    gain.gain.setValueAtTime(0, time);
+                    gain.gain.linearRampToValueAtTime(vol, time + 0.01);
+                    gain.gain.exponentialRampToValueAtTime(0.01, time + duration);
+                }
+
+                noise.connect(filter); filter.connect(gain); gain.connect(this.audioCtx.destination);
+                noise.start(time);
+            }
+
+            scheduleSound(time) {
+                // Timing (240px/sec basis): S1 @ x=40 (0.166s), S2 @ x=124 (0.516s)
+                const s1Time = time + (40 / 240); 
+                const s2Time = time + (124 / 240); 
+                const systoleDuration = s2Time - s1Time;
+                const diastoleDuration = (time + 1.0 + (40/240)) - s2Time; 
+
+                // Base S1, S2
+                this.playTone(s1Time, 70, 0.12, 1.2); 
+                this.playTone(s2Time, 110, 0.08, 1.0); 
+
+                // Pathologies
+                if (this.currentCondition === 'as') {
+                    this.playNoise(s1Time + 0.04, systoleDuration - 0.06, 'diamond', 1.0, 'medium');
+                } else if (this.currentCondition === 'mr' || this.currentCondition === 'vsd') {
+                    this.playNoise(s1Time - 0.01, systoleDuration + 0.02, 'plateau', 0.8, 'high');
+                } else if (this.currentCondition === 'asd') {
+                    this.playNoise(s1Time + 0.04, systoleDuration - 0.06, 'diamond', 0.6, 'medium'); // Flow murmur
+                    this.playTone(s2Time + 0.07, 100, 0.06, 1.2); // Jeda diperlebar (70ms) dan volume dinaikkan agar Fixed split P2 terdengar sangat jelas
+                } else if (this.currentCondition === 'mvp') {
+                    const clickTime = s1Time + (systoleDuration / 2.2);
+                    this.playTone(clickTime, 600, 0.05, 0.5, 'triangle', null); // High pitch click
+                    this.playNoise(clickTime, s2Time - clickTime, 'crescendo', 0.8, 'high');
+                } else if (this.currentCondition === 'ms' || this.currentCondition === 'ts') {
+                    const gap = 0.1; // Gap awal setelah S2
+                    this.playNoise(s2Time + gap, diastoleDuration - gap, 'mid-late-rumble', 0.9, 'low');
+                } else if (this.currentCondition === 'ar' || this.currentCondition === 'pr') {
+                    this.playNoise(s2Time, diastoleDuration * 0.6, 'decrescendo', 0.9, 'high');
+                } else if (this.currentCondition === 'pda') {
+                    this.playNoise(s1Time, 1.0, 'continuous', 0.9, 'medium'); // Span 1 detik penuh
+                } else if (this.currentCondition === 'to_and_fro') {
+                    this.playNoise(s1Time + 0.04, systoleDuration - 0.06, 'diamond', 1.0, 'medium'); // AS part
+                    this.playNoise(s2Time + 0.02, diastoleDuration * 0.5, 'decrescendo', 0.8, 'high'); // AR part
+                } else if (this.currentCondition === 's3') {
+                    this.playTone(time + (155 / 240), 45, 0.1, 1.0); 
+                } else if (this.currentCondition === 's4') {
+                    this.playTone(time + (15 / 240), 55, 0.1, 1.0); 
+                } else if (this.currentCondition === 'summation') {
+                    // Murni gabungan (Summation) S3 dan S4 di mid-diastol bertumpuk
+                    const sumTime = time + (175 / 240);
+                    this.playTone(sumTime, 45, 0.1, 1.2); // Komponen S3
+                    this.playTone(sumTime + 0.015, 55, 0.1, 1.2); // Komponen S4 masuk nyaris bersamaan
+                } else if (this.currentCondition === 'pericardial_rub') {
+                    // 3 komponen: presistolik, sistolik ventrikel, diastolik awal
+                    this.playNoise(time + (15 / 240), 0.08, 'scratchy', 0.9, 'scratchy'); // presistolik
+                    this.playNoise(s1Time + 0.03, 0.16, 'scratchy', 1.2, 'scratchy');     // sistolik (komponen dominan)
+                    this.playNoise(s2Time + 0.04, 0.12, 'scratchy', 0.8, 'scratchy');     // diastolik awal
+                }
+            }
+
+            scheduler() {
+                while (this.nextNoteTime < this.audioCtx.currentTime + this.scheduleAheadTime) {
+                    this.scheduleSound(this.nextNoteTime);
+                    this.nextNote();
+                }
+                this.timerID = setTimeout(() => this.scheduler(), this.lookahead);
+            }
+
+            play() {
+                if (this.isPlaying) return;
+                this.init(); this.isPlaying = true; this.nextNoteTime = this.audioCtx.currentTime + 0.1; this.scheduler();
+            }
+            stop() {
+                if (!this.isPlaying) return;
+                this.isPlaying = false; clearTimeout(this.timerID);
+            }
+        }
+
+        const audio = new HeartAudioEngine();
+        let selectedCondition = HEART_CONDITIONS[0];
+        let t = 0; 
+
+        // --- DOM Elements ---
+        const bgCanvas = document.getElementById('bg-canvas');
+        const traceCanvas = document.getElementById('trace-canvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        const traceCtx = traceCanvas.getContext('2d');
+        
+        const playBtn = document.getElementById('play-btn');
+        const playIcon = document.getElementById('play-icon');
+        const playText = document.getElementById('play-text');
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+        const mapContainer = document.getElementById('auscultation-map');
+        const conditionList = document.getElementById('condition-list');
+
+        // --- Render Visual ---
+        function renderBackgroundGuides() {
+            bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+            const pxPerSec = 240; const s1X = 40; const s2X = 124;
+            const ecgBaseY = bgCanvas.height * 0.35;
+            
+            for (let i = 0; i < 3; i++) {
+                const offsetX = i * pxPerSec;
+                
+                // Soft Systole Zone
+                bgCtx.fillStyle = 'rgba(56, 189, 248, 0.03)'; 
+                bgCtx.fillRect(offsetX + s1X, 0, s2X - s1X, bgCanvas.height);
+
+                // Dashed Timings
+                bgCtx.setLineDash([3, 5]);
+                bgCtx.strokeStyle = 'rgba(148, 163, 184, 0.2)'; 
+                bgCtx.lineWidth = 1;
+                bgCtx.beginPath();
+                bgCtx.moveTo(offsetX + s1X, 0); bgCtx.lineTo(offsetX + s1X, bgCanvas.height);
+                bgCtx.moveTo(offsetX + s2X, 0); bgCtx.lineTo(offsetX + s2X, bgCanvas.height);
+                bgCtx.stroke(); bgCtx.setLineDash([]); 
+
+                // Labels
+                bgCtx.fillStyle = 'rgba(148, 163, 184, 0.8)';
+                bgCtx.font = '600 11px sans-serif';
+                bgCtx.textAlign = 'right'; bgCtx.fillText('S1', offsetX + s1X - 4, 20);
+                bgCtx.textAlign = 'left'; bgCtx.fillText('S2', offsetX + s2X + 4, 20);
+                bgCtx.font = '500 9px sans-serif'; bgCtx.textAlign = 'center';
+                bgCtx.fillText('SYSTOLE', offsetX + s1X + ((s2X - s1X)/2), bgCanvas.height - 10);
+                bgCtx.fillText('DIASTOLE', offsetX + s2X + ((240 - s2X)/2), bgCanvas.height - 10);
+
+                // Patho Markers (Softly rendered)
+                bgCtx.font = '600 10px sans-serif';
+                bgCtx.fillStyle = 'rgba(216, 180, 254, 0.5)'; // soft purple
+                const cxSystole = offsetX + s1X + ((s2X - s1X)/2);
+                
+                if (selectedCondition.id === 'as') bgCtx.fillText('DIAMOND', cxSystole, bgCanvas.height / 2 + 40);
+                else if (selectedCondition.id === 'mr' || selectedCondition.id === 'vsd') bgCtx.fillText('PANSYSTOLIC', cxSystole, bgCanvas.height / 2 + 40);
+                else if (selectedCondition.id === 'asd') bgCtx.fillText('FLOW + FIXED SPLIT', cxSystole, bgCanvas.height / 2 + 40);
+                else if (selectedCondition.id === 'mvp') bgCtx.fillText('CLICK + LATE', cxSystole, bgCanvas.height / 2 + 40);
+                else if (selectedCondition.id === 'ms' || selectedCondition.id === 'ts') bgCtx.fillText('MID-LATE RUMBLE', offsetX + s2X + 60, bgCanvas.height / 2 + 40);
+                else if (selectedCondition.id === 'ar' || selectedCondition.id === 'pr') bgCtx.fillText('DECRESCENDO', offsetX + s2X + 40, bgCanvas.height / 2 + 40);
+                else if (selectedCondition.id === 'to_and_fro') bgCtx.fillText('TO-AND-FRO', offsetX + s2X, bgCanvas.height / 2 + 40);
+                else if (selectedCondition.id === 'pda') bgCtx.fillText('CONTINUOUS', offsetX + s2X, bgCanvas.height / 2 + 40);
+                else if (selectedCondition.id === 's3') bgCtx.fillText('S3', offsetX + 165, bgCanvas.height / 2 + 20);
+                else if (selectedCondition.id === 's4') bgCtx.fillText('S4', offsetX + 25, bgCanvas.height / 2 + 20);
+                else if (selectedCondition.id === 'summation') bgCtx.fillText('SUMMATION (S3+S4)', offsetX + 175, bgCanvas.height / 2 + 20); // Label diperjelas
+                else if (selectedCondition.id === 'pericardial_rub') {
+                    bgCtx.fillStyle = 'rgba(244, 114, 182, 0.6)'; // Pink
+                    bgCtx.fillText('3-COMPONENT RUB', cxSystole, bgCanvas.height / 2 + 40);
+                }
+                
+                bgCtx.textAlign = 'left'; 
+            }
+        }
+
+        let prevX = 0, prevEcgY = 280 * 0.35, prevPcgY = 280 * 0.75;
+        
+        function renderTrace() {
+            const width = traceCanvas.width; const height = traceCanvas.height;
+            const ecgBaseY = height * 0.35; const pcgBaseY = height * 0.75;
+            const speed = audio.isPlaying ? 3 : 0; // Slightly slower sweep for relaxed view
+            
+            if (speed > 0) {
+                for (let i = 0; i < speed; i++) {
+                    t++;
+                    const currentX = t % width;
+                    traceCtx.clearRect(currentX, 0, 15, height); // Eraser head
+
+                    const cycleX = t % 240;
+                    
+                    // --- ECG Soft Math ---
+                    let ecgAmp = 0;
+                    if (cycleX > 10 && cycleX <= 25) ecgAmp = -Math.sin(((cycleX - 10) / 15) * Math.PI) * 8; // P
+                    else if (cycleX > 32 && cycleX <= 34) ecgAmp = ((cycleX - 32) / 2) * 5; // Q
+                    else if (cycleX > 34 && cycleX <= 37) ecgAmp = 5 - ((cycleX - 34) / 3) * 55; // R
+                    else if (cycleX > 37 && cycleX <= 40) ecgAmp = -50 + ((cycleX - 37) / 3) * 60; // S
+                    else if (cycleX > 40 && cycleX <= 43) ecgAmp = 10 - ((cycleX - 40) / 3) * 10; // ST
+                    else if (cycleX > 75 && cycleX <= 125) ecgAmp = -Math.sin(Math.pow((cycleX - 75)/50, 0.7) * Math.PI) * 12; // T
+                    ecgAmp += (Math.random() - 0.5) * 0.4; // Very subtle noise
+                    const ecgY = ecgBaseY + ecgAmp;
+
+                    // --- PCG Soft Math ---
+                    let pcgAmp = 0;
+                    const s1Start = 40, s1End = 65;   
+                    const s2Start = 124, s2End = 144;  
+                    const getEnv = (x, s, e) => (x <= s || x >= e) ? 0 : Math.sin(((x - s) / (e - s)) * Math.PI);
+                    const noise = (Math.random() - 0.5) * 2;
+
+                    // PCG Pathologies
+                    const cond = selectedCondition.id;
+                    if (cond === 'as' && cycleX > 55 && cycleX < s2Start) {
+                        const env = getEnv(cycleX, 55, s2Start);
+                        pcgAmp += Math.sin(cycleX * 1.5) * 30 * env + (Math.random()-0.5) * 8 * env;
+                    } else if ((cond === 'mr' || cond === 'vsd') && cycleX > s1Start && cycleX < s2Start + 5) {
+                        let env = Math.pow(getEnv(cycleX, s1Start, s2Start + 5), 0.1); 
+                        pcgAmp += Math.sin(cycleX * 2.0) * 20 * env + (Math.random()-0.5) * 10 * env;
+                    } else if (cond === 'asd') {
+                        if (cycleX > 55 && cycleX < s2Start) { // Flow Murmur
+                            pcgAmp += Math.sin(cycleX * 1.5) * 15 * getEnv(cycleX, 55, s2Start);
+                        }
+                        if (cycleX > s2Start + 16 && cycleX < s2Start + 36) { // Visual Delayed P2 dipisah jaraknya agar terbentuk double-peak tajam
+                            pcgAmp += Math.sin(cycleX * 1.4) * 35 * Math.pow(getEnv(cycleX, s2Start + 16, s2Start + 36), 0.5); 
+                        }
+                    } else if (cond === 'mvp') {
+                        const clickX = s1Start + ((s2Start - s1Start) / 2.2);
+                        if (cycleX > clickX - 2 && cycleX < clickX + 2) pcgAmp += 35 * Math.sin((cycleX-clickX)*2); // Click
+                        else if (cycleX > clickX && cycleX < s2Start) {
+                            let env = Math.pow((cycleX - clickX) / (s2Start - clickX), 2); // Crescendo
+                            pcgAmp += Math.sin(cycleX * 2.2) * 25 * env + (Math.random()-0.5) * 8 * env;
+                        }
+                    } else if ((cond === 'ms' || cond === 'ts') && cycleX > s2Start + 24) {
+                        // Diastolic rumble (decrescendo -> plateau -> presystolic crescendo)
+                        let progress = (cycleX - (s2Start + 24)) / (240 + s1Start - (s2Start + 24));
+                        let env = 0.6 * (1 - progress) + 0.2 + 0.8 * Math.pow(progress, 4);
+                        if (cycleX > 240 + s1Start) env = 0; 
+                        pcgAmp += Math.sin(cycleX * 0.8) * 15 * env + (Math.random()-0.5) * 5 * env;
+                    } else if ((cond === 'ar' || cond === 'pr') && cycleX > s2Start && cycleX < 210) {
+                        let env = Math.pow(1 - (cycleX - s2Start) / (210 - s2Start), 2);
+                        pcgAmp += Math.sin(cycleX * 1.8) * 25 * env + (Math.random()-0.5) * 8 * env;
+                    } else if (cond === 'to_and_fro') {
+                        if(cycleX > 55 && cycleX < s2Start) { // AS part
+                            pcgAmp += Math.sin(cycleX * 1.5) * 25 * getEnv(cycleX, 55, s2Start);
+                        } else if(cycleX > s2Start + 5 && cycleX < 200) { // AR part
+                            let env = Math.pow(1 - (cycleX - s2Start - 5) / (200 - s2Start - 5), 2);
+                            pcgAmp += Math.sin(cycleX * 1.8) * 20 * env;
+                        }
+                    } else if (cond === 'pda') {
+                        let pdaEnv;
+                        if (cycleX >= s1Start && cycleX <= s2Start) { // Crescendo toward S2
+                            pdaEnv = 0.3 + 0.7 * ((cycleX - s1Start) / (s2Start - s1Start));
+                        } else { // Decrescendo wrapping back to next S1
+                            let distToNextS1 = (cycleX > s2Start) ? (240 + s1Start - cycleX) : (s1Start - cycleX);
+                            let totalDiastole = 240 - (s2Start - s1Start);
+                            pdaEnv = 0.3 + 0.7 * (distToNextS1 / totalDiastole);
+                        }
+                        pcgAmp += Math.sin(cycleX * 1.5) * 22 * pdaEnv + (Math.random()-0.5) * 8 * pdaEnv;
+                    } else if (cond === 'summation' && cycleX > 160 && cycleX < 195) {
+                        // Visual menggabungkan 2 envelope untuk mensimulasikan tumpukan gelombang S3 dan S4
+                        let env3 = Math.pow(getEnv(cycleX, 160, 185), 0.5); // S3 envelope
+                        let env4 = Math.pow(getEnv(cycleX, 170, 195), 0.5); // S4 envelope offset sedikit
+                        pcgAmp += Math.sin(cycleX * 0.7) * 22 * env3 + Math.sin(cycleX * 0.8) * 22 * env4;
+                    } else if (cond === 'pericardial_rub') {
+                        // Spiky math without sin waves, rendering pure amplified raw noise for scratchy look
+                        if (cycleX > 15 && cycleX < 35) { // presistolik
+                            pcgAmp += (Math.random() - 0.5) * 20 * Math.pow(getEnv(cycleX, 15, 35), 0.5);
+                        } else if (cycleX > 45 && cycleX < 85) { // sistolik ventrikel
+                            pcgAmp += (Math.random() - 0.5) * 35 * Math.pow(getEnv(cycleX, 45, 85), 0.5);
+                        } else if (cycleX > 135 && cycleX < 165) { // diastolik awal
+                            pcgAmp += (Math.random() - 0.5) * 15 * Math.pow(getEnv(cycleX, 135, 165), 0.5);
+                        }
+                    }
+
+                    // Base S1, S2, S3, S4
+                    if (cycleX > s1Start && cycleX < s1End) pcgAmp += Math.sin(cycleX * 1.0) * 40 * Math.pow(getEnv(cycleX, s1Start, s1End), 0.5);
+                    else if (cycleX > s2Start && cycleX < s2End) pcgAmp += Math.sin(cycleX * 1.3) * 35 * Math.pow(getEnv(cycleX, s2Start, s2End), 0.5);
+                    else if (cond === 's3' && cycleX > 155 && cycleX < 175) pcgAmp += Math.sin(cycleX * 0.7) * 20 * getEnv(cycleX, 155, 175);
+                    else if (cond === 's4' && cycleX > 15 && cycleX < 35) pcgAmp += Math.sin(cycleX * 0.7) * 15 * Math.pow(getEnv(cycleX, 15, 35), 0.5);
+                    else pcgAmp += noise * 0.5; // Soft baseline
+                    
+                    const pcgY = pcgBaseY + pcgAmp;
+
+                    // --- 3. Draw Lines (Soft Pastel Colors) ---
+                    if (currentX !== 0) {
+                        traceCtx.lineJoin = 'round'; traceCtx.lineCap = 'round';
+
+                        // EKG (Soft Pastel Green)
+                        traceCtx.beginPath();
+                        traceCtx.lineWidth = 1.2;
+                        traceCtx.strokeStyle = '#6ee7b7'; // emerald-300
+                        traceCtx.shadowColor = 'rgba(110, 231, 183, 0.5)'; traceCtx.shadowBlur = 4; // reduced blur
+                        traceCtx.moveTo(prevX, prevEcgY); traceCtx.lineTo(currentX, ecgY); traceCtx.stroke();
+
+                        // PCG (Soft Pastel Blue)
+                        traceCtx.beginPath();
+                        traceCtx.lineWidth = 1.0;
+                        traceCtx.strokeStyle = '#7dd3fc'; // sky-300
+                        traceCtx.shadowColor = 'rgba(125, 211, 252, 0.5)'; traceCtx.shadowBlur = 4;
+                        traceCtx.moveTo(prevX, prevPcgY); traceCtx.lineTo(currentX, pcgY); traceCtx.stroke();
+                        
+                        traceCtx.shadowBlur = 0; 
+                    }
+                    prevX = currentX; prevEcgY = ecgY; prevPcgY = pcgY;
+                }
+                
+                // Sweeper Heads (Soft dots)
+                traceCtx.fillStyle = '#ffffff'; traceCtx.shadowBlur = 8; 
+                traceCtx.shadowColor = '#6ee7b7'; traceCtx.beginPath(); traceCtx.arc(prevX, prevEcgY, 1.5, 0, Math.PI*2); traceCtx.fill();
+                traceCtx.shadowColor = '#7dd3fc'; traceCtx.beginPath(); traceCtx.arc(prevX, prevPcgY, 1.5, 0, Math.PI*2); traceCtx.fill();
+                traceCtx.shadowBlur = 0;
+            }
+            animationRef = requestAnimationFrame(renderTrace);
+        }
+
+        // --- UI Updates ---
+        function updateUI() {
+            document.getElementById('info-title').textContent = selectedCondition.name;
+            document.getElementById('info-location').textContent = selectedCondition.location;
+            document.getElementById('info-patho').textContent = selectedCondition.patho;
+            document.getElementById('info-char').textContent = selectedCondition.characteristics;
+            document.getElementById('map-label').textContent = selectedCondition.auscultationPoint === 'all' ? 'SEMUA' : selectedCondition.auscultationPoint.toUpperCase();
+
+            // Map Points
+            mapContainer.innerHTML = '<div class="absolute left-1/2 top-2 bottom-2 w-0.5 -translate-x-1/2 bg-slate-700/30 rounded-full"></div>';
+            AUSCULTATION_POINTS.forEach(pt => {
+                const isTarget = selectedCondition.auscultationPoint === 'all' || selectedCondition.auscultationPoint === pt.id;
+                const dot = document.createElement('div');
+                dot.className = `absolute flex flex-col items-center group`;
+                dot.style.left = `${pt.x}%`; dot.style.top = `${pt.y}%`; dot.style.transform = 'translate(-50%, -50%)';
+                
+                const inner = document.createElement('div');
+                // Soft glowing indicator
+                inner.className = `w-2.5 h-2.5 rounded-full border transition-all duration-300 ${isTarget ? 'bg-sky-400 border-sky-200 shadow-[0_0_10px_rgba(56,189,248,0.6)] scale-125 z-10' : 'bg-slate-700 border-slate-600 scale-75 opacity-50'}`;
+                dot.appendChild(inner);
+                mapContainer.appendChild(dot);
+            });
+
+            document.querySelectorAll('.condition-btn').forEach(btn => {
+                if(btn.dataset.id === selectedCondition.id) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+
+            renderBackgroundGuides();
+            if(audio.isPlaying) { audio.stop(); setTimeout(() => audio.play(), 50); }
+        }
+
+        function buildList() {
+            conditionList.innerHTML = '';
+            HEART_CONDITIONS.forEach(cond => {
+                const btn = document.createElement('button');
+                btn.className = `condition-btn snap-start shrink-0 text-left px-3.5 py-2.5 rounded-xl w-[140px]`;
+                btn.dataset.id = cond.id;
+                btn.innerHTML = `
+                    <div class="font-semibold text-[11px] truncate name-label mb-0.5">${cond.name}</div>
+                    <div class="text-[9px] truncate opacity-70">${cond.shortDesc}</div>
+                `;
+                btn.onclick = () => { selectedCondition = cond; audio.setCondition(cond.id); updateUI(); };
+                conditionList.appendChild(btn);
+            });
+        }
+
+        // --- Init & Events ---
+        playBtn.addEventListener('click', () => {
+            if (audio.isPlaying) {
+                audio.stop();
+                playBtn.classList.remove('bg-rose-500/10', 'text-rose-400', 'border-rose-500/30');
+                playBtn.classList.add('bg-slate-800', 'text-sky-400', 'border-sky-500/30');
+                playIcon.setAttribute('data-lucide', 'play'); playText.textContent = 'Putar Suara';
+                statusDot.classList.replace('bg-emerald-400', 'bg-slate-600');
+                statusText.classList.replace('text-emerald-300', 'text-slate-400');
+                statusText.textContent = 'STANDBY';
+            } else {
+                audio.play();
+                playBtn.classList.remove('bg-slate-800', 'text-sky-400', 'border-sky-500/30');
+                playBtn.classList.add('bg-rose-500/10', 'text-rose-400', 'border-rose-500/30');
+                playIcon.setAttribute('data-lucide', 'square'); playText.textContent = 'Stop Simulasi';
+                statusDot.classList.replace('bg-slate-600', 'bg-emerald-400');
+                statusText.classList.replace('text-slate-400', 'text-emerald-300');
+                statusText.textContent = 'MONITORING: 60 BPM';
+            }
+            lucide.createIcons();
+        });
+
+        buildList(); updateUI(); renderTrace();
+
+    </script>
+</body>
+</html>
