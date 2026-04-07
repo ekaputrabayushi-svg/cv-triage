@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Virtual Cath-Lab: Coronary 3D - Dr. Bayushi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: #020617; 
+            font-family: 'Inter', sans-serif; 
+            user-select: none;
+            touch-action: none; /* Prevent default touch actions like pinch-zoom on the document */
+        }
+        
+        #canvas-container { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; }
+        
+        /* UI Styling */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(51, 65, 85, 0.8);
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.4);
+        }
+
+        .interactive { pointer-events: auto; }
+        .data-font { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Hide Scrollbar for compact horizontal list */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Custom Range Slider for Mobile */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-thumb { 
+            -webkit-appearance: none; 
+            height: 26px; width: 16px; /* Fatter thumb for touch */
+            background: #38bdf8; 
+            cursor: grab; 
+            margin-top: -10px; 
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+        input[type=range]::-webkit-slider-thumb:active { cursor: grabbing; background: #0ea5e9; transform: scale(1.1); }
+        input[type=range]::-webkit-slider-runnable-track { 
+            width: 100%; height: 6px; 
+            cursor: pointer; 
+            background: rgba(100, 116, 139, 0.6); 
+            border-radius: 3px; 
+        }
+
+        /* Fluoro Monitor Frame (Picture in Picture) */
+        #fluoro-monitor {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 280px;
+            height: 280px;
+            border: 3px solid #1e293b;
+            border-radius: 12px;
+            background: transparent; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8), 0 0 0 1px #334155;
+            overflow: hidden;
+            z-index: 20;
+            pointer-events: none; 
+            transition: all 0.3s ease;
+        }
+        
+        #fluoro-monitor::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.3) 70%, rgba(0,0,0,0.8) 100%);
+            pointer-events: none;
+        }
+
+        .fluoro-overlay-text {
+            position: absolute;
+            color: #10b981;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            font-weight: bold;
+            z-index: 21;
+            pointer-events: none;
+            text-shadow: 0 1px 2px black;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 640px) {
+            #fluoro-monitor { 
+                width: 140px; 
+                height: 140px; 
+                top: 12px; 
+                right: 12px; 
+                border-width: 2px;
+                border-radius: 8px;
+            }
+            .fluoro-overlay-text { font-size: 0.5rem; }
+            .top-left-panel { padding: 12px; }
+        }
+    </style>
+</head>
+<body class="text-slate-200">
+
+    <!-- 3D Canvas -->
+    <div id="canvas-container"></div>
+    
+    <!-- Fluoro Monitor -->
+    <div id="fluoro-monitor">
+        <div class="fluoro-overlay-text top-1 left-2 sm:top-2 sm:left-2">LIVE FLUORO</div>
+        <div class="fluoro-overlay-text bottom-1 right-2 sm:bottom-2 sm:right-2" id="pip-projection">AP / CRA 0</div>
+        <div class="fluoro-overlay-text bottom-1 left-2 sm:bottom-2 sm:left-2 text-red-500 animate-pulse flex items-center gap-1">
+            <div class="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full"></div> X-RAY
+        </div>
+    </div>
+
+    <!-- UI Overlay Layer -->
+    <div id="ui-layer" class="absolute inset-0 pointer-events-none z-30 flex flex-col justify-between">
+        
+        <!-- Top Left Info (Compact for Mobile) -->
+        <div class="top-left-panel p-4 sm:p-6 interactive flex flex-col items-start pointer-events-none max-w-[80vw] sm:max-w-md">
+            <div class="bg-slate-900/60 backdrop-blur-md px-3 py-2 sm:px-4 sm:py-3 rounded-xl border border-slate-700/50 pointer-events-auto shadow-lg">
+                <div class="flex items-center gap-2 mb-0.5 sm:mb-1">
+                    <i data-lucide="activity" class="w-3 h-3 sm:w-4 sm:h-4 text-sky-400"></i>
+                    <h1 class="text-sm sm:text-base font-bold text-white tracking-wide">Virtual Cath-Lab</h1>
+                </div>
+                <p class="text-[8px] sm:text-[9px] text-sky-300 font-mono">Developer: Bayushi Eka Putra, MD, FIHA</p>
+                <p class="text-[8px] sm:text-[9px] text-emerald-400 font-mono uppercase tracking-widest mt-0.5 mb-1 sm:mb-2">Part of CardiologyVault</p>
+                <p class="text-[10px] text-slate-400 mt-2 hidden sm:block">
+                    Drag layar tengah untuk memutar sudut pandang ruangan.
+                </p>
+            </div>
+            
+            <!-- Tool Buttons (Stack on mobile, row on larger) -->
+            <div class="flex flex-col sm:flex-row gap-2 mt-2 sm:mt-4 pointer-events-auto">
+                <button id="btn-simulate-lesion" class="px-2 py-1.5 sm:px-3 sm:py-2 bg-slate-800 hover:bg-amber-600 border border-slate-600 rounded-lg text-[10px] sm:text-xs font-semibold transition-colors shadow-lg flex items-center gap-1.5">
+                    <i data-lucide="target" class="w-3 h-3 sm:w-4 sm:h-4 text-amber-400"></i> Lesion #7
+                </button>
+                <button id="btn-engage-cath" class="px-2 py-1.5 sm:px-3 sm:py-2 bg-slate-800 hover:bg-blue-600 border border-slate-600 rounded-lg text-[10px] sm:text-xs font-semibold transition-colors shadow-lg flex items-center gap-1.5">
+                    <i data-lucide="git-merge" class="w-3 h-3 sm:w-4 sm:h-4 text-blue-400"></i> Engage GC
+                </button>
+            </div>
+        </div>
+
+        <!-- Bottom Control Dashboard (Redesigned for Mobile) -->
+        <div class="interactive glass-panel w-full mt-auto border-t border-slate-700/50 rounded-t-2xl p-3 sm:p-5 pb-6 sm:pb-8">
+            <div class="max-w-5xl mx-auto flex flex-col gap-3 sm:gap-5">
+                
+                <!-- Gantry Angulation Sliders (Compact Grid) -->
+                <div class="grid grid-cols-2 gap-4 sm:gap-8 w-full">
+                    <!-- RAO/LAO Slider -->
+                    <div class="flex flex-col justify-end">
+                        <div class="flex justify-between items-end mb-1">
+                            <span class="text-[9px] sm:text-xs text-slate-400 font-bold font-mono">R90°</span>
+                            <span class="text-base sm:text-xl font-black text-sky-400 data-font" id="val-laorao">0°</span>
+                            <span class="text-[9px] sm:text-xs text-slate-400 font-bold font-mono">L90°</span>
+                        </div>
+                        <input type="range" id="slider-laorao" min="-90" max="90" value="0" class="mb-1">
+                        <span class="text-[8px] sm:text-[10px] text-center text-slate-500 uppercase font-semibold">Rotation</span>
+                    </div>
+
+                    <!-- CRA/CAU Slider -->
+                    <div class="flex flex-col justify-end">
+                        <div class="flex justify-between items-end mb-1">
+                            <span class="text-[9px] sm:text-xs text-slate-400 font-bold font-mono">C40°</span>
+                            <span class="text-base sm:text-xl font-black text-sky-400 data-font" id="val-cracau">0°</span>
+                            <span class="text-[9px] sm:text-xs text-slate-400 font-bold font-mono">C40°</span>
+                        </div>
+                        <input type="range" id="slider-cracau" min="-40" max="40" value="0" class="mb-1">
+                        <span class="text-[8px] sm:text-[10px] text-center text-slate-500 uppercase font-semibold">Tilt</span>
+                    </div>
+                </div>
+
+                <!-- Presets (Horizontal Scrollable for Mobile) -->
+                <div class="w-full pt-3 sm:pt-4 border-t border-slate-700/50">
+                    <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-1 px-1 snap-x">
+                        <button class="preset-btn shrink-0 snap-center px-4 py-2 bg-slate-800 hover:bg-sky-600 rounded-lg text-[10px] sm:text-xs font-bold transition-all border border-slate-600 shadow-md" data-lao="0" data-cra="0">AP</button>
+                        <button class="preset-btn shrink-0 snap-center px-4 py-2 bg-slate-800 hover:bg-sky-600 rounded-lg text-[10px] sm:text-xs font-bold transition-all border border-slate-600 shadow-md" data-lao="40" data-cra="0">LAO</button>
+                        <button class="preset-btn shrink-0 snap-center px-4 py-2 bg-slate-800 hover:bg-sky-600 rounded-lg text-[10px] sm:text-xs font-bold transition-all border border-slate-600 shadow-md" data-lao="-30" data-cra="0">RAO</button>
+                        <button class="preset-btn shrink-0 snap-center px-4 py-2 bg-slate-800 hover:bg-sky-600 rounded-lg text-[10px] sm:text-xs font-bold transition-all border border-slate-600 shadow-md text-amber-400 border-amber-500/50" data-lao="45" data-cra="-35">SPIDER</button>
+                        <button class="preset-btn shrink-0 snap-center px-4 py-2 bg-slate-800 hover:bg-sky-600 rounded-lg text-[10px] sm:text-xs font-bold transition-all border border-slate-600 shadow-md" data-lao="0" data-cra="30">AP CRA</button>
+                        <button class="preset-btn shrink-0 snap-center px-4 py-2 bg-slate-800 hover:bg-sky-600 rounded-lg text-[10px] sm:text-xs font-bold transition-all border border-slate-600 shadow-md" data-lao="30" data-cra="30">LAO CRA</button>
+                        <button class="preset-btn shrink-0 snap-center px-4 py-2 bg-slate-800 hover:bg-sky-600 rounded-lg text-[10px] sm:text-xs font-bold transition-all border border-slate-600 shadow-md" data-lao="-30" data-cra="30">RAO CRA</button>
+                        <button class="preset-btn shrink-0 snap-center px-4 py-2 bg-slate-800 hover:bg-sky-600 rounded-lg text-[10px] sm:text-xs font-bold transition-all border border-slate-600 shadow-md" data-lao="-30" data-cra="-20">RAO CAU</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        lucide.createIcons();
+
+        // --- SCENE SETUP ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        const LAYER_LAB = 0;
+        const LAYER_FLUORO = 1;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
+
+        // --- CAMERAS ---
+        const labCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+        // Slightly adjust initial camera position based on screen width for better mobile view
+        const isMobile = window.innerWidth <= 640;
+        labCamera.position.set(isMobile ? 50 : 40, isMobile ? 30 : 20, isMobile ? 70 : 60);
+        labCamera.layers.set(LAYER_LAB); 
+
+        const fluoroCamera = new THREE.PerspectiveCamera(30, 1, 0.1, 200);
+        fluoroCamera.layers.set(LAYER_FLUORO); 
+
+        const orbitControls = new OrbitControls(labCamera, renderer.domElement);
+        orbitControls.enableDamping = true;
+        orbitControls.dampingFactor = 0.05;
+        orbitControls.target.set(0, 0, 0); 
+        orbitControls.maxDistance = 150;
+        orbitControls.minDistance = 20;
+        orbitControls.maxPolarAngle = Math.PI / 2 + 0.2; 
+
+        // --- LIGHTING ---
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        ambientLight.layers.set(LAYER_LAB);
+        scene.add(ambientLight);
+        
+        const mainLight = new THREE.SpotLight(0xffffff, 1000);
+        mainLight.position.set(20, 60, 20);
+        mainLight.angle = Math.PI / 3;
+        mainLight.penumbra = 0.5;
+        mainLight.castShadow = true;
+        mainLight.shadow.mapSize.width = 2048;
+        mainLight.shadow.mapSize.height = 2048;
+        mainLight.layers.set(LAYER_LAB);
+        scene.add(mainLight);
+
+        // --- MATERIALS ---
+        const mat3D_Aorta = new THREE.MeshPhysicalMaterial({ color: 0xaa1111, transparent: true, opacity: 0.35, roughness: 0.1 });
+        const mat3D_Artery = new THREE.MeshPhysicalMaterial({ color: 0xdd1111, roughness: 0.2, metalness: 0.1 });
+        const mat3D_Lesion = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0x554400, roughness: 0.6 });
+        const mat3D_Cath = new THREE.MeshPhysicalMaterial({ color: 0x38bdf8, roughness: 0.1, transmission: 0.5, transparent: true });
+
+        const matFluoro_Aorta = new THREE.MeshBasicMaterial({ color: 0xbbbbbb, transparent: true, opacity: 0.15, depthWrite: false, blending: THREE.MultiplyBlending });
+        const matFluoro_Artery = new THREE.MeshBasicMaterial({ color: 0x222222, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.MultiplyBlending });
+        const matFluoro_Lesion = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        const matFluoro_Cath = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true, wireframeLinewidth: 2 });
+
+        // --- ANATOMY GENERATOR ---
+        const heartGroupLab = new THREE.Group();
+        const heartGroupFluoro = new THREE.Group();
+        scene.add(heartGroupLab);
+        scene.add(heartGroupFluoro);
+
+        let lesionMeshLab, lesionMeshFluoro;
+        let cathMeshLab, cathMeshFluoro;
+
+        function createVessel(pointsArr, radius, isAorta=false) {
+            const points = pointsArr.map(p => new THREE.Vector3(p[0], p[1], p[2]));
+            const curve = new THREE.CatmullRomCurve3(points);
+            const segments = points.length * 15;
+            const geometry = new THREE.TubeGeometry(curve, segments, radius, isAorta ? 24 : 12, false);
+            
+            const meshLab = new THREE.Mesh(geometry, isAorta ? mat3D_Aorta : mat3D_Artery);
+            meshLab.castShadow = true;
+            meshLab.receiveShadow = true;
+            meshLab.layers.set(LAYER_LAB);
+            heartGroupLab.add(meshLab);
+
+            const meshFluoro = new THREE.Mesh(geometry, isAorta ? matFluoro_Aorta : matFluoro_Artery);
+            meshFluoro.layers.set(LAYER_FLUORO);
+            heartGroupFluoro.add(meshFluoro);
+
+            return { lab: meshLab, fluoro: meshFluoro, curve: curve };
+        }
+
+        // Aorta
+        const aortaPts = [[0, 6, 0], [0, 4, 0], [0, 2, 0], [0, 0, 0]];
+        createVessel(aortaPts, 2.0, true);
+
+        // LCA
+        const ptOstiumLCA = [1.2, 1.5, -0.8]; 
+        const ptBifurcation = [2.2, 1.8, -1.0]; 
+        createVessel([ptOstiumLCA, ptBifurcation], 0.25); 
+
+        // LAD
+        const lad = createVessel([
+            ptBifurcation, 
+            [1.8, 0.5, 0.8],
+            [1.0, -1.5, 2.2],
+            [0.0, -4.0, 2.6],
+            [-0.5, -5.5, 2.0]
+        ], 0.2);
+        
+        // Diagonal 1 (D1) 
+        createVessel([[1.8, 0.5, 0.8], [2.8, -0.5, 1.2], [3.2, -2.5, 1.0]], 0.15);
+
+        // LCx 
+        createVessel([
+            ptBifurcation, 
+            [3.0, 0.5, -2.0],
+            [3.2, -1.0, -2.8],
+            [2.5, -2.5, -2.5]
+        ], 0.2);
+
+        // OM1
+        createVessel([[3.0, 0.5, -2.0], [4.0, -1.0, -1.5], [4.2, -2.5, -0.5]], 0.15);
+
+        // RCA
+        const ptOstiumRCA = [-0.5, 0.5, 1.5];
+        createVessel([
+            ptOstiumRCA, 
+            [-1.8, 0.0, 1.5],
+            [-2.8, -2.0, 0.5],
+            [-2.0, -4.5, -1.0],
+            [-0.5, -5.5, -1.5]
+        ], 0.22);
+        
+        // PDA / PLV
+        createVessel([[-0.5, -5.5, -1.5], [-0.5, -6.5, -0.5], [-0.5, -7.0, 0.5]], 0.15);
+        createVessel([[-0.5, -5.5, -1.5], [1.5, -5.0, -1.8]], 0.15);
+
+        // --- LESION SIMULATOR (#7 - MID LAD) ---
+        const lesionPos = lad.curve.getPoint(0.4); 
+        const lesionGeo = new THREE.SphereGeometry(0.28, 16, 16);
+        
+        lesionMeshLab = new THREE.Mesh(lesionGeo, mat3D_Lesion);
+        lesionMeshLab.position.copy(lesionPos);
+        lesionMeshLab.visible = false;
+        lesionMeshLab.layers.set(LAYER_LAB);
+        heartGroupLab.add(lesionMeshLab);
+
+        lesionMeshFluoro = new THREE.Mesh(lesionGeo, matFluoro_Lesion);
+        lesionMeshFluoro.position.copy(lesionPos);
+        lesionMeshFluoro.visible = false;
+        lesionMeshFluoro.layers.set(LAYER_FLUORO);
+        heartGroupFluoro.add(lesionMeshFluoro);
+
+        // --- CATHETER SIMULATOR ---
+        const cathPts = [
+            [0, 10, 0], 
+            [0, 6, 0], 
+            [-1.0, 3.5, 0.5],
+            [-0.5, 2.5, -0.5],
+            [0.8, 1.8, -0.8],
+            ptOstiumLCA
+        ];
+        const cathVecs = cathPts.map(p => new THREE.Vector3(p[0], p[1], p[2]));
+        const cathGeo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(cathVecs), 64, 0.08, 8, false);
+        
+        cathMeshLab = new THREE.Mesh(cathGeo, mat3D_Cath);
+        cathMeshLab.visible = false;
+        cathMeshLab.layers.set(LAYER_LAB);
+        heartGroupLab.add(cathMeshLab);
+
+        cathMeshFluoro = new THREE.Mesh(cathGeo, matFluoro_Cath);
+        cathMeshFluoro.visible = false;
+        cathMeshFluoro.layers.set(LAYER_FLUORO);
+        heartGroupFluoro.add(cathMeshFluoro);
+
+        // --- ENVIRONMENT & C-ARM RIGGING ---
+        const tableBase = new THREE.Mesh(new THREE.BoxGeometry(4, 10, 8), new THREE.MeshStandardMaterial({color: 0x1e293b}));
+        tableBase.position.y = -10;
+        tableBase.castShadow = true;
+        tableBase.layers.set(LAYER_LAB);
+        scene.add(tableBase);
+
+        const tableTop = new THREE.Mesh(new THREE.BoxGeometry(10, 0.5, 40), new THREE.MeshStandardMaterial({color: 0x0f172a, roughness: 0.6}));
+        tableTop.position.y = -5;
+        tableTop.castShadow = true;
+        tableTop.receiveShadow = true;
+        tableTop.layers.set(LAYER_LAB);
+        scene.add(tableTop);
+
+        const patientMat = new THREE.MeshPhysicalMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.15, transmission: 0.9, roughness: 0.3 });
+        const patientBody = new THREE.Group();
+        const torso = new THREE.Mesh(new THREE.CapsuleGeometry(3.5, 12, 16, 32), patientMat);
+        torso.rotation.x = Math.PI / 2;
+        torso.position.set(0, -1, -2); 
+        patientBody.add(torso);
+        const head = new THREE.Mesh(new THREE.SphereGeometry(2.5, 32, 32), patientMat);
+        head.position.set(0, -1, 10);
+        patientBody.add(head);
+        
+        patientBody.position.y = -4.5; 
+        patientBody.children.forEach(c => c.layers.set(LAYER_LAB));
+        scene.add(patientBody);
+
+        const floor = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: 0x020617, roughness: 0.9 }));
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = -15;
+        floor.receiveShadow = true;
+        floor.layers.set(LAYER_LAB);
+        scene.add(floor);
+
+        const cArmRadius = 24;
+        const cArmBase = new THREE.Group(); 
+        scene.add(cArmBase);
+        
+        const cArmArm = new THREE.Group();  
+        cArmBase.add(cArmArm);
+
+        const arcGeo = new THREE.TorusGeometry(cArmRadius, 1.5, 32, 64, Math.PI);
+        const arcMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.3, metalness: 0.6 });
+        const arcMesh = new THREE.Mesh(arcGeo, arcMat);
+        arcMesh.rotation.y = Math.PI / 2;
+        arcMesh.castShadow = true;
+        cArmArm.add(arcMesh);
+
+        const detectorGrp = new THREE.Group();
+        const detectorBody = new THREE.Mesh(new THREE.BoxGeometry(10, 10, 3), new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2 }));
+        const detectorFace = new THREE.Mesh(new THREE.PlaneGeometry(9, 9), new THREE.MeshBasicMaterial({ color: 0x111827 }));
+        detectorFace.position.z = -1.51; 
+        detectorFace.rotation.y = Math.PI; 
+        detectorGrp.add(detectorBody, detectorFace);
+        detectorGrp.position.set(0, 0, cArmRadius);
+        detectorGrp.castShadow = true;
+        cArmArm.add(detectorGrp);
+        
+        const tubeGrp = new THREE.Group();
+        const tubeBody = new THREE.Mesh(new THREE.CylinderGeometry(3, 4, 8, 32), new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.7 }));
+        tubeBody.rotation.x = Math.PI / 2;
+        tubeGrp.add(tubeBody);
+        tubeGrp.position.set(0, 0, -cArmRadius);
+        tubeGrp.castShadow = true;
+        cArmArm.add(tubeGrp);
+
+        const beamGeo = new THREE.CylinderGeometry(4.5, 0.5, cArmRadius * 2, 32, 1, true);
+        const beamMat = new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+        const beam = new THREE.Mesh(beamGeo, beamMat);
+        beam.rotation.x = Math.PI / 2;
+        cArmArm.add(beam);
+
+        cArmBase.traverse(child => { if(child.isMesh) child.layers.set(LAYER_LAB); });
+
+        // FLUORO CAMERA
+        fluoroCamera.position.set(0, 0, cArmRadius - 2);
+        fluoroCamera.lookAt(0, 0, 0);
+        cArmArm.add(fluoroCamera);
+
+        const beamLight = new THREE.PointLight(0xfef08a, 100, 50);
+        beamLight.position.set(0,0, cArmRadius/2);
+        cArmArm.add(beamLight);
+        beamLight.layers.set(LAYER_LAB);
+
+
+        // --- UI & INTERACTION LOGIC ---
+        const sliderLAORAO = document.getElementById('slider-laorao');
+        const sliderCRACAU = document.getElementById('slider-cracau');
+        const valLAORAO = document.getElementById('val-laorao');
+        const valCRACAU = document.getElementById('val-cracau');
+        const dispPiP = document.getElementById('pip-projection');
+
+        let targetLaoRao = 0;
+        let targetCraCau = 0;
+
+        function updateUI() {
+            targetLaoRao = parseInt(sliderLAORAO.value);
+            targetCraCau = parseInt(sliderCRACAU.value);
+
+            let txtLR = targetLaoRao === 0 ? "AP" : (targetLaoRao > 0 ? `LAO ${targetLaoRao}` : `RAO ${Math.abs(targetLaoRao)}`);
+            let txtCC = targetCraCau === 0 ? (targetLaoRao === 0 ? "" : "CRA 0") : (targetCraCau > 0 ? `CRA ${targetCraCau}` : `CAU ${Math.abs(targetCraCau)}`);
+
+            valLAORAO.innerText = targetLaoRao + "°";
+            valCRACAU.innerText = targetCraCau + "°";
+            dispPiP.innerText = txtLR + (txtCC ? " / " + txtCC : "");
+        }
+
+        sliderLAORAO.addEventListener('input', updateUI);
+        sliderCRACAU.addEventListener('input', updateUI);
+
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                sliderLAORAO.value = e.target.dataset.lao;
+                sliderCRACAU.value = e.target.dataset.cra;
+                updateUI();
+                
+                // Optional: visual feedback for active button
+                document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('ring-2', 'ring-sky-400'));
+                e.target.classList.add('ring-2', 'ring-sky-400');
+            });
+        });
+
+        const btnLesion = document.getElementById('btn-simulate-lesion');
+        let lesionActive = false;
+        btnLesion.addEventListener('click', () => {
+            lesionActive = !lesionActive;
+            lesionMeshLab.visible = lesionActive;
+            lesionMeshFluoro.visible = lesionActive;
+            btnLesion.classList.toggle('bg-amber-600');
+            btnLesion.classList.toggle('bg-slate-800');
+        });
+
+        const btnCath = document.getElementById('btn-engage-cath');
+        let cathActive = false;
+        btnCath.addEventListener('click', () => {
+            cathActive = !cathActive;
+            cathMeshLab.visible = cathActive;
+            cathMeshFluoro.visible = cathActive;
+            btnCath.classList.toggle('bg-blue-600');
+            btnCath.classList.toggle('bg-slate-800');
+        });
+
+        window.addEventListener('resize', () => {
+            labCamera.aspect = window.innerWidth / window.innerHeight;
+            labCamera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // --- ANIMATION & DUAL RENDER LOOP ---
+        const clock = new THREE.Clock();
+        const monitorDOM = document.getElementById('fluoro-monitor');
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = clock.getElapsedTime();
+
+            // Interpolasi Rotasi
+            cArmBase.rotation.y = THREE.MathUtils.lerp(cArmBase.rotation.y, THREE.MathUtils.degToRad(targetLaoRao), 0.08);
+            cArmArm.rotation.x = THREE.MathUtils.lerp(cArmArm.rotation.x, THREE.MathUtils.degToRad(-targetCraCau), 0.08);
+
+            // Detak jantung sinkron
+            const beat = Math.pow(Math.sin(time * Math.PI * 1.2), 4) * 0.03 + Math.pow(Math.sin(time * Math.PI * 2.4 + 0.5), 4) * 0.01;
+            const scale = 1 + beat;
+            heartGroupLab.scale.set(scale, scale, scale);
+            heartGroupFluoro.scale.set(scale, scale, scale);
+
+            orbitControls.update();
+
+            // RENDER 1: Lab View
+            renderer.setClearColor(0x020617);
+            renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
+            renderer.setScissor(0, 0, window.innerWidth, window.innerHeight);
+            renderer.setScissorTest(false);
+            renderer.render(scene, labCamera);
+
+            // RENDER 2: Fluoro View (PiP)
+            const rect = monitorDOM.getBoundingClientRect();
+            const pipX = rect.left;
+            const pipY = window.innerHeight - rect.bottom;
+            const pipW = rect.width;
+            const pipH = rect.height;
+
+            renderer.setViewport(pipX, pipY, pipW, pipH);
+            renderer.setScissor(pipX, pipY, pipW, pipH);
+            renderer.setScissorTest(true);
+            
+            renderer.setClearColor(0xe2e8f0); 
+            renderer.clear(); 
+            
+            fluoroCamera.aspect = pipW / pipH;
+            fluoroCamera.updateProjectionMatrix();
+            
+            renderer.render(scene, fluoroCamera);
+        }
+
+        updateUI();
+        animate();
+    </script>
+</body>
+</html>
