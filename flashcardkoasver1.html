@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard kardiologi (level koas-dr. umum)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* CSS untuk efek flip 3D */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        .card-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        .is-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen font-sans flex flex-col overflow-x-hidden">
+
+    <!-- Header -->
+    <header class="bg-blue-600 text-white shadow-md p-3 md:p-4 sticky top-0 z-20">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0">
+            <div class="text-center sm:text-left">
+                <h1 class="text-lg sm:text-xl md:text-2xl font-bold flex items-center justify-center sm:justify-start gap-2">
+                    <span>🫀</span> Flashcard kardiologi (level koas-dr. umum)
+                </h1>
+                <p class="text-[10px] sm:text-xs md:text-sm text-blue-200 font-medium tracking-wide">
+                    Varian 1 part of CardiologyVault
+                </p>
+            </div>
+            <div class="text-[10px] sm:text-xs md:text-sm font-medium bg-blue-700 px-3 py-1 rounded-full border border-blue-500 shadow-sm text-center">
+                Dev: Bayushi Eka Putra, MD, FIHA
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col items-center justify-start sm:justify-center p-4 md:p-8 max-w-4xl mx-auto w-full">
+        
+        <!-- Progress Info -->
+        <div class="w-full flex justify-between items-center mb-3 md:mb-4 text-slate-600 font-medium">
+            <span id="card-category" class="text-xs md:text-sm uppercase tracking-wider text-blue-500 font-bold bg-blue-100 px-2 py-1 rounded">Kategori</span>
+            <span id="card-counter" class="text-xs md:text-sm bg-white px-3 py-1 rounded-full shadow-sm font-bold border border-slate-200">1 / 100</span>
+        </div>
+
+        <!-- Flashcard Container -->
+        <div id="flashcard" class="relative w-full max-w-2xl h-[55vh] min-h-[320px] md:h-96 perspective-1000 cursor-pointer group mb-6 md:mb-8 touch-pan-y" onclick="toggleFlip(event)">
+            <div class="card-inner w-full h-full absolute transform-style-3d shadow-xl rounded-2xl md:rounded-3xl">
+                
+                <!-- Front (Question) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-white rounded-2xl md:rounded-3xl p-5 md:p-10 flex flex-col items-center justify-center text-center border-t-4 border-blue-500">
+                    <div class="absolute top-3 left-4 text-slate-200 font-bold text-3xl md:text-4xl">Q</div>
+                    <div class="w-full h-full flex flex-col justify-center overflow-y-auto no-scrollbar pt-6 pb-8">
+                        <p id="question-text" class="text-base sm:text-lg md:text-2xl text-slate-800 font-semibold leading-relaxed md:leading-normal m-auto">
+                            Memuat pertanyaan...
+                        </p>
+                    </div>
+                    <div class="absolute bottom-3 text-xs md:text-sm text-slate-400 flex items-center gap-1 animate-pulse">
+                        <span class="hidden sm:inline">Ketuk kartu untuk melihat jawaban</span>
+                        <span class="sm:hidden">Ketuk untuk jawaban • Usap untuk lanjut</span>
+                    </div>
+                </div>
+
+                <!-- Back (Answer) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-blue-50 rounded-2xl md:rounded-3xl p-5 md:p-10 flex flex-col items-center justify-center text-center rotate-y-180 border-t-4 border-green-500">
+                    <div class="absolute top-3 left-4 text-blue-200 font-bold text-3xl md:text-4xl">A</div>
+                    <div class="w-full h-full flex flex-col justify-center overflow-y-auto no-scrollbar pt-6 pb-4">
+                        <p id="answer-text" class="text-sm sm:text-base md:text-xl text-slate-800 font-medium leading-relaxed m-auto">
+                            Memuat jawaban...
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="w-full max-w-2xl grid grid-cols-2 sm:flex sm:flex-row justify-center gap-3 md:gap-4 pb-8">
+            <button onclick="prevCard()" class="col-span-1 bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-sm transition-all border border-slate-200 flex justify-center items-center gap-1 active:scale-95">
+                <span>&larr;</span> <span class="hidden sm:inline">Sebelumnya</span><span class="sm:hidden">Prev</span>
+            </button>
+            <button onclick="nextCard()" class="col-span-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-md transition-all flex justify-center items-center gap-1 active:scale-95">
+                <span class="hidden sm:inline">Selanjutnya</span><span class="sm:hidden">Next</span> <span>&rarr;</span>
+            </button>
+            <button onclick="shuffleCards()" class="col-span-2 sm:col-span-1 order-last sm:order-none bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm md:text-base py-3 md:py-4 px-4 md:px-6 rounded-xl shadow-md transition-all flex justify-center items-center active:scale-95">
+                Acak (Shuffle)
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        // Data Flashcard (100 Soal Kardiologi)
+        const originalCards = [
+            // --- BAGIAN 1: ACS & PJK (1-15) ---
+            { cat: "ACS & PJK", q: "Laki-laki 55 tahun nyeri dada kiri menjalar ke rahang sejak 2 jam lalu. EKG menunjukkan ST elevasi pada lead V1-V4. Diagnosis?", a: "STEMI Anteroseptal." },
+            { cat: "ACS & PJK", q: "Tatalaksana farmakologis awal pada pasien dengan Sindrom Koroner Akut (ACS) di IGD?", a: "Oksigen (jika SpO2 <90%), Aspirin (160-320 mg), Clopidogrel (300 mg), Nitrat sublingual, dan Morfin. (MONACO)." },
+            { cat: "ACS & PJK", q: "Berapa batas waktu (golden period) door-to-balloon untuk dilakukan Intervensi Koroner Perkutan (PCI) primer pada pasien STEMI?", a: "< 90 menit (atau < 120 menit sejak kontak medis pertama)." },
+            { cat: "ACS & PJK", q: "Biomarker jantung apa yang paling spesifik dan menjadi standar emas untuk diagnosis Infark Miokard Akut?", a: "Troponin I atau Troponin T." },
+            { cat: "ACS & PJK", q: "EKG menunjukkan ST elevasi di lead II, III, dan aVF. Di mana lokasi infark dan pembuluh darah mana yang tersumbat?", a: "Lokasi: Inferior. Pembuluh darah: Right Coronary Artery (RCA)." },
+            { cat: "ACS & PJK", q: "Nyeri dada saat istirahat, EKG ST depresi/T inversi, namun enzim jantung (Troponin) normal. Diagnosis?", a: "UAP (Unstable Angina Pectoris)." },
+            { cat: "ACS & PJK", q: "Nyeri dada saat istirahat, EKG ST depresi/T inversi, dan Troponin meningkat. Diagnosis?", a: "NSTEMI." },
+            { cat: "ACS & PJK", q: "Kontraindikasi mutlak pemberian Nitrat pada pasien ACS?", a: "Pasien post konsumsi obat disfungsi ereksi (misal: sildenafil/Viagra) dalam 24 jam terakhir, atau curiga infark ventrikel kanan (tensi bisa anjlok)." },
+            { cat: "ACS & PJK", q: "Sadapan EKG (lead) tambahan yang harus dipasang untuk mendeteksi infark miokard posterior?", a: "V7, V8, V9." },
+            { cat: "ACS & PJK", q: "Komplikasi infark miokard berupa perikarditis autoimun yang muncul 2-3 minggu pasca infark disebut?", a: "Sindrom Dressler (Dressler's Syndrome)." },
+            { cat: "ACS & PJK", q: "Angina pektoris yang muncul saat istirahat/malam hari disertai elevasi ST transien, sering karena spasme koroner tanpa sumbatan plak permanen. Diagnosis?", a: "Angina Prinzmetal (Variant Angina)." },
+            { cat: "ACS & PJK", q: "Obat antiplatelet golongan P2Y12 inhibitor yang onset kerjanya lebih cepat dan poten dari Clopidogrel (sering dipakai di ruang Cathlab)?", a: "Ticagrelor." },
+            { cat: "ACS & PJK", q: "Sistem skoring untuk memprediksi risiko kematian atau iskemik berulang pada pasien NSTEMI/UAP guna menentukan strategi invasif awal?", a: "Skor TIMI atau Skor GRACE." },
+            { cat: "ACS & PJK", q: "Terapi reperfusi pada STEMI di fasilitas tanpa Cath-Lab (tidak bisa PCI primer). Terapi apakah yang diberikan dan menggunakan obat apa?", a: "Terapi Fibrinolitik (Trombolitik), menggunakan Streptokinase, Alteplase, atau Tenecteplase." },
+            { cat: "ACS & PJK", q: "Sebutkan satu kontraindikasi absolut pemberian fibrinolitik (misal Streptokinase) pada kasus STEMI yang sangat fatal!", a: "Riwayat perdarahan intrakranial (kapanpun), stroke iskemik < 3 bulan, atau curiga diseksi aorta." },
+            
+            // --- BAGIAN 2: ARITMIA & ACLS (16-35) ---
+            { cat: "Aritmia & ACLS", q: "EKG: Irama irregularly irregular, tidak ada gelombang P yang jelas, dan kompleks QRS sempit. Laju nadi 130x/menit. Diagnosis?", a: "Atrial Fibrilasi (AF) Rapid Ventricular Response (RVR)." },
+            { cat: "Aritmia & ACLS", q: "Pasien AF RVR tiba-tiba mengalami penurunan kesadaran, akral dingin, dan TD 80/50 mmHg (tidak stabil). Tatalaksana awal?", a: "Kardioversi tersinkronisasi (Synchronized Cardioversion) mulai dari 100-200 Joule." },
+            { cat: "Aritmia & ACLS", q: "Monitor EKG pasien henti jantung menunjukkan Ventrikel Fibrilasi (VF). Tatalaksana utama?", a: "Defibrilasi (Unsynchronized DC Shock) dilanjutkan RJP segera." },
+            { cat: "Aritmia & ACLS", q: "EKG: Takikardia QRS sempit, 160x/menit, gelombang P tertanam di QRS, irama reguler. Pasien sadar, TD 120/80. Diagnosis & obat?", a: "Supraventrikular Takikardia (SVT). Terapi: Manuver Vagal, jika gagal berikan Adenosin IV." },
+            { cat: "Aritmia & ACLS", q: "EKG: Interval PR memanjang progresif, hingga akhirnya ada satu gelombang P yang tidak diikuti kompleks QRS (dropped beat). Diagnosis?", a: "Blok AV Derajat II tipe Mobitz 1 (Wenckebach)." },
+            { cat: "Aritmia & ACLS", q: "Pasien pingsan, nadi 40x/menit. EKG: Sinus Bradikardia. Hemodinamik tidak stabil. Obat awal pilihan utama?", a: "Sulfas Atropin 0.5 - 1 mg IV (maksimal 3 mg)." },
+            { cat: "Aritmia & ACLS", q: "EKG: Takikardia QRS lebar, laju 150x/m, reguler. Pasien tidak sadar dan tidak teraba nadi. Diagnosis & Tatalaksana awal?", a: "Pulseless Ventricular Tachycardia (pVT). Tatalaksana: Defibrilasi + RJP." },
+            { cat: "Aritmia & ACLS", q: "EKG: Takikardia QRS lebar yang aksisnya berputar seperti pita (Polimorfik VT). Biasanya didahului interval QT memanjang. Obat spesifiknya?", a: "Magnesium Sulfat IV (Kondisi: Torsades de Pointes)." },
+            { cat: "Aritmia & ACLS", q: "Remaja sering berdebar. EKG: PR interval pendek (<0.12s) dan terdapat gelombang Delta (slurred upstroke QRS). Diagnosis?", a: "Sindrom Wolff-Parkinson-White (WPW)." },
+            { cat: "Aritmia & ACLS", q: "EKG: PR interval memanjang tapi konstan (>0.20s), setiap gelombang P selalu diikuti kompleks QRS. Diagnosis?", a: "Blok AV Derajat 1." },
+            { cat: "Aritmia & ACLS", q: "EKG: PR interval konstan, namun tiba-tiba ada gelombang P yang tidak diikuti QRS (dropped beat secara mendadak). Diagnosis?", a: "Blok AV Derajat II tipe Mobitz 2." },
+            { cat: "Aritmia & ACLS", q: "EKG: Gelombang P dan kompleks QRS berjalan sendiri-sendiri tanpa ada hubungan (AV disosiasi). Laju QRS lebih lambat dari P. Diagnosis?", a: "Blok AV Derajat 3 (Total AV Block)." },
+            { cat: "Aritmia & ACLS", q: "Tatalaksana definitif/jangka panjang untuk pasien dengan Total AV Block simptomatik?", a: "Pemasangan Pacemaker (Pacu Jantung Permanen)." },
+            { cat: "Aritmia & ACLS", q: "Dua irama henti jantung yang TIDAK boleh di-DC shock (Non-shockable rhythm) menurut ACLS?", a: "Asistol dan Pulseless Electrical Activity (PEA)." },
+            { cat: "Aritmia & ACLS", q: "Tatalaksana farmakologis lini pertama pada pasien Asistol atau PEA saat resusitasi jantung paru?", a: "Epinefrin 1 mg IV tiap 3-5 menit." },
+            { cat: "Aritmia & ACLS", q: "Sistem skoring untuk menentukan indikasi pemberian antikoagulan (sebagai pencegahan stroke) pada pasien Atrial Fibrilasi?", a: "CHA2DS2-VASc score." },
+            { cat: "Aritmia & ACLS", q: "Antikoagulan oral klasik yang kerjanya menghambat Vitamin K (faktor II, VII, IX, X) dan butuh monitoring INR?", a: "Warfarin." },
+            { cat: "Aritmia & ACLS", q: "Obat yang bekerja memperpanjang fase repolarisasi dan digunakan untuk konversi AF menjadi irama sinus atau pada henti jantung VT/VF?", a: "Amiodaron." },
+            { cat: "Aritmia & ACLS", q: "Dosis pemberian Amiodaron IV pada algoritma henti jantung (VF/pVT) untuk dosis pertama (setelah shock ke-3)?", a: "300 mg bolus (diikuti 150 mg untuk dosis kedua jika diperlukan)." },
+            { cat: "Aritmia & ACLS", q: "Kedalaman kompresi dada yang direkomendasikan untuk orang dewasa saat melakukan Resusitasi Jantung Paru (RJP/CPR) menurut AHA?", a: "2 - 2.4 inchi (5 - 6 cm)." },
+
+            // --- BAGIAN 3: GAGAL JANTUNG (36-50) ---
+            { cat: "Gagal Jantung", q: "Sesak napas saat berbaring (orthopnea), sering terbangun malam hari karena sesak (PND), ronki basah basal, JVP meningkat, edema tungkai. Diagnosis?", a: "Gagal Jantung Kongestif (CHF)." },
+            { cat: "Gagal Jantung", q: "Pasien CHF datang sesak napas akut berat, batuk berdahak merah muda berbusa (frothy sputum). X-ray: batwing appearance. Diagnosis?", a: "Edema Paru Akut (Acute Lung Edema / ALO)." },
+            { cat: "Gagal Jantung", q: "Tatalaksana farmakologis lini pertama di IGD untuk Edema Paru Akut dengan tekanan darah normal/tinggi?", a: "Oksigen, Furosemid IV, dan Vasodilator (Nitrat IV/SL)." },
+            { cat: "Gagal Jantung", q: "Kondisi gagal jantung kanan yang murni disebabkan oleh penyakit primer pada paru (misalnya PPOK kronis) disebut?", a: "Kor Pulmonal (Cor Pulmonale)." },
+            { cat: "Gagal Jantung", q: "Klasifikasi NYHA untuk pasien gagal jantung yang sesak napas/kelelahan muncul saat aktivitas fisik ringan (misal: menyapu, berjalan ke kamar mandi)?", a: "NYHA Kelas III." },
+            { cat: "Gagal Jantung", q: "Sebutkan minimal 3 Kriteria Mayor Framingham untuk diagnosis Gagal Jantung!", a: "JVP meningkat, Ronki basah basal, Kardiomegali di foto toraks, Edema paru akut, S3 gallop, PND/Orthopnea." },
+            { cat: "Gagal Jantung", q: "Kondisi klinis pasien gagal jantung tapi hasil Echocardiography menunjukkan fraksi ejeksi (LVEF) > 50%. Diagnosis spesifiknya?", a: "HFpEF (Heart Failure with preserved Ejection Fraction) atau Gagal Jantung Diastolik." },
+            { cat: "Gagal Jantung", q: "Obat jantung golongan apakah yang SANGAT DIKONTRAINDIKASIKAN pada fase dekompensasi akut (sesak berat/edema paru)?", a: "Beta-blocker (harus ditunggu stabil dulu dan euvolemik)." },
+            { cat: "Gagal Jantung", q: "Pasien gagal jantung datang dengan keluhan mual, muntah, dan melihat lingkaran kuning/hijau (halo vision). Curiga intoksikasi obat apa?", a: "Intoksikasi Digoksin." },
+            { cat: "Gagal Jantung", q: "Biomarker darah yang spesifik untuk membedakan sesak napas karena penyebab kardiak (gagal jantung) atau murni pulmonal?", a: "BNP atau NT-proBNP." },
+            { cat: "Gagal Jantung", q: "Pasien gagal jantung datang dengan TD 70/50 mmHg, akral dingin basah, dan oliguria. Termasuk komplikasi/profil hemodinamik apa?", a: "Syok Kardiogenik (Profil Cold & Wet)." },
+            { cat: "Gagal Jantung", q: "Obat inotropik vasopresor pilihan utama untuk syok kardiogenik dengan tensi sangat rendah (TD sistolik < 70 mmHg)?", a: "Norepinefrin." },
+            { cat: "Gagal Jantung", q: "Diuretik hemat kalium yang terbukti menurunkan angka mortalitas/remodeling pada pasien gagal jantung kronik simptomatik?", a: "Spironolakton (Aldosterone antagonist)." },
+            { cat: "Gagal Jantung", q: "Kondisi dimana tekanan vena jugularis (JVP) bukannya turun tapi justru meningkat saat pasien inspirasi (menarik napas). Tanda apakah ini?", a: "Kussmaul Sign (sering pada kor pulmonal atau perikarditis konstriktif)." },
+            { cat: "Gagal Jantung", q: "Obat vasodilator vena yang dapat menurunkan 'preload' jantung secara cepat pada tatalaksana Edema Paru Akut?", a: "Nitrat (Nitrogliserin IV / Isosorbid Dinitrat SL)." },
+
+            // --- BAGIAN 4: KATUP & BAWAAN (51-65) ---
+            { cat: "Katup & Bawaan", q: "Auskultasi jantung: murmur mid-diastolik dengan opening snap di apeks. Riwayat sering sakit tenggorokan saat anak-anak. Diagnosis?", a: "Stenosis Mitral (biasanya sekunder akibat Penyakit Jantung Rematik)." },
+            { cat: "Katup & Bawaan", q: "Bayi biru saat menangis. Anak balita sering berjongkok (squatting) saat lelah. X-ray: Boot-shaped heart (Coeur en sabot). Diagnosis?", a: "Tetralogy of Fallot (ToF)." },
+            { cat: "Katup & Bawaan", q: "Bayi dengan bising pansistolik keras di SIC III-IV parasternal kiri. Pasien tidak biru tapi sering ISPA berulang. Diagnosis?", a: "Ventricular Septal Defect (VSD)." },
+            { cat: "Katup & Bawaan", q: "Bayi prematur dengan bising kontinyu mirip suara mesin (machinery-like murmur) di area subklavikula kiri/SIC II kiri. Diagnosis?", a: "Patent Ductus Arteriosus (PDA)." },
+            { cat: "Katup & Bawaan", q: "Murmur sistolik tipe crescendo-decrescendo (ejeksi) di SIC II kanan menjalar ke leher. Nadi teraba lambat dan lemah (pulsus parvus et tardus). Diagnosis?", a: "Stenosis Aorta." },
+            { cat: "Katup & Bawaan", q: "Murmur diastolik dini (early diastolic) di parasternal kiri. Nadi terasa sangat kuat lalu menghilang cepat (waterhammer pulse). Diagnosis?", a: "Regurgitasi Aorta." },
+            { cat: "Katup & Bawaan", q: "Murmur pansistolik/holosistolik terdengar paling jelas di apeks dan menjalar hingga ke aksila (ketiak). Diagnosis?", a: "Regurgitasi Mitral." },
+            { cat: "Katup & Bawaan", q: "Pasien muda asimptomatik atau sering dada berdebar. Terdengar murmur disertai mid-systolic click di area apeks. Diagnosis?", a: "Prolaps Katup Mitral (Mitral Valve Prolapse / MVP)." },
+            { cat: "Katup & Bawaan", q: "Katup jantung yang paling sering terkena vegetasi pada pasien pengguna narkoba suntik (IVDU) yang mengalami Endokarditis Infektif?", a: "Katup Trikuspid." },
+            { cat: "Katup & Bawaan", q: "Bunyi jantung kedua (S2) terdengar terbelah lebar dan menetap baik saat inspirasi maupun ekspirasi (wide fixed split S2). Diagnosis kongenital?", a: "Atrial Septal Defect (ASD)." },
+            { cat: "Katup & Bawaan", q: "Anak/remaja tekanan darah lengan tinggi tapi tungkai rendah. Pulsasi arteri femoralis lemah/tertunda. Foto Ro: Rib notching. Diagnosis?", a: "Koarktasio Aorta." },
+            { cat: "Katup & Bawaan", q: "Bayi baru lahir langsung sianosis berat. X-ray dada: Jantung berbentuk seperti telur terikat tali (Egg on a string appearance). Diagnosis?", a: "Transposition of the Great Arteries (TGA)." },
+            { cat: "Katup & Bawaan", q: "Tatalaksana profilaksis antibiotik untuk prosedur cabut gigi pada pasien dengan riwayat pasang katup jantung buatan?", a: "Amoxicillin 2 gram per oral, diberikan 30-60 menit sebelum tindakan." },
+            { cat: "Katup & Bawaan", q: "Obat golongan NSAID yang dapat merangsang penutupan PDA (Patent Ductus Arteriosus) pada bayi prematur tanpa operasi?", a: "Indometasin atau Ibuprofen." },
+            { cat: "Katup & Bawaan", q: "Penyebab paling umum terjadinya Stenosis Aorta pada populasi pasien lanjut usia (> 70 tahun)?", a: "Kalsifikasi degeneratif (Degenerative calcific aortic stenosis)." },
+
+            // --- BAGIAN 5: HIPERTENSI (66-80) ---
+            { cat: "Hipertensi", q: "Tekanan darah 210/120 mmHg, penurunan kesadaran, muntah proyektil, dan papiledema (tanda kerusakan organ target). Diagnosis?", a: "Hipertensi Emergensi." },
+            { cat: "Hipertensi", q: "Hamil 30 minggu, TD 160/100 mmHg, proteinuria (+). Pilihan obat antihipertensi yang aman (lini pertama)?", a: "Metildopa, Nifedipin, atau Labetalol." },
+            { cat: "Hipertensi", q: "Pasien Hipertensi dengan riwayat Diabetes Mellitus dan mikroalbuminuria. Golongan obat pilihan utama?", a: "ACE Inhibitor (Captopril) atau ARB (Valsartan) karena efek renoprotektif." },
+            { cat: "Hipertensi", q: "Efek samping paling umum dari penggunaan obat golongan ACE Inhibitor yang sering membuat pasien putus obat?", a: "Batuk kering (dry cough) akibat akumulasi bradikinin." },
+            { cat: "Hipertensi", q: "Target tekanan darah pada pasien Hipertensi lansia (>60 tahun) tanpa diabetes/CKD menurut pedoman JNC 8?", a: "< 150/90 mmHg." },
+            { cat: "Hipertensi", q: "Pria lansia dengan hipertensi dan keluhan sering kencing (BPH). Antihipertensi apa yang dapat mengobati kedua kondisi sekaligus?", a: "Alpha-1 blocker (Contoh: Doxazosin, Terazosin, Tamsulosin)." },
+            { cat: "Hipertensi", q: "Antihipertensi golongan apakah yang harus DIHINDARI pada pasien dengan komorbid Asma Bronkial aktif?", a: "Beta-blocker non-selektif (Contoh: Propranolol)." },
+            { cat: "Hipertensi", q: "Antihipertensi yang memiliki efek samping khas berupa pembengkakan gusi (gingival hyperplasia) dan edema tungkai (kaki bengkak)?", a: "Calcium Channel Blocker / CCB golongan Dihidropiridin (Nifedipin/Amlodipin)." },
+            { cat: "Hipertensi", q: "Obat antihipertensi yang sering memicu serangan Gout Artritis karena menghambat ekskresi asam urat?", a: "Diuretik Thiazide (Contoh: Hidroklorotiazid / HCT)." },
+            { cat: "Hipertensi", q: "Hipertensi pada dewasa muda, disertai keluhan episodik sakit kepala berdenyut, keringat dingin, dan dada berdebar (Triad). Curiga kondisi apa?", a: "Pheochromocytoma (Tumor medula adrenal penghasil katekolamin)." },
+            { cat: "Hipertensi", q: "Kondisi TD >180/120 mmHg namun TIDAK ADA tanda kerusakan organ target (funduskopi normal, EKG tak ada iskemik, urium kreatinin normal). Diagnosis?", a: "Hipertensi Urgensi." },
+            { cat: "Hipertensi", q: "Kelas antihipertensi yang dikontraindikasikan secara mutlak (Absolute CI) pada pasien dengan Stenosis Arteri Renalis Bilateral?", a: "ACE Inhibitor dan ARB (bisa memicu gagal ginjal akut cepat)." },
+            { cat: "Hipertensi", q: "Obat antihipertensi intravena (drip) yang sering menjadi pilihan utama di IGD untuk kasus Hipertensi Emergensi (misal ensefalopati)?", a: "Nicardipin IV atau Klonidin IV." },
+            { cat: "Hipertensi", q: "Perbedaan utama Preeklampsia dan Eklampsia pada wanita hamil dengan hipertensi?", a: "Eklampsia ditandai dengan munculnya Koma atau Kejang (seizures) yang tidak dapat dijelaskan oleh penyebab lain." },
+            { cat: "Hipertensi", q: "Mineralokortikoid berlebih yang menyebabkan Hipertensi sekunder disertai hipokalemia persisten. Diagnosis penyerta?", a: "Sindrom Conn (Primary Hyperaldosteronism)." },
+
+            // --- BAGIAN 6: VASKULAR, PERIKARDIUM & LAINNYA (81-95) ---
+            { cat: "Vaskular & Lainnya", q: "Nyeri dada tajam, memberat saat tarik napas, membaik saat duduk membungkuk ke depan. EKG: Diffuse ST elevation dan PR depresi. Diagnosis?", a: "Perikarditis Akut." },
+            { cat: "Vaskular & Lainnya", q: "Sebutkan 3 gejala klasik (Trias Beck) pada Tamponade Jantung!", a: "Hipotensi, Peningkatan JVP, dan Suara jantung menjauh (muffled heart sounds)." },
+            { cat: "Vaskular & Lainnya", q: "Temuan EKG yang sangat khas pada efusi perikardial masif atau tamponade jantung akibat jantung berayun?", a: "Electrical Alternans (tinggi QRS bergantian)." },
+            { cat: "Vaskular & Lainnya", q: "Demam subfebris lama, murmur baru, Janeway lesions (+), Osler nodes (+). Apa nama sistem kriteria untuk diagnosisnya?", a: "Kriteria Duke (untuk Endokarditis Infektif)." },
+            { cat: "Vaskular & Lainnya", q: "Sebutkan Kriteria Mayor (JONES) untuk diagnosis Demam Rematik Akut!", a: "Joints (Poliartritis), O (Carditis), Nodul subkutan, Eritema marginatum, Sydenham chorea." },
+            { cat: "Vaskular & Lainnya", q: "Tungkai kanan bengkak, merah, hangat, nyeri mendadak setelah tirah baring lama (post-op). Tanda Homan positif. Diagnosis?", a: "Deep Vein Thrombosis (DVT)." },
+            { cat: "Vaskular & Lainnya", q: "Laki-laki perokok, nyeri kram betis saat berjalan jauh, hilang saat istirahat (claudicatio intermittens). Pulsasi arteri tungkai lemah. Diagnosis?", a: "Peripheral Arterial Disease (PAD)." },
+            { cat: "Vaskular & Lainnya", q: "Nyeri dada hebat seperti dirobek (tearing pain) menjalar ke punggung. TD tangan kanan 180/100, tangan kiri 120/80. X-ray: Mediastinum melebar. Diagnosis?", a: "Diseksi Aorta." },
+            { cat: "Vaskular & Lainnya", q: "Laki-laki tua perokok, saat pemeriksaan perut teraba massa berdenyut (pulsatile mass), sering nyeri perut/punggung bawah. Diagnosis?", a: "Aneurisma Aorta Abdominalis (AAA)." },
+            { cat: "Vaskular & Lainnya", q: "Pria 30 tahun perokok sangat berat, ujung jari tangan/kaki menghitam (gangren), nyeri saat istirahat. Diagnosis penyakit vaskular?", a: "Penyakit Buerger (Thromboangiitis Obliterans)." },
+            { cat: "Vaskular & Lainnya", q: "Perubahan warna jari tangan paroksismal menjadi pucat memutih, lalu kebiruan, dan terakhir kemerahan saat terpapar dingin/stres emosional. Diagnosis?", a: "Fenomena Raynaud." },
+            { cat: "Vaskular & Lainnya", q: "Atlet muda tiba-tiba henti jantung saat bertanding. Riwayat keluarga mati mendadak. Pemeriksaan fisik: Murmur ejeksi sistolik. Penyakit genetik apa yang dicurigai?", a: "Kardiomiopati Hipertrofik (HCM)." },
+            { cat: "Vaskular & Lainnya", q: "Infeksi virus (tersering Coxsackie B) yang tiba-tiba memicu gagal jantung akut, EKG mirip ACS, tapi koroner normal. Diagnosis?", a: "Miokarditis Akut." },
+            { cat: "Vaskular & Lainnya", q: "Bunyi gesekan yang terdengar kasar seperti amplas di atas area prekordium, paling jelas terdengar saat pasien menahan napas usai ekspirasi penuh. Tanda fisik apakah ini?", a: "Pericardial Friction Rub (Khas pada Perikarditis Akut)." },
+            { cat: "Vaskular & Lainnya", q: "Tatalaksana awal DVT (Deep Vein Thrombosis) untuk mencegah emboli paru sebelum terapi antikoagulan oral jangka panjang bekerja?", a: "Suntikan Low Molecular Weight Heparin (LMWH, mis. Enoxaparin) atau UFH." },
+
+            // --- BAGIAN 7: EKG & BASIC (96-100) ---
+            { cat: "EKG & Basic", q: "Pada kertas perekaman EKG standar (kecepatan 25 mm/s), 1 kotak kecil horisontal bernilai berapa detik?", a: "0.04 detik (1 kotak besar = 0.20 detik)." },
+            { cat: "EKG & Basic", q: "Cara cepat menghitung frekuensi denyut jantung (Heart Rate) jika irama EKG teratur (reguler) menggunakan kotak besar?", a: "300 dibagi jumlah kotak besar antara puncak R ke puncak R berikutnya (R-R interval)." },
+            { cat: "EKG & Basic", q: "Munculnya gelombang U yang menonjol dan jelas (diikuti T yang datar/inversi) pada EKG sering dikaitkan dengan gangguan elektrolit apa?", a: "Hipokalemia berat." },
+            { cat: "EKG & Basic", q: "Gelombang T yang sangat tinggi, runcing, sempit, dan simetris (Tall T-wave / Peaked T-wave) mengindikasikan gangguan elektrolit apa?", a: "Hiperkalemia berat (risiko VF dan henti jantung)." },
+            { cat: "EKG & Basic", q: "Pada kasus keracunan obat anti-depresan trisiklik (TCA), EKG bisa menunjukkan pelebaran kompleks QRS ekstrim. Apa antidotum utamanya?", a: "Natrium Bikarbonat (NaHCO3) IV." }
+        ];
+
+        let cards = [...originalCards];
+        let currentIndex = 0;
+        let isFlipped = false;
+        
+        // Touch Variables for Swipe (Mobile)
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let isSwiping = false;
+
+        const flashcardEl = document.getElementById('flashcard');
+        const questionEl = document.getElementById('question-text');
+        const answerEl = document.getElementById('answer-text');
+        const counterEl = document.getElementById('card-counter');
+        const categoryEl = document.getElementById('card-category');
+
+        function renderCard() {
+            // Hilangkan animasi flip jika sedang di belakang
+            if (isFlipped) {
+                flashcardEl.classList.remove('is-flipped');
+                isFlipped = false;
+                
+                // Beri sedikit jeda agar kartu balik dulu sebelum kontennya diganti
+                setTimeout(() => {
+                    updateContent();
+                }, 300);
+            } else {
+                updateContent();
+            }
+        }
+
+        function updateContent() {
+            const currentCard = cards[currentIndex];
+            questionEl.textContent = currentCard.q;
+            answerEl.innerHTML = currentCard.a.replace(/\n/g, '<br>');
+            categoryEl.textContent = currentCard.cat;
+            counterEl.textContent = `${currentIndex + 1} / ${cards.length}`;
+        }
+
+        function toggleFlip(e) {
+            // Mencegah kartu membalik jika user sebenarnya sedang mengusap (swipe)
+            if (isSwiping) return;
+            
+            isFlipped = !isFlipped;
+            flashcardEl.classList.toggle('is-flipped');
+        }
+
+        function nextCard() {
+            if (currentIndex < cards.length - 1) {
+                currentIndex++;
+                renderCard();
+            } else {
+                // Looping kembali ke awal jika sudah di akhir
+                currentIndex = 0;
+                renderCard();
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderCard();
+            }
+        }
+
+        function shuffleCards() {
+            // Algoritma Fisher-Yates untuk mengacak array
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            currentIndex = 0;
+            renderCard();
+        }
+
+        // --- Fitur Swipe untuk Mobile ---
+        flashcardEl.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            isSwiping = false;
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchmove', e => {
+            // Jika jari bergerak cukup jauh, tandai sebagai swipe bukan tap
+            const currentTouchX = e.changedTouches[0].screenX;
+            if (Math.abs(currentTouchX - touchStartX) > 15) {
+                isSwiping = true;
+            }
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+
+        function handleSwipe() {
+            const swipeThreshold = 50; // Jarak minimum usapan layar (pixel)
+            
+            if (touchEndX < touchStartX - swipeThreshold) {
+                // Swipe ke Kiri -> Soal Selanjutnya
+                nextCard();
+            } else if (touchEndX > touchStartX + swipeThreshold) {
+                // Swipe ke Kanan -> Soal Sebelumnya
+                prevCard();
+            }
+            
+            // isSwiping direset sedikit terlambat agar klik tidak tertrigger
+            setTimeout(() => {
+                isSwiping = false;
+            }, 100);
+        }
+
+        // Inisialisasi kartu pertama saat halaman dimuat
+        window.onload = renderCard;
+
+        // Dukungan navigasi menggunakan keyboard
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                e.preventDefault();
+                toggleFlip();
+            } else if (e.code === 'ArrowRight') {
+                nextCard();
+            } else if (e.code === 'ArrowLeft') {
+                prevCard();
+            }
+        });
+    </script>
+</body>
+</html>
