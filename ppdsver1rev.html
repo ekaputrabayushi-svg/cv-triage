@@ -1,0 +1,286 @@
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard Kardiologi (Level PPDS)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* CSS untuk efek flip 3D */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        .card-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        .is-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen font-sans flex flex-col overflow-x-hidden">
+
+    <!-- Header -->
+    <header class="bg-red-800 text-white shadow-md p-3 md:p-4 sticky top-0 z-20">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0">
+            <div class="text-center sm:text-left">
+                <h1 class="text-lg sm:text-xl md:text-2xl font-bold flex items-center justify-center sm:justify-start gap-2">
+                    <span>🫀</span> Flashcard Kardiologi (Level PPDS)
+                </h1>
+                <p class="text-[10px] sm:text-xs md:text-sm text-red-200 font-medium tracking-wide">
+                    Varian 1 part of CardiologyVault - Advanced Edition
+                </p>
+            </div>
+            <div class="text-[10px] sm:text-xs md:text-sm font-medium bg-red-900 px-3 py-1 rounded-full border border-red-500 shadow-sm text-center">
+                Dev: Bayushi Eka Putra, MD, FIHA
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col items-center justify-start sm:justify-center p-4 md:p-8 max-w-4xl mx-auto w-full">
+        
+        <!-- Progress Info -->
+        <div class="w-full flex justify-between items-center mb-3 md:mb-4 text-slate-600 font-medium">
+            <span id="card-category" class="text-xs md:text-sm uppercase tracking-wider text-red-600 font-bold bg-red-100 px-2 py-1 rounded shadow-sm">Kategori</span>
+            <span id="card-counter" class="text-xs md:text-sm bg-white px-3 py-1 rounded-full shadow-sm font-bold border border-slate-200">1 / 50</span>
+        </div>
+
+        <!-- Flashcard Container -->
+        <div id="flashcard" class="relative w-full max-w-2xl h-[55vh] min-h-[360px] md:h-[420px] perspective-1000 cursor-pointer group mb-6 md:mb-8 touch-pan-y" onclick="toggleFlip(event)">
+            <div class="card-inner w-full h-full absolute transform-style-3d shadow-xl rounded-2xl md:rounded-3xl">
+                
+                <!-- Front (Question) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-white rounded-2xl md:rounded-3xl p-6 md:p-10 flex flex-col items-center justify-center text-center border-t-4 border-red-600">
+                    <div class="absolute top-4 left-5 text-slate-200 font-bold text-3xl md:text-4xl">Q</div>
+                    <div class="w-full h-full flex flex-col justify-center overflow-y-auto no-scrollbar pt-8 pb-8">
+                        <p id="question-text" class="text-base sm:text-lg md:text-xl text-slate-800 font-semibold leading-relaxed md:leading-normal m-auto">
+                            Memuat pertanyaan...
+                        </p>
+                    </div>
+                    <div class="absolute bottom-4 text-xs md:text-sm text-slate-400 flex items-center gap-1 animate-pulse">
+                        <span class="hidden sm:inline">Ketuk kartu untuk melihat jawaban</span>
+                        <span class="sm:hidden">Ketuk untuk jawaban • Usap untuk lanjut</span>
+                    </div>
+                </div>
+
+                <!-- Back (Answer) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-slate-50 rounded-2xl md:rounded-3xl p-6 md:p-10 flex flex-col items-center justify-center text-left rotate-y-180 border-t-4 border-green-500 shadow-inner">
+                    <div class="absolute top-4 left-5 text-green-200 font-bold text-3xl md:text-4xl">A</div>
+                    <div class="w-full h-full flex flex-col justify-center overflow-y-auto no-scrollbar pt-8 pb-4">
+                        <p id="answer-text" class="text-sm sm:text-base md:text-lg text-slate-700 font-medium leading-relaxed m-auto w-full">
+                            Memuat jawaban...
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="w-full max-w-2xl grid grid-cols-2 sm:flex sm:flex-row justify-center gap-3 md:gap-4 pb-8">
+            <button onclick="prevCard()" class="col-span-1 bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-sm transition-all border border-slate-200 flex justify-center items-center gap-1 active:scale-95">
+                <span>&larr;</span> <span class="hidden sm:inline">Sebelumnya</span><span class="sm:hidden">Prev</span>
+            </button>
+            <button onclick="nextCard()" class="col-span-1 bg-red-800 hover:bg-red-900 text-white font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-md transition-all flex justify-center items-center gap-1 active:scale-95">
+                <span class="hidden sm:inline">Selanjutnya</span><span class="sm:hidden">Next</span> <span>&rarr;</span>
+            </button>
+            <button onclick="shuffleCards()" class="col-span-2 sm:col-span-1 order-last sm:order-none bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm md:text-base py-3 md:py-4 px-4 md:px-6 rounded-xl shadow-md transition-all flex justify-center items-center active:scale-95">
+                Acak (Shuffle)
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        // Data Flashcard (50 Soal Kardiologi Level PPDS)
+        // Telah di-review dan diperbaiki sesuai standar medis & guideline terbaru
+        const originalCards = [
+            // --- BAGIAN 1: ACS & Ischemic Heart Disease (10) ---
+            { cat: "IHD & ACS", q: "Kriteria EKG Sgarbossa (termasuk modified Sgarbossa) untuk diagnosis STEMI pada Left Bundle Branch Block (LBBB) baru/lama?", a: "<strong>Original Sgarbossa:</strong><br>1. Concordant ST elevasi ≥ 1 mm (5 poin)<br>2. Concordant ST depresi ≥ 1 mm di V1-V3 (3 poin)<br>3. Discordant ST elevasi <strong>≥ 5 mm</strong> (2 poin).<br><br><strong>Modified Sgarbossa (Smith):</strong><br>Mengganti poin 3 menjadi: Discordant STE ≥ 1 mm DAN ST/S ratio ≤ -0.25 (STE ≥ 25% kedalaman gelombang S)." },
+            { cat: "IHD & ACS", q: "Berdasarkan ESC Guidelines, apa definisi MINOCA dan kriteria diagnostiknya?", a: "Myocardial Infarction with Non-Obstructive Coronary Arteries.<br>Kriteria: <br>1. Kriteria universal IMA (troponin naik turun). <br>2. Angiografi koroner non-obstruktif (<50% stenosis). <br>3. Tidak ada penyebab spesifik klinis lain (mis. miokarditis, Takotsubo)." },
+            { cat: "IHD & ACS", q: "Skor DAPT (DAPT Score) digunakan untuk apa, dan berapa nilai cut-off untuk memperpanjang DAPT > 12 bulan?", a: "Untuk menilai rasio risk-benefit perpanjangan DAPT pasca PCI. Skor <strong>≥ 2</strong> mendukung perpanjangan DAPT (benefit iskemik > risiko perdarahan)." },
+            { cat: "IHD & ACS", q: "Apa indikasi pemberian terapi Ticagrelor pada pasien ACS, dan apa kontraindikasi absolutnya?", a: "Indikasi: ACS (STEMI/NSTEMI) moderate-high risk.<br>Kontraindikasi absolut: Riwayat perdarahan intrakranial (kapanpun), perdarahan aktif patologis, dan gangguan hati berat." },
+            { cat: "IHD & ACS", q: "Pasien NSTEMI dengan skor GRACE > 140. Kapan target waktu dilakukan strategi invasif (coronary angiography)?", a: "Early invasive strategy (Strategi invasif awal) direkomendasikan dalam waktu <strong>< 24 jam</strong>." },
+            { cat: "IHD & ACS", q: "Apa yang dimaksud dengan fenomena 'No-Reflow' pasca PCI primer, dan apa terapi farmakologis intrakoroner pilihannya?", a: "Kegagalan perfusi mikrovaskuler miokard meskipun epikardial arteri koroner paten (TIMI flow <3) post-stent.<br>Terapi pilihan IC: Adenosin, Verapamil, Nitroprusside, atau Epinefrin." },
+            { cat: "IHD & ACS", q: "Arteri yang memperdarahi AV Node pada 90% populasi (Right Dominant) berasal dari cabang arteri mana?", a: "Cabang AV Nodal artery yang berasal dari <strong>Right Coronary Artery (RCA)</strong> bagian distal (area crux)." },
+            { cat: "IHD & ACS", q: "Klasifikasi Killip pada Infark Miokard Akut: Deskripsikan perbedaan hemodinamik Killip III dan IV!", a: "Killip III: Edema paru akut (ronki basah > 50% lapang paru), hemodinamik bisa masih terjaga.<br>Killip IV: Syok kardiogenik (hipotensi TD sistolik < 90 mmHg, oliguria, sianosis, diaforesis, CI <2.2)." },
+            { cat: "IHD & ACS", q: "Obat antiangina lini kedua yang bekerja dengan menghambat arus lambat natrium intraseluler (late sodium current / INa) tanpa menurunkan denyut jantung?", a: "<strong>Ranolazine</strong>." },
+            { cat: "IHD & ACS", q: "Kapan timing operasi CABG elektif disarankan setelah pasien ACS mendapat dual antiplatelet (P2Y12 inhibitor)?", a: "Berdasarkan ESC Guidelines (ACS 2023): <br>1. <strong>Ticagrelor:</strong> distop 3 hari sebelum operasi.<br>2. <strong>Clopidogrel:</strong> distop 5 hari sebelum operasi.<br>3. <strong>Prasugrel:</strong> distop 7 hari sebelum operasi." },
+
+            // --- BAGIAN 2: Heart Failure & Cardiomyopathies (10) ---
+            { cat: "Heart Failure", q: "Sebutkan 4 pilar terapi farmakologis (Fantastic Four) pada HFrEF berdasarkan guideline ESC/AHA terkini!", a: "1. ARNI (Sacubitril/Valsartan) atau ACE-i<br>2. Beta-blocker<br>3. MRA (Spironolactone/Eplerenone)<br>4. SGLT2 inhibitor (Dapagliflozin/Empagliflozin)." },
+            { cat: "Heart Failure", q: "Indikasi Kelas I untuk pemasangan CRT (Cardiac Resynchronization Therapy) pada pasien gagal jantung?", a: "HFrEF simptomatik (LVEF ≤ 35%), irama sinus, QRS duration <strong>≥ 150 ms dengan morfologi LBBB</strong>, meskipun sudah mendapat OMT optimal." },
+            { cat: "Heart Failure", q: "Apa kriteria diagnostik untuk Peripartum Cardiomyopathy (PPCM)?", a: "Gagal jantung yang berkembang pada bulan terakhir kehamilan atau hingga 5 bulan postpartum, tidak ada penyebab HF yang lain, dan terbukti ada disfungsi sistolik ventrikel kiri (LVEF < 45%)." },
+            { cat: "Heart Failure", q: "Obat inotropik pilihan (sensitizer kalsium) yang tidak meningkatkan konsumsi oksigen miokard secara signifikan dan aman digunakan pada pasien dalam terapi beta-blocker?", a: "<strong>Levosimendan</strong>." },
+            { cat: "Heart Failure", q: "Gambaran ekokardiografi khas pada Kardiomiopati Amiloidosis (Cardiac Amyloidosis)?", a: "Penebalan dinding biventrikuler dengan tampilan 'sparkling/granular', dilatasi biatrial, penebalan katup & septum interatrial. LVEF sering preserved di awal namun ada disfungsi diastolik berat." },
+            { cat: "Heart Failure", q: "Apa indikasi spesifik pemberian Ivabradine pada pasien gagal jantung kronik?", a: "HFrEF (LVEF ≤ 35%) simptomatik (NYHA II-IV), irama sinus dengan resting HR <strong>≥ 70 bpm</strong>, meskipun telah mendapat terapi beta-blocker dosis maksimal yang ditoleransi." },
+            { cat: "Heart Failure", q: "Pada HCM (Hypertrophic Cardiomyopathy), sebutkan faktor risiko untuk sudden cardiac death (SCD) sebagai indikasi primer pemasangan ICD!", a: "Klinis: Riwayat VT/SCA, riwayat keluarga SCD, unexplained syncope, LV wall thickness ≥ 30 mm. <br>Secara Guideline ESC: Jika <strong>ESC HCM Risk-SCD Score ≥ 6%</strong> dalam 5 tahun, direkomendasikan kuat pasang ICD." },
+            { cat: "Heart Failure", q: "Hemodinamik Invasif (Swan-Ganz): Berapa nilai normal PCWP (Pulmonary Capillary Wedge Pressure) dan apa artinya jika nilainya meningkat?", a: "Normal: 8-12 mmHg.<br>PCWP <strong>> 15 mmHg</strong> mengindikasikan peningkatan LVEDP (Disfungsi diastolik / HF).<br>PCWP <strong>> 18 mmHg</strong> biasanya berkaitan dengan mulai timbulnya kongesti/edema paru klinis." },
+            { cat: "Heart Failure", q: "Apa itu Takotsubo Cardiomyopathy dan apa temuan khas pada ventriculography/ekokardiografi?", a: "Stress-induced cardiomyopathy (akibat lonjakan katekolamin).<br>Temuan khas: <strong>Apical ballooning</strong> (akinesia/dyskinesia apikal/mid-ventrikular) dengan hiperkinesia basal, dan koroner normal/non-obstruktif." },
+            { cat: "Heart Failure", q: "Kriteria hemodinamik invasif (RHC) untuk diagnosis Pulmonary Arterial Hypertension (PAH)?", a: "Mean Pulmonary Arterial Pressure (mPAP) <strong>> 20 mmHg</strong> (ESC/ERS 2022), PAWP ≤ 15 mmHg (pre-kapiler), dan Pulmonary Vascular Resistance (PVR) > 2 Wood Units." },
+
+            // --- BAGIAN 3: Arrhythmias & Electrophysiology (10) ---
+            { cat: "Arrhythmias & EP", q: "Apa perbedaan anatomi/mekanisme Reentry pada sirkuit AVNRT dan AVRT?", a: "<strong>AVNRT:</strong> Reentry terjadi secara internal (mikro) di dalam struktur AV node itu sendiri (jalur slow dan fast).<br><strong>AVRT:</strong> Reentry makro yang melibatkan jalur aksesori ekstranodal (misal Bundle of Kent) dan AV node untuk membentuk sirkuit lengkap." },
+            { cat: "Arrhythmias & EP", q: "Apakah antikoagulan NOAC/DOAC dapat digunakan pada pasien AF dengan katup prostetik mekanik?", a: "<strong>TIDAK (Kontraindikasi Absolut).</strong> DOAC/NOAC terbukti meningkatkan risiko trombosis dan perdarahan pada katup mekanik (studi RE-ALIGN). Pilihan utamanya adalah Warfarin (VKA)." },
+            { cat: "Arrhythmias & EP", q: "EKG: Takikardia QRS sempit, reguler. Terlihat pseudo r' di V1 dan pseudo S di inferior leads. RP interval < 70 ms. Diagnosis paling mungkin?", a: "<strong>AVNRT</strong> (Atrioventricular Nodal Reentrant Tachycardia) tipe Tipikal (Slow-Fast)." },
+            { cat: "Arrhythmias & EP", q: "Apa kriteria diagnostik Brugada Syndrome Tipe 1 spontan pada EKG?", a: "Coved-type ST-segment elevation ≥ 2 mm (0.2 mV) yang diikuti oleh gelombang T negatif pada ≥ 1 lead prekordial kanan (V1-V2), baik posisi standar atau ICS 2/3." },
+            { cat: "Arrhythmias & EP", q: "Klasifikasi obat Vaughan Williams: Obat antiaritmia kelas IC bekerja memblokir kanal apa, dan apa contoh obatnya?", a: "Memblokir kuat kanal Natrium intrasel (Na+ channel blocker), sangat memperlambat fase 0 depolarisasi tanpa efek pada durasi potensial aksi. Contoh: <strong>Flecainide, Propafenone</strong>." },
+            { cat: "Arrhythmias & EP", q: "Algoritma Brugada untuk mendiagnosis Takikardia QRS Lebar. Apa pertanyaan langkah pertamanya?", a: "Apakah terdapat <strong>ketiadaan kompleks RS</strong> (Absence of an RS complex) di seluruh sadapan prekordial (V1-V6)? Jika ya (semua positif / negatif kongruen) -> VT. Jika tidak, lanjut cek RS interval > 100 ms." },
+            { cat: "Arrhythmias & EP", q: "Berapa target INR untuk pasien dengan katup jantung mekanik di posisi mitral?", a: "Target INR <strong>3.0</strong> (rentang 2.5 - 3.5) karena risiko trombogenik posisi mitral lebih tinggi dibanding posisi aorta." },
+            { cat: "Arrhythmias & EP", q: "Apa yang dimaksud dengan fenomena Ashman (Ashman phenomenon) pada EKG?", a: "Kompleks QRS lebar aberran (biasanya morfologi RBBB) yang terjadi akibat siklus R-R panjang (repolarisasi melambat) diikuti oleh siklus R-R yang sangat pendek. Paling sering dijumpai pada AF." },
+            { cat: "Arrhythmias & EP", q: "Sindrom QT Panjang (LQTS): Mutasi gen KCNQ1 berhubungan dengan LQTS tipe berapa dan apa pemicu aritmia khasnya?", a: "<strong>LQTS Tipe 1 (LQT1)</strong>.<br>Pemicu khas: Aktivitas fisik berat yang meningkatkan tonus adrenergik, terutama <strong>berenang</strong>." },
+            { cat: "Arrhythmias & EP", q: "Fasikular VT (Belhassen VT): Berasal dari struktur mana, bagaimana morfologi EKG khasnya, dan sangat responsif terhadap obat apa?", a: "Berasal dari left posterior fascicle.<br>Morfologi EKG: RBBB + Left Axis Deviation (LAD).<br>Sangat responsif terhadap <strong>Verapamil IV</strong>." },
+
+            // --- BAGIAN 4: Valvular, Congenital & Structural (10) ---
+            { cat: "Valvular & Congenital", q: "Kriteria utama ekokardiografi untuk mendiagnosis Stenosis Aorta (AS) Berat (Severe AS)?", a: "1. Vmax (Peak velocity) ≥ 4.0 m/s<br>2. Mean Gradient ≥ 40 mmHg<br>3. Aortic Valve Area (AVA) ≤ 1.0 cm² (atau AVA index ≤ 0.6 cm²/m²)." },
+            { cat: "Valvular & Congenital", q: "Apa itu Low-flow, Low-gradient Aortic Stenosis dengan LVEF turun? Tes apa yang dilakukan untuk menyingkirkan pseudo-severe AS?", a: "Kondisi di mana AVA ≤ 1.0 cm², tetapi Mean Gradient < 40 mmHg akibat CO/EF rendah (LVEF < 50%).<br>Tes pembeda: <strong>Dobutamine Stress Echocardiography (DSE)</strong> untuk melihat inotropic reserve." },
+            { cat: "Valvular & Congenital", q: "Sebutkan indikasi intervensi operasi (Kelas I) pada Regurgitasi Mitral (MR) primer yang ASIMPTOMATIK!", a: "Mulai timbulnya disfungsi ventrikel kiri: LVEF ≤ 60% ATAU LVESD (Left Ventricular End-Systolic Dimension) ≥ 40 mm." },
+            { cat: "Valvular & Congenital", q: "Berapa kriteria cut-off ekokardiografi (Planimetri / MVA) untuk mendiagnosis Stenosis Mitral Berat (Severe MS)?", a: "Mitral Valve Area (MVA) <strong>≤ 1.5 cm²</strong>. (Jika MVA ≤ 1.0 cm² disebut sebagai very severe MS)." },
+            { cat: "Valvular & Congenital", q: "Secara patofisiologi, Eisenmenger Syndrome didefinisikan sebagai apa?", a: "Penyakit jantung bawaan dengan shunt kiri-ke-kanan besar di awal kehidupan yang memicu <em>pulmonary vascular disease</em> & PVR melebihi resistensi sistemik, sehingga terjadi pembalikan shunt menjadi kanan-ke-kiri (sianosis sentral)." },
+            { cat: "Valvular & Congenital", q: "Prosedur TAVR/TAVI (Transcatheter Aortic Valve Replacement) secara guideline (ESC/AHA) paling diindikasikan pada kelompok pasien mana?", a: "Pasien AS berat bergejala dengan usia lansia (<strong>>75 tahun</strong>) ATAU berisiko tinggi secara pembedahan (STS PROM score tinggi), dengan anatomi transfemoral yang sesuai." },
+            { cat: "Valvular & Congenital", q: "Defek ASD Primum sering berhubungan dengan kelainan katup membentuk spektrum AVSD. Apa temuan sumbu aksis EKG yang sangat khas pada kondisi ini?", a: "Blok Cabang Berkas Kanan (RBBB) disertai <strong>Left Axis Deviation (LAD) yang ekstrem (Superior axis)</strong>." },
+            { cat: "Valvular & Congenital", q: "Pada pasien PDA besar yang telat ditangani, dapat muncul 'Differential Cyanosis'. Jelaskan klinis fenomena tersebut!", a: "Sianosis dan clubbing yang <strong>hanya terlihat pada kaki (ekstremitas bawah)</strong>, sedangkan tangan/wajah tetap pink. Terjadi akibat right-to-left shunt PDA yang bermuara di aorta descendens setelah percabangan arteri subklavia kiri." },
+            { cat: "Valvular & Congenital", q: "Sistem skoring ekokardiografi apa yang digunakan untuk menilai kelayakan katup mitral sebelum prosedur Balloon Mitral Valvuloplasty (BMV / PTMC)?", a: "<strong>Wilkins Score</strong> (menilai mobilitas, ketebalan, kalsifikasi, aparatus subvalvular). Skor ≤ 8 memprediksi hasil intervensi perkutan yang baik." },
+            { cat: "Valvular & Congenital", q: "Ebstein Anomaly: Apa kelainan anatomis utamanya dan sindrom elektrofisiologi apa yang sering menyertainya?", a: "<em>Apical displacement</em> dari septal dan posterior leaflet katup Trikuspid (membuat atrium kanan sangat besar / atrialisasi RV).<br>Sering disertai <strong>Sindrom WPW</strong> (right-sided accessory pathway)." },
+
+            // --- BAGIAN 5: Hemodynamics, Pericardial & Miscellaneous (10) ---
+            { cat: "Hemodynamics & Misc", q: "Bagaimana bentuk kurva tekanan vena sentral (CVP) yang khas pada Perikarditis Konstriktif di ruang kateterisasi?", a: "Gelombang 'x' dan 'y' descent yang curam, dalam, dan terakselerasi (membentuk W-shape atau M-shape). <em>Prominent y-descent</em> membedakannya dari tamponade jantung." },
+            { cat: "Hemodynamics & Misc", q: "Apa patofisiologi utama dari Pulsus Paradoxus pada Tamponade Jantung?", a: "Penurunan TD sistolik > 10 mmHg saat inspirasi. Terjadi akibat peningkatan venous return ke RV saat inspirasi mendesak septum interventrikuler ke arah LV (karena ruang perikardium tegang), sehingga stroke volume LV anjlok." },
+            { cat: "Hemodynamics & Misc", q: "Sebutkan rumus dasar untuk menghitung Cardiac Output (CO) menggunakan metode Direct Fick di Cathlab!", a: "CO (L/menit) = <strong>Konsumsi Oksigen (VO2) / ( [CaO2 - CvO2] × 10 )</strong><br><br><span class='text-sm text-slate-500'>*Ket: (CaO2 - CvO2) adalah A-V O2 difference dalam satuan mL/dL. Dikali 10 untuk konversi ke Liter.</span>" },
+            { cat: "Hemodynamics & Misc", q: "Obat pilihan untuk terapi akut pada krisis hipertensi akibat Diseksi Aorta Akut? Apa target hemodinamiknya?", a: "Obat: <strong>Beta-blocker IV</strong> (Esmolol/Labetalol) diberikan PERTAMA KALI.<br>Target: Turunkan denyut jantung < 60 bpm terlebih dahulu (mengurangi wall shear stress/dP/dt), diikuti penurunan TD sistolik ke 100-120 mmHg." },
+            { cat: "Hemodynamics & Misc", q: "Apa indikasi klinis pemberian Colchicine pada Guideline ESC untuk penyakit perikardium/koroner?", a: "Terapi esensial tambahan pada NSAID untuk Perikarditis Akut dan pencegahan rekurensinya (Class I).<br>Juga direkomendasikan dosis rendah (0.5 mg/hari) untuk secondary prevention pada CAD kronik berisiko tinggi (LoDoCo2 trial)." },
+            { cat: "Hemodynamics & Misc", q: "Bagaimana membedakan Perikarditis Konstriktif vs Restrictive Cardiomyopathy (RCM) dari parameter hemodinamik kateterisasi jantung (evaluasi respirasi)?", a: "Konstriktif: Adanya <strong>ventricular interdependence (discordance)</strong> saat pernapasan antara tekanan puncak sistolik RV dan LV.<br>RCM: Tekanan RV dan LV naik-turun bersamaan (concordance)." },
+            { cat: "Hemodynamics & Misc", q: "Dalam fisiologi koroner, FFR (Fractional Flow Reserve) untuk lesi intermediate, berapa nilai cut-off yang dianggap iskemik bermakna untuk dilakukan PCI?", a: "FFR <strong>≤ 0.80</strong> menunjukkan lesi tersebut memicu iskemia miokard yang bermakna secara hemodinamik." },
+            { cat: "Hemodynamics & Misc", q: "IVUS (Intravascular Ultrasound): Parameter Minimal Stent Area (MSA) yang direkomendasikan untuk menekan angka ISR setelah PCI pada segmen pembuluh darah non-Left Main?", a: "MSA yang dioptimalkan umumnya <strong>> 5.5 mm²</strong> (atau ekspansi stent mencapai > 80% dari area lumen referensi proksimal/distal)." },
+            { cat: "Hemodynamics & Misc", q: "Mengapa Amiodaron dapat menyebabkan gangguan fungsi tiroid (Amiodarone-induced thyroid dysfunction / AITD)?", a: "Karena strukturnya mengandung <strong>yodium sangat tinggi</strong> (~37% berat). Ini bisa menyebabkan hipertiroid Tipe 1 (Jod-Basedow, excess synthesis) / Tipe 2 (destructive thyroiditis) ATAU hipotiroid (efek Wolff-Chaikoff persisten)." },
+            { cat: "Hemodynamics & Misc", q: "Definisi 'Viability' Miokard (Miokard Hibernasi/Stunning) sangat penting pada HFrEF iskemik berat. Modalitas imaging gold standard untuk menilainya?", a: "1. <strong>Cardiac MRI dengan LGE</strong> (Late Gadolinium Enhancement) (melihat transmuralitas scar).<br>2. <strong>PET Scan FDG</strong> (Gold standard fungsional, melihat miokard yang mengalami flow-metabolism mismatch)." }
+        ];
+
+        let cards = [...originalCards];
+        let currentIndex = 0;
+        let isFlipped = false;
+        
+        // Touch Variables for Swipe (Mobile)
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let isSwiping = false;
+
+        const flashcardEl = document.getElementById('flashcard');
+        const questionEl = document.getElementById('question-text');
+        const answerEl = document.getElementById('answer-text');
+        const counterEl = document.getElementById('card-counter');
+        const categoryEl = document.getElementById('card-category');
+
+        function renderCard() {
+            if (isFlipped) {
+                flashcardEl.classList.remove('is-flipped');
+                isFlipped = false;
+                setTimeout(() => {
+                    updateContent();
+                }, 300);
+            } else {
+                updateContent();
+            }
+        }
+
+        function updateContent() {
+            const currentCard = cards[currentIndex];
+            questionEl.innerHTML = currentCard.q;
+            answerEl.innerHTML = currentCard.a;
+            categoryEl.textContent = currentCard.cat;
+            counterEl.textContent = `${currentIndex + 1} / ${cards.length}`;
+        }
+
+        function toggleFlip(e) {
+            if (isSwiping) return;
+            isFlipped = !isFlipped;
+            flashcardEl.classList.toggle('is-flipped');
+        }
+
+        function nextCard() {
+            if (currentIndex < cards.length - 1) {
+                currentIndex++;
+                renderCard();
+            } else {
+                currentIndex = 0;
+                renderCard();
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderCard();
+            }
+        }
+
+        function shuffleCards() {
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            currentIndex = 0;
+            renderCard();
+        }
+
+        // --- Fitur Swipe untuk Mobile ---
+        flashcardEl.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            isSwiping = false;
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchmove', e => {
+            const currentTouchX = e.changedTouches[0].screenX;
+            if (Math.abs(currentTouchX - touchStartX) > 15) {
+                isSwiping = true;
+            }
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+
+        function handleSwipe() {
+            const swipeThreshold = 50; 
+            if (touchEndX < touchStartX - swipeThreshold) {
+                nextCard();
+            } else if (touchEndX > touchStartX + swipeThreshold) {
+                prevCard();
+            }
+            setTimeout(() => {
+                isSwiping = false;
+            }, 100);
+        }
+
+        window.onload = renderCard;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                e.preventDefault();
+                toggleFlip();
+            } else if (e.code === 'ArrowRight') {
+                nextCard();
+            } else if (e.code === 'ArrowLeft') {
+                prevCard();
+            }
+        });
+    </script>
+</body>
+</html>
+
+```
