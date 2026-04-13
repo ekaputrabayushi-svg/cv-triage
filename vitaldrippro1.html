@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VitalDose Pro - Hemodynamic & Reperfusion Suite</title>
+    
+    <!-- LITE PROTECTION SCRIPT -->
+    <script>
+    (function(){
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if(e.keyCode==123 || (e.ctrlKey&&e.shiftKey&&(e.keyCode==73||e.keyCode==74||e.keyCode==67)) || (e.ctrlKey&&(e.keyCode==85||e.keyCode==83))) {
+                e.preventDefault(); return false;
+            }
+        });
+        document.addEventListener('selectstart', e => e.preventDefault());
+        document.addEventListener('dragstart', e => e.preventDefault());
+    })();
+    </script>
+
+    <!-- Tailwind CSS & Lucide Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>window.jsPDF = window.jspdf.jsPDF;</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    
+    <style>
+        body {
+            -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+            touch-action: pan-y;
+        }
+        img, svg { pointer-events: none; }
+        @media print { body { display: none !important; } }
+        
+        input[type=range] { accent-color: currentColor; color: inherit; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%;
+            background: currentColor; cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        
+        .locked-overlay {
+            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(2px);
+            z-index: 20; display: flex; align-items: center; justify-content: center;
+            border-radius: 1rem; opacity: 0; pointer-events: none; transition: all 0.3s ease;
+        }
+        .is-locked .locked-overlay { opacity: 1; pointer-events: auto; }
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 font-sans p-0 md:p-6 flex justify-center items-start md:items-center min-h-screen">
+    
+    <div class="max-w-md w-full bg-gray-900 md:border border-gray-800 md:rounded-3xl shadow-2xl overflow-hidden relative pb-10 md:pb-0 min-h-screen md:min-h-[850px] flex flex-col">
+        
+        <!-- Header -->
+        <div class="bg-black p-4 flex flex-col border-b border-gray-800 shrink-0">
+            <div class="flex items-center justify-between mb-1">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="zap" class="text-amber-500 w-5 h-5"></i>
+                    <h1 class="font-black text-lg tracking-wider text-white">VITALDOSE PRO</h1>
+                </div>
+                <div class="flex gap-1 items-center bg-gray-900 px-2 py-1 rounded-md border border-gray-800">
+                    <div class="w-2 h-2 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_#f43f5e]"></div>
+                    <div class="text-[10px] text-gray-400 tracking-widest font-bold">RESUS & ICU</div>
+                </div>
+            </div>
+            <div class="pl-7 flex justify-between items-end">
+                <div>
+                    <p class="text-[10px] text-gray-500 leading-tight font-semibold">Advanced Hemodynamic & Reperfusion Suite</p>
+                    <p class="text-[9px] text-gray-400 leading-tight mt-0.5">Developed by Bayushi Eka Putra, MD, FIHA</p>
+                    <p class="text-[9px] font-bold text-indigo-400 leading-tight mt-1 tracking-wider">PART OF CARDIOLOGYVAULT</p>
+                </div>
+                <button id="btn-lock" onclick="toggleLock()" class="text-gray-500 hover:text-white transition-colors p-2 bg-gray-900 rounded-full border border-gray-800 active:scale-95">
+                    <i data-lucide="unlock" id="lock-icon" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mode Switcher Tabs -->
+        <div class="flex bg-gray-900 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider shrink-0 border-b border-gray-800 overflow-x-auto">
+            <button onclick="switchMode('vasopressor')" id="tab-vasopressor" class="flex-1 py-3 px-1 text-rose-400 border-b-2 border-rose-500 bg-gray-800/50 transition-colors whitespace-nowrap">Vasopressor</button>
+            <button onclick="switchMode('vasodilator')" id="tab-vasodilator" class="flex-1 py-3 px-1 text-gray-500 border-b-2 border-transparent hover:text-gray-300 transition-colors whitespace-nowrap">Vasodilator</button>
+            <button onclick="switchMode('antiaritmia')" id="tab-antiaritmia" class="flex-1 py-3 px-1 text-gray-500 border-b-2 border-transparent hover:text-gray-300 transition-colors whitespace-nowrap">Antiaritmia</button>
+            <button onclick="switchMode('thrombo')" id="tab-thrombo" class="flex-1 py-3 px-1 text-gray-500 border-b-2 border-transparent hover:text-gray-300 transition-colors whitespace-nowrap">Fibrinolitik</button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto relative">
+            
+            <!-- Mode 1 & 2 -->
+            <div id="mode-titration" class="block">
+                <div class="p-4 space-y-5">
+                    <div class="space-y-2">
+                        <label id="titration-label" class="text-xs text-gray-400 font-semibold uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="activity" class="w-3.5 h-3.5"></i> Agen Vasopressor / Inotropik
+                        </label>
+                        <div id="drug-buttons" class="grid grid-cols-2 gap-2"></div>
+                    </div>
+
+                    <div id="calculator-panel" class="bg-black/50 p-4 rounded-2xl border border-gray-800/50 space-y-5 relative">
+                        <div class="locked-overlay">
+                            <div class="bg-gray-900 border border-gray-700 p-3 rounded-xl flex flex-col items-center gap-2 shadow-2xl">
+                                <i data-lucide="lock" class="w-6 h-6 text-indigo-400"></i>
+                                <span class="text-xs font-bold text-gray-300 tracking-wider">PANEL TERKUNCI</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <label class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Volume & Ampul</label>
+                                <div class="flex items-center gap-1 bg-gray-800 p-1 rounded-lg">
+                                    <button id="btn-amp-1" onclick="setAmpoules(1)" class="px-3 py-1 text-xs rounded-md font-bold transition-all">Single</button>
+                                    <button id="btn-amp-2" onclick="setAmpoules(2)" class="px-3 py-1 text-xs rounded-md font-bold transition-all">Double</button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-4 gap-2">
+                                <button id="btn-vol-20" onclick="setVolume(20)" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl border bg-gray-800 border-gray-700 text-gray-500"><span class="text-lg font-black leading-none">20</span><span class="text-[9px] uppercase font-semibold mt-1">cc</span></button>
+                                <button id="btn-vol-50" onclick="setVolume(50)" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl border bg-gray-800 border-gray-700 text-gray-500"><span class="text-lg font-black leading-none">50</span><span class="text-[9px] uppercase font-semibold mt-1">cc</span></button>
+                                <button id="btn-vol-100" onclick="setVolume(100)" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl border bg-gray-800 border-gray-700 text-gray-500"><span class="text-lg font-black leading-none">100</span><span class="text-[9px] uppercase font-semibold mt-1">cc</span></button>
+                                <button id="btn-vol-500" onclick="setVolume(500)" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl border bg-gray-800 border-gray-700 text-gray-500"><span class="text-lg font-black leading-none">500</span><span class="text-[9px] uppercase font-semibold mt-1">cc</span></button>
+                            </div>
+                            <div class="flex justify-between items-center bg-gray-900 rounded-lg p-2 border border-gray-800">
+                                <div class="flex items-center gap-1.5 text-gray-400">
+                                    <i data-lucide="test-tube-2" class="w-3.5 h-3.5"></i>
+                                    <span class="text-[10px] font-semibold uppercase tracking-wider">Konsentrasi</span>
+                                </div>
+                                <span id="concentration-badge" class="text-xs font-bold text-white bg-gray-800 px-2 py-0.5 rounded">--</span>
+                            </div>
+                        </div>
+
+                        <div id="weight-section" class="pt-4 border-t border-gray-800/50">
+                            <div class="flex justify-between items-end mb-2">
+                                <label class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Berat Badan</label>
+                                <span class="text-2xl font-black text-gray-200"><span id="weight-value">60</span> <span class="text-sm text-gray-500 font-bold">kg</span></span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <button onclick="adjustWeight(-1)" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-300 shrink-0"><i data-lucide="minus" class="w-5 h-5"></i></button>
+                                <input type="range" id="weight-slider" min="30" max="150" step="1" oninput="updateWeightFromSlider(this.value)" class="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer text-indigo-500" />
+                                <button onclick="adjustWeight(1)" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-300 shrink-0"><i data-lucide="plus" class="w-5 h-5"></i></button>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-gray-800/50">
+                            <div class="flex justify-between items-end mb-2">
+                                <label class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Target Dosis</label>
+                                <div class="text-right">
+                                    <span id="dose-value" class="text-4xl font-black text-rose-400">0.05</span>
+                                    <span id="dose-unit" class="text-[10px] font-bold tracking-widest text-gray-500 block uppercase mt-0.5">mcg/kg/menit</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <button onclick="adjustDose(-1)" class="w-12 h-12 rounded-full flex items-center justify-center shrink-0 dose-bg-color dose-text-color"><i data-lucide="minus" class="w-6 h-6"></i></button>
+                                <input type="range" id="dose-slider" oninput="updateDoseFromSlider(this.value)" class="w-full h-2 rounded-lg appearance-none cursor-pointer dose-text-color" />
+                                <button onclick="adjustDose(1)" class="w-12 h-12 rounded-full flex items-center justify-center shrink-0 dose-bg-color dose-text-color"><i data-lucide="plus" class="w-6 h-6"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900 border-t border-gray-800 p-5 flex flex-col items-center justify-center relative z-10">
+                    <p class="text-[10px] text-gray-400 font-bold mb-1 uppercase tracking-widest"><i data-lucide="play-circle" class="w-3.5 h-3.5 inline text-green-400 mb-0.5"></i> Syringe Rate</p>
+                    <div class="flex items-baseline gap-2">
+                        <span id="rate-value" class="text-7xl font-black text-white tracking-tighter">0.0</span>
+                        <span class="text-xl text-gray-500 font-bold">cc/jam</span>
+                    </div>
+                </div>
+
+                <div class="bg-black/90 border-t border-gray-800 p-4 pb-8">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-[11px] text-gray-400 font-semibold uppercase tracking-widest flex items-center gap-1.5"><i data-lucide="list-tree" class="w-3.5 h-3.5"></i> Auto-Titration Map</h3>
+                        <button onclick="downloadPDF()" class="flex items-center gap-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border border-indigo-500/30 active:scale-95">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i> Download PDF
+                        </button>
+                    </div>
+                    <div class="overflow-hidden rounded-xl border border-gray-800 bg-gray-900 shadow-inner">
+                        <table class="w-full text-left text-[11px]">
+                            <thead class="bg-gray-800/80 text-gray-400 border-b border-gray-700">
+                                <tr>
+                                    <th class="px-3 py-2.5 font-bold uppercase tracking-wider">Dosis <span id="table-dose-unit" class="text-[9px] font-normal lowercase ml-1"></span></th>
+                                    <th class="px-3 py-2.5 font-bold uppercase tracking-wider text-right">Rate (cc/jam)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="titration-table-body" class="divide-y divide-gray-800/50"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="mode-thrombo" class="hidden pb-8">
+                <div class="p-4 space-y-5">
+                    <div class="space-y-2">
+                        <label class="text-xs text-gray-400 font-semibold uppercase tracking-wider flex items-center gap-2"><i data-lucide="syringe" class="w-3.5 h-3.5"></i> Indikasi Fibrinolitik</label>
+                        <div id="thrombo-buttons" class="grid grid-cols-1 gap-2"></div>
+                    </div>
+                    <div class="bg-black/50 p-4 rounded-2xl border border-gray-800/50 space-y-4">
+                        <div class="flex justify-between items-end mb-2">
+                            <label class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Berat Badan Pasien</label>
+                            <span class="text-2xl font-black text-gray-200"><span id="t-weight-value">60</span> <span class="text-sm text-gray-500 font-bold">kg</span></span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <button onclick="adjustTWeight(-1)" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-300"><i data-lucide="minus" class="w-5 h-5"></i></button>
+                            <input type="range" id="t-weight-slider" min="30" max="150" step="1" oninput="updateTWeightFromSlider(this.value)" class="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer text-indigo-500" />
+                            <button onclick="adjustTWeight(1)" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-300"><i data-lucide="plus" class="w-5 h-5"></i></button>
+                        </div>
+                        <div class="mt-2 text-[10px] text-blue-400 bg-blue-500/10 px-4 py-3 rounded-xl flex flex-col gap-2 border border-blue-500/30 shadow-inner">
+                            <p class="leading-relaxed" id="t-drug-info"></p>
+                        </div>
+                    </div>
+                    <div id="thrombo-phases" class="space-y-3"></div>
+                </div>
+            </div>
+
+            <div id="mode-antiaritmia" class="hidden pb-8">
+                <div class="p-4 space-y-5">
+                    <div class="space-y-2">
+                        <label class="text-xs text-gray-400 font-semibold uppercase tracking-wider flex items-center gap-2"><i data-lucide="heart-crack" class="w-3.5 h-3.5"></i> Agen Antiaritmia</label>
+                        <div id="antiaritmia-buttons" class="grid grid-cols-1 gap-2"></div>
+                    </div>
+                    <div class="bg-black/50 p-4 rounded-2xl border border-gray-800/50 space-y-4">
+                        <div class="flex justify-between items-end mb-2">
+                            <label class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Berat Badan Pasien</label>
+                            <span class="text-2xl font-black text-gray-200"><span id="a-weight-value">60</span> <span class="text-sm text-gray-500 font-bold">kg</span></span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <button onclick="adjustAWeight(-1)" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-300"><i data-lucide="minus" class="w-5 h-5"></i></button>
+                            <input type="range" id="a-weight-slider" min="30" max="150" step="1" oninput="updateAWeightFromSlider(this.value)" class="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer text-indigo-500" />
+                            <button onclick="adjustAWeight(1)" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-300"><i data-lucide="plus" class="w-5 h-5"></i></button>
+                        </div>
+                        <div class="mt-2 text-[10px] text-purple-400 bg-purple-500/10 px-4 py-3 rounded-xl flex flex-col gap-2 border border-purple-500/30 shadow-inner">
+                            <p class="leading-relaxed" id="a-drug-info"></p>
+                        </div>
+                    </div>
+                    <div id="antiaritmia-phases" class="space-y-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function hapticPlay() { if (window.navigator && window.navigator.vibrate) { window.navigator.vibrate(15); } }
+
+        let appState = {
+            activeTab: 'vasopressor',
+            isLocked: false,
+            vasopressor: { selectedDrugId: "norepinephrine", weight: 60, dose: 0.05, volume: 50, ampoules: 1 },
+            vasodilator: { selectedDrugId: "nicardipine", weight: 60, dose: 5, volume: 50, ampoules: 1 },
+            thrombo: { selectedDrugId: "alteplase_stemi", weight: 60 },
+            antiaritmia: { selectedDrugId: "amiodarone", weight: 60 }
+        };
+
+        const DRUGS = {
+            norepinephrine: { id: "norepinephrine", name: "Norepinephrine", baseAmount: 4, baseUnit: "mg", inputUnit: "mcg/kg/menit", weightBased: true, defaultDose: 0.05, step: 0.01, min: 0.01, max: 1, color: "text-rose-400", bg: "bg-rose-500/20", border: "border-rose-500", category: "vasopressor" },
+            epinephrine: { id: "epinephrine", name: "Epinephrine", baseAmount: 1, baseUnit: "mg", inputUnit: "mcg/kg/menit", weightBased: true, defaultDose: 0.05, step: 0.01, min: 0.01, max: 1, color: "text-orange-400", bg: "bg-orange-500/20", border: "border-orange-500", category: "vasopressor" },
+            dopamine: { id: "dopamine", name: "Dopamine", baseAmount: 200, baseUnit: "mg", inputUnit: "mcg/kg/menit", weightBased: true, defaultDose: 5, step: 1, min: 1, max: 20, color: "text-cyan-400", bg: "bg-cyan-500/20", border: "border-cyan-500", category: "vasopressor" },
+            dobutamine: { id: "dobutamine", name: "Dobutamine", baseAmount: 250, baseUnit: "mg", inputUnit: "mcg/kg/menit", weightBased: true, defaultDose: 5, step: 1, min: 1, max: 20, color: "text-blue-400", bg: "bg-blue-500/20", border: "border-blue-500", category: "vasopressor" },
+            vasopressin: { id: "vasopressin", name: "Vasopressin", baseAmount: 20, baseUnit: "IU", inputUnit: "IU/menit", weightBased: false, defaultDose: 0.04, step: 0.01, min: 0.01, max: 0.08, color: "text-violet-400", bg: "bg-violet-500/20", border: "border-violet-500", category: "vasopressor" },
+            nicardipine: { id: "nicardipine", name: "Nicardipine (Perdipine)", baseAmount: 10, baseUnit: "mg", inputUnit: "mg/jam", weightBased: false, defaultDose: 5, step: 0.5, min: 0.5, max: 15, color: "text-yellow-400", bg: "bg-yellow-500/20", border: "border-yellow-500", category: "vasodilator" },
+            ntg: { id: "ntg", name: "Nitroglycerin (NTG)", baseAmount: 10, baseUnit: "mg", inputUnit: "mcg/menit", weightBased: false, defaultDose: 10, step: 5, min: 5, max: 200, color: "text-emerald-400", bg: "bg-emerald-500/20", border: "border-emerald-500", category: "vasodilator" },
+            nitroprusside: { id: "nitroprusside", name: "Nitroprusside", baseAmount: 50, baseUnit: "mg", inputUnit: "mcg/kg/menit", weightBased: true, defaultDose: 0.5, step: 0.1, min: 0.1, max: 10, color: "text-fuchsia-400", bg: "bg-fuchsia-500/20", border: "border-fuchsia-500", category: "vasodilator" }
+        };
+
+        const THROMBOLYTICS = {
+            alteplase_stemi: { id: "alteplase_stemi", name: "Alteplase (STEMI)", desc: "Accelerated Regimen (Max 100mg)", color: "text-rose-400", bg: "bg-rose-500/20", border: "border-rose-500" },
+            alteplase_stroke: { id: "alteplase_stroke", name: "Alteplase (Acute Ischemic Stroke)", desc: "0.9 mg/kg Regimen (Max 90mg)", color: "text-blue-400", bg: "bg-blue-500/20", border: "border-blue-500" },
+            alteplase_pe: { id: "alteplase_pe", name: "Alteplase (Emboli Paru)", desc: "100 mg Infus dalam 2 Jam", color: "text-emerald-400", bg: "bg-emerald-500/20", border: "border-emerald-500" },
+            streptokinase: { id: "streptokinase", name: "Streptokinase (STEMI)", desc: "1.5 Juta IU dalam 60 Menit", color: "text-orange-400", bg: "bg-orange-500/20", border: "border-orange-500" },
+            streptokinase_pe: { id: "streptokinase_pe", name: "Streptokinase (Emboli Paru)", desc: "1.5 Juta IU dalam 2 Jam", color: "text-amber-400", bg: "bg-amber-500/20", border: "border-amber-500" }
+        };
+
+        const ANTIARITMIA = {
+            amiodarone: { id: "amiodarone", name: "Amiodarone (Cordarone)", desc: "Protokol Lengkap 24 Jam (VT/VF/AF)", color: "text-purple-400", bg: "bg-purple-500/20", border: "border-purple-500" },
+            lidocaine: { id: "lidocaine", name: "Lidocaine 2%", desc: "Drip Kontinu (1-4 mg/menit)", color: "text-pink-400", bg: "bg-pink-500/20", border: "border-pink-500" },
+            diltiazem: { id: "diltiazem", name: "Diltiazem (Herbesser)", desc: "Bolus & Drip (Rate Control)", color: "text-teal-400", bg: "bg-teal-500/20", border: "border-teal-500" },
+            verapamil: { id: "verapamil", name: "Verapamil (Isoptin)", desc: "Bolus Lambat IV", color: "text-lime-400", bg: "bg-lime-500/20", border: "border-lime-500" }
+        };
+
+        function getTitrationState() { return appState.activeTab === 'vasodilator' ? appState.vasodilator : appState.vasopressor; }
+
+        function init() { renderDrugList(); renderThromboList(); renderAntiaritmiaList(); updateTitrationUI(); updateThromboUI(); updateAntiaritmiaUI(); lucide.createIcons(); }
+
+        function switchMode(mode) {
+            hapticPlay(); appState.activeTab = mode;
+            const tabs = ['vasopressor', 'vasodilator', 'antiaritmia', 'thrombo'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                btn.className = "flex-1 py-3 px-1 text-gray-500 border-b-2 border-transparent hover:text-gray-300 transition-colors whitespace-nowrap";
+            });
+            document.getElementById('mode-titration').classList.add('hidden');
+            document.getElementById('mode-thrombo').classList.add('hidden');
+            document.getElementById('mode-antiaritmia').classList.add('hidden');
+
+            if (mode === 'thrombo') {
+                document.getElementById('tab-thrombo').className = "flex-1 py-3 px-1 text-indigo-400 border-b-2 border-indigo-500 bg-gray-800/50 transition-colors whitespace-nowrap";
+                document.getElementById('mode-thrombo').classList.remove('hidden');
+            } else if (mode === 'antiaritmia') {
+                document.getElementById('tab-antiaritmia').className = "flex-1 py-3 px-1 text-purple-400 border-b-2 border-purple-500 bg-gray-800/50 transition-colors whitespace-nowrap";
+                document.getElementById('mode-antiaritmia').classList.remove('hidden');
+            } else {
+                const isVaso = mode === 'vasopressor';
+                document.getElementById(`tab-${mode}`).className = `flex-1 py-3 px-1 ${isVaso ? 'text-rose-400 border-rose-500' : 'text-yellow-400 border-yellow-500'} border-b-2 bg-gray-800/50 transition-colors whitespace-nowrap`;
+                document.getElementById('titration-label').innerHTML = `<i data-lucide="${isVaso ? 'activity' : 'wind'}" class="w-3.5 h-3.5"></i> ${isVaso ? 'Agen Vasopressor / Inotropik' : 'Agen Vasodilator'}`;
+                document.getElementById('mode-titration').classList.remove('hidden');
+                renderDrugList(); updateTitrationUI();
+            }
+            lucide.createIcons();
+        }
+
+        function toggleLock() {
+            hapticPlay(); appState.isLocked = !appState.isLocked;
+            const panel = document.getElementById('calculator-panel');
+            const icon = document.getElementById('lock-icon');
+            const btn = document.getElementById('btn-lock');
+            if (appState.isLocked) {
+                panel.classList.add('is-locked'); icon.setAttribute('data-lucide', 'lock'); btn.classList.replace('text-gray-500', 'text-rose-400');
+            } else {
+                panel.classList.remove('is-locked'); icon.setAttribute('data-lucide', 'unlock'); btn.classList.replace('text-rose-400', 'text-gray-500');
+            }
+            lucide.createIcons();
+        }
+
+        function handleDrugChange(drugId) { hapticPlay(); const st = getTitrationState(); st.selectedDrugId = drugId; st.dose = DRUGS[drugId].defaultDose; renderDrugList(); updateTitrationUI(); }
+        function setVolume(v) { hapticPlay(); getTitrationState().volume = v; updateTitrationUI(); }
+        function setAmpoules(a) { hapticPlay(); getTitrationState().ampoules = a; updateTitrationUI(); }
+        function adjustWeight(delta) { if(appState.isLocked) return; hapticPlay(); const st = getTitrationState(); const newVal = st.weight + delta; if (newVal >= 30 && newVal <= 150) { st.weight = newVal; updateTitrationUI(); } }
+        function updateWeightFromSlider(val) { getTitrationState().weight = parseFloat(val); updateTitrationUI(); }
+        function adjustDose(delta) { if(appState.isLocked) return; hapticPlay(); const st = getTitrationState(); const drug = DRUGS[st.selectedDrugId]; let newVal = parseFloat((st.dose + (drug.step * delta)).toFixed(2)); if (newVal >= drug.min && newVal <= drug.max) { st.dose = newVal; updateTitrationUI(); } }
+        function updateDoseFromSlider(val) { getTitrationState().dose = parseFloat(val); updateTitrationUI(); }
+
+        function renderDrugList() {
+            const container = document.getElementById("drug-buttons"); container.innerHTML = "";
+            const st = getTitrationState();
+            Object.values(DRUGS).filter(d => d.category === appState.activeTab).forEach(drug => {
+                const isSelected = st.selectedDrugId === drug.id;
+                const btn = document.createElement("button");
+                btn.className = `p-2.5 rounded-xl text-left transition-all border active:scale-95 ${isSelected ? drug.bg + ' ' + drug.border + ' shadow-lg shadow-' + drug.color.split('-')[1] + '-900/20' : 'bg-gray-800 border-gray-700'}`;
+                btn.onclick = () => handleDrugChange(drug.id);
+                btn.innerHTML = `<span class="text-[13px] font-bold block ${isSelected ? drug.color : 'text-gray-300'}">${drug.name}</span><span class="text-[10px] font-semibold mt-1 block ${isSelected ? 'text-white' : 'text-gray-500'}">${drug.baseAmount} ${drug.baseUnit}/Amp</span>`;
+                container.appendChild(btn);
+            });
+        }
+
+        function updateTitrationUI() {
+            const st = getTitrationState(); const drug = DRUGS[st.selectedDrugId];
+            let totalBase = drug.baseAmount * st.ampoules;
+            let totalMcg = drug.inputUnit.includes("mcg") ? totalBase * 1000 : totalBase;
+            const conc = totalMcg / st.volume;
+            let badgeText = drug.baseUnit === "IU" ? (totalBase/st.volume).toFixed(2) + " IU/cc" : drug.inputUnit.includes("mcg") ? ((totalBase*1000/st.volume) >= 1000 ? ((totalBase*1000/st.volume)/1000).toFixed(1) + " mg/cc" : Math.round(totalBase*1000/st.volume) + " mcg/cc") : (totalBase/st.volume).toFixed(1) + " mg/cc";
+            document.getElementById('concentration-badge').textContent = badgeText;
+            let currentRate = drug.inputUnit.includes("/jam") ? (drug.weightBased ? (st.dose * st.weight) / conc : st.dose / conc) : (drug.weightBased ? (st.dose * st.weight * 60) / conc : (st.dose * 60) / conc);
+            document.getElementById("btn-amp-1").className = `px-3 py-1 text-xs rounded-md font-bold transition-all ${st.ampoules === 1 ? drug.bg + ' ' + drug.color : 'text-gray-500 bg-transparent'}`;
+            document.getElementById("btn-amp-2").className = `px-3 py-1 text-xs rounded-md font-bold transition-all ${st.ampoules === 2 ? drug.bg + ' ' + drug.color : 'text-gray-500 bg-transparent'}`;
+            [20, 50, 100, 500].forEach(v => { document.getElementById(`btn-vol-${v}`).className = `flex flex-col items-center py-2 px-1 rounded-xl border transition-all active:scale-95 ${st.volume === v ? drug.bg + ' border-' + drug.color.split('-')[1] + '-500 ' + drug.color : 'bg-gray-800 border-gray-700 text-gray-500'}`; });
+            document.getElementById("weight-section").style.display = drug.weightBased ? "block" : "none";
+            document.getElementById("weight-value").textContent = st.weight; document.getElementById("weight-slider").value = st.weight;
+            const decimals = drug.step < 0.1 ? 2 : drug.step < 1 ? 1 : 0;
+            document.getElementById("dose-value").textContent = st.dose.toFixed(decimals); document.getElementById("dose-unit").textContent = drug.inputUnit;
+            const slider = document.getElementById("dose-slider"); slider.min = drug.min; slider.max = drug.max; slider.step = drug.step; slider.value = st.dose;
+            document.getElementById("dose-value").className = `text-4xl font-black drop-shadow-md ${drug.color}`;
+            slider.className = `w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer ${drug.color}`;
+            document.querySelectorAll(".dose-bg-color").forEach(el => { el.className = `w-12 h-12 rounded-full flex items-center justify-center active:scale-90 transition-transform shrink-0 dose-bg-color dose-text-color shadow-lg ${drug.bg} ${drug.color}`; });
+            document.getElementById("rate-value").textContent = currentRate.toFixed(1);
+            const tbody = document.getElementById("titration-table-body"); document.getElementById("table-dose-unit").textContent = `(${drug.inputUnit})`; let html = "";
+            for (let i = 4; i >= -4; i--) {
+                let iterDose = parseFloat((st.dose + (i * drug.step)).toFixed(decimals));
+                if (iterDose >= drug.min && iterDose <= drug.max) {
+                    let iterRate = drug.inputUnit.includes("/jam") ? (drug.weightBased ? (iterDose * st.weight) / conc : iterDose / conc) : (drug.weightBased ? (iterDose * st.weight * 60) / conc : (iterDose * 60) / conc);
+                    let isTarget = i === 0;
+                    html += `<tr class="${isTarget ? 'bg-gray-800 font-bold border-l-[3px] ' + drug.border : 'text-gray-400 border-l-[3px] border-transparent'}"><td class="px-3 py-2 ${isTarget ? drug.color : ''} text-xs flex items-center"><span class="inline-block w-1.5 h-1.5 rounded-full mr-2 ${isTarget ? drug.color.replace('text-', 'bg-') : ''}"></span>${iterDose.toFixed(decimals)}</td><td class="px-3 py-2 text-right ${isTarget ? drug.color : ''} text-xs">${iterRate.toFixed(1)}</td></tr>`;
+                }
+            } tbody.innerHTML = html;
+        }
+
+        function renderPhaseCard(title, time, icon, doseText, rateText, colorClass, highlight) {
+            const colorName = colorClass.split('-')[1];
+            return `<div class="border ${highlight ? 'border-'+colorName+'-500 bg-'+colorName+'-500/10' : 'border-gray-800 bg-gray-900'} rounded-xl p-4 shadow-sm relative overflow-hidden"><div class="absolute top-0 right-0 p-2 opacity-10"><i data-lucide="${icon}" class="w-16 h-16 text-white"></i></div><div class="flex items-center gap-2 mb-3"><div class="w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center border border-gray-700"><i data-lucide="${icon}" class="w-3.5 h-3.5 ${colorClass}"></i></div><h4 class="font-bold text-gray-200 text-sm tracking-wide">${title}</h4></div><div class="grid grid-cols-2 gap-4"><div><p class="text-[10px] text-gray-500 uppercase font-semibold tracking-wider">Volume/Dosis</p><p class="text-xl font-black ${colorClass}">${doseText}</p></div><div><p class="text-[10px] text-gray-500 uppercase font-semibold tracking-wider">Syringe Rate</p><p class="text-xl font-black text-white">${rateText}</p></div></div><div class="mt-3 bg-black/30 rounded-lg py-1.5 px-3 flex items-center gap-2 w-max"><i data-lucide="clock" class="w-3.5 h-3.5 text-gray-400"></i><span class="text-xs font-bold text-gray-300">${time}</span></div></div>`;
+        }
+
+        function selectThrombo(id) { hapticPlay(); appState.thrombo.selectedDrugId = id; renderThromboList(); updateThromboUI(); }
+        function adjustTWeight(delta) { hapticPlay(); const newVal = appState.thrombo.weight + delta; if (newVal >= 30 && newVal <= 150) { appState.thrombo.weight = newVal; updateThromboUI(); } }
+        function updateTWeightFromSlider(val) { appState.thrombo.weight = parseFloat(val); updateThromboUI(); }
+
+        function renderThromboList() {
+            const container = document.getElementById("thrombo-buttons"); container.innerHTML = "";
+            Object.values(THROMBOLYTICS).forEach(drug => {
+                const isSelected = appState.thrombo.selectedDrugId === drug.id; const colorName = drug.color.split('-')[1];
+                const btn = document.createElement("button"); btn.className = `p-3 rounded-xl text-left transition-all border active:scale-95 ${isSelected ? drug.bg + ' ' + drug.border + ' shadow-lg shadow-' + colorName + '-900/20 ring-1 ring-' + colorName + '-500/50' : 'bg-gray-800 border-gray-700 hover:bg-gray-700'}`;
+                btn.onclick = () => selectThrombo(drug.id); btn.innerHTML = `<span class="block text-sm font-bold ${isSelected ? drug.color : 'text-white'}">${drug.name}</span><span class="block text-[10px] mt-0.5 ${isSelected ? 'text-gray-300' : 'text-gray-400'}">${drug.desc}</span>`;
+                container.appendChild(btn);
+            });
+        }
+
+        function updateThromboUI() {
+            const w = appState.thrombo.weight; const drugId = appState.thrombo.selectedDrugId;
+            document.getElementById("t-weight-value").textContent = w; document.getElementById("t-weight-slider").value = w;
+            const container = document.getElementById("thrombo-phases"); let html = ""; const infoText = document.getElementById("t-drug-info");
+            if (drugId === "alteplase_stemi") {
+                infoText.innerHTML = "Siapkan Alteplase konsentrasi <b>1 mg/cc</b>.<br><span class='text-gray-300 block mt-1'><b>Bolus:</b> 15 mg (IV). <b>Infus:</b> 0.75 mg/kg (Maks 50 mg) dlm 30', lanjut 0.5 mg/kg (Maks 35 mg) dlm 60'.</span>";
+                html += renderPhaseCard("Dosis Bolus IV", "1 - 2 Menit", "syringe", "15 cc", "Bolus Manual", "text-rose-400", true);
+                let dose1 = Math.min(0.75 * w, 50); html += renderPhaseCard("Infus Kontinu Awal", "Selama 30 Menit", "play-circle", `${dose1.toFixed(1)} cc`, `${(dose1 * 2).toFixed(1)} cc/jam`, "text-rose-400", false);
+                let dose2 = Math.min(0.5 * w, 35); html += renderPhaseCard("Infus Kontinu Lanjutan", "Selama 60 Menit", "fast-forward", `${dose2.toFixed(1)} cc`, `${dose2.toFixed(1)} cc/jam`, "text-rose-400", false);
+            } else if (drugId === "alteplase_stroke") {
+                let totalDose = Math.min(0.9 * w, 90); let bolus = totalDose * 0.1; let drip = totalDose * 0.9;
+                infoText.innerHTML = `Siapkan Alteplase konsentrasi <b>1 mg/cc</b>. Target total 0.9 mg/kgBB.<br><span class='text-gray-300 block mt-1'><b>Bolus:</b> ${bolus.toFixed(1)} mg. <b>Infus:</b> ${drip.toFixed(1)} mg dlm 60'.</span>`;
+                html += renderPhaseCard("Dosis Bolus IV", "Selama 1 Menit", "syringe", `${bolus.toFixed(1)} cc`, "Bolus Manual", "text-blue-400", true);
+                html += renderPhaseCard("Infus Kontinu", "Selama 60 Menit", "play-circle", `${drip.toFixed(1)} cc`, `${drip.toFixed(1)} cc/jam`, "text-blue-400", false);
+            } else if (drugId === "alteplase_pe") {
+                let totalDose = Math.min(1.5 * w, 100); let bolus = 10; let drip = totalDose - bolus;
+                infoText.innerHTML = `Target total 100 mg (1.5 mg/kgBB jika BB < 65 kg).<br><span class='text-gray-300 block mt-1'><b>Bolus:</b> 10 mg. <b>Infus:</b> Sisa dosis dlm 2 Jam.</span>`;
+                html += renderPhaseCard("Dosis Bolus IV", "1-2 Menit", "syringe", `${bolus.toFixed(1)} cc`, "Bolus Manual", "text-emerald-400", true);
+                html += renderPhaseCard("Infus Kontinu", "Selama 2 Jam", "play-circle", `${drip.toFixed(1)} cc`, `${(drip/2).toFixed(1)} cc/jam`, "text-emerald-400", false);
+            } else if (drugId === "streptokinase") {
+                infoText.innerHTML = "Larutkan 1.5 Juta IU dlm 100 cc NaCl 0.9%. Habis dlm 60 Menit.";
+                html += renderPhaseCard("Infus Kontinu", "Selama 60 Menit", "droplets", "100 cc", "100 cc/jam", "text-orange-400", true);
+            } else if (drugId === "streptokinase_pe") {
+                infoText.innerHTML = "Larutkan 1.5 Juta IU dlm 100 cc NaCl 0.9%. Habis dlm 2 Jam.";
+                html += renderPhaseCard("Infus Kontinu", "Selama 2 Jam", "droplets", "100 cc", "50 cc/jam", "text-amber-400", true);
+            } container.innerHTML = html; lucide.createIcons();
+        }
+
+        function selectAntiaritmia(id) { hapticPlay(); appState.antiaritmia.selectedDrugId = id; renderAntiaritmiaList(); updateAntiaritmiaUI(); }
+        function adjustAWeight(delta) { hapticPlay(); const newVal = appState.antiaritmia.weight + delta; if (newVal >= 30 && newVal <= 150) { appState.antiaritmia.weight = newVal; updateAntiaritmiaUI(); } }
+        function updateAWeightFromSlider(val) { appState.antiaritmia.weight = parseFloat(val); updateAntiaritmiaUI(); }
+
+        function renderAntiaritmiaList() {
+            const container = document.getElementById("antiaritmia-buttons"); container.innerHTML = "";
+            Object.values(ANTIARITMIA).forEach(drug => {
+                const isSelected = appState.antiaritmia.selectedDrugId === drug.id; const colorName = drug.color.split('-')[1];
+                const btn = document.createElement("button"); btn.className = `p-3 rounded-xl text-left transition-all border active:scale-95 ${isSelected ? drug.bg + ' ' + drug.border + ' shadow-lg shadow-' + colorName + '-900/20' : 'bg-gray-800 border-gray-700'}`;
+                btn.onclick = () => selectAntiaritmia(drug.id); btn.innerHTML = `<span class="block text-sm font-bold ${isSelected ? drug.color : 'text-white'}">${drug.name}</span><span class="block text-[10px] mt-0.5 ${isSelected ? 'text-gray-300' : 'text-gray-400'}">${drug.desc}</span>`;
+                container.appendChild(btn);
+            });
+        }
+
+        function updateAntiaritmiaUI() {
+            const w = appState.antiaritmia.weight; const drugId = appState.antiaritmia.selectedDrugId;
+            document.getElementById("a-weight-value").textContent = w; document.getElementById("a-weight-slider").value = w;
+            const container = document.getElementById("antiaritmia-phases"); let html = ""; const infoText = document.getElementById("a-drug-info");
+            if (drugId === "amiodarone") {
+                infoText.innerHTML = "Oplos <b>900 mg</b> (6 Amp) dlm <b>50 cc</b> D5%. (18 mg/cc).<br><span class='text-rose-400 block mt-1 font-bold text-[9px]'>Kontraindikasi: Syok Kardiogenik, AV Block derajat 2-3.</span>";
+                html += renderPhaseCard("Dosis Bolus", "10-15 Menit", "syringe", "150 mg", "Infus Bebas", "text-purple-400", true);
+                html += renderPhaseCard("Infus Awal (1 mg/menit)", "6 Jam", "play-circle", "360 mg", "3.3 cc/jam", "text-purple-400", false);
+                html += renderPhaseCard("Infus Lanjut (0.5 mg/menit)", "18 Jam", "fast-forward", "540 mg", "1.7 cc/jam", "text-purple-400", false);
+            } else if (drugId === "lidocaine") {
+                let bolus = 1 * w; infoText.innerHTML = "Oplos 1000 mg Lidocaine dlm 50 cc. (20 mg/cc).";
+                html += renderPhaseCard("Dosis Bolus", "2-3 Menit", "syringe", `${bolus.toFixed(0)} mg`, "Bolus Manual", "text-pink-400", true);
+            } else if (drugId === "diltiazem") {
+                let bolus = 0.25 * w; infoText.innerHTML = "Oplos 50 mg dlm 50 cc. (1 mg/cc). Maks 15 mg/jam dlm 24 jam.<br><span class='text-rose-400 block mt-1 font-bold text-[9px]'>Kontraindikasi: WPW syndrome, HFrEF/Syok, AV Block 2-3.</span>";
+                html += renderPhaseCard("Dosis Bolus (0.25 mg/kg)", "2 Menit", "syringe", `${bolus.toFixed(1)} mg`, "Bolus Manual", "text-teal-400", true);
+            } else if (drugId === "verapamil") {
+                infoText.innerHTML = "Bolus Lambat IV. Tidak direkomendasikan infus kontinu.";
+                html += renderPhaseCard("Bolus Awal", "2-3 Menit", "syringe", "2.5-5 mg", "Bolus Manual", "text-lime-400", true);
+            } container.innerHTML = html; lucide.createIcons();
+        }
+
+        // ==========================================
+        // PDF SYSTEM (Direct Download)
+        // ==========================================
+        function showToast(message) {
+            const box = document.createElement('div');
+            box.className = "fixed top-4 left-1/2 transform -translate-x-1/2 bg-rose-600 text-white px-4 py-2 rounded-lg z-[200] shadow-lg font-bold text-sm transition-opacity duration-300";
+            box.innerText = message; document.body.appendChild(box);
+            setTimeout(() => { box.style.opacity = '0'; setTimeout(() => box.remove(), 300); }, 3000);
+        }
+
+        function downloadPDF() {
+            hapticPlay(); if (!window.jsPDF) { showToast("Modul PDF sedang dimuat..."); return; }
+            try {
+                const doc = new window.jsPDF(); const st = getTitrationState(); const drug = DRUGS[st.selectedDrugId];
+                let y = 18;
+                doc.setFontSize(22); doc.setFont(undefined, 'bold'); doc.setTextColor(20, 20, 20); doc.text("VITALDOSE PRO", 14, y);
+                doc.setFontSize(10); doc.setFont(undefined, 'normal'); doc.setTextColor(100, 100, 100); y += 6; doc.text("Advanced Hemodynamic & Reperfusion Suite", 14, y);
+                y += 5; doc.setFontSize(9); doc.text("Developed by Bayushi Eka Putra, MD, FIHA", 14, y);
+                y += 5; doc.setFont(undefined, 'bold'); doc.setTextColor(99, 102, 241); doc.text("PART OF CARDIOLOGYVAULT", 14, y);
+                y += 6; doc.setDrawColor(220, 220, 220); doc.line(14, y, 196, y);
+                y += 12; doc.setFontSize(14); doc.setTextColor(40, 40, 40); doc.setFont(undefined, 'bold'); doc.text(`Protokol Titrasi: ${drug.name}`, 14, y);
+                y += 6; doc.setFontSize(9); doc.setFont(undefined, 'normal'); doc.setTextColor(120, 120, 120);
+                const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                doc.text(`Waktu Cetak: ${dateStr}`, 14, y);
+                y += 6; doc.setDrawColor(200, 200, 200); doc.setFillColor(248, 250, 252); doc.rect(14, y, 182, 26, 'FD');
+                doc.setFontSize(10); doc.setTextColor(40, 40, 40); let boxY = y + 7;
+                const weightText = drug.weightBased ? `${st.weight} kg` : "Std BB";
+                doc.text(`Berat Badan: ${weightText}`, 18, boxY);
+                doc.text(`Sediaan Obat: ${drug.baseAmount * st.ampoules} ${drug.baseUnit} (${st.ampoules} Amp)`, 18, boxY + 7);
+                doc.text(`Volume Pelarut: ${st.volume} cc`, 18, boxY + 14);
+                doc.setFont(undefined, 'bold'); doc.setTextColor(225, 29, 72);
+                doc.text("DOSIS TARGET:", 192, boxY, { align: 'right' }); doc.text(`${st.dose} ${drug.inputUnit}`, 192, boxY + 7, { align: 'right' });
+                let totalBase = drug.baseAmount * st.ampoules; let totalMcg = drug.inputUnit.includes("mcg") ? totalBase * 1000 : totalBase; const conc = totalMcg / st.volume;
+                let currentRate = drug.inputUnit.includes("/jam") ? (drug.weightBased ? (st.dose * st.weight) / conc : st.dose / conc) : (drug.weightBased ? (st.dose * st.weight * 60) / conc : (st.dose * 60) / conc);
+                doc.text(`Rate: ${currentRate.toFixed(1)} cc/jam`, 192, boxY + 14, { align: 'right' });
+                doc.setFont(undefined, 'normal'); y += 34;
+                const tableData = [];
+                for (let i = 15; i >= -15; i--) {
+                    const decimals = drug.step < 0.1 ? 2 : drug.step < 1 ? 1 : 0;
+                    let iterDose = parseFloat((st.dose + (i * drug.step)).toFixed(decimals));
+                    if (iterDose >= drug.min && iterDose <= drug.max) {
+                        let iterRate = drug.inputUnit.includes("/jam") ? (drug.weightBased ? (iterDose * st.weight) / conc : iterDose / conc) : (drug.weightBased ? (iterDose * st.weight * 60) / conc : (iterDose * 60) / conc);
+                        let isTarget = (i === 0); let doseStr = iterDose.toFixed(decimals) + ` ${drug.inputUnit}`; if(isTarget) doseStr += "  (TARGET)";
+                        tableData.push([doseStr, iterRate.toFixed(1) + " cc/jam"]);
+                    }
+                }
+                doc.autoTable({
+                    startY: y, head: [['Dosis', 'Syringe Rate']], body: tableData, theme: 'grid',
+                    headStyles: { fillColor: [15, 23, 42], textColor: 255, fontStyle: 'bold', halign: 'center' },
+                    columnStyles: { 0: { halign: 'left' }, 1: { halign: 'right', fontStyle: 'bold' } },
+                    didParseCell: function(data) { if (data.row.raw[0].includes("(TARGET)")) { data.cell.styles.fillColor = [255, 228, 230]; data.cell.styles.textColor = [159, 18, 57]; data.cell.styles.fontStyle = 'bold'; } }
+                });
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) { doc.setPage(i); doc.setFontSize(8); doc.setTextColor(150, 150, 150); doc.text("DISCLAIMER KLINIS: Panduan ini adalah alat bantu taktis darurat. Keputusan klinis ada pada dokter.", 14, doc.internal.pageSize.height - 15); doc.text("Developed by Bayushi Eka Putra, MD, FIHA | CardiologyVault", 14, doc.internal.pageSize.height - 10); doc.text(`Hal ${i}/${pageCount}`, doc.internal.pageSize.width - 25, doc.internal.pageSize.height - 10); }
+                
+                const filename = `Titrasi_${drug.name.replace(/[^a-zA-Z0-9]/g, '_')}_${st.weight}kg.pdf`;
+                doc.save(filename);
+                showToast("PDF Berhasil diunduh.");
+            } catch (err) { console.error(err); showToast("Gagal merender PDF."); }
+        }
+        document.addEventListener("DOMContentLoaded", init);
+    </script>
+</body>
+</html>
