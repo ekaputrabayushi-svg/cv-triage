@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard Kardiologi V2 (Level Koas-Dr. Umum)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* CSS untuk efek flip 3D */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        .card-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        .is-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen font-sans flex flex-col overflow-x-hidden">
+
+    <!-- Header -->
+    <header class="bg-indigo-600 text-white shadow-md p-3 md:p-4 sticky top-0 z-20">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0">
+            <div class="text-center sm:text-left">
+                <h1 class="text-lg sm:text-xl md:text-2xl font-bold flex items-center justify-center sm:justify-start gap-2">
+                    <span>🩺</span> Flashcard Kardiologi (Koas/GP)
+                </h1>
+                <p class="text-[10px] sm:text-xs md:text-sm text-indigo-200 font-medium tracking-wide">
+                    Varian 2 • Part of CardiologyVault
+                </p>
+            </div>
+            <div class="text-[10px] sm:text-xs md:text-sm font-medium bg-indigo-700 px-3 py-1 rounded-full border border-indigo-500 shadow-sm text-center">
+                Dev: Bayushi Eka Putra, MD, FIHA
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col items-center justify-start sm:justify-center p-4 md:p-8 max-w-4xl mx-auto w-full">
+        
+        <!-- Progress Info -->
+        <div class="w-full flex justify-between items-center mb-3 md:mb-4 text-slate-600 font-medium">
+            <span id="card-category" class="text-xs md:text-sm uppercase tracking-wider text-indigo-500 font-bold bg-indigo-100 px-2 py-1 rounded">Kategori</span>
+            <span id="card-counter" class="text-xs md:text-sm bg-white px-3 py-1 rounded-full shadow-sm font-bold border border-slate-200">1 / 50</span>
+        </div>
+
+        <!-- Flashcard Container -->
+        <div id="flashcard" class="relative w-full max-w-2xl h-[55vh] min-h-[320px] md:h-96 perspective-1000 cursor-pointer group mb-6 md:mb-8 touch-pan-y" onclick="toggleFlip(event)">
+            <div class="card-inner w-full h-full absolute transform-style-3d shadow-xl rounded-2xl md:rounded-3xl">
+                
+                <!-- Front (Question) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-white rounded-2xl md:rounded-3xl p-5 md:p-10 flex flex-col items-center justify-center text-center border-t-4 border-indigo-500">
+                    <div class="absolute top-3 left-4 text-slate-200 font-bold text-3xl md:text-4xl">Q</div>
+                    <div class="w-full h-full flex flex-col justify-center overflow-y-auto no-scrollbar pt-6 pb-8">
+                        <p id="question-text" class="text-base sm:text-lg md:text-2xl text-slate-800 font-semibold leading-relaxed md:leading-normal m-auto">
+                            Memuat pertanyaan...
+                        </p>
+                    </div>
+                    <div class="absolute bottom-3 text-xs md:text-sm text-slate-400 flex items-center gap-1 animate-pulse">
+                        <span class="hidden sm:inline">Ketuk kartu untuk melihat jawaban</span>
+                        <span class="sm:hidden">Ketuk untuk jawaban • Usap untuk lanjut</span>
+                    </div>
+                </div>
+
+                <!-- Back (Answer) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-indigo-50 rounded-2xl md:rounded-3xl p-5 md:p-10 flex flex-col items-center justify-center text-center rotate-y-180 border-t-4 border-amber-500">
+                    <div class="absolute top-3 left-4 text-indigo-200 font-bold text-3xl md:text-4xl">A</div>
+                    <div class="w-full h-full flex flex-col justify-center overflow-y-auto no-scrollbar pt-6 pb-4">
+                        <p id="answer-text" class="text-sm sm:text-base md:text-xl text-slate-800 font-medium leading-relaxed m-auto">
+                            Memuat jawaban...
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="w-full max-w-2xl grid grid-cols-2 sm:flex sm:flex-row justify-center gap-3 md:gap-4 pb-8">
+            <button onclick="prevCard()" class="col-span-1 bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-sm transition-all border border-slate-200 flex justify-center items-center gap-1 active:scale-95">
+                <span>&larr;</span> <span class="hidden sm:inline">Sebelumnya</span><span class="sm:hidden">Prev</span>
+            </button>
+            <button onclick="nextCard()" class="col-span-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-md transition-all flex justify-center items-center gap-1 active:scale-95">
+                <span class="hidden sm:inline">Selanjutnya</span><span class="sm:hidden">Next</span> <span>&rarr;</span>
+            </button>
+            <button onclick="shuffleCards()" class="col-span-2 sm:col-span-1 order-last sm:order-none bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm md:text-base py-3 md:py-4 px-4 md:px-6 rounded-xl shadow-md transition-all flex justify-center items-center active:scale-95">
+                Acak (Shuffle)
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        // Data Flashcard Varian 2 (50 Soal Kardiologi)
+        const originalCards = [
+            // --- ACS & PJK ---
+            { cat: "ACS & PJK", q: "Laki-laki 60 tahun nyeri dada menjalar ke punggung, EKG ST elevasi V1-V6, I, aVL. Diagnosis spesifik lokasi infark?", a: "STEMI Anterior Luas (Extensive Anterior STEMI).\n\nPenjelasan Ekstra:\nElevasi ST dari V1-V6 ditambah I dan aVL menandakan infark masif yang meliputi septum, dinding anterior, dan lateral ventrikel kiri. Culprit lesion umumnya berada di proksimal arteri Left Anterior Descending (LAD) sebelum percabangan septal (S1) dan diagonal (D1) pertama, atau bahkan oklusi Left Main (LM) disease. Pasien ini berisiko sangat tinggi mengalami penurunan LVEF drastis, syok kardiogenik, dan aritmia ventrikular." },
+            { cat: "ACS & PJK", q: "Enzim jantung yang meningkat paling awal (dalam 1-2 jam) pada infark miokard akut, namun kurang spesifik dibandingkan troponin?", a: "Mioglobin (Myoglobin).\n\nPenjelasan Ekstra:\nMioglobin adalah protein pengikat oksigen yang ada di otot jantung maupun otot skeletal. Karena ukurannya kecil, ia bocor ke darah sangat cepat pasca-iskemik. Namun, karena juga terdapat di otot rangka, spesifisitasnya rendah. Puncaknya di 4-8 jam dan kembali normal dalam 24 jam." },
+            { cat: "ACS & PJK", q: "Pasien post STEMI hari ke-5 tiba-tiba sesak berat, terdengar murmur pansistolik baru di apeks. Komplikasi mekanik yang paling mungkin?", a: "Ruptur muskulus papilaris (menyebabkan Regurgitasi Mitral akut).\n\nPenjelasan Ekstra:\nMuskulus papilaris posteromedial paling sering ruptur karena suplai darahnya 'single-source' (hanya dari RCA atau PDA), berbeda dengan anterolateral yang punya suplai ganda (LAD dan LCx). Ruptur ini memicu regurgitasi mitral masif mendadak, menyebabkan syok kardiogenik dan edema paru fulminan." },
+            { cat: "ACS & PJK", q: "Obat penurun kolesterol golongan statin intensitas tinggi (High-intensity statin) yang direkomendasikan pasca ACS beserta dosisnya?", a: "Atorvastatin 40-80 mg atau Rosuvastatin 20-40 mg.\n\nPenjelasan Ekstra:\nStatin intensitas tinggi bertujuan menurunkan kadar kolesterol LDL lebih dari 50%. Selain efek penurun lipid, statin pasca-ACS sangat penting karena 'efek pleiotropik'-nya: menstabilkan plak aterosklerosis yang rentan (vulnerable plaque), mengurangi inflamasi endotel, dan mencegah trombosis berulang." },
+            { cat: "ACS & PJK", q: "Skor risiko untuk mengevaluasi pasien dengan nyeri dada di IGD (memprediksi MACE dalam 6 minggu) yang terdiri dari History, EKG, Age, Risk factors, dan Troponin?", a: "HEART Score.\n\nPenjelasan Ekstra:\nHEART score sangat berguna di lini depan (IGD) untuk memilah pasien. Pasien dengan skor rendah (0-3) memiliki risiko Major Adverse Cardiac Events (MACE) < 2% dalam 6 minggu dan umumnya aman dipulangkan. Skor tinggi (7-10) butuh perawatan intensif atau intervensi koroner dini." },
+            { cat: "ACS & PJK", q: "Apa gambaran EKG khas pada infark miokard ventrikel kanan (Right Ventricular Infarction) dan lead apa yang paling sensitif?", a: "ST elevasi pada lead V4R.\n\nPenjelasan Ekstra:\nInfark RV sering menyertai STEMI inferior (oklusi proksimal RCA). Kematian otot RV menyebabkan disfungsi diastolik kanan, sehingga RV gagal memompa darah ke paru/kiri (preload LV turun drastis). Tensi pasien sangat bergantung pada volume cairan (preload-dependent). Karena itu, Nitrat sangat dikontraindikasikan karena memicu hipotensi fatal!" },
+            { cat: "ACS & PJK", q: "Pasien UAP/NSTEMI dengan risiko perdarahan tinggi, antikoagulan apa yang lebih disarankan dibandingkan Heparin (UFH)?", a: "Fondaparinux.\n\nPenjelasan Ekstra:\nFondaparinux adalah inhibitor faktor Xa indirek sintetis. Berdasarkan trial OASIS-5, fondaparinux terbukti seefektif Enoxaparin dalam mencegah kejadian iskemik, namun secara signifikan memangkas risiko perdarahan mayor, sehingga menurunkan mortalitas secara keseluruhan pada populasi NSTEMI/UAP." },
+            { cat: "ACS & PJK", q: "Pada Angina Pektoris Stabil (Stable Angina), kapan keluhan nyeri dada khas ini biasanya muncul dan kapan mereda?", a: "Muncul saat aktivitas fisik/stres emosional dan mereda cepat (hitungan menit) dengan istirahat atau nitrat sublingual.\n\nPenjelasan Ekstra:\nKondisi ini disebut 'demand ischemia'. Terdapat plak aterosklerosis stabil yang menyumbat lumen (>70%). Saat istirahat, aliran darah masih cukup. Namun saat aktivitas (HR dan kontraktilitas naik), kebutuhan (demand) oksigen miokard melampaui suplai yang bisa melewati plak tersebut, memicu nyeri transien tanpa nekrosis." },
+            
+            // --- ARITMIA & ACLS ---
+            { cat: "Aritmia & ACLS", q: "Obat pilihan pertama untuk tatalaksana bradikardia simptomatik yang tidak berespon dengan Atropin, sebelum mempertimbangkan pasang pacu jantung?", a: "Epinefrin drip (2-10 mcg/mnt) atau Dopamin drip (5-20 mcg/kg/mnt).\n\nPenjelasan Ekstra:\nJika Sulfas Atropin (agen parasimpatolitik) gagal menaikkan heart rate, langkah selanjutnya adalah menggunakan agen simpatomimetik (beta-1 agonis) secara kontinyu untuk menstimulasi nodus SA/AV dan kontraktilitas, sembari mempersiapkan Transcutaneous Pacing (TCP)." },
+            { cat: "Aritmia & ACLS", q: "EKG menunjukkan gambaran gigi gergaji (saw-tooth appearance) pada lead II, III, aVF dengan laju ventrikel biasanya reguler. Diagnosis?", a: "Atrial Flutter.\n\nPenjelasan Ekstra:\nAtrial flutter disebabkan oleh sirkuit re-entry makro di atrium kanan (sering mengelilingi anulus trikuspid). Laju atrium biasanya 300x/menit. Nodus AV secara fisiologis menahan hantaran ini (block), paling sering menghasilkan rasio konduksi 2:1, sehingga denyut ventrikel (HR) konstan di sekitar 150x/menit." },
+            { cat: "Aritmia & ACLS", q: "Pelebaran QRS > 0.12 detik, bentuk rSR' (telinga kelinci) di V1-V2, dan gelombang S lebar di I dan V6. Diagnosis?", a: "Right Bundle Branch Block (RBBB).\n\nPenjelasan Ekstra:\nPada RBBB, konduksi cabang kanan terputus. Depolarisasi septum kiri-ke-kanan normal (gelombang r awal), kemudian LV depolarisasi secara normal (gelombang S), lalu RV mendepolarisasi belakangan dan lambat melalui otot dari kiri ke kanan (gelombang R' yang tinggi dan lebar di V1)." },
+            { cat: "Aritmia & ACLS", q: "Pelebaran QRS > 0.12 detik, bentuk M-shaped atau gelombang R monomorfik lebar di V5-V6, hilangnya gelombang q di I dan V6. Diagnosis?", a: "Left Bundle Branch Block (LBBB).\n\nPenjelasan Ekstra:\nLBBB menandakan penyakit sistem konduksi yang lebih serius (sering terkait IHD atau kardiomiopati). Aktivasi septum terbalik (kanan ke kiri), sehingga tak ada gelombang q septal normal di lateral. LV mendepolarisasi sangat lambat, menghasilkan QRS lebar bergerigi di lead lateral (I, aVL, V5, V6)." },
+            { cat: "Aritmia & ACLS", q: "Ekstrasistol ventrikel (PVC/VES) yang muncul selang-seling teratur setiap setelah 1 irama sinus normal disebut?", a: "Ventricular Bigeminy (Bigemini Ventrikel).\n\nPenjelasan Ekstra:\nPola ini menunjukkan irama dasar sinus disela oleh denyut prematur dari ventrikel secara bergantian (Sinus-PVC-Sinus-PVC). Penyebabnya bisa karena iskemia, hipokalemia, efek toksik digoksin, atau peningkatan tonus simpatis. Pasien sering mengeluhkan 'jantung terasa melompat' atau jeda." },
+            { cat: "Aritmia & ACLS", q: "Manuver vagal non-farmakologis apa yang paling sering dilakukan di awal untuk menghentikan SVT pada pasien dewasa yang hemodinamiknya stabil?", a: "Manuver Valsalva atau Pijat sinus karotis (Carotid sinus massage).\n\nPenjelasan Ekstra:\nManuver ini bertujuan meningkatkan tonus parasimpatis (Nervus Vagus) yang akan memperlambat konduksi dan memperpanjang masa refrakter di Nodus AV. Pada re-entry takikardia yang bergantung pada nodus AV (seperti AVNRT atau AVRT), blok sesaat ini dapat memutus sirkuit dan mengembalikan irama sinus." },
+            { cat: "Aritmia & ACLS", q: "Pada pasien dengan henti jantung irama Asistol/PEA, kapan Epinefrin diberikan menurut algoritma AHA?", a: "Sesegera mungkin setelah akses IV/IO terpasang (dosis 1 mg tiap 3-5 menit).\n\nPenjelasan Ekstra:\nBerbeda dengan VF/pVT dimana Epinefrin diberikan setelah shock ke-2, pada irama unshockable (Asistol/PEA), Epinefrin adalah tatalaksana farmakologis lini pertama. Efek alfa-adrenergiknya meningkatkan resistensi perifer, memaksimalkan aliran darah ke otak dan arteri koroner selama kompresi dada (RJP)." },
+            { cat: "Aritmia & ACLS", q: "Irama EKG laju > 100x/m, gelombang P memiliki minimal 3 morfologi berbeda pada lead yang sama. Sering pada pasien PPOK berat. Diagnosis?", a: "Multifocal Atrial Tachycardia (MAT).\n\nPenjelasan Ekstra:\nMAT terjadi karena banyak fokus ektopik di atrium yang menembak secara acak, sering dipicu oleh hipoksia, asidosis, atau peregangan atrium kanan akibat penyakit paru kronis (Cor Pulmonale). Tatalaksana utamanya adalah mengobati penyakit paru primernya (perbaiki oksigenasi), bukan langsung memberi antiaritmia." },
+
+            // --- GAGAL JANTUNG ---
+            { cat: "Gagal Jantung", q: "Pasien datang dengan Infark Miokard Akut yang disertai dengan Edema Paru Akut (ALO). Menurut klasifikasi Killip, ini masuk kelas berapa?", a: "Killip Kelas III.\n\nPenjelasan Ekstra:\nKlasifikasi Killip memprediksi mortalitas 30 hari pasca IMA. Killip I (tak ada gagal jantung), Killip II (ronki basah < 50% lapang paru, S3, elevasi JVP), Killip III (edema paru luas / ronki > 50%), dan Killip IV (Syok kardiogenik dengan hipotensi dan tanda hipoperfusi)." },
+            { cat: "Gagal Jantung", q: "Obat golongan SGLT2 Inhibitor yang awalnya untuk diabetes, namun kini masuk pilar terapi utama (GDMT) untuk Gagal Jantung HFrEF?", a: "Dapagliflozin atau Empagliflozin.\n\nPenjelasan Ekstra:\nSGLT2i merevolusi terapi gagal jantung. Obat ini terbukti menurunkan mortalitas kardiovaskular dan rawat inap secara independen dari status diabetes pasien. Mekanismenya multipel: diuresis osmotik, penurunan preload/afterload, perbaikan metabolisme sel jantung, dan perlindungan fungsi ginjal." },
+            { cat: "Gagal Jantung", q: "Kombinasi obat golongan ARNI (Angiotensin Receptor-Neprilysin Inhibitor) yang banyak menggantikan ACEi/ARB pada gagal jantung HFrEF?", a: "Sacubitril / Valsartan.\n\nPenjelasan Ekstra:\nValsartan (ARB) memblok efek buruk RAAS (vasokonstriksi dan retensi air). Sacubitril menghambat enzim neprilisin, sehingga peptida natriuretik (BNP) tidak terdegradasi. Hasilnya: natriuresis meningkat, vasodilatasi membaik, dan remodeling otot jantung (fibrosis) dicegah jauh lebih baik daripada Enalapril (Paradigm-HF trial)." },
+            { cat: "Gagal Jantung", q: "Gejala batuk malam hari (sering non-produktif/mengik) pada pasien gagal jantung akibat kongesti paru sering salah didiagnosis sebagai asma. Kondisi ini disebut?", a: "Cardiac Asthma (Asma Kardiak).\n\nPenjelasan Ekstra:\nAkibat gagal jantung kiri (orthopnea), cairan transudat menumpuk di interstitial paru dan mukosa bronkus saat berbaring. Edema jalan napas ini menyempitkan lumen bronkiolus, memicu suara mengik (wheezing) yang menyerupai asma bronkial. Terapi utamanya adalah diuretik, bukan sekadar bronkodilator." },
+            { cat: "Gagal Jantung", q: "Suara jantung tambahan yang khas terdengar pada gagal jantung fase dekompensasi akut akibat volume overload (pengisian cepat ventrikel yang kaku)?", a: "S3 Gallop.\n\nPenjelasan Ekstra:\nS3 (Third heart sound) terdengar sesaat setelah S2 pada fase diastolik awal (fase pengisian cepat ventrikel). Pada orang tua/gagal jantung, suara ini muncul karena tumpukan volume darah yang besar menabrak dinding ventrikel yang sudah over-distended dan lemah, menciptakan vibrasi berfrekuensi rendah." },
+            { cat: "Gagal Jantung", q: "Gagal jantung kanan murni ditandai dengan hepatomegali, asites, dan JVP naik tanpa kongesti paru. Apa penyebab paling sering terjadinya gagal jantung kanan?", a: "Gagal jantung kiri (Left-sided heart failure yang berujung pada hipertensi pulmonal sekunder).\n\nPenjelasan Ekstra:\nTekanan akhir diastolik LV yang tinggi (kongesti kiri) akan diteruskan mundur ke vena pulmonalis, memicu hipertensi vena pulmonal. Untuk memompa darah ke paru yang tekanannya sudah tinggi ini, RV harus bekerja ekstra keras. Lama-kelamaan RV akan hipertrofi, melebar, dan akhirnya gagal (right heart failure)." },
+            { cat: "Gagal Jantung", q: "Alat pacu jantung khusus (biventrikular) yang dipasang untuk mensinkronkan kontraksi ventrikel kanan dan kiri pada gagal jantung dengan LBBB lebar disebut?", a: "CRT (Cardiac Resynchronization Therapy).\n\nPenjelasan Ekstra:\nPada pasien gagal jantung dengan LBBB (QRS > 130-150 ms), dinding septum dan lateral LV tidak berkontraksi bersamaan (disinkroni). Ini membuat pompaan darah tidak efisien. CRT memiliki lead tambahan di sinus koronarius untuk memacu LV dari luar, mengembalikan sinkronisasi mekanik kontraksi ventrikel." },
+            { cat: "Gagal Jantung", q: "Apa nama parameter objektif yang diukur melalui Echocardiography untuk menilai dan membagi kelas fungsi sistolik ventrikel kiri (HFrEF, HFmrEF, HFpEF)?", a: "LVEF (Left Ventricular Ejection Fraction).\n\nPenjelasan Ekstra:\nLVEF adalah persentase darah yang disemprotkan ventrikel kiri setiap kali kontraksi (Volume Sekuncup dibagi Volume Akhir Diastolik). Normalnya >50%. HFrEF (berkurang) jika <40%. HFmrEF (mildly reduced) 41-49%. HFpEF (terjaga) jika >50% dengan bukti disfungsi diastolik." },
+
+            // --- KATUP & BAWAAN ---
+            { cat: "Katup & Bawaan", q: "Murmur diastolik di apeks tanpa opening snap, muncul pada pasien Regurgitasi Aorta berat akibat jet aliran regurgitan menghalangi pembukaan katup mitral. Disebut?", a: "Austin Flint murmur.\n\nPenjelasan Ekstra:\nPada Regurgitasi Aorta berat, darah kembali dari aorta ke LV saat diastolik. Pancaran jet regurgitasi ini menabrak daun katup mitral anterior, membuatnya bergetar dan sedikit tertutup secara fungsional. Hal ini menciptakan murmur diastolik yang mirip stenosis mitral, namun tanpa patologi asli pada katup mitralnya." },
+            { cat: "Katup & Bawaan", q: "Tanda fisik pada kuku berupa warna kemerahan/kepucatan (denyutan kapiler) yang sinkron dengan detak jantung pada pasien Regurgitasi Aorta disebut?", a: "Quincke's pulse.\n\nPenjelasan Ekstra:\nIni adalah salah satu tanda perifer klasik dari hiperdinamik sirkulasi pada Regurgitasi Aorta (selain waterhammer pulse, de Musset sign, Corrigan's pulse). Perbedaan tekanan sistolik yang sangat tinggi (akibat stroke volume besar) dan diastolik yang sangat rendah (darah balik ke LV) menyebabkan pulsasi kapiler yang terlihat jelas jika ujung kuku ditekan perlahan." },
+            { cat: "Katup & Bawaan", q: "Penyakit jantung bawaan sianotik yang paling sering ditemukan pada orang dewasa karena tingginya angka survival (bisa melewati masa anak-anak)?", a: "Tetralogy of Fallot (ToF).\n\nPenjelasan Ekstra:\nToF memiliki 4 kelainan: VSD, Overriding aorta, Stenosis pulmonal (RVOT obstruction), dan Hipertrofi ventrikel kanan. Derajat sianosis sangat bergantung pada seberapa sempit stenosis pulmonalnya. Jika tidak terlalu parah ('Pink Tet'), pasien bisa tumbuh hingga dewasa, meskipun kelak tetap butuh operasi korektif total." },
+            { cat: "Katup & Bawaan", q: "Sindrom Eisenmenger adalah komplikasi akhir dari PJB asianotik (misal VSD besar). Apa patofisiologi utamanya sehingga pasien menjadi biru?", a: "Pembalikan arah pirau/reversal shunt (dari kiri-ke-kanan menjadi kanan-ke-kiri) akibat Hipertensi Pulmonal yang ireversibel.\n\nPenjelasan Ekstra:\nDefek septum menyebabkan aliran darah ekstra terus-menerus membanjiri paru (kiri ke kanan). Lama-kelamaan, pembuluh darah paru bereaksi dengan vasokonstriksi dan hipertrofi otot polos (Penyakit Vaskular Paru). Saat tahanan paru melampaui tahanan sistemik tubuh, darah deoksigenasi dari jantung kanan berbalik mengalir ke kiri, memicu sianosis kronis." },
+            { cat: "Katup & Bawaan", q: "Profilaksis sekunder Demam Rematik (tanpa karditis) berupa injeksi Benzathine Penicillin G intramuskular. Diberikan setiap berapa lama?", a: "Setiap 4 minggu (28 hari).\n\nPenjelasan Ekstra:\nInjeksi ini bertujuan memberantas carriage Streptococcus beta-hemoliticus Grup A di tenggorokan untuk mencegah serangan ulang demam rematik. Pada pasien tanpa karditis rematik, profilaksis diberikan hingga 5 tahun setelah serangan terakhir atau hingga usia 21 tahun (dipilih mana yang lebih lama)." },
+            { cat: "Katup & Bawaan", q: "Kelainan katup jantung apa yang paling sering muncul sebagai komplikasi pada penderita Sindrom Marfan?", a: "Regurgitasi Aorta (akibat dilatasi akar aorta) atau Prolaps Katup Mitral (MVP).\n\nPenjelasan Ekstra:\nSindrom Marfan adalah penyakit jaringan ikat genetik (mutasi gen Fibrillin-1). Jaringan pengikat pada anulus/cincin katup dan akar aorta menjadi lemah dan elastis (degenerasi kistik medial). Ini membuat katup mitral gampang prolaps, dan pangkal aorta melebar (aneurisma) yang berujung pada inkompetensi katup aorta." },
+            { cat: "Katup & Bawaan", q: "Bunyi jantung pertama (S1) yang sangat keras (loud S1) saat auskultasi sering menjadi ciri khas awal dari kelainan katup apa?", a: "Stenosis Mitral.\n\nPenjelasan Ekstra:\nS1 tercipta dari penutupan katup Mitral dan Trikuspid. Pada MS fase awal, tekanan atrium kiri tinggi menahan daun katup mitral agar tetap terbuka lebar hingga akhir diastolik. Saat sistolik ventrikel dimulai mendadak, daun katup ini dipaksa menutup dari posisi terjauhnya, menimbulkan suara bantingan yang keras (Loud S1)." },
+            { cat: "Katup & Bawaan", q: "Pemeriksaan penunjang standar emas (namun non-invasif) untuk mendiagnosis defek septum (ASD/VSD) secara langsung dan menilai arah aliran darah?", a: "Echocardiography dengan color Doppler.\n\nPenjelasan Ekstra:\nEkokardiografi 2D (TTE/TEE) memvisualisasikan struktur anatomi jantung dan ukuran defek. Tambahan Color Doppler memungkinkan klinisi melihat warna aliran darah, menyingkap arah kebocoran (pirau) melalui defek tersebut (misal aliran merah-biru yang abnormal menyilang septum), dan menilai kecepatan serta tekanannya." },
+
+            // --- HIPERTENSI ---
+            { cat: "Hipertensi", q: "Sebutkan 2 penyebab Hipertensi Sekunder yang paling sering ditemukan pada pasien dewasa muda (usia < 30 tahun)?", a: "Penyakit parenkim ginjal (misal Glomerulonefritis/CKD) dan Stenosis Arteri Renalis.\n\nPenjelasan Ekstra:\nHipertensi pada usia muda sangat dicurigai sebagai HT Sekunder. Disfungsi ginjal akan menahan garam dan air. Pada stenosis arteri renalis (sering karena Fibromuscular Dysplasia pada wanita muda), ginjal 'merasa' iskemik dan terus-menerus memproduksi Renin, memicu kaskade RAAS yang menyebabkan vasokonstriksi hebat." },
+            { cat: "Hipertensi", q: "Tanda fisik spesifik pada pemeriksaan funduskopi mata yang membedakan Hipertensi Emergensi/Maligna dengan Hipertensi Urgensi?", a: "Papiledema (Retinopati Hipertensi Grade IV).\n\nPenjelasan Ekstra:\nHipertensi Emergensi didefinisikan sebagai tekanan darah sangat tinggi disertai acute target organ damage. Papiledema (pembengkakan diskus optikus) akibat peningkatan tekanan intrakranial atau kegagalan autoregulasi mikrovaskuler otak adalah bukti klinis kerusakan organ akut yang dapat membedakannya dari status Urgensi." },
+            { cat: "Hipertensi", q: "Penurunan tensi pada Hipertensi Emergensi tidak boleh terlalu cepat agar organ tidak iskemik. Berapa maksimal target penurunannya dalam 1 jam pertama?", a: "Penurunan MAP (Mean Arterial Pressure) maksimal 20-25%.\n\nPenjelasan Ekstra:\nOrgan vital (otak, ginjal) pada penderita hipertensi kronis telah beradaptasi (autoregulasi) dengan tekanan tinggi. Jika diturunkan terlalu drastis secara tiba-tiba ke angka 'normal' (misal 120/80), aliran darah ke organ tersebut anjlok dan bisa memicu stroke iskemik atau gagal ginjal akut. Ada pengecualian: pada Diseksi Aorta akut, tensi harus di-drop secepatnya < 120 mmHg." },
+            { cat: "Hipertensi", q: "Pemberian obat antihipertensi golongan Diuretik Loop (misal Furosemide) atau Thiazide dosis tinggi berisiko menyebabkan gangguan elektrolit apa yang memicu aritmia?", a: "Hipokalemia.\n\nPenjelasan Ekstra:\nDiuretik ini membuang banyak Natrium (Na) ke dalam tubulus ginjal. Saat mencapai tubulus distal dan duktus koligens, pompa Aldosteron akan bekerja ekstra menyerap kembali Na tersebut sambil menukar/membuang Kalium (K) ke urin. Hipokalemia berat menunda repolarisasi jantung (interval QT memanjang) dan rentan memicu VT/VF." },
+            { cat: "Hipertensi", q: "Hipertensi sistolik terisolasi (Isolated Systolic Hypertension) dimana sistolik >140 tapi diastolik normal sangat sering terjadi pada lansia. Patofisiologi utamanya?", a: "Kekakuan arteri besar / penurunan compliance dinding aorta (Arterial stiffness).\n\nPenjelasan Ekstra:\nSeiring penuaan, elastin pada dinding aorta digantikan kolagen kaku. Saat sistolik, aorta tak lagi lentur meredam semburan darah (Windkessel effect hilang), memicu lonjakan tekanan sistolik. Saat diastolik, karena aorta tak punya daya pegas/recoil, tekanan malah merosot. Kondisi ini melebarkan Pulse Pressure." },
+            { cat: "Hipertensi", q: "Pria obesitas, leher pendek, sering mendengkur keras, bangun pagi sakit kepala. Tensi 160/95 mmHg. Suspek penyebab hipertensi sekundernya?", a: "Obstructive Sleep Apnea (OSA).\n\nPenjelasan Ekstra:\nPada OSA, jalan napas menyempit saat tidur menyebabkan episode henti napas (apnea) dan hipoksia berulang. Hipoksia ini memicu aktivasi sistem saraf simpatis berlebihan semalaman, yang efeknya menetap hingga pagi dan siang hari (menyebabkan hipertensi resisten). Terapi utamanya adalah CPAP atau penurunan berat badan." },
+
+            // --- VASKULAR, PERIKARDIUM & LAINNYA ---
+            { cat: "Vaskular & Lainnya", q: "Kondisi sumbatan arteri perifer mendadak akibat emboli memiliki tanda klinis 6P. Sebutkan!", a: "Pain, Pallor, Pulselessness, Paresthesia, Paralysis, Poikilothermia (perabaan dingin).\n\nPenjelasan Ekstra:\nIni adalah gejala klasik dari Acute Limb Ischemia (ALI), sering akibat emboli dari jantung (pasien dengan AFib) yang menyangkut di percabangan arteri tungkai (misal femoralis). Otot dan saraf kehabisan oksigen mendadak. Jika tak direvaskularisasi segera (Fogarty embolektomi / trombolitik), tungkai bisa diamputasi." },
+            { cat: "Vaskular & Lainnya", q: "Peradangan arteri (Giant Cell Arteritis) sering pada lansia dengan keluhan nyeri kepala unilateral dan nyeri rahang saat mengunyah (jaw claudication). Terapi utamanya?", a: "Kortikosteroid dosis tinggi (misal Prednison) segera untuk mencegah komplikasi kebutaan.\n\nPenjelasan Ekstra:\nArteritis temporalis melibatkan cabang-cabang arteri karotis eksterna (seperti a. temporalis dan ophtalmica). Inflamasi akut menyumbat aliran darah. Jaw claudication adalah tanda iskemia otot pengunyah. Menunda steroid demi biopsi diagnostik dapat berakibat fatal: hilangnya penglihatan permanen mendadak akibat iskemia nervus optikus." },
+            { cat: "Vaskular & Lainnya", q: "Batasan klinis hemodinamik: Kapan cairan efusi perikardial dikatakan telah jatuh ke dalam kondisi Tamponade Jantung?", a: "Ketika tekanan cairan perikardium melebihi tekanan ruang jantung, menyebabkan kompresi/kolaps ventrikel kanan dan menurunkan curah jantung.\n\nPenjelasan Ekstra:\nEfusi perikardial hanyalah kumpulan cairan. Namun jika tekanannya naik (karena cairan banyak atau terakumulasi mendadak), ia menekan ruang dengan tekanan paling rendah (Atrium Kanan dan Ventrikel Kanan) saat diastolik. Jantung tak bisa mengembang dan terisi darah, curah jantung anjlok, menimbulkan syok obstruktif." },
+            { cat: "Vaskular & Lainnya", q: "Pada Kardiomiopati Peripartum, gagal jantung spesifik ini muncul pada rentang waktu kapan di sekitar kehamilan?", a: "Mulai dari bulan terakhir kehamilan hingga 5 bulan pasca melahirkan.\n\nPenjelasan Ekstra:\nIni adalah bentuk kardiomiopati dilatasi (HFrEF) unik tanpa riwayat penyakit jantung sebelumnya. Etiologi pastinya belum jelas, diduga inflamasi autoimun atau respon abnormal hormon Prolaktin dan pecahan stres oksidatifnya terhadap pembuluh darah jantung ibu. Terapi mirip gagal jantung biasa namun harus selektif obat aman kehamilan/laktasi." },
+            { cat: "Vaskular & Lainnya", q: "Manuver klinis apa yang akan menyebabkan murmur pada Kardiomiopati Hipertrofik (HCM) terdengar LEBIH KERAS?", a: "Berdiri dari posisi jongkok atau manuver Valsalva (karena menurunkan venous return / preload ventrikel kiri).\n\nPenjelasan Ekstra:\nPada HCM, masalahnya adalah septum otot menebal menutupi jalur keluar ventrikel (LVOT obstruction). Jika isi darah (volume/preload) ventrikel sedikit, ruangannya menciut, dan otot septum yang tebal semakin mudah saling bergesekan, memperparah sumbatan dan mengeraskan suara murmur ejeksinya. (Berbeda dari murmur lain yang malah melemah saat darah kurang)." },
+            { cat: "Vaskular & Lainnya", q: "Pasien suspect Deep Vein Thrombosis (DVT), parameter laboratorium darah apa yang sangat sensitif (high sensitivity) untuk menyingkirkan diagnosis jika hasilnya negatif?", a: "D-dimer.\n\nPenjelasan Ekstra:\nD-dimer adalah produk degradasi ikatan fibrin yang muncul ketika gumpalan darah dipecah. Jika D-dimer normal (negatif), kemungkinan adanya bekuan darah (DVT atau Emboli Paru) sangat kecil (High Negative Predictive Value). Namun jika positif, ia tak spesifik, bisa karena infeksi, kehamilan, atau trauma." },
+            
+            // --- EKG, BASIC & FARMAKOLOGI ---
+            { cat: "EKG & Basic", q: "Tanda EKG paling awal (hiperakut) yang terlihat pada fase awal oklusi total koroner, muncul sebelum terjadinya ST elevasi?", a: "Gelombang T hiperakut (Hyperacute T waves), biasanya simetris, lebar, dan tinggi.\n\nPenjelasan Ekstra:\nGelombang T hiperakut menandakan fase iskemik subendokardial akut yang terjadi pada menit-menit pertama hingga 30 menit awal sumbatan koroner. Morfologinya khas: pangkalnya melebar (berbeda dengan 'peaked T' akibat hiperkalemia yang pangkalnya sempit seperti menara) dan asimetris." },
+            { cat: "EKG & Basic", q: "Axis (sumbu) jantung normal berada di kuadran mana (-30 hingga +90 derajat), dan bagaimana melihatnya dengan cepat di lead I dan aVF?", a: "Lead I positif (R > S) dan lead aVF positif (R > S).\n\nPenjelasan Ekstra:\nVektor rata-rata depolarisasi ventrikel berjalan dari atas kanan (nodus AV) ke bawah kiri apeks. Lead I melihat dari kiri, dan aVF melihat dari bawah. Jika arus dominan menuju ke dua arah tersebut (ditandai dengan kompleks QRS dominan ke atas / positif pada keduanya), maka aksisnya berada di kuadran kiri bawah normal." },
+            { cat: "EKG & Basic", q: "Apa peran utama obat Clopidogrel (atau Ticagrelor) pasca pemasangan stent/ring koroner (PCI)?", a: "Sebagai Antiplatelet ganda (bersama Aspirin) untuk mencegah agregasi trombosit penyebab in-stent thrombosis.\n\nPenjelasan Ekstra:\nBenda asing (stent logam berlapis obat) di dalam koroner sangat memicu trombosit untuk menempel dan membentuk sumbatan bekuan darah akut. Aspirin memblok jalur Thromboxane A2, sedangkan Clopidogrel/Ticagrelor memblok reseptor P2Y12 (jalur ADP). Keduanya bekerja sinergis menjaga stent tetap paten hingga lapisan endotel tumbuh menutupinya." },
+            { cat: "EKG & Basic", q: "Sesuai guideline, berapa lama durasi standar pemberian Dual Antiplatelet Therapy (DAPT) pada pasien pasca pemasangan DES untuk kasus ACS?", a: "Umumnya 12 bulan.\n\nPenjelasan Ekstra:\nPada kasus sindrom koroner akut (ACS) yang dipasang Drug-Eluting Stent (DES), pedoman ACC/AHA merekomendasikan DAPT minimal 12 bulan (asalkan tidak ada perdarahan mayor), untuk menyeimbangkan pencegahan trombosis stent dan iskemik berulang, dibandingkan dengan risiko perdarahan." },
+            { cat: "EKG & Basic", q: "Obat antiaritmia kelas I (seperti Propafenon atau Flecainide) bekerja dengan cara memblokir kanal ion apa pada miosit jantung?", a: "Kanal Natrium (Sodium channel blockers).\n\nPenjelasan Ekstra:\nKlasifikasi Vaughan-Williams membagi antiaritmia: Kelas I memblok kanal Natrium (menekan depolarisasi fase 0), Kelas II memblok reseptor Beta-adrenergik, Kelas III memblok kanal Kalium (memperpanjang repolarisasi fase 3, ex: Amiodaron), dan Kelas IV memblok kanal Kalsium non-dihidropiridin (ex: Verapamil, Diltiazem)." },
+            { cat: "EKG & Basic", q: "Jika terjadi perdarahan masif akibat intoksikasi/overdosis obat antikoagulan Unfractionated Heparin (UFH), apa antidotum spesifiknya?", a: "Protamin Sulfat.\n\nPenjelasan Ekstra:\nHeparin adalah molekul asam kuat yang bermuatan negatif. Protamin sulfat adalah protein yang bermuatan sangat positif. Keduanya akan berikatan secara ionik membentuk garam kompleks yang stabil dan inaktif, sehingga langsung menetralkan efek antikoagulasi dari Heparin." },
+            { cat: "EKG & Basic", q: "Gelombang P yang sangat prominen, lancip, dan tinggi (P pulmonale) pada lead II (tinggi > 2.5 mm) mengindikasikan kelainan anatomi apa?", a: "Pembesaran Atrium Kanan (Right Atrial Enlargement / RAE), sering karena PPOK atau hipertensi pulmonal.\n\nPenjelasan Ekstra:\nDepolarisasi atrium normal dimulai dari kanan lalu kiri. Pada pembesaran atrium kanan (sering akibat paru kronis/pulmonale), gelombang depolarisasi kanan ini bertambah besar secara voltase, mendominasi dan menciptakan gambaran gelombang P tinggi menjulang bak gunung (> 2.5 kotak kecil) pada sadapan inferior (II, III, aVF)." },
+            { cat: "EKG & Basic", q: "Kondisi EKG dimana tinggi QRS berubah-ubah secara bergantian pada setiap beat (Aksis jantung mengayun dalam cairan). Khas pada Tamponade?", a: "Electrical Alternans.\n\nPenjelasan Ekstra:\nPada efusi perikardial masif atau tamponade, jantung ibarat 'berenang' dalam kantung air yang longgar. Pada setiap denyutnya, otot jantung berayun (swinging heart) mengubah posisinya relatif terhadap elektroda dada EKG. Hasilnya, jarak jantung ke kulit berubah-ubah, membuat amplitudo/ketinggian gelombang QRS besar-kecil secara bergantian." }
+        ];
+
+        let cards = [...originalCards];
+        let currentIndex = 0;
+        let isFlipped = false;
+        
+        // Touch Variables for Swipe (Mobile)
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let isSwiping = false;
+
+        const flashcardEl = document.getElementById('flashcard');
+        const questionEl = document.getElementById('question-text');
+        const answerEl = document.getElementById('answer-text');
+        const counterEl = document.getElementById('card-counter');
+        const categoryEl = document.getElementById('card-category');
+
+        function renderCard() {
+            // Hilangkan animasi flip jika sedang di belakang
+            if (isFlipped) {
+                flashcardEl.classList.remove('is-flipped');
+                isFlipped = false;
+                
+                // Beri sedikit jeda agar kartu balik dulu sebelum kontennya diganti
+                setTimeout(() => {
+                    updateContent();
+                }, 300);
+            } else {
+                updateContent();
+            }
+        }
+
+        function updateContent() {
+            const currentCard = cards[currentIndex];
+            questionEl.textContent = currentCard.q;
+            answerEl.innerHTML = currentCard.a.replace(/\n/g, '<br>');
+            categoryEl.textContent = currentCard.cat;
+            counterEl.textContent = `${currentIndex + 1} / ${cards.length}`;
+        }
+
+        function toggleFlip(e) {
+            // Mencegah kartu membalik jika user sebenarnya sedang mengusap (swipe)
+            if (isSwiping) return;
+            
+            isFlipped = !isFlipped;
+            flashcardEl.classList.toggle('is-flipped');
+        }
+
+        function nextCard() {
+            if (currentIndex < cards.length - 1) {
+                currentIndex++;
+                renderCard();
+            } else {
+                // Looping kembali ke awal jika sudah di akhir
+                currentIndex = 0;
+                renderCard();
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderCard();
+            }
+        }
+
+        function shuffleCards() {
+            // Algoritma Fisher-Yates untuk mengacak array
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            currentIndex = 0;
+            renderCard();
+        }
+
+        // --- Fitur Swipe untuk Mobile ---
+        flashcardEl.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            isSwiping = false;
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchmove', e => {
+            // Jika jari bergerak cukup jauh, tandai sebagai swipe bukan tap
+            const currentTouchX = e.changedTouches[0].screenX;
+            if (Math.abs(currentTouchX - touchStartX) > 15) {
+                isSwiping = true;
+            }
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+
+        function handleSwipe() {
+            const swipeThreshold = 50; // Jarak minimum usapan layar (pixel)
+            
+            if (touchEndX < touchStartX - swipeThreshold) {
+                // Swipe ke Kiri -> Soal Selanjutnya
+                nextCard();
+            } else if (touchEndX > touchStartX + swipeThreshold) {
+                // Swipe ke Kanan -> Soal Sebelumnya
+                prevCard();
+            }
+            
+            // isSwiping direset sedikit terlambat agar klik tidak tertrigger
+            setTimeout(() => {
+                isSwiping = false;
+            }, 100);
+        }
+
+        // Inisialisasi kartu pertama saat halaman dimuat
+        window.onload = renderCard;
+
+        // Dukungan navigasi menggunakan keyboard
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                e.preventDefault();
+                toggleFlip();
+            } else if (e.code === 'ArrowRight') {
+                nextCard();
+            } else if (e.code === 'ArrowLeft') {
+                prevCard();
+            }
+        });
+    </script>
+</body>
+</html>
