@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CardioMaternal SafeRx - CardiologyVault</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Custom Animations for Mobile-friendly modal */
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-slide-up {
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.2s ease-out forwards;
+        }
+        
+        /* Hide scrollbar for cleaner look on mobile but keep functionality */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 antialiased selection:bg-pink-200">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-pink-600 to-rose-800 text-white shadow-lg sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto px-4 py-5 sm:py-6">
+            <div class="flex justify-between items-start sm:items-center mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm shadow-inner">
+                        <i data-lucide="heart-pulse" class="w-7 h-7 sm:w-8 sm:h-8 text-pink-100"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-bold tracking-tight leading-tight">CardioMaternal SafeRx</h1>
+                        <p class="text-pink-100 text-xs sm:text-sm font-medium">Panduan Obat KV Kehamilan & Laktasi</p>
+                    </div>
+                </div>
+                <div class="text-right hidden sm:block">
+                    <p class="text-[10px] sm:text-xs text-pink-200 font-bold tracking-wider uppercase mb-0.5">Part of CardiologyVault</p>
+                    <p class="font-semibold text-sm">Dev: Bayushi Eka Putra, MD</p>
+                </div>
+            </div>
+
+            <!-- Mobile Dev Info -->
+            <div class="sm:hidden mb-4 pb-4 border-b border-pink-500/50">
+                <p class="text-[10px] text-pink-200 font-bold tracking-wider uppercase">Part of CardiologyVault</p>
+                <p class="font-medium text-xs">Dev: Bayushi Eka Putra, MD, FIHA</p>
+            </div>
+
+            <!-- Search & Filter Bar -->
+            <div class="flex flex-col sm:flex-row gap-3">
+                <div class="relative flex-grow">
+                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                    <input 
+                        type="text" 
+                        id="searchInput"
+                        placeholder="Cari obat (mis. Nifedipine)..." 
+                        class="w-full pl-10 pr-4 py-3 sm:py-3.5 rounded-xl border-none shadow-inner text-slate-800 focus:ring-4 focus:ring-pink-400/50 transition-all outline-none text-sm sm:text-base"
+                    >
+                </div>
+                <div class="relative min-w-[160px] sm:min-w-[200px]">
+                    <i data-lucide="filter" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                    <select 
+                        id="categoryFilter"
+                        class="w-full pl-10 pr-8 py-3 sm:py-3.5 rounded-xl border-none shadow-inner text-slate-800 focus:ring-4 focus:ring-pink-400/50 appearance-none bg-white font-medium text-sm sm:text-base cursor-pointer"
+                    >
+                        <option value="Semua">Semua Kategori</option>
+                        <option value="Hipertensi">Hipertensi</option>
+                        <option value="Aritmia">Aritmia</option>
+                        <option value="Gagal Jantung">Gagal Jantung</option>
+                        <option value="Antikoagulan">Antikoagulan</option>
+                        <option value="Antiplatelet">Antiplatelet</option>
+                        <option value="Lipid/Statin">Lipid/Statin</option>
+                        <option value="Hipertensi Pulmonal">Hipertensi Pulmonal</option>
+                        <option value="Emergensi/ICU">Emergensi/ICU</option>
+                    </select>
+                    <!-- Custom chevron for select -->
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                        <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 py-6 sm:py-8 min-h-[50vh]">
+        <div id="emptyState" class="hidden text-center py-16 sm:py-20 animate-fade-in">
+            <i data-lucide="info" class="w-12 h-12 sm:w-16 sm:h-16 text-slate-300 mx-auto mb-4"></i>
+            <h3 class="text-lg font-bold text-slate-600">Obat tidak ditemukan.</h3>
+            <p class="text-sm sm:text-base text-slate-400 mt-1">Coba kata kunci lain atau periksa ejaan.</p>
+        </div>
+
+        <div id="drugGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+            <!-- Cards will be injected here by JS -->
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-8 pb-8 pt-6">
+        <div class="max-w-3xl mx-auto px-4 text-center space-y-3">
+            <p class="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                <strong class="text-slate-700">Disclaimer:</strong> Aplikasi ini merupakan ringkasan panduan cepat (berdasarkan ESC/AHA Guidelines) dan bukan pengganti penilaian klinis. Selalu pertimbangkan kondisi individual pasien dan usia gestasi sebelum meresepkan.
+            </p>
+            <div class="inline-block bg-pink-50 px-4 py-2 rounded-full mt-4">
+                <p class="font-bold text-xs sm:text-sm text-pink-700">
+                    Part of CardiologyVault | Dev: Bayushi Eka Putra, MD, FIHA
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal Overlay -->
+    <div id="modalOverlay" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm items-end sm:items-center justify-center p-0 sm:p-6 transition-opacity duration-300 opacity-0">
+        <!-- Modal Content (Bottom sheet on mobile, centered modal on desktop) -->
+        <div id="modalContent" class="bg-white rounded-t-[2rem] sm:rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] sm:max-h-[85vh] flex flex-col transform translate-y-full sm:translate-y-0 transition-transform duration-300">
+            
+            <!-- Drag handle for mobile visual cue -->
+            <div class="w-full flex justify-center pt-3 pb-1 sm:hidden">
+                <div class="w-12 h-1.5 bg-slate-200 rounded-full"></div>
+            </div>
+
+            <!-- Modal Header -->
+            <div class="flex justify-between items-start px-6 pt-3 pb-4 sm:p-6 border-b border-slate-100 bg-slate-50/50 sm:rounded-t-3xl">
+                <div class="pr-4">
+                    <span id="modalCategory" class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-pink-600 mb-1 inline-block bg-pink-100 px-2 py-0.5 rounded-md"></span>
+                    <h2 id="modalName" class="text-xl sm:text-2xl font-bold text-slate-800 leading-tight"></h2>
+                    <p id="modalClass" class="text-sm text-slate-500 font-medium mt-0.5"></p>
+                </div>
+                <button onclick="closeModal()" class="p-2 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 rounded-full transition-colors text-slate-500 shrink-0">
+                    <i data-lucide="x" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="overflow-y-auto p-5 sm:p-6 space-y-5 sm:space-y-6 no-scrollbar pb-24 sm:pb-6">
+                
+                <!-- Pregnancy Section -->
+                <div class="space-y-2 sm:space-y-3">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="baby" class="w-5 h-5 sm:w-6 sm:h-6 text-pink-600"></i>
+                        <h3 class="text-base sm:text-lg font-bold text-slate-800">Profil Kehamilan</h3>
+                    </div>
+                    <div id="modalPregnancyBox" class="p-4 sm:p-5 rounded-2xl border-l-4">
+                        <div class="flex items-center gap-2 mb-2 flex-wrap">
+                            <span id="modalPregnancyIcon"></span>
+                            <span id="modalPregnancyLabel" class="font-bold text-sm sm:text-base"></span>
+                            <span id="modalPregnancyFda" class="ml-auto text-xs font-bold px-2 py-1 bg-white/60 rounded-md shadow-sm"></span>
+                        </div>
+                        <p id="modalPregnancyNote" class="text-sm leading-relaxed mt-2 opacity-90"></p>
+                    </div>
+                </div>
+
+                <!-- Lactation Section -->
+                <div class="space-y-2 sm:space-y-3">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="heart-pulse" class="w-5 h-5 sm:w-6 sm:h-6 text-rose-500"></i>
+                        <h3 class="text-base sm:text-lg font-bold text-slate-800">Profil Laktasi</h3>
+                    </div>
+                    <div id="modalLactationBox" class="p-4 sm:p-5 rounded-2xl border-l-4">
+                        <div class="flex items-center gap-2 mb-2 flex-wrap">
+                            <span id="modalLactationIcon"></span>
+                            <span id="modalLactationLabel" class="font-bold text-sm sm:text-base"></span>
+                            <span id="modalLactationHale" class="ml-auto text-xs font-bold px-2 py-1 bg-white/60 rounded-md shadow-sm"></span>
+                        </div>
+                        <p id="modalLactationNote" class="text-sm leading-relaxed mt-2 opacity-90"></p>
+                    </div>
+                </div>
+
+                <!-- Clinical Pearls -->
+                <div class="bg-pink-50/70 border border-pink-100 p-4 sm:p-5 rounded-2xl">
+                    <div class="flex items-center gap-2 mb-2 text-pink-800">
+                        <i data-lucide="info" class="w-5 h-5"></i>
+                        <h3 class="font-bold text-sm sm:text-base">Mutiara Klinis (Clinical Pearls)</h3>
+                    </div>
+                    <p id="modalClinicalTip" class="text-sm text-pink-900 leading-relaxed italic"></p>
+                </div>
+            </div>
+            
+            <!-- Mobile fixed close button at bottom (optional, but good for UX) -->
+            <div class="sm:hidden absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-100 pb-safe">
+                <button onclick="closeModal()" class="w-full py-3.5 bg-slate-800 text-white rounded-xl font-bold text-sm shadow-lg active:scale-[0.98] transition-transform">
+                    Tutup Panduan
+                </button>
+            </div>
+            <!-- Desktop Footer -->
+            <div class="hidden sm:flex p-6 border-t border-slate-100 bg-slate-50 justify-end rounded-b-3xl">
+                <button onclick="closeModal()" class="px-8 py-2.5 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-700 transition-colors">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        // Database Obat Terlengkap (37 Obat)
+        const drugDatabase = [
+            // HIPERTENSI
+            {
+                id: 1, name: 'Methyldopa', class: 'Antihipertensi (Alpha-2 Agonist)', category: 'Hipertensi',
+                pregnancy: { status: 'safe', fda: 'B', note: 'Obat lini pertama untuk hipertensi kronik pada kehamilan. Sangat banyak data keamanan jangka panjang pada janin.' },
+                lactation: { status: 'safe', hale: 'L2', note: 'Aman untuk menyusui. Disekresi dalam ASI dalam jumlah sangat kecil.' },
+                clinicalTip: 'Dapat menyebabkan sedasi ringan dan depresi pada ibu. Evaluasi berkala.'
+            },
+            {
+                id: 2, name: 'Labetalol', class: 'Antihipertensi (Alpha/Beta Blocker)', category: 'Hipertensi',
+                pregnancy: { status: 'safe', fda: 'C', note: 'Obat pilihan utama untuk hipertensi emergensi (IV) dan pemeliharaan (Oral) pada preeklampsia.' },
+                lactation: { status: 'safe', hale: 'L2', note: 'Aman. Kadar dalam ASI sangat rendah.' },
+                clinicalTip: 'Waspada bradikardia atau hipoglikemia neonatal jika digunakan dosis tinggi menjelang persalinan.'
+            },
+            {
+                id: 3, name: 'Nifedipine (Slow Release)', class: 'Antihipertensi (CCB)', category: 'Hipertensi',
+                pregnancy: { status: 'safe', fda: 'C', note: 'Sangat umum digunakan dan direkomendasikan untuk preeklampsia dan hipertensi gestasional.' },
+                lactation: { status: 'safe', hale: 'L2', note: 'Aman. Jumlah yang masuk ASI minimal.' },
+                clinicalTip: 'Hindari penggunaan nifedipine sublingual untuk krisis hipertensi karena risiko hipotensi maternal berat dan fetal distress.'
+            },
+            {
+                id: 4, name: 'ACE Inhibitor (Captopril/Ramipril)', class: 'ACE Inhibitor', category: 'Hipertensi',
+                pregnancy: { status: 'danger', fda: 'D', note: 'KONTRAINDIKASI. Teratogenik, terutama trimester 2 & 3. Menyebabkan toksisitas ginjal janin, oligohidramnion, dan hipoplasia kalvaria.' },
+                lactation: { status: 'caution', hale: 'L2/L3', note: 'Enalapril/Captopril relatif aman di ASI, tapi hindari pada bayi prematur/neonatus karena risiko hipotensi ginjal.' },
+                clinicalTip: 'Ganti ke Labetalol atau Nifedipine SEBELUM merencanakan kehamilan.'
+            },
+            {
+                id: 5, name: 'ARB (Valsartan/Candesartan)', class: 'Angiotensin Receptor Blocker', category: 'Hipertensi',
+                pregnancy: { status: 'danger', fda: 'D', note: 'KONTRAINDIKASI absolut sama seperti ACE Inhibitor.' },
+                lactation: { status: 'danger', hale: 'L3/L4', note: 'Tidak direkomendasikan. Data pada laktasi sangat terbatas.' },
+                clinicalTip: 'Stop segera jika pasien diketahui hamil (test pack positif).'
+            },
+            {
+                id: 17, name: 'Metoprolol / Bisoprolol', class: 'Beta-1 Selective Blocker', category: 'Hipertensi',
+                pregnancy: { status: 'caution', fda: 'C', note: 'Metoprolol adalah pilihan beta-blocker yang aman. Pilihan utama untuk rate control takikardia atau HHD.' },
+                lactation: { status: 'safe', hale: 'L2', note: 'Metoprolol sangat aman (L2). Bisoprolol relatif aman.' },
+                clinicalTip: 'Hentikan/tappering down dosis 2-3 hari sebelum persalinan elektif untuk mencegah bradikardia/hipoglikemia neonatal sementara.'
+            },
+            {
+                id: 18, name: 'Atenolol', class: 'Beta-1 Selective Blocker', category: 'Hipertensi',
+                pregnancy: { status: 'danger', fda: 'D', note: 'HINDARI PENGGUNAAN. Berkaitan kuat dengan Intrauterine Growth Restriction (IUGR) / retardasi pertumbuhan janin.' },
+                lactation: { status: 'caution', hale: 'L3', note: 'Konsentrasi dalam ASI tinggi, berisiko menyebabkan bradikardia pada bayi.' },
+                clinicalTip: 'Jika pasien datang dengan Atenolol, ganti segera ke Metoprolol atau Labetalol.'
+            },
+
+            // ARITMIA & RATE CONTROL
+            {
+                id: 6, name: 'Digoxin', class: 'Antiaritmia / Inotropik', category: 'Aritmia',
+                pregnancy: { status: 'safe', fda: 'C', note: 'Aman. Obat pilihan pertama (sering diberikan transplasental) untuk mengobati SVT pada janin.' },
+                lactation: { status: 'safe', hale: 'L2', note: 'Aman. Kadar dalam ASI sangat rendah.' },
+                clinicalTip: 'Kebutuhan dosis ibu mungkin meningkat selama kehamilan (peningkatan GFR). Lakukan Therapeutic Drug Monitoring (TDM).'
+            },
+            {
+                id: 7, name: 'Amiodarone', class: 'Antiaritmia (Kelas III)', category: 'Aritmia',
+                pregnancy: { status: 'danger', fda: 'D', note: 'HINDARI KECUALI LIFE-SAVING. Menyebabkan hipotiroidisme, goiter, dan retardasi mental pada janin akibat paparan yodium tinggi.' },
+                lactation: { status: 'danger', hale: 'L3', note: 'Dikontraindikasikan saat laktasi (toksisitas yodium, waktu paruh panjang).' },
+                clinicalTip: 'Gunakan HANYA jika aritmia maternal (VT/VF) mengancam jiwa dan refrakter terhadap DC shock/obat lain.'
+            },
+            {
+                id: 8, name: 'Adenosine', class: 'Antiaritmia', category: 'Emergensi/ICU',
+                pregnancy: { status: 'safe', fda: 'C', note: 'Sangat aman dan merupakan obat pilihan terminasi akut SVT maternal di IGD.' },
+                lactation: { status: 'safe', hale: 'L2', note: 'Sangat aman karena waktu paruh sangat singkat (<10 detik).' },
+                clinicalTip: 'Berikan bolus cepat IV dibilas NaCl 0.9%. Lakukan CTG/fetal monitoring jika memungkinkan.'
+            },
+            {
+                id: 25, name: 'Verapamil', class: 'Non-DHP CCB', category: 'Aritmia',
+                pregnancy: { status: 'caution', fda: 'C', note: 'Relatif aman (lini kedua untuk SVT setelah adenosine). Diltiazem lebih dihindari dibanding Verapamil karena studi teratogenik hewan.' },
+                lactation: { status: 'safe', hale: 'L2', note: 'Aman saat laktasi, diekskresi ke ASI dalam jumlah kecil.' },
+                clinicalTip: 'Hati-hati risiko hipotensi maternal yang bisa mengurangi aliran uteroplasenta.'
+            },
+            {
+                id: 32, name: 'Ivabradine', class: 'I(f) Channel Blocker', category: 'Aritmia',
+                pregnancy: { status: 'danger', fda: 'D', note: 'KONTRAINDIKASI. Menunjukkan toksisitas pada janin dan bradikardia fetal dalam studi hewan.' },
+                lactation: { status: 'danger', hale: 'L4', note: 'Tidak direkomendasikan. Hindari selama menyusui.' },
+                clinicalTip: 'Gunakan Beta-blocker (Metoprolol) atau Verapamil untuk rate control maternal, jangan gunakan Ivabradine.'
+            },
+
+            // ANTIKOAGULAN
+            {
+                id: 9, name: 'Enoxaparin / Fondaparinux', class: 'LMWH / Factor Xa Inhibitor', category: 'Antikoagulan',
+                pregnancy: { status: 'safe', fda: 'B', note: 'Obat pilihan utama untuk profilaksis/terapi VTE dan ACS selama kehamilan. Molekul besar, tidak menembus plasenta.' },
+                lactation: { status: 'safe', hale: 'L2', note: 'Aman. Tidak terserap di saluran cerna bayi secara oral.' },
+                clinicalTip: 'Dosis perlu disesuaikan dengan berat badan ibu seiring usia gestasi. Ganti ke UFH menjelang taksiran persalinan.'
+            },
+            {
+                id: 11, name: 'Warfarin', class: 'Vitamin K Antagonist', category: 'Antikoagulan',
+                pregnancy: { status: 'danger', fda: 'D/X', note: 'KONTRAINDIKASI di Trimester 1 (Warfarin Embryopathy: hipoplasia nasal, stippling epifisis). Kadang digunakan di TM 2 & 3 untuk ibu dengan katup jantung mekanik risiko sangat tinggi.' },
+                lactation: { status: 'safe', hale: 'L2', note: 'SANGAT AMAN untuk laktasi! Sangat terikat protein ibu, tidak diekskresi ke ASI.' },
+                clinicalTip: 'Penggunaan Warfarin pada ibu hamil dengan Katup Mekanik butuh diskusi multidisiplin (Heart Team) yang ketat untuk bridging terapi.'
+            },
+            {
+                id: 12, name: 'Rivaroxaban / Apixaban (DOAC)', class: 'Direct Oral Anticoagulant', category: 'Antikoagulan',
+                pregnancy: { status: 'danger', fda: 'C', note: 'TIDAK DIREKOMENDASIKAN. Bebas menembus plasenta. Data keselamatan janin masih sangat kurang.' },
+                lactation: { status: 'danger', hale: 'L3', note: 'Hindari. Data laktasi kurang.' },
+                clinicalTip: 'Segera switch ke LMWH jika pasien dengan terapi DOAC terdeteksi hamil.'
+            },
+
+            // ANTIPLATELET
+            {
+                id: 20, name: 'Aspirin (Dosis Rendah: 81-150 mg)', class: 'Antiplatelet', category: 'Antiplatelet',
+                pregnancy: { status: 'safe', fda: 'C/D', note: 'SANGAT DIREKOMENDASIKAN untuk profilaksis preeklampsia pada ibu risiko tinggi (mulai TM 1 akhir). Aman pada dosis rendah.' },
+                lactation: { status: 'safe', hale: 'L2', note: 'Aman pada dosis profilaksis KV. Hindari dosis analgetik tinggi.' },
+                clinicalTip: 'Efek optimal pencegahan preeklampsia didapat jika dimulai sebelum usia gestasi 16 minggu.'
+            },
+            {
+                id: 21, name: 'Clopidogrel', class: 'P2Y12 Inhibitor', category: 'Antiplatelet',
+                pregnancy: { status: 'caution', fda: 'B', note: 'Digunakan jika ada indikasi absolut (misal: ibu hamil pasca-PCI stenting baru atau ACS akut). Biasanya diberikan bersama aspirin.' },
+                lactation: { status: 'caution', hale: 'L3', note: 'Pertimbangkan manfaat vs risiko, data manusia sangat terbatas.' },
+                clinicalTip: 'Jika pasien stenting (<1 tahun) hamil, DAPT dengan Clopidogrel adalah pilihan yang paling aman dibandingkan agen P2Y12 lain.'
+            },
+            {
+                id: 22, name: 'Ticagrelor / Prasugrel', class: 'P2Y12 Inhibitor Baru', category: 'Antiplatelet',
+                pregnancy: { status: 'danger', fda: 'C', note: 'TIDAK DIREKOMENDASIKAN. Data keselamatan pada manusia sangat minim. Risiko perdarahan tinggi.' },
+                lactation: { status: 'danger', hale: 'L4', note: 'Hindari penggunaan.' },
+                clinicalTip: 'Switch ke Clopidogrel jika Dual Antiplatelet Therapy mutlak diperlukan.'
+            },
+
+            // LIPID / STATIN
+            {
+                id: 23, name: 'Statin (Atorvastatin, Rosuvastatin)', class: 'HMG-CoA Reductase Inhibitor', category: 'Lipid/Statin',
+                pregnancy: { status: 'danger', fda: 'X/C', note: 'DIHINDARI. Kolesterol esensial untuk perkembangan CNS dan sintesis steroid janin. ESC merekomendasikan penghentian statin selama kehamilan (kecuali homozigot FH ekstrem).' },
+                lactation: { status: 'danger', hale: 'L3', note: 'Kontraindikasi potensial karena gangguan biosintesis lipid pada bayi.' },
+                clinicalTip: 'Stop Statin minimal 1-2 bulan sebelum program kehamilan.'
+            },
+
+            // GAGAL JANTUNG
+            {
+                id: 13, name: 'Furosemide', class: 'Diuretik Loop', category: 'Gagal Jantung',
+                pregnancy: { status: 'caution', fda: 'C', note: 'Gunakan HANYA untuk gagal jantung akut/kongestif. Jangan gunakan untuk edema fisiologis karena menurunkan volume intravaskular dan perfusi plasenta.' },
+                lactation: { status: 'caution', hale: 'L3', note: 'Aman untuk bayi, tetapi efek diuretik kuat dapat menghentikan produksi ASI ibu secara drastis.' },
+                clinicalTip: 'Pantau ketat volume cairan ketuban (risiko oligohidramnion).'
+            },
+            {
+                id: 14, name: 'Spironolactone', class: 'MRA', category: 'Gagal Jantung',
+                pregnancy: { status: 'caution', fda: 'C', note: 'Hindari jika mungkin. Risiko teoritis efek anti-androgenik (feminisasi pada janin laki-laki) terlihat pada studi hewan.' },
+                lactation: { status: 'safe', hale: 'L2', note: 'Aman. Metabolit masuk dalam jumlah sangat kecil.' },
+                clinicalTip: 'Bukan terapi lini pertama untuk gagal jantung saat hamil. Optimalkan Beta-blocker.'
+            },
+            {
+                id: 29, name: 'Nitroglycerin / ISDN', class: 'Vasodilator / Nitrat', category: 'Gagal Jantung',
+                pregnancy: { status: 'caution', fda: 'C', note: 'Digunakan (IV/Sublingual) untuk ADHF atau iskemik maternal. Aman untuk janin secara molekuler.' },
+                lactation: { status: 'caution', hale: 'L3', note: 'Waktu paruh sangat pendek, kemungkinan aman.' },
+                clinicalTip: 'Risiko utama adalah hipotensi maternal yang menyebabkan fetal distress. Titrasi hati-hati.'
+            },
+
+            // HIPERTENSI PULMONAL (PAH)
+            {
+                id: 33, name: 'Sildenafil / Tadalafil', class: 'PDE-5 Inhibitor', category: 'Hipertensi Pulmonal',
+                pregnancy: { status: 'caution', fda: 'B', note: 'Dapat digunakan untuk manajemen PAH maternal. Telah dilaporkan memperbaiki aliran uteroplasenta tanpa teratogenisitas terbukti.' },
+                lactation: { status: 'caution', hale: 'L3', note: 'Data laktasi terbatas, perlu kewaspadaan.' },
+                clinicalTip: 'PAH pada kehamilan memiliki mortalitas sangat tinggi (>30%). Sildenafil sering jadi tulang punggung terapi.'
+            },
+            {
+                id: 34, name: 'Epoprostenol / Iloprost', class: 'Prostacyclin Analog', category: 'Hipertensi Pulmonal',
+                pregnancy: { status: 'caution', fda: 'B', note: 'Sering digunakan via infus kontinu / inhalasi untuk krisis PAH atau PAH berat pada ibu hamil.' },
+                lactation: { status: 'caution', hale: 'L3', note: 'Data minim, tapi waktu paruh sangat singkat.' },
+                clinicalTip: 'Manajemen PAH harus di pusat tersier (ICU/CVCU) dengan tim multidisiplin intensif.'
+            },
+            {
+                id: 35, name: 'Bosentan / Macitentan', class: 'Endothelin Receptor Antagonist', category: 'Hipertensi Pulmonal',
+                pregnancy: { status: 'danger', fda: 'X', note: 'KONTRAINDIKASI ABSOLUT. Sangat teratogenik pada hewan (menyebabkan anomali wajah dan organ tubuh utama).' },
+                lactation: { status: 'danger', hale: 'L4', note: 'Tidak direkomendasikan sama sekali.' },
+                clinicalTip: 'Wanita usia subur dengan Bosentan wajib menggunakan 2 metode kontrasepsi yang sangat andal.'
+            },
+
+            // EMERGENSI / ICU / SEDASI
+            {
+                id: 15, name: 'Epinephrine / Norepinephrine', class: 'Vasopresor', category: 'Emergensi/ICU',
+                pregnancy: { status: 'caution', fda: 'C', note: 'Vasokonstriksi kuat dapat menurunkan perfusi plasenta. NAMUN, mutlak digunakan jika ibu syok/henti jantung (Life-saving).' },
+                lactation: { status: 'safe', hale: 'L2', note: 'Aman. Waktu paruh singkat, hancur di saluran cerna bayi.' },
+                clinicalTip: 'Penyelamatan janin paling efektif adalah dengan memulihkan hemodinamik ibunya secepat mungkin.'
+            },
+            {
+                id: 36, name: 'Sodium Nitroprusside', class: 'Vasodilator Direk', category: 'Emergensi/ICU',
+                pregnancy: { status: 'danger', fda: 'C', note: 'HINDARI kecuali sangat terpaksa. Metabolisme obat ini menghasilkan sianida yang menumpuk dan sangat toksik bagi janin (fetal cyanide toxicity).' },
+                lactation: { status: 'danger', hale: 'L4', note: 'Risiko toksisitas sianida/tiosianat pada bayi.' },
+                clinicalTip: 'Gunakan Nitroglycerin (IV) sebagai pilihan yang jauh lebih aman untuk krisis hipertensi / ALO di ICU.'
+            },
+            {
+                id: 37, name: 'Midazolam / Propofol', class: 'Sedasi / Anestesi', category: 'Emergensi/ICU',
+                pregnancy: { status: 'caution', fda: 'D(Midazolam)/B(Propofol)', note: 'Propofol aman untuk sedasi singkat (misal Kardioversi Elektrik). Midazolam hindari di Trimester 1 (risiko cleft lip/palate) dan hindari menjelang persalinan (Floppy Infant Syndrome).' },
+                lactation: { status: 'safe', hale: 'L2/L3', note: 'Secara umum laktasi bisa dilanjutkan setelah ibu sadar penuh pasca-sedasi ringan (waktu paruh propofol cepat).' },
+                clinicalTip: 'Untuk Kardioversi DC Shock (SVT/VT ibu) yang aman, Propofol adalah pilihan sedasi/induksi yang paling direkomendasikan.'
+            }
+        ];
+
+        // Status Configurations & Styling
+        const getStatusConfig = (status) => {
+            switch(status) {
+                case 'safe': 
+                    return { 
+                        color: 'bg-green-50 text-green-800 border-green-200', 
+                        icon: '<i data-lucide="shield-check" class="w-5 h-5 text-green-600"></i>', 
+                        label: 'Aman / Direkomendasikan' 
+                    };
+                case 'caution': 
+                    return { 
+                        color: 'bg-yellow-50 text-yellow-800 border-yellow-200', 
+                        icon: '<i data-lucide="alert-triangle" class="w-5 h-5 text-yellow-600"></i>', 
+                        label: 'Hati-hati / Indikasi Khusus' 
+                    };
+                case 'danger': 
+                    return { 
+                        color: 'bg-red-50 text-red-800 border-red-200', 
+                        icon: '<i data-lucide="shield-alert" class="w-5 h-5 text-red-600"></i>', 
+                        label: 'Hindari / Kontraindikasi' 
+                    };
+                default: 
+                    return { 
+                        color: 'bg-gray-50 text-gray-800 border-gray-200', 
+                        icon: '<i data-lucide="info" class="w-5 h-5 text-gray-600"></i>', 
+                        label: 'Data Terbatas' 
+                    };
+            }
+        };
+
+        // DOM Elements
+        const searchInput = document.getElementById('searchInput');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const drugGrid = document.getElementById('drugGrid');
+        const emptyState = document.getElementById('emptyState');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalContent = document.getElementById('modalContent');
+
+        // State variables
+        let searchTerm = '';
+        let selectedCategory = 'Semua';
+
+        // Render Cards Function
+        function renderCards() {
+            // Filter logic
+            const filtered = drugDatabase.filter(drug => {
+                const matchSearch = drug.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                                    drug.class.toLowerCase().includes(searchTerm.toLowerCase());
+                const matchCat = selectedCategory === 'Semua' || drug.category === selectedCategory;
+                return matchSearch && matchCat;
+            });
+
+            // Handle empty state
+            if (filtered.length === 0) {
+                drugGrid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            // Build HTML string
+            let html = '';
+            filtered.forEach(drug => {
+                const pConfig = getStatusConfig(drug.pregnancy.status);
+                const lConfig = getStatusConfig(drug.lactation.status);
+
+                html += `
+                <div onclick="openModal(${drug.id})" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5 hover:shadow-md hover:border-pink-300 transition-all cursor-pointer group flex flex-col h-full active:scale-[0.98]">
+                    <div class="mb-4">
+                        <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-pink-600 bg-pink-50 px-2 py-1 rounded-md mb-2 inline-block">
+                            ${drug.category}
+                        </span>
+                        <h2 class="text-lg sm:text-xl font-bold text-slate-800 group-hover:text-pink-700 transition-colors leading-tight">${drug.name}</h2>
+                        <p class="text-xs sm:text-sm text-slate-500 font-medium mt-1">${drug.class}</p>
+                    </div>
+
+                    <div class="space-y-2 sm:space-y-3 mt-auto">
+                        <!-- Kehamilan Badge -->
+                        <div class="flex items-center gap-3 p-2.5 sm:p-3 rounded-xl border ${pConfig.color}">
+                            <div class="shrink-0 opacity-80 flex items-center justify-center">
+                                <i data-lucide="baby" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                            </div>
+                            <div class="flex-grow">
+                                <p class="text-[10px] sm:text-xs font-bold uppercase opacity-70">Kehamilan</p>
+                                <p class="font-bold text-xs sm:text-sm leading-none mt-0.5">${pConfig.label}</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Laktasi Badge -->
+                        <div class="flex items-center gap-3 p-2.5 sm:p-3 rounded-xl border ${lConfig.color}">
+                            <div class="shrink-0 opacity-80 flex items-center justify-center">
+                                <i data-lucide="heart-pulse" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                            </div>
+                            <div class="flex-grow">
+                                <p class="text-[10px] sm:text-xs font-bold uppercase opacity-70">Laktasi</p>
+                                <p class="font-bold text-xs sm:text-sm leading-none mt-0.5">${lConfig.label}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+            });
+
+            drugGrid.innerHTML = html;
+            // Re-initialize Lucide icons for new DOM elements
+            lucide.createIcons();
+        }
+
+        // Modal Functions
+        function openModal(id) {
+            const drug = drugDatabase.find(d => d.id === id);
+            if (!drug) return;
+
+            const pConfig = getStatusConfig(drug.pregnancy.status);
+            const lConfig = getStatusConfig(drug.lactation.status);
+
+            // Populate Modal Content
+            document.getElementById('modalCategory').innerText = drug.category;
+            document.getElementById('modalName').innerText = drug.name;
+            document.getElementById('modalClass').innerText = drug.class;
+
+            // Pregnancy details
+            document.getElementById('modalPregnancyBox').className = `p-4 sm:p-5 rounded-2xl border-l-4 ${pConfig.color.replace('border-', 'border-l-')}`;
+            document.getElementById('modalPregnancyIcon').innerHTML = pConfig.icon;
+            document.getElementById('modalPregnancyLabel').innerText = pConfig.label;
+            document.getElementById('modalPregnancyFda').innerText = `FDA: ${drug.pregnancy.fda}`;
+            document.getElementById('modalPregnancyNote').innerText = drug.pregnancy.note;
+
+            // Lactation details
+            document.getElementById('modalLactationBox').className = `p-4 sm:p-5 rounded-2xl border-l-4 ${lConfig.color.replace('border-', 'border-l-')}`;
+            document.getElementById('modalLactationIcon').innerHTML = lConfig.icon;
+            document.getElementById('modalLactationLabel').innerText = lConfig.label;
+            document.getElementById('modalLactationHale').innerText = `Hale: ${drug.lactation.hale}`;
+            document.getElementById('modalLactationNote').innerText = drug.lactation.note;
+
+            // Clinical Tips
+            document.getElementById('modalClinicalTip').innerText = `"${drug.clinicalTip}"`;
+
+            // Re-init icons inside modal just in case
+            lucide.createIcons();
+
+            // Show Modal UI logic
+            modalOverlay.classList.remove('hidden');
+            // Trigger reflow
+            void modalOverlay.offsetWidth;
+            // Add visible classes
+            modalOverlay.classList.add('flex', 'opacity-100');
+            modalOverlay.classList.remove('opacity-0');
+            
+            // Animation for inner content
+            if (window.innerWidth < 640) {
+                modalContent.classList.remove('translate-y-full');
+            } else {
+                modalContent.classList.add('scale-100');
+                modalContent.classList.remove('scale-95');
+            }
+            
+            // Prevent body scroll
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            // Animate out
+            modalOverlay.classList.remove('opacity-100');
+            modalOverlay.classList.add('opacity-0');
+            
+            if (window.innerWidth < 640) {
+                modalContent.classList.add('translate-y-full');
+            } else {
+                modalContent.classList.add('scale-95');
+                modalContent.classList.remove('scale-100');
+            }
+
+            setTimeout(() => {
+                modalOverlay.classList.add('hidden');
+                modalOverlay.classList.remove('flex');
+                document.body.style.overflow = 'auto'; // Restore body scroll
+            }, 300); // Matches Tailwind duration-300
+        }
+
+        // Event Listeners
+        searchInput.addEventListener('input', (e) => {
+            searchTerm = e.target.value;
+            renderCards();
+        });
+
+        categoryFilter.addEventListener('change', (e) => {
+            selectedCategory = e.target.value;
+            renderCards();
+        });
+
+        // Close modal when clicking on overlay background
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                closeModal();
+            }
+        });
+
+        // Initial Render
+        lucide.createIcons();
+        renderCards();
+
+    </script>
+</body>
+</html>
