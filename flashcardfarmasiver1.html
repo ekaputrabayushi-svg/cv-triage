@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard Farmasi Klinis Kardiologi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* CSS untuk efek flip 3D */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        .card-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        .is-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        /* Hide scrollbar */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Peningkatan tipografi untuk teks yang lebih panjang */
+        .answer-text {
+            line-height: 1.6;
+        }
+        .answer-text ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen font-sans flex flex-col overflow-x-hidden">
+
+    <!-- Header -->
+    <header class="bg-teal-800 text-white shadow-md p-3 md:p-4 sticky top-0 z-20">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0">
+            <div class="text-center sm:text-left">
+                <h1 class="text-lg sm:text-xl md:text-2xl font-bold flex items-center justify-center sm:justify-start gap-2">
+                    <span>⚕️</span> Farmasi Klinis Kardiologi
+                </h1>
+                <p class="text-[10px] sm:text-xs md:text-sm text-teal-200 font-medium tracking-wide">
+                    Varian 1. Part of CardiologyVault (Vignette-Based Clinical Pathway)
+                </p>
+            </div>
+            <div class="text-[10px] sm:text-xs md:text-sm font-medium bg-teal-900 px-3 py-1 rounded-full border border-teal-500 shadow-sm text-center">
+                Dev: Bayushi Eka Putra, MD, FIHA
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col items-center justify-start sm:justify-center p-4 md:p-8 max-w-4xl mx-auto w-full">
+        
+        <!-- Progress Info -->
+        <div class="w-full flex justify-between items-center mb-3 md:mb-4 text-slate-600 font-medium">
+            <span id="card-category" class="text-xs md:text-sm uppercase tracking-wider text-teal-700 font-bold bg-teal-100 px-3 py-1 rounded shadow-sm">Kategori</span>
+            <span id="card-counter" class="text-xs md:text-sm bg-white px-3 py-1 rounded-full shadow-sm font-bold border border-slate-200">1 / 50</span>
+        </div>
+
+        <!-- Flashcard Container -->
+        <div id="flashcard" class="relative w-full max-w-2xl h-[60vh] min-h-[400px] md:h-[480px] perspective-1000 cursor-pointer group mb-6 md:mb-8 touch-pan-y" onclick="toggleFlip(event)">
+            <div class="card-inner w-full h-full absolute transform-style-3d shadow-xl rounded-2xl md:rounded-3xl">
+                
+                <!-- Front (Question) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-white rounded-2xl md:rounded-3xl p-6 md:p-10 flex flex-col items-center justify-center text-center border-t-4 border-teal-600">
+                    <div class="absolute top-4 left-5 text-slate-200 font-bold text-3xl md:text-4xl">Q</div>
+                    <div class="w-full h-full flex flex-col justify-center overflow-y-auto no-scrollbar pt-8 pb-8">
+                        <p id="question-text" class="text-base sm:text-lg md:text-xl text-slate-800 font-semibold leading-relaxed md:leading-normal m-auto">
+                            Memuat pertanyaan...
+                        </p>
+                    </div>
+                    <div class="absolute bottom-4 text-xs md:text-sm text-slate-400 flex items-center gap-1 animate-pulse">
+                        <span class="hidden sm:inline">Ketuk kartu untuk melihat intervensi Farmasis</span>
+                        <span class="sm:hidden">Ketuk: Jawaban • Usap: Lanjut</span>
+                    </div>
+                </div>
+
+                <!-- Back (Answer) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-slate-50 rounded-2xl md:rounded-3xl p-6 md:p-8 flex flex-col rotate-y-180 border-t-4 border-emerald-500 shadow-inner overflow-hidden">
+                    <div class="absolute top-4 right-5 text-emerald-200 font-bold text-3xl md:text-4xl z-10 opacity-50">A</div>
+                    <div class="w-full h-full overflow-y-auto no-scrollbar pt-6 pb-2 pr-2 flex">
+                        <div id="answer-text" class="answer-text text-sm sm:text-base md:text-[15px] text-slate-800 font-medium w-full m-auto text-left">
+                            Memuat jawaban...
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="w-full max-w-2xl grid grid-cols-2 sm:flex sm:flex-row justify-center gap-3 md:gap-4 pb-8">
+            <button onclick="prevCard()" class="col-span-1 bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-sm transition-all border border-slate-200 flex justify-center items-center gap-1 active:scale-95">
+                <span>&larr;</span> <span class="hidden sm:inline">Sebelumnya</span><span class="sm:hidden">Prev</span>
+            </button>
+            <button onclick="nextCard()" class="col-span-1 bg-teal-700 hover:bg-teal-800 text-white font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-md transition-all flex justify-center items-center gap-1 active:scale-95">
+                <span class="hidden sm:inline">Selanjutnya</span><span class="sm:hidden">Next</span> <span>&rarr;</span>
+            </button>
+            <button onclick="shuffleCards()" class="col-span-2 sm:col-span-1 order-last sm:order-none bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm md:text-base py-3 md:py-4 px-4 md:px-6 rounded-xl shadow-md transition-all flex justify-center items-center active:scale-95">
+                Acak (Shuffle)
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        // Data Flashcard Farmasi Kardiologi Komprehensif (50 Soal) - Pharmacist Vignette Based
+        const originalCards = [
+            // --- BAB 1: ANTIKOAGULAN & ANTIPLATELET (10 Soal) ---
+            { 
+                cat: "Antikoagulan & Antiplatelet", 
+                q: "<strong>[Vignette]</strong> Pasien NSTEMI post-PCI diresepkan Clopidogrel 75mg. Karena ada riwayat GERD, DPJP meresepkan Omeprazole 20mg kapsul. <br><br>Apakah DRP (Drug-Related Problem) pada kasus ini dan apa intervensi farmasis?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Interaksi obat mayor. Omeprazole adalah inhibitor kuat enzim CYP2C19. Clopidogrel (prodrug) butuh CYP2C19 untuk aktif. Kombinasi ini mematikan efikasi Clopidogrel, memicu risiko <em>Stent Thrombosis</em>.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Rekomendasi <em>switch</em> (ganti) Omeprazole menjadi <strong>Pantoprazole</strong> atau <strong>Lansoprazole</strong>, yang memiliki afinitas hambatan CYP2C19 sangat minimal.<br><br>📚 <strong>Evidence:</strong> FDA Drug Safety Communication & ESC Guidelines for ACS." 
+            },
+            { 
+                cat: "Antikoagulan & Antiplatelet", 
+                q: "<strong>[Vignette]</strong> Pasien Fibrilasi Atrium (AF) dengan <em>Mechanical Heart Valve</em> (Katup Mekanik Mitral) diresepkan Rivaroxaban (DOAC) 20mg. <br><br>Sebagai apoteker yang melakukan rekonsiliasi, apa tindakan Anda?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Kontraindikasi Absolut. DOAC tidak efektif mencegah trombosis pada permukaan metalik katup buatan.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Segera <em>Hold</em> Rivaroxaban. Hubungi DPJP untuk konversi ke <em>Vitamin K Antagonist</em> (VKA) yaitu <strong>Warfarin</strong>.<br><br>🔬 <strong>Monitoring:</strong> Pantau INR dengan target ketat 2.5 - 3.5 (tergantung jenis/posisi katup mekanik).<br><br>📚 <strong>Evidence:</strong> Studi <strong>RE-ALIGN</strong> (dihentikan awal karena risiko tromboemboli/pendarahan fatal grup DOAC)." 
+            },
+            { 
+                cat: "Antikoagulan & Antiplatelet", 
+                q: "<strong>[Vignette]</strong> Pasien ACS (BB 60 kg) dengan komorbid CKD Stage 4 (CrCl 25 mL/mnt) diresepkan Injeksi Enoxaparin 60 mg Subkutan setiap 12 jam. <br><br>Apakah peresepan ini tepat?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> <em>Overdose</em>. Enoxaparin dominan dieliminasi via ginjal. Pada CrCl <30 mL/mnt, klirens obat turun drastis, memicu akumulasi dan perdarahan masif.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Rekomendasikan penyesuaian dosis terapi menjadi <strong>1 mg/kgBB setiap 24 jam</strong> (menjadi 60 mg tiap 24 jam).<br><br>🔬 <strong>Monitoring:</strong> Cek Hb/Ht berkala, pantau feses melena, dan disarankan cek <em>Anti-Factor Xa level</em> darah pada jam ke-4 pasca injeksi.<br><br>📚 <strong>Evidence:</strong> AHA/ESC Guideline (Penyesuaian LMWH pada disfungsi renal)." 
+            },
+            { 
+                cat: "Antikoagulan & Antiplatelet", 
+                q: "<strong>[Vignette]</strong> Pasien AF geriatri (81 tahun, BB 55 kg, Kreatinin Serum 1.6 mg/dL) diresepkan Apixaban 5 mg BID. <br><br>Sebagai Apoteker, parameter klinis apa yang Anda evaluasi untuk optimasi dosis?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Dosis berlebih. Pasien memenuhi 3 kriteria reduksi dosis Apixaban (Usia ≥80 th, BB ≤60 kg, Kreatinin Serum ≥1.5 mg/dL). Cukup memenuhi 2 dari 3 kriteria ini mewajibkan reduksi dosis.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Rekomendasikan penurunan dosis Apixaban menjadi <strong>2.5 mg BID (dua kali sehari)</strong> untuk meminimalkan risiko perdarahan kranial.<br><br>📚 <strong>Evidence:</strong> <em>ARISTOTLE Trial</em> dan Prescribing Information (Kriteria penyesuaian dosis spesifik Apixaban)." 
+            },
+            { 
+                cat: "Antikoagulan & Antiplatelet", 
+                q: "<strong>[Vignette]</strong> Di Cath Lab, pasien NSTEMI diresepkan injeksi Fondaparinux 2.5 mg SC. Namun dari rekam medis, diketahui CrCl pasien adalah 15 mL/menit. <br><br>Bagaimana tindak lanjut farmasis?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Kontraindikasi berat. Fondaparinux 100% diekskresikan melalui ginjal. Penggunaan pada CrCl < 20 mL/menit dilarang karena waktu paruh memanjang tak terkendali dan tidak ada antidotum spesifik.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> <em>Hold</em> pemberian obat. Rekomendasikan konversi ke <strong>Unfractionated Heparin (UFH) drip</strong> yang ekskresinya independen dari fungsi ginjal (dimetabolisme oleh sistem retikuloendotelial).<br><br>📚 <strong>Evidence:</strong> <em>OASIS-5 Trial</em> (Fondaparinux superior, tapi eksklusi gagal ginjal berat)." 
+            },
+            { 
+                cat: "Antikoagulan & Antiplatelet", 
+                q: "<strong>[Vignette]</strong> Pasien dengan riwayat <em>Ischemic Stroke</em> 2 tahun lalu masuk IGD dengan STEMI anterior. Direncanakan Primary PCI. Dokter menginstruksikan loading Prasugrel 60mg. <br><br>Apa intervensi farmasis yang <em>life-saving</em> di sini?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Kontraindikasi absolut antiplatelet. Pasien dengan riwayat TIA atau Stroke Iskemik masa lalu DILARANG menerima Prasugrel.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Segera intersep obat. Rekomendasikan penggantian <em>loading dose</em> menggunakan <strong>Ticagrelor 180 mg</strong> atau <strong>Clopidogrel 600 mg</strong>.<br><br>📚 <strong>Evidence:</strong> <em>TRITON-TIMI 38 Trial</em> membuktikan Prasugrel pada kelompok pasien stroke sangat signifikan memicu Perdarahan Intrakranial (ICH) fatal." 
+            },
+            { 
+                cat: "Antikoagulan & Antiplatelet", 
+                q: "<strong>[Vignette]</strong> Pasien STEMI yang sedang menerima UFH drip di CVCU tiba-tiba mengalami trombositopenia drastis (Platelet drop >50%) disertai trombosis vena baru. Dicurigai HIT. <br><br>Saran farmakoterapi apa yang diberikan apoteker?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> <em>Heparin-Induced Thrombocytopenia</em> (HIT) Tipe II. Reaksi imunologis mematikan.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> <br>1. STOP UFH dan <em>heparin flushes</em> segera.<br>2. Rekomendasikan inisiasi antikoagulan intravena <em>Direct Thrombin Inhibitor</em> (DTI), seperti <strong>Argatroban</strong> (jika ginjal buruk) atau <strong>Bivalirudin</strong>.<br>3. Hindari transfusi platelet kecuali ada pendarahan aktif (transfusi justru memicu bahan bakar trombosis baru pada HIT)." 
+            },
+            { 
+                cat: "Antikoagulan & Antiplatelet", 
+                q: "<strong>[Vignette]</strong> Pasien Fibrilasi Atrium yang sudah rutin minum Warfarin (INR stabil) baru saja menjalani PCI pasang stent. DPJP menulis <em>Triple Therapy</em> (Warfarin + Aspirin + Clopidogrel) selama 1 tahun. <br><br>Apa tinjauan klinis apoteker?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Durasi <em>Triple Antithrombotic Therapy</em> (TAT) terlalu panjang. Ini meningkatkan risiko perdarahan masif secara eksponensial.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Sesuai guideline modern, durasi TAT (Warfarin/DOAC + DAPT) direkomendasikan sesingkat mungkin, maksimal <strong>1 hingga 4 minggu</strong> saja. Setelah itu Aspirin dihentikan (<em>drop aspirin</em>), dan dilanjutkan dengan <em>Dual Therapy</em> (OAC + Clopidogrel) hingga 12 bulan.<br><br>📚 <strong>Evidence:</strong> <em>AUGUSTUS Trial</em> dan ESC 2020 AF Guidelines." 
+            },
+            { 
+                cat: "Antikoagulan & Antiplatelet", 
+                q: "<strong>[Vignette]</strong> Apoteker bangsal menerima keluhan dari pasien pengguna Ticagrelor yang baru diresepkan 3 hari lalu. Pasien mengeluh sering sesak napas (<em>dyspnea</em>) padahal paru-paru bersih dan SpO2 99%. <br><br>Bagaimana apoteker mengedukasi?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Efek samping spesifik (Adverse Drug Reaction) dari Ticagrelor. Obat ini menghambat <em>reuptake</em> seluler dari adenosin endogen, akumulasi adenosin di jaringan memicu sensasi sesak sentral.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> <br>1. Edukasi bahwa ini efek samping wajar (~15-20% pasien) dan seringkali <em>self-limiting</em> (mereda dalam 1-2 minggu).<br>2. Jika sesak sangat mengganggu/tidak tertahankan, komunikasikan dengan DPJP untuk de-eskalasi (<em>switch</em>) ke Clopidogrel." 
+            },
+            { 
+                cat: "Antikoagulan & Antiplatelet", 
+                q: "<strong>[Vignette]</strong> Pasien ACS di IGD yang mendapat loading dose Ticagrelor 180mg dijadwalkan operasi CABG emergensi keesokan harinya. Ahli bedah menanyakan waktu henti obat. <br><br>Berapa lama farmasis merekomendasikan *wash-out* antiplatelet ini sebelum sayatan?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Risiko perdarahan bedah mayor akibat ikatan P2Y12 inhibitor.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Berbeda dengan Clopidogrel/Prasugrel (butuh 5-7 hari karena ikatan ireversibel), Ticagrelor memiliki ikatan reversibel. Farmasis merekomendasikan penundaan bedah CABG non-emergensi selama <strong>3 hingga 5 hari</strong> pasca dosis terakhir Ticagrelor untuk meminimalkan pendarahan perioperatif.<br><br>📚 <strong>Evidence:</strong> ESC/EACTS Guidelines on Myocardial Revascularization." 
+            },
+
+            // --- BAB 2: GAGAL JANTUNG & INOTROPIK (10 Soal) ---
+            { 
+                cat: "HF & Inotropik", 
+                q: "<strong>[Vignette]</strong> Pasien HFrEF rawat jalan direkomendasikan ganti terapi dari Lisinopril 10mg ke ARNI (Sacubitril/Valsartan) 50mg BID. Pasien menebus resep siang ini. <br><br>Edukasi transisi krusial apa yang wajib diberikan apoteker?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Risiko <em>Angioedema</em> fatal akibat efek aditif akumulasi bradikinin jika ACE-I dan Neprilysin inhibitor bertemu di sirkulasi.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Berikan instruksi <em>Washout Period</em> mutlak. Pasien <strong>TIDAK BOLEH meminum ARNI selama 36 jam penuh</strong> sejak dosis terakhir Lisinopril diminum. Setelah 36 jam lewat, barulah dosis pertama ARNI boleh ditelan.<br><br>📚 <strong>Evidence:</strong> Protokol keselamatan dari <em>PARADIGM-HF Trial</em>." 
+            },
+            { 
+                cat: "HF & Inotropik", 
+                q: "<strong>[Vignette]</strong> Pasien ADHF (<em>Acute Decompensated HF</em>) dengan <em>severe gut edema</em> tidak memberikan respon diuresis yang adekuat (urin output minim) setelah diberikan tablet oral Furosemide dosis tinggi. <br><br>Apa rekomendasi klinis apoteker?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Penurunan bioavailabilitas obat. Edema pada mukosa dinding usus pasien ADHF menghalangi absorpsi oral Furosemide (bioavailabilitasnya bisa anjlok <10%).<br><br>⚕️ <strong>Intervensi Farmasis:</strong> <br>1. Rekomendasikan konversi rute pemberian menjadi <strong>Furosemide Intravena (IV)</strong> (dosis ekuivalen IV biasanya 1/2 dari dosis oral).<br>2. Alternatif oral jika rawat jalan: Ganti ke <strong>Torsemide</strong>, yang memiliki absorpsi >80% dan kebal terhadap efek blokade edema usus." 
+            },
+            { 
+                cat: "HF & Inotropik", 
+                q: "<strong>[Vignette]</strong> Pasien syok kardiogenik (BP 80/50, akral dingin basah) di CVCU baru saja dipasang infus inotropik Dobutamin. DPJP berencana meresepkan Bisoprolol hari ini. <br><br>Apa sikap apoteker yang menelaah resep?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Penggunaan obat inotropik negatif (Beta-blocker) pada fase akut dekompensasi berat / syok (profil Forrester <em>Cold & Wet</em>) adalah kontraindikasi absolut, dapat memicu kolaps hemodinamik.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> <em>Hold</em> inisiasi Bisoprolol. Sarankan DPJP untuk menunda terapi beta-blocker hingga hemodinamik pasien stabil, euvolemik (edema hilang), dan telah disapih (*weaning*) lepas sepenuhnya dari inotropik IV.<br><br>📚 <strong>Evidence:</strong> ESC Heart Failure Guidelines." 
+            },
+            { 
+                cat: "HF & Inotropik", 
+                q: "<strong>[Vignette]</strong> Dapagliflozin 10mg (SGLT2i) akan ditambahkan pada pasien gagal jantung (HFrEF) usia 65 tahun tanpa riwayat Diabetes. Pasien bingung mengapa diberi obat gula. <br><br>Edukasi indikasi & efek samping apa yang diberikan apoteker?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Kepatuhan pasien (<em>Compliance</em>) akibat kebingungan indikasi *off-label* (dulunya).<br><br>⚕️ <strong>Intervensi Farmasis:</strong> <br>1. Edukasi bahwa obat ini terbukti memperkuat pompa jantung dan membuang cairan berlebih, bukan sekadar turunkan gula darah.<br>2. <strong>Peringatan Efek Samping:</strong> Minta pasien ekstra higienis di area genital pasca BAK, karena pembuangan glukosa via urin meningkatkan risiko <strong>Infeksi Jamur Genital</strong> dan ISK.<br><br>📚 <strong>Evidence:</strong> <em>DAPA-HF Trial</em>." 
+            },
+            { 
+                cat: "HF & Inotropik", 
+                q: "<strong>[Vignette]</strong> Pasien pria 55 tahun pengguna Spironolactone 25mg mengeluhkan nyeri dan pembengkakan payudara (Ginekomastia). Pasien minta obat dihentikan selamanya. <br><br>Rekomendasi substitusi apa yang disarankan apoteker?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Efek samping anti-androgenik dari Spironolactone (terjadi pada ~10% pria) yang menurunkan kepatuhan minum obat pilar (MRA).<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Jangan hentikan terapi MRA secara total karena penting untuk <em>survival</em> HF. Rekomendasikan <em>switch</em> ke <strong>Eplerenone 25mg</strong>. Eplerenone adalah MRA generasi baru yang sangat selektif pada reseptor mineralokortikoid, tanpa afinitas terhadap reseptor androgen/progesteron, sehingga tidak memicu ginekomastia.<br><br>📚 <strong>Evidence:</strong> <em>EPHESUS / EMPHASIS-HF Trials</em>." 
+            },
+            { 
+                cat: "HF & Inotropik", 
+                q: "<strong>[Vignette]</strong> Pasien HFrEF simptomatik (LVEF 30%) dengan sinus ritme memiliki <em>Heart Rate</em> persisten 85x/menit meskipun sudah diresepkan Carvedilol 25mg BID (dosis maks toleransi, TD 100/60). <br><br>Terapi tambahan apa yang direkomendasikan?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Target <em>Heart Rate</em> (< 70x/mnt) gagal dicapai dengan Beta-blocker saja, risiko progresi gagal jantung.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Rekomendasikan penambahan obat <strong>Ivabradine</strong> (dosis awal 5mg BID). <br><em>Mekanisme:</em> Ivabradine memblokir kanal <em>funny current (If)</em> di Nodus SA, murni menurunkan nadi tanpa memiliki efek inotropik negatif atau menurunkan tekanan darah lebih lanjut.<br><br>📚 <strong>Evidence:</strong> <em>SHIFT Trial</em>." 
+            },
+            { 
+                cat: "HF & Inotropik", 
+                q: "<strong>[Vignette]</strong> Pasien HFrEF tua rutin minum Digoxin 0.25mg/hari. Ia masuk RS karena kelemahan otot. Hasil lab kalium serum 2.8 mEq/L, fungsi ginjal normal. <br><br>Risiko DRP apa yang sangat krusial dipantau apoteker?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> <strong>Hipokalemia memicu Toksisitas Digoxin.</strong> <br>Mekanisme: Kalium dan Digoxin berkompetisi untuk mengikat pompa Na+/K+-ATPase. Saat kalium rendah (akibat diuretik loop), situs ikatan pompa kosong, sehingga molekul digoxin bebas berikatan sangat kuat, memicu aritmia fatal seketika meski kadar lab digoxin darah normal.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Segera rekomendasikan koreksi <strong>KCl Intravena/Oral</strong> hingga kalium stabil > 4.0 mEq/L. Cek EKG untuk melihat perubahan *scooped ST segment*." 
+            },
+            { 
+                cat: "HF & Inotropik", 
+                q: "<strong>[Vignette]</strong> Pasien syok kardiogenik (LVEF 20%) yang selama ini rutin minum dosis tinggi Beta-blocker (Bisoprolol 10mg) tiba di IGD. Dibutuhkan obat inotropik segera. <br><br>Mana yang lebih efektif direkomendasikan: Dobutamin atau Levosimendan?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Efek inotropik Dobutamin (agonis Beta-1) akan diblokir mati-matian oleh sisa Bisoprolol yang masih terikat kuat di reseptor jantung pasien.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Rekomendasikan penggunaan infus <strong>Levosimendan</strong> (ataupun Milrinone). Levosimendan adalah <em>Calcium Sensitizer</em> yang bekerja langsung pada troponin-C miokard pada fase sistol. Kerjanya 100% independen dari reseptor adrenergik, sehingga tidak terhalangi oleh beta-blocker.<br><br>📚 <strong>Evidence:</strong> <em>SURVIVE Trial</em> sub-analisis." 
+            },
+            { 
+                cat: "HF & Inotropik", 
+                q: "<strong>[Vignette]</strong> Seorang pasien Gagal Jantung Kongestif di Poli Jantung diresepkan kombinasi obat rutinnya: Ramipril, Bisoprolol, Spironolactone, dan ternyata ada resep baru: Ibuprofen 400mg untuk nyeri lutut (Osteoarthritis). <br><br>Apa tindakan Apoteker Klinis?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Kontraindikasi NSAID pada Gagal Jantung. Ibuprofen menghambat prostaglandin, memicu vasokonstriksi arteriol aferen ginjal, menahan retensi garam/air (menggagalkan efek diuretik), dan bisa mencetuskan eksaserbasi ADHF seketika.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Cegat resep NSAID tersebut. Rekomendasikan edukasi penghentian NSAID sistemik. Untuk nyeri osteoarthritis, sarankan penggunaan obat topikal (Voltaren gel), kompres hangat, atau Acetaminophen (Paracetamol) sebagai analgesik primer lini pertama yang aman bagi jantung." 
+            },
+            { 
+                cat: "HF & Inotropik", 
+                q: "<strong>[Vignette]</strong> Pada titrasi naik (up-titration) dosis ARNI (Entresto) di ruang rawat, apoteker melihat tekanan darah asimptomatik pasien turun menjadi 95/60 mmHg, namun BUN/SCr stabil. <br><br>Apakah ARNI harus dihentikan?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Hipotensi terinduksi pengobatan (efek vasodilatasi pelepasan BNP dari penghambatan neprilysin).<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Tidak perlu dihentikan jika pasien asimptomatik (tidak pusing/pingsan). Rekomendasikan intervensi berikut kepada dokter:<br>1. Kurangi dosis diuretik loop (Furosemide) terlebih dahulu jika tidak ada kongesti cairan.<br>2. Pisahkan jadwal minum obat penurun tensi lainnya.<br>3. Perlambat laju titrasi ARNI." 
+            },
+
+            // --- BAB 3: ANTI-ARITMIA & KEGAWATDARURATAN (10 Soal) ---
+            { 
+                cat: "Anti-Aritmia & Emergensi", 
+                q: "<strong>[Vignette]</strong> Pasien Fibrilasi Atrium dengan Katup Mekanik yang stabil minum Warfarin (INR 2.5), hari ini ditambahkan Amiodaron 200mg oral karena sering SVT. <br><br>Rencana farmasis spesifik apa yang harus dieksekusi?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Interaksi farmakokinetik berat (Amiodaron menghambat enzim CYP2C9 metabolisme S-warfarin). INR akan melonjak drastis, risiko perdarahan internal fatal.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> <br>1. Secara proaktif rekomendasikan <strong>penurunan dosis rutin Warfarin sebesar 30% hingga 50%</strong> (misal dari 5mg jadi 2.5mg) pada hari pertama Amiodaron dimulai.<br>2. <strong>Monitoring:</strong> Pantau ketat lab INR setiap 3 hari selama 2 minggu pertama terapi kombinasi." 
+            },
+            { 
+                cat: "Anti-Aritmia & Emergensi", 
+                q: "<strong>[Vignette]</strong> Pasien aritmia rawat jalan menebus resep bulanan: Amiodaron 200mg dan Simvastatin 40mg. Pasien mengeluh akhir-akhir ini otot betisnya sangat kram dan nyeri. <br><br>Apa kecurigaan apoteker?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Interaksi Obat Mayor (Inhibisi CYP3A4 oleh Amiodaron terhadap Simvastatin). Akumulasi statin di darah memicu Miopati dan berpotensi menjadi <em>Rhabdomyolysis</em> (nyeri otot, urin gelap).<br><br>⚕️ <strong>Intervensi Farmasis:</strong> <br>1. Sarankan cek lab <strong>Creatine Kinase (CK)</strong> dan fungsi ginjal segera.<br>2. Rekomendasikan batas maksimal dosis Simvastatin adalah <strong>20 mg/hari</strong> jika digabung Amiodaron. Alternatif terbaik: <em>switch</em> ke Rosuvastatin (tidak lewat CYP3A4)." 
+            },
+            { 
+                cat: "Anti-Aritmia & Emergensi", 
+                q: "<strong>[Vignette]</strong> Monitor EKG di ICU menunjukkan pasien mengalami polimorfik VT yang melintir (<em>Torsades de Pointes</em>). Nadi teraba, namun pasien lemas. Di rekam medis ada injeksi Haloperidol dan Azithromycin. <br><br>Apa aksi farmasis?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> TdP akibat pemanjangan interval QT (<em>Drug-induced Long QT Syndrome</em>) dari efek aditif antibiotik makrolida dan antipsikotik.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> <br>1. Siapkan segera infus <strong>Magnesium Sulfat (MgSO4) 1-2 gram IV</strong> sebagai *first-line treatment*.<br>2. Telaah rekonsiliasi: <strong>STOP Mutiak (Hold)</strong> pemberian Haloperidol, Azithromycin, dan obat lain pembawa efek perpanjangan QT. Cek elektrolit (koreksi hipokalemia bila ada)." 
+            },
+            { 
+                cat: "Anti-Aritmia & Emergensi", 
+                q: "<strong>[Vignette]</strong> Perawat IGD meminta obat Adenosin untuk pasien SVT (HR 180x/mnt). Apoteker bertugas menyiapkan spuit obatnya. <br><br>Apa pedoman teknik injeksi spesifik yang harus disampaikan ke perawat?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Kegagalan obat mencapai jantung. Adenosin memiliki waktu paruh super pendek (< 10 detik) akibat pemecahan seluler darah merah cepat.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> <br>Instruksikan metode <strong><em>Two-syringe technique</em></strong>. Suntikkan 6mg Adenosin bolus SANGAT CEPAT (push < 2 detik) di proksimal vena (antecubital/CVC), segera disusul *flush* pendorong kilat 20 mL NaCl 0.9% dari spuit kedua, sembari lengan diangkat tinggi agar obat meluncur cepat ke nodus AV." 
+            },
+            { 
+                cat: "Anti-Aritmia & Emergensi", 
+                q: "<strong>[Vignette]</strong> Pasien dengan riwayat Infark Miokard 2 tahun lalu mengeluhkan sering berdebar (PVC). Residen merekomendasikan pemberian Flecainide oral (Anti-aritmia Kelas IC). <br><br>Apa telaah apoteker klinis?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Kontraindikasi Absolut. Agen Kelas IC sangat berbahaya pada jantung iskemik struktural.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Cegat resep tersebut. Jelaskan bahwa pemakaian Flecainide pada jaringan parut miokard pasca-infark memiliki efek <strong>Pro-aritmia letal</strong> (dapat mencetuskan VT/VF dan kematian mendadak).<br><br>📚 <strong>Evidence:</strong> Studi landmark <strong>CAST (Cardiac Arrhythmia Suppression Trial)</strong>. Amiodaron atau Beta-blocker adalah opsi yang jauh lebih aman." 
+            },
+            { 
+                cat: "Anti-Aritmia & Emergensi", 
+                q: "<strong>[Vignette]</strong> Pasien keracunan tablet Digoxin mual muntah parah, bingung, melihat warna serba kuning (<em>Xanthopsia</em>). EKG menunjukkan blok AV derajat tinggi dan hiperkalemia (K= 6.2 mEq/L). <br><br>Sebutkan antidotum definitifnya!", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Toksisitas Digoxin berat mengancam nyawa (pompa Na/K ATPase lumpuh total sehingga Kalium menumpuk di ekstraselular). Hemodialisis tidak mempan!<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Segera siapkan dan distribusikan sediaan <strong>Digoxin-specific Fab fragments</strong> (merk: DigiFab / Digibind) intravena. Antibodi ini akan mengikat digoxin di sirkulasi secara ireversibel dan dibuang lewat urin. Jangan turunkan kalium secara agresif sebelum antibodi masuk." 
+            },
+            { 
+                cat: "Anti-Aritmia & Emergensi", 
+                q: "<strong>[Vignette]</strong> Pasien Gagal Jantung Kongestif (ADHF, LVEF 25%) datang sesak napas berat dan irama Atrial Fibrilasi cepat (RVR 150x/mnt). DPJP menginstruksikan Drip Diltiazem IV. <br><br>Mengapa apoteker harus menghentikan order ini?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Eksaserbasi syok. Obat golongan Calcium Channel Blocker (CCB) Non-dihidropiridin (Diltiazem/Verapamil) memiliki efek <strong>inotropik negatif</strong> (melemahkan kekuatan pompa jantung).<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Blokir penggunaan CCB pada pasien HFrEF akut/dekompensasi. Rekomendasikan obat alternatif untuk *rate control* pada gagal jantung akut, yaitu preparat <strong>Digoxin IV</strong> atau <strong>Amiodaron IV</strong> (yang inotropik negatifnya sangat minimal)." 
+            },
+            { 
+                cat: "Anti-Aritmia & Emergensi", 
+                q: "<strong>[Vignette]</strong> Pasien diresepkan Amiodaron 200mg/hari sejak 1 tahun lalu. Saat ini datang kontrol rutin poli jantung untuk ambil obat di instalasi farmasi. <br><br>Sesuai SOP Pharmacist, panel lab apa saja yang harus dicek?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Toksisitas akumulasi organ kronis jangka panjang Amiodaron (waktu paruhnya sangat lambat: ~50 hari).<br><br>⚕️ <strong>Intervensi Farmasis (Monitoring Rutin per 6-12 bulan):</strong><br>1. <strong>Fungsi Tiroid:</strong> Panel TSH & Free T4 (risiko hipo/hipertiroid).<br>2. <strong>Fungsi Paru:</strong> Rontgen Thorax / PFT (risiko pneumonitis interstitial / fibrosis).<br>3. <strong>Fungsi Hati:</strong> SGOT/SGPT.<br>4. <strong>Mata:</strong> Rujuk Slit-lamp untuk melihat <em>corneal microdeposits</em> atau neuropati optik." 
+            },
+            { 
+                cat: "Anti-Aritmia & Emergensi", 
+                q: "<strong>[Vignette]</strong> Code Blue. Pasien mengalami bradikardia ekstrem simptomatik (HR 35x/mnt, BP 70/40, akral dingin). Troli emergensi dibuka, dokter minta Atropin disiapkan. <br><br>Berapa dosis pasti berdasarkan ACLS 2020?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Risiko kesalahan dosis *underdosing* bradikardia.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Berikan sediaan <strong>Atropin Sulfat Injeksi 1.0 mg bolus IV</strong>. <br>(Bukan 0.5 mg seperti panduan lama!). Sampaikan ke dokter bahwa dosis dapat diulang per 3-5 menit hingga mencapai batas dosis kumulatif maksimal <strong>3.0 mg</strong>. Bila tidak mempan, siapkan drip Epinefrin/Dopamin atau alat *Transcutaneous Pacing*." 
+            },
+            { 
+                cat: "Anti-Aritmia & Emergensi", 
+                q: "<strong>[Vignette]</strong> Pasien diputuskan akan memulai terapi Sotalol oral. Dokter meminta obat tersebut untuk dibawa pulang rawat jalan (outpatient). <br><br>Apakah protokol farmasi rumah sakit mengizinkannya?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Risiko Pro-aritmia fatal (<em>Torsades de Pointes</em>) pada awal terapi obat anti-aritmia Kelas III.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Tidak diizinkan <em>outpatient</em>. Sotalol WAJIB diinisiasi di ruang rawat inap (*in-patient setting*) selama <strong>minimal 3 hari (atau 5 kali dosis)</strong> dengan fasilitas pemantauan EKG kontinu dan fasilitas resusitasi. <br><strong>Monitoring:</strong> Perhitungan cermat interval QTc (diberhentikan jika QTc memanjang > 500 ms) dan kadar elektrolit (K, Mg)." 
+            },
+
+            // --- BAB 4: HIPERTENSI, LIPID & VASKULAR (10 Soal) ---
+            { 
+                cat: "Hipertensi & Vaskular", 
+                q: "<strong>[Vignette]</strong> Pasien lansia paska serangan jantung (NSTEMI) akan pulang (discharge). Lab Kolesterol total 150 mg/dL, LDL awal 90 mg/dL. Dokter meresepkan Simvastatin 10 mg. <br><br>Apa rekomendasi klinis apoteker?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> *Underdosing* prevensi sekunder. Pasien ACS pasca infark WAJIB mendapat Statin Intensitas Tinggi tanpa peduli baseline LDL-nya rendah.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Rekomendasi <em>switch</em> (eskalasi) resep ke <strong>Atorvastatin 40-80 mg</strong> atau <strong>Rosuvastatin 20-40 mg</strong>. <br><strong>Monitoring:</strong> Target pencapaian akhir LDL-C harus sangat agresif yaitu <strong>< 55 mg/dL</strong> (berdasarkan ESC Guideline 2019)." 
+            },
+            { 
+                cat: "Hipertensi & Vaskular", 
+                q: "<strong>[Vignette]</strong> Pasien dislipidemia diresepkan Atorvastatin 20mg malam hari. Karena trigliserida sangat tinggi (500 mg/dL), hari ini ditambahkan kapsul Gemfibrozil 600mg BID. <br><br>Apa tindakan Apoteker mengidentifikasi resep ini?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Interaksi Obat Berbahaya (Major Interaction). Gemfibrozil menghambat enzim glukuronidasi (OATP1B1), menutup jalur ekskresi statin. Kadar atorvastatin di darah akan melonjak tajam, memicu kerusakan otot dan <strong>Rhabdomyolysis akut</strong>.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Cegat resep Gemfibrozil. Jika terapi kombinasi fibrat tetap diperlukan, rekomendasikan penggunaan <strong>Fenofibrate</strong> yang tidak menghambat metabolisme statin sedrastis gemfibrozil." 
+            },
+            { 
+                cat: "Hipertensi & Vaskular", 
+                q: "<strong>[Vignette]</strong> Pasien poli rutin mengeluh batuk kering tanpa henti sejak mengonsumsi Ramipril 1 bulan lalu. Tidak ada demam, paru bersih. <br><br>Apa edukasi dan solusi dari apoteker?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Batuk kering persisten akibat akumulasi Bradikinin dan Substansi P di saluran napas (efek farmakodinamik enzim penghambat kininase II / ACE). Obat batuk antitusif biasa tidak akan mempan.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> <br>1. Edukasi pasien untuk menghentikan Ramipril (setelah konsultasi dokter). Batuk akan mereda dalam 1-4 minggu paska stop.<br>2. Rekomendasikan konversi obat antihipertensi ke golongan <strong>ARB (misal Valsartan/Candesartan)</strong> yang tidak mengganggu pemecahan bradikinin." 
+            },
+            { 
+                cat: "Hipertensi & Vaskular", 
+                q: "<strong>[Vignette]</strong> Pasien stroke iskemik akut di ICU mengalami Hipertensi Emergensi (TD 230/120 mmHg). DPJP meminta sediaan Nicardipine drip disiapkan. <br><br>Berapa target MAP/TD aman dalam 24 jam pertama yang perlu dipantau apoteker?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Bahaya penurunan tekanan darah terlalu cepat. Iskemia otak butuh perfusi kompensasi. Menurunkan tensi mendadak ke arah 'normal' (120/80) akan memicu perluasan area mati infark stroke (<em>ischemic penumbra death</em>).<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Ingatkan perawat untuk titrasi *drip* sangat perlahan. Target penurunan tekanan darah pada fase akut (kecuali akan ditrombolisis) <strong>maksimal hanya 15% dari baseline pada 24 jam pertama</strong>. Jangan diturunkan drastis!" 
+            },
+            { 
+                cat: "Hipertensi & Vaskular", 
+                q: "<strong>[Vignette]</strong> Pasien wanita hamil 30 minggu masuk IGD PONEK dengan Preeklamsia (TD 180/110 mmHg). Suaminya membawa Captopril rutin dari rumah, meminta perawat memberikannya. <br><br>Bagaimana respon cepat apoteker?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Kontraindikasi Mutlak (Kategori Teratogenik D/X). Semua golongan ACE-I dan ARB dilarang pada kehamilan karena memicu gagal ginjal janin, oligohidramnion, displasia tulang/paru, dan kematian neonatal.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Segera amankan Captopril. Rekomendasikan pilihan obat antihipertensi yang terbukti aman bagi janin, seperti <strong>Methyldopa, Nifedipine (Long-acting), atau Labetalol intravena</strong>." 
+            },
+            { 
+                cat: "Hipertensi & Vaskular", 
+                q: "<strong>[Vignette]</strong> Pasien Gagal Ginjal (CKD) dipasangi *drip infus* Sodium Nitroprusside (SNP) selama 3 hari berturut-turut untuk kontrol tensinya yang membandel. <br><br>Risiko akumulasi fatal apa yang mengancam pasien ini?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Akumulasi Toksisitas Tiosianat dan Sianida. Obat SNP mengandung struktur 5 ion sianida. Pada gagal ginjal (gangguan ekskresi) dan durasi panjang >48 jam, metabolisme pembuangannya gagal.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> <br>1. Batasi penggunaan maksimal 48-72 jam, terutama pasien CKD.<br>2. <strong>Monitoring Ekstra:</strong> Pantau gas darah adanya <em>Asidosis laktat</em>, tanda disorientasi, atau napas berbau <em>bitter almond</em>. <br>3. Siapkan antidotum Sodium Tiosulfat jika perlu." 
+            },
+            { 
+                cat: "Hipertensi & Vaskular", 
+                q: "<strong>[Vignette]</strong> Pasien datang ke IGD dengan krisis hipertensi (TD 210/110 mmHg), tremor berkeringat dingin, dan berdebar. Di riwayat resep, pasien kehabisan obat Clonidine (Catapres) sejak 3 hari lalu. <br><br>Apa fenomena yang terjadi?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> <strong>Rebound Hypertension (Sindrom Putus Obat).</strong> Clonidine (alfa-2 agonis sentral) menekan sistem saraf simpatis terus-menerus. Jika distop tiba-tiba (*abrupt withdrawal*), terjadi tumpahan katekolamin masif yang meledakkan tekanan darah bak krisis feokromositoma.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Obat ini tidak boleh distop tiba-tiba, harus <em>tapering off</em> bertahap 1-2 minggu. Tatalaksana IGD meliputi pemberian kembali Clonidine dosis inisial, atau terapi penghambat alfa/beta kerja cepat." 
+            },
+            { 
+                cat: "Hipertensi & Vaskular", 
+                q: "<strong>[Vignette]</strong> Dokter berencana menambahkan tablet Ezetimibe 10mg pada pasien hiperlipidemia yang sudah minum statin maksimal namun target LDL belum tercapai. <br><br>Apoteker mengedukasi pasien, obat ini bekerja di mana secara spesifik?", 
+                a: "⚕️ <strong>Edukasi Farmakologis Farmasis:</strong><br>Berbeda dengan Statin yang menekan pabrik kolesterol di hati, <strong>Ezetimibe bekerja di saluran usus halus (brush border)</strong>.<br><br>Ia secara selektif memblokir *transporter protein* khusus bernama <strong>NPC1L1 (Niemann-Pick C1-Like 1)</strong>. Akibatnya, usus tidak bisa menyerap kolesterol dari makanan (diet) atau cairan empedu (bilier). Usus kosong kolesterol, sehingga hati terpaksa mengambil cadangan LDL di darah, menurunkan kadar LDL sirkulasi." 
+            },
+            { 
+                cat: "Hipertensi & Vaskular", 
+                q: "<strong>[Vignette]</strong> Rumah sakit baru saja mengadakan obat Evolocumab (PCSK9 Inhibitor) untuk Dislipidemia familial. Pasien akan membawa pulang persediaan untuk sebulan. <br><br>Standar edukasi esensial apa dari apoteker terkait penyimpanan dan jadwalnya?", 
+                a: "⚕️ <strong>Intervensi & Edukasi Farmasis:</strong><br>1. <strong>Bentuk & Jadwal:</strong> Ini adalah sediaan pen injeksi <strong>Subkutan (SC)</strong>, bukan tablet. Digunakan mandiri <strong>setiap 2 minggu sekali (biweekly)</strong> atau 4 minggu sekali.<br>2. <strong>Cold Chain Storage:</strong> Sebagai antibodi monoklonal biologis, pena WAJIB disimpan di kulkas (suhu 2°C - 8°C). Dilarang membeku. Boleh di suhu ruang maksimal 30 hari, jauhkan dari sinar matahari. Hangatkan pen di suhu ruang 30 mnt sebelum suntik agar tak nyeri." 
+            },
+            { 
+                cat: "Hipertensi & Vaskular", 
+                q: "<strong>[Vignette]</strong> Pasien dengan <em>Resistant Hypertension</em> (membutuhkan 4 macam obat antihipertensi) diresepkan Spironolactone 25mg. <br><br>Bagaimana rasionalisasi panduan klinis dari apoteker atas tambahan obat diuretik hemat kalium ini?", 
+                a: "⚕️ <strong>Evaluasi Farmasis (Evidence-Based):</strong><br>Berdasarkan uji klinis <strong>PATHWAY-2</strong>, Spironolactone merupakan obat <strong>Lini Keempat (Step 4)</strong> yang paling superior dan <em>evidence-based</em> untuk menaklukkan Hipertensi Resisten (pasien yang sudah menggunakan kombinasi A+C+D: ACE-I/ARB + CCB + Thiazide tapi TD > 140/90).<br><br><strong>Monitoring:</strong> Farmasis wajib memeriksa kadar fungsi ginjal (eGFR >45) dan Kalium serum (<4.5 mEq/L) sebelum penyaluran, untuk menghindari hiperkalemia." 
+            },
+
+            // --- BAB 5: IV ADMIXTURE, TDM & PATIENT SAFETY (10 Soal) ---
+            { 
+                cat: "TDM & IV Admixture", 
+                q: "<strong>[Vignette]</strong> Apoteker di ruang IV Admixture Farmasi IGD diminta meracik *loading dose* injeksi Phenytoin IV. Ada stok pelarut NaCl 0.9%, Dextrose 5%, dan Ringer Laktat. <br><br>Pelarut mana yang digunakan dan mengapa?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Inkompatibilitas presipitasi obat fatal.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Phenytoin HANYA boleh diencerkan dengan pelarut <strong>Normal Saline murni (NaCl 0.9%)</strong>.<br><br><em>Mekanisme:</em> Phenytoin ampul bersuasana sangat basa (pH 12). Jika dicampur pelarut asam seperti D5W atau RL, kelarutannya runtuh dan langsung memisah membentuk <strong>presipitasi kristal putih seketika</strong> di selang infus/spuit. Wajib gunakan *filter in-line*, laju *push* maksimal 50 mg/menit." 
+            },
+            { 
+                cat: "TDM & IV Admixture", 
+                q: "<strong>[Vignette]</strong> Di CVCU, pasien SVT butuh rumatan drip infus Amiodaron kontinyu > 2 jam. Dokter meminta dilarutkan ke kantong NaCl 0.9%. <br><br>Apa intervensi khusus apoteker?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Inkompatibilitas farmasetik pada durasi infus panjang Amiodaron.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Drip pemeliharaan lambat (> 2 jam) Amiodaron mensyaratkan pelarut <strong>HANYA Dextrose 5% (D5W)</strong>. Dalam NaCl, amiodaron cenderung membentuk kristal/endapan dalam beberapa jam. Selain itu, kantong/selang PVC bisa membuat obat menempel, dan apoteker merekomendasikan penggunaan <em>polyolefin/glass bag</em> serta *filter in-line 0.22 mikron*." 
+            },
+            { 
+                cat: "TDM & IV Admixture", 
+                q: "<strong>[Vignette]</strong> Dokter meresepkan *drip* Nitroglycerin (NTG) IV pada pasien ACS. Apoteker merekomendasikan penggunaan botol kaca (Glass bottle) atau selang khusus berbahan Polyethylene (Non-PVC). <br><br>Apa rasionalisasinya?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Hilangnya molekul obat secara pasif sebelum masuk ke sirkulasi pasien (adsorpsi material).<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Molekul obat NTG sangat lipofilik dan mudah mengalami proses <strong>Sorption / Adsorpsi (menempel erat)</strong> pada polimer plastik PVC biasa. Jika pakai kantong PVC reguler RS, sekitar 40-80% kandungan obat akan raib menempel pada dinding selang. Dosis terapi yang presisi gagal dicapai tanpa wadah Non-PVC/Kaca." 
+            },
+            { 
+                cat: "TDM & IV Admixture", 
+                q: "<strong>[Vignette]</strong> Di IGD, jarum infus perifer pasien syok terlepas/bocor (*ekstravasasi*) saat infus vasopresor Norepinefrin berjalan deras. Tangan bengkak, iskemik pucat dan dingin. <br><br>Apa obat penyelamat (*rescue*) lokal yang disiapkan apoteker?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Ekstravasasi agen vasokonstriktor vesikan sangat kuat yang memicu nekrosis jaringan perifer (amputasi).<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Segera siapkan sediaan <strong>Phentolamine (Fentolamin)</strong> 5-10 mg yang diencerkan salin untuk Injeksi Subkutan Lokal Infiltrasi.<br>Phentolamine memblokir reseptor alfa di area bocoran, memecahkan vasokonstriksi kejang, dan memulihkan perfusi jaringan tangan kembali merah merona." 
+            },
+            { 
+                cat: "TDM & IV Admixture", 
+                q: "<strong>[Vignette]</strong> Pasien bangsal HCU mengalami hipokalemia (K: 2.5 mEq/L). Residen meminta flakon KCl 7.46% (25ml) disuntikkan secara bolus langsung ke Vena (*Direct Push*). <br><br>Apa standar prosedur RS yang menolak instruksi ini?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> <em>Medication Error</em> kategori *Sentinel Event* (Penyebab Kematian Langsung). Bolus KCl memicu *ventricular fibrillation* & asystole dalam hitungan detik.<br><br>⚕️ <strong>Intervensi Farmasis (SOP Keselamatan):</strong><br>1. KCl <strong>MUTLAK WAJIB DIENCERKAN</strong> dalam *base solution* (min. 500 mL NaCl 0.9%).<br>2. Laju infus lewat vena perifer MAKSIMAL <strong>10 mEq/jam</strong>, dengan batas konsentrasi 40 mEq/Liter untuk mencegah phlebitis terbakar vena." 
+            },
+            { 
+                cat: "TDM & IV Admixture", 
+                q: "<strong>[Vignette]</strong> Apoteker meracik infus Sodium Nitroprusside (SNP) untuk krisis hipertensi. Kantong infus dibalut erat dengan plastik hitam legam (aluminium foil). <br><br>Apa alasan fundamental secara farmakokimia?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Degradasi fotokimia cepat yang menghancurkan efikasi obat dan mempercepat terbentuknya racun.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Larutan obat SNP sangat ekstrem <strong>sensitif terhadap radiasi cahaya (Fotosensitif)</strong>. Paparan sinar ultraviolet lampu/matahari akan menghancurkan struktur molekuler (terlihat berubah warna dari bening coklat ke biru tua) dan memicu terlepasnya radikal ion Sianida (*Cyanide*) racun secara spontan ke dalam kantong cairan infus." 
+            },
+            { 
+                cat: "TDM & IV Admixture", 
+                q: "<strong>[Vignette]</strong> Proses Rekonsiliasi Obat saat Admisi. Pasien MRS karena infeksi paru. Di daftar obat rumah, pasien mengaku rutin minum pil anti-koagulan Warfarin untuk katup buatan sejak lama. <br><br>Apa *action plan* Pharmacist?", 
+                a: "⚕️ <strong>Intervensi Farmasis (Medication Reconciliation):</strong><br>1. Cegah terjadinya <strong><em>Omission</em> (Lupa diresepkan)</strong> dengan memasukkan resep Warfarin ke dokter bangsal agar katup mekanik tidak thrombosis mendadak.<br>2. Wawancara pasien untuk riwayat INR terakhir.<br>3. <strong>Skrining DRP:</strong> Evaluasi antibiotik infeksi paru yang baru diresepkan (mis. Makrolida / Levofloxacin / Kotrimoksazol) yang seringkali menginhibisi pembuangan Warfarin dan memicu lonjakan INR perdarahan. Lakukan penyesuaian dosis." 
+            },
+            { 
+                cat: "TDM & IV Admixture", 
+                q: "<strong>[Vignette]</strong> Pasien dengan Fibrilasi Atrium terdiagnosis Tuberkulosis aktif dan mulai konsumsi OAT kombinasi dengan Rifampisin. Obat stroke rutinnya adalah Rivaroxaban (DOAC). <br><br>Bagaimana telaah klinis apoteker?", 
+                a: "⚠️ <strong>Identifikasi DRP:</strong> Interaksi Obat Mayor. <strong>Rifampisin adalah induktor sangat kuat (Pan-inducer)</strong> untuk enzim CYP3A4 dan pompa efluks <em>P-glycoprotein</em> (P-gp). <br><br>⚕️ <strong>Intervensi Farmasis:</strong> Rifampisin akan membuang Rivaroxaban dari darah sangat cepat. Kadar DOAC anjlok, khasiat anti-strok hilang. Farmasis wajib merekomendasikan penggunaan alternatif OAT (mis. Rifabutin) ATAU mengalihkan antikoagulan DOAC menjadi <strong>Warfarin</strong> (yang bisa dipantau titrasi INR-nya secara pasti)." 
+            },
+            { 
+                cat: "TDM & IV Admixture", 
+                q: "<strong>[Vignette]</strong> Pasien katup jantung palsu (Mechanical Valve) akan cabut gigi geraham. Sebagai apoteker poliklinik, protokol terapi jembatan (<em>Bridging therapy</em>) dan pencegahan apa yang Anda siapkan?", 
+                a: "⚕️ <strong>Intervensi Farmasis Multidisiplin:</strong><br>1. <strong>Tatalaksana Bridging VKA:</strong> Warfarin di-stop 3-5 hari sebelum operasi, ditutupi sementara dengan suntikan LMWH (Enoxaparin) terapetik (dihentikan 24 jam sebelum insisi gigi). Warfarin dilanjut malam post-op.<br>2. <strong>Profilaksis Endokarditis Infektif (IE):</strong> Siapkan peresepan antibiotik profilaksis tunggal, yaitu <strong>Amoxicillin Oral 2 Gram</strong>, wajib diminum 30-60 menit sebelum alat gigi menembus gusi (AHA/ACC Guideline IE)." 
+            },
+            { 
+                cat: "TDM & IV Admixture", 
+                q: "<strong>[Vignette]</strong> Dokter meresepkan Losartan untuk gagal jantung, tapi gudang Farmasi RS hanya menyetok Candesartan dan Valsartan karena penyesuaian Formularium RS/JKN e-Katalog. <br><br>Bagaimana kebijakan substitusi apoteker?", 
+                a: "⚕️ <strong>Intervensi Farmasis (Manajemen & Regulasi):</strong><br>Apoteker berhak melakukan <strong>Substitusi Terapeutik (Therapeutic Interchange)</strong> sesuai payung hukum Kebijakan Komite Farmasi & Terapi (KFT) dan SOP RS.<br><br>1. Komunikasikan ke DPJP bahwa Losartan *out of formulary*.<br>2. Konversi mandiri berdasarkan rasio ekipotensi kelas ARB (misalnya konversi dosis ekuivalen ke Candesartan 8mg/16mg atau Valsartan 80mg).<br>3. Pastikan kelancaran terapi JKN BPJS tidak tersendat tanpa mengurangi kaidah indikasi *evidence-based* kardiovaskular." 
+            }
+        ];
+
+        let cards = [...originalCards];
+        let currentIndex = 0;
+        let isFlipped = false;
+        
+        // Touch Variables for Swipe (Mobile)
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let isSwiping = false;
+
+        const flashcardEl = document.getElementById('flashcard');
+        const questionEl = document.getElementById('question-text');
+        const answerEl = document.getElementById('answer-text');
+        const counterEl = document.getElementById('card-counter');
+        const categoryEl = document.getElementById('card-category');
+
+        function renderCard() {
+            if (isFlipped) {
+                flashcardEl.classList.remove('is-flipped');
+                isFlipped = false;
+                setTimeout(() => {
+                    updateContent();
+                }, 300);
+            } else {
+                updateContent();
+            }
+        }
+
+        function updateContent() {
+            const currentCard = cards[currentIndex];
+            questionEl.innerHTML = currentCard.q;
+            answerEl.innerHTML = currentCard.a;
+            categoryEl.textContent = currentCard.cat;
+            counterEl.textContent = `${currentIndex + 1} / ${cards.length}`;
+            
+            // Scroll answer to top whenever card changes
+            document.querySelector('#answer-text').parentElement.parentElement.scrollTop = 0;
+        }
+
+        function toggleFlip(e) {
+            // Prevent flip if the user is swiping or selecting text
+            if (isSwiping) return;
+            const selection = window.getSelection();
+            if (selection.toString().length > 0) return;
+            
+            isFlipped = !isFlipped;
+            flashcardEl.classList.toggle('is-flipped');
+        }
+
+        function nextCard() {
+            if (currentIndex < cards.length - 1) {
+                currentIndex++;
+                renderCard();
+            } else {
+                currentIndex = 0;
+                renderCard();
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderCard();
+            } else {
+                currentIndex = cards.length - 1; // loop to back
+                renderCard();
+            }
+        }
+
+        function shuffleCards() {
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            currentIndex = 0;
+            renderCard();
+        }
+
+        // --- Fitur Swipe untuk Mobile ---
+        flashcardEl.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            isSwiping = false;
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchmove', e => {
+            const currentTouchX = e.changedTouches[0].screenX;
+            // Deteksi threshold geseran untuk membedakan tap vs swipe
+            if (Math.abs(currentTouchX - touchStartX) > 15) {
+                isSwiping = true;
+            }
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+
+        function handleSwipe() {
+            const swipeThreshold = 50; 
+            if (touchEndX < touchStartX - swipeThreshold) {
+                nextCard();
+            } else if (touchEndX > touchStartX + swipeThreshold) {
+                prevCard();
+            }
+            setTimeout(() => {
+                isSwiping = false;
+            }, 100);
+        }
+
+        window.onload = renderCard;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                e.preventDefault(); // Mencegah scrolling bawah jika spasi ditekan
+                toggleFlip();
+            } else if (e.code === 'ArrowRight') {
+                nextCard();
+            } else if (e.code === 'ArrowLeft') {
+                prevCard();
+            }
+        });
+    </script>
+</body>
+</html>
