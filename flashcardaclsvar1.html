@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlashCard ACLS AHA 2025</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* CSS untuk efek flip 3D */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        .card-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        .is-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        /* Hide scrollbar */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-red-800 via-purple-900 to-blue-900 min-h-screen font-sans flex flex-col overflow-x-hidden text-slate-100">
+
+    <!-- Header -->
+    <header class="bg-black/30 backdrop-blur-md shadow-lg p-3 md:p-4 sticky top-0 z-20 border-b border-white/10">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0">
+            <div class="text-center sm:text-left">
+                <h1 class="text-lg sm:text-xl md:text-2xl font-bold flex items-center justify-center sm:justify-start gap-2 text-white">
+                    <span>⚡</span> FlashCard ACLS AHA 2025
+                </h1>
+                <p class="text-[10px] sm:text-xs md:text-sm text-purple-200 font-medium tracking-wide">
+                    Persiapan Ujian ACLS Varian 1 | Part of CardiologyVault
+                </p>
+            </div>
+            <div class="text-[10px] sm:text-xs md:text-sm font-medium bg-white/10 px-3 py-1 rounded-full border border-white/20 shadow-sm text-center text-white backdrop-blur">
+                Dev: Bayushi Eka Putra, MD, FIHA
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col items-center justify-start sm:justify-center p-4 md:p-8 max-w-4xl mx-auto w-full">
+        
+        <!-- Progress Info -->
+        <div class="w-full flex justify-between items-center mb-3 md:mb-4 font-medium">
+            <span id="card-category" class="text-xs md:text-sm uppercase tracking-wider text-white font-bold bg-white/20 px-3 py-1 rounded-lg shadow-sm border border-white/10 backdrop-blur">Kategori</span>
+            <span id="card-counter" class="text-xs md:text-sm bg-white/10 px-4 py-1 rounded-full shadow-sm font-bold border border-white/20 text-white backdrop-blur">1 / 50</span>
+    </div>
+
+    <!-- Flashcard Container (Ukuran Diperkecil) -->
+    <div id="flashcard" class="relative w-full max-w-2xl h-[45vh] min-h-[340px] md:min-h-[380px] md:h-[400px] perspective-1000 cursor-pointer group mb-6 md:mb-8 touch-pan-y" onclick="toggleFlip(event)">
+        <div class="card-inner w-full h-full absolute transform-style-3d shadow-2xl rounded-2xl md:rounded-3xl">
+            
+            <!-- Front (Question) -->
+            <div class="absolute inset-0 w-full h-full backface-hidden bg-slate-50 rounded-2xl md:rounded-3xl p-5 md:p-6 flex flex-col items-center text-center border-t-8 border-red-500">
+                <div class="absolute top-4 left-5 text-slate-300 font-black text-3xl md:text-4xl opacity-50">Q</div>
+                <div class="w-full h-full flex flex-col justify-start md:justify-center overflow-y-auto no-scrollbar pt-10 pb-6">
+                    <p id="question-text" class="text-sm sm:text-base md:text-lg text-slate-800 font-semibold leading-relaxed md:leading-normal m-auto text-left w-full">
+                        Memuat pertanyaan...
+                    </p>
+                </div>
+                <div class="absolute bottom-4 text-xs md:text-sm text-slate-400 flex items-center gap-1 animate-pulse bg-slate-200/50 px-3 py-1 rounded-full">
+                    <span class="hidden sm:inline">Ketuk kartu untuk melihat jawaban & pembahasan</span>
+                    <span class="sm:hidden">Ketuk untuk jawaban • Usap untuk lanjut</span>
+                </div>
+            </div>
+
+            <!-- Back (Answer) -->
+            <div class="absolute inset-0 w-full h-full backface-hidden bg-white rounded-2xl md:rounded-3xl p-5 md:p-6 flex flex-col items-center text-left rotate-y-180 border-t-8 border-blue-600 shadow-inner">
+                <div class="absolute top-4 left-5 text-blue-100 font-black text-3xl md:text-4xl">A</div>
+                <div class="w-full h-full flex flex-col justify-start overflow-y-auto no-scrollbar pt-10 pb-4">
+                    <div id="answer-text" class="text-xs sm:text-sm md:text-base text-slate-700 leading-relaxed w-full text-justify pr-2">
+                        Memuat penjelasan mendalam...
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Controls -->
+        <div class="w-full max-w-2xl grid grid-cols-2 sm:flex sm:flex-row justify-center gap-3 md:gap-4 pb-8">
+            <button onclick="prevCard()" class="col-span-1 bg-white/10 hover:bg-white/20 text-white font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-lg transition-all border border-white/20 flex justify-center items-center gap-1 backdrop-blur active:scale-95">
+                <span>&larr;</span> <span class="hidden sm:inline">Sebelumnya</span><span class="sm:hidden">Prev</span>
+            </button>
+            <button onclick="nextCard()" class="col-span-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-lg transition-all border border-blue-400 flex justify-center items-center gap-1 active:scale-95">
+                <span class="hidden sm:inline">Selanjutnya</span><span class="sm:hidden">Next</span> <span>&rarr;</span>
+            </button>
+            <button onclick="shuffleCards()" class="col-span-2 sm:col-span-1 order-last sm:order-none bg-red-600 hover:bg-red-500 text-white font-bold text-sm md:text-base py-3 md:py-4 px-4 md:px-6 rounded-xl shadow-lg transition-all border border-red-400 flex justify-center items-center active:scale-95">
+                Acak (Shuffle)
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+    const tagTeori = "<span class='text-purple-600 font-bold'>[Teori]</span> ";
+    const tagKasus = "<span class='text-red-600 font-bold'>[Vignette Klinis]</span> ";
+
+    // 50 Soal High-Yield ACLS (AHA 2025) - Expanded Explanations
+    const originalCards = [
+        // --- BLS & CPR QUALITY (1-5) ---
+        { 
+            cat: "Kualitas RJP", 
+            q: tagTeori + "Berdasarkan AHA, berapa target spesifik kedalaman dan laju kompresi dada pada resusitasi dewasa?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Kedalaman: 5-6 cm | Laju: 100-120x/menit.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Kompresi < 5 cm terbukti gagal memeras ventrikel secara memadai, menurunkan curah jantung mendekati nol. Sebaliknya, kompresi > 6 cm berkaitan erat dengan ruptur miokard dan fraktur kosta massif. Laju di atas 120x/m memperpendek fase diastolik secara radikal; jantung dipompa dalam keadaan belum terisi darah (preload kosong).</p><p><b>AHA Pearl:</b> Sangat ditekankan membiarkan dinding dada mengembang penuh (<i>Full Chest Recoil</i>). Recoil menciptakan tekanan negatif di rongga dada yang berfungsi bak 'vakum' untuk menarik darah vena kembali ke atrium (<i>venous return</i>). Kebiasaan penolong bersandar (<i>leaning</i>) akan merusak fase pengisian ini seketika.</p>" 
+        },
+        { 
+            cat: "Kualitas RJP", 
+            q: tagTeori + "Apa definisi dari Chest Compression Fraction (CCF) dan berapa target idealnya?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Proporsi waktu resusitasi yang dihabiskan untuk kompresi. Target ideal > 80%.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Parameter ini menentukan keberhasilan resusitasi. Membangun Tekanan Perfusi Koroner (<i>Coronary Perfusion Pressure</i> / CPP) butuh waktu. Tekanan ini baru naik maksimal setelah 10-15 kompresi berturut-turut.</p><p><b>AHA Pearl:</b> Setiap kali Anda berhenti menekan dada (untuk cek nadi, intubasi, atau memasang pad), CPP anjlok ke titik nol dalam hitungan detik. Jika CCF Anda di bawah 60%, hampir mustahil pasien mencapai kembalinya sirkulasi spontan (ROSC) karena jantung kekurangan suplai oksigen intra-resusitasi.</p>" 
+        },
+        { 
+            cat: "Kualitas RJP", 
+            q: tagKasus + "Seorang residen sedang melakukan RJP. Di menit pertama, kapnografi (PETCO2) terbaca 18 mmHg. Namun di menit kedua, PETCO2 tiba-tiba turun konstan ke angka 8 mmHg meski EKG masih VF. Apa intervensi kritis Anda sebagai Leader?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Segera perintahkan pergantian kompresor dada!</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Kapnografi (PETCO2) secara langsung mencerminkan aliran darah paru (<i>pulmonary blood flow</i>) yang dihasilkan oleh RJP. Jika kompresi efektif, darah mengalir ke paru, melepas CO2 > 10 mmHg. Penurunan dramatis dari 18 ke 8 mmHg merupakan tanda patognomonik bahwa kompresor mulai kelelahan secara fisik (kedalaman dangkal / melambat).</p><p><b>AHA Pearl:</b> Jangan pernah menunggu siklus 2 menit habis jika objektif monitor menunjukkan kualitas RJP memburuk. Ganti kompresor saat itu juga untuk menyelamatkan perfusi otak.</p>" 
+        },
+        { 
+            cat: "Kualitas RJP", 
+            q: tagTeori + "Bagaimana teknik pemberian ventilasi pada pasien henti jantung yang SUDAH terpasang Advanced Airway (ETT/SGA)?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Berikan 1 napas buatan tiap 6 detik (10x/menit) tanpa menjeda kompresi dada.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Setelah ETT/LMA terpasang, pita suara telah di-<i>bypass</i>. Tidak ada lagi risiko udara masuk secara massal ke lambung akibat resistensi glotis saat RJP berjalan. Oleh karena itu, rasio 30:2 dihentikan total. Kompresor bekerja secara independen tanpa henti.</p><p><b>AHA Pearl:</b> Ventilasi berlebih sangat toksik. Memompa BVM terlalu cepat meningkatkan tekanan intratorakal konstan (seolah pasien terkena tension pneumothorax iatrogenik), memblokir aliran darah balik dari vena kava superior dan inferior ke jantung kanan.</p>" 
+        },
+        { 
+            cat: "Kualitas RJP", 
+            q: tagKasus + "Tim Anda sedang resusitasi pasien Asistol. Rekan yang memegang Bag-Valve-Mask (BVM) tampak gugup dan memompa napas hingga ~25x/menit setiap kali melihat dada pasien kempes. Apa konsekuensi fisiologis mematikan dari tindakan ini?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Penurunan aliran balik vena (Venous Return) dan penurunan Curah Jantung total.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Tindakan rekan tersebut adalah Hiperventilasi. Dada dikembangkan paksa secara terus-menerus menghasilkan tekanan intratorakal positif yang amat tinggi. Pembuluh vena besar intra-dada (Vena Kava) memiliki dinding yang tipis; mereka akan 'tergencet' oleh tekanan ini.</p><p><b>AHA Pearl:</b> Darah akan menggenang di ekstremitas dan kepala (membengkak), gagal masuk kembali ke atrium kanan. Kompresor dada secara sia-sia hanya memompa ventrikel yang kosong (pulseless iatrogenik). Instruksikan rekan BVM untuk bersikap rileks dan patuhi ritme 1 napas/6 detik!</p>" 
+        },
+
+        // --- ARREST: VF/pVT (6-15) ---
+        { 
+            cat: "Arrest: VF/pVT", 
+            q: tagTeori + "Irama apa saja yang dikategorikan sebagai 'Shockable Rhythm' (Irama yang bisa di-Defibrilasi) dalam algoritma Henti Jantung?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Ventricular Fibrillation (VF) & Pulseless Ventricular Tachycardia (pVT).</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Pada VF/pVT, miokardium tidak mati, melainkan 'kejang' akibat ribuan impuls listrik mikro-reentry yang kacau balau di ventrikel. Karena otot berkontraksi tanpa sinkronisasi, tidak ada darah yang terpompa keluar (Nadi nol).</p><p><b>AHA Pearl:</b> Defibrilasi TIDAK menghidupkan jantung. Defibrilasi bekerja dengan men-depolarisasi (menghentikan/me-<i>stun</i>) *seluruh* sel miokard secara serentak, membungkam sirkuit yang kacau tersebut, dengan harapan Nodus SA sanggup mengambil alih kembali tugasnya sebagai pemacu alami pasca-syok.</p>" 
+        },
+        { 
+            cat: "Arrest: VF/pVT", 
+            q: tagKasus + "Pria 50 tahun Henti Jantung di IGD. Monitor menunjukkan VF. Anda langsung memberikan syok pertama (200J Bifasik). Apa instruksi pertama Anda kepada tim sepersekian detik setelah tombol syok ditekan?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>\"Lanjutkan RJP Segera! Jangan periksa nadi dulu!\"</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Setelah terkena sengatan listrik ribuan volt, sel otot jantung mengalami fase kelumpuhan sementara yang disebut <i>Myocardial Stunning</i>. Meskipun monitor mungkin langsung menunjukkan irama sinus, jantung yang lumpuh belum sanggup memompa darah dengan tekanan kuat.</p><p><b>AHA Pearl:</b> Berhenti untuk meraba nadi pasca-syok sangat berbahaya karena perfusi otak akan langsung terhenti. Anda harus memijat jantung (RJP) selama 2 menit untuk menggantikan fungsinya sembari menunggu otot jantung pulih dari efek 'stunning' akibat listrik.</p>" 
+        },
+        { 
+            cat: "Arrest: VF/pVT", 
+            q: tagTeori + "Kapan dosis pertama Epinefrin diindikasikan secara tepat waktu pada algoritma VF atau pVT?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Setelah pemberian syok ke-2 (Saat RJP siklus ketiga sedang berjalan).</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Pada VF, penyelesaian utamanya adalah syok listrik secepatnya, bukan obat. Jika VF menetap pasca syok awal, itu menandakan resistensi. Epinefrin 1 mg IV/IO diberikan untuk memicu stimulasi reseptor Alpha-1 adrenergik kuat di perifer.</p><p><b>AHA Pearl:</b> Vasokonstriksi kuat ini menyebabkan darah dari perifer terdorong masuk ke sistem sentral, meningkatkan Tekanan Diastolik Aorta. Ini akan \"memaksa\" darah mengalir menembus arteri koroner secara masif, memberikan energi ekstra agar miokardium lebih reaktif terhadap syok berikutnya.</p>" 
+        },
+        { 
+            cat: "Arrest: VF/pVT", 
+            q: tagKasus + "Pasien pVT telah menerima 3 kali syok, Epinefrin 1 mg, dan RJP optimal tak henti. Irama setelah 2 menit masih persisten pVT. Obat farmakologis apa yang selanjutnya wajib Anda siapkan?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Amiodaron 300 mg bolus IV/IO (Dosis pertama).</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Irama yang membandel setelah 3 syok dan vasopresor disebut <i>Refractory VF/pVT</i>. Amiodaron adalah antiaritmia Kelas III (Pemblokir Kanal Kalium). Ia secara drastis memperpanjang durasi potensial aksi miokard dan periode refrakter efektif.</p><p><b>AHA Pearl:</b> Dengan 'memanjangkan' fase istirahat listrik jantung, Amiodaron memutus rantai sirkuit re-entry yang memicu pVT tersebut. Jika Amiodaron tidak tersedia di troli emergensi, Lidokain (1-1.5 mg/kgBB) wajib menjadi substitusi lini pertama.</p>" 
+        },
+        { 
+            cat: "Arrest: VF/pVT", 
+            q: tagTeori + "Jika pasien masih mengalami VF setelah diberikan Amiodaron dosis awal 300 mg, berapa dosis Amiodaron kedua dan kapan waktu pemberiannya?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Berikan Dosis Kedua 150 mg bolus IV/IO, setelah syok ke-4.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Amiodaron memiliki akumulasi toksisitas dan dapat memicu bradikardia/hipotensi berat jika jantung berhasil ROSC. Karena itu, dosis kedua hanya diberikan setengah (150 mg).</p><p><b>AHA Pearl:</b> AHA sangat melarang pemberian Amiodaron lebih dari total 450 mg dalam setting henti jantung akut. Jika VF terus berlanjut setelah dosis kedua ini habis, fokuslah kembali murni pada RJP berkualitas tinggi, Epinefrin tiap 3-5 menit, dan Syok konstan sembari mencari penyebab reversibel ekstrem (iskemia akut/hipokalemia).</p>" 
+        },
+        { 
+            cat: "Arrest: VF/pVT", 
+            q: tagTeori + "Sebagai alternatif Amiodaron, bagaimana aturan dosis Lidokain (Dosis pertama dan kedua) yang direkomendasikan AHA untuk VF refrakter?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Dosis Pertama: 1 - 1.5 mg/kgBB. Dosis Kedua: 0.5 - 0.75 mg/kgBB.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Lidokain adalah antiaritmia Kelas 1b. Mekanisme kerjanya berikatan secara eksklusif dengan Kanal Natrium Cepat (Fast Na+ channels) dalam status inaktif. Hebatnya, obat ini memiliki afinitas tertinggi pada sel miokard yang mengalami iskemia berat (lokasi pemicu VF).</p><p><b>AHA Pearl:</b> Dosis kedua diberikan berselang 5 hingga 10 menit setelah dosis pertama jika irama refrakter tetap ada. Maksimal total kumulatif pemberian adalah 3 mg/kgBB untuk menghindari toksisitas neurologis sentral.</p>" 
+        },
+        { 
+            cat: "Arrest: VF/pVT", 
+            q: tagKasus + "Di menit ke-8 resusitasi, setelah RJP dihentikan sejenak untuk evaluasi, Anda melihat EKG berubah tajam dari VF menjadi Sinus Bradikardia terorganisir. Anda meraba karotis selama 5 detik dan merasa RAGU apakah nadi teraba atau tidak. Apa keputusan emas Anda?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Lanjutkan RJP segera! (Anggap pasien masih berada dalam PEA).</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Keraguan klinis (<i>cognitive bias</i>) sangat sering terjadi di tengah kekacauan resusitasi. Membuang waktu lebih dari 10 detik hanya untuk meyakinkan diri ada tidaknya nadi akan menghancurkan Tekanan Perfusi Koroner (CPP) yang susah payah dibangun selama 2 menit sebelumnya.</p><p><b>AHA Pearl:</b> Protokol baku AHA menyatakan: Jika dalam 10 detik Anda tidak merasakan nadi yang <i>definitif</i> dan kuat, asumsikan nadi tidak ada. Lebih baik melakukan RJP di atas dada pasien yang baru saja ROSC ringan, daripada menelantarkan otak tanpa darah pada pasien yang masih PEA.</p>" 
+        },
+        { 
+            cat: "Arrest: VF/pVT", 
+            q: tagKasus + "Pasien wanita malnutrisi pingsan mendadak. Monitor menunjukkan irama Takikardia QRS Lebar, ireguler, dengan amplitudo membesar-mengecil berputar di sekitar garis isoelektrik (Polimorfik VT khas Torsades de Pointes). Pasien <i>pulseless</i>. Obat penyelamat spesifiknya?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Magnesium Sulfat 1 hingga 2 gram IV/IO (dilarutkan dalam 10 mL D5W).</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Torsades de Pointes (TdP) terjadi akibat pemanjangan interval QT kronis yang memicu fenomena EAD (<i>Early Afterdepolarizations</i>). Hipomagnesemia, hipokalemia, atau keracunan obat (makrolida/antipsikotik) adalah etiologi primernya.</p><p><b>AHA Pearl:</b> Magnesium merupakan kofaktor vital untuk pompa Na-K-ATPase. Penyuntikan Magnesium Sulfat secara masif akan mendesak masuk kalium ke intraseluler, memperpendek durasi potensial aksi, dan menekan letupan ektopik. Ingat: Defibrilasi tetap jadi yang utama saat pulseless!</p>" 
+        },
+        { 
+            cat: "Arrest: VF/pVT", 
+            q: tagTeori + "Mengapa kita SANGAT DILARANG menekan tombol 'SYNC' (Mode Synchronized) saat hendak melakukan syok pada pasien dengan Ventricular Fibrillation?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Karena ketiadaan Gelombang R akan menahan mesin mengeluarkan syok.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Mode SYNC memerintahkan sensor defibrilator untuk mencari dan 'mengunci' puncak kompleks QRS terdekat (gelombang R) dan menembakkan arus pas setelahnya. Pada kasus VF, listrik bergetar sangat acak di garis baseline (fibrilasi), tidak ada kompleks QRS terorganisir.</p><p><b>AHA Pearl:</b> Jika Anda secara tidak sengaja menekan tombol SYNC, lalu menekan paddle di dada pasien, mesin tidak akan pernah melepaskan energi karena gagal menemukan gelombang R. Pasien akan kehilangan kesempatan emas (<i>time is muscle</i>). Selalu pastikan mode defibrilasi asinkron untuk henti jantung.</p>" 
+        },
+        { 
+            cat: "Arrest: VF/pVT", 
+            q: tagTeori + "Berapa anjuran dosis energi syok awal yang optimal untuk defibrilator tipe Bifasik maupun Monofasik?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Bifasik: 120-200 Joule. Monofasik: 360 Joule.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Defibrilator monofasik menembakkan arus satu arah saja, sehingga butuh energi maksimal (360J) untuk mengatasi hambatan dada (impedansi). Mesin bifasik menembak ke dinding jantung, lalu arusnya kembali lagi memutar; memotong impedansi, lebih hemat energi, dan mencegah miokard terbakar parah.</p><p><b>AHA Pearl:</b> Jika Anda menghadapi alat bifasik model lama yang rentang energinya tidak Anda ketahui, rekomendasi absolut AHA adalah: Langsung gunakan setting energi maksimal yang diperbolehkan di alat tersebut (<i>Use maximum available dose</i>).</p>" 
+        },
+
+        // --- ARREST: PEA/Asystole (16-22) ---
+        { 
+            cat: "Arrest: Asistol/PEA", 
+            q: tagTeori + "Kapan dosis Epinefrin pertama kali wajib diinjeksikan pada algoritma khusus Asistol atau PEA?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>SESEGERA MUNGKIN (As Soon As Possible) pasca pemasangan jalur IV/IO.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Kontras dengan VF yang bergantung pada syok listrik awal, Asistol dan PEA terlarang untuk disyok. Satu-satunya jalan farmakologis untuk memaksa darah koroner dan otak mengalir secara pasif adalah vasokonstriksi ekstrem secara artifisial.</p><p><b>AHA Pearl:</b> Epinefrin (1 mg) membanjiri reseptor Alpha-1 perifer, menyempitkan pembuluh darah tangan dan kaki, sehingga darah tersentralisasi ke sirkulasi aorta. Semakin cepat Epinefrin ini masuk di awal henti jantung PEA, semakin tinggi angka kesuksesan <i>ROSC</i>. Ulangi tiap 3-5 menit.</p>" 
+        },
+        { 
+            cat: "Arrest: Asistol/PEA", 
+            q: tagTeori + "Hafalkan secara akurat, apa saja penyebab reversibel Henti Jantung dalam kelompok '5H'?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Hipovolemia, Hipoksia, Hidrogen ion (Asidosis), Hipo/Hiperkalemia, Hipotermia.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Kelompok ini berkaitan dengan krisis biokimiawi dan fisiologi cairan tubuh. Henti jantung tipe PEA/Asistol hampir selalu disebabkan oleh salah satu dari defek metabolik ini yang membuat sel miokard mogok bekerja meskipun jalur listriknya mungkin masih intak.</p><p><b>AHA Pearl:</b> RJP selama berjam-jam tidak akan pernah membawa pasien ROSC permanen jika etiologi akarnya tidak dikoreksi. (Contoh: Pendarahan masif [hipovolemia] butuh resusitasi kristaloid/darah; bukan sekadar pijat jantung!).</p>" 
+        },
+        { 
+            cat: "Arrest: Asistol/PEA", 
+            q: tagTeori + "Sebutkan daftar lengkap kelainan mematikan penyebab Henti Jantung dalam kelompok '5T'!", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Tension pneumothorax, Tamponade (jantung), Toksin, Trombosis Paru (PE), Trombosis Koroner (ACS).</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Kelompok 5T sangat identik dengan rintangan mekanik/obstruktif anatomi. Jantung tergencet oleh udara (Tension), tenggelam dalam darah perikard (Tamponade), atau salurannya tersumbat bongkahan bekuan darah (Trombosis).</p><p><b>AHA Pearl:</b> Anda harus menjadi detektif kilat di IGD. Jika pasien PEA pasca-kecelakaan mobil: pikirkan Tension atau Tamponade. Jika pasien PEA tua dengan keluhan dada hancur sebelumnya: pikirkan Trombosis Koroner massif (LMCA occlusion).</p>" 
+        },
+        { 
+            cat: "Arrest: Asistol/PEA", 
+            q: tagKasus + "Pasien GGK kronis melewatkan jadwal cuci darah. Ia kolaps (PEA). EKG menunjukkan gambaran gelombang T memuncak sangat ekstrim (Tall-T) disusul kompleks QRS melebar luas hingga menyatu mirip gelombang sinusoidal (Sine-wave). Obat inotropik spesifik apa yang harus digelontorkan?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Kalsium (Klorida/Glukonat) IV dan Natrium Bikarbonat IV.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> EKG Sine-Wave pada pasien gagal ginjal adalah tanda stadium akhir dari toksisitas <b>Hiperkalemia Ekstrem</b> (> 7.5 mEq/L). Ion kalium berlebih menonaktifkan kanal natrium miokard, memicu kelumpuhan depolarisasi total (PEA asystolic).</p><p><b>AHA Pearl:</b> Kalsium bekerja instan dalam hitungan detik memulihkan gradien ambang potensial sel jantung (stabilisator membran). Bikarbonat menyusul untuk menarik kalium secara paksa masuk ke intrasel. Ini adalah satu dari sedikit kondisi di mana kalsium rutin disuntikkan saat henti jantung.</p>" 
+        },
+        { 
+            cat: "Arrest: Asistol/PEA", 
+            q: tagKasus + "Korban trauma tumpul dada tiba di IGD apneu & pulseless. EKG: Sinus Takikardia cepat (140x/m). Teraba krepitasi udara di dada kanan (emfisema subkutis) dan trakea tampak deviasi bergeser ke kiri leher. Tindakan <i>life-saving</i> apa yang Anda eksekusi selain RJP?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Needle Decompression segera (Dekompresi Jarum). Kasus ini adalah Tension Pneumothorax.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Udara bocor tanpa henti dari paru kanan ke rongga pleura (<i>one-way valve</i>). Tekanan udara mendesak Mediastinum ke sisi kiri (trakea deviasi), melipat Vena Kava. Darah tidak bisa kembali ke jantung. Jantung memompa ruang hampa, menghasilkan PEA (listrik jalan, nadi hilang).</p><p><b>AHA Pearl:</b> Tusukkan jarum berukuran besar (14G) di sela iga ke-2 (Midclavicular line) atau sela iga ke-5 (Anterior axillary line) dekstra. Tekanan akan mendesis keluar, Vena kava mengembang kembali, curah jantung memulih instan.</p>" 
+        },
+        { 
+            cat: "Arrest: Asistol/PEA", 
+            q: tagKasus + "Pria pasca prosedur PCI 1 minggu lalu tiba-tiba hipotensi berat lalu henti jantung dengan irama PEA lambat. Tim melakukan POCUS (USG Cepat) di sela RJP dan melihat adanya tumpukan cairan tebal hitam di perikardium dengan ventrikel kanan tampak tergencet (kolaps diastolik). Terapi utamanya?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Perikardiosentesis Darurat (Evakuasi Tamponade Jantung).</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Pasien ini sangat mungkin mengalami ruptur dinding miokard tertunda pasca-infark (<i>Free wall rupture</i>). Darah merembes ke rongga perikard yang kaku. Karena tak ada ruang ekspansi, cairan menekan jantung dari luar; ventrikel kanan kolaps dan gagal terisi darah (Syok obstruktif murni).</p><p><b>AHA Pearl:</b> Masukkan jarum spinal/kateter melalui celah subxiphoid diarahkan ke bahu kiri untuk menyedot darah tersebut. Menarik sekecil 50 ml darah dari perikard saja seringkali cukup untuk mengembalikan curah jantung dan ROSC instan.</p>" 
+        },
+        { 
+            cat: "Arrest: Asistol/PEA", 
+            q: tagTeori + "Secara farmakologis historis, mengapa pedoman AHA terbaru menghapus Atropin secara total dari penanganan Asistol / PEA lambat?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Ketiadaan bukti klinis yang mendukung (Lack of Evidence Based Medicine).</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Dahulu dipercaya bahwa PEA lambat/Asistol dipicu oleh hipertonia saraf vagus raksasa (Parasimpatis) yang 'menghentikan' laju jantung. Kenyataannya, iskemia miokard global menyebabkan Asistol karena habisnya cadangan ATP di tingkat sel, bukan masalah saraf autonom.</p><p><b>AHA Pearl:</b> Studi berskala besar mengonfirmasi bahwa injeksi Atropin sama sekali tidak meningkatkan angka bertahan hidup pada henti jantung. Sebaliknya, hal itu hanya mendistraksi tim resusitasi dari intervensi primer yang terbukti ampuh: RJP intensif dan injeksi Epinefrin awal.</p>" 
+        },
+
+        // --- BRADYCARDIA (23-30) ---
+        { 
+            cat: "Bradikardia", 
+            q: tagTeori + "Apa 5 Tanda Klinis fatal yang menentukan bahwa Bradikardia pasien masuk kategori 'TIDAK STABIL' dan wajib ditindak secara invasif?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Hipotensi, Tanda Syok sistemik, Nyeri dada iskemik akut, Gagal jantung akut, Penurunan kesadaran.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Kelima indikator ini menunjukkan bahwa perlambatan ekstrem dari laju ventrikel telah menggagalkan perfusi organ akhir (Malperfusi otak, koroner, dan ginjal/perifer). Jika pasien tidak segera dikoreksi detaknya, mereka akan jatuh dalam kolaps henti jantung (Asistol).</p><p><b>AHA Pearl:</b> Jika Anda menemukan pasien bradikardia (mis. laju 40x/m) yang asimptomatik total, santai mengobrol, dan tekanan darah di 110/70, pedoman secara tegas mengatakan: OBSERVASI saja. Jangan gegabah memberi terapi listrik/obat yang tak perlu.</p>" 
+        },
+        { 
+            cat: "Bradikardia", 
+            q: tagTeori + "Apa obat lini pertama andalan untuk Bradikardia Tidak Stabil dan berapa dosis pembaruan terkininya menurut panduan AHA?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Atropin Sulfat dosis 1 mg IV bolus cepat.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Atropin bekerja melumpuhkan reseptor muskarinik parasimpatis di nodus SA dan AV, secara efektif melepaskan 'rem' pada jantung agar memacu lebih cepat. Dosis lamanya (0.5 mg) telah dianulir karena dosis di bawah 1 mg terbukti dapat memicu bradikardia paradoksikal dari stimulasi vagal sentral awal.</p><p><b>AHA Pearl:</b> Suntikkan 1 mg bolus kuat, dapat Anda ulangi setiap 3 hingga 5 menit jika respon belum adekuat, hingga maksimal dosis batas total keracunan yaitu 3 mg (Vagolytic total).</p>" 
+        },
+        { 
+            cat: "Bradikardia", 
+            q: tagKasus + "Pasien Pria 60 tahun dengan TD 70/40, EKG menunjukkan Total AV Block dengan pelebaran QRS masif. Residen telah menyuntikkan Atropin 1 mg sebanyak dua kali berturut-turut tanpa perubahan <i>Heart Rate</i>. Mengapa obat tersebut dipastikan gagal di anatomi ini?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Letak blokade konduksi infranodal tidak memiliki inervasi saraf vagal (Kebal Atropin).</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Atropin hanya bekerja menghancurkan tonus saraf vagus (Parasimpatis). Jaringan saraf vagus murni hanya menempel di jaringan atrium (Nodus SA dan AV). Pada kasus Blok AV Derajat 2 Tipe II dan Derajat 3 ber-QRS lebar, kerusakan anatomis ada jauh di bawahnya (Berkas His/Serabut Purkinje).</p><p><b>AHA Pearl:</b> Pada bradikardia lolos infranodal lebar ini, injeksi Atropin berkali-kali hanyalah buang waktu krusial. Tim harus secara prediktif menyiapkan Transcutaneous Pacing (TCP) sesegera mungkin di IGD.</p>" 
+        },
+        { 
+            cat: "Bradikardia", 
+            q: tagTeori + "Jika injeksi Atropin gagal menghasilkan respons pada Bradikardia Tidak Stabil, apa 3 intervensi lini kedua yang direkomendasikan dan setara kelasnya?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>1. Transcutaneous Pacing (TCP)<br>2. Infus kontinu Epinefrin (2-10 mcg/menit)<br>3. Infus kontinu Dopamin (5-20 mcg/kg/menit)</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Pemilihan satu dari ketiga intervensi ini amat fleksibel dan diserahkan pada keahlian dokter di lapangan. TCP sangat cepat diaplikasikan via alat monitor, sementara infus inotropik (Epinefrin/Dopamin) memiliki keunggulan ganda: meningkatkan detak (Kronotropik) sekaligus kontraktilitas dan tonus vaskular (Inotropik/Vasopresor).</p><p><b>AHA Pearl:</b> Ketiganya hanya difungsikan sebagai 'jembatan penyelamat' (<i>Bridge therapy</i>) sementara ahli kardiologi bersiap untuk memasang Pacu Jantung Transvena (<i>Transvenous Pacemaker</i>) permanen atau sementara di ruang prosedur.</p>" 
+        },
+        { 
+            cat: "Bradikardia", 
+            q: tagKasus + "Anda memutuskan memasang TCP pada pasien bradikardia bergejala akut. Anda memutar tombol arus (mA) perlahan naik. Di layar monitor mulai tampak *pacing spike* (paku pacu) vertikal teratur yang sukses diikuti kompleks QRS lebar tiap denyut. Langkah verifikasi paten apa yang tak boleh lupa?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Meraba nadi secara fisik untuk mengonfirmasi 'Mechanical Capture'.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> EKG hanya membaca listrik. Terlihatnya garis QRS pasca-spike membuktikan bahwa energi masuk (*Electrical Capture*). Namun miokard yang sakit belum tentu mampu merespons listrik itu dengan menguncup sempurna memompa darah.</p><p><b>AHA Pearl:</b> Jangan pernah meraba arteri karotis saat TCP berjalan (kontraksi otot leher akibat alat akan menipu jari Anda seolah itu nadi). Rabalah kuat arteri Femoralis atau Radialis. Jika denyut nadi tidak selaras dengan pacu di layar, artinya pompa gagal; Anda wajib menaikkan mA listrik kembali.</p>" 
+        },
+        { 
+            cat: "Bradikardia", 
+            q: tagKasus + "Anda akan memulai inisiasi TCP pada pria Bradikardi parah yang ber-TD 85/50, namun ia masih sadar penuh dan dapat mengobrol kesakitan. Intervensi keperawatan primer apa yang harus dilayangkan sebelum tombol pacu diaktifkan?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Pemberian obat Analgesik Kuat dan/atau Sedatif IV (misalnya Fentanyl / Midazolam).</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Prosedur TCP mengirim arus listrik mentah berkekuatan 50-120 mA menembus dari pad eksternal melewati seluruh otot rangka dinding dada untuk mencapai jantung. Ini memicu kontraksi tetanus muskular dada yang amat menyiksa (rasanya seperti dihantam benda tumpul bertubi-tubi).</p><p><b>AHA Pearl:</b> Selama hemodinamik pasien tidak dalam kondisi sangat syok/koma asystolic, pedoman mewajibkan perlakuan manusiawi dengan sedasi-analgesik. Kecuali pasien sudah tak sadarkan diri, barulah TCP boleh ditembakkan instan.</p>" 
+        },
+        { 
+            cat: "Bradikardia", 
+            q: tagKasus + "Seorang Kakek mengeluh dada terasa hancur. EKG mengkonfirmasi STEMI Inferior luas. Monitor menyajikan laju jantung anjlok di 35x/menit. Apa penjelasan patofisiologi klasik yang paling selaras dengan sindrom ini dan terapi saktinya?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Terjadinya Refleks Bezold-Jarisch. Terapi sangat responsif: Atropin.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Iskemik nekrotik akut pada area inferior ventrikel akan merusak dan mengiritasi ribuan pleksus aferen saraf vagus raksasa yang dominan menempel di dinding bawah jantung. Saraf aferen ini menembakkan sinyal refleks panik ke medula otak, dan medula membalas dengan tonus eferen parasimpatis masif.</p><p><b>AHA Pearl:</b> \"Badai Parasimpatis\" lokal ini merem paksa Nodus SA menyebabkan bradikardia disertai vasodilatasi perifer sekunder (hipotensi). Beruntungnya, karena mekanisme ini *pure* vagal, suntikan Atropin bolus akan memblokir reseptornya dengan sangat spektakuler.</p>" 
+        },
+        { 
+            cat: "Bradikardia", 
+            q: tagTeori + "Pada kasus langka Bradikardia membandel yang disebabkan oleh intoksikasi (overdosis) obat Beta-Blocker atau Calcium Channel Blocker, obat rahasia apa yang disarankan AHA di algoritma pengecualian?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Pemberian Glukagon IV (Diikuti protokol High-Dose Insulin Euglycemia).</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Jika pasien menelan toksik Beta-Blocker, seluruh reseptor Adrenergik tertutup rapat. Memberi Epinefrin kadang sia-sia. Glukagon hormon memiliki reseptor seluler spesifik tersendiri di otot jantung yang sama sekali tidak dipengaruhi obat blocker.</p><p><b>AHA Pearl:</b> Saat Glukagon IV masuk, ia merangsang G-protein secara independen, memproduksi lonjakan cAMP intrasel, sehingga pintu kalsium terbuka kembali dan otot sukses memompa laju cepat menembus blokade toksik tersebut.</p>" 
+        },
+
+        // --- TACHYCARDIA (31-38) ---
+        { 
+            cat: "Takikardia", 
+            q: tagTeori + "Sebutkan 5 parameter Tanda Bahaya pada Takikardia yang menjadikannya kategori 'Tidak Stabil' (Unstable) dan mewajibkan Kardioversi?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Hipotensi, Tanda Syok Klinis, Nyeri Dada Iskemik, Gagal Jantung Akut (Edema Paru), Penurunan Kesadaran.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Ketika laju ventrikel menembus 150-200x/m, waktu pengisian ruang ventrikel (Diastole) dipangkas hingga 70%. Karena jantung nyaris memompa angin, tekanan pembuluh sistemik hancur. Kelima organ prioritas merespons syok ini dengan tanda kegagalannya masing-masing.</p><p><b>AHA Pearl:</b> Jangan pernah bereksperimen dengan manuver fisik (Valsava) atau mencampuradukkan obat antiaritmia intravena rumit jika satu saja tanda ini muncul. Pasien berada di ambang henti sirkulasi. Anda wajib melakukan Syok Listrik Sinkron (Kardioversi) SEGERA.</p>" 
+        },
+        { 
+            cat: "Takikardia", 
+            q: tagKasus + "Ibu 40 th masuk takikardi SVT laju 180x/m. Pasien terengah-engah hebat berbuih, terdengar ronki basah kasar di sekujur basal paru (Tanda gagal paru akut). TD merosot tajam ke 80/50. Pendekatan lini pertama paling waras untuk ibu ini?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Langsung Siapkan Synchronized Cardioversion (Kardioversi Tersinkronisasi).</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Kegagalan paru akibat backward failure dari jantung (edema) dan tensi jeblok membuktikan takikardi telah bersifat fatal. Memberikan Adenosin IV amat terlarang karena durasi persiapannya lama dan pasien bisa kolaps hipotensi total (asistol reaktif).</p><p><b>AHA Pearl:</b> Berikan sedasi ringan jika pasien secara mental masih sadar nyeri, oles jelly pada paddle, pasang tombol SYNC, atur pada energi konservatif awal 50 - 100 Joule, bebaskan area, dan lakukan *Clear & Shock* secara determinan.</p>" 
+        },
+        { 
+            cat: "Takikardia", 
+            q: tagTeori + "Mengacu pada pedoman standar, bedakan dosis energi kardioversi awal mesin Bifasik untuk takikardia QRS Sempit Reguler (SVT tipikal) dibandingkan dengan QRS Sempit Ireguler (Atrial Fibrilasi)!", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>SVT Reguler: 50 - 100 Joule. <br>AF Ireguler: 120 - 200 Joule.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Mengapa AF butuh listrik dua kali lipat lebih menyakitkan? Karena patologi SVT reguler (seperti AVNRT) bertumpu pada sirkuit korslet mini (Micro-reentry) di pusat nodus, mudah sekali dipadamkan. Sedangkan Atrial Fibrilasi adalah badai gelombang Macro-reentry yang menguasai seluruh penjuru luas miokard atrium atas.</p><p><b>AHA Pearl:</b> Energi minimal 120-200 J dibutuhkan untuk menyapu bersih dan menembus masa otot seluruh atrium di kasus AF secara serentak, membungkam ektopik agar Nodus SA pulih.</p>" 
+        },
+        { 
+            cat: "Takikardia", 
+            q: tagKasus + "Pria 30 thn datang panik SVT 170x/m. Namun ia hangat, rileks (TD 120/80 Stabil). Manuver Valsava tiup spuit nihil. Anda beralih ke injeksi Adenosin 6 mg bolus IV. Jelaskan prinsip farmakokinetik vital mengapa Adenosin HARUS disuntik ekstra cepat (Rapid Push)?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Waktu paruh (Half-life) Adenosin ekstrim pendek (< 10 detik).</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Adenosin unik karena ia secara kanibal dihancurkan instan oleh enzim Adenosin Deaminase yang berlimpah ruah berenang di dalam sel darah merah (Eritrosit) dan membran endotel vena pasien.</p><p><b>AHA Pearl:</b> Jika Anda menyuntiknya perlahan dari punggung tangan, obat malang ini akan lenyap total hancur lebur sebelum sempat singgah di target utamanya (Reseptor A1 di jantung). Strategi wajib: Dorong spuit Adenosin secepat kilat (1 detik), tembak dorong langsung 20cc Flush Saline, plus elevasi tegak lengan ke atas agar arus vena mengantar utuh sisa obat ke jantung sentral!</p>" 
+        },
+        { 
+            cat: "Takikardia", 
+            q: tagTeori + "Bagaimana protokol urutan administrasi Adenosin jika dosis inisial 6 mg gagal merestorasi ritme Nodus AV pada pasien SVT membandel?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Injeksikan Dosis Kedua 12 mg bolus cepat. (Dosis ketiga umumnya dihindari di 2025).</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Pasca dosis 6mg, tunggu observasi jeda jantung di monitor sekitar 1 hingga 2 menit maksimal. Jika sirkuit reentry tetap berputar liar tak terputus, dosis dilipatgandakan menjadi 12 mg untuk pukulan farmakologis maksimal.</p><p><b>AHA Pearl:</b> Pedoman AHA termutakhir tidak lagi menganjurkan dosis ketiga (12 mg ulangan) jika dua peluru awal luput. Dokter langsung beralih ke agen kontrol laju kronis durasi panjang seperti infus Calcium Channel Blocker (Diltiazem/Verapamil) atau Beta-blocker untuk menidurkan reseptor AV secara perlahan.</p>" 
+        },
+        { 
+            cat: "Takikardia", 
+            q: tagKasus + "Pria gaek riwayat by-pass jantung koroner masuk berdebar keras. Pasien kalem mengobrol (TD 110/70 Stabil). Mesin EKG mencetak gambar Takikardia QRS Lebar, murni monomorfik dan Reguler. Opsi medikamentosa drip primadona untuknya?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Amiodaron dosis 150 mg IV (Dilarutkan perlahan selama 10 menit infus).</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Rumus kardiologi mutlak: Takikardia QRS lebar pada usia tua berpenyakit jantung iskemik adalah <b>Ventricular Tachycardia (VT)</b> sampai terbukti sebaliknya (95% akurasi). Karena jaringan parut ventrikel bertindak bak mesin pembuat aritmia spontan.</p><p><b>AHA Pearl:</b> Infus Amiodaron 150 mg sangat stabil menidurkan ventrikel. Menyuntik obat AV-Blok murni seperti Verapamil pada pasien dugaan VT adalah malapraktik mengerikan; Verapamil melemahkan otot ventrikel mendadak, menjerumuskan pasien Stabil menjadi Syok Kardiogenik VT pulseless fatal dalam 2 menit.</p>" 
+        },
+        { 
+            cat: "Takikardia", 
+            q: tagTeori + "Pada kasus langka Takikardia ber-QRS Lebar yang terbukti REGULER dan MONOMORFIK, apakah dibenarkan secara legal di algoritma untuk kita mengetes memberi Adenosin?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Sangat Boleh dan Terjustifikasi kuat secara medis.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Ada persentase kecil di mana QRS lebar bukanlah VT betulan, melainkan hanyalah SVT jinakan dengan kelainan aberansi penyerta (mis. pasien dari sananya sudah mengidap Right Bundle Branch Block). Karena reguler, ini mengecoh monitor jadi mirip VT.</p><p><b>AHA Pearl:</b> Injeksi Adenosin IV di sini bertindak sebagai agen Diagnostik brilian. Jika itu rupanya SVT-Aberran, Adenosin seketika melenyapkan aritmianya ke Sinus ritme. Kalau itu Murni VT dari ventrikel parut, Adenosin tak berefek apa-apa padanya, namun durasinya yang <10 detik menjamin pasien aman tak terbunuh.</p>" 
+        },
+        { 
+            cat: "Takikardia", 
+            q: tagKasus + "Pasien QRS Lebar namun bentuknya IREGULER (Khas Polimorfik/ Atrial Fibrilasi plus Sindrom WPW Pre-Eksitasi). Dokter Jaga nekat menyuntik Diltiazem atau Digoksin untuk niat memelan detak. Terangkan mengapa dokter itu terancam mematikan pasien?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Ia mengebiri jalur rem alami (AV), memaksa badai listrik turun sepenuhnya via jalur abnormal pintas (Bundle of Kent) memicu VF.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Pada WPW (Wolf-Parkinson-White), ada jalan tol saraf pintas ilegal antara Atrium ke Ventrikel. Saat Atrium Fibrilasi (kecepatan 400x/m listrik kusut), Nodus AV alami bertindak heroik memblokade sebagian besar impuls gila itu agar ventrikel aman.</p><p><b>AHA Pearl:</b> Obat-obat pelambat AV (Adenosin, Beta-Blocker, CCB, Digoksin) justru merusak/menutup pertahanan gerbang Nodus AV tersebut! Akibatnya, seluruh 400x/m impuls atrium tumpah membanjiri jalur tol pintas langsung ke Ventrikel. Ventrikel Takikardi Polimorfik dan Fibrilasi (Henti Jantung) tak terelakkan. Solusi WPW-AF: Selalu Kardioversi kelistrikan mesin!</p>" 
+        },
+
+        // --- POST-ROSC CARE (39-44) ---
+        { 
+            cat: "Post-ROSC", 
+            q: tagTeori + "Apa angka ambang batas terbawah Tekanan Darah yang wajib dicapai kilat dan dipertahankan pada lini perawatan pasca Henti Jantung (Post-ROSC) di ruang ICU?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Tekanan Darah Sistolik > 90 mmHg atau MAP sistemik > 65 mmHg.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Otak manusia yang baru saja bangkit dari episode kematian sirkulasi (iskemia global) mengalami kerusakan parah pada fungsi Otoregulasi Alami Pembuluh Serebral. Jaringan rapuh ini tak bisa lagi mengatur aliran darah mandiri; aliran darah otak menjadi sepenuhnya, 100% bergantung pasif (Dependent) pada nilai MAP tekanan arteri sistemik.</p><p><b>AHA Pearl:</b> Menoleransi hipotensi ringan (MAP < 65) pasca ROSC sama saja memvonis neuron otak untuk mati kekeringan pelan-pelan sekunder. Guyur Cairan NaCl/RL agresif segera. Jika belum naik, pasang ganda Inotropik sentral (Norepinefrin/Epinefrin drip) tanpa ragu.</p>" 
+        },
+        { 
+            cat: "Post-ROSC", 
+            q: tagKasus + "Pasien stabil ROSC dirawat intensif ICU. Suster merasa iba membiarkan SpO2 pasien terpaku di angka 100% terus menerus dengan Masker Non-Rebreather 15 Lpm menyala maksimal (FiO2 100%). Kenapa kebiasaan berlebihan ini mematikan jaringan korteks yang baru direvitalisasi?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Tingginya kadar O2 memicu badai Reperfusion Injury (Keracunan Oksigen Seluler).</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Saat sel yang sebelumnya anoksia kelaparan mendadak diguyur banjiran oksigen murni (Hiperoksia ekstrim), mitokondria rusak memproduksi radikal bebas oksigen spesifik raksasa (Reactive Oxygen Species / ROS) yang super toksik. Molekul gila ini merobek membran lipid dan DNA neuron, melancarkan nekrosis tahap kedua.</p><p><b>AHA Pearl:</b> Aturan emas AHA 2025: Titrasi (Turunkan perlahan bertahap) suplai oksigen mekanis segera setelah pulse oximeter membaca angka reliabel. Cukup pasang target zona nyaman SpO2 membumi di angka <b>92% - 98%</b> demi neuroprotektif optimal.</p>" 
+        },
+        { 
+            cat: "Post-ROSC", 
+            q: tagTeori + "Pasien dipasangi trakea Ventilator mekanis di bed post-ROSC. Pada layar pembacaan gas darah arteri (AGD), berapakah tekanan kadar PaCO2 spesifik yang ditargetkan wajib dipertahankan?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Normokapnia mutlak (PaCO2: 35 hingga 45 mmHg).</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Gas Karbon Dioksida (CO2) adalah raja senyawa kimia paling poten (kuat) di tubuh dalam menentukan besar-kecil diameter pembuluh arteriol pembuluh otak murni.</p><p><b>AHA Pearl:</b> Pedoman AHA sangat mengharamkan terjadinya Hiperventilasi kronis (dimana CO2 lari ke bawah 35 mmHg) dan Hipoventilasi ekstrim (dimana CO2 menumpuk asam masif) pasca ROSC, karena otak yang memulihkan diri harus terjaga perfusinya bebas halangan deviasi arteriolar.</p>" 
+        },
+        { 
+            cat: "Post-ROSC", 
+            q: tagKasus + "Di tengah evakuasi transportasi, pasien ROSC terintubasi tidak sengaja ter-Hiperventilasi manual (dipompa membabi buta 25 napas per menit karena panik). Apakah patofisiologi serebral terburuk yang tak sengaja dijatuhkan penolong kepadanya?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Vasokonstriksi (Penciutan Vaskular) Serebral masif yang memicu Stroke Iskemik Sekunder Iatrogenik.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Hiperventilasi 'mencuci dan membuang' simpanan gas CO2 di tubuh berlebihan (terjadi Hipokapnia hebat / PaCO2 anjlok). Otak merespons anjloknya CO2 ini secara fisiologis alami dengan kontraksi pembuluh darah yang masif dan kaku penyempitan.</p><p><b>AHA Pearl:</b> Arteriol otak menyempit keras, darah tertahan tidak mampu merembes mencapai miliaran sel neuron distal, memicu kerusakan gelombang kedua sesaat setelah pasien mati-matian kita hidupkan. Ingat: 1 napas lembut setiap 6 detik!</p>" 
+        },
+        { 
+            cat: "Post-ROSC", 
+            q: tagTeori + "Apa yang dimaksud dengan terapi mutakhir Targeted Temperature Management (TTM) dan kelompok mana yang paling diwajibkan menjalaninya berdasarkan algoritma AHA?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Pendinginan neuro-suhu artifisial (Target 32-36°C). Mutlak bagi SEMUA pasien koma pasca-ROSC.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Jantung memang kembali berdetak (ROSC), namun otak yang terbakar iskemia tidak selalu bisa bangun (koma). TTM menurunkan thermostat inti secara artifisial dengan selimut pendingin endovaskular/permukaan. Metabolisme melambat drastis, meredam kaskade ledakan mediator peradangan apoptosis dan mencegah terjadinya demam toksik reaktif (Pyrexia iskemia) yang sanggup melumerkan sel otak.</p><p><b>AHA Pearl:</b> AHA 2025 memprioritaskan TTM dipertahankan ketat, disiplin konstan pada angka yang dipilih dokter antara rentang suhu 32-36 selama total minimum observasi <b>24 Jam penuh non-stop</b>.</p>" 
+        },
+        { 
+            cat: "Post-ROSC", 
+            q: tagKasus + "Kakek tak sadar berbaring menjalani prosedur protektif selimut TTM (Target 33°C). Tiba-tiba bahu dan rahang pasien mulai menggigil gemeretak hebat (Shivering klinis). Mengapa ini adalah kegagalan terapi berbahaya dan apa penawarnya?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Shivering menaikkan kebutuhan oksigen tak terkendali. Tatalaksana: Tambahan Sedatif + Agen Pelumpuh Otot (Paralisis).</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Menggigil adalah senjata refleks terakhir otak untuk melawan hawa dingin asing, membakar kontraksi muskular untuk melepaskan kalori termal buatan. Aksi ini menggandakan konsumsi beban oksigen (VO2) sistemik 200%, menumpas habis tujuan penghematan energi terapi TTM yang dokter canangkan.</p><p><b>AHA Pearl:</b> Segera atasi gawat ini dengan meng-infus Sedasi kuat tingkat lanjut (Propofol kontinu/Dexmedetomidine tinggi). Jika membandel refleksnya, eksekusi pemblokir Neuromuskular paralisis kuat (Golongan Rocuronium / Vecuronium) selama sesi mesin TTM mendinginkan.</p>" 
+        },
+
+        // --- ACUTE CORONARY SYNDROME (45-47) ---
+        { 
+            cat: "ACS (Koroner)", 
+            q: tagTeori + "Sebutkan 3 kontraindikasi absolut secara fisiologis paten untuk menyodorkan tablet Nitrat (ISDN / Nitrogliserin sublingual) pada pasien serang jantung ACS IGD!", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>1. Hipotensi akut (TDS < 90 mmHg)<br>2. Kecurigaan Infark Ventrikel Kanan (RV Infarct)<br>3. Pemakaian PDE-5 Inhibitor seks obat (Sildenafil/Viagra di bawah tenggat 24 jam)</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Nitrat mendeplesi (mengeringkan cadangan) muatan <i>preload</i> pengisian darah jantung kanan seketika akibat sifat dilator vena-nya yang garang. Jika preload dijatuhkan dalam kondisi awal tiga patologi ekstrim di atas, jantung kanan tidak akan sanggup melempar balik sisa darah, melahirkan kolaps total Syok Iskemik Iatrogenik buatan dokter.</p><p><b>AHA Pearl:</b> Selalu konfirmasi pertanyaan rahasia perihal konsumsi pil pria pada anamnesis tersembunyi; Reaksi silang PDE5 dan Nitrat sungguh tak tertolong dopamin.</p>" 
+        },
+        { 
+            cat: "ACS (Koroner)", 
+            q: tagKasus + "Bapak 50 tahun menjerit Nyeri Dada Tembus ke ulu hati. EKG CITO: ST Elevasi II, III, aVF (Jelas STEMI Inferior). Stetoskop Paru bersih, tiada ronki sekecil apapun. Namun TD pria ini tercatat terperosok ke 80/50, dan ada JVP membesar ekstrim di leher. Tatalaksana utama memulihkan tekanan darahnya?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Loading Cairan Guyur Kristaloid IV (Fluid Challenge agresif). HINDARI Morfin/Nitrat!</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Trias Hipotensi, JVP leher distensi melimpah, dipadu lapangan paru bersih pada infark rute Inferior (EKG II, III, aVF) adalah tanda patognomonik 100% *Right Ventricle Infarct* sekunder. Ventrikel kanan bapak ini sudah mati lumpuh kontraksi. Ia cuma bisa dihidupkan perfusinya jika dipaksa dorong dengan pasokan cairan masif dari infus, supaya daya beban cair mendorong tembus katup paru kiri.</p><p><b>AHA Pearl:</b> Sering terjadi kesalahan IGD menginjeksi Morfin meredakan nyeri dada pada kasus ini. Venodilatasi yang dibawanya membunuh bapak ini di bed seketika. Minta EKG rekaman dada kanan (V3R-V4R) CITO sebelum meracik obat apapun.</p>" 
+        },
+        { 
+            cat: "ACS (Koroner)", 
+            q: tagTeori + "Apa pedoman presisi Dosis awal (Loading Dose) Aspirin antiplatelet mutlak AHA, dan detail bagaimana instruksi esensial perawat menyodorkannya untuk jaminan daya serap sempurna?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Dosis: 160 hingga maksimal 325 mg (Pakai sediaan Non-Enteric Coated). Cara krusial: HARUS DIKUNYAH oleh pasien langsung.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Mengunyah hancur tablet Aspirin membebaskan dan melarutkan bubuk murni obat secara luas dalam mukosa vaskular buccal rongga mulut, sebelum terserap lambung instan. Aksi ini merampas durasi memblokir kerja enzim aktivator COX-1 trombosit penggumpal di lokasi plak robek pembuluh, langsung bekerja hanya dalam tempo kilat hitungan menit akut.</p><p><b>AHA Pearl:</b> Jangan sediakan air minum untuk pasien menelannya bulat-bulat, apalagi disodori kotak pil bertanda enterik (lapisan usus pelindung asam lambung) yang saking alotnya, baru akan terbuka khasiatnya di 4 jam kemudian usus duodeni. Tak akan terkejar kematian infarknya.</p>" 
+        },
+
+        // --- ACUTE STROKE (48-50) ---
+        { 
+            cat: "Stroke Akut", 
+            q: tagTeori + "Berapa \"Golden Time Window\" (Jendela Waktu Terapi Emas) standar AHA/ASA eksklusif pemberian injeksi trombolitik kemoterapi pembuluh (rt-PA / Alteplase) pada penderita stroke iskemik buntu?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Di bawah 3 Jam sejak onset keluhan defisit pertama (Bisa dimaksimalkan fleksibel hingga 4.5 Jam di kriteria khusus tertentu).</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Fibrinolitik (rt-PA) diformulasikan memotong ikatan jaring fibrin di otak (<i>Clot Buster</i> ampuh) demi mendanai sirkulasi ulang di area sel jaringan <i>Penumbra</i> malang yang masih hidup pingsan di sekitar otak inti.</p><p><b>AHA Pearl:</b> Lewati saja waktu 4.5 jam emas ini, maka area sentral otak itu telah membusuk menjadi bubur nekrotik rapuh kotor permanen. Mengguyur paksa agen trombolitik pasca keterlambatan jam kritis memfasilitasi komplikasi Transformasi Hemoragik (Otot pecah spontan mandi darah berujung koma sekunder letal tak tertolong).</p>" 
+        },
+        { 
+            cat: "Stroke Akut", 
+            q: tagKasus + "Pemuda dibawa panik meronta di IGD menderita kelumpuhan satu separuh sisi kiri tubuh simetris mendadak, serta disartria cadel bibir sejak baru 1 jam lalu. Menunggu CT Scan terparkir lama. Tim neurologis bergegas, namun apa uji POC (Point of Care) tes mandatori tercepat (< 1 menit) yang wajib disingkirkan eksekusinya sekarang?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>Skrining Glukosa Darah Sewaktu (GDS) via stik kapiler tusuk jari. Wajib mengenyahkan kecurigaan Hipoglikemia berat.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Krisis kejatuhan gula darah ekstrem secara dramatis bermanifestasi mematikan saraf lokal persis bak sindrom defisit neurologis fokal layaknya serangan Stroke akut murni (Neuroglikopenia asimetris fokal otak). Tragedi misdiagnosis ini digelari *Stroke Mimic*.</p><p><b>AHA Pearl:</b> Menyuntik pasien dengan sebotol glukosa pekat Dextrose IV D40% langsung \"membangkitkan dan menyembuhkan penuh\" kepeloan pemuda itu total. Mengeliminir risiko paparan radiasi CT atau kengerian fatal keliru memasukkan selang Fibrinolitik pengencer darah berbahaya di otaknya.</p>" 
+        },
+        { 
+            cat: "Stroke Akut", 
+            q: tagKasus + "Seorang nenek mengamini kriteria kandidat trombolisis r-tPA sempurna dalam onset aman baru 2 jam gejala stroke masuk RS. Hasil Scan CT Kepala mulus Non-Hemoragik darah bocor. Tapi celakanya, tensi lansia ini tercatat di monitor berbaring gawat 210/115 mmHg. Bolehkah suster mendrip obat r-tPA sekarang?", 
+            a: "<h3 class='font-bold text-blue-700 text-sm md:text-base mb-1'>TIDAK BOLEH DIGUYUR. Turunkan Titrasi tensinya stabilkan dulu di angka kurang dari (<) 185/110 mmHg.</h3><p class='mb-1'><b>Penjelasan Mendalam:</b> Tekanan darah roket di dalam otak iskemik itu sangat mengoyak jembatan pembuluh arteriol. Di tengah kepungan pembuluh lemah rapuh itu, r-tPA kimiawi melarutkan segala bentuk bekuan fibrin penjaga sel. Kolaborasi tensi gila 200 plus pelarut darah ini menjamin otak nenek itu akan meledak bocor perdarahan internal dalam hitungan 15 menit pasca r-tPA.</p><p><b>AHA Pearl:</b> Pasang akses paten, atasi agresif menggunakan titrasi labetalol IV infus atau nikardipin kontinu demi mendongkrak TD aman di 185/110. Sepanjang sisa esok 24 jam ke depan masa rawat, jaga proteksi sistoliknya mentok tak melewati ambang < 180/105 mmHg.</p>" 
+        }
+    ];
+
+        let cards = [...originalCards];
+        let currentIndex = 0;
+        let isFlipped = false;
+        
+        // Touch Variables for Swipe (Mobile)
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let isSwiping = false;
+
+        const flashcardEl = document.getElementById('flashcard');
+        const questionEl = document.getElementById('question-text');
+        const answerEl = document.getElementById('answer-text');
+        const counterEl = document.getElementById('card-counter');
+        const categoryEl = document.getElementById('card-category');
+
+        function renderCard() {
+            if (isFlipped) {
+                flashcardEl.classList.remove('is-flipped');
+                isFlipped = false;
+                setTimeout(() => {
+                    updateContent();
+                }, 400); // Sinkronisasi transisi flip
+            } else {
+                updateContent();
+            }
+        }
+
+        function updateContent() {
+            const currentCard = cards[currentIndex];
+            questionEl.innerHTML = currentCard.q;
+            answerEl.innerHTML = currentCard.a;
+            categoryEl.textContent = currentCard.cat;
+            counterEl.textContent = `${currentIndex + 1} / ${cards.length}`;
+        }
+
+        function toggleFlip(e) {
+            if (isSwiping) return;
+            isFlipped = !isFlipped;
+            flashcardEl.classList.toggle('is-flipped');
+        }
+
+        function nextCard() {
+            if (currentIndex < cards.length - 1) {
+                currentIndex++;
+                renderCard();
+            } else {
+                currentIndex = 0; // Loop kembali ke awal
+                renderCard();
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderCard();
+            }
+        }
+
+        function shuffleCards() {
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            currentIndex = 0;
+            renderCard();
+        }
+
+        // --- Fitur Swipe untuk Mobile ---
+        flashcardEl.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            isSwiping = false;
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchmove', e => {
+            const currentTouchX = e.changedTouches[0].screenX;
+            if (Math.abs(currentTouchX - touchStartX) > 15) {
+                isSwiping = true;
+            }
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+
+        function handleSwipe() {
+            const swipeThreshold = 50; 
+            if (touchEndX < touchStartX - swipeThreshold) {
+                nextCard();
+            } else if (touchEndX > touchStartX + swipeThreshold) {
+                prevCard();
+            }
+            setTimeout(() => {
+                isSwiping = false;
+            }, 100);
+        }
+
+        window.onload = renderCard;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                e.preventDefault();
+                toggleFlip();
+            } else if (e.code === 'ArrowRight') {
+                nextCard();
+            } else if (e.code === 'ArrowLeft') {
+                prevCard();
+            }
+        });
+    </script>
+</body>
+</html>
