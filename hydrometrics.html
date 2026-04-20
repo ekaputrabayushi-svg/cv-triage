@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HydroMetrics | Bubble Edition</title>
+  <link rel="preconnect" href="https://api.fontshare.com" />
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Satoshi', 'sans-serif'] },
+          colors: {
+            aqua: {
+              300: '#67e8f9',
+              400: '#22d3ee',
+              500: '#06b6d4',
+              600: '#0891b2',
+              900: '#164e63',
+            },
+            ocean: {
+              800: '#0c4a6e',
+              900: '#082f49',
+              950: '#042f2e', // Deep greenish blue
+            }
+          },
+          animation: {
+            'float-slow': 'floating 6s ease-in-out infinite',
+            'float-med': 'floating 4s ease-in-out infinite',
+            'float-fast': 'floating 3s ease-in-out infinite',
+            'shimmer': 'shimmer 2s linear infinite',
+          },
+          keyframes: {
+            floating: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-15px)' },
+            },
+            shimmer: {
+              '0%': { backgroundPosition: '200% 0' },
+              '100%': { backgroundPosition: '-200% 0' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; overflow-x: hidden; }
+    
+    /* Deep Ocean Background */
+    body {
+      background: radial-gradient(circle at 50% 0%, #083344 0%, #020617 80%, #000000 100%);
+      color: #f1f5f9;
+      background-attachment: fixed;
+    }
+
+    /* Ultra-Realistic Background Bubbles */
+    .bubble-container {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: -1; pointer-events: none; overflow: hidden;
+    }
+    .bg-bubble {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(100% 100% at 30% 30%, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.01) 50%, transparent);
+      box-shadow: 
+        inset -5px -5px 15px rgba(0, 0, 0, 0.3),
+        inset 5px 5px 15px rgba(255, 255, 255, 0.4),
+        0 0 10px rgba(34, 211, 238, 0.2);
+      backdrop-filter: blur(2px);
+      bottom: -100px;
+      animation: floatUp linear infinite, wobble ease-in-out infinite alternate;
+    }
+    
+    @keyframes floatUp {
+      0% { transform: translateY(0) scale(0.8); opacity: 0; }
+      10% { opacity: 1; }
+      80% { opacity: 0.8; transform: translateY(-100vh) scale(1.1); }
+      100% { transform: translateY(-120vh) scale(1.2); opacity: 0; }
+    }
+    @keyframes wobble {
+      0% { margin-left: 0; }
+      100% { margin-left: 30px; }
+    }
+
+    /* Bubble Cards - The core creative UI */
+    .bubble-card {
+      background: radial-gradient(120% 120% at 20% 10%, rgba(255, 255, 255, 0.08) 0%, rgba(15, 23, 42, 0.5) 100%);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 40px; /* Bubble-like extreme rounded corners */
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-top: 1px solid rgba(255, 255, 255, 0.3); /* Specular highlight */
+      border-left: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 
+        0 20px 40px -10px rgba(0, 0, 0, 0.5), 
+        inset 0 4px 15px rgba(255, 255, 255, 0.05);
+      position: relative;
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease;
+    }
+    .bubble-card:hover {
+      transform: translateY(-5px) scale(1.01);
+      box-shadow: 
+        0 25px 50px -10px rgba(6, 182, 212, 0.15), 
+        inset 0 4px 20px rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Special round card for Kumulatif Balance */
+    .bubble-card-circle {
+      border-radius: 40px;
+    }
+    @media (min-width: 768px) {
+      .bubble-card-circle {
+        border-radius: 60px; /* almost circular on larger screens */
+      }
+    }
+
+    /* Liquid Input Fields */
+    .liquid-input {
+      background: rgba(2, 6, 23, 0.4);
+      border-radius: 9999px; /* Pill shape */
+      border: 1px solid rgba(6, 182, 212, 0.2);
+      box-shadow: inset 0 3px 8px rgba(0,0,0,0.6), inset 0 -1px 2px rgba(255,255,255,0.05);
+      color: #e0f2fe;
+      transition: all 0.3s ease;
+    }
+    .liquid-input:focus {
+      background: rgba(8, 51, 68, 0.6);
+      border-color: #22d3ee;
+      box-shadow: 
+        inset 0 4px 10px rgba(0,0,0,0.6), 
+        0 0 15px rgba(34, 211, 238, 0.3);
+      outline: none;
+    }
+    
+    /* Remove arrows from number input */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+
+    /* Animated Diuresis Track */
+    .bubble-track {
+      background: rgba(2, 6, 23, 0.8);
+      border-radius: 9999px;
+      box-shadow: inset 0 4px 10px rgba(0,0,0,0.9), 0 1px 1px rgba(255,255,255,0.1);
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .liquid-bar {
+      border-radius: 9999px;
+      background-image: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      background-size: 200% 100%;
+      position: absolute;
+      inset-y: 0; left: 0;
+      transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.8s ease;
+    }
+    
+    /* Inner Mini Bubbles for Cards */
+    .inner-bubble {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1), transparent);
+      border: 1px solid rgba(255,255,255,0.05);
+      pointer-events: none;
+    }
+
+    /* Print styles */
+    @media print {
+      .print-hide { display: none !important; }
+      body { background: white; color: black; }
+      .bubble-card { background: none; border: 1px solid #ddd; box-shadow: none; border-radius: 16px; }
+      .bubble-container { display: none; }
+    }
+    
+    /* Text Glows */
+    .text-glow-cyan { text-shadow: 0 0 20px rgba(34, 211, 238, 0.5); }
+    .text-glow-emerald { text-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
+    .text-glow-rose { text-shadow: 0 0 20px rgba(244, 63, 94, 0.5); }
+  </style>
+</head>
+<body class="p-3 sm:p-5 md:p-8">
+
+  <!-- Floating Background Bubbles -->
+  <div class="bubble-container">
+    <div class="bg-bubble" style="left: 10%; width: 60px; height: 60px; animation-duration: 12s, 4s; animation-delay: 0s, 0s;"></div>
+    <div class="bg-bubble" style="left: 25%; width: 30px; height: 30px; animation-duration: 8s, 3s; animation-delay: 2s, 0.5s;"></div>
+    <div class="bg-bubble" style="left: 40%; width: 90px; height: 90px; animation-duration: 15s, 5s; animation-delay: 1s, 1s;"></div>
+    <div class="bg-bubble" style="left: 55%; width: 45px; height: 45px; animation-duration: 10s, 3.5s; animation-delay: 4s, 1.5s;"></div>
+    <div class="bg-bubble" style="left: 70%; width: 120px; height: 120px; animation-duration: 18s, 6s; animation-delay: 0.5s, 0.2s;"></div>
+    <div class="bg-bubble" style="left: 85%; width: 20px; height: 20px; animation-duration: 6s, 2s; animation-delay: 3s, 0.8s;"></div>
+    <div class="bg-bubble" style="left: 5%; width: 40px; height: 40px; animation-duration: 9s, 3s; animation-delay: 5s, 1.2s;"></div>
+    <div class="bg-bubble" style="left: 90%; width: 70px; height: 70px; animation-duration: 14s, 4.5s; animation-delay: 2.5s, 0.5s;"></div>
+  </div>
+
+  <div class="max-w-7xl mx-auto space-y-6 lg:space-y-8">
+    
+    <!-- Header -->
+    <header class="bubble-card p-6 sm:p-8 md:p-10 animate-float-slow">
+      <div class="inner-bubble w-32 h-32 -top-10 -right-10 opacity-30"></div>
+      <div class="inner-bubble w-16 h-16 bottom-5 right-40 opacity-20"></div>
+      
+      <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        
+        <!-- Logo & Title Section -->
+        <div class="flex items-center gap-5 sm:gap-6">
+          <div class="relative h-16 w-16 sm:h-20 sm:w-20 shrink-0 rounded-full bg-gradient-to-br from-cyan-300 to-blue-600 flex items-center justify-center shadow-[0_0_30px_rgba(34,211,238,0.5)] border-2 border-white/30 group">
+            <div class="absolute inset-0 rounded-full bg-white/20 animate-ping opacity-20 group-hover:opacity-50"></div>
+            <svg viewBox="0 0 24 24" fill="currentColor" class="w-10 h-10 sm:w-12 sm:h-12 text-white relative z-10 animate-[floating_3s_ease-in-out_infinite]">
+              <!-- Fluid Drop SVG -->
+              <path d="M12 21.5C7.30558 21.5 3.5 17.6944 3.5 13C3.5 8.35825 9.77157 2.45781 11.3129 1.05051C11.6983 0.698317 12.3017 0.698317 12.6871 1.05051C14.2284 2.45781 20.5 8.35825 20.5 13C20.5 17.6944 16.6944 21.5 12 21.5ZM12 4.10303C10.7412 5.31885 5.5 10.4573 5.5 13C5.5 16.5899 8.41015 19.5 12 19.5C15.5899 19.5 18.5 16.5899 18.5 13C18.5 10.4573 13.2588 5.31885 12 4.10303Z"/>
+              <path d="M12 21.5C7.30558 21.5 3.5 17.6944 3.5 13C3.5 8.35825 9.77157 2.45781 11.3129 1.05051C11.6983 0.698317 12.3017 0.698317 12.6871 1.05051C14.2284 2.45781 20.5 8.35825 20.5 13C20.5 17.6944 16.6944 21.5 12 21.5Z" opacity="0.3"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 to-blue-400 text-glow-cyan">HydroMetrics</h1>
+            <p class="text-aqua-300 text-[12px] sm:text-[13px] md:text-sm mt-1.5 font-bold tracking-wide uppercase">Hemodynamic Fluid Dashboard</p>
+            
+            <div class="mt-2.5 flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
+              <span class="px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-[9px] sm:text-[10px] font-black text-cyan-300 uppercase tracking-widest shadow-inner inline-flex items-center w-fit">
+                Part of CardiologyVault
+              </span>
+              <span class="text-[9px] sm:text-[10px] font-black text-cyan-500/80 uppercase tracking-widest w-fit flex items-center gap-1">
+                Dev: Bayushi Eka Putra, MD, FIHA
+              </span>
+            </div>
+
+            <p class="text-slate-400 text-[11px] sm:text-xs mt-3 max-w-md leading-relaxed">Instrumen kalkulasi klinis cerdas untuk memantau keseimbangan cairan dan respons diuresis secara presisi.</p>
+          </div>
+        </div>
+        
+        <!-- Controls Section -->
+        <div class="flex flex-col sm:items-end gap-3 print-hide">
+          <div class="flex flex-wrap items-center gap-3">
+            <button id="btn-sample" class="group px-5 py-3 rounded-full bg-cyan-950/50 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-300 text-sm font-black transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)] flex items-center gap-2">
+              <i data-lucide="flask-conical" class="w-4 h-4 text-cyan-400 group-hover:rotate-12 transition-transform"></i> Sample Data
+            </button>
+            <button id="btn-reset" class="px-5 py-3 rounded-full bg-rose-950/50 hover:bg-rose-900 border border-rose-500/30 text-rose-300 text-sm font-black transition-all shadow-sm flex items-center gap-2 hover:shadow-[0_0_15px_rgba(244,63,94,0.3)]">
+               <i data-lucide="rotate-ccw" class="w-4 h-4 text-rose-400"></i> Reset
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="main" class="grid grid-cols-1 xl:grid-cols-[1.2fr_1.2fr_1.1fr] gap-6 lg:gap-8">
+      
+      <!-- Section: Profil -->
+      <section class="bubble-card p-6 md:p-8 space-y-6">
+        <div class="flex items-center gap-3 border-b border-white/10 pb-4">
+          <div class="p-2.5 rounded-full bg-cyan-500/20 text-cyan-300 shadow-[inset_0_2px_5px_rgba(255,255,255,0.2)]"><i data-lucide="droplet" class="w-5 h-5"></i></div>
+          <h2 class="text-xl font-black text-white tracking-wide">Profil Pasien</h2>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-6">
+          <label class="space-y-2.5">
+            <span class="text-xs font-black text-cyan-200/70 uppercase tracking-widest pl-2">Berat Badan</span>
+            <div class="relative">
+              <input id="input-weight" type="number" step="0.1" placeholder="65" class="calc-input liquid-input w-full px-5 py-4 pr-12 outline-none text-base font-bold" />
+              <span class="absolute right-5 top-4 text-xs text-cyan-500 font-black">KG</span>
+            </div>
+          </label>
+          <label class="space-y-2.5">
+            <span class="text-xs font-black text-cyan-200/70 uppercase tracking-widest pl-2">Suhu Tubuh</span>
+            <div class="relative">
+              <input id="input-temp" type="number" step="0.1" value="36.5" class="calc-input liquid-input w-full px-5 py-4 pr-12 outline-none text-base font-bold" />
+              <span class="absolute right-5 top-4 text-xs text-cyan-500 font-black">°C</span>
+            </div>
+          </label>
+          <div class="space-y-2.5">
+            <span class="text-xs font-black text-cyan-200/70 uppercase tracking-widest pl-2">Durasi Observasi</span>
+            <div class="relative">
+              <input id="input-hours" type="number" step="1" value="24" class="calc-input liquid-input w-full px-5 py-4 pr-16 outline-none text-base font-bold" />
+              <span class="absolute right-5 top-4 text-xs text-cyan-500 font-black">JAM</span>
+            </div>
+            <div class="flex gap-2 pt-1 print-hide px-2">
+              <button class="preset-hours flex-1 rounded-full border border-cyan-500/20 bg-cyan-950/40 py-1.5 text-[10px] font-black uppercase text-cyan-400 hover:text-white hover:bg-cyan-600 transition-all shadow-inner" data-hours="6">6H</button>
+              <button class="preset-hours flex-1 rounded-full border border-cyan-500/20 bg-cyan-950/40 py-1.5 text-[10px] font-black uppercase text-cyan-400 hover:text-white hover:bg-cyan-600 transition-all shadow-inner" data-hours="12">12H</button>
+              <button class="preset-hours flex-1 rounded-full border border-cyan-500/20 bg-cyan-950/40 py-1.5 text-[10px] font-black uppercase text-cyan-400 hover:text-white hover:bg-cyan-600 transition-all shadow-inner" data-hours="24">24H</button>
+            </div>
+          </div>
+          <label class="space-y-2.5">
+            <span class="text-xs font-black text-cyan-200/70 uppercase tracking-widest pl-2">Target Dekongesti</span>
+            <div class="relative">
+              <input id="input-target" type="number" step="0.1" placeholder="0.5" class="calc-input liquid-input w-full px-5 py-4 pr-12 outline-none text-base font-bold" />
+              <span class="absolute right-5 top-4 text-xs text-cyan-500 font-black">KG</span>
+            </div>
+          </label>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4 pt-4">
+          <div class="rounded-[24px] border border-white/10 bg-black/20 p-5 shadow-inner relative overflow-hidden">
+            <div class="absolute -right-4 -bottom-4 w-16 h-16 bg-blue-500/10 rounded-full blur-xl"></div>
+            <p class="text-[10px] uppercase tracking-widest text-slate-400 font-black">Target Balance</p>
+            <p class="mt-2 text-2xl font-black tabular-nums text-white"><span id="display-target-balance">0</span> <span class="text-xs font-bold text-slate-500">cc</span></p>
+          </div>
+          <div class="rounded-[24px] border border-cyan-500/30 bg-cyan-900/20 p-5 shadow-[inset_0_0_20px_rgba(6,182,212,0.1)] relative overflow-hidden">
+            <div class="absolute -right-4 -bottom-4 w-16 h-16 bg-cyan-500/20 rounded-full blur-xl"></div>
+            <p class="text-[10px] uppercase tracking-widest text-cyan-400 font-black">Target Urin / Jam</p>
+            <p class="mt-2 text-2xl font-black tabular-nums text-cyan-300"><span id="display-urine-hour">0</span> <span class="text-xs font-bold text-cyan-600">cc/h</span></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Intake & Output -->
+      <section class="space-y-6 lg:space-y-8">
+        
+        <!-- Intake Card -->
+        <div class="bubble-card p-6 md:p-8 space-y-6">
+          <div class="flex items-center gap-3 border-b border-white/10 pb-4">
+            <div class="p-2.5 rounded-full bg-blue-500/20 text-blue-300 shadow-[inset_0_2px_5px_rgba(255,255,255,0.2)]"><i data-lucide="arrow-down-to-line" class="w-5 h-5"></i></div>
+            <h2 class="text-xl font-black text-white tracking-wide">Intake Cairan</h2>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <label class="space-y-2"><span class="text-[10px] font-black text-cyan-200/70 uppercase tracking-widest pl-2">Infus IV</span><input id="input-iv" type="number" step="0.1" placeholder="0" class="calc-input liquid-input w-full px-4 py-3 outline-none text-base font-bold text-center" /></label>
+            <label class="space-y-2"><span class="text-[10px] font-black text-cyan-200/70 uppercase tracking-widest pl-2">Syringe Pump</span><input id="input-meds" type="number" step="0.1" placeholder="0" class="calc-input liquid-input w-full px-4 py-3 outline-none text-base font-bold text-center" /></label>
+            <label class="space-y-2"><span class="text-[10px] font-black text-cyan-200/70 uppercase tracking-widest pl-2">Minum Oral</span><input id="input-oral" type="number" step="0.1" placeholder="0" class="calc-input liquid-input w-full px-4 py-3 outline-none text-base font-bold text-center" /></label>
+            <label class="space-y-2"><span class="text-[10px] font-black text-cyan-200/70 uppercase tracking-widest pl-2">Enteral</span><input id="input-enteral" type="number" step="0.1" placeholder="0" class="calc-input liquid-input w-full px-4 py-3 outline-none text-base font-bold text-center" /></label>
+          </div>
+          <div class="rounded-full bg-gradient-to-r from-blue-900/40 to-slate-900/40 border border-blue-500/30 p-4 px-6 flex justify-between items-center shadow-[inset_0_0_15px_rgba(59,130,246,0.2)]">
+            <div>
+              <p class="text-[10px] uppercase tracking-widest text-blue-400 font-black">Total Input</p>
+              <p class="text-3xl font-black mt-1 tabular-nums text-blue-200"><span id="display-total-in">0.0</span> <span class="text-[11px] font-bold opacity-60">cc</span></p>
+            </div>
+            <div class="text-right">
+              <p class="text-[10px] uppercase tracking-widest text-slate-500 font-black">Laju / Jam</p>
+              <p class="text-lg font-black text-slate-300"><span id="display-input-hour">0.0</span> <span class="text-[10px]">cc/h</span></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Output Card -->
+        <div class="bubble-card p-6 md:p-8 space-y-6">
+          <div class="flex items-center gap-3 border-b border-white/10 pb-4">
+            <div class="p-2.5 rounded-full bg-orange-500/20 text-orange-300 shadow-[inset_0_2px_5px_rgba(255,255,255,0.2)]"><i data-lucide="arrow-up-from-line" class="w-5 h-5"></i></div>
+            <h2 class="text-xl font-black text-white tracking-wide">Output Cairan</h2>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <label class="space-y-2"><span class="text-[10px] font-black text-cyan-200/70 uppercase tracking-widest pl-2">Urin Terukur</span><input id="input-urine" type="number" step="0.1" placeholder="0" class="calc-input liquid-input w-full px-4 py-3 outline-none text-base font-bold text-center" style="border-color: rgba(249, 115, 22, 0.4); box-shadow: inset 0 3px 8px rgba(0,0,0,0.6), 0 0 10px rgba(249, 115, 22, 0.2);"/></label>
+            <label class="space-y-2"><span class="text-[10px] font-black text-cyan-200/70 uppercase tracking-widest pl-2">IWL Factor</span><input id="input-iwl-factor" type="number" step="1" value="15" class="calc-input liquid-input w-full px-4 py-3 outline-none text-base font-bold text-center" /></label>
+            <label class="space-y-2"><span class="text-[10px] font-black text-cyan-200/70 uppercase tracking-widest pl-2">Muntah / Drain</span><input id="input-drain" type="number" step="0.1" placeholder="0" class="calc-input liquid-input w-full px-4 py-3 outline-none text-base font-bold text-center" /></label>
+            <div class="rounded-full bg-black/30 border border-white/10 p-3 flex flex-col justify-center text-center shadow-inner">
+              <p class="text-[10px] uppercase tracking-widest text-slate-500 font-black">Estimasi IWL</p>
+              <p class="text-xl font-black text-slate-300"><span id="display-iwl">0.0</span> <span class="text-[10px]">cc</span></p>
+            </div>
+          </div>
+          <div class="rounded-full bg-gradient-to-r from-orange-900/40 to-slate-900/40 border border-orange-500/30 p-4 px-6 flex justify-between items-center shadow-[inset_0_0_15px_rgba(249,115,22,0.2)]">
+            <div>
+              <p class="text-[10px] uppercase tracking-widest text-orange-400 font-black">Total Output</p>
+              <p class="text-3xl font-black mt-1 tabular-nums text-orange-200"><span id="display-total-out">0.0</span> <span class="text-[11px] font-bold opacity-60">cc</span></p>
+            </div>
+            <div class="text-right">
+              <p class="text-[10px] uppercase tracking-widest text-slate-500 font-black">Urin / Jam</p>
+              <p class="text-lg font-black text-slate-300"><span id="display-urine-per-hour">0.0</span> <span class="text-[10px]">cc/h</span></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Analisa & Kesimpulan -->
+      <section class="space-y-6 lg:space-y-8">
+        
+        <!-- Giant Bubble Balance Card -->
+        <div id="card-balance" class="bubble-card bubble-card-circle p-8 md:p-10 flex flex-col justify-center text-center min-h-[300px]">
+          <div id="balance-accent" class="absolute inset-0 border-[6px] border-cyan-500/20 rounded-[inherit] transition-all duration-700 pointer-events-none"></div>
+          
+          <div class="relative z-10">
+            <p class="text-xs uppercase tracking-[0.4em] text-cyan-200 font-black mb-2">Kumulatif Balance</p>
+            <div id="text-balance" class="text-6xl md:text-7xl lg:text-8xl font-black tabular-nums tracking-tighter text-white transition-all duration-700">0 <span class="text-2xl text-slate-400">cc</span></div>
+          </div>
+          
+          <div class="flex justify-center mt-6">
+            <div id="badge-balance-detail" class="hidden rounded-full bg-black/40 border border-white/10 px-5 py-2.5 text-xs font-bold text-slate-300 shadow-inner flex items-center gap-2">
+              <i data-lucide="target" class="w-4 h-4 text-cyan-400"></i> Target Drop: <span id="display-target-chip">0</span> cc
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 mt-8 max-w-sm mx-auto w-full">
+            <div class="rounded-full bg-black/20 border border-white/5 py-3">
+              <p class="text-[10px] uppercase tracking-widest text-slate-500 font-black">Net / Jam</p>
+              <p class="text-xl font-black mt-1 tabular-nums text-slate-200"><span id="display-net-hour">0.0</span> <span class="text-[10px] opacity-50">cc/h</span></p>
+            </div>
+            <div class="rounded-full bg-black/20 border border-white/5 py-3">
+              <p class="text-[10px] uppercase tracking-widest text-slate-500 font-black">Gap Target</p>
+              <p class="text-xl font-black mt-1 tabular-nums text-slate-200"><span id="display-gap-target">0</span> <span class="text-[10px] opacity-50">cc</span></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Diuresis Flow Card -->
+        <div class="bubble-card p-6 md:p-8 space-y-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-[11px] uppercase tracking-[0.2em] text-cyan-300 font-black">Laju Diuresis</p>
+              <div class="text-4xl md:text-5xl font-black text-white mt-2 tabular-nums tracking-tight"><span id="display-diuresis">0.00</span> <span class="text-[11px] sm:text-sm font-bold text-slate-500">cc/kg/h</span></div>
+            </div>
+            <div id="diuresis-chip" class="rounded-full px-5 py-2.5 text-xs font-black border border-white/10 bg-black/30 text-slate-400 shadow-inner uppercase tracking-widest">Standby</div>
+          </div>
+          
+          <div class="space-y-4 mt-4">
+            <div class="h-6 rounded-full bubble-track">
+              <div id="bar-diuresis" class="liquid-bar bg-slate-600 animate-shimmer" style="width: 0%;"></div>
+            </div>
+            <div class="flex justify-between px-2 text-[10px] uppercase tracking-widest font-black text-slate-500">
+              <span id="label-oliguria">Oliguria</span>
+              <span id="label-normal">Normal</span>
+              <span id="label-aktif">Aktif</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Smart Analysis Card -->
+        <div class="bubble-card p-6 md:p-8 relative overflow-hidden">
+          <div class="absolute -right-10 -bottom-10 opacity-[0.03] rotate-12">
+            <i id="icon-status-bg" data-lucide="waves" style="width: 200px; height: 200px;" class="text-white"></i>
+          </div>
+          
+          <div class="flex items-center gap-3 relative z-10">
+            <div class="p-2.5 rounded-full bg-black/30 shadow-inner border border-white/5"><i id="icon-status" data-lucide="cpu" class="w-5 h-5 text-slate-400"></i></div>
+            <h2 class="text-xl font-black text-white tracking-wide">Analisa Sistem</h2>
+          </div>
+          
+          <div class="relative z-10 mt-5">
+            <h3 id="text-status" class="text-2xl font-black text-slate-400 leading-tight">Menunggu Data...</h3>
+            <p id="text-advice" class="text-sm leading-relaxed text-slate-300 mt-2 font-medium">Input parameter pasien untuk memulai interpretasi klinis.</p>
+          </div>
+          
+          <div id="alert-electrolytes" class="hidden rounded-[24px] bg-yellow-500/10 border border-yellow-500/30 p-5 mt-6 relative z-10 shadow-[inset_0_0_15px_rgba(234,179,8,0.1)]">
+            <div class="flex gap-4">
+              <div class="mt-1"><i data-lucide="zap" class="w-5 h-5 text-yellow-400"></i></div>
+              <div>
+                <p class="text-xs uppercase tracking-widest text-yellow-400 font-black">Electrolyte Watch</p>
+                <p class="mt-1.5 text-sm text-yellow-200/80 leading-relaxed">Diuresis agresif terdeteksi. Monitor ketat <strong>K, Mg, Na</strong> untuk mencegah aritmia & AKI.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-[24px] bg-gradient-to-r from-cyan-900/30 to-blue-900/30 border border-cyan-500/20 p-5 mt-6 relative z-10 shadow-inner">
+            <div class="flex justify-between items-center">
+                <p class="text-[10px] uppercase tracking-widest text-cyan-300 font-black">Nursing Prompt</p>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-cyan-500"></i>
+            </div>
+            <p id="text-prompt" class="mt-2 text-sm text-cyan-100 font-medium italic leading-relaxed">"Verifikasi berat badan dan output cairan sebelum intervensi."</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer Audit Summary -->
+    <section class="bubble-card p-6 md:p-10 mt-8 mb-16 relative">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div>
+          <h2 class="text-2xl font-black text-white tracking-wide">Quick Summary</h2>
+          <p class="text-cyan-200/70 text-sm font-medium mt-2">Ringkasan cepat untuk operan klinis (handover).</p>
+        </div>
+        <button id="btn-copy-summary" class="print-hide w-full md:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:-translate-y-1 active:scale-95 text-sm font-black transition-all flex items-center justify-center gap-3 border border-cyan-300/50">
+          <i data-lucide="clipboard" class="w-5 h-5"></i> SALIN RINGKASAN
+        </button>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+        <div class="rounded-[24px] bg-black/20 border border-white/5 p-5 shadow-inner text-center">
+          <p class="text-[10px] text-slate-500 font-black uppercase tracking-widest">Net Balance</p>
+          <p id="sum-balance" class="mt-2 font-black text-2xl tabular-nums text-white">0 cc</p>
+        </div>
+        <div class="rounded-[24px] bg-black/20 border border-white/5 p-5 shadow-inner text-center">
+          <p class="text-[10px] text-slate-500 font-black uppercase tracking-widest">Diuresis Rate</p>
+          <p id="sum-diuresis" class="mt-2 font-black text-2xl tabular-nums text-cyan-300">0.00</p>
+        </div>
+        <div class="rounded-[24px] bg-black/20 border border-white/5 p-5 shadow-inner text-center">
+          <p class="text-[10px] text-slate-500 font-black uppercase tracking-widest">Total IWL</p>
+          <p id="sum-iwl" class="mt-2 font-black text-2xl tabular-nums text-blue-300">0 cc</p>
+        </div>
+        <div class="rounded-[24px] bg-black/20 border border-white/5 p-5 shadow-inner text-center">
+          <p class="text-[10px] text-slate-500 font-black uppercase tracking-widest">Urine Target</p>
+          <p id="sum-target-urine" class="mt-2 font-black text-2xl tabular-nums text-emerald-300">0 cc/h</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="mt-12 mb-12 text-center max-w-2xl mx-auto px-4 relative z-10">
+      <p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] leading-relaxed">
+        Sanggahan Medis: Aplikasi ini adalah alat bantu kalkulasi klinis observasional. Keputusan akhir terkait manajemen pasien sepenuhnya berada di tangan Dokter Penanggung Jawab Pelayanan (DPJP).
+      </p>
+      <div class="mt-8 h-1 w-24 bg-gradient-to-r from-cyan-500 to-transparent mx-auto rounded-full opacity-30"></div>
+    </footer>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    
+    const $ = (id) => document.getElementById(id);
+    const els = {
+      inputs: document.querySelectorAll('.calc-input'),
+      weight: $('input-weight'), temp: $('input-temp'), hours: $('input-hours'), target: $('input-target'),
+      iwlFactor: $('input-iwl-factor'),
+      iv: $('input-iv'), meds: $('input-meds'), oral: $('input-oral'), enteral: $('input-enteral'),
+      urine: $('input-urine'), drain: $('input-drain'),
+      totalIn: $('display-total-in'), totalOut: $('display-total-out'), iwl: $('display-iwl'),
+      balanceText: $('text-balance'), balanceCard: $('card-balance'), balanceAccent: $('balance-accent'),
+      targetChip: $('badge-balance-detail'), targetChipText: $('display-target-chip'),
+      targetBalance: $('display-target-balance'), urineHourTarget: $('display-urine-hour'),
+      diuresis: $('display-diuresis'), diuresisBar: $('bar-diuresis'), diuresisChip: $('diuresis-chip'),
+      lblOliguria: $('label-oliguria'), lblNormal: $('label-normal'), lblAktif: $('label-aktif'),
+      status: $('text-status'), advice: $('text-advice'), prompt: $('text-prompt'), iconStatus: $('icon-status'),
+      inputHour: $('display-input-hour'), urinePerHour: $('display-urine-per-hour'), netHour: $('display-net-hour'),
+      gapTarget: $('display-gap-target'), alertElectrolytes: $('alert-electrolytes'),
+      sumBalance: $('sum-balance'), sumDiuresis: $('sum-diuresis'), sumIwl: $('sum-iwl'), sumTargetUrine: $('sum-target-urine')
+    };
+
+    function num(el, fallback = 0) {
+      const v = parseFloat(el.value);
+      return Number.isFinite(v) ? v : fallback;
+    }
+
+    function clamp(val, min, max) {
+      return Math.min(Math.max(val, min), max);
+    }
+
+    function computeIWL(weight, temp, hours, factor) {
+      const base = factor * weight * (hours / 24);
+      const fever = temp > 36.8 ? (temp - 36.8) * 200 * (hours / 24) : 0;
+      return base + fever;
+    }
+
+    function computeDiuresis(urine, weight, hours) {
+      if (weight <= 0 || hours <= 0) return 0;
+      return urine / weight / hours;
+    }
+
+    function formatSigned(n, digits = 0) {
+      const sign = n > 0 ? '+' : '';
+      return sign + n.toFixed(digits);
+    }
+
+    function setStatusVisual(color, icon) {
+      const colorMap = {
+        emerald: 'text-emerald-400', textGlow: 'text-glow-emerald',
+        rose: 'text-rose-400', roseGlow: 'text-glow-rose',
+        cyan: 'text-cyan-400', cyanGlow: 'text-glow-cyan',
+        amber: 'text-yellow-400',
+        slate: 'text-slate-400'
+      };
+      
+      els.status.className = `text-2xl font-black ${colorMap[color] || colorMap.slate} leading-tight`;
+      if(color === 'cyan') els.status.classList.add('text-glow-cyan');
+      if(color === 'emerald') els.status.classList.add('text-glow-emerald');
+      if(color === 'rose') els.status.classList.add('text-glow-rose');
+
+      els.iconStatus.className = `w-5 h-5 ${colorMap[color] || colorMap.slate}`;
+      els.iconStatus.setAttribute('data-lucide', icon);
+      lucide.createIcons();
+    }
+
+    function interpret(balance, targetBal, diuresis, hours, weight) {
+      if (weight <= 0) return { status: 'Menunggu Berat Badan', advice: 'Input berat badan pasien untuk memulai target hemodinamik dan diuresis.', prompt: 'Masukkan baseline BB saat ini.', color: 'slate', icon: 'user' };
+      if (hours <= 0) return { status: 'Durasi Tidak Valid', advice: 'Jam observasi harus lebih besar dari 0.', prompt: 'Perbaiki durasi observasi.', color: 'amber', icon: 'clock' };
+
+      let status = 'Fluid Overload';
+      let advice = 'Keseimbangan cairan positif terdeteksi. Evaluasi respons diuresis dan retriksi cairan.';
+      let prompt = 'Pertimbangkan eskalasi diuretik atau pembatasan intake.';
+      let color = 'rose';
+      let icon = 'alert-triangle';
+      
+      if (targetBal < 0 && balance <= targetBal) {
+        status = 'Target Dekongesti Tercapai';
+        advice = 'Balance cairan negatif sesuai target. Pantau ketat tanda hipoperfusi dan hipotensi.';
+        prompt = 'Target tercapai. Sesuaikan dosis diuretik sesuai toleransi.';
+        color = 'emerald';
+        icon = 'check-circle';
+      } else if (balance < 0) {
+        status = 'Balance Negatif';
+        advice = 'Keseimbangan cairan sudah negatif namun belum mencapai spesifik target (bila ada).';
+        prompt = 'Lanjutkan terapi saat ini, monitor tren hemodinamik.';
+        color = 'cyan'; 
+        icon = 'trending-down';
+      }
+
+      return { status, advice, prompt, color, icon, isOverdiuresis: diuresis > 1.5 };
+    }
+
+    function updateBalanceCard(balance) {
+      if (balance < 0) {
+        els.balanceAccent.className = 'absolute inset-0 border-[6px] border-emerald-400/40 rounded-[inherit] shadow-[inset_0_0_40px_rgba(16,185,129,0.3)] transition-all duration-700 pointer-events-none';
+        els.balanceText.classList.add('text-glow-emerald');
+        els.balanceText.classList.remove('text-glow-rose', 'text-glow-cyan');
+      } else if (balance > 0) {
+        els.balanceAccent.className = 'absolute inset-0 border-[6px] border-rose-500/40 rounded-[inherit] shadow-[inset_0_0_40px_rgba(244,63,94,0.3)] transition-all duration-700 pointer-events-none';
+        els.balanceText.classList.add('text-glow-rose');
+        els.balanceText.classList.remove('text-glow-emerald', 'text-glow-cyan');
+      } else {
+        els.balanceAccent.className = 'absolute inset-0 border-[6px] border-cyan-500/20 rounded-[inherit] transition-all duration-700 pointer-events-none';
+        els.balanceText.classList.remove('text-glow-emerald', 'text-glow-rose');
+      }
+    }
+
+    function updateDiuresisVisual(rate) {
+      els.diuresis.textContent = rate.toFixed(2);
+      const width = clamp((rate / 3) * 100, 0, 100);
+      els.diuresisBar.style.width = width + '%';
+      
+      [els.lblOliguria, els.lblNormal, els.lblAktif].forEach(el => el.className = 'font-black');
+      
+      if (rate < 0.5) {
+        els.diuresisBar.className = 'liquid-bar bg-rose-500 animate-shimmer shadow-[0_0_20px_rgba(244,63,94,0.6)]';
+        els.diuresisChip.textContent = 'OLIGURIA';
+        els.diuresisChip.className = 'rounded-full px-5 py-2.5 text-xs font-black border border-rose-500/30 bg-rose-950/50 text-rose-400 shadow-inner tracking-widest';
+        els.lblOliguria.classList.add('text-rose-400');
+      } else if (rate <= 1.5) {
+        els.diuresisBar.className = 'liquid-bar bg-emerald-500 animate-shimmer shadow-[0_0_20px_rgba(16,185,129,0.6)]';
+        els.diuresisChip.textContent = 'OPTIMAL';
+        els.diuresisChip.className = 'rounded-full px-5 py-2.5 text-xs font-black border border-emerald-500/30 bg-emerald-950/50 text-emerald-400 shadow-inner tracking-widest';
+        els.lblNormal.classList.add('text-emerald-400');
+      } else {
+        els.diuresisBar.className = 'liquid-bar bg-yellow-500 animate-shimmer shadow-[0_0_20px_rgba(234,179,8,0.6)]';
+        els.diuresisChip.textContent = 'AKTIF';
+        els.diuresisChip.className = 'rounded-full px-5 py-2.5 text-xs font-black border border-yellow-500/30 bg-yellow-950/50 text-yellow-400 shadow-inner tracking-widest';
+        els.lblAktif.classList.add('text-yellow-400');
+      }
+    }
+
+    function calculate() {
+      const weight = num(els.weight);
+      const temp = num(els.temp, 36.5);
+      const hours = num(els.hours, 24);
+      const targetLoss = num(els.target);
+      const iwlFactor = num(els.iwlFactor, 15);
+      
+      const iv = num(els.iv), meds = num(els.meds), oral = num(els.oral), enteral = num(els.enteral);
+      const urine = num(els.urine), drain = num(els.drain);
+      
+      const totalIn = iv + meds + oral + enteral;
+      const iwl = computeIWL(weight, temp, hours, iwlFactor);
+      const totalOut = urine + drain + iwl;
+      const balance = totalIn - totalOut;
+      
+      const targetBal = -(targetLoss * 1000) * (hours / 24);
+      const diuresis = computeDiuresis(urine, weight, hours);
+      const urinePerHour = hours > 0 ? urine / hours : 0;
+      const urineHourTarget = weight > 0 ? 0.5 * weight : 0;
+      const netHour = hours > 0 ? balance / hours : 0;
+      const gapTarget = targetBal < 0 ? balance - targetBal : balance;
+
+      els.totalIn.textContent = totalIn.toFixed(1);
+      els.totalOut.textContent = totalOut.toFixed(1);
+      els.iwl.textContent = iwl.toFixed(1);
+      els.inputHour.textContent = (totalIn / (hours || 1)).toFixed(1);
+      els.urinePerHour.textContent = urinePerHour.toFixed(1);
+      els.netHour.textContent = netHour.toFixed(1);
+      els.targetBalance.textContent = targetBal.toFixed(0);
+      els.urineHourTarget.textContent = urineHourTarget.toFixed(0);
+      els.gapTarget.textContent = formatSigned(gapTarget, 0);
+      
+      // Update balance text
+      els.balanceText.innerHTML = `${formatSigned(balance, 0)} <span class="text-2xl md:text-3xl text-white/50 font-bold ml-1">cc</span>`;
+      els.targetChipText.textContent = targetBal.toFixed(0);
+      
+      targetLoss > 0 ? els.targetChip.classList.remove('hidden') : els.targetChip.classList.add('hidden');
+      
+      updateBalanceCard(balance);
+      updateDiuresisVisual(diuresis);
+      
+      const note = interpret(balance, targetBal, diuresis, hours, weight);
+      els.status.textContent = note.status;
+      els.advice.textContent = note.advice;
+      els.prompt.textContent = `"${note.prompt}"`;
+      setStatusVisual(note.color, note.icon);
+
+      note.isOverdiuresis ? els.alertElectrolytes.classList.remove('hidden') : els.alertElectrolytes.classList.add('hidden');
+      
+      els.sumBalance.textContent = `${formatSigned(balance, 0)} cc`;
+      els.sumDiuresis.textContent = diuresis.toFixed(2);
+      els.sumIwl.textContent = `${iwl.toFixed(0)} cc`;
+      els.sumTargetUrine.textContent = `${urineHourTarget.toFixed(0)} cc/h`;
+      
+      window.__lastSummary = `[HydroMetrics Summary]\n- Pasien: BB ${weight}kg\n- Kumulatif Balance: ${formatSigned(balance,0)} cc\n- Rate Diuresis: ${diuresis.toFixed(2)} cc/kg/jam\n- Output Urin: ${urinePerHour.toFixed(0)} cc/jam\n- Status: ${note.status}\n\n*Dev: Bayushi Eka Putra, MD, FIHA (CardiologyVault)`;
+    }
+
+    els.inputs.forEach(input => input.addEventListener('input', calculate));
+    
+    document.querySelectorAll('.preset-hours').forEach(btn => {
+      btn.addEventListener('click', () => {
+        els.hours.value = btn.dataset.hours;
+        calculate();
+      });
+    });
+
+    $('btn-reset').addEventListener('click', () => {
+      [els.weight, els.target, els.iv, els.meds, els.oral, els.enteral, els.urine, els.drain].forEach(i => i.value = '');
+      els.temp.value = '36.5'; els.hours.value = '24'; els.iwlFactor.value = '15';
+      calculate();
+    });
+
+    $('btn-sample').addEventListener('click', () => {
+      els.weight.value = '70'; els.temp.value = '37.2'; els.hours.value = '24'; els.target.value = '1.0';
+      els.iv.value = '500'; els.meds.value = '50'; els.oral.value = '1000';
+      els.urine.value = '2500'; els.drain.value = '0';
+      calculate();
+    });
+
+    $('btn-copy-summary').addEventListener('click', () => {
+      const text = window.__lastSummary || '';
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      
+      const btn = $('btn-copy-summary');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i data-lucide="check" class="w-5 h-5"></i> BERHASIL DISALIN!';
+      btn.classList.replace('from-cyan-500', 'from-emerald-500');
+      btn.classList.replace('to-blue-600', 'to-emerald-700');
+      lucide.createIcons();
+      setTimeout(() => {
+        btn.innerHTML = orig;
+        btn.classList.replace('from-emerald-500', 'from-cyan-500');
+        btn.classList.replace('to-emerald-700', 'to-blue-600');
+        lucide.createIcons();
+      }, 2000);
+    });
+
+    calculate();
+  </script>
+</body>
+</html>
