@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Code Blue Investigator Pro - CardiologyVault</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Phosphor Icons (Mobile Friendly Icons) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Google Fonts: JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { mono: ['"JetBrains Mono"', 'monospace'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'JetBrains Mono', monospace; background-color: #050505; color: #e2e8f0; }
+        .bg-cyber-gradient { background: radial-gradient(ellipse at top, #0a1128, #050505, #050505); }
+        .glass-panel { background: rgba(10, 14, 23, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(6, 182, 212, 0.3); }
+        /* Hide scrollbar for cleaner mobile look */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #05080f; }
+        ::-webkit-scrollbar-thumb { background: #06b6d4; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-cyber-gradient min-h-screen flex flex-col relative overflow-x-hidden">
+
+    <!-- Ambient Glow -->
+    <div class="fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-cyan-900/10 blur-[100px] rounded-full pointer-events-none z-0"></div>
+
+    <!-- AUDIO TOGGLE (Global) -->
+    <button id="btn-audio" class="fixed top-3 right-3 z-50 p-2 bg-[#05080f] border border-cyan-800 rounded-lg text-slate-400 hover:text-cyan-400 hidden">
+        <i class="ph ph-speaker-x text-xl" id="icon-audio"></i>
+    </button>
+
+    <!-- ==================== START SCREEN ==================== -->
+    <div id="start-screen" class="relative z-10 flex flex-col items-center justify-center min-h-screen p-4">
+        <div class="glass-panel p-6 md:p-8 rounded-3xl shadow-[0_0_40px_rgba(6,182,212,0.2)] max-w-lg w-full text-center relative overflow-hidden">
+            <i class="ph ph-shield-check text-6xl text-cyan-400 drop-shadow-[0_0_15px_rgba(34,211,238,0.8)] mb-2 inline-block"></i>
+            
+            <h1 class="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-fuchsia-400 to-blue-500 tracking-widest uppercase drop-shadow-sm leading-tight">
+                Code Blue<br><span class="text-xl md:text-3xl text-white font-bold drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">Investigator</span>
+            </h1>
+            
+            <div class="mt-4 mb-2 text-cyan-300 font-bold uppercase tracking-widest text-[10px] md:text-xs bg-cyan-950/50 py-1.5 px-4 rounded-lg border border-cyan-500/20 inline-block">
+                Part of CardiologyVault
+            </div>
+            <div class="text-slate-400 font-semibold text-[9px] md:text-[10px] tracking-widest uppercase mb-4 pb-4 border-b border-cyan-900/50">
+                Dev: Bayushi Eka Putra, MD, FIHA
+            </div>
+            
+            <p class="text-slate-300 text-sm leading-relaxed mb-6">
+                Terdapat <span class="text-fuchsia-400 font-black text-base drop-shadow-[0_0_8px_rgba(232,121,249,0.8)]">40 Berkas Kasus</span> henti jantung misterius di IGD hari ini. Tentukan penyebab dan tatalaksananya!
+            </p>
+
+            <button onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-700 text-white rounded-xl font-bold text-lg transition-all shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:scale-105 active:scale-95 border border-cyan-400/50">
+                MULAI SHIFT
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== GAME SCREEN ==================== -->
+    <div id="game-screen" class="relative z-10 flex-col flex-grow hidden">
+        <!-- HEADER -->
+        <header class="glass-panel p-3 sticky top-0 z-20 shadow-[0_5px_20px_rgba(0,0,0,0.8)] border-b-2 border-cyan-900/60">
+            <div class="max-w-3xl mx-auto flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="bg-gradient-to-br from-cyan-600 to-blue-800 p-1.5 rounded-lg border border-cyan-400/50">
+                        <i class="ph ph-magnifying-glass text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xs md:text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-fuchsia-400 uppercase tracking-widest">CODE BLUE INVESTIGATOR</h1>
+                        <p class="text-[7px] md:text-[9px] text-cyan-500 font-bold tracking-widest uppercase">CardiologyVault • Dev: Bayushi E.P.</p>
+                    </div>
+                </div>
+                <div class="text-right bg-[#05080f] px-3 py-1 rounded-lg border border-cyan-800/50 mr-8 md:mr-0">
+                    <div class="text-[8px] text-cyan-600 font-bold tracking-widest uppercase">Skor</div>
+                    <div id="ui-score" class="text-sm md:text-lg font-black text-emerald-400 drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]">0</div>
+                </div>
+            </div>
+        </header>
+
+        <main class="p-3 md:p-4 max-w-3xl mx-auto w-full flex flex-col gap-4 flex-grow pb-10">
+            <!-- PROGRESS -->
+            <div class="flex justify-between text-[10px] text-cyan-400 font-bold mb-[-10px] tracking-widest uppercase">
+                <span id="ui-progress-text">Berkas 1 / 40</span>
+                <span class="text-fuchsia-500 flex items-center gap-1 animate-pulse"><i class="ph ph-activity"></i> Kritis</span>
+            </div>
+            <div class="w-full bg-[#0b1221] h-1.5 rounded-full overflow-hidden border border-slate-800">
+                <div id="ui-progress-bar" class="bg-gradient-to-r from-fuchsia-500 to-cyan-400 h-full transition-all duration-500 w-0"></div>
+            </div>
+
+            <!-- DOSSIER -->
+            <div class="glass-panel rounded-2xl p-4 md:p-6 space-y-4 relative overflow-hidden">
+                <i class="ph ph-file-text text-8xl text-cyan-400 absolute -top-4 -right-4 opacity-5"></i>
+                
+                <h2 id="ui-case-title" class="text-lg md:text-xl font-black text-white border-b border-cyan-900/50 pb-2 shadow-sm drop-shadow-md">
+                    Kasus #001: Judul
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="bg-[#05080f] p-3 rounded-xl border border-slate-800 relative overflow-hidden">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-cyan-500"></div>
+                        <div class="flex items-center gap-1.5 mb-1 text-cyan-400 text-[10px]">
+                            <i class="ph ph-activity"></i> <span class="font-bold tracking-widest">TANDA VITAL AWAL</span>
+                        </div>
+                        <p id="ui-vitals" class="text-slate-200 font-bold text-xs md:text-sm">HR: 100</p>
+                    </div>
+
+                    <div class="bg-[#05080f] p-3 rounded-xl border border-slate-800 relative overflow-hidden">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-fuchsia-500"></div>
+                        <div class="flex items-center gap-1.5 mb-1 text-fuchsia-400 text-[10px]">
+                            <i class="ph ph-heartbeat animate-pulse"></i> <span class="font-bold tracking-widest">MONITOR / EKG</span>
+                        </div>
+                        <p id="ui-ecg" class="text-slate-200 font-bold text-xs md:text-sm">PEA</p>
+                    </div>
+                </div>
+
+                <div class="bg-amber-950/20 p-3 md:p-4 rounded-xl border-l-2 border-amber-500">
+                    <div class="flex items-center gap-1.5 mb-2 text-amber-400 text-[10px]">
+                        <i class="ph ph-stethoscope"></i> <span class="font-bold tracking-widest uppercase">Laporan Klinis IGD</span>
+                    </div>
+                    <p id="ui-clinical" class="text-white font-medium text-xs md:text-sm leading-relaxed tracking-wide">Klinis deskripsi...</p>
+                </div>
+            </div>
+
+            <!-- ACTION PANEL (Dynamic) -->
+            <div id="action-panel" class="transition-all">
+                <!-- Injected via JS -->
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== RESULT MODAL ==================== -->
+    <div id="result-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-[#0a0e17] border-2 border-cyan-500/40 rounded-3xl shadow-[0_0_50px_rgba(6,182,212,0.3)] p-5 md:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto relative transform scale-95 transition-transform duration-300" id="result-modal-content">
+            
+            <h2 class="text-center font-black text-xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-4 tracking-widest uppercase pb-3 border-b border-slate-800">
+                Hasil Investigasi
+            </h2>
+
+            <div id="res-dx-box" class="p-4 rounded-2xl mb-3 border-2 relative overflow-hidden">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-[10px] font-black tracking-widest text-slate-400">1. DIAGNOSIS</span>
+                    <i id="icon-dx" class="text-2xl drop-shadow-md"></i>
+                </div>
+                <div class="text-[10px] text-slate-400 mb-0.5">Pilihan Anda:</div>
+                <div id="text-dx-user" class="text-lg font-black text-white"></div>
+                <div id="box-dx-correct" class="mt-2 p-2 bg-red-950/50 rounded-lg border border-red-900 hidden">
+                    <span class="text-[9px] text-red-300 uppercase font-bold tracking-widest">Seharusnya:</span> 
+                    <div id="text-dx-correct" class="font-black text-red-400 text-sm mt-0.5"></div>
+                </div>
+            </div>
+
+            <div id="res-tx-box" class="p-4 rounded-2xl mb-4 border-2 relative overflow-hidden">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-[10px] font-black tracking-widest text-slate-400">2. TATALAKSANA</span>
+                    <i id="icon-tx" class="text-2xl drop-shadow-md"></i>
+                </div>
+                <div class="text-[10px] text-slate-400 mb-0.5">Pilihan Anda:</div>
+                <div id="text-tx-user" class="text-lg font-black text-white leading-tight"></div>
+                <div id="box-tx-correct" class="mt-2 p-2 bg-red-950/50 rounded-lg border border-red-900 hidden">
+                    <span class="text-[9px] text-red-300 uppercase font-bold tracking-widest">Seharusnya:</span> 
+                    <div id="text-tx-correct" class="font-black text-red-400 text-sm mt-0.5 leading-tight"></div>
+                </div>
+            </div>
+
+            <div class="bg-[#05080f] p-4 rounded-2xl border border-cyan-800/50 mb-5 relative">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="ph ph-magnifying-glass text-cyan-400 text-lg"></i>
+                    <h3 class="font-black text-cyan-300 text-[10px] tracking-widest uppercase">Catatan Detektif</h3>
+                </div>
+                <p id="text-explanation" class="text-slate-300 text-xs leading-relaxed font-medium"></p>
+            </div>
+
+            <button onclick="nextCase()" class="w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-700 text-white rounded-xl font-bold text-base shadow-[0_0_20px_rgba(6,182,212,0.4)] active:scale-95 transition-transform flex justify-center items-center gap-2">
+                Berkas Berikutnya <i class="ph ph-caret-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== END SCREEN ==================== -->
+    <div id="end-screen" class="relative z-10 flex flex-col items-center justify-center min-h-screen p-4 hidden">
+        <div class="glass-panel p-6 md:p-8 rounded-3xl max-w-sm w-full text-center">
+            <i class="ph ph-shield-warning text-6xl text-cyan-400 drop-shadow-[0_0_20px_rgba(34,211,238,0.8)] mb-4 inline-block"></i>
+            <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-fuchsia-400 mb-1">Shift Selesai!</h1>
+            <p class="text-xs text-slate-400 mb-6 font-semibold uppercase tracking-widest">Laporan Akhir</p>
+            
+            <div class="bg-[#05080f] rounded-2xl p-5 mb-6 border border-cyan-900/50 shadow-inner">
+                <div class="text-[10px] text-cyan-500 uppercase tracking-widest mb-1 font-bold">Total Poin</div>
+                <div class="text-4xl font-black text-emerald-400 mb-4">
+                    <span id="final-score">0</span> <span class="text-lg text-slate-600">/ 4000</span>
+                </div>
+                
+                <div class="text-[10px] text-fuchsia-500 uppercase tracking-widest mb-1 font-bold">Gelar Detektif</div>
+                <div id="final-rank" class="text-lg font-black text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.6)]">Rank</div>
+            </div>
+
+            <button onclick="startGame()" class="w-full py-3 bg-[#0b1221] text-cyan-300 border border-cyan-800 rounded-xl font-bold text-sm shadow-[0_0_15px_rgba(6,182,212,0.2)] active:scale-95 transition-transform">
+                Mainkan Ulang Kasus
+            </button>
+            <div class="mt-6 text-[8px] font-bold text-slate-500 tracking-widest uppercase">CardiologyVault • Bayushi E.P.</div>
+        </div>
+    </div>
+
+<script>
+// ============================================================================
+// AUDIO ENGINE (Vanilla JS)
+// ============================================================================
+class AudioEngine {
+    constructor() { this.ctx = null; this.muted = true; this.isPlayingBGM = false; this.bgmTimer = null; }
+    init() {
+        if (!this.ctx) { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+        if (this.ctx.state === 'suspended') { this.ctx.resume(); }
+    }
+    startBGM() {
+        if (this.muted || !this.ctx) return;
+        this.isPlayingBGM = true;
+        const tempo = 110; const beatLen = 60 / tempo;
+        const notes = [82.41, 82.41, 87.31, 82.41, 92.50, 82.41, 98.00, 92.50]; 
+        let noteIdx = 0; let nextNoteTime = this.ctx.currentTime + 0.1;
+        const schedule = () => {
+            if (!this.isPlayingBGM) return;
+            while (nextNoteTime < this.ctx.currentTime + 0.1) {
+                this.playBassNote(notes[noteIdx], nextNoteTime, beatLen / 2);
+                noteIdx = (noteIdx + 1) % notes.length;
+                nextNoteTime += beatLen / 2;
+            }
+            this.bgmTimer = setTimeout(schedule, 25);
+        };
+        schedule();
+    }
+    stopBGM() { this.isPlayingBGM = false; clearTimeout(this.bgmTimer); }
+    playBassNote(freq, time, dur) {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+        osc.type = 'triangle'; osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.4, time); gain.gain.exponentialRampToValueAtTime(0.001, time + dur - 0.05);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(time); osc.stop(time + dur);
+    }
+    playClick() {
+        if (this.muted || !this.ctx) return;
+        const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+        osc.type = 'sine'; osc.frequency.setValueAtTime(800, this.ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.5, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(); osc.stop(this.ctx.currentTime + 0.1);
+    }
+    playCorrect() {
+        if (this.muted || !this.ctx) return;
+        const playNote = (freq, st, dur) => {
+            const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+            osc.type = 'sine'; osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.8, st); gain.gain.exponentialRampToValueAtTime(0.001, st + dur);
+            osc.connect(gain); gain.connect(this.ctx.destination);
+            osc.start(st); osc.stop(st + dur);
+        };
+        playNote(523.25, this.ctx.currentTime, 0.15); playNote(659.25, this.ctx.currentTime + 0.15, 0.3);
+    }
+    playWrong() {
+        if (this.muted || !this.ctx) return;
+        const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, this.ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(50, this.ctx.currentTime + 0.5);
+        gain.gain.setValueAtTime(0.8, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.5);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(); osc.stop(this.ctx.currentTime + 0.5);
+    }
+    playFlatline() {
+        if (this.muted || !this.ctx) return;
+        this.stopBGM();
+        const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+        osc.type = 'sine'; osc.frequency.value = 800;
+        gain.gain.setValueAtTime(0.4, this.ctx.currentTime); gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 2);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(); osc.stop(this.ctx.currentTime + 2);
+        setTimeout(() => { if (!this.muted) this.startBGM(); }, 2000);
+    }
+    toggleMute() {
+        this.muted = !this.muted;
+        if (!this.muted) { this.init(); this.startBGM(); document.getElementById('icon-audio').className = "ph ph-speaker-high text-xl"; } 
+        else { this.stopBGM(); document.getElementById('icon-audio').className = "ph ph-speaker-x text-xl"; }
+        return this.muted;
+    }
+}
+const sfx = new AudioEngine();
+
+// ============================================================================
+// DATA KASUS
+// ============================================================================
+const CASES = [
+  { id: 1, title: "Kasus #001: Trauma Berdarah", vitals: "HR: 140, BP: 70/40, SpO2: 92%", clinical: "Laki-laki 25 th, KLL, fraktur pelvis terbuka. Pakaian basah darah. Vena leher kolaps.", ecg: "Sinus Tachycardia -> PEA", correctDx: "Hipovolemia", correctTx: "Resusitasi Cairan Masif / Transfusi", explanation: "Syok hemoragik akibat fraktur pelvis masif." },
+  { id: 2, title: "Kasus #002: Benturan Setir", vitals: "HR: 110, BP: 85/50", clinical: "KLL dada membentur setir. Vena leher distensi, trakea deviasi ke kiri. Suara napas kanan hilang.", ecg: "PEA", correctDx: "Tension Pneumothorax", correctTx: "Dekompresi Jarum / WSD", explanation: "Triad Tension Pneumo. Butuh needle thoracostomy segera." },
+  { id: 3, title: "Kasus #003: Jadwal Terlewat", vitals: "HR: 40, BP: 90/60", clinical: "Pria 60 th CKD, bolos HD 2 kali. Lemas lalu tidak sadar.", ecg: "Tall Peaked T -> Sine Wave -> Asystole", correctDx: "Hipo-/Hiperkalemia", correctTx: "Kalsium Glukonas & Insulin+Dextrose", explanation: "Hiperkalemia berat khas pada CKD telat HD." },
+  { id: 4, title: "Kasus #004: Tusukan Sunyi", vitals: "HR: 120, BP: 70/50", clinical: "Luka tusuk parasternal kiri. Suara jantung menjauh (muffled), JVP meningkat tajam.", ecg: "Electrical Alternans -> PEA", correctDx: "Tamponade Jantung", correctTx: "Perikardiosentesis", explanation: "Beck's Triad (Muffled heart, JVP naik, hipotensi)." },
+  { id: 5, title: "Kasus #005: Bakso Mematikan", vitals: "HR: 30, SpO2: Tak terbaca", clinical: "Anak 8 th memegang leher (Choking sign) saat makan bakso. Sianosis berat lalu kolaps.", ecg: "Severe Bradycardia -> Asystole", correctDx: "Hipoksia", correctTx: "Bebaskan Jalan Napas & Intubasi", explanation: "Sumbatan jalan napas memicu bradikardia dan asystole pada anak." },
+  { id: 6, title: "Kasus #006: Penerbangan Panjang", vitals: "HR: 115, BP: 80/50", clinical: "Wanita 55 th pasca penerbangan 14 jam. Sesak napas akut, dada berat, kolaps.", ecg: "S1Q3T3 pattern -> PEA", correctDx: "Trombosis (Paru)", correctTx: "Trombolisis / Trombektomi", explanation: "DVT memicu Emboli Paru Masif." },
+  { id: 7, title: "Kasus #007: Beban di Dada", vitals: "HR: 90, BP: 100/60", clinical: "Pria 50 th nyeri dada tertindih beban menjalar ke rahang. Keringat dingin. Pingsan di IGD.", ecg: "ST Elevasi V1-V6 -> VF -> Asystole", correctDx: "Trombosis (Koroner)", correctTx: "Primary PCI / Kateterisasi", explanation: "STEMI Anterior memicu cardiac arrest." },
+  { id: 8, title: "Kasus #008: Botol Kosong", vitals: "HR: 40, BP: 80/40", clinical: "Remaja koma, dekat botol Amitriptyline (TCA) kosong. Pupil melebar.", ecg: "Prolonged QT, Widened QRS -> PEA", correctDx: "Toksin", correctTx: "Pemberian Antidotum Spesifik", explanation: "Overdosis TCA. Butuh Natrium Bikarbonat sebagai antidotum." },
+  { id: 9, title: "Kasus #009: Napas Aseton", vitals: "HR: 110, RR: 35x/mnt", clinical: "Pria DM tipe 1, napas Kussmaul (berbau aseton). Gula kapiler 'HIGH'.", ecg: "Low amplitude QRS -> PEA", correctDx: "Hidrogen Ion (Asidosis)", correctTx: "Ventilasi Adekuat & Bikarbonat", explanation: "Ketoasidosis Diabetik (KAD) memicu asidosis metabolik berat." },
+  { id: 10, title: "Kasus #010: Malam Bersalju", vitals: "Temp: 28°C", clinical: "Gelandangan kaku di taman saat hujan salju. Kaku rahang, kulit es.", ecg: "J-waves (Osborn) -> Asystole", correctDx: "Hipotermia", correctTx: "Active Core Rewarming", explanation: "Hipotermia berat. Arrest refrakter hingga suhu tubuh inti naik." },
+  { id: 11, title: "Kasus #011: Feses Hitam", vitals: "HR: 130, BP: 60/40", clinical: "Pria muntah darah masif & BAB melena 2 hari. Konjungtiva pucat pasif.", ecg: "Sinus Tachycardia -> PEA", correctDx: "Hipovolemia", correctTx: "Resusitasi Cairan Masif / Transfusi", explanation: "Syok hemoragik ec perdarahan varises esofagus." },
+  { id: 12, title: "Kasus #012: Diare Profus", vitals: "HR: 100, BP: 80/50", clinical: "GEA cair 5 hari tanpa asupan. Sinkop di bangsal.", ecg: "Prominent U waves -> Torsades", correctDx: "Hipo-/Hiperkalemia", correctTx: "Koreksi Kalium & Magnesium IV", explanation: "Hipokalemia berat ec kehilangan cairan GI." },
+  { id: 13, title: "Kasus #013: Pupil Jarum", vitals: "RR: 4x/mnt, SpO2: 70%", clinical: "Bekas suntikan lengan, pupil pinpoint, depresi napas berat di toilet umum.", ecg: "Bradycardia -> PEA", correctDx: "Toksin", correctTx: "Pemberian Antidotum Spesifik", explanation: "Overdosis Opioid (Heroin). Antidotum: Naloxone." },
+  { id: 14, title: "Kasus #014: Alarm Ventilator", vitals: "HR: 140, BP: 60/40", clinical: "Pasca insersi CVC leher kanan, ventilator alarm High Peak Pressure. Desaturasi instan.", ecg: "PEA", correctDx: "Tension Pneumothorax", correctTx: "Dekompresi Jarum / WSD", explanation: "Komplikasi iatrogenik insersi CVC memicu pneumothorax." },
+  { id: 15, title: "Kasus #015: Penyakit Serigala", vitals: "BP: 80/60 (Pulsus Paradoxus+)", clinical: "Wanita SLE, sesak berbaring, JVP sangat distensi. Paru bersih.", ecg: "Low voltage QRS -> PEA", correctDx: "Tamponade Jantung", correctTx: "Perikardiosentesis", explanation: "Efusi perikardial masif pada SLE memicu Tamponade." },
+  { id: 16, title: "Kasus #016: Pasca Operasi Panggul", vitals: "HR: 120, SpO2: 85%", clinical: "H+3 Post-THR (ganti panggul), mendadak sesak berat saat belajar jalan.", ecg: "New RBBB, RV Strain -> PEA", correctDx: "Trombosis (Paru)", correctTx: "Trombolisis / Trombektomi", explanation: "Risiko tinggi DVT paska operasi ortopedi memicu Emboli Paru." },
+  { id: 17, title: "Kasus #017: Busa Kemerahan", vitals: "SpO2: 60%", clinical: "Anak tenggelam di kolam. Mulut berbusa kemerahan (foamy sputum).", ecg: "Asystole", correctDx: "Hipoksia", correctTx: "Bebaskan Jalan Napas & Intubasi", explanation: "Tenggelam memicu ARDS dan hipoksia mematikan." },
+  { id: 18, title: "Kasus #018: Syok Sepsis", vitals: "BP: 50/palp, Laktat: 15", clinical: "Lansia ISK berat, kulit mottled, anuria. Sepsis berat.", ecg: "Sinus Tachy -> PEA", correctDx: "Hidrogen Ion (Asidosis)", correctTx: "Ventilasi Adekuat & Bikarbonat", explanation: "Asidosis Laktat parah akibat syok septik." },
+  { id: 19, title: "Kasus #019: Nyeri Ulu Hati Pagi", vitals: "HR: 35, BP: 70/40", clinical: "Pria perokok nyeri ulu hati jam 3 pagi, mual hebat. Pucat.", ecg: "ST Elevasi II, III, aVF -> CHB -> Asystole", correctDx: "Trombosis (Koroner)", correctTx: "Primary PCI / Kateterisasi", explanation: "STEMI Inferior dengan blokade nodus AV (Vagal reflex)." },
+  { id: 20, title: "Kasus #020: Resep Tensi", vitals: "HR: 30, GDS: 50", clinical: "Kakek pikun, blister Bisoprolol kosong. Letargi.", ecg: "Profound Bradycardia -> PEA", correctDx: "Toksin", correctTx: "Pemberian Antidotum Spesifik", explanation: "Keracunan Beta Blocker. Butuh Glukagon & High Dose Insulin." },
+  { id: 21, title: "Kasus #021: Tragedi Persalinan", vitals: "HR: 145, BP: 60/palp", clinical: "Wanita G1P1 perdarahan merembes hebat paska persalinan normal (Atonia uteri). Uterus lembek.", ecg: "Tachycardia -> PEA", correctDx: "Hipovolemia", correctTx: "Resusitasi Cairan Masif / Transfusi", explanation: "Hemorrhagic shock paska persalinan." },
+  { id: 22, title: "Kasus #022: Runtuhan Bangunan", vitals: "HR: 50, BP: 90/50", clinical: "Pekerja tambang kaki tertimpa batu 6 jam. Setelah dievakuasi mendadak henti jantung.", ecg: "Wide bizarre QRS -> Asystole", correctDx: "Hipo-/Hiperkalemia", correctTx: "Kalsium Glukonas & Insulin+Dextrose", explanation: "Crush syndrome melepaskan kalium seluler memicu hiperkalemia mematikan." },
+  { id: 23, title: "Kasus #023: Inhaler Kosong", vitals: "RR: 40x/mnt, SpO2: 75%", clinical: "Pria asma berat, silent chest (tidak ada suara napas). Cyanosis.", ecg: "PEA", correctDx: "Hipoksia", correctTx: "Bebaskan Jalan Napas & Intubasi", explanation: "Status Asmatikus memicu hipoksia berat dan henti napas." },
+  { id: 24, title: "Kasus #024: Nyeri Perut Akut", vitals: "HR: 130, BP: 70/40", clinical: "Wanita muda telat haid 2 bln, nyeri perut bawah mendadak, pingsan. Pucat.", ecg: "PEA", correctDx: "Hipovolemia", correctTx: "Resusitasi Cairan Masif / Transfusi", explanation: "Ruptur Kehamilan Ektopik Terganggu (KET) menyebabkan perdarahan intraabdomen." },
+  { id: 25, title: "Kasus #025: Pasien Marfan", vitals: "BP: 70/50, JVP Distensi", clinical: "Pria tinggi kurus (Sindrom Marfan), nyeri dada 'merobek' menjalar ke punggung lalu kolaps.", ecg: "Electrical Alternans -> PEA", correctDx: "Tamponade Jantung", correctTx: "Perikardiosentesis", explanation: "Ruptur Diseksi Aorta tipe A ke dalam ruang perikardium memicu Tamponade." },
+  { id: 26, title: "Kasus #026: Korban Kebakaran", vitals: "HR: 120, Laktat: 20", clinical: "Korban terjebak kebakaran gedung. Wajah jelaga. Tidak sadar.", ecg: "Asystole", correctDx: "Toksin", correctTx: "Pemberian Antidotum Spesifik", explanation: "Keracunan Sianida & Karbon Monoksida. Butuh Hidroksokobalamin." },
+  { id: 27, title: "Kasus #027: Retensi CO2", vitals: "RR: 8x/mnt, GCS: 5", clinical: "Pasien PPOK kronis diberi O2 10 L/mnt oleh keluarga. Menjadi letargi dan henti napas.", ecg: "PEA", correctDx: "Hidrogen Ion (Asidosis)", correctTx: "Ventilasi Adekuat & Bikarbonat", explanation: "Asidosis Respiratorik ekstrem akibat hilangnya hypoxic drive. Butuh ventilasi mekanik." },
+  { id: 28, title: "Kasus #028: Emboli Lemak", vitals: "SpO2: 80%, Petechiae", clinical: "Remaja post-KLL fraktur femur bilateral H+2. Sesak akut, ruam petechiae di dada.", ecg: "RBBB -> PEA", correctDx: "Trombosis (Paru)", correctTx: "Trombolisis / Trombektomi", explanation: "Sindrom Emboli Lemak menyumbat arteri pulmonalis (berlaku sbg Trombosis Paru)." },
+  { id: 29, title: "Kasus #029: Pesta Semalam", vitals: "HR: 150, BP: 200/110", clinical: "Pria 25 th nyeri dada hebat di klab malam setelah konsumsi serbuk putih. Diaphoresis.", ecg: "ST Elevasi luas -> VF -> Asystole", correctDx: "Trombosis (Koroner)", correctTx: "Primary PCI / Kateterisasi", explanation: "Kokain memicu vasospasme koroner parah dan trombosis akut." },
+  { id: 30, title: "Kasus #030: Tekanan Darah Jatuh", vitals: "HR: 40, GDS: 150", clinical: "Pasien meminum sekotak Amlodipine (CCB). Hipotensi refrakter, paru bersih.", ecg: "AV Block -> Asystole", correctDx: "Toksin", correctTx: "Pemberian Antidotum Spesifik", explanation: "Keracunan CCB. Tx: Kalsium IV, Glukagon, High Dose Insulin." },
+  { id: 31, title: "Kasus #031: Pendaki Hilang", vitals: "Temp: 26°C", clinical: "Pendaki gunung ditemukan 2 hari setelah badai. Kaku seperti kayu.", ecg: "VF halus -> Asystole", correctDx: "Hipotermia", correctTx: "Active Core Rewarming", explanation: "Hipotermia letal. Jangan hentikan CPR sampai tubuh dihangatkan." },
+  { id: 32, title: "Kasus #032: Mesin HD Bocor", vitals: "HR: 130, BP: Tak Terukur", clinical: "Akses fistula AV pasien HD terlepas tanpa disadari. Genangan darah besar di lantai.", ecg: "PEA", correctDx: "Hipovolemia", correctTx: "Resusitasi Cairan Masif / Transfusi", explanation: "Exsanguination (perdarahan arteri masif). Turniket & resusitasi." },
+  { id: 33, title: "Kasus #033: Wabah Desa", vitals: "BP: 70/40, Turgor buruk", clinical: "Wabah Kolera. Pasien diare 'rice water' puluhan kali sehari. Kejang otot lalu kolaps.", ecg: "Flat T waves, U waves -> VF", correctDx: "Hipo-/Hiperkalemia", correctTx: "Koreksi Kalium & Magnesium IV", explanation: "Hipokalemia sekunder ec diare profus." },
+  { id: 34, title: "Kasus #034: Ruang Operasi", vitals: "HR: 30, BP: 60/40", clinical: "Wanita jalani anestesi regional (Epidural) utk operasi. Mendadak kejang dan bradikardia.", ecg: "Wide QRS -> Asystole", correctDx: "Toksin", correctTx: "Pemberian Antidotum Spesifik", explanation: "Local Anesthetic Systemic Toxicity (LAST) akibat Bupivacaine masuk darah. Tx: Intralipid." },
+  { id: 35, title: "Kasus #035: Pemanas Ruangan", vitals: "SpO2: 100% (Palsu)", clinical: "Satu keluarga ditemukan pingsan di kamar tertutup dengan genset menyala. Pasien 'Cherry Red'.", ecg: "PEA", correctDx: "Hipoksia", correctTx: "Bebaskan Jalan Napas & Intubasi", explanation: "Keracunan CO memicu hipoksia jaringan meski SpO2 pulse oximeter tampak 100%." },
+  { id: 36, title: "Kasus #036: Vena Sentral Tercabut", vitals: "HR: 130, Sesak akut", clinical: "Kateter vena jugularis pasien tercabut saat ganti baju. Terdengar suara 'hissing' di leher.", ecg: "RV Strain -> PEA", correctDx: "Hipoksia", correctTx: "Bebaskan Jalan Napas & Intubasi", explanation: "Emboli udara masif menghalangi pertukaran gas di paru. Oksigenasi 100% & posisi khusus." },
+  { id: 37, title: "Kasus #037: Terhimpit Roda", vitals: "Urin kemerahan gelap", clinical: "Kaki pasien terlindas truk. Urin warna teh pekat (Myoglobinuria). Kritis di hari ke-3.", ecg: "Sine Wave -> Asystole", correctDx: "Hipo-/Hiperkalemia", correctTx: "Kalsium Glukonas & Insulin+Dextrose", explanation: "Rhabdomyolisis berat gagal ginjal -> Hiperkalemia." },
+  { id: 38, title: "Kasus #038: Nyeri Perut Papan", vitals: "Temp: 39°C, Laktat: 18", clinical: "Nyeri perut difus (perforasi gaster). Perut defans muskuler. Syok septik berat.", ecg: "PEA", correctDx: "Hidrogen Ion (Asidosis)", correctTx: "Ventilasi Adekuat & Bikarbonat", explanation: "Asidosis Laktat karena infeksi intraabdomen berat." },
+  { id: 39, title: "Kasus #039: Kemoterapi", vitals: "HR: 120, BP: 80/60", clinical: "Pasien kanker payudara terpasang Port-a-Cath. Tungkai bengkak sepihak seminggu terakhir. Sesak kolaps.", ecg: "S1Q3T3 -> PEA", correctDx: "Trombosis (Paru)", correctTx: "Trombolisis / Trombektomi", explanation: "Keganasan (Hiperkoagulasi) memicu DVT -> Emboli Paru Masif." },
+  { id: 40, title: "Kasus #040: Strangulasi", vitals: "Sianosis wajah", clinical: "Korban percobaan bunuh diri dengan gantung diri. Tali baru saja dipotong.", ecg: "Bradikardia -> Asystole", correctDx: "Hipoksia", correctTx: "Bebaskan Jalan Napas & Intubasi", explanation: "Hipoksia murni karena asfiksia mekanik." }
+];
+
+const HS_OPTIONS = ["Hipovolemia", "Hipoksia", "Hidrogen Ion (Asidosis)", "Hipo-/Hiperkalemia", "Hipotermia"];
+const TS_OPTIONS = ["Tension Pneumothorax", "Tamponade Jantung", "Toksin", "Trombosis (Paru)", "Trombosis (Koroner)"];
+const TX_OPTIONS = [
+  "Resusitasi Cairan Masif / Transfusi", "Dekompresi Jarum / WSD", "Kalsium Glukonas & Insulin+Dextrose", 
+  "Koreksi Kalium & Magnesium IV", "Perikardiosentesis", "Bebaskan Jalan Napas & Intubasi", 
+  "Trombolisis / Trombektomi", "Primary PCI / Kateterisasi", "Pemberian Antidotum Spesifik", 
+  "Ventilasi Adekuat & Bikarbonat", "Active Core Rewarming"
+];
+
+// ============================================================================
+// GAME STATE & LOGIC
+// ============================================================================
+let gameCases = [];
+let currentIdx = 0;
+let score = 0;
+let selectedDx = null;
+let isAudioInit = false;
+
+// DOM Elements
+const elStart = document.getElementById('start-screen');
+const elGame = document.getElementById('game-screen');
+const elEnd = document.getElementById('end-screen');
+const elResultModal = document.getElementById('result-modal');
+const elActionPanel = document.getElementById('action-panel');
+const btnAudio = document.getElementById('btn-audio');
+
+document.getElementById('btn-audio').addEventListener('click', () => sfx.toggleMute());
+
+function shuffleArray(array) {
+    let curId = array.length, randomId;
+    while (0 !== curId) {
+        randomId = Math.floor(Math.random() * curId); curId -= 1;
+        let tmp = array[curId]; array[curId] = array[randomId]; array[randomId] = tmp;
+    }
+    return array;
+}
+
+function startGame() {
+    if (!isAudioInit) { sfx.toggleMute(); isAudioInit = true; btnAudio.classList.remove('hidden'); }
+    sfx.playClick();
+    gameCases = shuffleArray([...CASES]);
+    currentIdx = 0; score = 0;
+    
+    elStart.classList.add('hidden');
+    elEnd.classList.add('hidden');
+    elGame.classList.remove('hidden');
+    
+    renderGame();
+}
+
+function renderGame() {
+    const cCase = gameCases[currentIdx];
+    
+    // Update Header & Dossier
+    document.getElementById('ui-score').innerText = score;
+    document.getElementById('ui-progress-text').innerText = `Berkas ${currentIdx + 1} / ${gameCases.length}`;
+    document.getElementById('ui-progress-bar').style.width = `${((currentIdx) / gameCases.length) * 100}%`;
+    
+    document.getElementById('ui-case-title').innerText = cCase.title;
+    document.getElementById('ui-vitals').innerText = cCase.vitals;
+    document.getElementById('ui-ecg').innerText = cCase.ecg;
+    document.getElementById('ui-clinical').innerText = cCase.clinical;
+
+    renderPhaseDx();
+}
+
+function renderPhaseDx() {
+    selectedDx = null;
+    let hsHtml = HS_OPTIONS.map(opt => `
+        <button onclick="selectDx('${opt}')" class="w-full text-left px-4 py-3 mb-2 bg-[#0a0e17] hover:bg-[#111a2c] border border-cyan-900 rounded-xl flex justify-between items-center shadow-sm active:scale-[0.98]">
+            <span class="text-slate-300 font-bold text-xs md:text-sm">${opt}</span>
+            <i class="ph ph-caret-right text-cyan-400"></i>
+        </button>
+    `).join('');
+    
+    let tsHtml = TS_OPTIONS.map(opt => `
+        <button onclick="selectDx('${opt}')" class="w-full text-left px-4 py-3 mb-2 bg-[#0a0e17] hover:bg-[#1a112c] border border-fuchsia-900 rounded-xl flex justify-between items-center shadow-sm active:scale-[0.98]">
+            <span class="text-slate-300 font-bold text-xs md:text-sm">${opt}</span>
+            <i class="ph ph-caret-right text-fuchsia-400"></i>
+        </button>
+    `).join('');
+
+    elActionPanel.innerHTML = `
+        <div class="bg-cyan-950/30 border border-cyan-500/30 p-3 rounded-xl mb-4 flex items-center gap-3">
+            <i class="ph ph-magnifying-glass text-cyan-300 text-xl animate-pulse"></i>
+            <p class="text-cyan-100 font-semibold text-[10px] md:text-xs">Langkah 1: Identifikasi Penyebab H/T</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <div class="text-center font-black text-cyan-400 pb-2 border-b border-cyan-900/50 text-[10px] tracking-widest mb-3">THE 5 H's</div>
+                ${hsHtml}
+            </div>
+            <div>
+                <div class="text-center font-black text-fuchsia-400 pb-2 border-b border-fuchsia-900/50 text-[10px] tracking-widest mb-3">THE 5 T's</div>
+                ${tsHtml}
+            </div>
+        </div>
+    `;
+}
+
+function selectDx(dx) {
+    sfx.playClick();
+    selectedDx = dx;
+    renderPhaseTx();
+}
+
+function undoDx() {
+    sfx.playClick();
+    renderPhaseDx();
+}
+
+function renderPhaseTx() {
+    let txHtml = TX_OPTIONS.map(opt => `
+        <button onclick="selectTx('${opt}')" class="w-full text-left px-4 py-3 mb-2 bg-[#0a0e17] hover:bg-amber-950/40 border border-slate-800 rounded-xl flex items-start gap-3 shadow-sm active:scale-[0.98]">
+            <i class="ph ph-crosshair text-slate-500 mt-0.5"></i>
+            <span class="text-xs md:text-sm font-bold text-slate-300 leading-tight">${opt}</span>
+        </button>
+    `).join('');
+
+    elActionPanel.innerHTML = `
+        <div class="bg-[#0a0e17] border border-cyan-800 p-4 rounded-2xl mb-4 flex justify-between items-center shadow-sm">
+            <div>
+                <span class="text-[9px] text-cyan-500 font-bold tracking-widest uppercase block mb-0.5">Diagnosis Tersangka:</span>
+                <span class="text-base md:text-xl font-black text-white">${selectedDx}</span>
+            </div>
+            <button onclick="undoDx()" class="flex items-center gap-1 text-[10px] font-bold text-slate-300 bg-[#05080f] px-3 py-2 rounded-lg border border-slate-700 active:scale-95">
+                <i class="ph ph-arrow-u-up-left"></i> Ganti
+            </button>
+        </div>
+        <div class="bg-amber-950/30 border border-amber-500/30 p-3 rounded-xl mb-4 flex items-center gap-3">
+            <i class="ph ph-syringe text-amber-400 text-xl"></i>
+            <p class="text-amber-100 font-semibold text-[10px] md:text-xs">Langkah 2: Eksekusi Tatalaksana Darurat!</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-3">
+            ${txHtml}
+        </div>
+    `;
+}
+
+function selectTx(tx) {
+    const cCase = gameCases[currentIdx];
+    const isDxCorrect = selectedDx === cCase.correctDx;
+    const isTxCorrect = tx === cCase.correctTx;
+    
+    if (isDxCorrect) score += 50;
+    if (isTxCorrect) score += 50;
+    
+    if (isDxCorrect && isTxCorrect) { setTimeout(() => sfx.playCorrect(), 200); } 
+    else { setTimeout(() => sfx.playFlatline(), 200); }
+
+    showResultModal(isDxCorrect, isTxCorrect, tx, cCase);
+}
+
+function showResultModal(isDxCorrect, isTxCorrect, tx, cCase) {
+    document.getElementById('ui-score').innerText = score;
+
+    const boxDx = document.getElementById('res-dx-box');
+    const iconDx = document.getElementById('icon-dx');
+    const txtDxUser = document.getElementById('text-dx-user');
+    const boxDxCor = document.getElementById('box-dx-correct');
+
+    const boxTx = document.getElementById('res-tx-box');
+    const iconTx = document.getElementById('icon-tx');
+    const txtTxUser = document.getElementById('text-tx-user');
+    const boxTxCor = document.getElementById('box-tx-correct');
+
+    // DX styling
+    txtDxUser.innerText = selectedDx;
+    if(isDxCorrect) {
+        boxDx.className = "p-4 rounded-2xl mb-3 border-2 relative overflow-hidden bg-emerald-950/20 border-emerald-500/50";
+        iconDx.className = "ph ph-check-circle text-2xl text-emerald-400";
+        boxDxCor.classList.add('hidden');
+    } else {
+        boxDx.className = "p-4 rounded-2xl mb-3 border-2 relative overflow-hidden bg-red-950/20 border-red-500/50";
+        iconDx.className = "ph ph-x-circle text-2xl text-red-500";
+        boxDxCor.classList.remove('hidden');
+        document.getElementById('text-dx-correct').innerText = cCase.correctDx;
+    }
+
+    // TX styling
+    txtTxUser.innerText = tx;
+    if(isTxCorrect) {
+        boxTx.className = "p-4 rounded-2xl mb-4 border-2 relative overflow-hidden bg-emerald-950/20 border-emerald-500/50";
+        iconTx.className = "ph ph-check-circle text-2xl text-emerald-400";
+        boxTxCor.classList.add('hidden');
+    } else {
+        boxTx.className = "p-4 rounded-2xl mb-4 border-2 relative overflow-hidden bg-red-950/20 border-red-500/50";
+        iconTx.className = "ph ph-x-circle text-2xl text-red-500";
+        boxTxCor.classList.remove('hidden');
+        document.getElementById('text-tx-correct').innerText = cCase.correctTx;
+    }
+
+    document.getElementById('text-explanation').innerText = cCase.explanation;
+
+    elResultModal.classList.remove('hidden');
+    // small delay for transition
+    setTimeout(() => {
+        elResultModal.classList.remove('opacity-0');
+        document.getElementById('result-modal-content').classList.remove('scale-95');
+    }, 10);
+}
+
+function nextCase() {
+    sfx.playClick();
+    
+    elResultModal.classList.add('opacity-0');
+    document.getElementById('result-modal-content').classList.add('scale-95');
+    
+    setTimeout(() => {
+        elResultModal.classList.add('hidden');
+        if (currentIdx < gameCases.length - 1) {
+            currentIdx++;
+            renderGame();
+        } else {
+            showEndScreen();
+        }
+    }, 300);
+}
+
+function showEndScreen() {
+    elGame.classList.add('hidden');
+    elEnd.classList.remove('hidden');
+    
+    document.getElementById('final-score').innerText = score;
+    
+    const maxScore = gameCases.length * 100;
+    const ratio = score / maxScore;
+    let rank = "Medical Student";
+    if (ratio >= 0.9) rank = "Master Diagnostician";
+    else if (ratio >= 0.7) rank = "Senior Attending";
+    else if (ratio >= 0.5) rank = "Chief Resident";
+    else if (ratio >= 0.3) rank = "Medical Intern";
+    
+    document.getElementById('final-rank').innerText = rank;
+}
+</script>
+</body>
+</html>
