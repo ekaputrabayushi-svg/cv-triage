@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Flashcard Farmasi Kardiologi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* CSS untuk efek flip 3D */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        .card-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        .is-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        /* Hide scrollbar */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Peningkatan tipografi untuk teks yang lebih panjang */
+        .answer-text {
+            line-height: 1.6;
+        }
+        .answer-text ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 min-h-screen font-sans flex flex-col overflow-x-hidden text-slate-100">
+
+    <!-- Header (Advanced Theme) -->
+    <header class="bg-indigo-950 text-white shadow-lg p-3 md:p-4 sticky top-0 z-20 border-b border-indigo-800">
+        <div class="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0">
+            <div class="text-center sm:text-left">
+                <h1 class="text-lg sm:text-xl md:text-2xl font-bold flex items-center justify-center sm:justify-start gap-2">
+                    <span class="text-crimson-500">🔥</span> Advanced Clinical Cardiology Pharmacy
+                </h1>
+                <p class="text-[10px] sm:text-xs md:text-sm text-indigo-300 font-medium tracking-wide">
+                    Varian 2 (Expert Level) • CardiologyVault
+                </p>
+            </div>
+            <div class="text-[10px] sm:text-xs md:text-sm font-bold bg-indigo-900/50 px-4 py-1.5 rounded-full border border-indigo-500 shadow-sm text-center text-indigo-100 backdrop-blur-sm">
+                Dev: Bayushi Eka Putra, MD, FIHA
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col items-center justify-start sm:justify-center p-4 md:p-8 max-w-5xl mx-auto w-full">
+        
+        <!-- Progress Info -->
+        <div class="w-full flex justify-between items-center mb-3 md:mb-4 font-medium">
+            <span id="card-category" class="text-xs md:text-sm uppercase tracking-wider text-rose-200 font-bold bg-rose-900/60 px-3 py-1 rounded shadow-sm border border-rose-800">Kategori</span>
+            <span id="card-counter" class="text-xs md:text-sm bg-indigo-900 px-3 py-1 rounded-full shadow-sm font-bold border border-indigo-700 text-indigo-200">1 / 50</span>
+        </div>
+
+        <!-- Flashcard Container -->
+        <div id="flashcard" class="relative w-full max-w-3xl h-[65vh] min-h-[420px] md:h-[500px] perspective-1000 cursor-pointer group mb-6 md:mb-8 touch-pan-y" onclick="toggleFlip(event)">
+            <div class="card-inner w-full h-full absolute transform-style-3d shadow-2xl rounded-2xl md:rounded-3xl">
+                
+                <!-- Front (Question) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-slate-800 rounded-2xl md:rounded-3xl p-6 md:p-10 flex flex-col items-center justify-center text-center border-t-4 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
+                    <div class="absolute top-4 left-5 text-indigo-500/30 font-black text-4xl md:text-5xl">Q</div>
+                    <div class="w-full h-full flex flex-col justify-center overflow-y-auto no-scrollbar pt-8 pb-8">
+                        <p id="question-text" class="text-base sm:text-lg md:text-[1.1rem] text-slate-200 font-semibold leading-relaxed m-auto">
+                            Memuat pertanyaan...
+                        </p>
+                    </div>
+                    <div class="absolute bottom-4 text-xs md:text-sm text-slate-500 flex items-center gap-2 animate-pulse font-medium">
+                        <span class="hidden sm:inline">Ketuk kartu untuk melihat telaah pakar</span>
+                        <span class="sm:hidden">Ketuk: Jawaban • Usap: Lanjut</span>
+                    </div>
+                </div>
+
+                <!-- Back (Answer) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-slate-100 rounded-2xl md:rounded-3xl p-6 md:p-8 flex flex-col rotate-y-180 border-t-4 border-rose-600 shadow-inner overflow-hidden text-slate-800">
+                    <div class="absolute top-4 right-5 text-rose-600/10 font-black text-4xl md:text-5xl z-10">A</div>
+                    <div class="w-full h-full overflow-y-auto no-scrollbar pt-6 pb-2 pr-2 flex relative z-20">
+                        <div id="answer-text" class="answer-text text-sm sm:text-base md:text-[15px] font-medium w-full m-auto text-left">
+                            Memuat jawaban...
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="w-full max-w-3xl grid grid-cols-2 sm:flex sm:flex-row justify-center gap-3 md:gap-4 pb-8">
+            <button onclick="prevCard()" class="col-span-1 bg-slate-800 hover:bg-slate-700 text-indigo-300 font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-lg transition-all border border-slate-700 flex justify-center items-center gap-1 active:scale-95 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <span>&larr;</span> <span class="hidden sm:inline">Sebelumnya</span><span class="sm:hidden">Prev</span>
+            </button>
+            <button onclick="nextCard()" class="col-span-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-lg shadow-indigo-900/50 transition-all flex justify-center items-center gap-1 active:scale-95 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                <span class="hidden sm:inline">Selanjutnya</span><span class="sm:hidden">Next</span> <span>&rarr;</span>
+            </button>
+            <button onclick="shuffleCards()" class="col-span-2 sm:col-span-1 order-last sm:order-none bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm md:text-base py-3 md:py-4 px-4 md:px-6 rounded-xl shadow-lg shadow-rose-900/50 transition-all flex justify-center items-center active:scale-95 focus:outline-none focus:ring-2 focus:ring-rose-400">
+                Acak (Shuffle)
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        // Data Flashcard Varian 2 - ADVANCED LEVEL (50 Soal)
+        const originalCards = [
+            // --- BAB 1: ADVANCED ANTITHROMBOTIC (10 Soal) ---
+            { 
+                cat: "Advanced Antithrombotic", 
+                q: "<strong>[Vignette]</strong> Pasien wanita 45 tahun dengan riwayat DVT berulang terdiagnosis <em>Antiphospholipid Syndrome</em> (APS) tipe <em>Triple Positive</em>. DPJP berencana memulangkan pasien dengan Rivaroxaban 20mg. <br><br>Apa tinjauan kritis apoteker klinis terhadap resep ini?", 
+                a: "⚠️ <strong>DRP Level Ekstrem:</strong> Kontraindikasi Absolut penggunaan DOAC pada APS risiko tinggi (<em>Triple Positive</em>).<br><br>⚕️ <strong>Intervensi:</strong> Segera intersep resep. DOAC (Rivaroxaban, Apixaban) terbukti inferior dan secara signifikan meningkatkan kejadian tromboemboli arteri (termasuk stroke iskemik) dibandingkan VKA pada pasien APS.<br><br>📚 <strong>Evidence:</strong> Berdasarkan <em>TRAPS Trial</em>, farmasis wajib merekomendasikan konversi ke <strong>Warfarin</strong> dengan target INR 2.0 - 3.0." 
+            },
+            { 
+                cat: "Advanced Antithrombotic", 
+                q: "<strong>[Vignette]</strong> Pasien STEMI berat direncakan *Primary PCI*. Berat badan pasien 100 kg. Dokter IGD meminta Tenecteplase (TNK-tPA) disiapkan sebagai bagian dari strategi *Pharmaco-invasive*. <br><br>Berapa dosis pasti TNK yang harus ditarik oleh apoteker ke dalam spuit?", 
+                a: "⚠️ <strong>DRP:</strong> Kesalahan dosis fibrinolitik memicu perdarahan intrakranial fatal atau kegagalan reperfusi.<br><br>⚕️ <strong>Intervensi:</strong> Tenecteplase diberikan berbasis berat badan (weight-based). Untuk pasien BB ≥ 90 kg, dosis maksimalnya adalah <strong>50 mg (ekuivalen dengan 10 mL volume bolus)</strong>. Diberikan sebagai bolus IV tunggal selama 5-10 detik.<br><br><em>Note:</em> Dosis turun 5 mg (1 mL) untuk setiap penurunan berat badan 10 kg (misal <60 kg = 30 mg)." 
+            },
+            { 
+                cat: "Advanced Antithrombotic", 
+                q: "<strong>[Vignette]</strong> Pasien ACS yang dijadwalkan CABG tertunda akibat baru saja menelan *loading dose* Ticagrelor. Ahli bedah meminta apoteker menyiapkan <strong>Cangrelor</strong> sebagai *Bridging Therapy* di ruang rawat intensif.<br><br>Apa profil farmakokinetik unik obat ini yang membenarkan penggunaannya?", 
+                a: "⚕️ <strong>Edukasi Farmakokinetik:</strong><br>Cangrelor adalah P2Y12 inhibitor <strong>Intravena</strong> dengan mekanisme *direct-acting* (tanpa metabolisme hepatik) dan reversibel. <br><br>Keunggulan utamanya adalah *waktu paruh* yang sangat super singkat <strong>(~3 hingga 6 menit)</strong>. Jika infus distop, fungsi platelet akan kembali normal 100% dalam waktu 1 jam. Ini menjadikannya jembatan antiplatelet ideal sebelum sayatan pisau bedah (CABG) untuk mencegah stent trombosis tanpa memicu perdarahan bedah." 
+            },
+            { 
+                cat: "Advanced Antithrombotic", 
+                q: "<strong>[Vignette]</strong> Pasien STEMI yang rutin konsumsi Warfarin untuk Katup Mitral Mekanik (INR 3.2 saat ini) datang dengan perdarahan gastrointestinal masif dan syok. <br><br>Apa agen <em>reversal</em> (antidotum) lini pertama dengan *onset* paling cepat yang direkomendasikan?", 
+                a: "⚠️ <strong>DRP:</strong> Perdarahan mengancam nyawa pada pasien terapi VKA.<br><br>⚕️ <strong>Intervensi Lini Pertama:</strong> <br>Segera berikan <strong>4-Factor Prothrombin Complex Concentrate (4F-PCC / mis. Octaplex/Beriplex)</strong> secara IV, DITAMBAH dengan <strong>Vitamin K 10 mg IV lambat</strong>. <br><br><em>Rasional:</em> 4F-PCC menggantikan faktor koagulasi II, VII, IX, X secara instan (onset <15 menit), jauh lebih superior dan cepat dibandingkan *Fresh Frozen Plasma* (FFP) yang butuh waktu *thawing* dan volume masif." 
+            },
+            { 
+                cat: "Advanced Antithrombotic", 
+                q: "<strong>[Vignette]</strong> Pasien AF diresepkan Edoxaban 60mg/hari. Pada rekonsiliasi, apoteker menghitung *Creatinine Clearance* (CrCl) pasien adalah 110 mL/menit. <br><br>Apa <em>Black Box Warning</em> FDA terkait kasus ini?", 
+                a: "⚠️ <strong>DRP:</strong> Penurunan efikasi terapi akibat klirens renal terlalu cepat (<em>Hyperfiltration</em>).<br><br>⚕️ <strong>Intervensi:</strong> Terdapat *Black Box Warning* untuk <strong>TIDAK MENGGUNAKAN Edoxaban</strong> pada pasien Non-Valvular AF dengan <strong>CrCl > 95 mL/menit</strong>. <br><br>📚 <strong>Evidence:</strong> Sub-analisis <em>ENGAGE AF-TIMI 48</em> menunjukkan pada ginjal hiper-filtrasi, obat terbuang terlalu cepat sehingga kadar lembahnya sub-terapetik, meningkatkan risiko stroke iskemik signifikan. Rekomendasi: <em>Switch</em> ke DOAC lain (Apixaban/Rivaroxaban) atau Warfarin." 
+            },
+            { 
+                cat: "Advanced Antithrombotic", 
+                q: "<strong>[Vignette]</strong> Pasien HBR (<em>High Bleeding Risk</em>) baru saja menjalani PCI pemasangan DES di LAD. DPJP bertanya kepada Anda sebagai *Clinical Pharmacist*, berapa lama minimum *Dual Antiplatelet Therapy* (DAPT) berdasarkan *ESC Guidelines* terbaru?<br><br>Apa jawaban Anda?", 
+                a: "⚕️ <strong>Rekomendasi Guideline (ESC):</strong><br>Pada pasien dengan *High Bleeding Risk* (HBR - misal skor PRECISE-DAPT tinggi, riwayat perdarahan, usia >75th) yang menjalani PCI dengan DES modern, durasi DAPT dapat dipersingkat menjadi <strong>1 bulan (30 hari)</strong> untuk kasus stabil (CCS), atau <strong>3 bulan</strong> untuk kasus ACS.<br><br>Setelah fase tersebut, dianjurkan untuk men-<em>drop</em> salah satu antiplatelet dan melanjutkan SAPT (Single Antiplatelet Therapy), umumnya P2Y12 inhibitor monoterapi." 
+            },
+            { 
+                cat: "Advanced Antithrombotic", 
+                q: "<strong>[Vignette]</strong> Pasien NSTEMI yang dijadwalkan PCI diketahui memiliki mutasi farmakogenomik genotip <strong>CYP2C19 *2/*3 (Poor Metabolizer)</strong>. <br><br>Antiplatelet mana yang kontraindikasi dan mana yang menjadi *Drug of Choice*?", 
+                a: "⚠️ <strong>DRP:</strong> <em>Therapeutic Failure</em> akibat genetik.<br><br>⚕️ <strong>Intervensi Farmakogenomik:</strong><br>❌ <strong>Hindari Clopidogrel.</strong> Clopidogrel adalah *prodrug* yang butuh enzim CYP2C19 untuk menjadi aktif. Pasien *Poor Metabolizer* (*2/*3) tidak bisa mengaktifkannya, sehingga risiko <em>Stent Thrombosis</em> sangat tinggi.<br>✅ <strong>Drug of Choice:</strong> Gunakan <strong>Ticagrelor</strong> (bukan prodrug, langsung aktif) atau <strong>Prasugrel</strong> (metabolisme utamanya via CYP3A4/2B6, bukan dominan 2C19)." 
+            },
+            { 
+                cat: "Advanced Antithrombotic", 
+                q: "<strong>[Vignette]</strong> Pasien ICU dengan trombosis arteri dicurigai mengalami <em>Heparin-Induced Thrombocytopenia</em> (HIT). Pasien butuh antikoagulan IV segera untuk prosedur Cath Lab PCI. <br><br>Obat antikoagulan alternatif apa yang diindikasikan?", 
+                a: "⚠️ <strong>DRP:</strong> HIT memicu hiperkoagulabilitas letal jika UFH/LMWH dilanjutkan.<br><br>⚕️ <strong>Intervensi:</strong> Gunakan agen <em>Direct Thrombin Inhibitor</em> (DTI) intravena. <br>Khusus untuk *setting* prosedur PCI (Cath Lab) pada pasien HIT, <strong>Bivalirudin</strong> adalah agen pilihan utama (Drug of Choice) karena waktu paruhnya pendek (~25 menit) dan tidak memerlukan kofaktor antithrombin (yang mungkin terkuras saat HIT)." 
+            },
+            { 
+                cat: "Advanced Antithrombotic", 
+                q: "<strong>[Vignette]</strong> Pasien HIV rutin konsumsi regimen ART (termasuk Ritonavir). Ia masuk IGD dengan ACS dan diresepkan Ticagrelor 90mg BID. <br><br>Apa interaksi letal yang terdeteksi oleh sistem farmasi?", 
+                a: "⚠️ <strong>DRP:</strong> Interaksi Obat Mayor (Kontraindikasi Absolut).<br><br>⚕️ <strong>Intervensi:</strong> Ritonavir adalah <strong>Inhibitor CYP3A4 sangat kuat</strong>. Ticagrelor dimetabolisme secara ekstensif oleh CYP3A4. Kombinasi ini akan melipatgandakan kadar Ticagrelor di dalam darah (*AUC* meroket >400%), memicu perdarahan spontan masif dan sesak napas sentral berat.<br><strong>Rekomendasi:</strong> Segera <em>Hold</em> Ticagrelor, <em>switch</em> ke <strong>Clopidogrel</strong>." 
+            },
+            { 
+                cat: "Advanced Antithrombotic", 
+                q: "<strong>[Vignette]</strong> Perdarahan otak (*Intracranial Hemorrhage*) terjadi pada pasien yang mengonsumsi Dabigatran Etexilate 150mg BID. <br><br>Apa nama agen <em>reversal</em> spesifik (monoclonal antibody) untuk obat ini?", 
+                a: "⚕️ <strong>Antidotum Definitif:</strong><br>Berikan <strong>Idarucizumab (Praxbind)</strong> 5 gram IV (diberikan dalam 2 vial @2.5 gram berturut-turut).<br><br><em>Mekanisme:</em> Idarucizumab adalah fragmen antibodi monoklonal spesifik yang memiliki afinitas ikatan 350 kali lebih kuat terhadap Dabigatran dibandingkan afinitas trombin. Obat ini menetralisir efek antikoagulasi dalam hitungan menit.<br><br><em>(Note: Berbeda dengan Andexanet Alfa yang digunakan untuk inhibitor Faktor Xa seperti Apixaban/Rivaroxaban).</em>" 
+            },
+
+            // --- BAB 2: ADVANCED HEART FAILURE & TRANSPLANT (10 Soal) ---
+            { 
+                cat: "Advanced Heart Failure", 
+                q: "<strong>[Vignette]</strong> Pasien pasca Transplantasi Jantung (<em>Heart Transplant</em>) 3 bulan lalu tiba-tiba mengalami bradikardia simptomatik (HR 35x/mnt) di IGD. Residen hendak menyuntikkan Atropin Sulfat 1 mg IV bolus. <br><br>Mengapa apoteker kritis menolak keras instruksi ini?", 
+                a: "⚠️ <strong>DRP:</strong> Kegagalan terapi pada anatomi denervasi.<br><br>⚕️ <strong>Telaah Pakar:</strong> Jantung hasil transplantasi adalah <strong>jantung yang terdenervasi (tidak tersambung dengan nervus vagus)</strong>. Atropin bekerja dengan memblokir tonus vagal (parasimpatis). Karena tidak ada saraf vagus yang terhubung ke jantung donor, <strong>Atropin TIDAK AKAN MEMILIKI EFEK SAMA SEKALI</strong>.<br><br><strong>Rekomendasi Lini Pertama:</strong> Gunakan agonis reseptor adrenergik langsung seperti infus <strong>Isoproterenol (Isuprel)</strong>, Epinefrin, atau pacu jantung (*Pacing*)." 
+            },
+            { 
+                cat: "Advanced Heart Failure", 
+                q: "<strong>[Vignette]</strong> Pasien HFrEF dengan Diabetes dijadwalkan operasi ortopedi elektif. Pasien rutin meminum Empagliflozin (SGLT2i). <br><br>Apa edukasi prabedah spesifik terkait obat ini?", 
+                a: "⚠️ <strong>DRP:</strong> Risiko <em>Euglycemic Diabetic Ketoacidosis</em> (euDKA) perioperatif.<br><br>⚕️ <strong>Intervensi Farmasis:</strong> Instruksikan pasien untuk <strong>MENGHENTIKAN SGLT2i minimal 3 hingga 4 hari SEBELUM jadwal operasi</strong>. Puasa perioperatif dan stres bedah sangat berisiko memicu euDKA (ketoasidosis dengan gula darah tampak normal < 250 mg/dL) pada pengguna SGLT2i. Lanjutkan kembali post-op hanya setelah pasien bisa makan minum normal." 
+            },
+            { 
+                cat: "Advanced Heart Failure", 
+                q: "<strong>[Vignette]</strong> Pasien HFrEF persisten yang sudah dioptimasi dengan <em>Quadruple Therapy</em> (ARNI, BB, MRA, SGLT2i) masih sering dirawat inap. Dokter meresepkan <strong>Vericiguat</strong>. <br><br>Apa mekanisme farmakologis unik dari obat ini?", 
+                a: "⚕️ <strong>Edukasi Mekanisme Obat:</strong><br>Vericiguat adalah obat HF kelas baru yang bertindak sebagai <strong>stimulator enzim Soluble Guanylate Cyclase (sGC) oral</strong>.<br><br>Pada gagal jantung kronis, produksi Nitric Oxide (NO) endotel rusak. Vericiguat memotong jalur tersebut dengan menstimulasi langsung sGC secara independen, meningkatkan produksi cGMP intraseluler yang mengembalikan fungsi relaksasi otot polos vaskular dan miokard (mencegah fibrosis & hipertrofi).<br><br>📚 <em>Evidence: VICTORIA Trial.</em>" 
+            },
+            { 
+                cat: "Advanced Heart Failure", 
+                q: "<strong>[Vignette]</strong> Pasien HFrEF di poli rawat jalan melakukan lab rutin. Hasil pro-BNP adalah 2500 pg/mL (sangat tinggi), padahal secara klinis pasien sangat stabil (NYHA I), euvolemik, tanpa edema. Pasien rutin minum ARNI (Sacubitril/Valsartan). <br><br>Apa penjelasan laboratorium dari fenomena ini?", 
+                a: "⚠️ <strong>DRP:</strong> Kesalahan interpretasi biomarker gagal jantung.<br><br>⚕️ <strong>Telaah Apoteker:</strong> Sacubitril dalam ARNI menginhibisi enzim Neprilysin. Enzim ini secara alami memecah peptida natriuretik (BNP). Akibat diinhibisi, <strong>kadar BNP di darah secara artifisial akan MENINGKAT TAJAM</strong>, meski pasien stabil.<br><br><strong>Rekomendasi:</strong> Pada pasien pengguna ARNI, dilarang mengecek BNP. Marker yang <em>valid</em> digunakan adalah <strong>NT-proBNP</strong>, karena NT-proBNP bukan substrat dari neprilysin." 
+            },
+            { 
+                cat: "Advanced Heart Failure", 
+                q: "<strong>[Vignette]</strong> Pasien Transplantasi Jantung rutin menelan obat imunosupresan Tacrolimus. Akibat hipertensi, DPJP menambahkan Diltiazem SR 120mg. Satu minggu kemudian, pasien masuk ICU dengan gagal ginjal akut berat (SCr 4.5). <br><br>Apa penyebab pastinya?", 
+                a: "⚠️ <strong>DRP:</strong> Toksisitas Tacrolimus akibat Interaksi Farmakokinetik.<br><br>⚕️ <strong>Intervensi:</strong> Diltiazem adalah <strong>inhibitor moderat-kuat enzim CYP3A4 dan P-glycoprotein (P-gp)</strong>. Tacrolimus (obat dengan indeks terapi sempit) murni dimetabolisme oleh CYP3A4. <br>Interaksi ini membuat level Tacrolimus darah melonjak tajam >300%, memicu <em>Nephrotoxicity</em> akut (vasokonstriksi arteriol aferen ginjal fatal). <br><strong>Saran:</strong> Jika Diltiazem harus dipakai (*protocol sparing*), dosis Tacrolimus wajib diturunkan drastis dan rutin cek <em>Trough Level</em>." 
+            },
+            { 
+                cat: "Advanced Heart Failure", 
+                q: "<strong>[Vignette]</strong> Pasien syok kardiogenik dengan <em>Severe Pulmonary Hypertension</em> (Hipertensi Paru berat) membutuhkan dukungan inotropik. Di farmasi tersedia Dobutamin dan Milrinon. <br><br>Secara hemodinamik, mana yang lebih direkomendasikan apoteker ICU?", 
+                a: "⚕️ <strong>Pemilihan Inotropik:</strong><br>Pilih <strong>Milrinon (Inodilator - PDE3 Inhibitor)</strong>.<br><br><em>Rasional:</em> Selain efek inotropik positif, Milrinon memiliki efek vasodilatasi yang lebih superior pada ranjang vaskular pulmonal dibandingkan Dobutamin. Ia secara signifikan menurunkan <em>Pulmonary Vascular Resistance</em> (PVR) dan meringankan <em>afterload</em> Ventrikel Kanan (RV failure). Namun, pantau ketat hipotensi sistemik." 
+            },
+            { 
+                cat: "Advanced Heart Failure", 
+                q: "<strong>[Vignette]</strong> Pasien HFrEF mengeluh kelelahan esktrem. Lab menunjukkan Ferritin 50 ng/mL (Defisiensi Besi Absolut), Hb 11.5 g/dL. Residen meresepkan tablet Ferrous Sulfate 300mg 1x1. <br><br>Apa rekomendasi revisi *Evidence-Based* dari Apoteker?", 
+                a: "⚠️ <strong>DRP:</strong> Terapi oral tidak efektif (kegagalan absorpsi akibat inflamasi usus kronis HF/Hepcidin tinggi).<br><br>⚕️ <strong>Intervensi:</strong> Tablet besi oral TIDAK memperbaiki luaran klinis gagal jantung. Farmasis harus merekomendasikan penggantian ke terapi besi Intravena, spesifiknya <strong>Ferric Carboxymaltose (FCM) IV</strong> atau <strong>Ferric Derisomaltose</strong>.<br><br>📚 <strong>Evidence:</strong> <em>FAIR-HF</em> dan <em>AFFIRM-AHF trials</em> membuktikan besi IV menurunkan rehospitalisasi dan memperbaiki kapasitas fungsional secara signifikan." 
+            },
+            { 
+                cat: "Advanced Heart Failure", 
+                q: "<strong>[Vignette]</strong> Seorang lansia didiagnosis menderita <em>Transthyretin Amyloid Cardiomyopathy</em> (ATTR-CM) *wild-type*. Dokter menanyakan obat *disease-modifying* apa yang kini disetujui FDA untuk kondisi ini. <br><br>Apa jawaban farmasis spesialis?", 
+                a: "⚕️ <strong>Drug Information:</strong><br>Obat pilihannya adalah <strong>Tafamidis (Vyndaqel/Vyndamax)</strong>.<br><br><em>Mekanisme:</em> Tafamidis adalah <em>TTR stabilizer</em> spesifik. Obat ini mengikat molekul tetramer transthyretin secara selektif, menstabilkan strukturnya, dan mencegah tetramer tersebut pecah menjadi monomer amiloid beracun yang menumpuk di otot jantung (miokardium).<br><br>📚 <strong>Evidence:</strong> <em>ATTR-ACT Trial</em> menunjukkan reduksi mortalitas kardiovaskular signifikan." 
+            },
+            { 
+                cat: "Advanced Heart Failure", 
+                q: "<strong>[Vignette]</strong> Pasien ICU mengalami eksaserbasi HF refrakter (kongesti berat, TD 160/90). DPJP berniat menggunakan vasodilator IV kuat, dan bingung memilih antara infus Nitroglycerin (NTG) atau Sodium Nitroprusside (SNP). <br><br>Apa telaah letak aksi kerja kedua obat ini?", 
+                a: "⚕️ <strong>Telaah Hemodinamik:</strong><br>1. <strong>Nitroglycerin (NTG):</strong> Terutama bekerja di ranjang vena (Venodilator murni pada dosis rendah/menengah). Menurunkan <em>Preload</em> jantung dominan.<br>2. <strong>Sodium Nitroprusside (SNP):</strong> Adalah vasodilator arteri dan vena yang sangat seimbang (<em>Balanced Venous & Arterial Dilator</em>). SNP secara masif menurunkan *Preload* sekaligus <em>Afterload</em> (meningkatkan <em>Cardiac Output</em> secara mekanis). SNP lebih poten untuk gagal jantung dengan hipertensi parah." 
+            },
+            { 
+                cat: "Advanced Heart Failure", 
+                q: "<strong>[Vignette]</strong> Pasien yang menderita Gagal Ginjal Kronik (CKD Stage 5) mendapat infus kontinu Milrinone selama 48 jam. Pasien mendadak mengalami VT/VF dan hipotensi refrakter. <br><br>Apa penyebab latensi DRP ini?", 
+                a: "⚠️ <strong>DRP:</strong> Toksisitas akumulasi Milrinone.<br><br>⚕️ <strong>Intervensi:</strong> Berbeda dengan Dobutamin (metabolisme hati/jaringan cepat), <strong>Milrinone dieliminasi 80-90% dalam bentuk utuh lewat GINJAL</strong>. Pada pasien CKD anuria, waktu paruh Milrinone (normal ~2 jam) memanjang ekstrem menjadi kelipatan belasan jam. <br>Akumulasi ini memicu aritmia ventrikel letal dan vasodilatasi (hipotensi) lumpuh yang tak merespon vasopresor." 
+
+            },
+
+            // --- BAB 3: REFRACTORY ARRHYTHMIA & CRITICAL CARE (10 Soal) ---
+            { 
+                cat: "Refractory Arrhythmia", 
+                q: "<strong>[Vignette]</strong> Pasien AF direncanakan *chemical cardioversion* menggunakan obat Dofetilide oral. <br><br>Sebutkan 3 prasyarat mutlak (protokol wajib farmasi) sebelum obat lini pertama ini boleh diminum pasien!", 
+                a: "⚠️ <strong>Protokol Keselamatan Obat Dofetilide (Tikosyn):</strong><br>Obat ini memiliki risiko pro-aritmia fatal (TdP) yang sangat tinggi di awal terapi.<br>1. <strong>In-Hospital Setting:</strong> Inisiasi WAJIB dilakukan di RS dengan pantauan monitor telemetry/EKG kontinu minimal selama 3 hari (atau 6 dosis pertama).<br>2. <strong>Evaluasi QTc:</strong> EKG *baseline* QTc harus < 440 ms. Cek QTc ulang 2-3 jam *post-dose*. Stop jika QTc > 500 ms.<br>3. <strong>Fungsi Ginjal:</strong> CrCl > 20 mL/menit, dan dosis wajib disesuaikan matematis dengan nilai ginjal." 
+            },
+            { 
+                cat: "Refractory Arrhythmia", 
+                q: "<strong>[Vignette]</strong> Remaja di IGD mengalami takikardia QRS sempit, irregular, HR 200x/mnt. EKG mendiagnosis *Atrial Fibrillation with WPW Syndrome* (Pre-excited AF). Residen meminta Adenosin atau Verapamil. <br><br>Mengapa apoteker harus menahan tangan residen?", 
+                a: "⚠️ <strong>DRP Level Ekstrem:</strong> Letal! Memblokir Nodus AV pada *Pre-excited AF* akan membunuh pasien.<br><br>⚕️ <strong>Intervensi:</strong> Obat AV-nodal blocker (ABCD: Adenosine, Beta-blockers, CCB, Digoxin) akan mematikan jalur konduksi normal, memaksa seluruh 200 impuls atrium turun lewat <em>Jalur Aksesori (Bundle of Kent)</em> yang tidak punya filter. Hasilnya: Ventricular Fibrillation instan.<br><strong>Drug of Choice:</strong> Gunakan <strong>Procainamide IV</strong>, <strong>Ibutilide IV</strong>, atau <strong>Kardioversi Elektrik (DC Shock)</strong>." 
+            },
+            { 
+                cat: "Refractory Arrhythmia", 
+                q: "<strong>[Vignette]</strong> Pasien post-VT diresepkan Amiodaron kronis selama 2 tahun. Datang dengan keluhan penurunan berat badan, takikardia 130x/mnt, dan tremor. Lab TSH nyaris 0, FT4 sangat tinggi (Hipertiroid). <br><br>Jelaskan beda penanganan AIT (Amiodarone-Induced Thyrotoxicosis) Tipe 1 dan Tipe 2!", 
+                a: "⚕️ <strong>Telaah Farmakoterapi Lanjut:</strong><br>Amiodaron mengandung Iodium tinggi (37% massa).<br>• <strong>AIT Tipe 1:</strong> Terjadi hiperproduksi hormon tiroid nyata (karena *overload* iodium pada tiroid multinodular). Terapi utamanya adalah <strong>Obat Anti-Tiroid (Thionamides: Methimazole/PTU)</strong>.<br>• <strong>AIT Tipe 2:</strong> Ini adalah *Destructive Thyroiditis* (folikel tiroid hancur tumpah ke darah akibat efek toksik langsung obat). Anti-tiroid tak mempan! Terapi utamanya adalah anti-inflamasi <strong>Kortikosteroid (Prednison oral)</strong>." 
+            },
+            { 
+                cat: "Refractory Arrhythmia", 
+                q: "<strong>[Vignette]</strong> Infus Lidocaine kontinu (Kelas IB) diberikan di ICCU untuk VT refrakter. Keesokan harinya pasien gelisah, bicara cadel, mengeluh bibirnya kebas (*perioral numbness*), dan kemudian kejang. <br><br>Apa makna klinis gejala ini?", 
+                a: "⚠️ <strong>DRP:</strong> Toksisitas Lidocaine pada Sistem Saraf Pusat (SSP).<br><br>⚕️ <strong>Intervensi:</strong> Gejala neurotoksisitas SSP (kebas perioral, tinnitus, halusinasi, hingga kejang tonik-klonik) adalah manifestasi utama dari *overdosis* Lidocaine yang menembus sawar darah otak (lipofilik tinggi). Hal ini sering terjadi jika pasien memiliki gagal jantung parah atau gagal hati (klirens lidocaine lumpuh).<br><strong>Tindakan:</strong> Hentikan infus segera. Tangani kejang dengan Benzodiazepin." 
+            },
+            { 
+                cat: "Refractory Arrhythmia", 
+                q: "<strong>[Vignette]</strong> Pasien dengan <em>Long QT Syndrome Type 3 (LQT3)</em> herediter (mutasi gain-of-function kanal Natrium) membutuhkan pencegahan aritmia kronis. <br><br>Obat aritmia spesifik kelas berapa (dan sebutkan obatnya) yang direkomendasikan?", 
+                a: "⚕️ <strong>Pharmacogenomic Targeting:</strong><br>Pada LQT3, arus akhir natrium (*late INa*) gagal menutup dengan sempurna saat repolarisasi.<br><br>Terapi presisi pilihan adalah obat antiaritmia <strong>Kelas IB</strong>, spesifiknya <strong>Mexiletine oral</strong>. Mexiletine secara spesifik menghambat masuknya arus akhir natrium (*late INa*) yang patologis tersebut, menormalkan interval QT dan mencegah *Torsades de Pointes* pada subtipe genetik LQT3 ini." 
+            },
+            { 
+                cat: "Refractory Arrhythmia", 
+                q: "<strong>[Vignette]</strong> Pasien syok kardiogenik dipasang sirkuit mesin ECMO V-A (<em>Extracorporeal Membrane Oxygenation</em>). Pasien sedang dalam drip Fentanyl dan Amiodarone dosis standar, namun klinisnya tampak *under-dosed*. <br><br>Apa penjelasan farmakokinetik (PK) apoteker ICU terkait sirkuit ECMO?", 
+                a: "⚕️ <strong>Prinsip PK ECMO (*Drug Sequestration*):</strong><br>Obat-obatan yang bersifat <strong>sangat lipofilik</strong> (larut lemak) dan <strong>memiliki ikatan protein tinggi (High Protein Binding)</strong>, seperti Amiodarone, Propofol, dan Fentanyl, akan secara masif 'terperangkap' atau diadsorpsi oleh membran oksigenator poli-metilpentena (PMP) dan selang PVC sirkuit ECMO.<br><br><strong>Intervensi:</strong> Farmasis wajib merekomendasikan peningkatkan *loading dose* dan infus *maintenance* secara agresif untuk mencapai level terapeutik obat di dalam darah pasien." 
+            },
+            { 
+                cat: "Refractory Arrhythmia", 
+                q: "<strong>[Vignette]</strong> Untuk mengontrol *rate* pasien Diseksi Aorta Akut (nyeri robekan dada), DPJP memesan Esmolol IV drip. Perawat bertanya, mengapa tidak Labetalol injeksi bolus saja yang lebih mudah? <br><br>Apa keunikan utama Esmolol?", 
+                a: "⚕️ <strong>Keunikan Farmakokinetik Esmolol:</strong><br>Esmolol adalah kardioselektif Beta-1 blocker ultra-pendek. Keunggulan utamanya ada pada waktu paruhnya yang sangat super singkat <strong>(~9 menit)</strong>.<br><br><em>Mekanisme:</em> Ia dimetabolisme (dihidrolisis) secara kilat oleh enzim <strong>Esterase di dalam sitosol Sel Darah Merah (Eritrosit)</strong>, independen terhadap hati/ginjal. Pada kondisi gawat (misal diseksi aorta), jika TD/Nadi tiba-tiba <em>drop</em> terlalu rendah, *stop drip* Esmolol akan menghilangkan efeknya secara instan, sangat mudah dititrasi." 
+            },
+            { 
+                cat: "Refractory Arrhythmia", 
+                q: "<strong>[Vignette]</strong> Pasien takikardia ventrikular dengan *Heart Failure* mendapat amiodaron infus namun belum berhasil (*refractory VT storm*). DPJP mendiskusikan *rescue therapy* menggunakan anti-aritmia kelas III lainnya, yakni Ibutilide. <br><br>Apa prasyarat elektrolit yang wajib disuntikkan sebelum Ibutilide?", 
+                a: "⚠️ <strong>DRP:</strong> Pro-aritmia Ibutilide (Torsades de Pointes / TdP).<br><br>⚕️ <strong>Intervensi:</strong> Ibutilide memiliki risiko kejadian *Torsades de Pointes* (TdP) sangat tinggi (~4-8%). Sebagai standar pencegahan berbasis bukti, farmasis memastikan bahwa infus profilaksis <strong>Magnesium Sulfat (MgSO4) 1-2 gram IV</strong> diberikan tepat SEBELUM memulai infus Ibutilide untuk menstabilkan membran miokard dan mengoreksi subklinis hipomagnesemia." 
+            },
+            { 
+                cat: "Refractory Arrhythmia", 
+                q: "<strong>[Vignette]</strong> Vasopresor *Drug of Choice* (lini pertama) pada syok kardiogenik dengan tanda hipotensi parah menurut pedoman mutakhir adalah Norepinefrin (NE). <br><br>Jika NE gagal mencapai target MAP >65, vasopresor apa yang menjadi lini kedua (tambahan)?", 
+                a: "⚕️ <strong>Rekomendasi Guideline ICU Kardiologi:</strong><br>Jika Norepinefrin dosis tinggi gagal/refrakter, lini kedua yang direkomendasikan adalah penambahan infus <strong>Vasopressin (Argipressin)</strong> dosis tetap (biasanya 0.03 unit/menit).<br><br><em>Mekanisme:</em> Vasopressin bekerja pada reseptor V1 di vaskular (bukan reseptor adrenergik/katekolamin), sangat berguna pada syok asidosis di mana reseptor adrenergik sudah mengalami <em>down-regulation</em> (kebal) terhadap norepinefrin/epinefrin." 
+            },
+            { 
+                cat: "Refractory Arrhythmia", 
+                q: "<strong>[Vignette]</strong> Apoteker bangsal mencatat pasien dengan Aritmia Ventrikel rutin meminum Propafenone oral. Pasien mengeluh akhir-akhir ini makanan terasa seperti logam (<em>metallic taste</em>) dan jika naik tangga sedikit menjadi sesak (napas mengi). <br><br>Bagaimana farmasis menganalisis ini?", 
+                a: "⚠️ <strong>DRP:</strong> Efek Samping Obat (ADR) dan efek farmakodinamik *off-target*.<br><br>⚕️ <strong>Intervensi:</strong> <br>1. *Metallic/bitter taste* (Dysgeusia) adalah efek samping SSP unik yang sangat umum pada Propafenone.<br>2. Napas mengi terjadi karena secara struktur, Propafenone memiliki <strong>aktivitas non-selektif Beta-Blocking sekunder</strong> yang signifikan. Obat ini dapat memicu bronkospasme pada pasien asma tersembunyi (reaktif saluran napas). Evaluasi fungsi paru atau *switch* ke anti-aritmia lain." 
+            },
+
+            // --- BAB 4: LIPIDOLOGY & HYPERTENSIVE CRISIS (10 Soal) ---
+            { 
+                cat: "Lipid & HTN Crisis", 
+                q: "<strong>[Vignette]</strong> Pasien intoleran statin akibat miopati parah. Dokter meresepkan asam bempedoat (Bempedoic Acid) 180mg/hari. Pasien kembali minggu depannya dengan radang sendi jempol kaki yang merah, panas, meradang hebat. <br><br>Apa efek samping spesifik dari obat ini?", 
+                a: "⚠️ <strong>DRP:</strong> Eksaserbasi Gout / Hiperurisemia terinduksi obat.<br><br>⚕️ <strong>Analisis Farmasis:</strong> Asam bempedoat (inhibitor enzim *ATP citrate lyase*) sangat efektif menurunkan kolesterol LDL, TETAPI ia <strong>menghambat transporter OAT2 di tubulus ginjal</strong>. Akibatnya, ekskresi asam urat ke urin terhenti, menyebabkan penumpukan asam urat di darah (*Hyperuricemia*) yang memicu serangan Gout Akut. <br><strong>Saran:</strong> Tangani gout dengan NSAID/Kolkisin, pertimbangkan *switch* ke Ezetimibe atau PCSK9i jika rekuren." 
+            },
+            { 
+                cat: "Lipid & HTN Crisis", 
+                q: "<strong>[Vignette]</strong> Dokter berencana meresepkan terapi mutakhir <strong>Inclisiran</strong> (Leqvio) di RS untuk pasien HeFH dengan LDL membandel. <br><br>Apoteker mengedukasi pasien, bagaimana mekanisme canggih obat ini dan seberapa sering injeksinya?", 
+                a: "⚕️ <strong>Edukasi Mekanisme Inovatif:</strong><br>Inclisiran adalah molekul <strong>small interfering RNA (siRNA)</strong>. Ia masuk ke dalam hati dan menghancurkan mRNA pembawa pesan sebelum protein PCSK9 sempat dirakit. (Mencegah pabrik dari awal).<br><br><strong>Jadwal Dosis Super Panjang:</strong> Injeksi subkutan hanya diberikan pada <strong>Bulan ke-0, Bulan ke-3, lalu selanjutnya hanya SETIAP 6 BULAN SEKALI</strong>. Kepraktisan ini menjamin kepatuhan absolut (*adherence*) dibandingkan antibodi PCSK9 lain yang tiap 2 minggu." 
+            },
+            { 
+                cat: "Lipid & HTN Crisis", 
+                q: "<strong>[Vignette]</strong> Pasien dislipidemia meminta dokter meresepkan suplemen Omega-3/Minyak Ikan OTC generik (mengandung DHA & EPA) karena Trigliserida-nya 400 mg/dL. Dokter meminta pendapat Apoteker. <br><br>Berdasarkan *REDUCE-IT Trial*, apa bentuk *purified* spesifik yang wajib diberikan untuk proteksi jantung?", 
+                a: "⚕️ <strong>Intervensi Evidence-Based:</strong><br>Suplemen Omega-3 OTC campuran (mengandung DHA) jusru dapat menaikkan kadar LDL-C dan tidak terbukti mencegah kejadian kardiovaskular.<br><br>Rekomendasikan peresepan spesifik <strong>Icosapent Ethyl (Vascepa)</strong> 2x2g sehari. Ini adalah produk murni dan tersaturasi penuh dari molekul EPA (*Eicosapentaenoic Acid*) yang telah terbukti kuat dalam studi *REDUCE-IT* menurunkan mortalitas dan kejadian iskemik pada pasien hipertrigliseridemia." 
+            },
+            { 
+                cat: "Lipid & HTN Crisis", 
+                q: "<strong>[Vignette]</strong> Pasien hipertensi emergensi perioperatif (TD 220/120) mendapatkan infus <strong>Clevedipine</strong> IV emulsi di ruang ICU bedah. Infus berjalan > 24 jam dengan dosis tinggi. <br><br>Sebagai apoteker ICU, sebutkan 2 parameter esensial yang wajib Anda pantau ketat!", 
+                a: "⚠️ <strong>Monitoring Kritis ICU:</strong><br>Clevedipine adalah CCB Dihidropiridin ultra-pendek, namun sediaannya diracik dalam dasar pelarut <strong>Emulsi Lipid 20% (menyumbang 2 kcal / mL)</strong>.<br><br>1. <strong>Hipertrigliseridemia:</strong> Wajib cek lab Trigliserida darah harian. Pasien bisa mengalami pankreatitis iatrogenik akibat *lipid overload*.<br>2. <strong>Risiko Infeksi:</strong> Botol kaca/selang emulsi lemak sangat disukai bakteri. Standar *Aseptic* Farmasi mewajibkan seluruh set infus dan sisa obat botol Clevedipine <strong>DIGANTI TOTAL MAKSIMAL SETIAP 12 JAM</strong>." 
+            },
+            { 
+                cat: "Lipid & HTN Crisis", 
+                q: "<strong>[Vignette]</strong> Pasien hipertensi krisis (TD 240/130 mmHg) mengalami gagal ginjal akut berbarengan (SCr mendadak naik dari 1.0 ke 3.5). Diperlukan obat antihipertensi IV yang justru meningkatkan aliran darah (perfusi) ginjal saat menurunkan tensi sistemik. <br><br>Obat langka spesifik apa yang direkomendasikan farmasis?", 
+                a: "⚕️ <strong>Drug of Choice Khusus Ginjal:</strong><br>Rekomendasikan infus kontinu <strong>Fenoldopam</strong>.<br><br><em>Mekanisme:</em> Fenoldopam adalah agonis reseptor Dopamin-1 (D1) perifer kerja selektif. Sembari mendilatasi pembuluh darah sistemik (menurunkan *afterload*), obat ini secara unik <strong>mendilatasi arteriol ginjal dan mempromosikan natriuresis</strong>, yang mempertahankan atau bahkan menaikkan <em>Renal Blood Flow</em> di tengah krisis ginjal akut." 
+            },
+            { 
+                cat: "Lipid & HTN Crisis", 
+                q: "<strong>[Vignette]</strong> Pasien transplantasi organ (menggunakan Siklosporin / Cyclosporine) mengalami kolesterol tinggi (LDL 190). Dokter meresepkan Rosuvastatin 40mg. <br><br>Apa deteksi interaksi mematikan apoteker?", 
+                a: "⚠️ <strong>DRP Level Berat:</strong> Interaksi Siklosporin dan Rosuvastatin.<br><br>⚕️ <strong>Intervensi:</strong> Siklosporin menghambat kuat polipeptida transporter organik hepatik (OATP1B1/OATP1B3) dan <em>Breast Cancer Resistance Protein</em> (BCRP). Karena pompa penarik ini lumpuh, Rosuvastatin gagal masuk ke hati untuk dibuang, membuat kadarnya di darah meroket hingga <strong>7 KALI LIPAT (700%)</strong>, memicu miotoksisitas dan gagal ginjal. <br><strong>Saran:</strong> Dosis MAX Rosuvastatin bersama Siklosporin adalah <strong>5 mg/hari</strong>, atau gunakan Fluvastatin." 
+            },
+            { 
+                cat: "Lipid & HTN Crisis", 
+                q: "<strong>[Vignette]</strong> Pasien wanita dengan Hipertensi Pulmonal Berat (PAH Grup 1) masuk UGD. Ia memakai pompa infus <strong>Epoprostenol (Flolan) IV kontinyu</strong> dari rumah. Tiba-tiba kateter infusnya macet/tersumbat (*line occlusion*). <br><br>Mengapa apoteker memencet bel *Code Blue* kegawatan?", 
+                a: "⚠️ <strong>DRP:</strong> <em>Rebound Pulmonary Hypertensive Crisis</em> yang mengancam nyawa dalam hitungan menit!<br><br>⚕️ <strong>Intervensi:</strong> Epoprostenol IV memiliki waktu paruh di sirkulasi yang teramat ekstrem pendek: <strong>HANYA 3 - 5 MENIT</strong>. Jika infus terhenti total, tekanan arteri pulmonal akan melonjak drastis kembali (*rebound*) menyebabkan <em>Acute Right Heart Failure</em> mematikan. Farmasis dan tim medis harus merekonstruksi selang infus baru *back-up* tanpa jeda detik sedikitpun." 
+            },
+            { 
+                cat: "Lipid & HTN Crisis", 
+                q: "<strong>[Vignette]</strong> Dokter Poliklinik menyerah menghadapi pasien <em>True Resistant Hypertension</em> (TD terus 180/100 walau minum 6 obat max dosis). Ia berencana memulai <strong>Minoxidil oral</strong> sebagai senjata pamungkas. <br><br>Apa dua jenis obat yang WAJIB diresepkan apoteker sebagai pendamping Minoxidil?", 
+                a: "⚕️ <strong>Kaidah Farmakoterapi Minoxidil:</strong><br>Minoxidil oral adalah vasodilator arteriolar langsung yang luar biasa agresif dan *brutal*. Oleh karena itu, hukum farmasi mewajibkan harus didampingi oleh:<br>1. <strong>Loop Diuretik poten (mis. Furosemide dosis tinggi):</strong> Minoxidil menyebabkan retensi Na/air dan edema masif sekunder akibat turunnya tekanan filtrasi.<br>2. <strong>Beta-Blocker kuat (mis. Bisoprolol):</strong> Minoxidil memicu aktivasi simpatik parah (takikardia refleks mematikan) yang harus ditumpulkan oleh beta-blocker." 
+            },
+            { 
+                cat: "Lipid & HTN Crisis", 
+                q: "<strong>[Vignette]</strong> Apoteker mendeteksi penggunaan tablet Endothelin Receptor Antagonist (ERA) yakni <strong>Bosentan</strong> pada pasien Hipertensi Pulmonal wanita muda. <br><br>Program keselamatan spesifik Amerika (FDA) apa yang wajib ditaati obat ini dan kenapa?", 
+                a: "⚠️ <strong>DRP / Regulasi Keselamatan Khusus:</strong><br>1. <strong>Program REMS (Risk Evaluation and Mitigation Strategy):</strong> Bosentan masuk obat sangat ketat karena sifatnya yang <strong>Sangat Teratogenik (Kategori X)</strong>. Pasien wanita subur wajib tes kehamilan tiap bulan. Obat juga menyebabkan hepatotoksisitas (cek LFT rutin).<br>2. <strong>Interaksi PK Unik:</strong> Bosentan adalah inducer kuat (CYP3A4/CYP2C9), sehingga otomatis akan menggagalkan efikasi Pil KB (Kontrasepsi Oral) pasien tersebut." 
+            },
+            { 
+                cat: "Lipid & HTN Crisis", 
+                q: "<strong>[Vignette]</strong> Obat hiperkolesterolemia <strong>Lomitapide (Juxtapid)</strong> digunakan secara <em>off-label/compassionate use</em> pada anak laki-laki dengan *Homozygous Familial Hypercholesterolemia* (HoFH) ekstrem. <br><br>Apoteker mengedukasi diet mutlak apa yang wajib diterapkan?", 
+                a: "⚕️ <strong>Edukasi Diet Penunjang Mekanisme Obat:</strong><br>Lomitapide bekerja memblokir <em>Microsomal Triglyceride Transfer Protein (MTP)</em>, mencegah perakitan lipid di usus. <br><br>Jika pasien memakan lemak tinggi, lemak itu tak bisa diserap tubuh dan akan tertahan hancur di usus, menyebabkan steatorrhea berat, diare eksplosif, dan malabsorpsi vitamin larut lemak. <strong>Pasien WAJIB mematuhi diet super rendah lemak kronis (kurang dari 20% total kalori harian)</strong>." 
+            },
+
+            // --- BAB 5: CARDIOTOXICITY, IV ADMIXTURE & PHARMACOGENOMICS (10 Soal) ---
+            { 
+                cat: "Tox & Pharmacogenomics", 
+                q: "<strong>[Vignette]</strong> Pasien kanker payudara direncanakan sesi kemoterapi Doxorubicin (Anthracycline). Ia sudah mendekati batas <em>Lifetime Cumulative Dose</em> (> 300 mg/m2), dan fungsi pompa jantung mulai turun. <br><br>Obat penawar/pelindung (cardioprotectant) spesifik apa yang diracik apoteker onko-kardiologi ke dalam infus?", 
+                a: "⚕️ <strong>Intervensi Cardio-Oncology:</strong><br>Apoteker meracik obat <strong>Dexrazoxane (Zinecard)</strong> diberikan IV sebelum Doxorubicin.<br><br><em>Mekanisme:</em> Doxorubicin menghancurkan otot jantung tipe 1 (ireversibel) lewat badai radikal bebas karena berikatan dengan ion besi intraseluler. Dexrazoxane bekerja sebagai *iron chelator* (pengikat besi) yang sangat spesifik menyusup ke sel miokardium, 'merampas' besi tersebut sehingga Doxorubicin gagal memicu reaksi radikal bebas perusak jantung." 
+            },
+            { 
+                cat: "Tox & Pharmacogenomics", 
+                q: "<strong>[Vignette]</strong> Di IV Admixture Farmasi ICU, apoteker harus meracik ampul Kalsium (untuk menstabilkan membran miokard pasien hiperkalemia). Tersedia <strong>Calcium Gluconate 10%</strong> dan <strong>Calcium Chloride 10%</strong>. <br><br>Perawat meminta CaCl2 karena katanya 'lebih poten', tetapi akses pasien hanya ada IV line perifer. Apa putusan apoteker?", 
+                a: "⚠️ <strong>DRP:</strong> <em>Extravasation Necrosis</em>.<br><br>⚕️ <strong>Intervensi IV Admixture:</strong> Tolak pemberian CaCl2 melalui jalur perifer!<br>Secara stoikiometri, Calcium Chloride (CaCl2) memberikan elemen kalsium aktif <strong>3 KALI LIPAT lebih pekat</strong> daripada Gluconate. Karena sifat basa hiperosmolarnya ekstrem, jika CaCl2 sedikit saja bocor dari vena tepi (ekstravasasi), ia akan membusukkan dan mematikan (nekrosis) seluruh jaringan lengan pasien. <br><strong>CaCl2 HANYA BOLEH di-push lewat Central Venous Catheter (CVC)</strong>. Untuk perifer perifer, gunakan Calcium Gluconate lambat." 
+            },
+            { 
+                cat: "Tox & Pharmacogenomics", 
+                q: "<strong>[Vignette]</strong> Pasien kanker kolon di IGD mengeluhkan Nyeri Dada *Angina Pectoris* tipikal, dengan elevasi ST EKG temporer yang hilang timbul, sesaat setelah pulang dari klinik rawat jalan infus kemoterapi 5-Fluorouracil (5-FU) / Capecitabine. <br><br>Apa patofisiologi toksisitas yang dicurigai farmasis?", 
+                a: "⚠️ <strong>DRP:</strong> Vasospasme Koroner Imbas Obat.<br><br>⚕️ <strong>Analisis Cardio-Oncology:</strong> 5-FU (dan prodrug-nya, Capecitabine) secara notorik menyebabkan <strong>Vasospasme Arteri Koroner</strong> akut mirip sindrom Prinzmetal (mampu mencetuskan iskemik infark pada pembuluh jantung yang mulus tanpa plak).<br><br><strong>Tatalaksana:</strong> Hentikan kemo segera. Resusitasi *rescue* diberikan infus vasodilator koroner kuat: <strong>Calcium Channel Blocker (Diltiazem/Amlodipine) atau Nitrat kerja cepat</strong>. Beta-blocker dikontraindikasikan (memperburuk spasme alfa)." 
+            },
+            { 
+                cat: "Tox & Pharmacogenomics", 
+                q: "<strong>[Vignette]</strong> Pasien post-operasi CABG diresepkan <strong>Kolkhisin (Colchicine) 0.5mg BID</strong> untuk mencegah sindrom pasca-perikardiotomi. Tiga hari kemudian ia terkena pneumonia dan diberi antibiotik <strong>Clarithromycin</strong>. <br><br>Apoteker mengaktifkan alarm *stop order*. Mengapa?", 
+                a: "⚠️ <strong>DRP Level Kematian:</strong> Interaksi Obat Mayor (Fatal Neuromuscular Toxicity).<br><br>⚕️ <strong>Intervensi:</strong> Kolkhisin dibuang utuh dari sel melalui pompa <em>P-glycoprotein (P-gp)</em> dan dimetabolisme sebagian oleh CYP3A4. Clarithromycin adalah <strong>inhibitor ganda yang sangat kuat pada P-gp DAN CYP3A4 sekaligus</strong>.<br>Kadar Kolkhisin di darah akan meroket tak terkendali, memicu kematian sel, kegagalan organ multipel, dan *rhabdomyolysis* lumpuh saraf tulang belakang progresif. <strong>Ganti antibiotik ke Azithromycin</strong> (tidak mengganggu enzim tersebut)." 
+            },
+            { 
+                cat: "Tox & Pharmacogenomics", 
+                q: "<strong>[Vignette]</strong> Di laboratorium Pharmacogenomics, genotipe pasien hiperkolesterolemia diteliti. Ditemukan mutasi varian pada gen <strong>SLCO1B1 (tipe polimorfisme CC / mutan alel *5)</strong>. <br><br>Informasi klinis krusial apa yang disampaikan apoteker terkait obat kolesterolnya?", 
+                a: "⚠️ <strong>DRP Genomik:</strong> Kerentanan genetik menderita *Statin-Induced Myopathy*.<br><br>⚕️ <strong>Analisis Pakar:</strong> Gen SLCO1B1 mengkodekan protein OATP1B1, yakni 'gerbang' penyedot statin masuk ke dalam organ hati. Pasien dengan mutasi *5 kehilangan fungsi gerbang ini, sehingga <strong>Simvastatin</strong> akan menumpuk parah dalam sirkulasi darah otot, memicu Rhabdomyolysis masif.<br><strong>Rekomendasi:</strong> Pasien tipe ini mutlak <strong>DILARANG DIBERIKAN Simvastatin dosis berapapun</strong>. Pilihan statin paling aman (ketergantungan OATP terendah) adalah Rosuvastatin dosis rendah atau Fluvastatin." 
+            },
+            { 
+                cat: "Tox & Pharmacogenomics", 
+                q: "<strong>[Vignette]</strong> Di IGD, perawat akan melarutkan obat *Pulmonary Arterial Hypertension* darurat (Epoprostenol serbuk liofilisasi). Farmasi mencabut NaCl 0.9% dari perawat dan menyodorkan <strong>Pelarut Khusus (Diluent) Buffer Alkali</strong> dari kit pabrikan. <br><br>Apa alasan *chemistry* di balik larangan NaCl biasa?", 
+                a: "⚠️ <strong>DRP Farmasetika Lanjut:</strong> Degradasi Asam Spontan Instan.<br><br>⚕️ <strong>Intervensi IV Admixture:</strong> Molekul Epoprostenol sangat-sangat labil secara kimia. Pada pH netral (seperti cairan infus NaCl 0.9% / D5W yang memiliki pH ~5.5 - 6.5), obat ini akan <strong>terhidrolisis hancur dalam hitungan menit</strong> sebelum sempat masuk ke tubuh pasien. Ia <strong>WAJIB mutlak</strong> dilarutkan dengan *diluent* pelarut glisin spesifik bawaan pabrik yang berbasa kuat (pH > 10.5) untuk mempertahankannya." 
+            },
+            { 
+                cat: "Tox & Pharmacogenomics", 
+                q: "<strong>[Vignette]</strong> Pasien dengan katup prostetik buatan membutuhkan inisiasi Warfarin. DPJP meminta apoteker melakukan perhitungan target dosis presisi berdasarkan tes profil *Pharmacogenomics*. <br><br>Dua varian genetik spesifik apakah yang menentukan tinggi rendahnya dosis Warfarin?", 
+                a: "⚕️ <strong>Penanda Farmakogenomik Warfarin:</strong><br>1. <strong>Gen CYP2C9:</strong> Menentukan klirens/pembuangan Warfarin. Varian *2 atau *3 adalah <em>Poor Metabolizer</em> (butuh dosis jauh lebih KECIL karena obat menumpuk).<br>2. <strong>Gen VKORC1:</strong> Menentukan kepekaan enzim target (Vitamin K Epoxide Reductase). Varian alel 'A' menandakan reseptor sangat sensitif (butuh dosis jauh lebih KECIL untuk mencapai target INR). Kombinasi CYP2C9*3 dan VKORC1(A) butuh dosis mini, misal 0.5-1 mg/hari, jauh dari empiris 5mg." 
+            },
+            { 
+                cat: "Tox & Pharmacogenomics", 
+                q: "<strong>[Vignette]</strong> Pasien pria 60 tahun terdiagnosis *Alpha-Gal Syndrome* (alergi daging merah akibat gigitan kutu *Lone Star Tick*). Masuk IGD terkena NSTEMI, perawat hendak menyuntikkan Enoxaparin LMWH dan Heparin (UFH) drip di perutnya. <br><br>Apa bahaya mematikan (*Anaphylaxis*) yang diidentifikasi farmasi?", 
+                a: "⚠️ <strong>DRP:</strong> Syok Anafilaktik terinduksi komponen molekul mamalia non-primata.<br><br>⚕️ <strong>Intervensi:</strong> Pada *Alpha-Gal Syndrome*, pasien alergi parah terhadap karbohidrat <em>Galactose-alpha-1,3-galactose</em> yang ada di tubuh mamalia. <strong>Heparin dan LMWH (Enoxaparin) diproduksi dari ekstrak usus BABI (porcine-derived)</strong> yang kaya akan alpha-gal. <br><strong>Tindakan:</strong> <em>Hold</em> Heparin babi! Berikan alternatif <strong>Fondaparinux (sintetis total buatan lab)</strong> atau Bivalirudin IV untuk tata laksana ACS-nya." 
+            },
+            { 
+                cat: "Tox & Pharmacogenomics", 
+                q: "<strong>[Vignette]</strong> Paska operasi cangkok jantung (HTx), pasien wajib meminum obat penekan imun Mycophenolate Mofetil (MMF/CellCept). Dua minggu kemudian ia menebus resep Lansoprazole oral (PPI) untuk lambung nyerinya. <br><br>Mengapa apoteker menunda penyerahan PPI?", 
+                a: "⚠️ <strong>DRP:</strong> Rejeksi Penolakan Organ Jantung akibat kegagalan imunosupresan.<br><br>⚕️ <strong>Intervensi PK Lanjut:</strong> Tablet Mycophenolate Mofetil (MMF) butuh suasana <strong>Asam Lambung yang kuat</strong> untuk larut maksimal dan diserap usus (kelarutan *pH-dependent*). Penggunaan *Proton Pump Inhibitor* (PPI) akan mematikan asam lambung, menurunkan bioavailabilitas MMF hingga 40%, membuat kadar imunosupresan terjun bebas (risiko sistem tubuh menyerang jantung cangkokan baru).<br><strong>Saran:</strong> Ganti MMF ke formasi <em>Enteric-Coated Mycophenolate Sodium</em> (Myfortic) yang diabsorpsi di usus basa." 
+            },
+            { 
+                cat: "Tox & Pharmacogenomics", 
+                q: "<strong>[Vignette]</strong> Di unit HD, pasien End-Stage Renal Disease (ESRD) / Anuria (tanpa urin) menderita Atrial Fibrilasi. Dokter meresepkan Sotalol 80mg untuk kontrol iramanya setelah hemodialisis mingguan selesai. <br><br>Mengapa Sotalol pada pasien anuria ekstrem sangat berbahaya tanpa dosis matematis apoteker?", 
+                a: "⚠️ <strong>DRP:</strong> Pro-aritmia akibat 100% Retensi Obat.<br><br>⚕️ <strong>Analisis ICU Ginjal:</strong> Tidak seperti Beta-Blocker lainnya yang dicerna hati (seperti Metoprolol/Carvedilol), <strong>Sotalol murni 100% diekskresikan tak berubah oleh ginjal</strong>. Pada ESRD (CrCl < 10), waktu paruh yang aslinya 12 jam meledak menjadi nyaris **70 JAM**. <br>Jika diminum tiap hari, penumpukannya memicu interval QTc > 600 ms dan *Torsades de Pointes*. Dosis pada anuria HD biasanya hanya boleh dipreskripsikan <strong>25-50% dari dosis normal, diberikan secara post-dialysis SAJA (mis. 40 mg setiap 48 jam / sehabis cuci darah)</strong>." 
+            }
+        ];
+
+        let cards = [...originalCards];
+        let currentIndex = 0;
+        let isFlipped = false;
+        
+        // Touch Variables for Swipe (Mobile)
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let isSwiping = false;
+
+        const flashcardEl = document.getElementById('flashcard');
+        const questionEl = document.getElementById('question-text');
+        const answerEl = document.getElementById('answer-text');
+        const counterEl = document.getElementById('card-counter');
+        const categoryEl = document.getElementById('card-category');
+
+        function renderCard() {
+            if (isFlipped) {
+                flashcardEl.classList.remove('is-flipped');
+                isFlipped = false;
+                setTimeout(() => {
+                    updateContent();
+                }, 300);
+            } else {
+                updateContent();
+            }
+        }
+
+        function updateContent() {
+            const currentCard = cards[currentIndex];
+            questionEl.innerHTML = currentCard.q;
+            answerEl.innerHTML = currentCard.a;
+            categoryEl.textContent = currentCard.cat;
+            counterEl.textContent = `${currentIndex + 1} / ${cards.length}`;
+            
+            // Scroll answer to top whenever card changes
+            document.querySelector('#answer-text').parentElement.parentElement.scrollTop = 0;
+        }
+
+        function toggleFlip(e) {
+            // Prevent flip if the user is swiping or selecting text
+            if (isSwiping) return;
+            const selection = window.getSelection();
+            if (selection.toString().length > 0) return;
+            
+            isFlipped = !isFlipped;
+            flashcardEl.classList.toggle('is-flipped');
+        }
+
+        function nextCard() {
+            if (currentIndex < cards.length - 1) {
+                currentIndex++;
+                renderCard();
+            } else {
+                currentIndex = 0;
+                renderCard();
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderCard();
+            } else {
+                currentIndex = cards.length - 1; // loop to back
+                renderCard();
+            }
+        }
+
+        function shuffleCards() {
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            currentIndex = 0;
+            renderCard();
+        }
+
+        // --- Fitur Swipe untuk Mobile ---
+        flashcardEl.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            isSwiping = false;
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchmove', e => {
+            const currentTouchX = e.changedTouches[0].screenX;
+            // Deteksi threshold geseran untuk membedakan tap vs swipe
+            if (Math.abs(currentTouchX - touchStartX) > 15) {
+                isSwiping = true;
+            }
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+
+        function handleSwipe() {
+            const swipeThreshold = 50; 
+            if (touchEndX < touchStartX - swipeThreshold) {
+                nextCard();
+            } else if (touchEndX > touchStartX + swipeThreshold) {
+                prevCard();
+            }
+            setTimeout(() => {
+                isSwiping = false;
+            }, 100);
+        }
+
+        window.onload = renderCard;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                e.preventDefault(); // Mencegah scrolling bawah jika spasi ditekan
+                toggleFlip();
+            } else if (e.code === 'ArrowRight') {
+                nextCard();
+            } else if (e.code === 'ArrowLeft') {
+                prevCard();
+            }
+        });
+    </script>
+</body>
+</html>
