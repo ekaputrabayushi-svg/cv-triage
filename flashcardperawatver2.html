@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard Kardiologi Intermediate (Keperawatan)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* CSS untuk efek flip 3D */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        .card-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        .is-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen font-sans flex flex-col overflow-x-hidden">
+
+    <!-- Header -->
+    <header class="bg-orange-700 text-white shadow-md p-3 md:p-4 sticky top-0 z-20">
+        <div class="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0">
+            <div class="text-center sm:text-left">
+                <h1 class="text-lg sm:text-xl md:text-2xl font-bold flex items-center justify-center sm:justify-start gap-2">
+                    <span>🩺</span> Flashcard Kardiologi (Keperawatan)
+                </h1>
+                <p class="text-[10px] sm:text-xs md:text-sm text-orange-200 font-medium tracking-wide">
+                    Varian 2 part of CardiologyVault - <strong>Intermediate Edition</strong>
+                </p>
+            </div>
+            <div class="text-[10px] sm:text-xs md:text-sm font-medium bg-orange-800 px-3 py-1 rounded-full border border-orange-400 shadow-sm text-center">
+                Dev: Bayushi Eka Putra, MD, FIHA
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col items-center justify-start sm:justify-center p-4 md:p-8 max-w-4xl mx-auto w-full">
+        
+        <!-- Progress Info -->
+        <div class="w-full flex justify-between items-center mb-3 md:mb-4 text-slate-600 font-medium">
+            <span id="card-category" class="text-xs md:text-sm uppercase tracking-wider text-orange-700 font-bold bg-orange-100 px-2 py-1 rounded shadow-sm">Kategori</span>
+            <span id="card-counter" class="text-xs md:text-sm bg-white px-3 py-1 rounded-full shadow-sm font-bold border border-slate-200">1 / 56</span>
+        </div>
+
+        <!-- Flashcard Container -->
+        <div id="flashcard" class="relative w-full max-w-2xl h-[65vh] min-h-[400px] md:h-[480px] perspective-1000 cursor-pointer group mb-6 md:mb-8 touch-pan-y" onclick="toggleFlip(event)">
+            <div class="card-inner w-full h-full absolute transform-style-3d shadow-xl rounded-2xl md:rounded-3xl">
+                
+                <!-- Front (Question) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-white rounded-2xl md:rounded-3xl p-6 md:p-10 flex flex-col items-center justify-center text-center border-t-4 border-orange-500">
+                    <div class="absolute top-4 left-5 text-slate-200 font-bold text-3xl md:text-4xl">Q</div>
+                    <div class="w-full h-full flex flex-col justify-center overflow-y-auto no-scrollbar pt-8 pb-8">
+                        <p id="question-text" class="text-base sm:text-lg md:text-xl text-slate-800 font-semibold leading-relaxed md:leading-normal m-auto">
+                            Memuat pertanyaan...
+                        </p>
+                    </div>
+                    <div class="absolute bottom-4 text-xs md:text-sm text-slate-400 flex items-center gap-1 animate-pulse">
+                        <span class="hidden sm:inline">Ketuk kartu untuk melihat jawaban</span>
+                        <span class="sm:hidden">Ketuk untuk jawaban • Usap untuk lanjut</span>
+                    </div>
+                </div>
+
+                <!-- Back (Answer) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-slate-50 rounded-2xl md:rounded-3xl p-6 md:p-10 flex flex-col items-center justify-center text-left rotate-y-180 border-t-4 border-emerald-500 shadow-inner">
+                    <div class="absolute top-4 left-5 text-emerald-200 font-bold text-3xl md:text-4xl">A</div>
+                    <div class="w-full h-full flex flex-col justify-center overflow-y-auto no-scrollbar pt-8 pb-4">
+                        <p id="answer-text" class="text-sm sm:text-base md:text-[15px] text-slate-700 font-medium leading-relaxed m-auto w-full">
+                            Memuat jawaban...
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="w-full max-w-2xl grid grid-cols-2 sm:flex sm:flex-row justify-center gap-3 md:gap-4 pb-8">
+            <button onclick="prevCard()" class="col-span-1 bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-sm transition-all border border-slate-200 flex justify-center items-center gap-1 active:scale-95">
+                <span>&larr;</span> <span class="hidden sm:inline">Sebelumnya</span><span class="sm:hidden">Prev</span>
+            </button>
+            <button onclick="nextCard()" class="col-span-1 bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-md transition-all flex justify-center items-center gap-1 active:scale-95">
+                <span class="hidden sm:inline">Selanjutnya</span><span class="sm:hidden">Next</span> <span>&rarr;</span>
+            </button>
+            <button onclick="shuffleCards()" class="col-span-2 sm:col-span-1 order-last sm:order-none bg-blue-500 hover:bg-blue-600 text-white font-bold text-sm md:text-base py-3 md:py-4 px-4 md:px-6 rounded-xl shadow-md transition-all flex justify-center items-center active:scale-95">
+                Acak (Shuffle)
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        // Data Flashcard (50 Soal Kardiologi Level Perawat Intermediate / ICCU)
+        const originalCards = [
+            // --- BAGIAN 1: EKG Lanjut & Aritmia Kompleks (10) ---
+            { 
+                cat: "EKG Lanjut", 
+                q: "Apa perbedaan paling mendasar pada gambaran EKG antara AV Block Derajat 2 Mobitz Tipe I (Wenckebach) dan Mobitz Tipe II?", 
+                a: "<strong>Mobitz I:</strong> Interval PR <em>memanjang secara progresif</em> (makin lama makin panjang) sebelum akhirnya gelombang P gagal dihantarkan (QRS hilang/dropped beat).<br><strong>Mobitz II:</strong> Interval PR <em>konstan/tetap</em>, lalu tiba-tiba ada gelombang P yang tidak diikuti QRS.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Mobitz II jauh lebih berbahaya karena blok berada di bawah AV node (berkas His/Purkinje) dan sering berlanjut menjadi Total AV Block (TAVB) yang mematikan. Siapkan alat <em>Transcutaneous Pacing (TCP)</em> untuk pasien Mobitz II.</span>" 
+            },
+            { 
+                cat: "EKG Lanjut", 
+                q: "Pasien di monitor menunjukkan takikardia QRS lebar. Bagaimana cara membedakan antara Ventricular Tachycardia (VT) dengan SVT with Aberrancy (SVT dengan penyimpangan jalur)?", 
+                a: "Gunakan <strong>Kriteria Brugada</strong>. Tanda kuat yang mengarah ke VT: <br>1. <strong>AV Dissociation:</strong> Gelombang P terlihat berjalan sendiri terpisah dari QRS.<br>2. <strong>Concordance:</strong> Di sadapan prekordial (V1-V6), arah QRS semuanya positif atau semuanya negatif.<br>3. <strong>Fusion/Capture beats:</strong> Kadang muncul kompleks QRS sempit normal di tengah-tengah rentetan QRS lebar.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Jika ragu apakah itu VT atau SVT dengan aberrancy, protap ACLS mengajarkan: <em>Selalu perlakukan takikardia QRS lebar sebagai VT sampai terbukti sebaliknya!</em></span>" 
+            },
+            { 
+                cat: "EKG Lanjut", 
+                q: "Apa yang membedakan gambaran EKG LBBB (Left Bundle Branch Block) dengan RBBB (Right Bundle Branch Block) di sadapan V1?", 
+                a: "Keduanya memiliki QRS lebar (>0.12 detik).<br><strong>RBBB di V1:</strong> Gambaran QRS dominan positif, sering terlihat pola <strong>'rsR' atau telinga kelinci (Rabbit ears)</strong>.<br><strong>LBBB di V1:</strong> Gambaran QRS dominan negatif (gelombang QS atau rS yang dalam dan lebar).<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> LBBB baru (New Onset LBBB) pada pasien yang mengeluh nyeri dada adalah <em>STEMI Equivalent</em> (dianggap setara dengan STEMI) dan membutuhkan aktivasi Cath Lab segera.</span>" 
+            },
+            { 
+                cat: "EKG Lanjut", 
+                q: "Apa karakteristik EKG dari sindrom Wolff-Parkinson-White (WPW)?", 
+                a: "1. Interval PR sangat pendek (< 0.12 detik).<br>2. Kompleks QRS sedikit melebar.<br>3. Adanya <strong>Gelombang Delta (Delta Wave)</strong>: slurring (naik lambat/landai) pada awal kompleks QRS.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> WPW terjadi karena adanya jalur listrik ekstra/bypass (Bundle of Kent) yang mem-bypass AV Node. Pasien WPW sangat rentan jatuh pada SVT (Takiaritmia re-entri). Pemberian Digoksin atau Verapamil sering <strong>dikontraindikasikan</strong>.</span>" 
+            },
+            { 
+                cat: "EKG Lanjut", 
+                q: "Bagaimana membedakan Atrial Fibrilasi (AF) dengan Atrial Flutter pada EKG?", 
+                a: "<strong>Atrial Flutter:</strong> Garis dasar berbentuk gigi gergaji (<strong>Sawtooth appearance / F waves</strong>) yang sangat teratur (rate atrium 250-350x/m). Respons ventrikel (jarak R-R) bisa reguler (blok 2:1 atau 3:1) maupun ireguler.<br><strong>Atrial Fibrilasi:</strong> Garis dasar keriting/kasar tanpa bentuk P yang jelas (fibrilasi), dan jarak R-R <em>selalu</em> ireguler (sangat tidak teratur).<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Keduanya berisiko memicu pembentukan trombus di atrium (risiko stroke), sehingga tatalaksana antikoagulan seringkali sama.</span>" 
+            },
+            { 
+                cat: "EKG Lanjut", 
+                q: "Apa tanda EKG hiperkalemia dari derajat ringan hingga berat yang dapat mengancam nyawa?", 
+                a: "1. <strong>Ringan:</strong> Gelombang T tinggi dan lancip (<em>Peaked T waves / T-Tall</em>).<br>2. <strong>Sedang:</strong> Interval PR memanjang, gelombang P mendatar/menghilang.<br>3. <strong>Berat:</strong> QRS melebar, akhirnya menyatu dengan gelombang T membentuk <strong>Sine Wave pattern</strong> sebelum berujung pada Asistol atau VF.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Jika melihat <em>peaked T</em> dan QRS mulai melebar pada pasien gagal ginjal, segera siapkan Kalsium Glukonas IV untuk menstabilkan membran miokard (mencegah henti jantung), disusul terapi penurun Kalium (Insulin+Dextrose).</span>" 
+            },
+            { 
+                cat: "EKG Lanjut", 
+                q: "Apa yang dimaksud dengan Prolonged QT interval, dan apa bahaya utamanya?", 
+                a: "Pemanjangan QTc > 450 ms (pria) atau > 460 ms (wanita). Mengindikasikan tertundanya repolarisasi ventrikel.<br><strong>Bahaya Utama:</strong> Sangat rentan memicu aritmia letal berupa <strong>Torsades de Pointes</strong> (Polymorphic VT) jika terjadi R-on-T phenomenon.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Pemanjangan QT sering dipicu oleh obat-obatan (Amiodarone, Haloperidol, makrolida) atau gangguan elektrolit (Hipokalemia, Hipomagnesemia). Perawat wajib mengevaluasi EKG jika pasien mendapat obat berisiko ini.</span>" 
+            },
+            { 
+                cat: "EKG Lanjut", 
+                q: "Pasien menggunakan Pacemaker (PPM). Di monitor terlihat garis spike (pacing artefak), namun tidak diikuti oleh kompleks QRS. Kondisi ini disebut apa?", 
+                a: "<strong>Failure to Capture</strong> (Gagal menangkap/menstimulasi).<br>Pacemaker mengeluarkan impuls listrik (terbukti dari adanya spike), namun miokardium tidak merespon/berkontraksi.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Penyebabnya bisa karena <em>output</em> (mA) terlalu rendah, dislokasi lead (kabel lepas), fibrosis di jaringan otot, atau asidosis/hipoksia berat. Tindakan perawat: tingkatkan nilai output (mA) pada generator jika pakai <em>Temporary Pacemaker</em>, atau lapor dokter.</span>" 
+            },
+            { 
+                cat: "EKG Lanjut", 
+                q: "Monitor EKG menunjukkan Brugada Pattern tipe 1. Seperti apa gambarannya dan apa risiko klinisnya?", 
+                a: "<strong>Gambaran:</strong> ST Elevasi dengan bentuk <em>Coved-type</em> (melengkung ke bawah seperti kubah) ≥ 2 mm diikuti gelombang T negatif di sadapan V1-V2.<br><strong>Risiko Klinis:</strong> Sangat berisiko mengalami aritmia ventrikel mendadak (VF) dan <strong>Kematian Jantung Mendadak (Sudden Cardiac Death)</strong>, sering terjadi saat tidur.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Ini adalah kelainan genetik kanal ion (Channelopathy). Demam dapat mencetuskan munculnya pola EKG ini atau aritmianya. Penanganan definitifnya seringkali adalah pemasangan ICD.</span>" 
+            },
+            { 
+                cat: "EKG Lanjut", 
+                q: "Jika Anda melihat gambaran 'Tombstone' ST Elevasi pada EKG, apa maknanya?", 
+                a: "Ini adalah bentuk ST elevasi masif di mana kompleks QRS menyatu dengan gelombang T yang sangat tinggi, menyerupai bentuk batu nisan (Tombstone).<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Gambaran ini mencerminkan <strong>Infark Miokard Akut yang sangat luas (biasanya pada oklusi LAD proksimal)</strong> dengan risiko kerusakan pompa ventrikel dan mortalitas yang amat tinggi. Segera persiapkan obat inotropik, defibrilator, dan percepat door-to-balloon time!</span>" 
+            },
+
+            // --- BAGIAN 2: Hemodinamik & Monitoring Invasif (10) ---
+            { 
+                cat: "Hemodinamik", 
+                q: "Apa nilai normal dari PAWP (Pulmonary Artery Wedge Pressure) dan parameter ini merefleksikan apa?", 
+                a: "<strong>Nilai Normal: 6 - 12 mmHg.</strong><br>PAWP adalah parameter pengganti (surrogate) yang paling akurat untuk menilai <strong>LVEDP (Left Ventricular End-Diastolic Pressure)</strong> atau tekanan isi (preload) bilik jantung kiri.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Jika PAWP tinggi (>18 mmHg), ini menandakan kongesti pulmonal (Edema Paru / Gagal Jantung Kiri). Terapi utamanya adalah menurunkan preload (Diuretik/Venodilator).</span>" 
+            },
+            { 
+                cat: "Hemodinamik", 
+                q: "Di monitor hemodinamik, apa yang dimaksud dengan SVR (Systemic Vascular Resistance) dan berapa nilai normalnya?", 
+                a: "SVR mengukur tahanan/resistensi pembuluh darah sistemik yang harus dilawan oleh ventrikel kiri (Afterload).<br><strong>Nilai Normal: 800 - 1200 dynes.sec/cm⁻⁵</strong>.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Pada syok kardiogenik (pompa lemah), tubuh akan kompensasi dengan vasokonstriksi parah sehingga SVR meningkat sangat tinggi (>1500). Sebaliknya, pada syok sepsis/distributif, pembuluh darah vasodilatasi masif sehingga SVR sangat rendah (<800).</span>" 
+            },
+            { 
+                cat: "Hemodinamik", 
+                q: "Apa perbedaan antara Cardiac Output (CO) dengan Cardiac Index (CI)?", 
+                a: "<strong>Cardiac Output (CO):</strong> Total darah yang dipompa jantung dalam 1 menit (Normal: 4 - 8 Liter/menit).<br><strong>Cardiac Index (CI):</strong> Cardiac Output yang <em>telah disesuaikan dengan Luas Permukaan Tubuh (Body Surface Area / BSA)</em> pasien (Normal: 2.5 - 4.0 L/min/m²).<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> CI lebih akurat untuk menilai kecukupan pompa jantung secara individu. CO sebesar 4 Liter/menit mungkin cukup untuk wanita mungil, namun berarti syok bagi pria obesitas berpostur besar.</span>" 
+            },
+            { 
+                cat: "Hemodinamik", 
+                q: "Pada gelombang monitor Arterial Line (A-Line), terdapat lekukan kecil yang disebut 'Dicrotic Notch'. Apa arti fisiologis dari lekukan ini?", 
+                a: "Dicrotic notch mencerminkan momen tertutupnya <strong>Katup Aorta</strong>, yang menandai akhir dari fase sistol dan awal dari fase diastol ventrikel.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Menghilangnya dicrotic notch pada gelombang A-Line sering terjadi pada kondisi vasodilatasi parah, hipovolemia berat, regurgitasi aorta berat, atau gelombang yang <em>overdamped</em> (terlalu redam akibat adanya gelembung udara di selang transduser).</span>" 
+            },
+            { 
+                cat: "Hemodinamik", 
+                q: "Saat perawat melakukan 'Square Wave Test' (Fast Flush Test) pada sistem A-Line, didapatkan hasil gelombang meluncur turun tanpa osilasi (pantulan), dan gelombang darah tampak membulat. Ini disebut apa?", 
+                a: "<strong>Overdamped System</strong> (Sistem terlalu teredam).<br>Akibatnya: Tekanan Sistolik akan terbaca <em>lebih rendah palsu</em>, dan Diastolik <em>lebih tinggi palsu</em>.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Penyebab overdamped biasanya: adanya gelembung udara (microbubbles) di selang, bekuan darah parsial (clot) di kateter, selang transduser terlalu panjang, atau selang terlipat (kinking). Segera cari dan hilangkan penyebabnya sebelum meresepkan vasopresor karena tensi rendah palsu!</span>" 
+            },
+            { 
+                cat: "Hemodinamik", 
+                q: "Apa nilai normal MAP (Mean Arterial Pressure) dan bagaimana rumusnya secara manual?", 
+                a: "<strong>Nilai Normal: 70 - 105 mmHg.</strong> (Target resusitasi ICCU biasanya MAP ≥ 65 mmHg agar perfusi organ vital adekuat).<br><strong>Rumus manual:</strong> [Sistolik + (2 x Diastolik)] / 3.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Diastolik dikali dua karena jantung menghabiskan waktu dua pertiga dari siklus detaknya dalam fase relaksasi (diastol). MAP adalah penentu utama perfusi jaringan, lebih penting dibanding hanya melihat angka sistolik.</span>" 
+            },
+            { 
+                cat: "Hemodinamik", 
+                q: "Pasien menggunakan kateter Swan-Ganz untuk mengukur SvO2 (Mixed Venous Oxygen Saturation). Nilainya turun dari 75% menjadi 50%. Apa artinya?", 
+                a: "Penurunan SvO2 mengindikasikan <strong>jaringan tubuh mengekstraksi/menyedot oksigen lebih banyak dari biasanya</strong>.<br>Penyebab: <em>Suplai Oksigen turun</em> (Cardiac output turun/syok, anemia, hipoksia) ATAU <em>Kebutuhan (Demand) Oksigen naik</em> (demam, nyeri, kejang, menggigil).<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> SvO2 normal adalah 60-80%. Jika nilainya tiba-tiba turun tajam pasca operasi jantung, ini adalah alarm awal (early warning) bahwa pasien sedang jatuh ke dalam syok kardiogenik sebelum tensi atau kesadaran menurun.</span>" 
+            },
+            { 
+                cat: "Hemodinamik", 
+                q: "Bagaimana efek penggunaan Positive End-Expiratory Pressure (PEEP) yang tinggi pada ventilator terhadap hemodinamik jantung?", 
+                a: "PEEP yang tinggi akan meningkatkan tekanan intratorakal, yang akan <strong>menekan Vena Cava dan menurunkan Venous Return (Preload)</strong> ke jantung kanan.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Akibatnya, curah jantung (Cardiac Output) dan tekanan darah bisa anjlok (Hipotensi). Perawat harus waspada saat dokter menaikkan PEEP pada pasien ARDS, selalu evaluasi respons hemodinamik dan siap lakukan <em>fluid loading</em> jika preload turun drastis.</span>" 
+            },
+            { 
+                cat: "Hemodinamik", 
+                q: "CVP pasien bernilai tinggi (15 mmHg), namun PAWP bernilai normal (8 mmHg). Apa interpretasi hemodinamik kondisi ini?", 
+                a: "Kondisi ini menandakan murni <strong>Kegagalan Jantung Kanan (Right Ventricular Failure)</strong>, kor pulmonal, atau hipertensi pulmonal.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> CVP (mengukur preload kanan) tinggi berarti ada bendungan di sisi kanan. PAWP (mengukur preload kiri) normal berarti pompa sisi kiri masih bekerja baik mengosongkan darah. Jika terjadi infark ventrikel kanan, ini adalah pola klasik yang ditemukan.</span>" 
+            },
+            { 
+                cat: "Hemodinamik", 
+                q: "Apa bahaya me-wedge (mengembangkan balon) kateter arteri pulmonalis (Swan-Ganz) terlalu lama saat mengukur PAWP?", 
+                a: "Dapat menyebabkan <strong>Ruptur Arteri Pulmonalis</strong> (Perdarahan paru masif yang mematikan) atau <strong>Infark Pulmonal</strong>.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Aturan emas: Kembangkan balon (maksimal 1.5 cc udara) HANYA sampai gelombang berubah dari pola PA menjadi pola Wedge (sekitar 2-3 siklus napas / < 15 detik), baca nilainya pada akhir ekspirasi, lalu SEGERA kempiskan balon secara pasif (jangan ditarik paksa).</span>" 
+            },
+
+            // --- BAGIAN 3: Farmakologi Kritis & Titrasi (9) ---
+            { 
+                cat: "Farmakologi Kritis", 
+                q: "Jelaskan cara pemberian (protokol) Amiodaron untuk takikardia ventrikel (VT) dengan NADI yang stabil!", 
+                a: "<strong>Dosis Loading:</strong> 150 mg diencerkan dalam D5% (misal 50-100 cc), diberikan lambat via infus selama 10 menit.<br>Bila berhasil teratasi, dilanjutkan <strong>Dosis Maintenance:</strong> 1 mg/menit selama 6 jam pertama, kemudian 0.5 mg/menit selama 18 jam berikutnya.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Hati-hati! Amiodaron mengandung Yodium dan vasolidator. Pemberian terlalu cepat dapat memicu HIPOTENSI dan Bradikardi berat. Obat ini wajib dilarutkan dalam Dextrose 5%, BUKAN NaCl 0.9% (bisa mengendap).</span>" 
+            },
+            { 
+                cat: "Farmakologi Kritis", 
+                q: "Bagaimana teknik injeksi Adenosin yang benar pada pasien SVT?", 
+                a: "Obat didorong dengan teknik <strong>Rapid IV Push</strong> (sangat cepat, 1-2 detik) melalui akses IV proksimal/besar (misal vena antekubiti), dan segera <strong>langsung di-flush dengan bolus cepat 10-20 cc NaCl 0.9%</strong>, lalu tangan diangkat (elevasi lengan).<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Adenosin memiliki waktu paruh (half-life) yang luar biasa pendek (hanya < 10 detik). Jika disuntik lambat, obat akan hancur di darah sebelum mencapai reseptor AV node di jantung. Beri tahu pasien mereka mungkin merasa dada diremas atau sesak nafas sesaat (sensasi 'kematian mengancam' / impending doom).</span>" 
+            },
+            { 
+                cat: "Farmakologi Kritis", 
+                q: "Apa perbedaan efek hemodinamik utama antara penggunaan Dobutamin dan Dopamin?", 
+                a: "<strong>Dobutamin:</strong> Murni menstimulasi Beta-1 (Inotropik positif kuat), meningkatkan curah jantung, dengan sedikit efek vasodilatasi ringan di perifer. Tensi mungkin tidak naik signifikan, bahkan bisa sedikit turun.<br><strong>Dopamin:</strong> Efeknya tergantung dosis (Dose-dependent). Dosis sedang (Beta-1) memompa jantung, dosis tinggi >10 mcg/kg/m menstimulasi Alpha-1 secara kuat menyebabkan <strong>Vasokonstriksi murni</strong>.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Dobutamin adalah pilihan utama pada syok kardiogenik dengan congestive heart failure. Dopamin lebih dipilih jika tensi benar-benar anjlok dan butuh efek vasopresor (meski kini Norepinefrin lebih superior dari Dopamin). Keduanya memicu takikardia dan aritmia.</span>" 
+            },
+            { 
+                cat: "Farmakologi Kritis", 
+                q: "Obat Milrinone termasuk golongan Phosphodiesterase (PDE) Inhibitor. Apa efek fisiologisnya yang disebut sebagai 'Inodilator'?", 
+                a: "Milrinone memiliki efek ganda secara bersamaan:<br>1. <strong>Inotropik positif:</strong> Meningkatkan kekuatan kontraktilitas miokard.<br>2. <strong>Vasodilator:</strong> Melebarkan pembuluh darah secara langsung, menurunkan Preload (CVP) dan Afterload (SVR, PVR).<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Milrinone sangat efektif untuk Gagal Jantung Kanan dan Hipertensi Pulmonal. Namun, komplikasi terseringnya adalah HIPOTENSI karena efek vasodilatasinya tidak dipengaruhi reseptor beta. Sering harus digabung dengan Norepinefrin untuk menjaga tensi.</span>" 
+            },
+            { 
+                cat: "Farmakologi Kritis", 
+                q: "Pasien Hypertensive Emergency dengan Edema Paru mendapat drip Sodium Nitroprusside (Nipride). Apa pemantauan keamanan spesifik untuk obat ini?", 
+                a: "Waspada terhadap risiko <strong>Intoksikasi Sianida (Cyanide / Thiocyanate Toxicity)</strong>.<br>Gejalanya: Asidosis metabolik persisten, penurunan kesadaran (delirium), mual, dan otot kedutan (twitching).<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Nitroprusside dipecah menjadi sianida di dalam darah. Risiko ini meningkat jika infus diberikan > 3 hari, dosis tinggi, atau pasien gagal ginjal. Pastikan selang infus dibungkus aluminium foil atau plastik hitam karena obat ini peka/rusak oleh cahaya.</span>" 
+            },
+            { 
+                cat: "Farmakologi Kritis", 
+                q: "Obat Tirofiban (Aggrastat) dan Eptifibatide tergolong GP IIb/IIIa inhibitor. Kapan obat ini diberikan dan apa komplikasi utamanya?", 
+                a: "Diberikan pada pasien ACS risiko tinggi / PCI kompleks. Obat ini adalah <strong>Super Antiplatelet</strong> yang memblokir reseptor terakhir pada trombosit sehingga benar-benar mencegah penggumpalan.<br><strong>Komplikasi utama:</strong> Perdarahan mayor dan Trombositopenia (penurunan sel keping darah) akut secara drastis.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Perawat WAJIB mengecek darah rutin (terutama trombosit/platelet count) dalam 2-4 jam pertama setelah infus dimulai dan memantau ketat area insersi kateter (radial/femoral) terhadap hematoma.</span>" 
+            },
+            { 
+                cat: "Farmakologi Kritis", 
+                q: "Kapan Atropin Sulfat (SA) diindikasikan, dan pada bradikardia jenis apa Atropin KONTRAINDIKASI / tidak akan mempan?", 
+                a: "<strong>Indikasi:</strong> Simptomatik Sinus Bradikardia dan AV Block Derajat 1 atau Derajat 2 Mobitz 1 (Blok di level AV node ke atas).<br><strong>Tidak Mempan/Kontraindikasi:</strong> Pada <strong>AV Block Derajat 2 Mobitz II dan Total AV Block (Derajat 3)</strong> dengan irama escape ventrikel QRS lebar, atau pada post-Transplantasi Jantung.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Atropin bekerja memblok nervus vagus yang mensarafi SA dan AV node. Jika blok listrik berada di berkas HIS (bawah AV node), atropin tidak akan berguna dan malah membuang waktu. Segera beralih ke Pacing transkutan atau infus Epinefrin/Dopamin. Dosis tunggal Atropin maks 3 mg.</span>" 
+            },
+            { 
+                cat: "Farmakologi Kritis", 
+                q: "Apa fungsi pemberian Magnesium Sulfat (MgSO4) dalam setting kegawatdaruratan ICCU?", 
+                a: "1. <strong>Torsades de Pointes (Polymorphic VT):</strong> MgSO4 (1-2 gram IV) adalah terapi *drug of choice* (obat utama) terlepas dari level magnesium serum normal atau tidak.<br>2. Digunakan untuk mengatasi aritmia refrakter yang dipicu oleh <strong>Hipokalemia parah</strong> (karena K+ sulit masuk kembali ke sel jika kadar Mg rendah).<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Magnesium menstabilkan membran sel dan memperpendek repolarisasi lambat. Pantau tanda toksisitas MgSO4: hilangnya refleks patella (lutut) dan depresi pernapasan.</span>" 
+            },
+            { 
+                cat: "Farmakologi Kritis", 
+                q: "Bagaimana cara kerja Norepinefrin (Levophed/Vasilip) meningkatkan tekanan darah pada syok?", 
+                a: "Bekerja sangat dominan pada <strong>Reseptor Alpha-1</strong> perifer yang menghasilkan <strong>Vasokonstriksi (Penyempitan) pembuluh darah yang sangat kuat</strong>, sehingga SVR meningkat tajam dan tensi naik.<br>Juga memiliki efek Beta-1 ringan untuk mendukung kontraktilitas.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Karena vasokonstriksi sangat kuat, obat ini berisiko menyebabkan berkurangnya suplai darah ke ginjal, usus (iskemia mesenterika), dan ekstremitas jari-jari (nekrosis iskemik distal). Harus diberikan via CVC. Pastikan pasien <strong>TIDAK hipovolemik</strong> (CVP cukup) sebelum memulai titrasi vasopresor!</span>" 
+            },
+
+            // --- BAGIAN 4: ACS Kompleks & Komplikasinya (8) ---
+            { 
+                cat: "ACS Kompleks", 
+                q: "Pada pasien Infark Miokard Inferior, perawat sangat dianjurkan merekam EKG sadapan Kanan (Right Sided EKG: V3R, V4R). Apa alasannya?", 
+                a: "Untuk mendeteksi keterlibatan <strong>Infark Ventrikel Kanan (Right Ventricular Infarction)</strong>.<br>ST Elevasi pada V4R adalah tanda paling spesifik (akurasi tinggi) adanya infark RV.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Trias klinis Infark RV: JVP meningkat jelas, paru bersih (tidak ada ronki/edema), dan hipotensi. JANGAN berikan obat Nitrat, Morfin, atau Diuretik karena RV yang infark sangat bergantung pada pre-load darah. Tatalaksana utamanya adalah cairan guyur (Fluid Challenge).</span>" 
+            },
+            { 
+                cat: "ACS Kompleks", 
+                q: "Pasien post-STEMI Anterior hari ke-3 tiba-tiba sesak berat, tensi turun, dan perawat mendengarkan bising jantung baru (New Loud Holosystolic Murmur) yang sangat keras di sela iga ke-4 parasternal. Komplikasi mekanik apa yang dicurigai?", 
+                a: "<strong>Ruptur Septum Ventrikel (Ventricular Septal Defect / VSD Acquired)</strong>.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Dinding penyekat ventrikel kiri dan kanan (septum) membusuk dan jebol. Darah bertekanan tinggi dari kiri akan membanjiri ventrikel kanan dan paru (Left-to-Right shunt) memicu gagal jantung kanan dan kiri mendadak. Angka kematian > 90% jika tidak segera ditangani bedah. Pasang IABP untuk bantuan jembatan ke operasi.</span>" 
+            },
+            { 
+                cat: "ACS Kompleks", 
+                q: "Apa perbedaan target waktu reperfusi antara Door-to-Balloon (PCI Primer) dan Door-to-Needle (Fibrinolitik) pada pasien STEMI yang baru tiba di IGD?", 
+                a: "<strong>Door-to-Balloon (Waktu dari IGD hingga balon mengembang di Cathlab):</strong> Target < 90 menit.<br><strong>Door-to-Needle (Waktu dari IGD hingga obat trombolitik disuntikkan):</strong> Target < 30 menit.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> <em>\"Time is Muscle\"</em>. EKG pertama harus direkam dan diinterpretasi dalam waktu < 10 menit setelah pasien datang. Jika RS tidak punya Cathlab dan butuh waktu transfer > 120 menit, berikan Fibrinolitik di IGD!</span>" 
+            },
+            { 
+                cat: "ACS Kompleks", 
+                q: "Gambaran EKG Wellens' Syndrome mencerminkan oklusi kritis pada pembuluh darah apa?", 
+                a: "Sumbatan kritis tingkat tinggi pada <strong>LAD Proksimal (Left Anterior Descending)</strong>.<br>Ciri khasnya pada saat pasien <em>sedang tidak nyeri dada</em> (pain free): Inversi gelombang T yang dalam simetris (Tipe B) atau gelombang T Biphasic (Tipe A) pada sadapan V2 dan V3.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Pasien Wellens sangat berisiko jatuh ke STEMI masif anterior sewaktu-waktu. Perawat tidak boleh melakukan Treadmill Stress Test pada pasien ini. Konsul dokter untuk rencana Cath Lab segera.</span>" 
+            },
+            { 
+                cat: "ACS Kompleks", 
+                q: "Pasien mengeluh nyeri dada. EKG menunjukkan ST Depresi yang dalam horizontal di V1-V3, dengan gelombang R yang tinggi dan T tegak lurus. Diagnosis apa yang harus dicurigai?", 
+                a: "<strong>Infark Miokard Posterior (Posterior MI)</strong>.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> ST depresi di V1-V3 sebenarnya adalah cerminan terbalik (mirror image) dari ST Elevasi di dinding belakang jantung. Perawat harus inisiatif memasang elektroda tambahan di punggung kiri (sadapan V7, V8, V9) untuk membuktikan adanya ST Elevasi posterior. Jika terbukti, ini diterapi sebagai STEMI!</span>" 
+            },
+            { 
+                cat: "ACS Kompleks", 
+                q: "Pasien yang baru sembuh dari STEMI sekitar 2 minggu lalu datang kembali mengeluh nyeri dada pleuritik (nyeri memberat saat tarik napas) dan demam. Apa komplikasi yang dicurigai?", 
+                a: "<strong>Sindrom Dressler (Post-MI Pericarditis)</strong>.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Ini adalah respons peradangan autoimun tubuh terhadap protein otot jantung nekrotik yang masuk ke aliran darah. Terapi utamanya bukan pasang ring atau Clopidogrel, melainkan obat antiinflamasi dosis tinggi (Aspirin dosis besar atau Colchicine).</span>" 
+            },
+            { 
+                cat: "ACS Kompleks", 
+                q: "Apa tanda klinis jika terjadi Ruptur Otot Papilaris pada pasien ACS (biasanya terjadi infark dinding inferior)?", 
+                a: "Otot papilaris yang menahan katup mitral putus, menyebabkan <strong>Acute Severe Mitral Regurgitation</strong>.<br>Pasien mendadak jatuh pada fase Edema Paru Akut hebat dan Syok Kardiogenik. Terdengar murmur sistolik paru kasar di apeks yang menjalar ke aksila.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Darah dari ventrikel kiri sebagian besar menyembur berbalik arah ke atrium dan paru, bukan ke aorta. Oksigenasi menjadi sangat buruk. Pasien sering harus diintubasi dan dipasang IABP menunggu operasi perbaikan katup darurat.</span>" 
+            },
+            { 
+                cat: "ACS Kompleks", 
+                q: "Sistem skor TIMI Risk atau perdarahan CRUSADE digunakan untuk menilai apa?", 
+                a: "Untuk memprediksi <strong>Risiko Perdarahan Major (Bleeding Risk)</strong> pada pasien NSTEMI/STEMI yang mendapat terapi antiplatelet ganda (DAPT) dan antikoagulan agresif.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Pasien ICCU tidak hanya meninggal karena sumbatan jantung, namun banyak yang kritis akibat Perdarahan Saluran Cerna (GI Bleed) atau perdarahan retroperitoneal akibat terapi pengencer darah masif. Pantau terus level Hb, Hematokrit, dan warna BAB/Urin pasien.</span>" 
+            },
+
+            // --- BAGIAN 5: Gagal Jantung Lanjut & Device (IABP/LVAD/PPM) (8) ---
+            { 
+                cat: "Heart Failure & Device", 
+                q: "Alat IABP (Intra-Aortic Balloon Pump) bekerja berdasarkan prinsip 'Counterpulsation'. Kapan balon IABP mengembang (Inflate) dan mengempis (Deflate) hubungannya dengan siklus EKG?", 
+                a: "<strong>Inflasi:</strong> Terjadi pada AWAL DIASTOL (bersamaan dengan dicrotic notch / pertengahan gelombang T EKG).<br><strong>Deflasi:</strong> Terjadi SESAAT SEBELUM SISTOL (bersamaan atau sesaat sebelum puncak gelombang R EKG).<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Inflasi saat diastol bertujuan menekan darah agar masuk ke arteri koroner (meningkatkan suplai oksigen). Deflasi mendadak sebelum sistol bertujuan menciptakan efek vakum yang menurunkan Afterload, sehingga ventrikel kiri lebih mudah dan ringan memompa darah keluar.</span>" 
+            },
+            { 
+                cat: "Heart Failure & Device", 
+                q: "Sebutkan satu Kontraindikasi Mutlak (Absolut) pemasangan IABP pada pasien syok kardiogenik!", 
+                a: "<strong>Regurgitasi Aorta berat (Severe Aortic Regurgitation)</strong> atau Diseksi Aorta.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Jika katup aorta bocor/menganga parah, balon yang mengembang di aorta asendens justru akan menembakkan dan mendorong paksa darah kembali mundur masuk ke dalam ventrikel kiri, menyebabkan ventrikel pecah atau gagal fungsi seketika.</span>" 
+            },
+            { 
+                cat: "Heart Failure & Device", 
+                q: "Pasien pasca operasi dipasang alat mekanik LVAD (Left Ventricular Assist Device). Mengapa Anda tidak bisa meraba nadi perifer atau mengukur tekanan darah menggunakan manset biasa?", 
+                a: "Karena mesin LVAD memompa darah dengan metode <strong>Continuous Flow (Aliran Berkelanjutan)</strong> berupa putaran turbin magnetik (rotor), bukan metode pulsatif seperti jantung alami.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Pasien LVAD tidak memiliki 'denyut nadi', namun organ mereka mendapat aliran oksigen konstan. Untuk mengukur tekanan darahnya, perawat harus menggunakan <strong>USG Doppler Doppler arteri</strong> dengan manset, dan yang dicatat adalah MAP (Mean Arterial Pressure), dengan target ideal 70-80 mmHg.</span>" 
+            },
+            { 
+                cat: "Heart Failure & Device", 
+                q: "Apa indikasi klinis pemasangan CRT (Cardiac Resynchronization Therapy) atau pacu jantung Biventrikuler pada pasien gagal jantung?", 
+                a: "Pasien dengan <strong>Gagal Jantung Fraksi Ejeksi Rendah (HFrEF, LVEF < 35%)</strong> yang tetap bergejala walau sudah diobati maksimal, dan memiliki <strong>EKG LBBB lebar (QRS > 130-150 ms)</strong>.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> LBBB menyebabkan septum interventrikular dan dinding lateral ventrikel kiri memompa pada waktu yang tidak bersamaan (disinkroni). Dinding jantung jadi seperti 'bergoyang' meremas darah tidak efektif. CRT menempatkan lead listrik di ventrikel kanan dan kiri agar berdetak serentak kembali (Resinkronisasi).</span>" 
+            },
+            { 
+                cat: "Heart Failure & Device", 
+                q: "Klasifikasi Stevenson membagi pasien ADHF (Acute Decompensated HF) berdasarkan status Kongesti (Wet/Dry) dan Perfusi (Warm/Cold). Mayoritas pasien gagal jantung yang masuk ICCU datang dengan fenotip mana?", 
+                a: "<strong>Profil B: WARM and WET (Hangat dan Basah)</strong>.<br>Pasien mengeluh sangat sesak, ortopnea, ronkhi basah (Wet), tetapi akral dan tangannya masih teraba hangat dengan tensi normal/tinggi (Warm/Perfusi masih baik).<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Profil paling menakutkan adalah Profil C (COLD and WET). Tangan dingin pucat basah dengan syok kardiogenik, sementara parunya penuh air. Tatalaksana Profil C sangat rumit karena Diuretik butuh perfusi ginjal yang baik (warm), sehingga inotropik harus masuk lebih dulu.</span>" 
+            },
+            { 
+                cat: "Heart Failure & Device", 
+                q: "Apa tindakan medis/keperawatan lanjut bagi pasien gagal jantung dengan kelebihan cairan masif (Fluid overload) yang refrakter/kebal terhadap diuretik dosis sangat tinggi (Diuretic Resistance)?", 
+                a: "Terapi <strong>Ultrafiltrasi Mekanik (Ultrafiltration/Aquapheresis)</strong> atau <strong>Hemodialisis (CRRT)</strong>.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Ginjal seringkali kehilangan kemampuannya merespons furosemide akibat aliran darah ginjal yang menurun (Cardiorenal Syndrome). Mesin ultrafiltrasi menyaring air dan natrium berlebih langsung dari plasma darah secara terkontrol presisi tanpa mengganggu elektrolit parah.</span>" 
+            },
+            { 
+                cat: "Heart Failure & Device", 
+                q: "Pasien terpasang ICD (Implantable Cardioverter Defibrillator) tiba-tiba pingsan, alat di dadanya menyetrum (shock) berulang kali, pasien tersadar dan teriak kesakitan. Apa peran perawat di situasi darurat ini?", 
+                a: "Baringkan pasien, pasang monitor EKG 12 Lead, persiapkan Amiodarone, dan <strong>Letakkan Magnet Klinis khusus (Ring Magnet) di atas dada (generator ICD)</strong> jika terapi kejut dianggap tidak tepat/malfungsi alat (Inappropriate Shock).<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Meletakkan magnet di atas ICD akan 'mengesampingkan' (men-suspend) fungsi terapi kejut tanpa mematikan fungsi pemacunya (pacing). Hal ini sangat menyelamatkan saat sensor alat salah mengira SVT cepat, AF, atau artefak gerak sebagai VF, sehingga terus-terusan menyetrum pasien hidup-hidup.</span>" 
+            },
+            { 
+                cat: "Heart Failure & Device", 
+                q: "Apa yang dimaksud dengan Cor Pulmonale, dan bagaimana EKG menunjukkannya?", 
+                a: "Cor Pulmonale adalah pembesaran atau kegagalan ventrikel kanan murni akibat masalah pada <strong>Sistem Pernapasan (Penyakit Paru Kronis/PPOK, Hipertensi Pulmonal utama)</strong>, bukan sekunder dari gagal jantung kiri.<br><strong>EKG:</strong> Sering terlihat P Pulmonale (Gelombang P lancip di II, III, aVF) dan Right Axis Deviation (RAD).<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Jaringan paru yang rusak kaku/fibrosis akan meningkatkan tekanan perlawanan (PVR). Bilik kanan yang tadinya tipis dipaksa berotot tebal untuk menembus tahanan paru. Pasien wajib optimasi terapi paru dan Oksigen (O2 adalah vasodilator pulmonal alami).</span>" 
+            },
+
+            // --- BAGIAN 6: Katup, Perikardium, & Struktural (5) ---
+            { 
+                cat: "Katup & Struktural", 
+                q: "Sebutkan Trias Klasik gejala klinis dari penyakit Aortic Stenosis (Penyempitan Katup Aorta) parah!", 
+                a: "1. <strong>SAD:</strong> Syncope (Pingsan saat aktivitas).<br>2. Angina (Nyeri dada iskemik meski koroner normal).<br>3. Dyspnea (Sesak napas karena gagal jantung).<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Jantung harus memeras mati-matian melewati katup aorta yang mengapur/buntu. Menurunkan Preload secara agresif (Nitrasi / Furosemide dosis tinggi) pada pasien AS sangat berbahaya karena curah jantung sangat bergantung pada volume pengisian. Mereka bisa kolaps hipotensi tiba-tiba.</span>" 
+            },
+            { 
+                cat: "Katup & Struktural", 
+                q: "Bagaimana cara membedakan gambaran EKG Perikarditis Akut dengan STEMI?", 
+                a: "<strong>Perikarditis:</strong> ST Elevasi menyebar <em>hampir di seluruh sadapan (Diffuse / Global)</em> dengan bentuk cekung ke atas (Concave/Smiley face), dan disertai adanya <strong>Depresi interval PR</strong>.<br><strong>STEMI:</strong> ST Elevasi <em>terlokalisir</em> pada sadapan teritori koroner tertentu saja (misal V1-V4), cembung (Convex), dan sering disertai cerminan balik (Resiprokal).<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Nyeri dada perikarditis sering lebih tajam, menusuk, bertambah sakit saat tarik napas atau berbaring telentang, dan mereda signifikan bila pasien disuruh duduk condong ke depan.</span>" 
+            },
+            { 
+                cat: "Katup & Struktural", 
+                q: "Sebutkan 3 tanda Trias Beck (Beck's Triad) pada kondisi Cardiac Tamponade!", 
+                a: "1. <strong>Hipotensi</strong> (Tensi turun drastis, curah jantung kolaps).<br>2. <strong>Peningkatan JVP (Jugular Venous Pressure) / Distensi Vena Leher</strong>.<br>3. <strong>Muffled Heart Sounds (Suara jantung terdengar redup, jauh, tidak jelas)</strong>.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Tamponade terjadi karena rongga perikard (kantung jantung) terisi darah/cairan dengan tekanan luar biasa tinggi, meremukkan dinding bilik jantung dari luar sehingga darah tidak bisa masuk sama sekali. Tindakan life-saving adalah Perikardiosentesis (penusukan selang di dada) darurat.</span>" 
+            },
+            { 
+                cat: "Katup & Struktural", 
+                q: "Tanda fisik 'Pulsus Paradoxus' sering ditemukan pada Tamponade. Apa itu pulsus paradoxus?", 
+                a: "Penurunan tekanan darah sistolik yang drastis (jatuh <strong>> 10 mmHg</strong>) <em>saat pasien sedang menarik napas dalam (Inspirasi)</em>.<br><br><span class='text-sm text-slate-600 bg-indigo-50 p-2 rounded block mt-2 border-l-2 border-indigo-400'><strong>💡 Catatan Klinis:</strong> Perawat dapat mengevaluasinya dengan Arterial Line atau manset manual. Saat inspirasi, darah tertarik banyak ke ventrikel kanan. Namun karena ada cairan perikard ketat di luar jantung, septum malah terdesak melengkung menekan sisi kiri, sehingga isi sekuncup kiri merosot tajam.</span>" 
+            },
+            { 
+                cat: "Katup & Struktural", 
+                q: "Pada pemeriksaan fisik endokarditis infektif (infeksi katup), sering ditemukan lesi kulit khas imunologis/mikroemboli. Sebutkan perbedaannya!", 
+                a: "<strong>Osler Nodes:</strong> Benjolan merah kecil di bantalan jari tangan/kaki yang <em>sangat nyeri</em>.<br><strong>Janeway Lesions:</strong> Bercak makula perdarahan tidak teratur di telapak tangan atau telapak kaki yang <em>tidak nyeri</em>.<br><br><span class='text-sm text-slate-600 bg-orange-50 p-2 rounded block mt-2 border-l-2 border-orange-400'><strong>💡 Catatan Klinis:</strong> Pasien Endokarditis harus selalu dimonitor status neurologisnya (GCS/Pupil) secara ketat, karena vegetasi (gumpalan bakteri/nanah pada katup) sangat rapuh dan mudah copot menyumbat pembuluh darah otak dan memicu Stroke Emboli parah.</span>" 
+            },
+
+            // --- BAGIAN 7: Cath Lab & Intervensi Koroner (6) ---
+            {
+                cat: "Cath Lab",
+                q: "Saat prosedur PCI, pasien mendadak mengeluh nyeri dada hebat, tensi drop, dan di monitor fluoroskopi tampak ekstravasasi kontras (kontras menyembur bocor keluar dari pembuluh darah). Apa komplikasi gawat dan tindakan pertamanya?",
+                a: "<strong>Perforasi Koroner</strong>.<br>Tindakan Perawat/Asisten: Segera siapkan balon dilatasi untuk dilakukan <em>Balloon Tamponade</em> (mengembangkan balon secara memanjang di titik perforasi untuk menyumbat perdarahan sementara), siapkan <em>Covered Stent</em> (Stent Graft), dan Set Perikardiosentesis darurat.<br><br><span class='text-sm text-slate-600 bg-orange-50 p-2 rounded block mt-2 border-l-2 border-orange-400'><strong>💡 Catatan Klinis:</strong> Ini adalah salah satu kegawatan paling menegangkan di Cath Lab. Tim harus segera mengecek tanda-tanda tamponade jantung di layar fluoroskopi/echo. Bersiaplah membalikkan (reverse) efek antikoagulan Heparin dengan <strong>Protamin Sulfat</strong> jika diinstruksikan oleh operator.</span>"
+            },
+            {
+                cat: "Cath Lab",
+                q: "Apa kegunaan utama penggunaan modalitas IVUS (Intravascular Ultrasound) dibandingkan angiografi (fluoroskopi) biasa saat prosedur PCI pada lesi kompleks seperti In-Stent Restenosis (ISR) atau kalsifikasi?",
+                a: "Angiografi hanya menampilkan 'bayangan siluet' (2D) dari lumen. <strong>IVUS</strong> menggunakan gelombang suara untuk melihat dinding pembuluh darah dari dalam (3D secara tomografi).<br>Digunakan untuk melihat: ketebalan plak, memastikan komposisi kalsifikasi, memastikan ekspansi balon/stent optimal, dan melihat apakah stent menempel utuh di dinding (oposisi yang baik).<br><br><span class='text-sm text-slate-600 bg-orange-50 p-2 rounded block mt-2 border-l-2 border-orange-400'><strong>💡 Catatan Klinis:</strong> Pada kasus ISR (In-Stent Restenosis), IVUS wajib untuk membedakan apakah penyempitan ulang terjadi karena pembentukan jaringan parut fibrosa (neointimal hyperplasia) atau karena <em>stent under-expansion</em> (ring lama belum mekar sempurna). Hal ini sangat mengubah taktik operator (misal memakai <em>Cutting Balloon</em>).</span>"
+            },
+            {
+                cat: "Cath Lab",
+                q: "Dokter akan menggunakan kawat khusus FFR (Fractional Flow Reserve) untuk menilai lesi koroner intermediate (50-70%). Obat farmakologis apa yang harus disiapkan perawat untuk menginduksi hiperemia maksimal pada pasien, dan berapa nilai potong (cut-off) FFR?",
+                a: "Siapkan obat <strong>Adenosin</strong> (bisa diberikan secara IV kontinu atau bolus intrakoroner) atau <strong>ATP</strong>.<br>Nilai cut-off FFR untuk indikasi pemasangan stent (iskemia bermakna) adalah <strong>≤ 0.80</strong>.<br><br><span class='text-sm text-slate-600 bg-orange-50 p-2 rounded block mt-2 border-l-2 border-orange-400'><strong>💡 Catatan Klinis:</strong> FFR mengukur rasio tekanan darah sesudah lesi dibanding sebelum lesi. FFR 0.75 berarti aliran darah ke otot jantung drop 25% dari normal. Saat diberi Adenosin, pasien mungkin akan merasa berdebar, dada amblas, dan denyut nadi melambat (AV block sementara). Edukasi pasien untuk tidak panik.</span>"
+            },
+            {
+                cat: "Cath Lab",
+                q: "Pasca pemasangan Stent (DES) pada pasien STEMI anterior yang berbekuan darah banyak (high thrombus burden), aliran kontras mendadak berhenti di ujung distal arteri (Fenomena No-Reflow), padahal tidak tampak ada oklusi di stent. Apa tindakan farmakologis intrakoroner (IC) yang biasa diberikan?",
+                a: "Berikan <strong>Vasodilator Intrakoroner (IC)</strong> secara langsung melalui Guiding Catheter.<br>Obat yang sering dipakai: <strong>Adenosin IC, Nitroprusside IC, Verapamil, atau Diltiazem</strong>.<br><br><span class='text-sm text-slate-600 bg-orange-50 p-2 rounded block mt-2 border-l-2 border-orange-400'><strong>💡 Catatan Klinis:</strong> <em>No-Reflow phenomenon</em> bukan karena pembuluh darah besar tersumbat, tapi kapiler halus di ujung (mikrovaskular) tertutup oleh puing-puing (debris) bekuan darah atau spasme berat. Kondisi ini bisa memicu aritmia VT/VF di meja Cath Lab. Siapkan Defibrilator selalu menyala!</span>"
+            },
+            {
+                cat: "Cath Lab",
+                q: "Saat asisten memasukkan Guiding Catheter atau Wire menembus arteri radialis di lengan, pasien tiba-tiba mengeluh sakit luar biasa menjalar ke lengan atas, dan kateter terasa 'terjepit' kencang tidak bisa ditarik. Apa yang terjadi dan apa tata laksananya?",
+                a: "Terjadi <strong>Spasme Arteri Radialis (Radial Artery Spasm)</strong>.<br>Tata laksana: JANGAN tarik paksa (bisa robek/avulsi!). Injeksi segera <em>Spasmolytic Cocktail</em> (misal campuran Nitrogliserin + Verapamil/Diltiazem) via sheath radialis.<br><br><span class='text-sm text-slate-600 bg-orange-50 p-2 rounded block mt-2 border-l-2 border-orange-400'><strong>💡 Catatan Klinis:</strong> Lengan pasien merespon masuknya benda asing dengan mengejang kuat. Jika cocktail penangkal spasme gagal dan kateter tetap terkunci, pasien mungkin memerlukan pemberian sedasi dalam (Fentanyl/Midazolam) atau bahkan anestesi umum sebelum kateter dapat dilepaskan.</span>"
+            },
+            {
+                cat: "Cath Lab",
+                q: "Pasien gagal ginjal derajat 3 baru saja selesai menjalani PCI kompleks (penggunaan kontras > 200 cc). Apa intervensi keperawatan standar emas di ICCU/CVCU pasca tindakan untuk mencegah Contrast-Induced Nephropathy (CIN)?",
+                a: "<strong>Hidrasi Intravena secara Agresif (IV Hydration)</strong>.<br>Biasanya menggunakan cairan <em>Normal Saline</em> (NaCl 0.9%) atau Ringer Laktat, dimulai beberapa jam sebelum prosedur dan diteruskan hingga 12-24 jam pasca prosedur.<br><br><span class='text-sm text-slate-600 bg-orange-50 p-2 rounded block mt-2 border-l-2 border-orange-400'><strong>💡 Catatan Klinis:</strong> Kontras iodium sangat pekat dan toksik bagi tubulus ginjal. Cairan infus bekerja mengencerkan darah, meningkatkan diuresis, dan membilas kontras keluar secepat mungkin. Perawat wajib menghitung total keseimbangan cairan (Balance) dengan ketat—jangan sampai pasien malah Edema Paru akibat infus terlalu deras!</span>"
+            }
+        ];
+
+        let cards = [...originalCards];
+        let currentIndex = 0;
+        let isFlipped = false;
+        
+        // Touch Variables for Swipe (Mobile)
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let isSwiping = false;
+
+        const flashcardEl = document.getElementById('flashcard');
+        const questionEl = document.getElementById('question-text');
+        const answerEl = document.getElementById('answer-text');
+        const counterEl = document.getElementById('card-counter');
+        const categoryEl = document.getElementById('card-category');
+
+        function renderCard() {
+            if (isFlipped) {
+                flashcardEl.classList.remove('is-flipped');
+                isFlipped = false;
+                setTimeout(() => {
+                    updateContent();
+                }, 300);
+            } else {
+                updateContent();
+            }
+        }
+
+        function updateContent() {
+            const currentCard = cards[currentIndex];
+            questionEl.innerHTML = currentCard.q;
+            
+            // Ubah class styling pada jawaban secara dinamis dari indigo menjadi orange
+            let formattedAnswer = currentCard.a.replace(/bg-indigo-50/g, 'bg-orange-50').replace(/border-indigo-400/g, 'border-orange-400');
+            answerEl.innerHTML = formattedAnswer;
+            
+            categoryEl.textContent = currentCard.cat;
+            counterEl.textContent = `${currentIndex + 1} / ${cards.length}`;
+        }
+
+        function toggleFlip(e) {
+            if (isSwiping) return;
+            isFlipped = !isFlipped;
+            flashcardEl.classList.toggle('is-flipped');
+        }
+
+        function nextCard() {
+            if (currentIndex < cards.length - 1) {
+                currentIndex++;
+                renderCard();
+            } else {
+                // Loop back to start
+                currentIndex = 0;
+                renderCard();
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderCard();
+            }
+        }
+
+        function shuffleCards() {
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            currentIndex = 0;
+            renderCard();
+        }
+
+        // --- Fitur Swipe untuk Mobile ---
+        flashcardEl.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            isSwiping = false;
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchmove', e => {
+            const currentTouchX = e.changedTouches[0].screenX;
+            // Jika pergeseran > 15px, tandai sebagai swiping (bukan klik/tap)
+            if (Math.abs(currentTouchX - touchStartX) > 15) {
+                isSwiping = true;
+            }
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+
+        function handleSwipe() {
+            const swipeThreshold = 50; 
+            if (touchEndX < touchStartX - swipeThreshold) {
+                nextCard(); // Swipe kiri -> Next
+            } else if (touchEndX > touchStartX + swipeThreshold) {
+                prevCard(); // Swipe kanan -> Prev
+            }
+            // Reset swiping flag setelah delay singkat
+            setTimeout(() => {
+                isSwiping = false;
+            }, 100);
+        }
+
+        // Initialize on load
+        window.onload = renderCard;
+
+        // Keyboard Navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                e.preventDefault();
+                toggleFlip();
+            } else if (e.code === 'ArrowRight') {
+                nextCard();
+            } else if (e.code === 'ArrowLeft') {
+                prevCard();
+            }
+        });
+    </script>
+</body>
+</html>
