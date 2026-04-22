@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <!-- Meta tag ini sangat penting agar responsif di HP dan mencegah zoom otomatis saat memutar slider -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GRADE Protocol - CardiologyVault</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Kustomisasi slider agar lebih estetik di HP */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px; width: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 6px;
+            cursor: pointer;
+            background: #450a0a; /* bg-red-950 */
+            border-radius: 4px;
+            border: 1px solid #7f1d1d;
+        }
+        input[type=range].accent-red-600::-webkit-slider-thumb { background: #dc2626; border: 2px solid #fca5a5; }
+        input[type=range].accent-rose-600::-webkit-slider-thumb { background: #e11d48; border: 2px solid #fda4af; }
+        input[type=range].accent-red-500::-webkit-slider-thumb { background: #ef4444; border: 2px solid #fca5a5; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-[#120303] via-[#0a0101] to-[#170505] text-slate-200 min-h-screen selection:bg-red-500/30 pb-12">
+
+    <div class="p-4 md:p-8">
+        <!-- Header -->
+        <header class="max-w-6xl mx-auto mb-6 md:mb-8 flex flex-col md:flex-row items-center justify-between gap-4 border-b border-red-900/30 pb-6 text-center md:text-left">
+            <div>
+                <div class="flex items-center justify-center md:justify-start gap-3">
+                    <div class="p-2 bg-gradient-to-br from-red-600/20 to-slate-800/20 rounded-lg border border-red-500/30 shadow-[0_0_15px_rgba(220,38,38,0.15)]">
+                        <i data-lucide="activity" class="text-red-500 h-7 w-7"></i>
+                    </div>
+                    <h1 class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-red-500 via-rose-300 to-slate-400 bg-clip-text text-transparent tracking-widest">
+                        GRADE Protocol
+                    </h1>
+                </div>
+                <p class="text-slate-400 mt-1 text-sm md:text-base font-medium tracking-wide">GRACE & CRUSADE Integrator</p>
+                <p class="text-slate-500 mt-1 text-xs md:text-sm font-medium">Developed by Bayushi Eka Putra, MD, FIHA</p>
+            </div>
+            <div class="flex items-center gap-2 px-4 py-2 bg-[#1a0505]/60 rounded-full border border-red-500/40 backdrop-blur-md shadow-[0_0_15px_rgba(220,38,38,0.2)]">
+                <i data-lucide="heart-pulse" class="text-red-500 animate-pulse h-4 w-4"></i>
+                <span class="text-xs md:text-sm font-bold tracking-widest text-slate-200 uppercase">Part of CardiologyVault</span>
+            </div>
+        </header>
+
+        <main class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
+            
+            <!-- LEFT COLUMN: INPUT FORM -->
+            <section class="lg:col-span-7 space-y-6">
+                
+                <!-- Card: Demografi & Vitals -->
+                <div class="bg-[#180505]/60 backdrop-blur-xl border border-red-500/60 rounded-2xl p-5 md:p-6 shadow-[0_0_20px_rgba(220,38,38,0.3)]">
+                    <h2 class="text-lg font-semibold text-white mb-5 flex items-center gap-2 border-b border-red-900/30 pb-3">
+                        <i data-lucide="thermometer" class="text-red-500 h-5 w-5"></i>
+                        Demografi & Tanda Vital
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Age & Sex -->
+                        <div class="space-y-5">
+                            <div>
+                                <div class="flex justify-between mb-2">
+                                    <label class="text-sm font-medium text-slate-300">Usia (Tahun)</label>
+                                    <span id="val-age" class="text-red-400 font-bold">65</span>
+                                </div>
+                                <input type="range" id="inp-age" min="18" max="100" value="65" class="accent-red-600" oninput="updateState('age', this.value)">
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-slate-300 mb-2 block">Jenis Kelamin</label>
+                                <div class="flex bg-[#0f0303] rounded-lg p-1 border border-red-950">
+                                    <button id="btn-sex-male" onclick="updateState('sex', 'Male')" class="flex-1 py-2 text-sm rounded-md transition font-medium">Pria</button>
+                                    <button id="btn-sex-female" onclick="updateState('sex', 'Female')" class="flex-1 py-2 text-sm rounded-md transition font-medium">Wanita</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Weight & HR -->
+                        <div class="space-y-5">
+                            <div>
+                                <div class="flex justify-between mb-2">
+                                    <label class="text-sm font-medium text-slate-300">Berat Badan (kg)</label>
+                                    <span id="val-weight" class="text-red-400 font-bold">70</span>
+                                </div>
+                                <input type="range" id="inp-weight" min="30" max="150" value="70" class="accent-red-600" oninput="updateState('weight', this.value)">
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-2">
+                                    <label class="text-sm font-medium text-slate-300">Heart Rate (bpm)</label>
+                                    <span id="val-hr" class="text-rose-400 font-bold">85</span>
+                                </div>
+                                <input type="range" id="inp-hr" min="30" max="250" value="85" class="accent-rose-600" oninput="updateState('hr', this.value)">
+                            </div>
+                        </div>
+
+                        <!-- SBP -->
+                        <div class="md:col-span-2">
+                            <div class="flex justify-between mb-2">
+                                <label class="text-sm font-medium text-slate-300">Tekanan Darah Sistolik (mmHg)</label>
+                                <span id="val-sbp" class="text-red-400 font-bold">130</span>
+                            </div>
+                            <input type="range" id="inp-sbp" min="60" max="250" value="130" class="accent-red-500" oninput="updateState('sbp', this.value)">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card: Lab & Klinis -->
+                <div class="bg-[#180505]/60 backdrop-blur-xl border border-red-500/60 rounded-2xl p-5 md:p-6 shadow-[0_0_20px_rgba(220,38,38,0.3)]">
+                    <h2 class="text-lg font-semibold text-white mb-5 flex items-center gap-2 border-b border-red-900/30 pb-3">
+                        <i data-lucide="droplet" class="text-red-500 h-5 w-5"></i>
+                        Laboratorium & Klinis
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Creatinine & Hct -->
+                        <div class="space-y-6">
+                            <div>
+                                <div class="flex justify-between mb-2">
+                                    <label class="text-sm font-medium text-slate-300">Kreatinin (mg/dL)</label>
+                                    <span id="val-creatinine" class="text-red-400 font-bold">1.0</span>
+                                </div>
+                                <input type="range" id="inp-creatinine" min="0.1" max="10" step="0.1" value="1.0" class="accent-red-600" oninput="updateState('creatinine', this.value)">
+                                <div class="text-[11px] md:text-xs text-slate-400 mt-2 flex justify-between items-center">
+                                    <span>Hitung CrCl Otomatis:</span>
+                                    <span id="val-crcl" class="text-red-300 font-mono bg-red-950/50 border border-red-900/50 px-2 py-1 rounded">0.0 mL/min</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-2">
+                                    <label class="text-sm font-medium text-slate-300">Hematokrit (%)</label>
+                                    <span id="val-hct" class="text-rose-400 font-bold">40</span>
+                                </div>
+                                <input type="range" id="inp-hct" min="15" max="60" value="40" class="accent-rose-600" oninput="updateState('hct', this.value)">
+                            </div>
+                        </div>
+
+                        <!-- Killip -->
+                        <div>
+                            <label class="text-sm font-medium text-slate-300 mb-3 block">Klasifikasi Killip</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button id="btn-killip-1" onclick="updateState('killip', 1)" class="py-2.5 rounded-lg text-sm font-medium border transition-all">Class 1</button>
+                                <button id="btn-killip-2" onclick="updateState('killip', 2)" class="py-2.5 rounded-lg text-sm font-medium border transition-all">Class 2</button>
+                                <button id="btn-killip-3" onclick="updateState('killip', 3)" class="py-2.5 rounded-lg text-sm font-medium border transition-all">Class 3</button>
+                                <button id="btn-killip-4" onclick="updateState('killip', 4)" class="py-2.5 rounded-lg text-sm font-medium border transition-all">Class 4</button>
+                            </div>
+                            <p id="killip-warning" class="hidden text-[11px] md:text-xs text-red-400 mt-3 flex items-start gap-1 bg-red-950/30 p-2 rounded border border-red-900/30 leading-tight">
+                                <i data-lucide="info" class="h-3 w-3 flex-shrink-0 mt-0.5"></i> 
+                                Class > I otomatis terhitung sebagai tanda CHF pada skor CRUSADE.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Booleans Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-6 pt-6 border-t border-red-900/30">
+                        <button onclick="toggleBool('elevatedEnzymes')" id="btn-bool-elevatedEnzymes" class="flex items-center justify-between w-full p-3 md:p-3.5 rounded-xl border transition-all duration-300 bg-[#0f0303]/50 border-red-950 text-slate-400">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="heart-pulse" class="h-4 w-4 toggle-icon text-slate-500"></i>
+                                <span class="font-medium text-sm text-left leading-tight">Peningkatan Enzim Jantung</span>
+                            </div>
+                            <div class="w-4 h-4 rounded-full border-2 border-slate-600 toggle-circle flex-shrink-0"></div>
+                        </button>
+                        <button onclick="toggleBool('stDeviation')" id="btn-bool-stDeviation" class="flex items-center justify-between w-full p-3 md:p-3.5 rounded-xl border transition-all duration-300 bg-[#0f0303]/50 border-red-950 text-slate-400">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="activity" class="h-4 w-4 toggle-icon text-slate-500"></i>
+                                <span class="font-medium text-sm text-left leading-tight">Deviasi Segmen ST</span>
+                            </div>
+                            <div class="w-4 h-4 rounded-full border-2 border-slate-600 toggle-circle flex-shrink-0"></div>
+                        </button>
+                        <button onclick="toggleBool('cardiacArrest')" id="btn-bool-cardiacArrest" class="flex items-center justify-between w-full p-3 md:p-3.5 rounded-xl border transition-all duration-300 bg-[#0f0303]/50 border-red-950 text-slate-400">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="alert-triangle" class="h-4 w-4 toggle-icon text-slate-500"></i>
+                                <span class="font-medium text-sm text-left leading-tight">Henti Jantung saat Masuk</span>
+                            </div>
+                            <div class="w-4 h-4 rounded-full border-2 border-slate-600 toggle-circle flex-shrink-0"></div>
+                        </button>
+                        <button onclick="toggleBool('diabetes')" id="btn-bool-diabetes" class="flex items-center justify-between w-full p-3 md:p-3.5 rounded-xl border transition-all duration-300 bg-[#0f0303]/50 border-red-950 text-slate-400">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="droplet" class="h-4 w-4 toggle-icon text-slate-500"></i>
+                                <span class="font-medium text-sm text-left leading-tight">Diabetes Mellitus</span>
+                            </div>
+                            <div class="w-4 h-4 rounded-full border-2 border-slate-600 toggle-circle flex-shrink-0"></div>
+                        </button>
+                        <button onclick="toggleBool('vascularDisease')" id="btn-bool-vascularDisease" class="flex items-center justify-between w-full p-3 md:p-3.5 rounded-xl border transition-all duration-300 bg-[#0f0303]/50 border-red-950 text-slate-400 md:col-span-2 lg:col-span-1">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="shield-alert" class="h-4 w-4 toggle-icon text-slate-500"></i>
+                                <span class="font-medium text-sm text-left leading-tight">Riwayat Penyakit Vaskular (PAD/Stroke)</span>
+                            </div>
+                            <div class="w-4 h-4 rounded-full border-2 border-slate-600 toggle-circle flex-shrink-0"></div>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RIGHT COLUMN: DASHBOARD & RESULTS -->
+            <section class="lg:col-span-5 space-y-6">
+                
+                <!-- GRACE Score Card -->
+                <div class="bg-gradient-to-br from-[#1c0808] to-[#0f0303] backdrop-blur-xl border border-red-900/40 rounded-2xl p-5 md:p-6 relative overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.5)]">
+                    <div class="absolute -top-4 -right-4 p-4 opacity-5 text-red-500">
+                        <i data-lucide="heart-pulse" class="h-32 w-32"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <h3 class="text-slate-400 text-xs md:text-sm font-bold tracking-wider uppercase mb-1">Risiko Iskemik</h3>
+                        <h2 class="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
+                            GRACE Score 2.0
+                        </h2>
+                        
+                        <div class="flex items-end gap-3 mt-4 md:mt-6">
+                            <div id="res-grace-score" class="text-5xl md:text-6xl font-black tabular-nums tracking-tighter text-emerald-400">
+                                0
+                            </div>
+                            <div id="res-grace-badge" class="px-3 py-1 rounded-full text-xs md:text-sm font-bold border bg-emerald-400/10 border-emerald-500/30 text-emerald-400 mb-1 md:mb-2 shadow-sm">
+                                Rendah Risk
+                            </div>
+                        </div>
+
+                        <div class="w-full bg-[#0a0202] rounded-full h-2 mt-5 md:mt-6 overflow-hidden border border-red-950">
+                            <div id="res-grace-bar" class="h-full transition-all duration-700 bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-[10px] md:text-xs text-slate-500 mt-2 font-mono">
+                            <span>0</span>
+                            <span>Cutoff: 109 & 140</span>
+                            <span>250+</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CRUSADE Score Card -->
+                <div class="bg-gradient-to-br from-[#1c0808] to-[#0f0303] backdrop-blur-xl border border-red-900/40 rounded-2xl p-5 md:p-6 relative overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.5)]">
+                    <div class="absolute -top-4 -right-4 p-4 opacity-5 text-red-500">
+                        <i data-lucide="droplet" class="h-32 w-32"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <h3 class="text-slate-400 text-xs md:text-sm font-bold tracking-wider uppercase mb-1">Risiko Perdarahan Mayor</h3>
+                        <h2 class="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
+                            CRUSADE Score
+                        </h2>
+                        
+                        <div class="flex items-end gap-3 mt-4 md:mt-6">
+                            <div id="res-crusade-score" class="text-5xl md:text-6xl font-black tabular-nums tracking-tighter text-emerald-400">
+                                0
+                            </div>
+                            <div id="res-crusade-badge" class="px-3 py-1 rounded-full text-xs md:text-sm font-bold border bg-emerald-400/10 border-emerald-500/30 text-emerald-400 mb-1 md:mb-2 shadow-sm whitespace-nowrap">
+                                Sangat Rendah Risk
+                            </div>
+                        </div>
+
+                        <div class="w-full bg-[#0a0202] rounded-full h-2 mt-5 md:mt-6 overflow-hidden border border-red-950">
+                            <div id="res-crusade-bar" class="h-full transition-all duration-700 bg-emerald-500" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-[10px] md:text-xs text-slate-500 mt-2 font-mono">
+                            <span>0</span>
+                            <span>Cutoff: 20, 30, 40, 50</span>
+                            <span>70+</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clinical Recommendation Engine -->
+                <div class="bg-gradient-to-br from-red-950/60 to-[#0a0202] backdrop-blur-xl border border-red-800/40 rounded-2xl p-5 md:p-6 shadow-2xl relative overflow-hidden">
+                    <div class="absolute -right-10 -top-10 bg-red-600/10 w-40 h-40 rounded-full blur-3xl"></div>
+                    
+                    <h2 class="text-base md:text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i data-lucide="calculator" class="text-red-400 h-5 w-5"></i>
+                        Triage Recommendation
+                    </h2>
+
+                    <div class="space-y-4 relative z-10">
+                        <!-- Ischemic Logic -->
+                        <div class="bg-[#140404]/80 p-4 rounded-xl border border-red-900/50 shadow-inner">
+                            <div class="flex items-start gap-3">
+                                <i data-lucide="arrow-right" class="text-red-500 mt-0.5 flex-shrink-0 h-4 w-4 md:h-5 md:w-5"></i>
+                                <div>
+                                    <h4 class="text-xs md:text-sm font-semibold text-slate-200 mb-1">Strategi Penanganan:</h4>
+                                    <p id="recom-grace" class="text-xs md:text-sm text-slate-300 leading-relaxed">
+                                        <!-- Injected by JS -->
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bleeding Logic (Conditional) -->
+                        <div id="recom-crusade-container" class="hidden bg-red-950/60 p-4 rounded-xl border border-red-500/40 shadow-[0_0_15px_rgba(225,29,72,0.1)]">
+                            <div class="flex items-start gap-3">
+                                <i data-lucide="shield-alert" class="text-red-400 mt-0.5 flex-shrink-0 h-4 w-4 md:h-5 md:w-5"></i>
+                                <div>
+                                    <h4 class="text-xs md:text-sm font-semibold text-red-300 mb-1">Perhatian Khusus:</h4>
+                                    <p class="text-xs md:text-sm text-red-200/80 leading-relaxed">
+                                        Risiko perdarahan pasien <strong>tinggi/sangat tinggi</strong>. Sangat disarankan: <br/>
+                                        &bull; Akses radial sebagai pilihan utama.<br/>
+                                        &bull; Pemilihan DAPT yang lebih aman (Clopidogrel vs Potent P2Y12).<br/>
+                                        &bull; Hindari penggunaan GPIIb/IIIa rutin.<br/>
+                                        &bull; Penyesuaian dosis antikoagulan secara presisi.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer Disclaimer -->
+        <footer class="max-w-6xl mx-auto mt-12 py-8 border-t border-red-900/30 text-center">
+            <div class="max-w-3xl mx-auto px-4">
+                <p class="text-red-500/80 text-xs md:text-sm font-bold tracking-widest uppercase mb-3 flex items-center justify-center gap-2">
+                    <i data-lucide="shield-alert" class="h-4 w-4"></i> Disclaimer Medis
+                </p>
+                <p class="text-slate-500 text-[10px] md:text-xs leading-relaxed">
+                    Aplikasi <strong>GRADE Protocol</strong> ini dirancang sebagai alat bantu kalkulasi klinis untuk tenaga medis profesional dan tidak ditujukan untuk menggantikan penilaian klinis komprehensif. Keputusan tata laksana, strategi invasif, dan farmakoterapi tetap menjadi tanggung jawab penuh Dokter Penanggung Jawab Pelayanan (DPJP). Algoritma ini menggunakan pedoman umum dari skor GRACE 2.0 dan CRUSADE. Harap selalu merujuk pada panduan klinis terbaru (AHA/ACC/ESC) untuk praktik medis Anda.
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        // Inisialisasi ikon
+        lucide.createIcons();
+
+        // State Global
+        const state = {
+            age: 65,
+            sex: 'Male',
+            weight: 70,
+            hr: 85,
+            sbp: 130,
+            creatinine: 1.0,
+            hct: 40,
+            killip: 1,
+            elevatedEnzymes: false,
+            stDeviation: false,
+            cardiacArrest: false,
+            diabetes: false,
+            vascularDisease: false
+        };
+
+        // Fungsi Update State dari Input
+        function updateState(key, value) {
+            if(key === 'age' || key === 'weight' || key === 'hr' || key === 'sbp' || key === 'hct' || key === 'killip') {
+                state[key] = parseInt(value);
+            } else if (key === 'creatinine') {
+                state[key] = parseFloat(value);
+            } else {
+                state[key] = value;
+            }
+            
+            // Update Teks Input Label
+            if(document.getElementById(`val-${key}`)) {
+                document.getElementById(`val-${key}`).innerText = value;
+            }
+            
+            calculateAndRender();
+        }
+
+        // Fungsi Toggle Booleans
+        function toggleBool(key) {
+            state[key] = !state[key];
+            calculateAndRender();
+        }
+
+        // Engine Kalkulasi Utama
+        function calculateAndRender() {
+            // 1. Render UI States (Buttons & Toggles)
+            renderInputsUI();
+
+            // 2. Kalkulasi CrCl (Cockcroft-Gault)
+            let crCl = ((140 - state.age) * state.weight) / (72 * state.creatinine);
+            if (state.sex === 'Female') crCl = crCl * 0.85;
+            document.getElementById('val-crcl').innerText = crCl.toFixed(1) + ' mL/min';
+
+            // 3. Kalkulasi GRACE 2.0 (Menggunakan Linear Interpolation)
+            let gScore = 0;
+            
+            // AGE
+            let agePts = 0;
+            if (state.age >= 90) agePts = 100;
+            else if (state.age >= 85) agePts = 91 + (state.age - 85) * 1.8;
+            else if (state.age >= 75) agePts = 73 + (state.age - 75) * 1.8;
+            else if (state.age >= 65) agePts = 54 + (state.age - 65) * 1.9;
+            else if (state.age >= 55) agePts = 36 + (state.age - 55) * 1.8;
+            else if (state.age >= 45) agePts = 18 + (state.age - 45) * 1.8;
+            else if (state.age >= 35) agePts = (state.age - 35) * 1.8;
+            gScore += Math.round(agePts);
+
+            // HEART RATE
+            let hrPts = 0;
+            if (state.hr >= 200) hrPts = 46;
+            else if (state.hr >= 150) hrPts = 30 + (state.hr - 150) * (16/50);
+            else if (state.hr >= 110) hrPts = 18 + (state.hr - 110) * (12/40);
+            else if (state.hr >= 50)  hrPts = (state.hr - 50) * (3/10);
+            gScore += Math.round(hrPts);
+
+            // SYSTOLIC BP
+            let sbpPts = 0;
+            if (state.sbp < 80) sbpPts = 58;
+            else if (state.sbp < 100) sbpPts = 58 - (state.sbp - 80) * (10/20);
+            else if (state.sbp < 110) sbpPts = 48 - (state.sbp - 100) * (5/10);
+            else if (state.sbp < 120) sbpPts = 43 - (state.sbp - 110) * (4/10);
+            else if (state.sbp < 130) sbpPts = 39 - (state.sbp - 120) * (5/10);
+            else if (state.sbp < 140) sbpPts = 34 - (state.sbp - 130) * (5/10);
+            else if (state.sbp < 150) sbpPts = 29 - (state.sbp - 140) * (5/10);
+            else if (state.sbp < 160) sbpPts = 24 - (state.sbp - 150) * (5/10);
+            else if (state.sbp < 180) sbpPts = 19 - (state.sbp - 160) * (9/20);
+            else if (state.sbp < 200) sbpPts = 10 - (state.sbp - 180) * (10/20);
+            else sbpPts = 0;
+            gScore += Math.round(sbpPts);
+
+            // CREATININE
+            let crPts = 0;
+            const cr = state.creatinine;
+            if (cr >= 4.0) crPts = 28;
+            else if (cr >= 3.0) crPts = 21 + (cr - 3.0) * 7;
+            else if (cr >= 2.0) crPts = 14 + (cr - 2.0) * 7;
+            else if (cr >= 1.8) crPts = 13 + (cr - 1.8) * (1/0.2);
+            else if (cr >= 1.6) crPts = 11 + (cr - 1.6) * (2/0.2);
+            else if (cr >= 1.4) crPts = 10 + (cr - 1.4) * (1/0.2);
+            else if (cr >= 1.2) crPts = 8  + (cr - 1.2) * (2/0.2);
+            else if (cr >= 1.0) crPts = 7  + (cr - 1.0) * (1/0.2);
+            else if (cr >= 0.8) crPts = 6  + (cr - 0.8) * (1/0.2);
+            else if (cr >= 0.6) crPts = 4  + (cr - 0.6) * (2/0.2);
+            else if (cr >= 0.4) crPts = 3  + (cr - 0.4) * (1/0.2);
+            else if (cr >= 0.2) crPts = 1  + (cr - 0.2) * (2/0.2);
+            else crPts = cr * (1/0.2);
+            gScore += Math.round(crPts);
+
+            // OTHER GRACE VARIABLES
+            if (state.killip === 2) gScore += 20;
+            else if (state.killip === 3) gScore += 39;
+            else if (state.killip === 4) gScore += 59;
+
+            if (state.cardiacArrest) gScore += 39;
+            if (state.stDeviation) gScore += 28;
+            if (state.elevatedEnzymes) gScore += 14;
+
+            // 4. Kalkulasi CRUSADE
+            let cScore = 0;
+            if (state.hct < 31) cScore += 9;
+            else if (state.hct < 34) cScore += 7;
+            else if (state.hct < 37) cScore += 3;
+            else if (state.hct < 40) cScore += 2;
+
+            if (crCl <= 15) cScore += 39;
+            else if (crCl <= 30) cScore += 35;
+            else if (crCl <= 60) cScore += 28;
+            else if (crCl <= 90) cScore += 17;
+
+            if (state.hr >= 121) cScore += 11;
+            else if (state.hr >= 111) cScore += 10;
+            else if (state.hr >= 101) cScore += 8;
+            else if (state.hr >= 91) cScore += 6;
+            else if (state.hr >= 81) cScore += 3;
+            else if (state.hr >= 71) cScore += 1;
+
+            if (state.sbp <= 90) cScore += 10;
+            else if (state.sbp <= 100) cScore += 8;
+            else if (state.sbp <= 120) cScore += 5;
+            else if (state.sbp >= 201) cScore += 5;
+
+            if (state.killip > 1) cScore += 7; 
+            if (state.vascularDisease) cScore += 6;
+            if (state.diabetes) cScore += 6;
+            if (state.sex === 'Female') cScore += 8;
+
+            // 5. Render Hasil
+            renderResults(gScore, cScore);
+        }
+
+        // Styling Helper
+        const styles = {
+            btnActive: 'bg-gradient-to-b from-red-600 to-red-800 text-white shadow-lg border-red-500/50',
+            btnInactive: 'text-slate-400 hover:text-slate-200 border-transparent',
+            killipActive: 'bg-red-900/50 border-red-500/60 text-red-200 shadow-[0_0_10px_rgba(220,38,38,0.25)]',
+            killipInactive: 'bg-[#0f0303]/50 border-red-950 text-slate-400 hover:border-red-900/50',
+            toggleActive: 'bg-red-900/40 border-red-500/50 text-red-200 shadow-[0_0_15px_rgba(220,38,38,0.2)]',
+            toggleInactive: 'bg-[#0f0303]/50 border-red-950 text-slate-400',
+        };
+
+        function renderInputsUI() {
+            // Sex
+            const bMale = document.getElementById('btn-sex-male');
+            const bFemale = document.getElementById('btn-sex-female');
+            bMale.className = `flex-1 py-1.5 text-sm rounded-md transition font-medium border ${state.sex === 'Male' ? styles.btnActive : styles.btnInactive}`;
+            bFemale.className = `flex-1 py-1.5 text-sm rounded-md transition font-medium border ${state.sex === 'Female' ? styles.btnActive : styles.btnInactive}`;
+
+            // Killip
+            for(let i=1; i<=4; i++) {
+                let kBtn = document.getElementById(`btn-killip-${i}`);
+                kBtn.className = `py-2 rounded-lg text-sm font-medium border transition-all ${state.killip === i ? styles.killipActive : styles.killipInactive}`;
+            }
+            document.getElementById('killip-warning').style.display = state.killip > 1 ? 'flex' : 'none';
+
+            // Booleans
+            const bools = ['elevatedEnzymes', 'stDeviation', 'cardiacArrest', 'diabetes', 'vascularDisease'];
+            bools.forEach(key => {
+                let btn = document.getElementById(`btn-bool-${key}`);
+                let isTrue = state[key];
+                
+                // Kelas Container
+                let baseClass = "flex items-center justify-between w-full p-3 md:p-3.5 rounded-xl border transition-all duration-300";
+                if(key === 'vascularDisease') baseClass += " md:col-span-2 lg:col-span-1";
+                btn.className = `${baseClass} ${isTrue ? styles.toggleActive : styles.toggleInactive}`;
+                
+                // Ikon Text Color
+                let icon = btn.querySelector('.toggle-icon');
+                if (icon) {
+                    icon.classList.remove('text-red-400', 'text-slate-500');
+                    icon.classList.add(isTrue ? 'text-red-400' : 'text-slate-500');
+                }
+                
+                // Circle styling
+                let circle = btn.querySelector('.toggle-circle');
+                if (circle) {
+                    circle.className = `w-4 h-4 rounded-full border-2 flex-shrink-0 transition-all toggle-circle ${isTrue ? 'bg-red-500 border-red-300' : 'border-slate-600 bg-transparent'}`;
+                }
+            });
+        }
+
+        function renderResults(grace, crusade) {
+            // -- GRACE --
+            document.getElementById('res-grace-score').innerText = grace;
+            let gLvl, gCol, gBg, gBdr, gShadow;
+            if (grace <= 108) {
+                gLvl = 'Rendah'; gCol = 'text-emerald-400'; gBg = 'bg-emerald-400/10'; gBdr = 'border-emerald-500/30'; gShadow = 'shadow-[0_0_10px_rgba(16,185,129,0.5)]';
+                document.getElementById('recom-grace').innerHTML = '<span class="text-emerald-400 font-medium">Risiko Rendah. Pertimbangkan Ischemia-guided strategy / Invasif Selektif.</span>';
+            } else if (grace <= 140) {
+                gLvl = 'Menengah'; gCol = 'text-amber-400'; gBg = 'bg-amber-400/10'; gBdr = 'border-amber-500/30'; gShadow = 'shadow-[0_0_10px_rgba(245,158,11,0.5)]';
+                document.getElementById('recom-grace').innerHTML = '<span class="text-amber-400 font-medium">Strategi Invasif direkomendasikan (&lt; 72 jam).</span>';
+            } else {
+                gLvl = 'Tinggi'; gCol = 'text-rose-500'; gBg = 'bg-rose-500/10'; gBdr = 'border-rose-500/30'; gShadow = 'shadow-[0_0_10px_rgba(225,29,72,0.5)]';
+                document.getElementById('recom-grace').innerHTML = '<span class="text-rose-400 font-medium">Strategi Invasif Awal (&lt; 24 jam) sangat direkomendasikan.</span>';
+            }
+            
+            document.getElementById('res-grace-score').className = `text-5xl md:text-6xl font-black tabular-nums tracking-tighter ${gCol}`;
+            document.getElementById('res-grace-badge').className = `px-3 py-1 rounded-full text-xs md:text-sm font-bold border mb-1 md:mb-2 shadow-sm ${gBg} ${gBdr} ${gCol}`;
+            document.getElementById('res-grace-badge').innerText = gLvl + ' Risk';
+            
+            let gPct = Math.min((grace / 250) * 100, 100);
+            let gBar = document.getElementById('res-grace-bar');
+            let baseColorClass = gLvl === 'Rendah' ? 'bg-emerald-500' : (gLvl === 'Menengah' ? 'bg-amber-500' : 'bg-rose-600');
+            gBar.className = `h-full transition-all duration-700 ${baseColorClass} ${gShadow}`;
+            gBar.style.width = gPct + '%';
+
+
+            // -- CRUSADE --
+            document.getElementById('res-crusade-score').innerText = crusade;
+            let cLvl, cCol, cBg, cBdr, cBase;
+            if (crusade <= 20) { cLvl = 'Sangat Rendah'; cCol = 'text-emerald-400'; cBg = 'bg-emerald-400/10'; cBdr = 'border-emerald-500/30'; cBase = 'bg-emerald-500'; }
+            else if (crusade <= 30) { cLvl = 'Rendah'; cCol = 'text-teal-400'; cBg = 'bg-teal-400/10'; cBdr = 'border-teal-500/30'; cBase = 'bg-teal-500'; }
+            else if (crusade <= 40) { cLvl = 'Sedang'; cCol = 'text-amber-400'; cBg = 'bg-amber-400/10'; cBdr = 'border-amber-500/30'; cBase = 'bg-amber-500'; }
+            else if (crusade <= 50) { cLvl = 'Tinggi'; cCol = 'text-orange-500'; cBg = 'bg-orange-500/10'; cBdr = 'border-orange-500/30'; cBase = 'bg-orange-500'; }
+            else { cLvl = 'Sangat Tinggi'; cCol = 'text-rose-500'; cBg = 'bg-rose-500/10'; cBdr = 'border-rose-500/30'; cBase = 'bg-rose-600'; }
+
+            document.getElementById('res-crusade-score').className = `text-5xl md:text-6xl font-black tabular-nums tracking-tighter ${cCol}`;
+            document.getElementById('res-crusade-badge').className = `px-3 py-1 rounded-full text-xs md:text-sm font-bold border mb-1 md:mb-2 shadow-sm whitespace-nowrap ${cBg} ${cBdr} ${cCol}`;
+            document.getElementById('res-crusade-badge').innerText = cLvl + ' Risk';
+            
+            let cPct = Math.min((crusade / 70) * 100, 100);
+            let cBar = document.getElementById('res-crusade-bar');
+            cBar.className = `h-full transition-all duration-700 ${cBase}`;
+            cBar.style.width = cPct + '%';
+
+            // Crusade Recommendation Box Toggle
+            if (crusade > 40) {
+                document.getElementById('recom-crusade-container').classList.remove('hidden');
+            } else {
+                document.getElementById('recom-crusade-container').classList.add('hidden');
+            }
+        }
+
+        // Initial Render
+        calculateAndRender();
+
+    </script>
+</body>
+</html>
