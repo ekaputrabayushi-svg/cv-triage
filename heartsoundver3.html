@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Heart Sound Simulator Maneuver v3.3 - CardiologyVault</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@500,700,800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --font-body: 'Satoshi', Inter, sans-serif;
+      --font-display: 'Cabinet Grotesk', 'Satoshi', sans-serif;
+    }
+    
+    * { box-sizing: border-box; }
+    html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+    
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font-body);
+      color: #f8fafc;
+      background-color: #020617;
+      background-image: 
+        radial-gradient(circle at 15% 0%, rgba(14, 165, 233, 0.12), transparent 40%),
+        radial-gradient(circle at 85% 15%, rgba(217, 70, 239, 0.12), transparent 40%),
+        radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.08), transparent 50%);
+      background-attachment: fixed;
+    }
+
+    .glass {
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+
+    .condition-btn {
+      background: rgba(30, 41, 59, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      color: #94a3b8;
+      transition: all 0.2s ease;
+    }
+    .condition-btn:hover {
+      background: rgba(30, 41, 59, 0.7);
+      transform: translateY(-2px);
+    }
+    .condition-btn.active {
+      background: linear-gradient(145deg, rgba(14, 165, 233, 0.15), rgba(192, 132, 252, 0.1));
+      border-color: rgba(56, 189, 248, 0.4);
+      color: #f8fafc;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(14, 165, 233, 0.12);
+    }
+    .condition-btn.active .sub { color: #bae6fd; }
+    
+    .metric {
+      background: linear-gradient(180deg, rgba(15,23,42,.72), rgba(15,23,42,.52));
+    }
+    .pill { border-radius: 999px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+    @media (max-width: 760px) {
+      #condition-list { grid-template-columns: 1fr 1fr; }
+      .mobile-stack { grid-template-columns: 1fr !important; }
+    }
+
+    .legend-dot { width: 8px; height: 8px; border-radius: 999px; display: inline-block; }
+    
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 15px rgba(56, 189, 248, 0.3); }
+      50% { box-shadow: 0 0 25px rgba(56, 189, 248, 0.6); }
+    }
+    .play-active { animation: pulse-glow 2s infinite; }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+    path { transition: d 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+  </style>
+</head>
+<body class="flex justify-center px-3 py-4 md:px-6 md:py-6">
+  <div class="w-full max-w-[1280px]">
+    
+    <!-- Header -->
+    <header class="glass rounded-3xl px-5 py-4 mb-5 sticky top-3 z-30 flex flex-col gap-3 md:flex-row md:items-center md:justify-between shadow-2xl shadow-black/50">
+      <div>
+        <div class="inline-flex items-center gap-2 rounded-full border border-fuchsia-500/30 bg-fuchsia-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-fuchsia-300">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-fuchsia-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-fuchsia-500"></span>
+          </span>
+          CardiologyVault
+        </div>
+        <h1 class="mt-2 text-2xl md:text-3xl font-extrabold tracking-tight text-white" style="font-family:var(--font-display)">
+          Heart Sound Simulator <span class='text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-fuchsia-400'>v3.3</span>
+        </h1>
+        <p class="mt-1.5 max-w-2xl text-sm text-slate-400 font-medium">Korelasi presisi Wiggers Diagram (Tekanan & Volume) dengan EKG dan Bunyi Jantung.</p>
+        <p class="mt-1 text-xs font-semibold text-cyan-400">Developer: Bayushi Eka Putra, MD, FIHA</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="theme-toggle" class="pill flex h-10 w-10 items-center justify-center border border-slate-700 bg-slate-800/80 text-slate-300 hover:bg-slate-700 transition-colors shadow-lg">
+          <i data-lucide="moon" class="h-4 w-4"></i>
+        </button>
+      </div>
+    </header>
+
+    <main class="mobile-stack grid gap-5 xl:grid-cols-[1.3fr_.7fr]">
+      
+      <!-- LEFT COLUMN: WIGGERS DIAGRAM -->
+      <div class="grid gap-5 flex-col content-start">
+        <section class="glass rounded-3xl p-1 shadow-xl relative">
+          <div class="bg-slate-900/40 rounded-[22px] p-4 md:p-5 relative overflow-hidden">
+            
+            <!-- Controls Overlay -->
+            <div class="mb-4 flex flex-col lg:flex-row lg:items-end justify-between gap-4 z-10 relative">
+              <div class="flex flex-col gap-3">
+                <div class="flex items-center gap-3">
+                  <h3 class="text-base font-bold uppercase tracking-[0.2em] text-white">Live Wiggers Diagram</h3>
+                  <div class="flex items-center gap-2 rounded-full border border-slate-700/50 bg-black/60 px-2.5 py-1 backdrop-blur-md">
+                    <div id="status-dot" class="h-2 w-2 rounded-full bg-slate-500 shadow-[0_0_8px_rgba(100,116,139,0.8)]"></div>
+                    <span id="status-text" class="text-[10px] mono font-bold tracking-wider text-slate-300">STANDBY</span>
+                  </div>
+                </div>
+                
+                <!-- Legend -->
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] font-semibold text-slate-300 bg-black/30 px-3 py-2 rounded-xl border border-white/5">
+                  <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-rose-500"></span> Tek. Aorta</span>
+                  <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-indigo-500"></span> Tek. Ventrikel</span>
+                  <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-amber-400"></span> Tek. Atrium</span>
+                  <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full border-2 border-sky-400"></span> Volume</span>
+                  <span class="flex items-center gap-1.5 ml-2 border-l border-slate-600 pl-3"><span class="h-0.5 w-3 bg-emerald-400"></span> EKG</span>
+                  <span class="flex items-center gap-1.5"><span class="h-0.5 w-3 bg-slate-200"></span> PCG</span>
+                </div>
+              </div>
+
+              <!-- Maps & Play -->
+              <div class="flex flex-row items-center gap-4">
+                <div class="relative w-[70px] h-[70px] rounded-full border border-white/10 bg-black/40 backdrop-blur-md shadow-inner flex items-center justify-center p-1">
+                  <div class="relative h-full w-full" id="auscultation-map"></div>
+                  <div id="map-label" class="absolute -bottom-2.5 rounded-full border border-slate-700 bg-slate-800 px-2 py-0.5 text-[9px] font-bold tracking-widest text-sky-200">SEMUA</div>
+                </div>
+
+                <button id="play-btn" class="group flex items-center gap-2.5 rounded-2xl border border-sky-500/40 bg-sky-500/10 px-5 py-4 text-sm font-bold text-sky-400 shadow-[0_8px_30px_rgba(14,165,233,0.15)] hover:bg-sky-500/20 hover:border-sky-400 transition-all shrink-0">
+                  <i id="play-icon" data-lucide="play" class="h-5 w-5 fill-current"></i>
+                  <span id="play-text" class="tracking-wide">Putar Suara</span>
+                </button>
+              </div>
+            </div>
+            
+            <!-- Compact Wiggers Canvas (viewBox 0 0 600 520) -->
+            <div class="w-full overflow-x-auto rounded-2xl bg-[#030712] p-4 border border-white/5 shadow-inner relative z-0">
+              <svg viewBox="0 0 600 520" class="w-full min-w-[550px] h-auto font-sans" preserveAspectRatio="xMidYMid meet">
+                
+                <!-- Background Phase Highlight -->
+                <rect x="125" y="0" width="24" height="360" fill="rgba(255,255,255,0.03)" />
+                <rect x="293" y="0" width="38" height="360" fill="rgba(255,255,255,0.03)" />
+
+                <!-- Phase Vertical Lines -->
+                <line x1="125" y1="0" x2="125" y2="520" stroke="rgba(255,255,255,0.12)" stroke-dasharray="4,4"/>
+                <line x1="149" y1="0" x2="149" y2="520" stroke="rgba(255,255,255,0.12)" stroke-dasharray="4,4"/>
+                <line x1="293" y1="0" x2="293" y2="520" stroke="rgba(255,255,255,0.12)" stroke-dasharray="4,4"/>
+                <line x1="331" y1="0" x2="331" y2="520" stroke="rgba(255,255,255,0.12)" stroke-dasharray="4,4"/>
+
+                <!-- Phase Labels -->
+                <text x="137" y="15" fill="#64748b" font-size="9" text-anchor="middle" transform="rotate(-90 137,15)" font-weight="bold">IVC</text>
+                <text x="221" y="15" fill="#94a3b8" font-size="10" font-weight="700" text-anchor="middle">Ventricular Ejection</text>
+                <text x="312" y="15" fill="#64748b" font-size="9" text-anchor="middle" transform="rotate(-90 312,15)" font-weight="bold">IVR</text>
+                <text x="428" y="15" fill="#94a3b8" font-size="10" font-weight="700" text-anchor="middle">Ventricular Filling</text>
+
+                <!-- Separator Line -->
+                <line x1="0" y1="360" x2="600" y2="360" stroke="rgba(255,255,255,0.08)" stroke-width="2" stroke-dasharray="6,4"/>
+
+                <!-- Y-Axis (Left) - Pressure -->
+                <text x="40" y="20" fill="#64748b" font-size="10" text-anchor="end" font-weight="600">120</text>
+                <line x1="45" y1="20" x2="560" y2="20" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+                <text x="40" y="90" fill="#64748b" font-size="10" text-anchor="end" font-weight="600">80</text>
+                <line x1="45" y1="90" x2="560" y2="90" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+                <text x="40" y="240" fill="#64748b" font-size="10" text-anchor="end" font-weight="600">0</text>
+                <text x="18" y="130" fill="#cbd5e1" font-size="10" transform="rotate(-90 18,130)" font-weight="700" letter-spacing="2">PRESSURE (mmHg)</text>
+
+                <!-- Y-Axis (Right) - Volume -->
+                <text x="565" y="290" fill="#38bdf8" font-size="10" text-anchor="start" font-weight="600">130</text>
+                <text x="565" y="340" fill="#38bdf8" font-size="10" text-anchor="start" font-weight="600">50</text>
+                <text x="585" y="315" fill="#38bdf8" font-size="10" transform="rotate(90 585,315)" font-weight="700" letter-spacing="2">VOLUME (mL)</text>
+
+                <!-- Paths (Dynamically Updated) -->
+                <path id="path-atrium" d="" fill="none" stroke="#fbbf24" stroke-width="2.5" stroke-dasharray="4,4" stroke-linecap="round"/>
+                <path id="path-ao" d="" fill="none" stroke="#f43f5e" stroke-width="3" stroke-linejoin="round"/>
+                <path id="path-lv" d="" fill="none" stroke="#6366f1" stroke-width="3" stroke-linejoin="round"/>
+                <path id="path-volume" d="" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linejoin="round" style="filter: drop-shadow(0 4px 6px rgba(56,189,248,0.2))"/>
+
+                <!-- ECG / PCG Labels -->
+                <rect x="0" y="370" width="38" height="20" fill="rgba(16,185,129,0.1)" rx="4"/>
+                <text x="19" y="384" fill="#10b981" font-size="10" font-weight="800" letter-spacing="1" text-anchor="middle">EKG</text>
+                <text x="81" y="395" fill="rgba(16,185,129,0.5)" font-size="11" font-weight="700" text-anchor="middle">P</text>
+                <text x="122" y="375" fill="rgba(16,185,129,0.5)" font-size="11" font-weight="700" text-anchor="middle">R</text>
+                <text x="245" y="395" fill="rgba(16,185,129,0.5)" font-size="11" font-weight="700" text-anchor="middle">T</text>
+
+                <rect x="0" y="445" width="38" height="20" fill="rgba(226,232,240,0.1)" rx="4"/>
+                <text x="19" y="459" fill="#f8fafc" font-size="10" font-weight="800" letter-spacing="1" text-anchor="middle">PCG</text>
+                <rect x="125" y="425" width="24" height="15" fill="rgba(255,255,255,0.08)" rx="4"/>
+                <text x="137" y="436" fill="#e2e8f0" font-size="10" font-weight="bold" text-anchor="middle">S1</text>
+                <rect x="293" y="425" width="24" height="15" fill="rgba(255,255,255,0.08)" rx="4"/>
+                <text x="305" y="436" fill="#e2e8f0" font-size="10" font-weight="bold" text-anchor="middle">S2</text>
+
+                <!-- Scrubber & Traces -->
+                <line id="wiggers-scrubber" x1="45" y1="0" x2="45" y2="520" stroke="rgba(56,189,248,0.5)" stroke-width="1.5" stroke-dasharray="6,4" style="filter: drop-shadow(0 0 4px rgba(56,189,248,0.4))" />
+                <polyline id="live-wiggers-ecg" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+                <circle id="wiggers-ecg-dot" cx="45" cy="405" r="4.5" fill="#fff" stroke="#10b981" stroke-width="2"/>
+                <polyline id="live-wiggers-pcg" fill="none" stroke="#e2e8f0" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+                <circle id="wiggers-pcg-dot" cx="45" cy="480" r="3.5" fill="#fff" stroke="#94a3b8" stroke-width="1.5"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Info Tabs (Replaces thick vertical blocks) -->
+          <div class="mt-4 px-2 pb-2">
+            <div class="flex gap-2 mb-3 bg-slate-800/50 p-1 rounded-xl w-fit border border-slate-700">
+              <button id="btn-tab-patho" class="px-4 py-1.5 text-[11px] uppercase tracking-wider font-bold rounded-lg bg-indigo-500/20 text-indigo-300 transition-colors">Patofisiologi</button>
+              <button id="btn-tab-char" class="px-4 py-1.5 text-[11px] uppercase tracking-wider font-bold rounded-lg text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-colors">Karakteristik & Lokasi</button>
+            </div>
+            
+            <div id="pane-patho" class="rounded-2xl metric highlight p-4 shadow-inner border-l-4 border-l-indigo-500 min-h-[100px]">
+              <h2 id="info-title" class="text-xl font-extrabold text-white mb-2" style="font-family:var(--font-display)">Aortic Stenosis</h2>
+              <p id="info-patho" class="text-[13px] leading-relaxed text-slate-300"></p>
+            </div>
+            
+            <div id="pane-char" class="hidden rounded-2xl metric highlight p-4 shadow-inner border-l-4 border-l-emerald-500 min-h-[100px]">
+              <p id="info-char" class="text-[13px] leading-relaxed text-slate-300"></p>
+              <div class="mt-2.5 flex items-start gap-2 text-slate-400 bg-black/20 p-2 rounded-lg border border-white/5">
+                <i data-lucide="map-pin" class="h-4 w-4 mt-0.5 text-rose-400 shrink-0"></i>
+                <p id="info-location" class="text-[12px] leading-snug"></p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- RIGHT SIDEBAR: CONTROLS & ACCORDIONS -->
+      <aside class="grid gap-5 content-start">
+        <!-- Lesion Selection -->
+        <section class="glass rounded-3xl p-1 shadow-xl">
+          <div class="bg-slate-900/40 rounded-[22px] p-4">
+            <div class="mb-3 flex items-end justify-between border-b border-white/5 pb-3">
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-[0.2em] text-white">Pilihan Lesi</h3>
+                <span class="text-[11px] text-slate-400">Pilih kelainan katup/jantung</span>
+              </div>
+              <i data-lucide="activity" class="h-4 w-4 text-fuchsia-400"></i>
+            </div>
+            <div id="condition-list" class="grid grid-cols-2 gap-2.5"></div>
+          </div>
+        </section>
+
+        <!-- Dynamic Maneuver Accordion -->
+        <section class="glass rounded-3xl p-1 shadow-xl">
+          <div class="bg-slate-900/40 rounded-[22px] p-4">
+            <div class="mb-3 flex items-end justify-between border-b border-white/5 pb-3">
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-[0.2em] text-white">Manuver Fisik</h3>
+                <span class="text-[11px] text-slate-400">Uji dinamis & efek instan</span>
+              </div>
+              <i data-lucide="stethoscope" class="h-4 w-4 text-sky-400"></i>
+            </div>
+            <!-- Maneuver list is injected here as accordion -->
+            <div id="maneuver-list" class="flex flex-col gap-2"></div>
+          </div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+<script>
+// Data Configurations (Updated Based on Clinical Feedback)
+const HEART_CONDITIONS = [
+  {
+    id:'as', name:'Aortic Stenosis', shortDesc:'Ejeksi sistolik', auscultationPoint:'aortic',
+    patho:'Katup aorta menyempit sehingga ejeksi ventrikel kiri terganggu dan menghasilkan murmur crescendo-decrescendo. Kurva tekanan LV meningkat signifikan selama sistol melampaui tekanan aorta.',
+    location:'Area aorta ICS II kanan, sering menjalar ke karotis.',
+    characteristics:'Harsh systolic ejection murmur berbentuk diamond. Biasanya lebih kuat saat preload naik, dan bisa relatif turun saat afterload meningkat.',
+    base:{type:'diamond', pitch:'medium', start:'systoleEarly', end:'systoleEnd', vol:1.0},
+    maneuverEffects:{baseline:{amp:1, timing:0}, squat:{amp:1.6, timing:0.01, effect:'Sangat keras'}, legraise:{amp:1.5, timing:0.01, effect:'Lebih keras'}, standing:{amp:0.35, timing:-0.01, effect:'Sangat pelan'}, valsalva:{amp:0.3, timing:-0.01, effect:'Hampir hilang'}, handgrip:{amp:0.45, timing:0, effect:'Jelas melemah'}, amyl:{amp:1.4, timing:0.01, effect:'Lebih keras (Afterload turun)'}, phenyl:{amp:0.4, timing:0, effect:'Jelas melemah'}, inspiration:{amp:0.8, timing:0, effect:'Sedikit turun'}, expiration:{amp:1.3, timing:0, effect:'Lebih jelas'}}
+  },
+  {
+    id:'mr', name:'Mitral Regurgitation', shortDesc:'Holosistolik blowing', auscultationPoint:'mitral',
+    patho:'Katup mitral inkompeten sehingga darah kembali ke atrium kiri sepanjang sistol. Menghasilkan gelombang-v prominen pada kurva tekanan atrium kiri (LA).',
+    location:'Apeks, menjalar ke aksila kiri.',
+    characteristics:'Murmur pansistolik/holosistolik, cenderung menguat bila afterload meningkat.',
+    base:{type:'plateau', pitch:'high', start:'s1SlightBefore', end:'s2SlightAfter', vol:0.85},
+    maneuverEffects:{baseline:{amp:1, timing:0}, squat:{amp:1.5, timing:0, effect:'Lebih keras'}, legraise:{amp:1.4, timing:0, effect:'Lebih keras'}, standing:{amp:0.4, timing:0, effect:'Jelas melemah'}, valsalva:{amp:0.35, timing:0, effect:'Jelas melemah'}, handgrip:{amp:1.9, timing:0, effect:'Sangat keras (Afterload naik)'}, amyl:{amp:0.3, timing:0, effect:'Hampir hilang'}, phenyl:{amp:1.7, timing:0, effect:'Sangat keras'}, inspiration:{amp:0.85, timing:0, effect:'Sedikit turun'}, expiration:{amp:1.2, timing:0, effect:'Sedikit lebih jelas'}}
+  },
+  {
+    id:'ar', name:'Aortic Regurgitation', shortDesc:'Early diastolic blowing', auscultationPoint:'aortic',
+    patho:'Katup aorta bocor sehingga darah kembali ke ventrikel kiri pada awal diastol. Tekanan diastolik aorta menurun cepat dan LV EDV (volume) meningkat.',
+    location:'Area aorta atau Erb point, lebih jelas saat duduk condong ke depan dan ekspirasi.',
+    characteristics:'Murmur diastolik awal, decrescendo, bernada tinggi.',
+    base:{type:'decrescendo', pitch:'high', start:'s2', end:'diastoleMid', vol:0.86},
+    maneuverEffects:{baseline:{amp:1, timing:0}, squat:{amp:1.5, timing:0, effect:'Lebih keras'}, legraise:{amp:1.4, timing:0, effect:'Lebih keras'}, standing:{amp:0.45, timing:0, effect:'Jelas melemah'}, valsalva:{amp:0.4, timing:0, effect:'Jelas melemah'}, handgrip:{amp:1.6, timing:0, effect:'Sangat keras (Afterload naik)'}, amyl:{amp:0.25, timing:0, effect:'Hampir hilang'}, phenyl:{amp:1.7, timing:0, effect:'Sangat keras'}, inspiration:{amp:0.8, timing:0, effect:'Sedikit turun'}, expiration:{amp:1.4, timing:0, effect:'Lebih jelas'}}
+  },
+  {
+    id:'vsd', name:'Ventricular Septal Defect', shortDesc:'Holosistolik kasar', auscultationPoint:'tricuspid',
+    patho:'Shunt kiri ke kanan melalui defek septum ventrikel menghasilkan murmur pansistolik keras.',
+    location:'LLSB, sering dengan thrill.',
+    characteristics:'Murmur holosistolik kasar yang sering menguat saat afterload naik.',
+    base:{type:'plateau', pitch:'high', start:'s1SlightBefore', end:'s2SlightAfter', vol:0.9},
+    maneuverEffects:{baseline:{amp:1, timing:0}, squat:{amp:1.5, timing:0, effect:'Lebih keras'}, legraise:{amp:1.4, timing:0, effect:'Lebih keras'}, standing:{amp:0.4, timing:0, effect:'Jelas melemah'}, valsalva:{amp:0.35, timing:0, effect:'Jelas melemah'}, handgrip:{amp:1.8, timing:0, effect:'Sangat keras'}, amyl:{amp:0.3, timing:0, effect:'Hampir hilang'}, phenyl:{amp:1.8, timing:0, effect:'Sangat keras'}, inspiration:{amp:1.1, timing:0, effect:'Sedikit naik'}, expiration:{amp:1.0, timing:0, effect:'Minimal'}}
+  },
+  {
+    id:'asd', name:'Atrial Septal Defect', shortDesc:'Flow murmur + fixed split', auscultationPoint:'pulmonic',
+    patho:'Shunt atrium kiri ke kanan menyebabkan overload volume ventrikel kanan dan peningkatan aliran melewati katup pulmonal.',
+    location:'Area pulmonal ICS II kiri.',
+    characteristics:'Murmur ejeksi sistolik halus akibat hiperflow pulmonal disertai fixed split S2 yang tetap pada inspirasi maupun ekspirasi.',
+    base:{type:'asdFlow', pitch:'medium', start:'systoleEarly', end:'systoleEnd', vol:0.62},
+    maneuverEffects:{baseline:{amp:1, timing:0, splitShift:0.07, effect:'Flow murmur + fixed split'}, squat:{amp:1.4, timing:0, splitShift:0.075, effect:'Lebih keras'}, legraise:{amp:1.3, timing:0, splitShift:0.075, effect:'Lebih keras'}, standing:{amp:0.6, timing:0, splitShift:0.065, effect:'Jelas melemah'}, valsalva:{amp:0.5, timing:0, splitShift:0.06, effect:'Melemah'}, handgrip:{amp:0.95, timing:0, splitShift:0.07, effect:'Minimal'}, amyl:{amp:1.1, timing:0, splitShift:0.075, effect:'Minimal'}, phenyl:{amp:0.9, timing:0, splitShift:0.07, effect:'Minimal'}, inspiration:{amp:1.3, timing:0, splitShift:0.08, effect:'Split sedikit lebar & menguat'}, expiration:{amp:0.9, timing:0, splitShift:0.07, effect:'Split tetap (Fixed Split)'}}
+  },
+  {
+    id:'hocm', name:'HOCM', shortDesc:'Dinamik ejeksi sistolik', auscultationPoint:'tricuspid',
+    patho:'Obstruksi dinamik traktus keluar ventrikel kiri meningkat drastis saat rongga ventrikel mengecil (preload turun) atau afterload turun.',
+    location:'Left lower sternal border sampai apeks.',
+    characteristics:'Murmur ejeksi sistolik yang justru menguat saat preload turun atau afterload turun, berlawanan dengan murmur AS.',
+    base:{type:'diamond', pitch:'medium', start:'systoleEarly', end:'systoleLate', vol:0.95},
+    maneuverEffects:{baseline:{amp:1, timing:0}, squat:{amp:0.25, timing:0.01, effect:'Sangat pelan / Hilang'}, legraise:{amp:0.35, timing:0.01, effect:'Jelas melemah'}, standing:{amp:1.9, timing:-0.015, effect:'Sangat keras'}, valsalva:{amp:2.2, timing:-0.02, effect:'Paling keras (Preload drop tajam)'}, handgrip:{amp:0.3, timing:0, effect:'Jelas melemah'}, amyl:{amp:1.8, timing:-0.015, effect:'Sangat keras'}, phenyl:{amp:0.25, timing:0, effect:'Sangat pelan'}, inspiration:{amp:0.9, timing:0, effect:'Minimal'}, expiration:{amp:1.1, timing:0, effect:'Minimal'}}
+  },
+  {
+    id:'mvp', name:'Mitral Valve Prolapse', shortDesc:'Click + late systolic', auscultationPoint:'mitral',
+    patho:'Prolaps daun katup mitral ke atrium kiri saat sistol. Timing click dan murmur sangat bergantung pada ukuran rongga ventrikel (preload).',
+    location:'Apeks.',
+    characteristics:'Yang khas bukan cuma intensitas, tapi timing click/murmur bergeser lebih awal jika volume ventrikel mengecil.',
+    base:{type:'mvp', pitch:'high', start:'dynamic', end:'s2', vol:0.82},
+    maneuverEffects:{baseline:{amp:1, timing:0, clickShift:0}, squat:{amp:0.35, timing:0.06, clickShift:0.06, effect:'Sangat pelan (Klik mundur)'}, legraise:{amp:0.45, timing:0.05, clickShift:0.05, effect:'Jelas melemah'}, standing:{amp:1.6, timing:-0.06, clickShift:-0.06, effect:'Lebih keras (Klik maju)'}, valsalva:{amp:1.8, timing:-0.07, clickShift:-0.07, effect:'Sangat keras & memanjang'}, handgrip:{amp:0.45, timing:0.03, clickShift:0.03, effect:'Jelas melemah'}, amyl:{amp:1.5, timing:-0.04, clickShift:-0.04, effect:'Lebih keras'}, phenyl:{amp:0.4, timing:0.04, clickShift:0.04, effect:'Jelas melemah'}, inspiration:{amp:0.9, timing:0, clickShift:0, effect:'Minimal'}, expiration:{amp:1.1, timing:0, clickShift:0, effect:'Minimal'}}
+  },
+  {
+    id:'ms', name:'Mitral Stenosis', shortDesc:'Diastolic rumble', auscultationPoint:'mitral',
+    patho:'Katup mitral menyempit sehingga menaikkan gradien tekanan antara LA dan LV saat diastol. Tekanan atrium kiri baseline lebih tinggi.',
+    location:'Apeks, bell, posisi miring kiri.',
+    characteristics:'Low-pitched mid-to-late diastolic rumble. Paling dipengaruhi oleh perubahan preload (aliran darah vena).',
+    base:{type:'midLateRumble', pitch:'low', start:'afterGap', end:'diastoleEnd', vol:0.88},
+    maneuverEffects:{baseline:{amp:1, timing:0}, squat:{amp:1.6, timing:0, effect:'Sangat jelas'}, legraise:{amp:1.5, timing:0, effect:'Lebih keras'}, standing:{amp:0.4, timing:0, effect:'Jelas melemah'}, valsalva:{amp:0.35, timing:0, effect:'Hampir hilang'}, handgrip:{amp:1.0, timing:0, effect:'Hampir tidak berubah'}, amyl:{amp:0.9, timing:0, effect:'Minimal'}, phenyl:{amp:1.0, timing:0, effect:'Minimal'}, inspiration:{amp:0.9, timing:0, effect:'Minimal (Sisi kiri)'}, expiration:{amp:1.3, timing:0, effect:'Menguat'}}
+  },
+  {
+    id:'ts', name:'Tricuspid Stenosis', shortDesc:'Mid-to-late diastolic', auscultationPoint:'tricuspid',
+    patho:'Penyempitan trikuspid sehingga aliran pengisian RV terganggu. Tekanan atrium kanan meningkat.',
+    location:'Lower left sternal border, meningkat saat inspirasi.',
+    characteristics:'Low-pitched mid-to-late diastolic rumble mirip MS, tetapi lebih dominan di sisi kanan dan sangat dipengaruhi fase respirasi.',
+    base:{type:'midLateRumble', pitch:'low', start:'afterGap', end:'diastoleEnd', vol:0.8},
+    maneuverEffects:{baseline:{amp:1, timing:0, effect:'Rumble diastolik'}, squat:{amp:1.3, timing:0, effect:'Lebih keras'}, legraise:{amp:1.4, timing:0, effect:'Lebih keras'}, standing:{amp:0.4, timing:0, effect:'Jelas melemah'}, valsalva:{amp:0.35, timing:0, effect:'Hampir hilang'}, handgrip:{amp:1.0, timing:0, effect:'Minimal'}, amyl:{amp:0.9, timing:0, effect:'Minimal'}, phenyl:{amp:1.0, timing:0, effect:'Minimal'}, inspiration:{amp:1.9, timing:0, effect:'Sangat keras'}, expiration:{amp:0.4, timing:0, effect:'Sangat pelan'}}
+  },
+  {
+    id:'tr', name:'Tricuspid Regurgitation', shortDesc:'Holosistolik kanan', auscultationPoint:'tricuspid',
+    patho:'Regurgitasi trikuspid menyebabkan RV memompa balik ke RA saat sistol. Meningkatkan volume darah RA dan RV.',
+    location:'LLSB dan meningkat saat inspirasi (Carvallo sign positif).',
+    characteristics:'Murmur pansistolik sisi kanan yang khas menguat dengan inspirasi akibat naiknya venous return ke jantung kanan.',
+    base:{type:'plateau', pitch:'medium', start:'s1SlightBefore', end:'s2SlightAfter', vol:0.78},
+    maneuverEffects:{baseline:{amp:1, timing:0}, squat:{amp:1.3, timing:0, effect:'Lebih keras'}, legraise:{amp:1.4, timing:0, effect:'Lebih keras'}, standing:{amp:0.4, timing:0, effect:'Jelas melemah'}, valsalva:{amp:0.35, timing:0, effect:'Hampir hilang'}, handgrip:{amp:1.1, timing:0, effect:'Minimal'}, amyl:{amp:0.8, timing:0, effect:'Sedikit turun'}, phenyl:{amp:1.2, timing:0, effect:'Sedikit naik'}, inspiration:{amp:2.0, timing:0, effect:'Sangat keras (Carvallo +)'}, expiration:{amp:0.4, timing:0, effect:'Sangat pelan'}}
+  },
+  {
+    id:'pr', name:'Pulmonic Regurgitation', shortDesc:'Early diastolic kanan', auscultationPoint:'pulmonic',
+    patho:'Katup pulmonal bocor menghasilkan murmur diastolik awal, terutama bila hipertensi pulmonal mendasari. RV mengalami overload volume.',
+    location:'Area pulmonal, meningkat saat inspirasi.',
+    characteristics:'Decrescendo diastolik awal, kanan-sisi, lebih terdengar saat inspirasi.',
+    base:{type:'decrescendo', pitch:'high', start:'s2', end:'diastoleMid', vol:0.74},
+    maneuverEffects:{baseline:{amp:1, timing:0}, squat:{amp:1.3, timing:0, effect:'Lebih keras'}, legraise:{amp:1.4, timing:0, effect:'Lebih keras'}, standing:{amp:0.4, timing:0, effect:'Jelas melemah'}, valsalva:{amp:0.35, timing:0, effect:'Hampir hilang'}, handgrip:{amp:1.0, timing:0, effect:'Minimal'}, amyl:{amp:0.8, timing:0, effect:'Sedikit turun'}, phenyl:{amp:1.1, timing:0, effect:'Minimal'}, inspiration:{amp:1.9, timing:0, effect:'Sangat keras'}, expiration:{amp:0.4, timing:0, effect:'Sangat pelan'}}
+  }
+];
+
+const MANEUVERS = [
+  {id:'baseline', name:'Baseline', short:'Kontrol', preload:'Baseline', afterload:'Baseline', timing:'Normal', note:'Kondisi tanpa manuver. Digunakan sebagai patokan identifikasi letak & intensitas murmur.'},
+  {id:'squat', name:'Squatting', short:'Preload naik', preload:'Naik', afterload:'Naik ringan', timing:'Stabil / MVP mundur', note:'Jongkok menaikkan venous return cepat. Banyak murmur patologis menguat, namun HOCM & MVP justru melemah (karena ventrikel membesar).'},
+  {id:'legraise', name:'Leg Raise', short:'Preload naik', preload:'Naik', afterload:'Sedikit naik', timing:'Stabil / MVP mundur', note:'Pasif leg raise menaikkan venous return. Efeknya mirip squatting tapi dapat dilakukan di ranjang (supine).'},
+  {id:'standing', name:'Standing', short:'Preload turun', preload:'Turun', afterload:'Sedikit turun', timing:'MVP klik maju', note:'Berdiri cepat menarik darah ke vena tungkai, menurunkan preload tajam. Sangat diagnostik untuk memunculkan HOCM dan memajukan click MVP.'},
+  {id:'valsalva', name:'Valsalva Strain', short:'Preload turun tajam', preload:'Turun tajam', afterload:'Turun', timing:'MVP klik maju', note:'Fase strain Valsalva (mengedan) memblok vena masuk dada. HOCM akan menguat ekstrem, mayoritas murmur lain melemah atau hilang.'},
+  {id:'handgrip', name:'Handgrip', short:'Afterload naik', preload:'Minimal', afterload:'Naik tajam', timing:'Stabil', note:'Genggaman isometrik meningkatkan resistensi vaskular (SVR). Sangat baik untuk memperjelas murmur regurgitasi kiri (MR, AR) & VSD.'},
+  {id:'amyl', name:'Amyl Nitrite', short:'Afterload turun', preload:'Turun', afterload:'Turun drastis', timing:'Bisa maju', note:'Vasodilator instan menurunkan afterload drastis. Murmur regurgitasi (MR/AR) langsung mereda, sementara ejeksi sistolik (AS/HOCM) terdengar lebih kuat.'},
+  {id:'phenyl', name:'Phenylephrine', short:'Afterload naik tajam', preload:'Minimal', afterload:'Naik tajam', timing:'Stabil / MVP mundur', note:'Vasopresor kuat menaikkan afterload tanpa efek langsung ke otot jantung. Memperkuat regurgitasi sisi kiri secara mencolok.'},
+  {id:'inspiration', name:'Inspirasi', short:'Right heart naik', preload:'Kanan naik', afterload:'Minimal', timing:'Stabil / Split lebar', note:'Tekanan intratoraks negatif menyedot darah ke kanan. Memperkeras TR, PR, TS, dan memperlebar split S2 pada kondisi normal/ASD.'},
+  {id:'expiration', name:'Ekspirasi', short:'Left heart lebih jelas', preload:'Kiri relatif jelas', afterload:'Minimal', timing:'Stabil', note:'Ekspirasi secara aktif menekan murmur sisi kanan (TS, TR), membedakannya dari sisi kiri (MS, MR).'}
+];
+
+const AUSCULTATION_POINTS = [
+  {id:'aortic', name:'A', x:35, y:28},
+  {id:'pulmonic', name:'P', x:65, y:28},
+  {id:'tricuspid', name:'T', x:55, y:62},
+  {id:'mitral', name:'M', x:76, y:78}
+];
+
+const geometry = { pxPerSec: 240, s1X: 40, s2X: 124 };
+
+// Audio Engine Details (Sama secara fungsional)
+class HeartAudioEngine {
+  constructor(){
+    this.audioCtx = null; this.isPlaying = false; this.bpm = 60; this.nextNoteTime = 0; this.timerID = null; this.lookahead = 25; this.scheduleAheadTime = .1; this.currentCondition='as'; this.currentManeuver='baseline'; this.firstCycleTime=0;
+  }
+  init(){ if(!this.audioCtx){ this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } if(this.audioCtx.state==='suspended') this.audioCtx.resume(); }
+  setCondition(id){ this.currentCondition = id; }
+  setManeuver(id){ this.currentManeuver = id; }
+  nextNote(){ this.nextNoteTime += 60 / this.bpm; }
+  playTone(time, freq, duration, vol, type='sine', lpFreq=180){
+    const osc = this.audioCtx.createOscillator(); const gain = this.audioCtx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, time); gain.gain.setValueAtTime(0.0001, time); gain.gain.linearRampToValueAtTime(vol, time + 0.01); gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+    osc.connect(gain);
+    if(lpFreq){ const filter = this.audioCtx.createBiquadFilter(); filter.type='lowpass'; filter.frequency.value = lpFreq; gain.connect(filter); filter.connect(this.audioCtx.destination);} else gain.connect(this.audioCtx.destination);
+    osc.start(time); osc.stop(time + duration + 0.02);
+  }
+  playNoise(time, duration, shape, vol, pitch='medium'){
+    const bufferSize = Math.max(1, Math.floor(this.audioCtx.sampleRate * duration));
+    const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i=0;i<bufferSize;i++) data[i] = Math.random()*2 - 1;
+    const noise = this.audioCtx.createBufferSource(); noise.buffer = buffer;
+    const filter = this.audioCtx.createBiquadFilter(); filter.type='bandpass';
+    const settings = { low:[150,1.4], medium:[360,1.2], high:[740,1.0], scratchy:[900,2.0] }[pitch] || [360,1.2];
+    filter.frequency.value = settings[0]; filter.Q.value = settings[1];
+    const gain = this.audioCtx.createGain();
+    const end = time + duration;
+    const set = (t,v)=>gain.gain.linearRampToValueAtTime(Math.max(v,0.001), t);
+    gain.gain.setValueAtTime(0.001, time);
+    if(shape==='diamond'){ set(time + duration*.5, vol); set(end, 0.001); }
+    else if(shape==='plateau'){ set(time + 0.02, vol*.9); gain.gain.setValueAtTime(vol*.9, Math.max(time+0.02, end-0.03)); set(end, 0.001); }
+    else if(shape==='decrescendo'){ set(time + 0.02, vol); set(end, 0.001); }
+    else if(shape==='mid-late-rumble'){ set(time + 0.06, vol*.55); set(time + duration*.65, vol*.22); set(end - 0.04, vol*.88); set(end,0.001); }
+    noise.connect(filter); filter.connect(gain); gain.connect(this.audioCtx.destination); noise.start(time); noise.stop(end + 0.02);
+  }
+  scheduleSound(time){
+    const cond = HEART_CONDITIONS.find(c=>c.id===this.currentCondition);
+    const fx = cond.maneuverEffects[this.currentManeuver] || cond.maneuverEffects.baseline;
+    const s1Time = time + (geometry.s1X / geometry.pxPerSec);
+    const s2Time = time + (geometry.s2X / geometry.pxPerSec);
+    const systoleDuration = s2Time - s1Time;
+    const nextS1 = time + 1.0 + (geometry.s1X / geometry.pxPerSec);
+    const diastoleDuration = nextS1 - s2Time;
+    
+    this.playTone(s1Time, 70, .12, 1.15);
+    this.playTone(s2Time + (cond.id==='asd'?0:0), 110, .08, 0.95);
+    
+    const amp = fx.amp || 1; const timing = fx.timing || 0;
+    if(cond.id === 'mvp'){
+      const clickShift = fx.clickShift || 0;
+      const clickTime = s1Time + (systoleDuration / 2.2) + clickShift;
+      this.playTone(clickTime, 620, .05, 0.48, 'triangle', null);
+      this.playNoise(clickTime, Math.max(.06, s2Time - clickTime), 'crescendo', cond.base.vol * amp, 'high');
+      return;
+    }
+    if(cond.id === 'asd'){
+      this.playNoise(s1Time + .04, Math.max(.08, systoleDuration - .06), 'diamond', cond.base.vol * amp, 'medium');
+      this.playTone(s2Time + (fx.splitShift || 0.07), 102, .06, 1.05, 'sine', 180);
+      return;
+    }
+    if(cond.base.type === 'diamond') this.playNoise(s1Time + .04 + timing, Math.max(.08, systoleDuration - .06), 'diamond', cond.base.vol * amp, cond.base.pitch);
+    if(cond.base.type === 'plateau') this.playNoise(s1Time - .01 + timing, systoleDuration + .02, 'plateau', cond.base.vol * amp, cond.base.pitch);
+    if(cond.base.type === 'decrescendo') this.playNoise(s2Time + timing, diastoleDuration * .62, 'decrescendo', cond.base.vol * amp, cond.base.pitch);
+    if(cond.base.type === 'midLateRumble') this.playNoise(s2Time + .1 + timing, Math.max(.1, diastoleDuration - .1), 'mid-late-rumble', cond.base.vol * amp, cond.base.pitch);
+  }
+  scheduler(){ while(this.nextNoteTime < this.audioCtx.currentTime + this.scheduleAheadTime){ this.scheduleSound(this.nextNoteTime); this.nextNote(); } this.timerID = setTimeout(()=>this.scheduler(), this.lookahead); }
+  play(){ if(this.isPlaying) return; this.init(); this.isPlaying=true; this.firstCycleTime = this.audioCtx.currentTime + 0.1; this.nextNoteTime = this.firstCycleTime; this.scheduler(); }
+  stop(){ if(!this.isPlaying) return; this.isPlaying=false; clearTimeout(this.timerID); }
+}
+
+const audio = new HeartAudioEngine();
+let selectedCondition = HEART_CONDITIONS[0];
+let selectedManeuver = MANEUVERS[0];
+let t = 0;
+let currentAmpSmooth = 1;
+
+let wiggersEcgPts = [];
+let wiggersPcgPts = [];
+
+const playBtn = document.getElementById('play-btn');
+const playIcon = document.getElementById('play-icon');
+const playText = document.getElementById('play-text');
+const statusDot = document.getElementById('status-dot');
+const statusText = document.getElementById('status-text');
+const conditionList = document.getElementById('condition-list');
+const maneuverList = document.getElementById('maneuver-list');
+
+// Tabs Setup
+const tabPatho = document.getElementById('btn-tab-patho');
+const tabChar = document.getElementById('btn-tab-char');
+const panePatho = document.getElementById('pane-patho');
+const paneChar = document.getElementById('pane-char');
+
+tabPatho.onclick = () => {
+  tabPatho.className = 'px-4 py-1.5 text-[11px] uppercase tracking-wider font-bold rounded-lg bg-indigo-500/20 text-indigo-300 transition-colors';
+  tabChar.className = 'px-4 py-1.5 text-[11px] uppercase tracking-wider font-bold rounded-lg text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-colors';
+  panePatho.classList.remove('hidden'); paneChar.classList.add('hidden');
+};
+tabChar.onclick = () => {
+  tabChar.className = 'px-4 py-1.5 text-[11px] uppercase tracking-wider font-bold rounded-lg bg-emerald-500/20 text-emerald-300 transition-colors';
+  tabPatho.className = 'px-4 py-1.5 text-[11px] uppercase tracking-wider font-bold rounded-lg text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-colors';
+  paneChar.classList.remove('hidden'); panePatho.classList.add('hidden');
+};
+
+function currentFx(){ return selectedCondition.maneuverEffects[selectedManeuver.id] || selectedCondition.maneuverEffects.baseline; }
+function effectToneText(mult){ if(mult > 1.08) return 'Menguat'; if(mult < 0.92) return 'Melemah'; return 'Tidak berubah'; }
+function relativeDb(mult){ const db = 20 * Math.log10(mult || 1); return `${db >= 0 ? '+' : ''}${db.toFixed(1)} dB`; }
+
+let lastAnimTime = performance.now();
+
+function renderTrace(timestamp){
+  if(!timestamp) timestamp = performance.now();
+  let dt = timestamp - lastAnimTime; lastAnimTime = timestamp;
+
+  let targetT;
+  if(audio.isPlaying && audio.audioCtx){
+    let elapsed = audio.audioCtx.currentTime - audio.firstCycleTime;
+    if(elapsed < 0) elapsed = 0;
+    targetT = elapsed * geometry.pxPerSec;
+  } else targetT = t + (dt / 1000) * 120;
+
+  let steps = Math.floor(targetT - t);
+  if(steps > 240) steps = 240; 
+  if(steps < 0) { t = targetT; steps = 0; } 
+  
+  // Smooth Amplitude Transition (Lerp)
+  const targetAmp = currentFx().amp || 1;
+  currentAmpSmooth += (targetAmp - currentAmpSmooth) * 0.1;
+  
+  for(let i=0; i<steps; i++){
+    t += 1;
+    const cycleX = t % geometry.pxPerSec;
+    const prevCycleX = (t - 1 + geometry.pxPerSec) % geometry.pxPerSec; 
+
+    if (prevCycleX > cycleX || wiggersEcgPts.length === 0) {
+      wiggersEcgPts = []; wiggersPcgPts = [];
+    }
+
+    let ecgAmp = 0;
+    if(cycleX >= 10 && cycleX < 26) ecgAmp = -Math.sin(((cycleX-10)/16)*Math.PI) * 7; 
+    else if(cycleX >= 34 && cycleX < 36) ecgAmp = ((cycleX-34)/2) * 3; 
+    else if(cycleX >= 36 && cycleX < 38.5) ecgAmp = 3 - ((cycleX-36)/2.5) * 60; 
+    else if(cycleX >= 38.5 && cycleX < 41) ecgAmp = -57 + ((cycleX-38.5)/2.5) * 65; 
+    else if(cycleX >= 41 && cycleX < 44) ecgAmp = 8 - ((cycleX-41)/3) * 8; 
+    else if(cycleX >= 75 && cycleX < 125) ecgAmp = -Math.sin(Math.pow((cycleX-75)/50,.7)*Math.PI) * 14; 
+    ecgAmp += (Math.random() - .5) * 0.4; 
+
+    const fx = currentFx();
+    const s1Start = geometry.s1X, s1End = 65, s2Start = geometry.s2X, s2End = 144;
+    const getEnv = (x,s,e) => (x < s || x > e) ? 0 : Math.sin(((x-s)/(e-s))*Math.PI);
+    let pcgAmp = (Math.random()-.5) * .6;
+    const cond = selectedCondition.id;
+    const renderAmp = currentAmpSmooth;
+
+    if(cond === 'as' || cond === 'hocm'){
+      const adj = (fx.timing||0) * geometry.pxPerSec;
+      if(cycleX > 55 + adj && cycleX < s2Start){ const env = getEnv(cycleX,55+adj,s2Start); pcgAmp += Math.sin(cycleX*1.55) * 26 * env * renderAmp; }
+    } else if(cond === 'mr' || cond === 'vsd' || cond === 'tr'){
+      if(cycleX > s1Start && cycleX < s2Start+5){ const env = Math.pow(getEnv(cycleX,s1Start,s2Start+5),0.12); pcgAmp += Math.sin(cycleX*2.05) * 22 * env * renderAmp; }
+    } else if(cond === 'asd'){
+      if(cycleX > 55 && cycleX < s2Start){ const env = getEnv(cycleX,55,s2Start); pcgAmp += Math.sin(cycleX*1.5) * 16 * env * renderAmp; }
+      const splitShiftPx = (fx.splitShift || 0.07) * geometry.pxPerSec;
+      if(cycleX > s2Start + splitShiftPx - 10 && cycleX < s2Start + splitShiftPx + 10){ pcgAmp += Math.sin(cycleX*1.4) * 20 * Math.pow(getEnv(cycleX, s2Start + splitShiftPx - 10, s2Start + splitShiftPx + 10), .5); }
+    } else if(cond === 'mvp'){
+      const clickShiftPx = (fx.clickShift || 0) * geometry.pxPerSec;
+      const clickX = s1Start + ((s2Start - s1Start)/2.2) + clickShiftPx;
+      if(cycleX > clickX-2 && cycleX < clickX+2) pcgAmp += 38 * Math.sin(((cycleX-clickX)/2) * Math.PI);
+      else if(cycleX > clickX && cycleX < s2Start){ const env = Math.pow((cycleX-clickX)/(s2Start-clickX),2); pcgAmp += Math.sin(cycleX*2.2) * 24 * env * renderAmp; }
+    } else if(cond === 'ar' || cond === 'pr'){
+      if(cycleX > s2Start && cycleX < 210){ const env = Math.pow(1 - ((cycleX-s2Start)/(210-s2Start)), 2); pcgAmp += Math.sin(cycleX*1.8) * 22 * env * renderAmp; }
+    } else if(cond === 'ms' || cond === 'ts'){
+      const rumbleStart = s2Start + 42; const midDiastoleEnd = 188; const preS1AccentStart = 220; const cycleEnd = geometry.pxPerSec + s1Start - 3;
+      let env = 0;
+      if(cycleX >= rumbleStart && cycleX < midDiastoleEnd) env = 0.44 - (0.10 * ((cycleX - rumbleStart) / (midDiastoleEnd - rumbleStart)));
+      else if(cycleX >= midDiastoleEnd && cycleX < preS1AccentStart) env = 0.34 - (0.06 * ((cycleX - midDiastoleEnd) / (preS1AccentStart - midDiastoleEnd)));
+      else if(cycleX >= preS1AccentStart && cycleX < cycleEnd) env = 0.28 + (0.72 * Math.pow(((cycleX - preS1AccentStart) / (cycleEnd - preS1AccentStart)), 1.7));
+      if(env > 0) pcgAmp += (Math.sin(cycleX * (cond==='ts'?0.86:0.8)) * 14 + (Math.random() - 0.5) * 4.6) * env * renderAmp;
+    }
+
+    if(cycleX > s1Start && cycleX < s1End) pcgAmp += Math.sin(cycleX) * 36 * Math.pow(getEnv(cycleX,s1Start,s1End),.5);
+    else if(cycleX > s2Start && cycleX < s2End) pcgAmp += Math.sin(cycleX*1.3) * 30 * Math.pow(getEnv(cycleX,s2Start,s2End),.5);
+
+    const svgX = 45 + (cycleX * 2);
+    // Based on viewBox height 520, ECG base is 405, PCG base is 480
+    wiggersEcgPts.push(`${svgX.toFixed(1)},${(405 + ecgAmp * 1.2).toFixed(1)}`);
+    wiggersPcgPts.push(`${svgX.toFixed(1)},${(480 + pcgAmp * 0.9).toFixed(1)}`);
+  }
+  
+  if (wiggersEcgPts.length > 0) {
+    document.getElementById('live-wiggers-ecg').setAttribute('points', wiggersEcgPts.join(' '));
+    document.getElementById('live-wiggers-pcg').setAttribute('points', wiggersPcgPts.join(' '));
+    const lastEcg = wiggersEcgPts[wiggersEcgPts.length - 1].split(',');
+    const lastPcg = wiggersPcgPts[wiggersPcgPts.length - 1].split(',');
+    document.getElementById('wiggers-ecg-dot').setAttribute('cx', lastEcg[0]);
+    document.getElementById('wiggers-ecg-dot').setAttribute('cy', lastEcg[1]);
+    document.getElementById('wiggers-pcg-dot').setAttribute('cx', lastPcg[0]);
+    document.getElementById('wiggers-pcg-dot').setAttribute('cy', lastPcg[1]);
+    document.getElementById('wiggers-scrubber').setAttribute('x1', lastEcg[0]);
+    document.getElementById('wiggers-scrubber').setAttribute('x2', lastEcg[0]);
+  }
+  requestAnimationFrame(renderTrace);
+}
+
+// Calculate comprehensive hemodynamics (Pressure & Volume based on 11 conds & maneuvers)
+function calculateHemodynamics() {
+  let edv = 130, esv = 50;
+  let aoSys = 120, aoDia = 80;
+  let lvSys = 120, laSys = 10, laDia = 5;
+
+  const cond = selectedCondition.id;
+  if (cond === 'as') { aoSys=105; aoDia=80; lvSys=160; edv=120; esv=65; laSys=14; }
+  else if (cond === 'ar') { aoSys=140; aoDia=50; lvSys=140; edv=170; esv=60; laSys=12; }
+  else if (cond === 'mr') { aoSys=115; aoDia=75; lvSys=115; edv=160; esv=45; laSys=28; } // High V-wave
+  else if (cond === 'hocm') { aoSys=110; aoDia=70; lvSys=150; edv=105; esv=35; laSys=12; }
+  else if (cond === 'vsd') { edv=150; esv=50; laSys=18; }
+  else if (cond === 'ms') { aoSys=110; aoDia=75; lvSys=110; edv=100; esv=45; laSys=25; laDia=15; } // Elevated LA pressure baseline
+  else if (cond === 'ts') { edv=110; esv=45; laSys=16; laDia=10; } // Represents RA curve elevation
+  else if (cond === 'tr') { edv=140; esv=50; laSys=24; } // High V-wave in right side (represented in general atrial curve)
+  else if (cond === 'pr') { edv=150; esv=60; laSys=10; }
+  else if (cond === 'asd') { edv=160; esv=50; laSys=12; }
+  else if (cond === 'mvp') { edv=130; esv=45; laSys=14; }
+
+  const man = selectedManeuver.id;
+  if (man === 'squat' || man === 'legraise') {
+    edv *= 1.15; esv *= 1.05; aoSys += 15; aoDia += 10; lvSys += (cond==='as'? 20:15); laSys += 2; laDia += 1;
+  } else if (man === 'standing' || man === 'valsalva') {
+    edv *= 0.8; esv *= 0.9; aoSys -= 15; aoDia -= 10; lvSys -= (cond==='as'? 20:15); laSys -= 3; laDia -= 2;
+    if(cond === 'hocm') lvSys += 30;
+  } else if (man === 'handgrip') {
+    edv *= 1.05; esv *= 1.25; aoSys += 25; aoDia += 20; lvSys += 25; laSys += 2;
+    if(cond === 'hocm') lvSys -= 15;
+  } else if (man === 'amyl') {
+    edv *= 0.95; esv *= 0.75; aoSys -= 25; aoDia -= 20; lvSys -= 25;
+    if(cond === 'hocm') lvSys += 40; if(cond === 'as') lvSys += 10;
+  } else if (man === 'phenyl') {
+    edv *= 1.05; esv *= 1.3; aoSys += 30; aoDia += 25; lvSys += 30;
+    if(cond === 'hocm') lvSys -= 20;
+  }
+  return { edv, esv, aoSys, aoDia, lvSys, laSys, laDia };
+}
+
+function updateWiggersPaths() {
+  const hemo = calculateHemodynamics();
+  
+  // Transform values to SVG Y coordinates
+  // Pressure scale: 0 is Y=240, 120 is Y=20. Ratio = 220/120 = 1.833
+  const pToY = p => 240 - p * 1.833;
+  const volToY = v => 340 - (v - 50) * 1.1; // Adjusting for smaller viewBox volume scale (50-130)
+
+  const yEDV = volToY(hemo.edv); const yESV = volToY(hemo.esv);
+  const yPreKick = volToY(hemo.edv - 18); const yMidFill = volToY(hemo.edv - 22);
+
+  const volPath = `M 45 ${yPreKick} C 70 ${yPreKick}, 95 ${yPreKick}, 100 ${volToY(hemo.edv-13)} C 110 ${yEDV}, 120 ${yEDV}, 125 ${yEDV} L 149 ${yEDV} C 180 ${yEDV}, 220 ${yESV}, 293 ${yESV} L 331 ${yESV} C 340 ${yESV}, 370 ${yMidFill}, 420 ${yPreKick} C 470 ${yPreKick}, 500 ${yPreKick}, 525 ${yPreKick}`;
+  document.getElementById('path-volume').setAttribute('d', volPath);
+
+  const yLVSys = pToY(hemo.lvSys); const yAoSys = pToY(hemo.aoSys); const yAoDia = pToY(hemo.aoDia);
+  const yLaSys = pToY(hemo.laSys); const yLaDia = pToY(hemo.laDia);
+  
+  // Atrial Path (Dynamic Amber line)
+  const atPath = `M 45 ${yLaDia} C 80 ${yLaDia}, 90 ${yLaDia}, 95 ${yLaSys} C 100 ${yLaSys}, 110 ${yLaDia}, 125 ${yLaDia} C 130 ${yLaSys}, 140 ${yLaSys}, 149 ${yLaDia} C 200 ${yLaDia+5}, 280 ${yLaDia+2}, 331 ${yLaSys} C 350 ${yLaDia}, 400 ${yLaDia}, 525 ${yLaDia}`;
+  document.getElementById('path-atrium').setAttribute('d', atPath);
+
+  // Dynamic LV crossing coordinates to eliminate hardcoding
+  const yAoOpen = yAoDia; 
+  const yAoClose = pToY(hemo.aoSys - (hemo.aoSys - hemo.aoDia)*0.6); 
+  const lvPath = `M 45 ${yLaDia} C 80 ${yLaDia}, 90 ${yLaDia}, 95 ${yLaDia} C 100 ${yLaDia}, 110 ${yLaDia}, 125 ${yLaDia} C 130 ${yLaDia}, 140 ${pToY((hemo.laDia+hemo.aoDia)/2)}, 149 ${yAoOpen} C 180 ${yLVSys}, 240 ${yLVSys}, 293 ${yAoClose} C 300 130, 320 ${pToY((hemo.lvSys+hemo.laSys)/2)}, 331 ${yLaSys} C 350 ${yLaDia}, 450 ${yLaDia}, 525 ${yLaDia}`;
+  document.getElementById('path-lv').setAttribute('d', lvPath);
+
+  const aoPath = `M 45 ${pToY(hemo.aoDia + 5)} C 80 ${pToY(hemo.aoDia + 3)}, 115 ${pToY(hemo.aoDia + 1)}, 149 ${yAoOpen} C 180 ${yAoSys}, 240 ${yAoSys}, 293 ${yAoClose} C 298 ${pToY(hemo.aoSys - (hemo.aoSys - hemo.aoDia)*0.55)}, 302 ${pToY(hemo.aoSys - (hemo.aoSys - hemo.aoDia)*0.7)}, 310 ${pToY(hemo.aoSys - (hemo.aoSys - hemo.aoDia)*0.65)} C 380 ${pToY(hemo.aoDia + 15)}, 450 ${pToY(hemo.aoDia + 8)}, 525 ${pToY(hemo.aoDia + 5)}`;
+  document.getElementById('path-ao').setAttribute('d', aoPath);
+}
+
+function updateMap(){
+  const mapContainer = document.getElementById('auscultation-map');
+  mapContainer.innerHTML = '<div class="absolute left-1/2 top-1 bottom-1 w-[2px] -translate-x-1/2 rounded-full bg-slate-700/40"></div>';
+  AUSCULTATION_POINTS.forEach(pt => {
+    const isTarget = selectedCondition.auscultationPoint === pt.id;
+    const dot = document.createElement('div');
+    dot.className = 'absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center transition-all duration-300';
+    dot.style.left = `${pt.x}%`; dot.style.top = `${pt.y}%`;
+    dot.innerHTML = `<div class="grid h-4 w-4 md:h-5 md:w-5 place-items-center rounded-full border ${isTarget ? 'border-sky-300 bg-sky-500 text-slate-950 shadow-[0_0_15px_rgba(14,165,233,.6)] scale-110 z-10' : 'border-slate-600 bg-slate-800 text-slate-400 opacity-75'} text-[8px] md:text-[9px] font-bold">${pt.name}</div>`;
+    mapContainer.appendChild(dot);
+  });
+  document.getElementById('map-label').textContent = selectedCondition.auscultationPoint.toUpperCase();
+}
+
+function updateUI(){
+  document.getElementById('info-title').textContent = selectedCondition.name;
+  document.getElementById('info-patho').textContent = selectedCondition.patho;
+  document.getElementById('info-char').textContent = selectedCondition.characteristics;
+  document.getElementById('info-location').textContent = selectedCondition.location;
+  
+  [...document.querySelectorAll('.condition-btn')].forEach(btn => btn.classList.toggle('active', btn.dataset.id === selectedCondition.id));
+  
+  updateMap(); updateWiggersPaths();
+  buildManeuverList(); // Re-render accordion
+  
+  if(audio.isPlaying){ audio.stop(); setTimeout(()=>audio.play(), 60); }
+}
+
+function buildConditionList(){
+  conditionList.innerHTML = '';
+  HEART_CONDITIONS.forEach(cond => {
+    const btn = document.createElement('button');
+    btn.className = 'condition-btn rounded-2xl p-3 text-left w-full';
+    btn.dataset.id = cond.id;
+    btn.innerHTML = `<div class="text-[13px] font-bold leading-snug text-white">${cond.name}</div><div class="sub mt-1 text-[11px] font-medium leading-tight">${cond.shortDesc}</div>`;
+    btn.onclick = () => { selectedCondition = cond; audio.setCondition(cond.id); updateUI(); };
+    conditionList.appendChild(btn);
+  });
+}
+
+function buildManeuverList(){
+  maneuverList.innerHTML = '';
+  MANEUVERS.forEach(man => {
+    const isActive = man.id === selectedManeuver.id;
+    const fx = selectedCondition.maneuverEffects[man.id] || selectedCondition.maneuverEffects.baseline;
+    const fxTone = fx.effect || effectToneText(fx.amp||1);
+    const db = relativeDb(fx.amp || 1);
+
+    const wrap = document.createElement('div');
+    wrap.className = `rounded-2xl border ${isActive ? 'border-sky-500/40 bg-slate-800/60 shadow-lg' : 'border-transparent bg-slate-900/40 hover:bg-slate-800/40'} transition-all overflow-hidden`;
+
+    const btn = document.createElement('button');
+    btn.className = 'w-full p-3 text-left flex justify-between items-center';
+    btn.onclick = () => { selectedManeuver = man; audio.setManeuver(man.id); updateUI(); };
+    btn.innerHTML = `
+      <div>
+        <div class="text-[13px] font-bold ${isActive ? 'text-sky-400' : 'text-white'}">${man.name}</div>
+        <div class="text-[11px] font-medium ${isActive ? 'text-sky-300' : 'text-slate-400'}">${man.short}</div>
+      </div>
+      <i data-lucide="${isActive ? 'chevron-up' : 'chevron-down'}" class="h-4 w-4 ${isActive ? 'text-sky-400' : 'text-slate-500'}"></i>
+    `;
+
+    const details = document.createElement('div');
+    details.className = `px-3 pb-3 ${isActive ? 'block' : 'hidden'}`;
+    details.innerHTML = `
+      <div class="text-[12px] text-slate-300 bg-black/20 p-2.5 rounded-xl border border-white/5 mb-3 leading-relaxed">
+        ${man.note} <br>
+        <span class="text-sky-300 mt-1 inline-block border-l-2 border-sky-500 pl-2">Efek pada <b>${selectedCondition.name}</b>: <span class="font-bold underline decoration-sky-500/50 underline-offset-2">${fxTone}</span></span>
+      </div>
+      <div class="grid grid-cols-3 gap-2 mb-2">
+        <div class="bg-slate-900/50 p-2 rounded-lg text-center">
+          <div class="text-[9px] font-bold uppercase text-slate-500">Preload</div>
+          <div class="text-[11px] font-bold text-white mt-0.5">${man.preload}</div>
+        </div>
+        <div class="bg-slate-900/50 p-2 rounded-lg text-center">
+          <div class="text-[9px] font-bold uppercase text-slate-500">Afterload</div>
+          <div class="text-[11px] font-bold text-white mt-0.5">${man.afterload}</div>
+        </div>
+        <div class="bg-slate-900/50 p-2 rounded-lg text-center">
+          <div class="text-[9px] font-bold uppercase text-slate-500">Timing</div>
+          <div class="text-[11px] font-bold text-white mt-0.5">${man.timing}</div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div class="bg-sky-500/10 border border-sky-500/20 p-2 rounded-lg text-center">
+          <div class="text-[9px] font-bold uppercase text-sky-400">Efek Murmur</div>
+          <div class="text-[11px] font-bold text-sky-300 mt-0.5">${fxTone}</div>
+        </div>
+        <div class="bg-amber-500/10 border border-amber-500/20 p-2 rounded-lg text-center">
+          <div class="text-[9px] font-bold uppercase text-amber-400">Loudness</div>
+          <div class="text-[11px] font-bold text-amber-400 mt-0.5">${db}</div>
+        </div>
+      </div>
+    `;
+    
+    wrap.appendChild(btn); wrap.appendChild(details);
+    maneuverList.appendChild(wrap);
+  });
+  lucide.createIcons();
+}
+
+playBtn.addEventListener('click', () => {
+  if(audio.isPlaying){
+    audio.stop();
+    playBtn.classList.remove('bg-rose-500/10','text-rose-400','border-rose-500/50', 'play-active', 'hover:bg-rose-950/80', 'hover:border-rose-400');
+    playBtn.classList.add('bg-sky-500/10','text-sky-400','border-sky-500/40', 'hover:bg-sky-500/20', 'hover:border-sky-400');
+    playIcon.setAttribute('data-lucide','play'); playText.textContent='Putar Suara';
+    statusDot.classList.replace('bg-emerald-400','bg-slate-500'); statusDot.style.boxShadow = '0 0 8px rgba(100,116,139,0.8)';
+    statusText.classList.replace('text-emerald-300','text-slate-300'); statusText.textContent='STANDBY';
+  } else {
+    t = 0; wiggersEcgPts = []; wiggersPcgPts = [];
+    audio.play();
+    playBtn.classList.remove('bg-sky-500/10','text-sky-400','border-sky-500/40', 'hover:bg-sky-500/20', 'hover:border-sky-400');
+    playBtn.classList.add('bg-rose-500/10','text-rose-400','border-rose-500/50', 'play-active', 'hover:bg-rose-950/80', 'hover:border-rose-400');
+    playIcon.setAttribute('data-lucide','square'); playText.textContent='Stop Simulasi';
+    statusDot.classList.replace('bg-slate-500','bg-emerald-400'); statusDot.style.boxShadow = '0 0 10px rgba(52,211,153,0.8)';
+    statusText.classList.replace('text-slate-300','text-emerald-300'); statusText.textContent='MONITORING 60 BPM';
+  }
+  lucide.createIcons();
+});
+
+(function(){
+  const toggle = document.getElementById('theme-toggle'); let theme = 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+  toggle.addEventListener('click', ()=>{
+    theme = theme === 'dark' ? 'light' : 'dark';
+    if(theme === 'light'){
+      document.body.style.backgroundColor = '#f8fafc';
+      document.body.style.backgroundImage = 'radial-gradient(circle at 10% 10%, rgba(244,114,182,.12), transparent 25%), radial-gradient(circle at 90% 15%, rgba(14,211,238,.12), transparent 30%), radial-gradient(circle at 50% 100%, rgba(52,211,153,.1), transparent 40%)';
+      document.body.style.color = '#0f172a';
+    } else {
+      document.body.style.backgroundColor = '#020617';
+      document.body.style.backgroundImage = 'radial-gradient(circle at 15% 0%, rgba(14, 165, 233, 0.12), transparent 40%), radial-gradient(circle at 85% 15%, rgba(217, 70, 239, 0.12), transparent 40%), radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.08), transparent 50%)';
+      document.body.style.color = '#f8fafc';
+    }
+  });
+})();
+
+buildConditionList();
+updateUI(); 
+requestAnimationFrame(renderTrace);
+lucide.createIcons();
+</script>
+</body>
+</html>
