@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard Kardiologi V3 (PPDS & Calon PPDS)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* CSS untuk efek flip 3D */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        .card-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        .is-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        /* Custom Scrollbar for Light Theme */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05); 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2); 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.4); 
+        }
+
+        /* Tipografi untuk teks medis yang padat */
+        .answer-text {
+            line-height: 1.5;
+            letter-spacing: 0.01em;
+        }
+        .answer-text strong {
+            color: #b91c1c; /* red-700 */
+        }
+        .answer-text ul {
+            list-style-type: disc;
+            padding-left: 1.25rem;
+            margin-top: 0.25rem;
+            margin-bottom: 0.5rem;
+        }
+        .answer-text li {
+            margin-bottom: 0.25rem;
+        }
+        .answer-text em {
+            color: #64748b; /* Slate 500 */
+            font-style: italic;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen font-sans flex flex-col overflow-x-hidden selection:bg-red-500 selection:text-white">
+
+    <!-- Header -->
+    <header class="bg-red-800 text-white shadow-lg p-3 md:p-4 sticky top-0 z-20 border-b border-red-900">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0">
+            <div class="text-center sm:text-left">
+                <h1 class="text-lg sm:text-xl md:text-2xl font-bold flex items-center justify-center sm:justify-start gap-2 text-white">
+                    <span>🩺</span> Flashcard Kardiologi (PPDS)
+                </h1>
+                <p class="text-[10px] sm:text-xs md:text-sm text-red-200 font-medium tracking-wide">
+                    Varian 3 - Echo, Hemodinamik & Pembahasan Mendalam
+                </p>
+            </div>
+            <div class="text-[10px] sm:text-xs md:text-sm font-medium bg-red-900 px-3 py-1 rounded-full border border-red-500 shadow-sm text-center text-white">
+                Dev: Bayushi Eka Putra, MD, FIHA
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col items-center justify-start sm:justify-center p-4 md:p-8 max-w-4xl mx-auto w-full">
+        
+        <!-- Progress Info -->
+        <div class="w-full flex justify-between items-center mb-3 md:mb-4">
+            <span id="card-category" class="text-xs md:text-sm uppercase tracking-wider text-red-700 font-bold bg-red-100 border border-red-200 px-3 py-1 rounded shadow-sm">Kategori</span>
+            <span id="card-counter" class="text-xs md:text-sm bg-white px-3 py-1 rounded-full shadow-sm font-bold border border-slate-300 text-slate-700">1 / 50</span>
+        </div>
+
+        <!-- Flashcard Container -->
+        <div id="flashcard" class="relative w-full max-w-2xl h-[68vh] min-h-[480px] md:h-[550px] perspective-1000 cursor-pointer group mb-6 md:mb-8 touch-pan-y" onclick="toggleFlip(event)">
+            <div class="card-inner w-full h-full absolute transform-style-3d shadow-xl rounded-2xl md:rounded-3xl">
+                
+                <!-- Front (Question) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-white rounded-2xl md:rounded-3xl p-6 md:p-10 flex flex-col items-center justify-center text-center border-t-4 border-red-600 shadow-md">
+                    <div class="absolute top-4 left-5 text-slate-200 font-extrabold text-4xl md:text-5xl opacity-80">Q</div>
+                    <div class="w-full h-full flex flex-col justify-center overflow-y-auto custom-scrollbar pt-8 pb-8 pr-2">
+                        <p id="question-text" class="text-base sm:text-lg md:text-xl text-slate-800 font-bold leading-relaxed m-auto">
+                            Memuat pertanyaan...
+                        </p>
+                    </div>
+                    <div class="absolute bottom-4 text-xs md:text-sm text-slate-400 flex items-center gap-1 animate-pulse">
+                        <span class="hidden sm:inline">Ketuk kartu untuk melihat jawaban detail</span>
+                        <span class="sm:hidden">Ketuk: Jawaban • Usap: Lanjut</span>
+                    </div>
+                </div>
+
+                <!-- Back (Answer) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-slate-50 rounded-2xl md:rounded-3xl p-6 md:p-8 flex flex-col items-start justify-start text-left rotate-y-180 border-t-4 border-green-600 shadow-inner overflow-hidden ring-1 ring-black/5">
+                    <div class="absolute top-4 right-5 text-green-200 font-extrabold text-4xl md:text-5xl opacity-60">A</div>
+                    <div class="w-full h-full overflow-y-auto custom-scrollbar pt-8 pb-2 pr-4">
+                        <!-- Ukuran font diperkecil sedikit agar muat penjelasan panjang -->
+                        <div id="answer-text" class="answer-text text-xs sm:text-sm md:text-base text-slate-800 w-full font-medium">
+                            Memuat jawaban...
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="w-full max-w-2xl grid grid-cols-2 sm:flex sm:flex-row justify-center gap-3 md:gap-4 pb-8">
+            <button onclick="prevCard()" class="col-span-1 bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-sm transition-all border border-slate-300 flex justify-center items-center gap-1 active:scale-95">
+                <span>&larr;</span> <span class="hidden sm:inline">Sebelumnya</span><span class="sm:hidden">Prev</span>
+            </button>
+            <button onclick="nextCard()" class="col-span-1 bg-red-800 hover:bg-red-900 text-white font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-md transition-all flex justify-center items-center gap-1 active:scale-95">
+                <span class="hidden sm:inline">Selanjutnya</span><span class="sm:hidden">Next</span> <span>&rarr;</span>
+            </button>
+            <button onclick="shuffleCards()" class="col-span-2 sm:col-span-1 order-last sm:order-none bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm md:text-base py-3 md:py-4 px-4 md:px-6 rounded-xl shadow-md transition-all flex justify-center items-center active:scale-95">
+                Acak (Shuffle)
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        // Data Flashcard Varian 3 (PPDS & Calon PPDS)
+        // Penjelasan Diperdalam: Klinis, Guideline, Angka Normal, & Pitfalls.
+        const originalCards = [
+            // --- BAGIAN 1: Hemodinamik & Angiografi Koroner (10 Soal) ---
+            { 
+                cat: "Hemodinamik & Cath", 
+                q: "Jelaskan prinsip dan rumus Fick (Direct Fick Method) untuk menghitung Cardiac Output (CO) di ruang kateterisasi (Cathlab) beserta kelemahan utamanya!", 
+                a: `<strong>Prinsip:</strong> Berdasarkan hukum konservasi massa, aliran darah ke paru (CO) = O2 yang diabsorpsi paru (VO2) dibagi perbedaan konsentrasi O2 antara darah arteri dan vena campuran.<br><br>
+                    <strong>Rumus CO (L/menit):</strong><br>
+                    CO = VO2 / [ (SaO2 - SvO2) × Hemoglobin × 1.36 × 10 ]<br>
+                    <em>Dimana 1.36 adalah kapasitas pengikatan O2 oleh 1 gram Hb.</em><br><br>
+                    <strong>Pitfall / Kelemahan Klinis:</strong><br>
+                    <ul>
+                        <li><strong>Asumsi VO2:</strong> Pengukuran VO2 aktual sangat sulit (butuh sungkup metabolik). Seringkali hanya diasumsikan (Rumus LaFarge/Dehmer) sebesar <em>125 ml/min/m²</em> BSA atau <em>3 ml/kg/min</em>. Asumsi ini tidak akurat pada pasien syok, sepsis, atau obesitas.</li>
+                        <li>Sangat bergantung pada akurasi sampling SvO2 (darah arteri pulmonalis). Jika ada <em>left-to-right shunt</em>, SvO2 akan tinggi palsu (step-up), membuat kalkulasi CO sistemik menjadi salah kaprah.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Hemodinamik & Cath", 
+                q: "Pada pemeriksaan angiografi koroner (CAG), bagaimana cara menentukan 'Dominansi Koroner' dan apa makna klinis prognostiknya?", 
+                a: `<strong>Penentuan:</strong> Dominansi ditentukan BUKAN dari ukuran, melainkan arteri mana yang melewati <em>Crux Cordis</em> untuk memberikan cabang <strong>Posterior Descending Artery (PDA)</strong> dan <strong>Posterolateral (PLV)</strong>.<br>
+                    <ul>
+                        <li><strong>Right Dominant (~80-85%):</strong> PDA & PLV dari RCA.</li>
+                        <li><strong>Left Dominant (~10%):</strong> PDA & PLV dari LCx (RCA biasanya kecil dan non-dominan).</li>
+                        <li><strong>Co-dominant (~5-10%):</strong> PDA dari RCA, PLV dari LCx.</li>
+                    </ul>
+                    <strong>Makna Klinis Prognostik:</strong> Pasien dengan <strong>Left Dominant</strong> memiliki prognosis yang jauh lebih buruk jika terjadi oklusi proksimal Left Main (LM) atau LAD proksimal (STEMI). Hal ini karena nyaris >80% suplai miokardium ventrikel kiri (termasuk septum inferior dan dinding posterior) bergantung hanya pada sistem koroner kiri tanpa kompensasi dari RCA.` 
+            },
+            { 
+                cat: "Hemodinamik & Cath", 
+                q: "Proyeksi Angiografi Koroner: Proyeksi apa yang paling ideal untuk melihat bifurkasio Left Main proksimal, LAD, dan LCx ('Spider View') dan mengapa disebut demikian?", 
+                a: `<strong>Proyeksi:</strong> <strong>LAO Caudal</strong> (Left Anterior Oblique 40°-50° dan Caudal 30°-40°).<br><br>
+                    <strong>Anatomi yang Terekspos:</strong><br>
+                    Pada <em>view</em> ini, sinar-X memotong tegak lurus terhadap bidang bifurkasio Left Main. Ini membuka ostium LCx dan LAD dengan sangat jelas tanpa <em>overlap</em> dengan pembuluh darah lain.<br><br>
+                    <strong>Mengapa 'Spider View'?</strong><br>
+                    Karena penampakan angiografisnya: Ujung kateter di LM terlihat di bagian atas (kepala/tubuh laba-laba), lalu bercabang ke bawah menjadi LAD, Ramus Intermedius (jika ada), dan LCx beserta cabang OM-nya, yang menyebar menyerupai kaki-kaki laba-laba.` 
+            },
+            { 
+                cat: "Hemodinamik & Cath", 
+                q: "Pada pengukuran Pulmonary Capillary Wedge Pressure (PCWP) menggunakan Swan-Ganz, apa definisi 'Giant v-wave' dan pada kondisi apa ini ditemukan?", 
+                a: `<strong>Definisi:</strong> Gelombang 'v' pada PCWP merepresentasikan pengisian pasif atrium kiri. <strong>Giant v-wave</strong> didefinisikan secara hemodinamik jika tinggi amplitudo gelombang V <strong>lebih dari 2 kali lipat</strong> (atau >10 mmHg di atas) mean PCWP (misal: mean PCWP 15, gelombang V > 30 mmHg).<br><br>
+                    <strong>Kondisi Klasik (Patognomonis):</strong><br>
+                    <strong>Mitral Regurgitation (MR) Akut Berat.</strong><br>
+                    Terjadi akibat ruptur korda/papilari (paska IMA). Darah menyemprot balik masif ke LA yang masih berukuran kecil/kaku selama sistol ventrikel (LA belum sempat dilatasi kompensasi seperti pada MR kronik).<br><br>
+                    <em>Note: Giant V-wave juga bisa ditemukan pada kondisi tanpa MR murni, yaitu pada penurunan drastis compliance LA (misal: iskemik berat yang tiba-tiba membuat LVEDP melonjak, 'stiff LA syndrome').</em>` 
+            },
+            { 
+                cat: "Hemodinamik & Cath", 
+                q: "Bagaimana cara membedakan Tamponade Jantung vs Perikarditis Konstriktif pada tracing tekanan hemodinamik invasif (Swan-Ganz / Pigtail)?", 
+                a: `<strong>1. Tamponade Jantung (Patologi di cairan/tekanan):</strong><br>
+                    <ul>
+                        <li><strong>Equalization of Diastolic Pressures:</strong> Tekanan diastolik RA = RV = LA (PCWP) = LV (semua berkisar 15-20 mmHg).</li>
+                        <li><strong>Pulsus Paradoxus Invasif:</strong> Tekanan sistolik aorta/arteri sistemik turun > 10 mmHg saat inspirasi.</li>
+                        <li>Gelombang 'y' descent menghilang (blunted).</li>
+                    </ul>
+                    <strong>2. Perikarditis Konstriktif (Patologi di perikard kaku):</strong><br>
+                    <ul>
+                        <li><strong>Dip-and-Plateau (Square Root Sign):</strong> Kurva RV/LV diastolik menunjukkan penurunan awal tajam (dip) lalu mendatar (plateau) karena ventrikel terbentur perikard kaku.</li>
+                        <li><strong>Prominent y-descent:</strong> Gelombang 'y' pada kurva RA turun sangat curam menyerupai huruf M atau W.</li>
+                        <li><strong>Ventricular Interdependence:</strong> Saat inspirasi, tekanan sistolik RV NAIK dan LV TURUN secara berlawanan (discordant).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Hemodinamik & Cath", 
+                q: "Sebutkan indikasi utama dan kontraindikasi absolut dari pemasangan Intra-Aortic Balloon Pump (IABP)!", 
+                a: `<strong>Indikasi Utama (Class IIa/IIb):</strong><br>
+                    Syok kardiogenik dengan komplikasi mekanik IMA (Ruptur septum/VSD, Ruptur muskulus papilaris) sebagai jembatan menuju bedah (<em>bridge to surgery</em>). Serta dukungan hemodinamik pada PCI risiko tinggi (CHIP).<br><br>
+                    <strong>Kontraindikasi Absolut:</strong><br>
+                    <ul>
+                        <li><strong>Regurgitasi Aorta (AR) sedang-berat:</strong> IABP mengembang (inflasi) saat diastol untuk meningkatkan perfusi koroner. Jika ada AR, tekanan IABP justru akan menyemprotkan darah balik ke ventrikel kiri, menyebabkan LV <em>overload</em> mematikan.</li>
+                        <li><strong>Diseksi Aorta atau Aneurisma Aorta Abdominalis besar:</strong> Inflasi balon dapat merobek dinding aorta lebih lanjut.</li>
+                        <li><strong>Sepsis berat / Perdarahan tak terkontrol.</strong></li>
+                    </ul>` 
+            },
+            { 
+                cat: "Hemodinamik & Cath", 
+                q: "Jelaskan prinsip kerja Fractional Flow Reserve (FFR) pada lesi koroner intermediate, beserta nilai cut-off dan jebakan (pitfall) utamanya!", 
+                a: `<strong>Prinsip:</strong> FFR adalah indeks spesifik-lesi yang menghitung rasio aliran darah maksimal di miokard pada area stenotik dibandingkan jika tidak ada stenosis. Dihitung sebagai: <strong>Pd (Tekanan Distal) / Pa (Tekanan Aorta)</strong> saat kondisi <strong>Hiperemia Maksimal</strong> (dilatasi mikrovaskular total oleh Adenosin IV 140 mcg/kg/min).<br><br>
+                    <strong>Cut-off Iskemik:</strong> <strong>≤ 0.80</strong> (Indikasi jelas untuk PCI / Stenting). Jika > 0.80, aman dikelola dengan obat saja.<br><br>
+                    <strong>Pitfall Utama:</strong><br>
+                    Karena FFR mengandalkan resistensi mikrovaskular (R) yang turun maksimal, jika pasien memiliki <strong>Disfungsi Mikrovaskular Berat (CMD)</strong> atau infark akut (AMI), mikrovaskular tidak bisa dilatasi. Hal ini menyebabkan aliran melambat (R tetap tinggi), sehingga gradien Pd/Pa menjadi kecil. Akibatnya FFR menjadi <strong>Negatif Palsu (False Negative, >0.80)</strong> meski lesi epikardialnya parah.` 
+            },
+            { 
+                cat: "Hemodinamik & Cath", 
+                q: "Dalam prosedur oksimetri jantung kanan (Right Heart Cath), apa yang dimaksud dengan 'Oxygen Step-Up' dan berapa batas nilai signifikannya untuk mendiagnosis ASD vs VSD?", 
+                a: `<strong>Definisi:</strong> 'Step-up' oksigen adalah lonjakan (peningkatan tak wajar) pada saturasi oksigen darah vena saat kateter bergerak maju ke ruang jantung berikutnya, yang menandakan masuknya darah teroksigenasi murni akibat <em>Left-to-Right Shunt</em>.<br><br>
+                    <strong>Batas Nilai Signifikan (Diagnostic Cut-off):</strong><br>
+                    <ul>
+                        <li><strong>Untuk ASD (Level Atrium):</strong> Peningkatan saturasi O2 <strong>≥ 7%</strong> antara Vena Cava (SVC/IVC rata-rata) ke Atrium Kanan (RA).</li>
+                        <li><strong>Untuk VSD (Level Ventrikel):</strong> Peningkatan saturasi O2 <strong>≥ 5%</strong> antara Atrium Kanan (RA) ke Ventrikel Kanan (RV).</li>
+                        <li><strong>Untuk PDA (Level Arteri Besar):</strong> Peningkatan saturasi O2 <strong>≥ 5%</strong> antara Ventrikel Kanan (RV) ke Arteri Pulmonalis (PA).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Hemodinamik & Cath", 
+                q: "Bagaimana rumus menghitung Pulmonary Vascular Resistance (PVR) di Cathlab? Apa nilai normalnya dan cut-off terbaru untuk Hipertensi Pulmonal Pre-Kapiler?", 
+                a: `<strong>Rumus PVR (Wood Units):</strong><br>
+                    PVR = (mPAP - PCWP) / CO<br>
+                    <em>Ket: mPAP (Mean Pulmonary Artery Pressure), PCWP (Pulmonary Capillary Wedge Pressure), CO (Cardiac Output).</em><br><br>
+                    <strong>Nilai Normal:</strong> < 1.0 - 1.5 Wood Units (WU).<br><br>
+                    <strong>Cut-off Hipertensi Pulmonal (Update ESC 2022):</strong><br>
+                    Hipertensi Pulmonal <em>Pre-kapiler</em> (Group 1 PAH / Group 3) ditegakkan jika:
+                    <ol>
+                        <li>mPAP > 20 mmHg (turun dari kriteria lama >25 mmHg)</li>
+                        <li>PCWP ≤ 15 mmHg</li>
+                        <li>PVR <strong>> 2 Wood Units</strong> (turun dari kriteria lama > 3 WU). Perubahan ini untuk menangkap penyakit pembuluh darah paru di tahap lebih dini.</li>
+                    </ol>` 
+            },
+            { 
+                cat: "Hemodinamik & Cath", 
+                q: "Bagaimana membedakan Severe Pulmonic Stenosis (PS) dari Hipertensi Pulmonal Primer murni berdasarkan tekanan sistolik/diastolik RV dan PA di Cathlab?", 
+                a: `Pembedaan ini krusial dan dilihat dari <strong>Gradien Tekanan Sistolik</strong> melintasi katup pulmonal.<br><br>
+                    <strong>1. Pulmonic Stenosis (PS) Berat:</strong><br>
+                    <ul>
+                        <li>Tekanan <strong>Sistolik RV sangat tinggi</strong> (bisa 80-100 mmHg karena memompa melawan katup sempit).</li>
+                        <li>Tekanan <strong>Sistolik PA normal atau justru rendah</strong> (misal 15-20 mmHg).</li>
+                        <li>Terdapat perbedaan/gradien sistolik mencolok (peak-to-peak gradient > 40-50 mmHg) antara RV dan PA.</li>
+                    </ul>
+                    <strong>2. Hipertensi Pulmonal Primer (PAH):</strong><br>
+                    <ul>
+                        <li>Tekanan Sistolik RV dan PA <strong>keduanya sama-sama tinggi</strong> (misal RV 80 mmHg, PA juga 80/40 mmHg).</li>
+                        <li>Tidak ada perbedaan gradien sistolik antara RV dan PA (katup pulmonal normal, tahanannya ada jauh di mikrovaskular paru).</li>
+                    </ul>` 
+            },
+
+            // --- BAGIAN 2: Ekokardiografi Dasar & Menengah (10 Soal) ---
+            { 
+                cat: "Ekokardiografi", 
+                q: "Sebutkan 3 parameter utama Ekokardiografi beserta cut-off nilainya untuk mendiagnosis Stenosis Aorta (AS) Derajat Berat, dan bagaimana jika pasien mengalami Low-Flow Low-Gradient (LFLG)?", 
+                a: `<strong>Kriteria Klasik Severe AS:</strong><br>
+                    1. <strong>Aortic Valve Area (AVA)</strong>: ≤ 1.0 cm² (atau AVA index ≤ 0.6 cm²/m²).<br>
+                    2. <strong>Peak Jet Velocity (Vmax)</strong>: ≥ 4.0 m/s.<br>
+                    3. <strong>Mean Transvalvular Gradient</strong>: ≥ 40 mmHg.<br><br>
+                    <strong>Low-Flow, Low-Gradient (LFLG) AS:</strong><br>
+                    Jika AVA ≤ 1.0 cm² (menunjukkan berat) TETAPI Mean Gradient < 40 mmHg dan LVEF menurun (<50%). Untuk membuktikan ini bukan <em>pseudosevere AS</em> akibat pompa LV yang lemah, lakukan <strong>Dobutamine Stress Echocardiography (DSE)</strong>. <br>
+                    Jika setelah dobutamin, SV meningkat >20% dan gradient naik >40 mmHg (namun AVA tetap <1.0), itu adalah <strong>True Severe AS</strong> yang butuh intervensi (TAVR/SAVR).` 
+            },
+            { 
+                cat: "Ekokardiografi", 
+                q: "Selain TAPSE, sebutkan 2 parameter ekokardiografi kuantitatif lainnya yang sering digunakan untuk menilai disfungsi sistolik Ventrikel Kanan (RV) beserta nilai normalnya!", 
+                a: `Selain TAPSE (< 17 mm menandakan disfungsi), guideline ASE merekomendasikan:<br>
+                    <strong>1. RV Fractional Area Change (RV FAC):</strong><br>
+                    Menghitung perubahan luas area RV dari end-diastole ke end-systole pada Apical 4-chamber. Meliputi otot RV secara dua dimensi (tidak hanya longitudinal).<br>
+                    <em>Cut-off Abnormal:</em> <strong>< 35%</strong>.<br><br>
+                    <strong>2. Tissue Doppler Imaging (TDI) S' Wave:</strong><br>
+                    Mengukur kecepatan puncak kontraksi otot (Peak systolic velocity) dari annulus trikuspid lateral.<br>
+                    <em>Cut-off Abnormal:</em> <strong>< 9.5 cm/detik</strong>.<br><br>
+                    <em>Parameter tambahan canggih: RV Global Longitudinal Strain (GLS) abnormal jika > -20%.</em>` 
+            },
+            { 
+                cat: "Ekokardiografi", 
+                q: "Jelaskan tanda-tanda spesifik Tamponade Jantung pada evaluasi Ekokardiografi dan patofisiologi 'Diastolic Collapse'!", 
+                a: `Tanda patognomonis Tamponade secara Echo:<br>
+                    <ul>
+                        <li><strong>Right Atrial (RA) Systolic Collapse:</strong> Dinding RA melesak ke dalam saat akhir diastol/sistol (karena tekanan perikard melebihi tekanan RA minimal). Paling sensitif, muncul paling awal.</li>
+                        <li><strong>Right Ventricular (RV) Diastolic Collapse:</strong> Dinding bebas RV kolaps ke dalam saat pengisian awal diastol. <strong>Lebih spesifik</strong> (tanda syok impending).</li>
+                        <li><strong>Plethoric IVC:</strong> Vena cava inferior lebar (>2.1 cm) tanpa kolaps saat inspirasi <50%.</li>
+                        <li><strong>Variasi Mitral/Trikuspid Inflow (Pulsus Paradoxus Echo):</strong> Aliran Doppler katup Trikuspid naik >40% saat inspirasi, sedangkan Mitral turun >25% (Ventricular interdependence).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Ekokardiografi", 
+                q: "Dalam algoritma evaluasi Disfungsi Diastolik Ventrikel Kiri (Guideline ASE 2016), sebutkan 4 variabel utama yang digunakan untuk mendiagnosis peningkatan LVEDP!", 
+                a: `Untuk mendiagnosis disfungsi diastolik pada pasien dengan LVEF normal (HFpEF suspect), diperlukan ≥ 50% (lebih dari 2) dari 4 variabel berikut bernilai positif:<br>
+                    1. <strong>Rasio E/e' rata-rata (Average E/e')</strong>: <strong>> 14</strong>. (Menandakan tekanan pengisian / LVEDP tinggi).<br>
+                    2. <strong>Septal e' velocity</strong>: < 7 cm/s ATAU <strong>Lateral e' velocity</strong>: < 10 cm/s.<br>
+                    3. <strong>Tricuspid Regurgitation (TR) Peak Velocity</strong>: <strong>> 2.8 m/s</strong>. (Menandakan komplikasi hipertensi paru paska-kapiler).<br>
+                    4. <strong>Left Atrial Volume Index (LAVI)</strong>: <strong>> 34 mL/m²</strong>. (Bentuk remodeling LA kronis akibat tekanan diastolik tinggi).` 
+            },
+            { 
+                cat: "Ekokardiografi", 
+                q: "Berapa nilai planimetri Mitral Valve Area (MVA) yang mengklasifikasikan Stenosis Mitral (MS) derajat Berat (Severe), dan skor apa yang digunakan untuk menilai kelayakan Balloon Mitral Valvuloplasty (BMV)?", 
+                a: `<strong>Cut-off Severe MS:</strong> Mitral Valve Area (MVA) <strong>≤ 1.5 cm²</strong> (MVA ≤ 1.0 cm² sering disebut Very Severe).<br><br>
+                    <strong>Sistem Skoring BMV / PTMC: Wilkins Score.</strong><br>
+                    Menilai 4 komponen anatomi katup menggunakan echo (masing-masing skor 1-4, total maksimal 16):
+                    <ul>
+                        <li><strong>M</strong>obility (Mobilitas daun katup)</li>
+                        <li><strong>T</strong>hickness (Ketebalan daun katup)</li>
+                        <li><strong>C</strong>alcification (Kalsifikasi katup)</li>
+                        <li><strong>S</strong>ubvalvular apparatus (Penebalan/fusi korda tendinea)</li>
+                    </ul>
+                    <em>Keputusan:</em> Skor <strong>≤ 8</strong> adalah kandidat ideal untuk BMV/PTMC. Skor > 8-10 mengindikasikan katup terlalu kaku/hancur, lebih baik dirujuk untuk bedah ganti katup (MVR).` 
+            },
+            { 
+                cat: "Ekokardiografi", 
+                q: "Sebutkan 3 kelemahan/limitasi utama dari perhitungan LVEF menggunakan metode Teichholz (M-Mode) dibandingkan dengan Metode Simpson Biplane (2D/3D)!", 
+                a: `Metode Teichholz adalah perhitungan kuno (menggunakan ukuran LVEDD dan LVESD) dengan rumus asumsi geometris.<br><br>
+                    <strong>Kelemahan Teichholz:</strong><br>
+                    1. <strong>Asumsi Geometri Bulat/Peluru:</strong> Asumsi ini runtuh jika bentuk LV distorsi (misal aneurisma apikal paska infark).<br>
+                    2. <strong>Hanya Mengukur Satu Dimensi (Sumbu Basal):</strong> Sinar M-Mode hanya menembus basal ventrikel. Jika pasien mengalami <em>Regional Wall Motion Abnormality</em> (RWMA) di area apeks (misal STEMI LAD), metode ini akan buta terhadap kerusakan apikal tersebut dan menghasilkan <strong>LVEF tinggi palsu (False Normal)</strong>.<br>
+                    3. <strong>Pengaruh Translasi Jantung:</strong> Pergeseran mekanis jantung saat sistol membuat kursor M-mode memotong segmen otot yang berbeda antara sistol dan diastol.<br>
+                    <em>Oleh karena itu, Guideline ASE mewajibkan metode Simpson Biplane (menjiplak endokardium seluruh kavitas 4-chamber & 2-chamber).</em>` 
+            },
+            { 
+                cat: "Ekokardiografi", 
+                q: "Pada potongan Parasternal Short Axis (PSAX), ventrikel kiri tampak pipih menyerupai huruf 'D' (D-shape LV). Jelaskan beda patofisiologi D-Shape saat diastol murni vs sistol-diastol!", 
+                a: `D-shape LV terjadi karena desakan septum interventrikuler ke arah kiri akibat <strong>Right Ventricular (RV) Overload</strong> yang tekanan/volumenya mengalahkan LV.<br><br>
+                    <ul>
+                        <li><strong>D-Shape HANYA saat Diastol (Volume Overload RV):</strong><br>
+                        Terjadi karena RV terisi volume darah sangat besar (misal: <em>ASD besar, Tricuspid Regurgitation parah</em>). Saat diastol, volume ini mendorong septum. Namun saat sistol, tekanan LV masih menang (120 mmHg vs RV 30 mmHg) sehingga septum kembali bulat di sistol.</li>
+                        <li><strong>D-Shape saat Sistol & Diastol (Pressure Overload RV):</strong><br>
+                        Terjadi karena tekanan (pressure) RV meningkat setara atau melampaui tekanan sistemik LV (misal: <em>Primary Pulmonary Hypertension, Emboli Paru Masif</em>). Tekanan RV yang sangat tinggi (> 80 mmHg) menahan septum tetap gepeng di sepanjang siklus jantung.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Ekokardiografi", 
+                q: "Dalam evaluasi Endokarditis Infektif (IE) dengan Echo, jika dicurigai ada komplikasi Abses Aortic Root, modalitas apa yang paling sensitif dan apa tanda utamanya?", 
+                a: `<strong>Modalitas:</strong> <strong>Transesophageal Echocardiography (TEE).</strong><br>
+                    Transthoracic Echo (TTE) memiliki sensitivitas buruk (<50%) untuk abses akar aorta akibat terhalang tulang/paru dan letak katup yang dalam. TEE (probe di esofagus langsung di belakang atrium kiri) memiliki sensitivitas > 90%.<br><br>
+                    <strong>Tanda Utama Abses Root:</strong><br>
+                    <ul>
+                        <li>Terdapat ruang *echo-lucent* (hitam/kistik) atau penebalan dinding jaringan irreguler yang membesar di sekitar annulus katup aorta (biasanya meluas ke *mitral-aortic intervalvular fibrosa*).</li>
+                        <li>Jika abses pecah, Doppler berwarna akan menunjukkan aliran darah berdenyut bolak-balik di dalam kavitas abses tersebut (Pseudoaneurisma akar aorta).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Ekokardiografi", 
+                q: "Apa yang dimaksud dengan fenomena 'SAM' (Systolic Anterior Motion) pada Ekokardiografi, dan bagaimana ini bisa menyebabkan Regurgitasi Mitral (MR)?", 
+                a: `<strong>SAM (Systolic Anterior Motion)</strong> adalah tertariknya daun katup mitral anterior (AML) secara abnormal ke depan menuju septum interventrikuler selama fase sistol.<br><br>
+                    <strong>Patofisiologi:</strong><br>
+                    Paling sering terjadi pada <strong>Hypertrophic Obstructive Cardiomyopathy (HOCM)</strong>. Hipertrofi septum basal yang ekstrem mempersempit aliran darah (LVOT). Aliran darah berkecepatan tinggi yang melewati lorong sempit ini menciptakan efek vakum (<em>Venturi effect</em>) dan daya tarik hidro-mekanis (<em>Drag force</em>) yang menyedot leaflet mitral ke depan, menutup total jalur LVOT.<br><br>
+                    <strong>Penyebab MR:</strong> Karena daun anterior tersedot ke depan septum, ia gagal ber-koaptasi (menutup rapat) dengan daun posterior di puncaknya. Celah ini menyebabkan darah bocor ke atrium kiri, membentuk MR yang secara klasik berekor/mengarah ke <strong>posterior/lateral</strong>.` 
+            },
+            { 
+                cat: "Ekokardiografi", 
+                q: "Regional Wall Motion Abnormality (RWMA) digunakan untuk melokalisir iskemik koroner. Jika segmen Inferior dan Inferoseptal basal hipokinetik, arteri mana yang tersumbat dan *view* apa yang terbaik?", 
+                a: `<strong>Arteri Koroner yang Tersumbat:</strong><br>
+                    Segmen Inferior (Dinding bawah yang menempel diafragma) dan Inferoseptal (Septum bagian bawah) divaskularisasi terutama oleh cabang <strong>Posterior Descending Artery (PDA)</strong>, yang pada orang *right-dominant* (80% populasi) berasal dari <strong>Right Coronary Artery (RCA)</strong>.<br><br>
+                    <strong>Pandangan (*Views*) Terbaik di Ekokardiografi:</strong><br>
+                    <ul>
+                        <li><strong>Apical 2-Chamber:</strong> Sangat ideal untuk melihat murni dinding Inferior (bawah) dan Anterior (atas).</li>
+                        <li><strong>Parasternal Short Axis (PSAX) level otot papilaris:</strong> Sangat berguna untuk melihat seluruh 6 segmen secara melingkar (Inferior di arah jam 6, Inferoseptal di arah jam 7-8).</li>
+                    </ul>` 
+            },
+
+            // --- BAGIAN 3: EKG & Elektrofisiologi Dasar (10 Soal) ---
+            { 
+                cat: "EKG & Elektrofisiologi", 
+                q: "Bagaimana membedakan Takikardia QRS Lebar (VT vs SVT Aberan) menggunakan Langkah 1 & 2 Algoritma Brugada?", 
+                a: `Algoritma Brugada dirancang spesifik untuk VT (Sensitivitas 98%, Spesifisitas 96%).<br><br>
+                    <strong>Langkah 1: 'Absence of an RS complex' (Kongkordansi).</strong><br>
+                    Lihat sadapan V1-V6. Jika semua kompleks QRS murni positif (R wave tinggi semua tanpa gelombang S) ATAU murni negatif (QS complex semua tanpa gelombang R), maka diagnosis = <strong>Ventricular Tachycardia (VT)</strong>. Jika ada RS, lanjut langkah 2.<br><br>
+                    <strong>Langkah 2: Interval R-S > 100 ms.</strong><br>
+                    Ukur waktu dari awal gelombang R hingga nadir (titik terdalam) gelombang S di salah satu sadapan prekordial. Jika lebarnya > 100 ms (2.5 kotak kecil), maka diagnosis = <strong>VT</strong>. Jika < 100 ms, lanjut cek disosiasi AV (Langkah 3).` 
+            },
+            { 
+                cat: "EKG & Elektrofisiologi", 
+                q: "Dalam mendiagnosis AMI pada pasien dengan LBBB baru/lama, kriteria Sgarbossa konvensional dirasa kurang sensitif. Apa itu 'Modified Sgarbossa Criteria' (Smith Rule) yang meningkatkan akurasi?", 
+                a: `Kriteria Sgarbossa konvensional poin ke-3 (Discordant ST elevasi > 5 mm) memiliki spesifisitas baik tapi sensitivitas sangat buruk, karena pasien dengan QRS yang sangat dalam wajar memiliki ST elevasi yang ikut tinggi (>5mm).<br><br>
+                    <strong>Modified Sgarbossa (Smith Rule):</strong><br>
+                    Mengganti kriteria absolut 5 mm dengan kriteria proporsional. Elevasi segmen ST yang diskordan dianggap patologis/iskemik JIKA <strong>rasio antara tinggi ST Elevasi dibagi dengan kedalaman gelombang S (ST/S ratio) bernilai ≤ -0.25</strong> (atau secara kasar ST elevasi tingginya > 25% dari kedalaman gelombang S di bawahnya). Kriteria tunggal ini saja cukup diagnostik untuk STEMI ekuivalen pada LBBB.` 
+            },
+            { 
+                cat: "EKG & Elektrofisiologi", 
+                q: "Apa gambaran EKG khas dari Sindrom Brugada Tipe 1 (Coved-type), dan apa pemicu mematikan yang harus dihindari mutlak (Kontraindikasi)?", 
+                a: `<strong>Kriteria EKG Brugada Tipe 1:</strong><br>
+                    Elevasi segmen ST yang melengkung cembung ke atas (<strong>Coved-type ST elevation</strong>) <strong>≥ 2 mm (0.2 mV)</strong>, diikuti gelombang T negatif simetris, pada sadapan V1 dan/atau V2 (seringkali harus dinaikkan posisinya ke spatium interkostal ke-2 atau ke-3).<br><br>
+                    <strong>Pemicu Mematikan (Triggers) yang Harus Dihindari:</strong><br>
+                    1. <strong>Obat-obatan Sodium Channel Blocker (Class IC):</strong> Flecainide, Propafenone. (Juga beberapa antidepresan trisiklik).<br>
+                    2. <strong>Demam Tinggi (Fever):</strong> Demam sering memunculkan EKG tipe 1 (<em>fever-induced Brugada</em>) dan mencetuskan VF/SCD pada anak/dewasa muda. Demam harus segera diturunkan agresif dengan Parasetamol.<br>
+                    3. <strong>Alkohol dan Kokain.</strong>` 
+            },
+            { 
+                cat: "EKG & Elektrofisiologi", 
+                q: "Jelaskan mekanisme patofisiologi re-entry pada AVNRT Tipikal (Slow-Fast) dan mengapa obat Adenosin IV sangat efektif memutusnya!", 
+                a: `<strong>Mekanisme AVNRT (Slow-Fast):</strong><br>
+                    Pasien memiliki 2 jalur (Dual AV Node Physiology): Jalur Lambat (Slow, refrakter cepat pulih) dan Jalur Cepat (Fast, refrakter lama pulih). Saat terjadi ektopik atrium prematur (PAC), impuls ini terblokir di Fast pathway (masih refrakter), sehingga turun pelan melalui <em>Slow pathway</em>. Saat sampai di ujung bawah, Fast pathway sudah pulih, sehingga impuls putar balik secara retrograde ke atrium dengan sangat cepat. Siklus ini berulang membentuk Takikardia.<br><br>
+                    <strong>Mengapa Adenosin Efektif?</strong><br>
+                    Adenosin berikatan dengan reseptor A1 miokardial yang membuka kanal ion Kalium (K+ efflux). Ini menyebabkan hiperpolarisasi ekstrem dan <strong>blokade total transien di AV Node</strong> selama 5-10 detik. Hal ini menghentikan sirkuit konduksi (terutama di <em>slow pathway</em>), mereset jantung dan mengembalikan irama sinus asli.` 
+            },
+            { 
+                cat: "EKG & Elektrofisiologi", 
+                q: "Apa karakteristik EKG dari Sindrom Wolff-Parkinson-White (WPW) tipe Pre-eksitasi, dan obat apa yang KONTRAINDIKASI jika pasien WPW masuk AF dengan respon ventrikel cepat?", 
+                a: `<strong>Trias EKG WPW:</strong><br>
+                    1. Interval PR memendek (< 120 ms).<br>
+                    2. Gelombang Delta (Delta Wave): Upsloping lambat di awal kompleks QRS.<br>
+                    3. Kompleks QRS melebar (> 120 ms).<br><br>
+                    <strong>Kontraindikasi Mutlak saat terjadi Pre-excited AF (AF + WPW):</strong><br>
+                    <strong>Obat Pemblokir Nodus AV (AV Node Blocking Agents): Digoxin, Verapamil, Diltiazem, Beta-blocker, Amiodaron (kontroversial).</strong><br>
+                    <em>Alasan:</em> Jika nodus AV diblokir, ratusan impuls Fibrilasi Atrium (300-600x/m) tidak punya hambatan dan akan turun 100% (1:1) melalui <em>Accessory Pathway</em> (Jalur Kent) langsung ke ventrikel. Ini akan langsung memicu Fibrilasi Ventrikel (VF) yang mematikan. Tatalaksana utamanya adalah Procainamide IV atau Kardioversi Elektrik segera.` 
+            },
+            { 
+                cat: "EKG & Elektrofisiologi", 
+                q: "Sebutkan sistem pengkodean 3 huruf pertama alat Pacu Jantung (Pacemaker) berdasarkan NBG code, dan jelaskan cara kerja mode 'DDD'!", 
+                a: `<strong>Urutan Kode NBG:</strong><br>
+                    Huruf ke-1: Ruang yang di-<strong>P</strong>acing (A=Atrium, V=Ventrikel, D=Dual).<br>
+                    Huruf ke-2: Ruang yang di-<strong>S</strong>ensing/dibaca (A, V, D).<br>
+                    Huruf ke-3: Respon alat terhadap Sensing (I=Inhibit, T=Trigger, D=Dual Inhibit/Trigger).<br><br>
+                    <strong>Cara Kerja Mode DDD (Fisiologis):</strong><br>
+                    Alat memacu di Atrium dan Ventrikel, serta membaca di kedua ruang tersebut.<br>
+                    • Jika sinus pasien lambat, alat memacu Atrium.<br>
+                    • Alat 'membaca' depolarisasi Atrium (P wave) lalu menunggu interval AV. Jika ventrikel tidak berdenyut dalam batas waktu itu (AV block), alat akan <em>Trigger</em> (Memicu) pacuan ventrikel.<br>
+                    • Jika ventrikel pasien berdenyut normal/prematur, alat akan <em>Inhibit</em> (Menahan) diri agar tidak memacu tumpang tindih.` 
+            },
+            { 
+                cat: "EKG & Elektrofisiologi", 
+                q: "Bagaimana cara membedakan Atrioventricular (AV) Block Derajat 2 Tipe Mobitz I (Wenckebach) vs Mobitz II, dan mana yang indikasi absolut pasang Pacemaker?", 
+                a: `Kedua kelainan sama-sama memiliki "Drop beat" (Gelombang P yang tidak diikuti kompleks QRS).<br><br>
+                    <strong>1. Mobitz I (Wenckebach):</strong><br>
+                    Terdapat <strong>pemanjangan interval PR yang progresif</strong> dari denyut ke denyut hingga akhirnya terjadi drop beat. PR interval sesudah blok selalu lebih pendek dari PR sebelum blok. Lokasi blok di AV Node, seringkali asimptomatik dan jinak (tidak butuh pacemaker rutin).<br><br>
+                    <strong>2. Mobitz II:</strong><br>
+                    Interval PR <strong>konstan/tetap</strong> dari denyut ke denyut (bisa normal/memanjang), lalu terjadi drop beat mendadak secara acak tanpa peringatan. Lokasi blok berada di bawah His bundle (Infranodal).<br>
+                    <em>Indikasi:</em> Mobitz II adalah <strong>Indikasi Kelas I untuk pemasangan Permanent Pacemaker (PPM)</strong> karena probabilitas tinggi memburuk seketika menjadi Total AV Block dan Asistol.` 
+            },
+            { 
+                cat: "EKG & Elektrofisiologi", 
+                q: "Apa gambaran evolusi EKG pada Hiperkalemia yang mengancam nyawa (K+ > 7.0 mEq/L) hingga terminal (Sine Wave)?", 
+                a: `Evolusi EKG tidak selalu linier dengan kadar K+, namun tahapannya progresif mematikan:<br>
+                    1. <strong>T-Wave Peaking (K+ 5.5-6.5):</strong> Gelombang T tinggi, meruncing seperti tenda, menyempit di basis, paling jelas di prekordial (Terkadang repolarisasi tampak lebih pendek/QTc memendek).<br>
+                    2. <strong>Atrial Paralysis (K+ 6.5-8.0):</strong> Gelombang P memipih, melebar, hingga menghilang total dari EKG (irama sinoventrikular). Interval PR (jika ada) memanjang.<br>
+                    3. <strong>QRS Widening (K+ 7.0-8.0):</strong> Kompleks QRS mulai melebar secara difus akibat hambatan konduksi intraventrikuler lambat.<br>
+                    4. <strong>Sine Wave / Terminal (K+ > 8.0):</strong> QRS yang sangat lebar menyatu utuh dengan gelombang T tinggi, membentuk gelombang sinus (gelombang lautan) yang licin tanpa garis isoelektrik. Segera memburuk menjadi Ventricular Fibrillation (VF) atau Asistol.` 
+            },
+            { 
+                cat: "EKG & Elektrofisiologi", 
+                q: "Pada Takikardia Ventrikel fasikular idiopatik (Belhassen VT), apa morfologi EKG yang khas dan obat spesifik lini pertama (termasuk kelasnya) yang paling efektif?", 
+                a: `VT Fasikular (Idiopathic Left Ventricular Tachycardia) paling sering bersumber dari sirkuit re-entry di area <strong>Left Posterior Fascicle</strong>, sering pada pria muda sehat saat stres/olahraga.<br><br>
+                    <strong>Morfologi EKG Khas:</strong><br>
+                    Kompels QRS hanya sedikit melebar (100-140 ms, karena berasal dari sistem Purkinje) dengan morfologi <strong>Right Bundle Branch Block (RBBB) dan Left Axis Deviation (LAD)</strong> ekstrim.<br><br>
+                    <strong>Tatalaksana Spesifik:</strong><br>
+                    Sangat responsif dihentikan dengan bolus Calcium Channel Blocker (CCB) non-dihidropiridin (Obat Antiaritmia Kelas IV), yaitu <strong>Verapamil IV</strong> (oleh karena itu disebut <em>Verapamil-sensitive VT</em>). Jika gagal, dapat dipertimbangkan ablasi kateter fasikel posterior.` 
+            },
+            { 
+                cat: "EKG & Elektrofisiologi", 
+                q: "Sindrom Wellens (Wellens' Syndrome) adalah ekuivalen pre-infark. Bagaimana kriteria EKG-nya dan mengapa obat anti-iskemik standar tidak cukup?", 
+                a: `<strong>Kriteria EKG Wellens (Harus diukur saat pasien BEBAS NYERI DADA / Pain-free period):</strong><br>
+                    Diamati di sadapan V2 dan V3, dengan gelombang Q patologis minimal dan ST elevasi < 1 mm:<br>
+                    • <strong>Tipe A (25%):</strong> Gelombang T Bifasik (awal positif, akhir terminasi negatif).<br>
+                    • <strong>Tipe B (75%):</strong> Gelombang T Inversi yang dalam dan simetris tajam.<br><br>
+                    <strong>Kenapa Obat Tidak Cukup?</strong><br>
+                    Wellens menandakan adanya stenosis kritis berulang (plak yang ruptur, memblokir parsial, reperfusi spontan, lalu memblokir lagi) di segmen <strong>PROKSIMAL Arteri LAD</strong>. Pasien berisiko masif terkena STEMI anterior mendadak dan syok kardiogenik. Obat medis dan stress test (Treadmill) KONTRAINDIKASI absolut. Pasien harus segera dijadwalkan untuk <strong>Angiografi Koroner (Invasif awal)</strong>.` 
+            },
+
+            // --- BAGIAN 4: Heart Failure & ACS / Kegawatan (10 Soal) ---
+            { 
+                cat: "Heart Failure & ACS", 
+                q: "Dalam evaluasi Gagal Jantung, jelaskan secara klinis perbedaan HFrEF, HFmrEF, dan HFpEF berdasarkan Guideline ESC terbaru!", 
+                a: `Semua pasien harus memiliki gejala/tanda Gagal Jantung (sesak, edema, peningkatan peptida natriuretik).<br>
+                    <strong>1. HFrEF (HF with Reduced EF):</strong><br>LVEF <strong>≤ 40%</strong>. Bukti disfungsi sistolik primer. Ini adalah kelompok di mana terapi 'Fantastic Four' terbukti menurunkan mortalitas.<br>
+                    <strong>2. HFmrEF (HF with Mildly Reduced EF):</strong><br>LVEF <strong>41% - 49%</strong>. Kelompok transisi, seringkali etiologinya iskemik (CAD). Tatalaksana mirip dengan HFrEF (rekomendasi kelas IIb untuk ARNI/Beta-blocker/MRA, kelas I untuk SGLT2i).<br>
+                    <strong>3. HFpEF (HF with Preserved EF):</strong><br>LVEF <strong>≥ 50%</strong>. Fungsi pompa (sistolik) tampak normal, tapi ventrikel kaku (disfungsi diastolik). HARUS ada bukti tambahan: Peningkatan NT-proBNP DITAMBAH abnormalitas struktur echo (Hipertrofi LV tebal / Dilatasi LA) atau disfungsi diastolik (E/e' tinggi).` 
+            },
+            { 
+                cat: "Heart Failure & ACS", 
+                q: "Sebutkan 4 golongan obat yang menjadi pilar utama (Fantastic Four) HFrEF, dan obat apa yang paling dominan dihentikan jika pasien Gagal Ginjal akut progresif?", 
+                a: `<strong>Pilar Utama (Guidelines Class I, Titrasi optimal segera):</strong><br>
+                    1. <strong>ARNI</strong> (Sacubitril/Valsartan) atau ACE-inhibitor.<br>
+                    2. <strong>Beta-blocker</strong>.<br>
+                    3. <strong>MRA / Aldosterone Antagonist</strong> (Spironolactone/Eplerenone).<br>
+                    4. <strong>SGLT2 Inhibitor</strong> (Dapagliflozin/Empagliflozin).<br><br>
+                    <strong>Mana yang dihentikan saat Acute Kidney Injury (AKI) berat / Hiperkalemia?</strong><br>
+                    Obat yang paling sering dihentikan atau dikurangi sementara adalah obat penghambat sistem RAAS yang murni membuang kalium dan menurunkan GFR di glomerulus, yaitu <strong>MRA (Spironolakton)</strong> dan dosis <strong>ARNI/ACE-i</strong>. Beta-blocker dan SGLT2i relatif lebih aman dipertahankan kecuali AKI dibarengi syok.` 
+            },
+            { 
+                cat: "Heart Failure & ACS", 
+                q: "Klasifikasi Forrester sangat penting di ICCU/CVCU. Syok Kardiogenik klasik masuk di kuadran mana, dan apa profil hemodinamik invasifnya (CI dan PCWP)?", 
+                a: `Klasifikasi Forrester menilai perfusi perifer (Warm vs Cold) dan kongesti paru (Wet vs Dry).<br><br>
+                    Syok Kardiogenik Klasik masuk dalam <strong>Kuadran / Profil IV (Cold and Wet)</strong>.<br>
+                    <strong>Profil Hemodinamik (Swan-Ganz):</strong><br>
+                    <ul>
+                        <li><strong>Hipoperfusi jaringan ('Cold'):</strong> Cardiac Index (CI) turun drastis <strong>< 2.2 L/min/m²</strong>. Tanda klinis oliguria, laktat asidosis, akral dingin basah.</li>
+                        <li><strong>Kongesti/Bendungan paru ('Wet'):</strong> PCWP sangat tinggi <strong>> 18 mmHg</strong>. Tanda klinis ronkhi basah basal penuh, edema paru akut, orthopnea berat.</li>
+                    </ul>
+                    <em>Tatalaksana Profil IV butuh diuretik hati-hati BERSAMA inotropik / vasopresor / mechanical support.</em>` 
+            },
+            { 
+                cat: "Heart Failure & ACS", 
+                q: "Pada tatalaksana STEMI, apa yang dimaksud 'Primary PCI' dan berapa limit 'Door-to-Balloon time' jika pasien datang ke rumah sakit NON-PCI (puskesmas)?", 
+                a: `<strong>Primary PCI (IKP Primer)</strong> adalah intervensi koroner perkutan (balonisasi/stent) segera (emergen) yang dilakukan sebagai terapi reperfusi utama STEMI, tanpa pemberian obat fibrinolitik sebelumnya.<br><br>
+                    <strong>Waktu Target (FMC-to-Wire-Crossing):</strong><br>
+                    <ul>
+                        <li>Datang ke RS fasilitas PCI: Target <strong>< 90 menit</strong>.</li>
+                        <li>Datang ke RS Non-PCI / Puskesmas: Pertimbangkan <em>Door-to-Balloon</em> JIKA waktu tunggu dari rujukan hingga kateterisasi diprediksi masih <strong>< 120 menit</strong>.</li>
+                        <li><strong>Jika estimasi transfer dan IKP > 120 menit:</strong> KONTRAINDIKASI merujuk langsung PCI. Berikan <strong>Fibrinolitik / Trombolitik</strong> segera di tempat (Door-to-Needle < 30 menit), baru pasien dirujuk pelan-pelan (Pharmacoinvasive strategy).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Heart Failure & ACS", 
+                q: "Apa perbedaan mekanisme farmakodinamik utama antara obat Clopidogrel dan Ticagrelor (P2Y12 inhibitor) dan mengapa Guideline ACS ESC lebih mengutamakan Ticagrelor?", 
+                a: `<strong>Mekanisme Farmakodinamik:</strong><br>
+                    <ul>
+                        <li><strong>Clopidogrel (Thienopyridine):</strong> Merupakan prodrug (butuh 2 tahap aktivasi enzim CYP450 hati). Mengikat reseptor ADP P2Y12 platelet secara <strong>Ireversibel</strong>. Terdapat variasi respon genetik (resistensi). Onset lambat (2-6 jam).</li>
+                        <li><strong>Ticagrelor (Cyclopentyltriazolopyrimidine):</strong> Bukan prodrug (langsung aktif, onset cepat < 30 menit). Mengikat area alosterik reseptor P2Y12 secara <strong>Reversibel</strong>.</li>
+                    </ul>
+                    <strong>Mengapa Ticagrelor Diutamakan (Class I vs Clopidogrel Class IIa)?</strong><br>
+                    Berdasarkan studi monumental <strong>PLATO Trial</strong>, Ticagrelor menurunkan angka kematian kardiovaskular absolut secara signifikan dibanding Clopidogrel pada ACS, tanpa perbedaan pendarahan mayor fatal. Clopidogrel hanya lini pertama jika terapi menggunakan trombolitik, pasien AF yang pakai OAC (triple therapy), atau Ticagrelor tidak ada/mahal.` 
+            },
+            { 
+                cat: "Heart Failure & ACS", 
+                q: "Sebutkan 3 komplikasi mekanis mematikan pasca Infark Miokard Akut (sering muncul tiba-tiba di hari ke 3-5), serta patofisiologinya!", 
+                a: `Pada hari ke 3-5 paska infark (fase makrofag membersihkan nekrosis, jaringan miokard sangat rapuh/lunak), risiko robek sangat tinggi:<br>
+                    1. <strong>Ruptur Septum Interventrikular (VSD didapat):</strong> Nekrosis septum menyebabkan jebolnya dinding pemisah RV-LV. Menghasilkan pirau kiri-ke-kanan akut, overload volume RV. Bising holosistolik kasar teraba <em>thrill</em> parasternal kiri.<br>
+                    2. <strong>Ruptur Muskulus Papilaris:</strong> Paling sering pada papilaris posteromedial (yang hanya disuplai cabang RCA murni) pada infark inferior. Menyebabkan <em>Flail mitral leaflet</em>, Regurgitasi Mitral (MR) akut masif dan edema paru florid. Bising sistolik bisa terdengar lembut/hilang karena penyamaran tekanan.<br>
+                    3. <strong>Ruptur Dinding Bebas Ventrikel (Free Wall Rupture):</strong> Robeknya dinding epikardium LV/RV. Darah tumpah mengisi rongga perikard, langsung memicu Tamponade Jantung akut dan henti jantung dengan gambaran PEA (Pulseless Electrical Activity). Sangat fatal.` 
+            },
+            { 
+                cat: "Heart Failure & ACS", 
+                q: "Jika Anda mendiagnosis pasien dengan STEMI Inferior di IGD, mengapa Anda wajib melengkapi rekam EKG sadapan sisi kanan (V3R, V4R) sebelum memberikan terapi obat tertentu?", 
+                a: `<strong>Alasan Inisial:</strong> Sekitar 30-50% kasus STEMI Inferior (oklusi RCA proksimal) dibarengi dengan <strong>Infark Ventrikel Kanan (Right Ventricular Infarction)</strong>.<br><br>
+                    <strong>Diagnosis EKG:</strong> Bukti ST Elevasi ≥ 1 mm di sadapan prekordial kanan, terutama <strong>V4R</strong>.<br><br>
+                    <strong>Kepentingan Terapetik (Kontraindikasi):</strong><br>
+                    RV infark membuat ventrikel kanan sangat gagal memompa, sehingga stroke volume murni mengandalkan tingginya pengisian vena (CVP/Preload). Pemberian <strong>VASODILATOR (Nitrat Sublingual/Nitrogliserin IV, Morfin) atau DIURETIK (Furosemide) sangat dihindari</strong>. Obat ini melebarkan vena perifer (pooling), menurunkan preload ke RV, dan menyebabkan hipotensi refrakter (Syok Kardiogenik instan). Terapinya justru *Fluid Challenge* (Loading NaCl 0.9%).` 
+            },
+            { 
+                cat: "Heart Failure & ACS", 
+                q: "Skor GRACE (Global Registry of Acute Coronary Events) sangat krusial pada pasien NSTEMI. Apa implikasi terapi jika skor GRACE pasien > 140?", 
+                a: `<strong>Skor GRACE</strong> menggabungkan umur, HR, TD sistolik, Killip class, kreatinin, ada/tidaknya henti jantung, elevasi biomarker (Troponin), dan perubahan ST, untuk memprediksi probabilitas kematian 6 bulan.<br><br>
+                    <strong>Implikasi Terapi (GRACE > 140 / Kategori High Risk):</strong><br>
+                    Guideline ESC/AHA mewajibkan pasien tersebut menjalani <strong>Strategi Invasif Awal (Early Invasive Strategy)</strong>. Artinya, Angiografi Koroner (dan stenting bila perlu) harus dilakukan dalam kurun waktu <strong>< 24 jam</strong> sejak admisi. <br>
+                    <em>Note: Jika pasien tidak stabil secara hemodinamik, ada aritmia VF/VT berulang, atau nyeri dada refrakter yang gagal obat, strategi Invasif harus <strong>SANGAT SEGERA (Immediate, < 2 jam)</strong> tanpa mempedulikan skor GRACE.</em>` 
+            },
+            { 
+                cat: "Heart Failure & ACS", 
+                q: "Pemberian terapi Fibrinolitik (Streptokinase/Alteplase) pada STEMI mengandung risiko perdarahan masif. Sebutkan 5 Kontraindikasi Absolut untuk pemberian obat ini!", 
+                a: `Kontraindikasi absolut bertujuan mencegah komplikasi perdarahan intrakranial fatal:<br>
+                    1. Riwayat Perdarahan Intrakranial (ICH) <strong>kapanpun terjadi</strong> tanpa batasan waktu.<br>
+                    2. Adanya kelainan malformasi pembuluh darah struktural serebral (misal AVM atau aneurisma otak).<br>
+                    3. Riwayat tumor otak ganas yang diketahui (primer atau metastatik).<br>
+                    4. Riwayat <strong>Stroke Iskemik</strong> dalam kurun waktu <strong>3 bulan terakhir</strong> (KECUALI onset stroke iskemik akut yang masih di bawah < 4.5 jam yang memang butuh r-tPA).<br>
+                    5. Kecurigaan tinggi adanya Diseksi Aorta Akut.<br>
+                    6. Perdarahan internal aktif (misal tukak lambung berdarah) atau gangguan pembekuan darah (diastesis), KECUALI menstruasi normal.<br>
+                    7. Trauma wajah/kepala berat dan tertutup yang bermakna dalam 3 bulan terakhir.` 
+            },
+            { 
+                cat: "Heart Failure & ACS", 
+                q: "Mengapa High-Sensitivity Troponin (hs-cTn) merupakan Gold Standard biomarker infark dibandingkan CK-MB, dan dalam skenario klinis apa CK-MB (atau isoenzim lain) masih berguna?", 
+                a: `<strong>Keunggulan hs-cTn:</strong><br>
+                    Sangat spesifik untuk protein otot jantung (miokard). Hs-cTn bisa mendeteksi nekrosis mikroskopis seawal 1-2 jam paska onset nyeri dada (algoritma 0/1 jam ESC), sehingga <em>rule-in</em> NSTEMI bisa dipastikan jauh lebih cepat. Profil Troponin akan <strong>bertahan tinggi sangat lama di sirkulasi darah (bisa 7-14 hari)</strong> sebelum bersih.<br><br>
+                    <strong>Kegunaan Khusus CK-MB:</strong><br>
+                    CK-MB cepat naik (memuncak 12-24 jam) TAPI juga <strong>cepat bersih/turun ke level normal (dalam 48-72 jam)</strong>.<br>
+                    Skenario Emas: Jika seorang pasien STEMI yang dirawat membaik, lalu di hari ke-5 tiba-tiba nyeri dada lagi, kadar Troponin pasti masih tinggi dari infark pertama (sulit dibaca perubahannya). Namun jika <strong>CK-MB di hari ke-5 kembali melonjak/naik tinggi</strong>, ini diagnostik untuk adanya <strong>RE-INFARK AKUT</strong> (oklusi berulang baru pada pembuluh darah yang berbeda atau stent trombosis akut).` 
+            },
+
+            // --- BAGIAN 5: Katup, Kongenital, Perikardium & Vaskuler (10 Soal) ---
+            { 
+                cat: "Katup, PJB & Vaskuler", 
+                q: "Pada auskultasi dada anak, terdengar bising 'Machinery Murmur' yang kontinu (sistolo-diastolik) keras di sela iga 2 parasternal kiri. Patofisiologi PJB apa yang mendasarinya?", 
+                a: `<strong>Diagnosis: Patent Ductus Arteriosus (PDA).</strong><br><br>
+                    <strong>Patofisiologi:</strong><br>
+                    Duktus arteriosus gagal menutup setelah lahir, menghubungkan aorta desendens proksimal ke cabang arteri pulmonalis kiri. <br>
+                    Bising (murmur) ini berbunyi seperti suara mesin bor/machinery secara kontinu tanpa putus dan menutupi bunyi S2. Ini terjadi karena <strong>Gradien tekanan di Aorta selalu jauh lebih tinggi daripada Arteri Pulmonalis (PA) secara konstan</strong>, baik saat kontraksi sistolik (Aorta 100 vs PA 25) maupun relaksasi diastolik (Aorta 70 vs PA 10). Akibatnya, darah secara deras dan turbulen mengalir (shunt kiri-ke-kanan) melalui duktus tiada henti sepanjang seluruh fase siklus jantung.` 
+            },
+            { 
+                cat: "Katup, PJB & Vaskuler", 
+                q: "Dalam elektrokardiografi (EKG) defek septum atrium, temuan apa yang paling handal untuk membedakan secara instan antara ASD Secundum vs ASD Primum?", 
+                a: `Keduanya sering memiliki morfologi blok cabang berkas kanan inkomplit (Incomplete RBBB, pola rSR' di V1) akibat overload volume ventrikel kanan memanjangkan jalur konduksi.<br><br>
+                    <strong>Pembeda Utama - Sumbu Aksis Frontal (Frontal Axis):</strong><br>
+                    <ul>
+                        <li><strong>ASD Secundum (Letak septum sentral):</strong> EKG biasanya menunjukkan Aksis Normal atau <strong>Right Axis Deviation (RAD, QRS dominan negatif di I dan positif di aVF)</strong> (+90° hingga +120°).</li>
+                        <li><strong>ASD Primum (Defek bantalan endokardial bawah):</strong> Sistem konduksi fasikel anterior kiri bergeser karena kelainan bantalan atrioventrikular. EKG sangat diagnostik menunjukkan <strong>Left Axis Deviation (LAD) yang ekstrem / superior axis (QRS dominan positif di I dan negatif dalam di aVF/II)</strong> (sekitar -30° hingga -90°).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Katup, PJB & Vaskuler", 
+                q: "Komponen anatomi mana dari Tetralogy of Fallot (ToF) yang paling menentukan derajat keparahan presentasi klinis 'Sianosis' atau 'Tet Spells' pada anak?", 
+                a: `Dari 4 komponen (VSD besar, Overriding Aorta, Stenosis RVOT, dan RVH), komponen determinan yang menentukan perjalanan klinis ToF adalah <strong>Derajat Obstruksi Right Ventricular Outflow Tract (RVOT) / Stenosis Pulmonal infundibular</strong>.<br><br>
+                    <strong>Patofisiologi:</strong> VSD pada ToF umumnya besar dan <em>non-restrictive</em>, sehingga tekanan LV dan RV sama tinggi. Jika stenosis RVOT sangat parah/spasme (misal saat anak menangis keras / aktivitas), resistensi aliran darah menuju paru mendadak melonjak melebihi tahanan sistemik aorta. <br>
+                    Akibatnya, darah deoksigenasi (kotor) dari RV akan mencari jalan keluar yang lebih mudah (<em>path of least resistance</em>) dengan menyeberangi VSD ke arah Aorta (Right-to-Left Shunt ekstrem), langsung masuk ke tubuh dan memicu <strong>Sianosis berat seketika (Tet Spells / Hypoxic Spells)</strong>.` 
+            },
+            { 
+                cat: "Katup, PJB & Vaskuler", 
+                q: "Guideline AHA/ESC secara dramatis mempersempit indikasi pemberian Antibiotik Profilaksis sebelum cabut gigi (dental procedures) untuk mencegah Endokarditis. Siapa saja kelompok pasien tersebut?", 
+                a: `Profilaksis (Amoxicillin oral 2 gram 1 jam sebelum tindakan gusi/apikal) HANYA direkomendasikan pada kelompok dengan insiden kematian / infeksi komplikasi tertinggi, <strong>BUKAN</strong> untuk kelainan katup sederhana:<br>
+                    1. Pasien yang memiliki <strong>Katup Jantung Prostetik</strong> (katup mekanik logam maupun katup bioprostetik), termasuk material <em>ring</em> prostetik yang dipakai mereparasi katup (mis. Annuloplasty ring).<br>
+                    2. Pasien dengan riwayat <strong>Pernah terkena Endokarditis Infektif (EI)</strong> di masa lalu.<br>
+                    3. Kelompok <strong>Penyakit Jantung Bawaan (PJB) spesifik</strong>:<br>
+                       - PJB Sianotik yang belum/tidak dioperasi sama sekali (atau masih paliatif shunt).<br>
+                       - PJB yang sudah ditutup total dengan prostesis (tapi profilaksis <em>hanya wajib selama 6 bulan pertama</em> paska operasi hingga endotelialisasi selesai).<br>
+                       - PJB terkoreksi yang masih menyisakan bocor kecil (residual shunt) di sekitar tambalan/prostesis.` 
+            },
+            { 
+                cat: "Katup, PJB & Vaskuler", 
+                q: "Untuk mendiagnosis Endokarditis Infektif (EI) secara pasti, kita menggunakan Kriteria Modified Duke. Jelaskan dengan lengkap 2 Kriteria Mayor-nya!", 
+                a: `Diagnosis definitif ditegakkan jika memenuhi 2 Mayor, atau 1 Mayor + 3 Minor, atau 5 Minor.<br>
+                    <strong>Kriteria Mayor:</strong><br>
+                    <strong>1. Bukti Kultur Darah Positif Spesifik EI:</strong><br>
+                    - Mikrorganisme tipikal dari 2 botol kultur terpisah (<em>S. aureus, Viridans group strep, Streptococcus bovis/gallolyticus, grup HACEK, atau Enterococcus</em> di komunitas).<br>
+                    - Atau kultur positif berulang (persisten) untuk kuman lain yang tak terduga (diambil berjarak >12 jam).<br>
+                    - Atau titer serologi IgG <em>Coxiella burnetii</em> > 1:800.<br>
+                    <strong>2. Bukti Keterlibatan Endokardium / Imaging Positif:</strong><br>
+                    - TTE / TEE positif menunjukkan <strong>Vegetasi</strong> berosilasi pada katup/struktur jantung, formasi <strong>Abses/pseudoaneurisma</strong> kardiak, atau dehisensi sebagian/copotnya katup buatan.<br>
+                    - Timbulnya <strong>Murmur Regurgitasi (Bocor) katup yang BENAR-BENAR BARU</strong> yang diamati klinisi (perburukan murmur lama tidak dihitung).<br>
+                    - Temuan lesi PET/CT Scan glukosa (FDG) atau SPECT lekosit di area katup prostetik (jika operasi > 3 bulan lalu).` 
+            },
+            { 
+                cat: "Katup, PJB & Vaskuler", 
+                q: "Pada pasien penyakit jantung rematik (RHD), apa saja manifestasi klasik saat pemeriksaan auskultasi stetoskop yang menandakan Stenosis Mitral (MS) derajat sedang-berat?", 
+                a: `Auskultasi klasik MS Rematik terdengar terbaik pada posisi dekubitus lateral kiri di area apeks jantung, menggunakan bel (bell) stetoskop untuk frekuensi rendah:<br>
+                    1. <strong>Loud S1 (Bunyi jantung 1 mengeras):</strong> Daun katup anterior yang tebal dan kaku dipertahankan tetap terbuka lebar di akhir diastol karena gradien LA yang tinggi, lalu ditampar menutup secara paksa dan berisik saat kontraksi isovolumetrik ventrikel (S1).<br>
+                    2. <strong>Opening Snap (OS):</strong> Bunyi 'klik' frekuensi tinggi terdengar sesaat setelah S2 di awal diastolik (semakin dekat OS dengan S2, semakin berat stenosisnya). Ini adalah bunyi katup kaku yang "melengkung maksimal" dipaksa terbuka oleh LA.<br>
+                    3. <strong>Mid-diastolic rumbling murmur:</strong> Bising bernada amat rendah di pertengahan diastol bergemuruh mengiringi aliran turbulen melewati corong katup sempit.<br>
+                    4. <strong>Presystolic accentuation:</strong> Bising mengeras mendadak pada akhir diastol akibat 'atrial kick' / atrium berkontraksi mompa aktif (hanya ada jika irama sinus, hilang jika AF).` 
+            },
+            { 
+                cat: "Katup, PJB & Vaskuler", 
+                q: "Regurgitasi Aorta (AR) kronik derajat berat memunculkan beragam tanda Eponim pada pemeriksaan fisik nadi perifer. Jelaskan patofisiologinya dan sebutkan 3 tanda eponym tersebut!", 
+                a: `<strong>Patofisiologi:</strong><br>AR kronik berat menyebabkan Ventrikel Kiri memompa darah maju (Forward Stroke Volume) dalam jumlah amat masif saat sistolik, tapi separuh darah tersebut langsung jatuh kembali secara bebas/bocor ke ventrikel saat diastolik. Ini menghasilkan <strong>Wide Pulse Pressure</strong> (Tekanan sistolik amat tinggi ~160, diastolik amat rendah ~40) yang diterjemahkan sebagai pulsasi "meledak dan kolaps" <em>(bounding and collapsing pulses)</em> di seluruh pembuluh perifer.<br><br>
+                    <strong>Tanda Eponym Klasik:</strong><br>
+                    1. <strong>Corrigan's Pulse (Water-hammer pulse):</strong> Nadi (radialis/karotis) terasa menghentak distensi penuh tiba-tiba, diikuti kolaps/kempes seketika mendadak.<br>
+                    2. <strong>De Musset's sign:</strong> Anggukan ritmis kepala pasien ke depan-belakang mengikuti setiap detak sistolik jantung.<br>
+                    3. <strong>Quincke's sign:</strong> Pulsasi warna merah dan pucat (blanching) yang bergantian dengan cepat jika kuku telunjuk ditekan lembut pada basanya.<br>
+                    <em>(Lainnya: Traube's pistol shot sound di femoral, Duroziez's sign to-and-fro bruits).</em>` 
+            },
+            { 
+                cat: "Katup, PJB & Vaskuler", 
+                q: "Dalam memanajemen Diseksi Aorta Akut (Acute Aortic Dissection), apa perbedaan klasifikasi Stanford Tipe A vs Tipe B dan konsep algoritma terapinya di ICU?", 
+                a: `<strong>Klasifikasi Anatomi (Stanford):</strong><br>
+                    • <strong>Tipe A (Proksimal):</strong> Robekan intimal HARUS melibatkan <strong>Aorta Ascendens</strong> (baik ia berhenti di sana atau menjalar panjang sampai abdomen). Sangat letal karena proksimitas ke akar koroner (Oklusi RCA memicu STEMI) dan katup aorta (AR akut fatal) serta efusi perikard (Tamponade).<br>
+                    • <strong>Tipe B (Distal):</strong> Robekan intimal terjadi murni di <strong>Aorta Descendens</strong> (mulai di sebelah distal dari asal muasal arteri subklavia kiri).<br><br>
+                    <strong>Algoritma Terapi Umum:</strong><br>
+                    <strong>1. Tipe A = Bedah Segera Mutlak.</strong> 100% indikasi <em>Emergency Open Heart Surgery</em> (mis. penggantian graft aorta asendens).<br>
+                    <strong>2. Tipe B = Konservatif Medis Utama.</strong> Fokus pada <em>Anti-impulse therapy</em> intravena agresif (Target: HR turun jadi < 60x/menit dulu pakai Beta-blocker Labetalol/Esmolol agar stress mekanik (dp/dt) dinding pembuluh mereda, baru turunkan Sistolik BP ke <120 mmHg pakai Nikardipin). Intervensi endovaskular stent-graft (TEVAR) hanya jika <em>Uncomplicated</em> menjadi <em>Complicated</em> (ruptur aneurisma impending, aliran darah ke iskemik organ splanknik/ginjal buntu).` 
+            },
+            { 
+                cat: "Katup, PJB & Vaskuler", 
+                q: "Bagaimana cara Anda membedakan presentasi EKG antara Perikarditis Akut luas (Stadium 1) dengan Infark Miokard STEMI Inferior awal di IGD?", 
+                a: `Keduanya menyebabkan ST Elevasi dan nyeri dada, tapi beda patofisiologinya sangat mendasar.<br><br>
+                    <strong>EKG Perikarditis Akut (Gesekan perikardium inflamasi luas):</strong><br>
+                    1. <strong>ST Elevasi "Smiley":</strong> Elevasinya difus/luas menyebar hampir di semua lead anggota gerak dan prekordial (karena radang tidak mengikuti wilayah 1 arteri). Bentuk elevasi segmen ST melengkung ke atas <strong>(Konkaf / Concave-up)</strong>.<br>
+                    2. <strong>Depresi Segmen PR:</strong> Sangat diagnostik. Garis isoelektrik PR turun/depresi secara difus di banyak sadapan, menandakan inflamasi epikardium yang merambat ke atrium.<br>
+                    3. <strong>Elevasi Segmen PR di Lead aVR:</strong> Kebalikan pantulan dari depresi PR di sadapan lain.<br>
+                    4. <strong>TIDAK ADA Perubahan Resiprokal:</strong> Kecuali aVR dan V1 (yang cerminan utama), sadapan EKG lain tidak ada depresi ST resiprokal seperti halnya STEMI (misal STEMI inferior ST naik di II/III/aVF pasti diikuti depresi di I/aVL).` 
+            },
+            { 
+                cat: "Katup, PJB & Vaskuler", 
+                q: "Pasien paska operasi katup mekanik menggunakan Warfarin oral untuk mencegah Trombosis Katup. Berapa target terapi INR (International Normalized Ratio) untuk posisi katup Mitral vs Aorta menurut Guideline ESC?", 
+                a: `Katup mekanik sangat rentan ditempeli trombosit dan fibrin, sehingga DOAC (NOAC) seperti Rivaroxaban/Apixaban merupakan KONTRAINDIKASI absolut, wajib pakai Warfarin (Vitamin K Antagonist).<br><br>
+                    <strong>Target INR berdasarkan Posisi dan Aliran Hemodinamik:</strong><br>
+                    <ul>
+                        <li><strong>Posisi Katup Aorta (Sirkulasi Aliran Tinggi / High Flow):</strong> Target INR standar adalah <strong>2.5</strong> (rentang target dijaga di 2.0 hingga 3.0). Arus darah kuat dari kontraksi LV menyapu daun katup aorta sehingga risiko stagnasi trombus relatif lebih kecil.</li>
+                        <li><strong>Posisi Katup Mitral (Sirkulasi Aliran Rendah / Low Flow):</strong> Target INR standar dinaikkan menjadi <strong>3.0</strong> (rentang target dijaga di 2.5 hingga 3.5). Darah atrium mengalir lambat dan sering berputar (turbulensi lambat), risiko terbentuknya gumpalan trombus mematikan jauh lebih tinggi.</li>
+                    </ul>
+                    <em>Note Tambahan:</em> Target INR di posisi Aorta harus dinaikkan menjadi 3.0 jika pasien memiliki faktor risiko tromboembolik tambahan yang parah (misal: Atrial Fibrilasi kronis, ukuran LVEF sangat rendah <35%, atau riwayat stroke embolik sebelumnya).` 
+            }
+        ];
+
+        let cards = [...originalCards];
+        let currentIndex = 0;
+        let isFlipped = false;
+        
+        // Touch Variables for Swipe (Mobile)
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let isSwiping = false;
+
+        const flashcardEl = document.getElementById('flashcard');
+        const questionEl = document.getElementById('question-text');
+        const answerEl = document.getElementById('answer-text');
+        const counterEl = document.getElementById('card-counter');
+        const categoryEl = document.getElementById('card-category');
+
+        function renderCard() {
+            if (isFlipped) {
+                flashcardEl.classList.remove('is-flipped');
+                isFlipped = false;
+                setTimeout(() => {
+                    updateContent();
+                }, 300);
+            } else {
+                updateContent();
+            }
+        }
+
+        function updateContent() {
+            const currentCard = cards[currentIndex];
+            questionEl.innerHTML = currentCard.q;
+            answerEl.innerHTML = currentCard.a;
+            categoryEl.textContent = currentCard.cat;
+            counterEl.textContent = `${currentIndex + 1} / ${cards.length}`;
+            
+            // Scroll answer to top whenever card changes
+            document.querySelector('#answer-text').parentElement.scrollTop = 0;
+            document.querySelector('#question-text').parentElement.scrollTop = 0;
+        }
+
+        function toggleFlip(e) {
+            // Prevent flip if the user is swiping or selecting text
+            if (isSwiping) return;
+            const selection = window.getSelection();
+            if (selection.toString().length > 0) return;
+            
+            isFlipped = !isFlipped;
+            flashcardEl.classList.toggle('is-flipped');
+        }
+
+        function nextCard() {
+            if (currentIndex < cards.length - 1) {
+                currentIndex++;
+                renderCard();
+            } else {
+                currentIndex = 0;
+                renderCard();
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderCard();
+            } else {
+                currentIndex = cards.length - 1; // loop to back
+                renderCard();
+            }
+        }
+
+        function shuffleCards() {
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            currentIndex = 0;
+            renderCard();
+        }
+
+        // --- Fitur Swipe untuk Mobile ---
+        flashcardEl.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            isSwiping = false;
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchmove', e => {
+            const currentTouchX = e.changedTouches[0].screenX;
+            // Deteksi threshold geseran untuk membedakan tap vs swipe
+            if (Math.abs(currentTouchX - touchStartX) > 15) {
+                isSwiping = true;
+            }
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+
+        function handleSwipe() {
+            const swipeThreshold = 50; 
+            if (touchEndX < touchStartX - swipeThreshold) {
+                nextCard();
+            } else if (touchEndX > touchStartX + swipeThreshold) {
+                prevCard();
+            }
+            setTimeout(() => {
+                isSwiping = false;
+            }, 100);
+        }
+
+        window.onload = renderCard;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                e.preventDefault(); // Mencegah scrolling bawah jika spasi ditekan
+                toggleFlip();
+            } else if (e.code === 'ArrowRight') {
+                nextCard();
+            } else if (e.code === 'ArrowLeft') {
+                prevCard();
+            }
+        });
+    </script>
+</body>
+</html>
