@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ACLS Rhythm Drill</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  
+  <!-- Babel untuk JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    @keyframes ekgScroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    body { margin: 0; padding: 0; background-color: #020617; overflow: hidden; }
+    /* Menghilangkan scrollbar visual tapi tetap bisa di-scroll */
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, useRef } = React;
+
+    // --- ICON COMPONENTS ---
+    const Activity = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+    );
+    const Heart = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+    );
+    const Zap = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+    );
+    const ShieldAlert = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+    );
+    const Play = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+    );
+    const RotateCcw = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+    );
+    const Pause = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+    );
+    const Award = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+    );
+
+    // --- GENERATOR EKG PATHS ---
+    const generateEKGPath = (type) => {
+      let path = 'M 0 50 ';
+      const width = 2000; 
+      
+      if (type === 'asystole') {
+        for (let i = 10; i <= width; i += 10) {
+          const jitter = (Math.random() - 0.5) * 4;
+          path += `L ${i} ${50 + jitter} `;
+        }
+      } else if (type === 'vf') {
+        for (let i = 10; i <= width; i += 15) {
+          const amp = Math.random() * 60 - 30; 
+          path += `L ${i} ${50 + amp} `;
+        }
+      } else if (type === 'vt') {
+        for (let i = 0; i <= width; i += 60) {
+          path += `Q ${i + 15} -20, ${i + 30} 50 T ${i + 60} 50 `; 
+        }
+      } else if (type === 'svt') {
+        for (let i = 0; i <= width; i += 30) { 
+          path += `L ${i + 10} 50 L ${i + 15} 10 L ${i + 20} 80 L ${i + 25} 50 L ${i + 30} 50 `;
+        }
+      } else if (type === 'nsr' || type === 'pea') {
+        for (let i = 0; i <= width; i += 120) { 
+          path += `L ${i + 20} 50 L ${i + 25} 45 L ${i + 30} 50 L ${i + 45} 50 L ${i + 50} 10 L ${i + 55} 90 L ${i + 60} 50 L ${i + 75} 50 L ${i + 85} 40 L ${i + 95} 50 L ${i + 120} 50 `;
+        }
+      } else if (type === 'brady') {
+        for (let i = 0; i <= width; i += 240) { 
+          path += `L ${i + 20} 50 L ${i + 25} 45 L ${i + 30} 50 L ${i + 45} 50 L ${i + 50} 10 L ${i + 55} 90 L ${i + 60} 50 L ${i + 75} 50 L ${i + 85} 40 L ${i + 95} 50 L ${i + 240} 50 `;
+        }
+      }
+      return path;
+    };
+
+    // Ditambahkan konteks klinis (clinicalHint) untuk UX edukasi yang lebih baik
+    const RHYTHMS = [
+      { id: 'vf', name: 'Ventricular Fibrillation (VF)', isShockable: true, hint: 'Henti jantung, aktivitas ventrikel kacau' },
+      { id: 'vt', name: 'Pulseless VT', isShockable: true, hint: 'Tidak ada nadi teraba' },
+      { id: 'asystole', name: 'Asystole', isShockable: false, hint: 'Tidak ada aktivitas listrik dan nadi' },
+      { id: 'pea', name: 'PEA (Pulseless Electrical Activity)', isShockable: false, hint: 'Ada aktivitas listrik, TIDAK ADA nadi' },
+      { id: 'svt', name: 'Supraventricular Tachycardia', isShockable: false, hint: 'Takikardia sempit, pasien berdebar' },
+      { id: 'brady', name: 'Symptomatic Bradycardia', isShockable: false, hint: 'HR lambat, pasien hipoperfusi' },
+      { id: 'nsr', name: 'Normal Sinus Rhythm', isShockable: false, hint: 'Ritme normal, nadi teraba kuat' }
+    ];
+
+    const INITIAL_WEIGHTS = { vf: 5, vt: 5, asystole: 5, pea: 5, svt: 5, brady: 5, nsr: 5 };
+    const TIME_LIMIT = 2000; 
+
+    function App() {
+      const [gameState, setGameState] = useState('menu'); // 'menu', 'playing', 'result'
+      const [currentRhythm, setCurrentRhythm] = useState(null);
+      const [ekgPath, setEkgPath] = useState('');
+      
+      const [weights, setWeights] = useState({ ...INITIAL_WEIGHTS });
+      const weightsRef = useRef(weights);
+      useEffect(() => { weightsRef.current = weights; }, [weights]);
+      
+      const [stats, setStats] = useState({ correct: 0, wrong: 0, streak: 0, maxStreak: 0 });
+      const [timeLeft, setTimeLeft] = useState(TIME_LIMIT);
+      const [feedback, setFeedback] = useState(null); 
+      
+      const [isPaused, setIsPaused] = useState(false);
+      const [showQuitModal, setShowQuitModal] = useState(false);
+      
+      const currentRhythmRef = useRef(null);
+      const timerRef = useRef(null);
+      const isAnsweringRef = useRef(false);
+
+      const [dragStartX, setDragStartX] = useState(null);
+      const [dragCurrentX, setDragCurrentX] = useState(null);
+      const [isDragging, setIsDragging] = useState(false);
+
+      const pickNextRhythm = useCallback(() => {
+        const currentWeights = weightsRef.current;
+        const totalWeight = Object.values(currentWeights).reduce((a, b) => a + b, 0);
+        let random = Math.random() * totalWeight;
+        let selectedId = RHYTHMS[0].id;
+        
+        for (const [id, weight] of Object.entries(currentWeights)) {
+          if (random < weight) {
+            selectedId = id;
+            break;
+          }
+          random -= weight;
+        }
+        
+        // Menambahkan fallback (Meskipun edge case ekstrim)
+        const rhythmDef = RHYTHMS.find(r => r.id === selectedId) || RHYTHMS[0];
+        const waveType = rhythmDef.id === 'pea' ? 'nsr' : rhythmDef.id;
+        
+        currentRhythmRef.current = rhythmDef;
+        setCurrentRhythm(rhythmDef);
+        setEkgPath(generateEKGPath(waveType));
+        setTimeLeft(TIME_LIMIT);
+        
+        // Reset state drag
+        setDragStartX(null);
+        setDragCurrentX(null);
+      }, []);
+
+      const handleAnswer = useCallback((action) => {
+        if (isAnsweringRef.current) return;
+        isAnsweringRef.current = true;
+        
+        const activeRhythm = currentRhythmRef.current;
+        if (!activeRhythm) {
+          isAnsweringRef.current = false;
+          return;
+        }
+
+        let isCorrect = false;
+        if (action === 'timeout') {
+          isCorrect = false;
+        } else {
+          const isShockAction = action === 'shock';
+          isCorrect = isShockAction === activeRhythm.isShockable;
+        }
+
+        setFeedback(action === 'timeout' ? 'timeout' : isCorrect ? 'correct' : 'wrong');
+
+        if (isCorrect) {
+          setStats(s => ({ ...s, correct: s.correct + 1, streak: s.streak + 1, maxStreak: Math.max(s.maxStreak, s.streak + 1) }));
+          setWeights(w => ({ ...w, [activeRhythm.id]: Math.max(1, w[activeRhythm.id] - 1) }));
+        } else {
+          setStats(s => ({ ...s, wrong: s.wrong + 1, streak: 0 }));
+          setWeights(w => ({ ...w, [activeRhythm.id]: Math.min(w[activeRhythm.id] + 5, 30) }));
+        }
+
+        setTimeout(() => {
+          setFeedback(null);
+          isAnsweringRef.current = false;
+          pickNextRhythm();
+        }, 800);
+      }, [pickNextRhythm]);
+
+      // [FIX 2] Mengamankan reference dari handleAnswer agar tidak men-trigger reset timer jika deps berubah
+      const handleAnswerRef = useRef(handleAnswer);
+      useEffect(() => { handleAnswerRef.current = handleAnswer; }, [handleAnswer]);
+
+      // Timer Logic
+      useEffect(() => {
+        // Hentikan timer jika ada feedback aktif, sedang di-pause, atau sedang membuka modal
+        if (gameState === 'playing' && feedback === null && currentRhythm && !isPaused && !showQuitModal) {
+          timerRef.current = setInterval(() => {
+            setTimeLeft(prev => {
+              if (prev <= 50) {
+                clearInterval(timerRef.current);
+                handleAnswerRef.current('timeout'); // Pemanggilan aman via Ref
+                return 0;
+              }
+              return prev - 50;
+            });
+          }, 50);
+        }
+
+        return () => {
+          if (timerRef.current) clearInterval(timerRef.current);
+        };
+      }, [gameState, feedback, currentRhythm, isPaused, showQuitModal]);
+
+      // [FIX 1] Imperative Pause
+      const handlePause = () => {
+        if (timerRef.current) clearInterval(timerRef.current);
+        setIsPaused(true);
+      };
+
+      const startGame = () => {
+        setStats({ correct: 0, wrong: 0, streak: 0, maxStreak: 0 });
+        setWeights({ ...INITIAL_WEIGHTS });
+        setGameState('playing');
+        setFeedback(null);
+        isAnsweringRef.current = false;
+        setIsPaused(false);
+        setShowQuitModal(false);
+        pickNextRhythm();
+      };
+
+      // Custom Quit Logic
+      const attemptQuit = () => {
+        if (timerRef.current) clearInterval(timerRef.current);
+        setShowQuitModal(true);
+      };
+
+      const confirmQuit = () => {
+        // [FIX 3] Reset semua isPaused and showModal flag
+        setShowQuitModal(false);
+        setIsPaused(false);
+        setGameState('result');
+        setFeedback(null);
+        isAnsweringRef.current = false;
+        if (timerRef.current) clearInterval(timerRef.current);
+      };
+
+      const cancelQuit = () => {
+        setShowQuitModal(false);
+        // Biarkan berjalan dari timerRef effect 
+      };
+
+      const returnToMenu = () => {
+        setGameState('menu');
+        setCurrentRhythm(null);
+        currentRhythmRef.current = null;
+      }
+
+      // --- TOUCH & MOUSE EVENTS FOR "TINDER" SWIPE ---
+      const handleDragStart = (e) => {
+        if(isAnsweringRef.current || isPaused || showQuitModal) return;
+        setIsDragging(true);
+        setDragStartX(e.type.includes('mouse') ? e.clientX : e.touches[0].clientX);
+      };
+
+      const handleDragMove = (e) => {
+        if (!isDragging || dragStartX === null) return;
+        const currentX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        setDragCurrentX(currentX);
+      };
+
+      const handleDragEnd = () => {
+        if (!isDragging || dragStartX === null) return;
+        setIsDragging(false);
+        
+        // [FIX 4] Cegah evaluasi null jika di-klik tapi tidak di-drag
+        if (dragCurrentX === null) return;
+        
+        const deltaX = dragCurrentX - dragStartX;
+        const swipeThreshold = 100;
+
+        if (deltaX > swipeThreshold) {
+          handleAnswer('shock');
+        } else if (deltaX < -swipeThreshold) {
+          handleAnswer('stay');
+        } else {
+          setDragStartX(null);
+          setDragCurrentX(null);
+        }
+      };
+
+      const deltaX = dragCurrentX !== null && dragStartX !== null ? dragCurrentX - dragStartX : 0;
+      const cardRotation = deltaX * 0.05; 
+      const cardTranslateX = deltaX;
+      
+      const shockHintOpacity = Math.min(Math.max(deltaX / 100, 0), 1);
+      const stayHintOpacity = Math.min(Math.max(-deltaX / 100, 0), 1);
+
+      // Hitung Akurasi
+      const totalAnswers = stats.correct + stats.wrong;
+      const accuracy = totalAnswers === 0 ? 0 : Math.round((stats.correct / totalAnswers) * 100);
+
+      return (
+        <div className="min-h-[100dvh] font-sans text-slate-100 selection:bg-rose-500 overflow-hidden flex flex-col items-center justify-center relative">
+          
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/30 via-slate-950 to-red-950/40 pointer-events-none"></div>
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/10 blur-[120px] rounded-full pointer-events-none"></div>
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-red-600/10 blur-[120px] rounded-full pointer-events-none"></div>
+
+          {gameState === 'menu' && (
+            <div className="relative z-10 max-w-md w-full px-6 flex flex-col items-center animate-in fade-in zoom-in duration-500 max-h-[100dvh] overflow-y-auto py-8 scrollbar-hide">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-tr from-rose-600 to-blue-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-rose-900/50 mb-4 sm:mb-8 border border-white/10 shrink-0">
+                <Activity className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
+              </div>
+              
+              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-center mb-1 sm:mb-2 bg-gradient-to-r from-blue-400 to-rose-400 text-transparent bg-clip-text shrink-0">
+                ACLS Rhythm
+              </h1>
+              <h2 className="text-lg sm:text-xl font-medium text-slate-400 mb-6 sm:mb-8 text-center shrink-0">
+                Rapid Recognition Drill
+              </h2>
+
+              <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800 p-5 sm:p-6 rounded-2xl w-full mb-6 sm:mb-8 shadow-xl shrink-0">
+                <p className="text-slate-300 text-sm mb-4 text-center leading-relaxed">
+                  Halo <span className="font-semibold text-white">Sejawat</span>.<br/> Latih insting resusitasi Anda. Waktu Anda hanya <strong>2 detik</strong> per ritme.
+                </p>
+                <ul className="space-y-3 text-sm text-slate-400 font-medium">
+                  <li className="flex items-center gap-3">
+                    <span className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center border border-blue-500/30"><RotateCcw size={16}/></span>
+                    <span>Geser Kiri: <span className="text-blue-400">Stay / CPR / Drugs</span></span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="flex-shrink-0 w-8 h-8 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center border border-rose-500/30"><Zap size={16}/></span>
+                    <span>Geser Kanan: <span className="text-rose-400">SHOCK!</span></span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30"><Activity size={16}/></span>
+                    <span>Spaced Repetition: <span className="text-slate-300">Ritme yang salah akan sering muncul.</span></span>
+                  </li>
+                </ul>
+              </div>
+
+              <button 
+                onClick={startGame}
+                aria-label="Mulai Drill Sekarang"
+                className="w-full group relative inline-flex items-center justify-center px-8 py-3 sm:py-4 text-base font-bold text-white transition-all duration-200 bg-gradient-to-r from-blue-600 to-rose-600 border border-transparent rounded-full hover:shadow-[0_0_40px_-10px_rgba(225,29,72,0.6)] focus:outline-none shrink-0"
+              >
+                <Play className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+                Mulai Drill Sekarang
+              </button>
+            </div>
+          )}
+
+          {gameState === 'playing' && currentRhythm && (
+            <div className="relative z-10 w-full max-w-lg px-4 flex flex-col h-[100dvh] py-6 sm:py-10">
+              
+              {/* Header Stats & Pause */}
+              <div className="flex justify-between items-center mb-4 sm:mb-6 px-2 relative z-20">
+                <div className="flex gap-4">
+                  <div className="flex flex-col">
+                    <span className="text-xs text-slate-500 uppercase font-bold tracking-wider">Benar</span>
+                    <span className="text-2xl font-black text-emerald-400">{stats.correct}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-slate-500 uppercase font-bold tracking-wider">Salah</span>
+                    <span className="text-2xl font-black text-rose-500">{stats.wrong}</span>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={isPaused ? () => setIsPaused(false) : handlePause}
+                  disabled={feedback !== null || showQuitModal}
+                  className={`p-3 rounded-full text-slate-300 transition-colors border shadow-lg disabled:opacity-50 ${isPaused ? 'bg-blue-600 hover:bg-blue-500 border-blue-500' : 'bg-slate-800/80 hover:bg-slate-700 border-slate-700'}`}
+                  aria-label={isPaused ? "Lanjut Game" : "Pause Game"}
+                >
+                  {isPaused ? <Play size={20} className="fill-white" /> : <Pause size={20} />}
+                </button>
+
+                <div className="flex flex-col items-end">
+                  <span className="text-xs text-slate-500 uppercase font-bold tracking-wider">Streak</span>
+                  <span className="text-2xl font-black text-amber-400 flex items-center gap-1">
+                    <Zap size={20} className={stats.streak > 2 ? 'fill-amber-400 animate-pulse' : ''} />
+                    {stats.streak}
+                  </span>
+                </div>
+              </div>
+
+              {/* MAIN TINDER CARD AREA */}
+              <div className="flex-1 relative flex items-center justify-center perspective-[1000px] z-10">
+                
+                <div className="absolute inset-0 flex justify-between items-center px-8 pointer-events-none z-0">
+                   <div className="flex flex-col items-center opacity-0 transition-opacity" style={{ opacity: stayHintOpacity }}>
+                     <div className="w-16 h-16 rounded-full bg-blue-500/20 border-2 border-blue-500 text-blue-400 flex items-center justify-center mb-2">
+                       <ShieldAlert size={32} />
+                     </div>
+                     <span className="font-black text-xl text-blue-400 tracking-widest uppercase">CPR/Drugs</span>
+                   </div>
+                   <div className="flex flex-col items-center opacity-0 transition-opacity" style={{ opacity: shockHintOpacity }}>
+                     <div className="w-16 h-16 rounded-full bg-rose-500/20 border-2 border-rose-500 text-rose-400 flex items-center justify-center mb-2">
+                       <Zap size={32} className="fill-rose-400" />
+                     </div>
+                     <span className="font-black text-xl text-rose-400 tracking-widest uppercase">SHOCK</span>
+                   </div>
+                </div>
+
+                <div 
+                  key={currentRhythm.id + stats.correct + stats.wrong}
+                  className={`relative z-10 w-full h-[60vh] bg-slate-900 border border-slate-700/50 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col touch-none select-none ${!isDragging && !feedback ? 'transition-transform duration-300 ease-out' : ''}`}
+                  style={{
+                    transform: `translateX(${cardTranslateX}px) rotate(${cardRotation}deg)`,
+                    cursor: isDragging ? 'grabbing' : 'grab'
+                  }}
+                  onMouseDown={handleDragStart}
+                  onMouseMove={handleDragMove}
+                  onMouseUp={handleDragEnd}
+                  onMouseLeave={handleDragEnd}
+                  onTouchStart={handleDragStart}
+                  onTouchMove={handleDragMove}
+                  onTouchEnd={handleDragEnd}
+                >
+                  <div className="h-2 w-full bg-slate-800">
+                    <div 
+                      className={`h-full ${timeLeft < 500 ? 'bg-rose-500' : 'bg-emerald-400'}`}
+                      style={{ width: `${(timeLeft / TIME_LIMIT) * 100}%`, transition: 'width 50ms linear' }}
+                    />
+                  </div>
+
+                  <div className="flex-1 bg-black relative flex flex-col justify-center overflow-hidden border-b border-slate-800">
+                    
+                    {/* [UX 5] Menambahkan Konteks Klinis/Hints agar tidak hanya bergantung pada visual gelombang EKG */}
+                    <div className="absolute top-4 left-1/2 -translate-x-1/2 w-3/4 flex flex-col items-center z-20">
+                       {currentRhythm.id === 'pea' && (
+                         <div className="bg-rose-900/80 border border-rose-500 text-rose-300 px-4 py-1.5 rounded-full text-xs font-bold animate-pulse shadow-lg shadow-rose-900 mb-2">
+                           ⚠️ NO PULSE PALPABLE
+                         </div>
+                       )}
+                       {/* Penjelasan klinis pendukung keputusan */}
+                       <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600/50 text-slate-300 px-3 py-1 rounded text-[11px] font-medium text-center">
+                         Klinis: {currentRhythm.hint}
+                       </div>
+                    </div>
+
+                    <div className="absolute inset-0 opacity-20 pointer-events-none"
+                         style={{
+                           backgroundImage: 'linear-gradient(rgba(0, 255, 0, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 0, 0.2) 1px, transparent 1px)',
+                           backgroundSize: '20px 20px'
+                         }}>
+                    </div>
+
+                    <div className="w-full overflow-hidden absolute flex items-center" style={{ height: '200px' }}>
+                      <svg 
+                        viewBox="0 0 1000 100" 
+                        className="w-[200%] h-full"
+                        style={{ 
+                          animation: 'ekgScroll 3s linear infinite',
+                          animationPlayState: (isPaused || showQuitModal) ? 'paused' : 'running'
+                        }}
+                        preserveAspectRatio="none"
+                      >
+                        <path 
+                          d={ekgPath} 
+                          fill="none" 
+                          stroke="#10b981"
+                          strokeWidth="3" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                          style={{ filter: 'drop-shadow(0px 0px 4px rgba(16, 185, 129, 0.8))' }}
+                        />
+                      </svg>
+                    </div>
+                    
+                    <div className="absolute top-4 right-4 flex flex-col items-end gap-2 text-emerald-400 font-mono z-10">
+                      <div className="flex items-center gap-2">
+                        <Heart size={16} className="animate-pulse fill-emerald-400" />
+                        <span className="text-2xl font-bold">{currentRhythm.id === 'asystole' || currentRhythm.id === 'vf' || currentRhythm.id === 'vt' ? '---' : currentRhythm.id === 'svt' ? '185' : currentRhythm.id === 'brady' ? '35' : '72'}</span>
+                      </div>
+                      <div className="text-xs text-slate-500">SpO2: {currentRhythm.id === 'asystole' || currentRhythm.id === 'vf' || currentRhythm.id === 'vt' ? '--' : '98'}%</div>
+                    </div>
+
+                    <div className="absolute bottom-4 left-4 font-mono text-emerald-500/50 text-xs z-10">
+                      LEAD II | X1.0 | MONITOR
+                    </div>
+                  </div>
+
+                  <div className="h-24 bg-slate-900/90 backdrop-blur-md flex items-center justify-center relative">
+                     <div className="flex w-full px-6 justify-between items-center text-sm font-semibold tracking-wide">
+                        <div className="text-blue-400 flex items-center gap-2">
+                          <RotateCcw size={18} /> GESER KIRI
+                        </div>
+                        <div className="text-rose-400 flex items-center gap-2">
+                          GESER KANAN <Zap size={18} />
+                        </div>
+                     </div>
+                     <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-12 h-1 bg-slate-700 rounded-full"></div>
+                  </div>
+
+                  {/* Overlays */}
+                  {feedback === 'correct' && (
+                    <div className="absolute inset-0 bg-emerald-500/20 backdrop-blur-sm z-50 flex flex-col items-center justify-center animate-in fade-in duration-200">
+                      <div className="bg-emerald-500 text-white rounded-full w-24 h-24 flex items-center justify-center shadow-[0_0_50px_rgba(16,185,129,0.8)]">
+                        <Heart size={48} className="fill-white" />
+                      </div>
+                      <h3 className="text-3xl font-black mt-4 text-emerald-400 drop-shadow-lg">TEPAT!</h3>
+                      <p className="text-emerald-100/80 mt-1">{currentRhythm.name}</p>
+                    </div>
+                  )}
+
+                  {(feedback === 'wrong' || feedback === 'timeout') && (
+                    <div className="absolute inset-0 bg-rose-600/30 backdrop-blur-sm z-50 flex flex-col items-center justify-center animate-in fade-in duration-200">
+                      <div className="bg-rose-600 text-white rounded-full w-24 h-24 flex items-center justify-center shadow-[0_0_50px_rgba(225,29,72,0.8)]">
+                        <Zap size={48} className="fill-white" />
+                      </div>
+                      <h3 className="text-3xl font-black mt-4 text-rose-400 drop-shadow-lg">
+                        {feedback === 'timeout' ? 'TERLAMBAT!' : 'SALAH!'}
+                      </h3>
+                      <p className="text-rose-100/90 mt-2 text-center px-6">
+                        Itu adalah <br/><span className="font-bold text-xl">{currentRhythm.name}</span>
+                      </p>
+                      <p className="text-rose-300/70 text-sm mt-2 text-center max-w-[80%]">
+                        Ritme ini akan dimunculkan lebih sering.
+                      </p>
+                    </div>
+                  )}
+
+                  {isPaused && !showQuitModal && (
+                    <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex flex-col items-center justify-center animate-in fade-in duration-200 rounded-[2rem]">
+                      <Pause size={48} className="text-slate-400 mb-4" />
+                      <h3 className="text-2xl font-black text-white mb-8 tracking-widest">PAUSED</h3>
+                      <button 
+                        onClick={() => setIsPaused(false)}
+                        className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold shadow-[0_0_20px_-5px_rgba(37,99,235,0.8)] transition-all flex items-center gap-2"
+                      >
+                        <Play size={18} className="fill-white" /> Lanjutkan
+                      </button>
+                    </div>
+                  )}
+
+                </div>
+              </div>
+
+              <div className="mt-8 flex justify-center gap-6 px-4 z-20">
+                <button 
+                  onClick={() => handleAnswer('stay')}
+                  disabled={feedback !== null || isPaused || showQuitModal}
+                  aria-label="Tindakan CPR atau Obat"
+                  className="flex-1 bg-slate-800 hover:bg-slate-700 border-2 border-blue-500/30 text-blue-400 rounded-2xl py-4 font-bold tracking-widest uppercase transition-colors shadow-lg shadow-blue-900/20 active:scale-95 disabled:opacity-50"
+                >
+                  CPR / Drugs
+                </button>
+                <button 
+                  onClick={() => handleAnswer('shock')}
+                  disabled={feedback !== null || isPaused || showQuitModal}
+                  aria-label="Tindakan Shock Defibrilasi"
+                  className="flex-1 bg-rose-600 hover:bg-rose-500 text-white rounded-2xl py-4 font-bold tracking-widest uppercase transition-colors shadow-lg shadow-rose-900/40 active:scale-95 disabled:opacity-50 flex justify-center items-center gap-2"
+                >
+                  <Zap size={20} className="fill-white" /> SHOCK
+                </button>
+              </div>
+
+              <button 
+                onClick={attemptQuit} 
+                disabled={showQuitModal}
+                aria-label="Akhiri Sesi" 
+                className="mt-6 text-slate-500 hover:text-slate-300 text-sm font-medium tracking-wide pb-4 z-20 disabled:opacity-50"
+              >
+                Akhiri Sesi
+              </button>
+              
+              {/* Custom Quit Confirmation Modal */}
+              {showQuitModal && (
+                <div className="absolute inset-0 z-[100] flex items-center justify-center p-4">
+                  <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={cancelQuit}></div>
+                  <div className="bg-slate-900 border border-slate-700 p-6 rounded-2xl shadow-2xl relative z-10 w-full max-w-sm text-center animate-in zoom-in duration-200">
+                    <h3 className="text-xl font-bold text-white mb-2">Akhiri Sesi Drill?</h3>
+                    <p className="text-slate-400 text-sm mb-6">Progress simulasi Anda akan dihitung di layar hasil.</p>
+                    <div className="flex gap-4">
+                      <button onClick={cancelQuit} className="flex-1 py-3 rounded-xl font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+                        Batal
+                      </button>
+                      <button onClick={confirmQuit} className="flex-1 py-3 rounded-xl font-semibold bg-rose-600 text-white hover:bg-rose-500 shadow-[0_0_15px_-3px_rgba(225,29,72,0.5)] transition">
+                        Akhiri
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* --- RESULT SCREEN (UX #6) --- */}
+          {gameState === 'result' && (
+            <div className="relative z-10 max-w-md w-full px-6 flex flex-col items-center animate-in fade-in slide-in-from-bottom-8 duration-500 py-10">
+              <div className="w-20 h-20 bg-gradient-to-tr from-amber-500 to-rose-500 rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(245,158,11,0.4)] mb-6 border-4 border-slate-900">
+                <Award className="w-10 h-10 text-white" />
+              </div>
+              
+              <h1 className="text-3xl font-extrabold text-white mb-2 text-center">Sesi Selesai</h1>
+              <p className="text-slate-400 mb-8 text-center text-sm">Laporan Performa ACLS Anda</p>
+
+              <div className="bg-slate-900/80 border border-slate-700/50 rounded-3xl w-full p-6 shadow-xl mb-8">
+                
+                {/* Accuracy Circle */}
+                <div className="flex flex-col items-center justify-center mb-8">
+                  <div className="relative w-32 h-32 flex items-center justify-center">
+                    <svg className="absolute inset-0 w-full h-full transform -rotate-90">
+                      <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-800" />
+                      <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="8" fill="transparent" 
+                        strokeDasharray="351.85" 
+                        strokeDashoffset={351.85 - (accuracy / 100) * 351.85} 
+                        className={`${accuracy >= 80 ? 'text-emerald-500' : accuracy >= 50 ? 'text-amber-500' : 'text-rose-500'} transition-all duration-1000 ease-out`} />
+                    </svg>
+                    <div className="flex flex-col items-center">
+                      <span className="text-3xl font-black text-white">{accuracy}%</span>
+                      <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Akurasi</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700 flex flex-col">
+                    <span className="text-xs text-slate-400 font-medium mb-1 flex items-center gap-1"><Heart size={12}/> Jawaban Benar</span>
+                    <span className="text-2xl font-bold text-emerald-400">{stats.correct}</span>
+                  </div>
+                  <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700 flex flex-col">
+                    <span className="text-xs text-slate-400 font-medium mb-1 flex items-center gap-1"><ShieldAlert size={12}/> Jawaban Salah</span>
+                    <span className="text-2xl font-bold text-rose-400">{stats.wrong}</span>
+                  </div>
+                  <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700 flex flex-col col-span-2 items-center text-center">
+                    <span className="text-xs text-slate-400 font-medium mb-1 flex items-center gap-1"><Zap size={14}/> Maximum Streak (Beruntun)</span>
+                    <span className="text-3xl font-black text-amber-400">{stats.maxStreak}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-4 w-full">
+                <button onClick={returnToMenu} className="flex-1 py-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded-full font-bold transition">
+                  Menu Utama
+                </button>
+                <button onClick={startGame} className="flex-1 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold shadow-lg shadow-blue-900/50 transition">
+                  Main Lagi
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Global External Footer */}
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center pointer-events-none z-50">
+             <span className="text-[10px] text-slate-400/80 font-mono tracking-wider text-center drop-shadow-md">
+                Dev: Bayushi Eka Putra, MD, FIHA. Part of CardiologyVault
+             </span>
+          </div>
+
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
