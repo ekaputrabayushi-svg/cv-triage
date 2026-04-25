@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Guideline Learner ESC 2025 Cardio-Pregnancy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Base optimizations for mobile */
+        body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; font-variant-numeric: tabular-nums; }
+        
+        /* Flashcard 3D Flip & Slide Animations */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-preserve-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        .card-transition { transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1); }
+        
+        .slide-next { animation: slideNext 0.3s ease-out forwards; }
+        .slide-prev { animation: slidePrev 0.3s ease-out forwards; }
+        
+        @keyframes slideNext {
+            0% { transform: translateX(30px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slidePrev {
+            0% { transform: translateX(-30px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Swipe Affordance Animation */
+        .animate-swipe-hint { animation: swipeHint 2s infinite; }
+        @keyframes swipeHint {
+            0%, 100% { transform: translateX(0); opacity: 0.5; }
+            50% { transform: translateX(5px); opacity: 1; }
+        }
+
+        /* Custom Scrollbar for inner content */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        .fade-in { animation: fadeIn 0.3s ease-in-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Semantic colors for clinical badges */
+        .badge-red { background-color: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+        .badge-amber { background-color: #fef3c7; color: #92400e; border: 1px solid #fbbf24; }
+        .badge-green { background-color: #dcfce3; color: #166534; border: 1px solid #4ade80; }
+        .badge-blue { background-color: #dbeafe; color: #1e40af; border: 1px solid #60a5fa; }
+        .badge-purple { background-color: #f3e8ff; color: #6b21a8; border: 1px solid #c084fc; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col overflow-x-hidden">
+
+    <!-- Header & Mode Switcher -->
+    <header class="bg-slate-900 text-white shadow-sm sticky top-0 z-50 border-b border-white/10">
+        <div class="max-w-6xl mx-auto px-4 py-4 sm:py-5">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex items-start gap-3">
+                    <div class="bg-white/10 p-2.5 rounded-xl border border-white/10 hidden sm:block">
+                        <i class="fa-solid fa-heart-pulse text-lg text-rose-300"></i>
+                    </div>
+                    <div>
+                        <p class="text-[0.7rem] sm:text-xs uppercase tracking-[0.18em] text-slate-300 font-semibold">
+                            CardiologyVault Learning Series
+                        </p>
+                        <h1 class="mt-1 text-lg sm:text-2xl font-bold tracking-tight leading-tight">
+                            ESC 2025 Cardio-Pregnancy
+                        </h1>
+                        <p class="mt-1 text-sm text-slate-300 font-medium">
+                            Flashcards dan guideline matrix yang ringkas, cepat, dan enak dibaca.
+                        </p>
+                        <p class="mt-2 text-[0.72rem] text-slate-400">
+                            Bayushi Eka Putra, MD, FIHA
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Main Mode Toggle -->
+                <div class="flex flex-col sm:flex-row bg-white/5 p-1 rounded-xl border border-white/10 shadow-inner shrink-0 gap-1">
+                    <button onclick="setMode('learner')" id="btnModeLearner" class="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-300 bg-blue-600 text-white shadow-md">
+                        <i class="fa-solid fa-book-medical"></i> <span class="hidden sm:inline">Learner</span> (102)
+                    </button>
+                    <button onclick="setMode('comparator')" id="btnModeComparator" class="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-300 text-slate-400 hover:text-white hover:bg-white/10">
+                        <i class="fa-solid fa-code-compare"></i> <span class="whitespace-nowrap">ESC 2018 vs 2025</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mini Learning Dashboard KPI -->
+        <div class="bg-slate-950/50 border-t border-slate-800 py-2 px-4">
+            <div class="max-w-6xl mx-auto flex justify-between items-center text-[0.65rem] sm:text-xs font-semibold text-slate-300 overflow-x-auto hide-scrollbar gap-4">
+                <div class="flex items-center gap-1.5 whitespace-nowrap" id="kpi-mastered">
+                    <i class="fa-solid fa-check-circle text-green-400"></i> 0 Mastered
+                </div>
+                <div class="flex items-center gap-1.5 whitespace-nowrap" id="kpi-bookmarked">
+                    <i class="fa-solid fa-bookmark text-amber-400"></i> 0 Saved
+                </div>
+                <div class="flex items-center gap-1.5 whitespace-nowrap">
+                    <button onclick="resetProgress()" class="text-slate-400 hover:text-white underline decoration-slate-600 underline-offset-2">Reset Progress</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sub Navigation (Tabs) - Only visible in Learner Mode -->
+    <div id="tabContainerWrapper" class="bg-white border-b border-slate-200 shadow-sm sticky top-[108px] sm:top-[122px] z-40">
+        <div class="max-w-6xl mx-auto px-2 sm:px-4">
+            <nav class="flex overflow-x-auto hide-scrollbar gap-1 py-1" id="tabContainer">
+                <button onclick="setTab('flashcard')" id="btnTabFlashcard" class="whitespace-nowrap flex items-center justify-center flex-1 gap-2 px-4 py-3 min-w-[100px] min-h-[44px] text-sm font-bold border-b-2 border-blue-600 text-blue-600 transition-colors">
+                    <i class="fa-solid fa-clone"></i> Flashcards
+                </button>
+                <button onclick="setTab('cheatsheet')" id="btnTabCheatsheet" class="whitespace-nowrap flex items-center justify-center flex-1 gap-2 px-4 py-3 min-w-[100px] min-h-[44px] text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors">
+                    <i class="fa-solid fa-table-list"></i> Guideline Matrix
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Filter Chips Area (Dynamic) -->
+    <div id="filterContainer" class="bg-slate-50 border-b border-slate-200 py-2 hidden">
+        <div class="max-w-6xl mx-auto px-4 flex overflow-x-auto hide-scrollbar gap-2 pb-1" id="filterChips">
+            <!-- Chips injected by JS -->
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-6xl mx-auto px-4 py-6 w-full pb-28 md:pb-6" id="mainContent">
+        <!-- Content will be injected here by JS -->
+    </main>
+
+    <!-- Mobile Sticky Action Bar (Only for Flashcards) -->
+    <div id="mobileActionBar" class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-50 p-2 pb-safe hidden">
+        <div class="flex justify-between items-center gap-2 max-w-md mx-auto">
+            <button onclick="navigateCard('prev')" class="flex flex-col items-center justify-center min-h-[48px] px-4 rounded-xl text-slate-500 active:bg-slate-100">
+                <i class="fa-solid fa-chevron-left text-lg mb-0.5"></i>
+                <span class="text-[0.6rem] font-bold uppercase">Prev</span>
+            </button>
+            
+            <button onclick="toggleMastery()" id="btnActionMastery" class="flex-1 flex flex-col items-center justify-center min-h-[48px] px-2 rounded-xl text-slate-400 border border-slate-200 active:bg-slate-50 transition-colors">
+                <i class="fa-solid fa-check-circle text-lg mb-0.5"></i>
+                <span class="text-[0.6rem] font-bold uppercase">Got it</span>
+            </button>
+            
+            <button onclick="flipCard()" class="flex-1 flex flex-col items-center justify-center min-h-[48px] px-2 rounded-xl bg-blue-600 text-white shadow-sm active:bg-blue-700 transition-colors">
+                <i class="fa-solid fa-rotate text-lg mb-0.5"></i>
+                <span class="text-[0.6rem] font-bold uppercase">Flip</span>
+            </button>
+
+            <button onclick="toggleBookmark()" id="btnActionBookmark" class="flex flex-col items-center justify-center min-h-[48px] px-4 rounded-xl text-slate-400 active:bg-slate-100 transition-colors">
+                <i class="fa-regular fa-bookmark text-lg mb-0.5" id="iconActionBookmark"></i>
+                <span class="text-[0.6rem] font-bold uppercase">Save</span>
+            </button>
+            
+            <button onclick="navigateCard('next')" class="flex flex-col items-center justify-center min-h-[48px] px-4 rounded-xl text-slate-500 active:bg-slate-100">
+                <i class="fa-solid fa-chevron-right text-lg mb-0.5"></i>
+                <span class="text-[0.6rem] font-bold uppercase">Next</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- DATA & LOGIC SCRIPT -->
+    <script>
+        // ==========================================
+        // 1. DATA ENRICHMENT: TOPICS & URGENCY (102 SOAL LEARNER)
+        // ==========================================
+        const learnerRaw = [
+            { id: 1, topic: "Risk Stratification", urgency: "Must Know", badgeClass: "badge-blue", q: "Apa klasifikasi yang paling direkomendasikan untuk menilai risiko kardiovaskular maternal?", a: "Modified World Health Organization (mWHO) classification.", pearl: "mWHO paling akurat memprediksi mortalitas maternal dibanding sistem skoring lain.", rationale: "Berdasarkan data dari registri ROPAC, sistem klasifikasi mWHO terbukti memiliki akurasi prediktif tertinggi. Pembagian ini mengkategorikan risiko dari I (sangat rendah) hingga IV (kehamilan dikontraindikasikan mutlak)." },
+            { id: 2, topic: "Risk Stratification", urgency: "Absolute Contraindication", badgeClass: "badge-red", q: "Sebutkan 3 contoh penyakit yang masuk dalam mWHO Class IV (Kehamilan dilarang).", a: "1) Hipertensi pulmonal, 2) Disfungsi LV sistemik berat (LVEF <30%), 3) Stenosis Mitral/Aorta simtomatik berat.", pearl: "Kondisi ini memicu mortalitas maternal 30-50%.", rationale: "Hipertensi pulmonal memicu krisis kardiogenik akibat gagal ventrikel kanan saat menahan resistensi ekstra; disfungsi LV berat tidak mampu mentolerir peningkatan curah jantung kehamilan sebesar 50%." },
+            { id: 3, topic: "Diagnosis", urgency: "Class I", badgeClass: "badge-green", q: "Kapan biomarker BNP/NT-proBNP rutin direkomendasikan pada ibu hamil dengan kelainan jantung?", a: "Pada Trimester Pertama (sebagai baseline).", pearl: "Membantu membedakan dispnea fisiologis kehamilan vs dekompensasi di TM2/TM3.", rationale: "Pemeriksaan baseline sangat krusial. Pada trimester kedua dan ketiga, kehamilan memicu sesak napas (fisiologis). NT-proBNP trimester satu menjadi pembanding absolut jika klinis memburuk." },
+            { id: 4, topic: "Diagnosis", urgency: "Must Know", badgeClass: "badge-blue", q: "Pemeriksaan D-dimer seringkali meningkat normal pada kehamilan. Apakah D-dimer masih berguna?", a: "Ya, nilai D-dimer yang NORMAL (negatif) tetap berguna untuk menyingkirkan (rule-out) VTE/PTE.", pearl: "Fokus pada Negative Predictive Value (NPV), bukan nilai positifnya.", rationale: "D-dimer mempertahankan High NPV. Artinya, jika D-dimer negatif, emboli paru atau DVT dapat disingkirkan tanpa ibu perlu terpapar radiasi pemeriksaan CTPA." },
+            { id: 5, topic: "Hemodynamics", urgency: "Exam Favorite", badgeClass: "badge-purple", q: "Kapan curah jantung (Cardiac Output) mencapai puncaknya selama masa kehamilan?", a: "Sekitar usia kehamilan 24 - 32 minggu.", pearl: "Ini adalah periode window paling rentan terjadinya gagal jantung akut.", rationale: "Peningkatan beban hemodinamik kehamilan terdiri dari peningkatan volume plasma (hingga 50%) dan takikardia fisiologis, mencapai puncaknya di akhir TM2 hingga awal TM3." },
+            { id: 6, topic: "Hypertension", urgency: "Class I", badgeClass: "badge-green", q: "Berapa target inisiasi terapi farmakologis untuk SEMUA jenis hipertensi pada kehamilan (ESC 2025)?", a: "Tekanan darah persisten ≥ 140/90 mmHg.", pearl: "Rekomendasi ini mengadopsi studi CHAP secara universal.", rationale: "Inisiasi pengobatan antihipertensi dini pada batas <140/90 mmHg terbukti signifikan menurunkan risiko preeklampsia progresif berat tanpa menyebabkan gangguan hipoperfusi plasenta pada janin." },
+            { id: 7, topic: "Drugs", urgency: "Class I", badgeClass: "badge-green", q: "Sebutkan 3 obat antihipertensi oral lini pertama yang aman untuk kehamilan.", a: "Metildopa, Labetalol, dan Nifedipine.", pearl: "Hindari diuretik jika preeklampsia (volume contracted).", rationale: "Metildopa terbukti sangat aman untuk neurodevelopmental bayi. Labetalol bekerja cepat memblokade alfa & beta. Nifedipine long-acting adalah vasodilator kuat yang tidak mengganggu perfusi uterus." },
+            { id: 8, topic: "Drugs", urgency: "Red Flag", badgeClass: "badge-red", q: "Apa obat hipertensi yang KONTRAINDIKASI MUTLAK karena memicu gagal ginjal janin?", a: "ACE inhibitor, ARB, dan Direct Renin Inhibitor.", pearl: "Menyebabkan fetal anuria dan Potter's sequence.", rationale: "Pemblokir RAAS bersifat fetotoksik parah jika melewati plasenta, menyebabkan disgenesis tubular ginjal janin, oligohidramnion persisten, hingga kematian perinatal." },
+            { id: 9, topic: "Hypertension", urgency: "Class I", badgeClass: "badge-green", q: "Kapan dan berapa dosis pemberian Aspirin untuk mencegah preeklampsia?", a: "Aspirin 150 mg/hari (malam hari) dimulai usia kehamilan 11-14 minggu hingga 36 minggu.", pearl: "Dosis 150mg lebih superior dibanding 75mg (Studi ASPRE).", rationale: "Pemberian Aspirin dosis ini secara signifikan menekan produksi tromboksan A2 vasokonstriktif dari platelet ibu, memperbaiki invasi trofoblas, dan mencegah iskemia plasenta." },
+            { id: 10, topic: "Emergency", urgency: "Must Know", badgeClass: "badge-blue", q: "Obat IV apa yang direkomendasikan untuk krisis hipertensi (TD ≥ 170/110 mmHg) ibu hamil?", a: "Labetalol IV, Urapidil IV, atau Nicardipine IV.", pearl: "Turunkan tekanan darah perlahan, jangan mendadak hipotensi.", rationale: "Labetalol dan Nicardipine IV menjadi pilihan karena mampu menurunkan MAP ibu secara terkendali tanpa menyebabkan hipotensi mendadak yang bisa memicu fetal distress (hipoksia janin)." },
+            { id: 11, topic: "Heart Failure", urgency: "Red Flag", badgeClass: "badge-red", q: "Apa yang dimaksud dengan 'Washout Period' pada wanita HFrEF yang berencana hamil?", a: "Penghentian absolut ACEi/ARB, ARNI, MRA, dan SGLT2i sebelum konsepsi.", pearl: "Keempat pilar HF dilarang saat hamil.", rationale: "Pilar pengobatan modern HFrEF sangat teratogenik dan berpotensi memicu cacat fatal pada janin. Pengobatan harus disubstitusi dengan hydralazine/nitrates selama fase prakonsepsi." },
+            { id: 12, topic: "Heart Failure", urgency: "Must Know", badgeClass: "badge-blue", q: "Kapan diagnosis Peripartum Cardiomyopathy (PPCM) paling sering ditegakkan?", a: "Bulan terakhir kehamilan hingga beberapa bulan setelah persalinan.", pearl: "PPCM adalah diagnosis eksklusi (singkirkan penyebab HF lain).", rationale: "PPCM dipicu oleh stres oksidatif berlebih yang membelah hormon prolaktin menjadi fragmen 16-kDa. Fragmen ini bersifat anti-angiogenik dan sangat toksik terhadap endotel serta miokardium ibu." },
+            { id: 13, topic: "Drugs", urgency: "Absolute Contraindication", badgeClass: "badge-red", q: "Beta-blocker apa yang TEGAS DIKONTRAINDIKASIKAN selama kehamilan?", a: "Atenolol.", pearl: "Gunakan beta-1 selektif lain seperti Bisoprolol atau Metoprolol.", rationale: "Atenolol menembus sawar plasenta dan terbukti mengurangi aliran darah uteroplasenta secara signifikan, secara langsung memicu Intrauterine Growth Restriction (IUGR) yang parah." },
+            { id: 14, topic: "Heart Failure", urgency: "Exam Favorite", badgeClass: "badge-purple", q: "Apa konsep regimen B-O-A-R-D pada terapi PPCM berat?", a: "Bromocriptine, Oral HF therapy, Anticoagulant, Relaxing agents, Diuretics.", pearl: "Ini adalah tata laksana spesifik ESC untuk PPCM.", rationale: "Bromocriptine menghentikan produksi prolaktin; Antikoagulan (profilaksis/terapeutik) wajib diberikan karena risiko terbentuknya trombus intra-kavitas sangat tinggi akibat LVEF yang sangat rendah." },
+            { id: 15, topic: "Heart Failure", urgency: "Class IIa", badgeClass: "badge-amber", q: "Apa indikasi pemberian Bromocriptine menurut panduan ESC 2025?", a: "PPCM akut dengan disfungsi ventrikel berat (LVEF <25%) atau syok kardiogenik.", pearl: "Wajib disertai pemberian antikoagulan profilaksis.", rationale: "Rekomendasi Bromocriptine diperkuat karena pemutusan kaskade prolaktin toksik di awal onset terbukti memfasilitasi pemulihan selular miokardium (LVEF recovery)." },
+            { id: 16, topic: "Heart Failure", urgency: "Must Know", badgeClass: "badge-blue", q: "Berapa lama regimen Bromocriptine diberikan pada PPCM berat?", a: "2.5 mg BID (2x/hari) selama 2 minggu, dilanjutkan 2.5 mg QD (1x/hari) selama 6 minggu.", pearl: "Total durasi pengobatan adalah 8 minggu.", rationale: "Perpanjangan durasi hingga 8 minggu ini didukung oleh observasi klinis yang menunjukkan tingkat pemulihan (recovery rate) ventrikel kiri yang paling superior dibanding durasi singkat." },
+            { id: 17, topic: "Risk Stratification", urgency: "Red Flag", badgeClass: "badge-red", q: "Apakah ibu riwayat PPCM dengan LVEF yang sudah pulih (>50%) boleh hamil lagi?", a: "Dipertimbangkan (Class IIb), tapi ada risiko relaps gagal jantung 20%.", pearl: "Jika LVEF BELUM pulih (<50%), kehamilan mutlak DILARANG.", rationale: "Pemulihan angka LVEF tidak berarti arsitektur sel miokardium sembuh sempurna. Fungsi kontraktil cadangan masih rentan menghadapi beban volumetrik kehamilan berikutnya." },
+            { id: 18, topic: "Valvular", urgency: "Class I", badgeClass: "badge-green", q: "Kapan intervensi profilaksis sangat disarankan pada Stenosis Mitral (MS) reumatik?", a: "SEBELUM konsepsi jika luas katup (MVA) < 1.5 cm², MESKIPUN asimtomatik.", pearl: "Gunakan intervensi perkutan (PTMC) jika anatomi sesuai.", rationale: "Volume plasma yang meningkat tajam saat hamil (terutama TM2) hampir pasti memicu tekanan atrium kiri tinggi, transudasi masif, dan edema paru akut pada area katup < 1.5 cm²." },
+            { id: 19, topic: "Valvular", urgency: "Must Know", badgeClass: "badge-blue", q: "Obat lini pertama untuk mengontrol takikardia pada Stenosis Mitral saat hamil?", a: "Beta-1 selective blockers (contoh: Bisoprolol, Metoprolol).", pearl: "Takikardia mematikan pada Stenosis Mitral.", rationale: "Beta-blocker menurunkan laju denyut jantung (heart rate), sehingga memperpanjang durasi fase diastolik. Ini memberi waktu lebih lama bagi darah melewati katup sempit menuju ventrikel." },
+            { id: 20, topic: "Valvular", urgency: "Class IIa", badgeClass: "badge-amber", q: "Jika katup jantung biologis rusak (degenerasi) saat hamil, apa intervensi pilihannya?", a: "Intervensi katup transkateter (Valve-in-Valve TAVI/TMVR).", pearl: "Jauhi operasi jantung terbuka (Bypass) saat hamil jika memungkinkan.", rationale: "Penggunaan mesin Cardiopulmonary Bypass (CPB) pada operasi jantung terbuka memiliki mortalitas fetal sangat tinggi (hipoperfusi). Pendekatan transkateter jauh lebih aman." },
+            { id: 21, topic: "Anticoagulation", urgency: "Must Know", badgeClass: "badge-blue", q: "Antikoagulan Trimester 1 untuk Katup Mekanik jika butuh VKA ≤ 5 mg/hari?", a: "Lanjutkan Warfarin (VKA).", pearl: "Dosis ≤ 5mg/hari sangat aman dan tidak memicu embriopati signifikan.", rationale: "Pada dosis rendah (≤ 5 mg), risiko teratogenik warfarin (fetal warfarin syndrome) turun drastis <3%. Sementara itu, efektivitasnya mencegah trombosis katup mekanik mekanik tidak tertandingi oleh Heparin." },
+            { id: 22, topic: "Anticoagulation", urgency: "Red Flag", badgeClass: "badge-red", q: "Jika menggunakan LMWH (Enoxaparin) untuk katup mekanik, apa syarat mutlaknya?", a: "Pemantauan kadar Anti-Xa berkala (peak & trough) HARUS tersedia ketat.", pearl: "Tanpa Anti-Xa, LMWH dikontraindikasikan (Class III).", rationale: "Kehamilan mempercepat laju ekskresi ginjal (GFR) terhadap LMWH. Dosis standar akan menjadi sub-terapeutik dengan cepat, memicu risiko tinggi trombosis katup mekanik yang fatal." },
+            { id: 23, topic: "Anticoagulation", urgency: "Must Know", badgeClass: "badge-blue", q: "Kapan Warfarin (VKA) harus dihentikan menjelang persalinan?", a: "Pada usia kehamilan 36 minggu, diganti bridging dengan LMWH atau UFH.", pearl: "Menghindari persalinan saat darah janin sedang ter-antikoagulasi.", rationale: "VKA menembus plasenta. Bridging dilakukan untuk membersihkan efek antikoagulan sistemik pada janin guna mencegah perdarahan intrakranial traumatik (Fetal ICH) saat proses persalinan pervaginam." },
+            { id: 24, topic: "Aorta Disease", urgency: "Class I", badgeClass: "badge-green", q: "Batas diameter Aorta untuk operasi profilaksis SEBELUM hamil pada Sindrom Marfan?", a: "Diameter ≥ 40 mm (jika ada riwayat keluarga/dilatasi cepat) atau ≥ 45 mm (standar).", pearl: "Aorta sangat rentan di TM3 dan peripartum.", rationale: "Kehamilan menambah curah jantung dan tekanan darah. Lebih buruk lagi, hormon relaksin merubah arsitektur jaringan ikat (kolagen) dinding aorta, sangat rentan diseksi spontan (Tipe A)." },
+            { id: 25, topic: "Arrhythmia", urgency: "Class I", badgeClass: "badge-green", q: "Tatalaksana lini pertama SVT (Supraventricular Tachycardia) akut di UGD untuk ibu hamil?", a: "1) Manuver Vagal, jika gagal 2) Adenosin IV bolus cepat.", pearl: "Adenosin sangat aman, paruh waktunya < 10 detik.", rationale: "Adenosin efektif memutus sirkuit re-entry di AV Node. Masa kerjanya sangat singkat dan terdegradasi cepat di sirkulasi ibu sehingga tidak menembus sawar plasenta secara bermakna." },
+            { id: 26, topic: "Emergency", urgency: "Must Know", badgeClass: "badge-blue", q: "Bagaimana posisi resusitasi (RJP/CPR) yang tepat pada ibu hamil usia kehamilan lanjut?", a: "Left Lateral Tilt 15-30 derajat (miring ke kiri) ATAU penarikan uterus manual ke kiri.", pearl: "Bebaskan Vena Kava Inferior (Aortocaval compression).", rationale: "Uterus gravid yang membesar akan menekan kuat vena kava inferior saat ibu telentang (supine), menghalangi Venous Return ke jantung. CPR tidak akan menghasilkan stroke volume jika preload nol." },
+            { id: 27, topic: "Emergency", urgency: "Must Know", badgeClass: "badge-blue", q: "Apakah kardioversi elektrik atau Defibrilasi (DC Shock) aman dilakukan saat hamil?", a: "Ya, SANGAT AMAN. Lakukan dengan pengaturan energi standar biasa.", pearl: "Jangan menunda kejut listrik jika pasien aritmia hemodinamik tidak stabil.", rationale: "Cairan amnion menyebarkan arus listrik secara difus. Jumlah listrik aktual yang menembus dan mencapai miokardium janin sangat kecil dan hampir tidak pernah menginduksi aritmia sekunder." },
+            { id: 28, topic: "Ischemic", urgency: "Class I", badgeClass: "badge-green", q: "Jika terjadi STEMI akut pada ibu hamil, reperfusi apa yang menjadi pilihan utama?", a: "Primary PCI (Percutaneous Coronary Intervention).", pearl: "Terapi fibrinolitik/trombolitik sangat dihindari kecuali terpaksa.", rationale: "Fibrinolitik (Streptokinase/Alteplase) memiliki risiko fatal memicu solusio plasenta dan perdarahan masif ibu. PCI jauh lebih aman asalkan disertai pelindung radiasi abdomen (lead apron)." },
+            { id: 29, topic: "Ischemic", urgency: "Class I", badgeClass: "badge-green", q: "Akses vaskular PCI mana yang paling direkomendasikan pada ibu hamil?", a: "Akses Arteri Radialis (Tangan).", pearl: "Akses femoral sedapat mungkin dihindari karena dekat janin.", rationale: "Akses radial sangat memudahkan penempatan perisai timbal (lead apron) yang tebal menutupi abdomen dan pelvis, sehingga paparan radiasi fluoroskopi ke rahim dan janin bisa dibuat mendekati nol." },
+            { id: 30, topic: "Anticoagulation", urgency: "Absolute Contraindication", badgeClass: "badge-red", q: "Bolehkah antikoagulan oral DOAC (Apixaban, Rivaroxaban) diberikan saat hamil?", a: "TIDAK. Dikontraindikasikan mutlak (Class III) selama hamil dan menyusui.", pearl: "Molekul DOAC sangat kecil dan langsung meracuni janin.", rationale: "DOAC melintasi plasenta secara bebas, meracuni sistem koagulasi janin dan berisiko tinggi memicu perdarahan intrakranial fetal. Obat ini juga aktif diekskresikan melalui Air Susu Ibu (ASI)." },
+            { id: 31, topic: "ACHD", urgency: "Class I", badgeClass: "badge-green", q: "Metode persalinan apa yang direkomendasikan untuk sebagian besar wanita dengan penyakit jantung?", a: "Persalinan Pervaginam (Vaginal Delivery).", pearl: "Sectio Caesarea (SC) HANYA untuk indikasi obstetrik atau kondisi kardiak spesifik.", rationale: "Persalinan pervaginam memicu kehilangan darah yang lebih sedikit dan risiko infeksi/trombosis yang lebih rendah dibandingkan SC. Pergeseran cairan pascapersalinan juga lebih dapat ditoleransi." },
+            { id: 32, topic: "Delivery", urgency: "Class I", badgeClass: "badge-green", q: "Sebutkan 3 indikasi kardiak untuk persalinan Sectio Caesarea (SC) terencana.", a: "1) Persalinan pada pasien antikoagulan oral, 2) Sindrom Marfan dengan diameter aorta >45 mm, 3) Gagal jantung akut/syok kardiogenik.", pearl: "SC mencegah mengejan (Valsalva) yang bisa memecahkan aorta yang melebar.", rationale: "Pada kondisi ini, beban hemodinamik dari persalinan pervaginam (fluktuasi curah jantung & tekanan darah) atau risiko perdarahan intrakranial janin (akibat antikoagulan) terlalu tinggi." },
+            { id: 33, topic: "ACHD", urgency: "Red Flag", badgeClass: "badge-red", q: "Apa risiko utama kehamilan pada wanita dengan Sindrom Eisenmenger?", a: "Mortalitas maternal sangat tinggi (20-50%) dan kehamilan dikontraindikasikan mutlak (mWHO IV).", pearl: "Sianosis janin dan IUGR hampir pasti terjadi.", rationale: "Penurunan resistensi vaskular sistemik (SVR) akibat kehamilan memicu perburukan pirau (shunt) kanan-ke-kiri, menyebabkan hipoksia ibu yang parah dan henti jantung." },
+            { id: 34, topic: "Endocarditis", urgency: "Class IIa", badgeClass: "badge-amber", q: "Siapa saja ibu hamil yang perlu profilaksis antibiotik Endokarditis Infektif (IE) saat persalinan?", a: "HANYA risiko tinggi: Katup prostetik, riwayat IE sebelumnya, atau PJB sianotik yang belum dikoreksi.", pearl: "Tidak disarankan rutin untuk persalinan pervaginam atau SC normal tanpa faktor risiko.", rationale: "Bakteremia transien saat persalinan normal jarang memicu endokarditis pada katup asli yang sehat, namun sangat fatal jika menempel pada material buatan/prostetik." },
+            { id: 35, topic: "Arrhythmia", urgency: "Absolute Contraindication", badgeClass: "badge-red", q: "Obat antiaritmia apa yang DILARANG KERAS selama kehamilan karena toksisitas tiroid janin?", a: "Amiodarone.", pearl: "Gunakan obat lini lain seperti Beta-blocker, Flecainide, atau Sotalol.", rationale: "Amiodarone mengandung iodine tinggi dan menembus plasenta secara bebas. Ini dapat menyebabkan hipotiroidisme, goiter (gondok), dan retardasi mental pada janin." },
+            { id: 36, topic: "Ischemic", urgency: "Must Know", badgeClass: "badge-blue", q: "Apa penyebab paling sering Infark Miokard Akut (AMI) terkait kehamilan?", a: "Spontaneous Coronary Artery Dissection (SCAD).", pearl: "Berbeda dengan populasi umum yang disebabkan oleh ruptur plak aterosklerotik.", rationale: "Perubahan hormon kehamilan merusak arsitektur jaringan ikat dan vasa vasorum arteri koroner, meningkatkan kerentanan dinding pembuluh darah untuk robek secara spontan." },
+            { id: 37, topic: "Postpartum", urgency: "Must Know", badgeClass: "badge-blue", q: "Kapan tekanan darah pascasalin biasanya mencapai puncaknya (peak)?", a: "Hari ke 3 sampai 6 setelah persalinan.", pearl: "Waspada preeklampsia onset lambat atau perburukan hipertensi di minggu pertama postpartum.", rationale: "Pergeseran cairan masif dari ruang ekstravaskular (edema) kembali ke ruang intravaskular terjadi secara intensif pada periode ini, sangat membebani sirkulasi sistemik ibu." },
+            { id: 38, topic: "Contraception", urgency: "Red Flag", badgeClass: "badge-red", q: "Metode kontrasepsi apa yang DILARANG pada pasien jantung mWHO Class III dan IV?", a: "Kontrasepsi hormonal yang mengandung Estrogen (Combined Oral Contraceptives).", pearl: "Gunakan Progesterone-only pill/implant atau IUD (LARC).", rationale: "Estrogen sangat bersifat prothrombotic. Pada pasien dengan disfungsi jantung berat atau katup mekanik, paparan estrogen melipatgandakan risiko tromboemboli yang fatal." },
+            { id: 39, topic: "Valvular", urgency: "Class IIa", badgeClass: "badge-amber", q: "Bagaimana efek kehamilan terhadap umur katup jantung biologis (Bioprosthetic valve)?", a: "Mempercepat laju degenerasi struktural (SVD - Structural Valve Deterioration).", pearl: "Katup biologis terhindar dari pemakaian VKA, tapi berisiko cepat rusak saat hamil.", rationale: "Perubahan hemodinamik yang ekstrem, peningkatan stres geser (shear stress), dan perubahan profil kalsium maternal memicu kalsifikasi dan robekan daun katup bioprostetik lebih dini." },
+            { id: 40, topic: "Device", urgency: "Class I", badgeClass: "badge-green", q: "Apakah ibu hamil yang sudah memiliki ICD (Implantable Cardioverter Defibrillator) aman untuk meneruskan kehamilan?", a: "Ya, kehamilan aman ditoleransi dan ICD harus tetap dibiarkan aktif.", pearl: "Cek rutin fungsi ICD dan sesuaikan parameter batas takikardia.", rationale: "Perangkat ICD tidak membahayakan janin. Namun, peningkatan takikardia fisiologis saat hamil perlu diantisipasi dengan memprogram ulang ICD agar tidak memicu 'Inappropriate Shock'." },
+            { id: 41, topic: "Device", urgency: "Class I", badgeClass: "badge-green", q: "Bolehkah implantasi Pacemaker atau ICD dilakukan SAAT ibu sedang hamil?", a: "Boleh, sangat disarankan dipandu Echocardiography atau Electroanatomic mapping.", pearl: "Tunda hingga usia kehamilan > 8 minggu jika kondisi klinis memungkinkan.", rationale: "Implantasi aman jika menggunakan metode zero-fluoroscopy (dipandu USG). Jika fluoroskopi terpaksa digunakan, minimalkan waktu paparan dan pasang pelindung timbal menutupi panggul." },
+            { id: 42, topic: "Aorta Disease", urgency: "Must Know", badgeClass: "badge-blue", q: "Pada Sindrom Turner, indeks apa yang digunakan untuk menilai risiko diseksi aorta?", a: "Aortic Size Index (ASI) = Diameter Aorta dibagi Luas Permukaan Tubuh (BSA).", pearl: "ASI > 25 mm/m² adalah indikasi absolut evaluasi bedah pranikah.", rationale: "Wanita dengan Sindrom Turner umumnya memiliki postur/perawakan yang pendek. Penggunaan cut-off diameter absolut (misal 40 mm) sering meleset; ukuran aorta harus disesuaikan dengan luas area tubuh." },
+            { id: 43, topic: "Pulmonary Hypertension", urgency: "Class I", badgeClass: "badge-green", q: "Jika pasien Hipertensi Pulmonal (PAH) 'kebobolan' hamil, obat PAH apa yang aman dilanjutkan?", a: "Sildenafil (PDE-5 inhibitor) dan Analog Prostasiklin (IV/Inhalasi).", pearl: "Hentikan ERA (Endothelin Receptor Antagonist) seperti Bosentan segera.", rationale: "Golongan obat ERA (Bosentan) sangat teratogenik. Pengobatan PAH krusial bagi kelangsungan hidup ibu, sehingga harus segera diganti ke PDE-5 inhibitor dan Prostasiklin yang lebih aman untuk organ janin." },
+            { id: 44, topic: "Valvular", urgency: "Must Know", badgeClass: "badge-blue", q: "Manakah yang secara hemodinamik lebih bisa ditoleransi saat hamil: Stenosis Aorta (AS) atau Stenosis Mitral (MS)?", a: "Stenosis Aorta (AS) simtomatik ringan-sedang JAUH LEBIH BAIK ditoleransi dibanding MS.", pearl: "Hati-hati dan larang hamil jika AS memicu disfungsi LV sistolik berat.", rationale: "Ventrikel kiri (LV) yang hipertrofi akibat AS masih cukup tangguh memompa beban cairan kehamilan ekstra. Sebaliknya, MS langsung memompa sisa cairan berlebih ke paru, dengan cepat memicu edema paru." },
+            { id: 45, topic: "Delivery", urgency: "Class IIa", badgeClass: "badge-amber", q: "Apa teknik anestesi regional pilihan untuk persalinan pada ibu dengan kelainan kardiak?", a: "Anestesi Epidural.", pearl: "Lebih dipilih (Class IIa) daripada Anestesi Spinal.", rationale: "Anestesi Epidural memiliki keunggulan karena dapat dititrasi lambat. Hal ini mencegah terjadinya penurunan resistensi vaskular sistemik (SVR) mendadak (hipotensi drop) yang sangat berbahaya, yang lazim terjadi pada Anestesi Spinal tunggal." },
+            { id: 46, topic: "Heart Failure", urgency: "Class III", badgeClass: "badge-red", q: "Bolehkah memberikan cairan infus ekstra (fluid pre-loading) secara rutin sebelum induksi anestesi neuroaksial pada pasien jantung?", a: "Sangat DILARANG.", pearl: "Intake cairan harus diawasi ketat dan sangat dibatasi saat inpartu.", rationale: "Pemberian bolus cairan infus pre-loading secara rutin untuk cegah hipotensi akan langsung membanjiri jantung kanan ibu yang sudah kewalahan, memicu edema paru akut seketika di meja persalinan." },
+            { id: 47, topic: "Arrhythmia", urgency: "Class I", badgeClass: "badge-green", q: "Obat pencegah (profilaksis) lini pertama untuk pasien yang sering kambuh Takikardia Supraventrikular (SVT) pada kehamilan?", a: "Beta-1 selektif blocker (Bisoprolol/Metoprolol) atau Verapamil oral.", pearl: "Dosis mungkin perlu dinaikkan di TM3 karena laju filtrasi ginjal ibu meningkat pesat.", rationale: "SVT sangat rentan kambuh di trimester 3 akibat takikardia fisiologis, kecemasan, dan tonus simpatis tinggi. Agen pemblokir AV node ini aman meredam listrik jantung ibu dan tidak mengganggu janin." },
+            { id: 48, topic: "Valvular", urgency: "Red Flag", badgeClass: "badge-red", q: "Langkah terpenting pertama jika dicurigai terjadi trombosis katup mekanik akut (mendadak sesak/shock) pada ibu hamil?", a: "Echocardiography Transthoracic (TTE) dilanjutkan Transesophageal (TOE) CITO.", pearl: "Trombosis katup mekanik adalah kegawatdaruratan mematikan (Class I).", rationale: "Kehamilan mendorong status tubuh menjadi super-hiperkoagulasi. Apabila kadar antikoagulan meleset sedikit saja, bekuan trombus raksasa bisa seketika memacetkan daun katup, menghentikan sirkulasi absolut." },
+            { id: 49, topic: "Anticoagulation", urgency: "Class I", badgeClass: "badge-green", q: "Bolehkah ibu postpartum yang sedang rutin menggunakan suntikan LMWH atau obat Warfarin menyusui bayinya?", a: "Ya, SANGAT AMAN. Menyusui direkomendasikan.", pearl: "Heparin, LMWH, dan Warfarin (VKA) tidak masuk ke dalam Air Susu Ibu (ASI).", rationale: "Struktur molekul ketiga antikoagulan ini terlalu besar untuk merembes masuk ke saluran kelenjar susu, sehingga tidak akan memengaruhi profil perdarahan sang bayi sama sekali." },
+            { id: 50, topic: "ACHD", urgency: "Class IIa", badgeClass: "badge-amber", q: "Apa risiko paling mematikan jika wanita dengan 'Sirkulasi Fontan' memaksakan diri untuk hamil?", a: "Gagal jantung kanan masif, timbulnya aritmia atrium menetap, dan Enteropati Kehilangan Protein.", pearl: "Sirkulasi Fontan sangat mengandalkan tarikan vakum vena (preload pasif) murni tanpa pompa ventrikel kanan.", rationale: "Peningkatan drastis tekanan vena sentral akibat bayi dan takikardia kronis menghambat laju darah menuju pembuluh paru. Aliran mandek, memicu asites, pembengkakan hati, dan henti jantung." },
+            // TAMBAHAN 51-100
+            { id: 51, topic: "Cardiomyopathy", urgency: "Must Know", badgeClass: "badge-blue", q: "Apa panduan terapi obat utama untuk ibu hamil dengan Hypertrophic Cardiomyopathy (HCM) simtomatik?", a: "Pemberian Beta-blocker kardio-selektif secara kontinu.", pearl: "Beta-blocker mencegah obstruksi saluran keluar (LVOT) akibat takikardia.", rationale: "Takikardia fisiologis kehamilan memperpendek waktu pengisian diastolik ventrikel yang sudah kaku pada HCM, serta memperburuk obstruksi aliran darah. Beta-blocker mengamankan fase relaksasi." },
+            { id: 52, topic: "Cardiomyopathy", urgency: "Class IIa", badgeClass: "badge-amber", q: "Metode persalinan apa yang dianjurkan pada pasien HCM dengan obstruksi LVOT berat?", a: "Epidural Anesthesia yang dititrasi sangat perlahan pada persalinan pervaginam atau SC indikasi obstetrik.", pearl: "Hindari vasodilatasi mendadak atau spinal block tunggal.", rationale: "Penurunan resistensi perifer (SVR) mendadak akibat spinal anestesi dapat menyebabkan kolaps sirkulasi pada pasien dengan obstruksi aliran keluar ventrikel kiri (LVOT)." },
+            { id: 53, topic: "ACHD", urgency: "Class I", badgeClass: "badge-green", q: "Apa persiapan wajib sebelum kehamilan bagi pasien riwayat reparasi Koarktasio Aorta?", a: "Kontrol tekanan darah ketat dan pencitraan (MRI/CT) seluruh panjang aorta.", pearl: "Aorta post-koarktasio rentan aneurisma dan robek di area jaringan parut.", rationale: "Meski sudah direparasi di masa kecil, sisa jaringan parut di aorta sering melemah. Kehamilan meningkatkan tekanan di dinding pembuluh ini secara ekstrem, memicu risiko aneurisma fatal." },
+            { id: 54, topic: "ACHD", urgency: "Red Flag", badgeClass: "badge-red", q: "Apa kontraindikasi kehamilan pada pasien Anomali Ebstein?", a: "Sianosis berat (SaO2 <85%) atau gagal jantung kanan dengan regurgitasi trikuspid berat.", pearl: "Ventrikel kanan (RV) tidak akan mampu memompa volume plasma ekstra 50%.", rationale: "Pada Anomali Ebstein, bilik kanan sudah terdeformasi (atrialisasi). Beban cairan hamil memicu peregangan RV berlebih, regurgitasi total, dan gagal jantung kanan akut." },
+            { id: 55, topic: "Valvular", urgency: "Class I", badgeClass: "badge-green", q: "Kapan operasi katup (penggantian) harus dilakukan saat wanita sedang hamil?", a: "HANYA JIKA kondisi mengancam jiwa (edema paru refrakter/syok) dan gagal merespons obat maksimal.", pearl: "Tunda hingga setelah persalinan jika ibu masih stabil dengan obat.", rationale: "Operasi jantung terbuka dengan mesin pintas jantung-paru (CPB) memiliki angka kematian janin hingga 30% akibat hipoperfusi sirkulasi." },
+            { id: 56, topic: "VTE", urgency: "Class I", badgeClass: "badge-green", q: "Apa tes pencitraan pilihan pertama (First Line) jika dicurigai Emboli Paru (PE) pada ibu hamil?", a: "CT Pulmonary Angiography (CTPA) atau V/Q Lung Scan.", pearl: "Jangan tunda pencitraan hanya karena takut radiasi pada janin.", rationale: "Radiasi dari CTPA ke rahim sangat minim (<0.1 mGy) dan jauh di bawah ambang teratogenik. Ketidaktahuan adanya emboli paru justru jauh lebih mematikan bagi ibu dan janin." },
+            { id: 57, topic: "VTE", urgency: "Must Know", badgeClass: "badge-blue", q: "Bagaimana cara membedakan DVT kehamilan fisiologis vs patologis di ekstremitas?", a: "Gunakan Compression Duplex Ultrasound (CUS) pada area vena proksimal.", pearl: "Edema tungkai simetris normal, tapi bengkak asimetris (unilateral) adalah bendera merah (red flag).", rationale: "Rahim sering menekan vena iliaka (terutama kiri), menyebabkan bengkak tungkai. Namun jika disertai nyeri tekan atau bengkak beda ukuran >2cm, CUS wajib segera dilakukan." },
+            { id: 58, topic: "Ischemic", urgency: "Must Know", badgeClass: "badge-blue", q: "Bagaimana profilaksis VTE untuk pasien mWHO kelas III atau IV yang bed rest di RS?", a: "LMWH profilaksis wajib diberikan segera.", pearl: "Gagal jantung + imobilisasi hamil = risiko trombosis ekstrem.", rationale: "Kehamilan meningkatkan faktor koagulasi (FVII, VIII, X, Fibrinogen). Jika ditambah stasis aliran darah akibat tirah baring dan gagal jantung, risiko VTE meningkat hingga 10x lipat." },
+            { id: 59, topic: "Ischemic", urgency: "Red Flag", badgeClass: "badge-red", q: "Obat antiplatelet spesifik apa yang belum cukup data keamanannya dan DILARANG saat hamil?", a: "Prasugrel dan Ticagrelor.", pearl: "Tetap gunakan kombinasi Clopidogrel + Aspirin jika pasien butuh DAPT.", rationale: "Kedua agen P2Y12 generasi baru ini kurang diteliti untuk embriotoksisitas. Clopidogrel memiliki rekam jejak keamanan yang lebih baik untuk pencegahan trombosis stent pada ibu hamil." },
+            { id: 60, topic: "Drugs", urgency: "Absolute Contraindication", badgeClass: "badge-red", q: "Bolehkah memberikan obat Statin pada ibu hamil dengan hiperkolesterolemia?", a: "Secara umum KONTRAINDIKASI karena dapat mengganggu sintesis membran sel janin.", pearl: "Terkecuali kasus ekstrem (misal ASCVD sangat tinggi) via pertimbangan multidisiplin.", rationale: "Kolesterol sangat krusial bagi organogenesis dan pertumbuhan sistem saraf pusat (otak) janin. Statin memblokir prekursor kolesterol ini." },
+            { id: 61, topic: "Hypertension", urgency: "Class I", badgeClass: "badge-green", q: "Obat antihipertensi oral apa yang jadi pilihan utama untuk merawat ibu hamil dengan Asma komorbid?", a: "Nifedipine (Calcium Channel Blocker).", pearl: "Labetalol berisiko memicu bronkospasme berat.", rationale: "Labetalol, sebagai penyekat reseptor beta non-selektif parsial, dapat mengunci reseptor di saluran napas dan memicu serangan asma fatal. CCB seperti Nifedipine sepenuhnya aman untuk otot polos bronkus." },
+            { id: 62, topic: "Hypertension", urgency: "Must Know", badgeClass: "badge-blue", q: "Kapan Magnesium Sulfat (MgSO4) IV diberikan pada ibu hamil dengan hipertensi?", a: "Indikasi spesifik Preeklampsia Berat (pencegahan/terapi kejang Eklampsia).", pearl: "MgSO4 BUKAN obat penurun tensi, tapi neuroprotektor sentral.", rationale: "Meski memberi efek sedikit vasodilatasi, tujuan utama MgSO4 adalah menstabilkan membran sel saraf otak ibu dari ancaman kejang (eklampsia) yang bisa merusak oksigenasi janin seketika." },
+            { id: 63, topic: "Hypertension", urgency: "Red Flag", badgeClass: "badge-red", q: "Apakah diuretik (Furosemide/Thiazide) boleh diberikan rutin untuk hipertensi kehamilan?", a: "Dihindari (Class III) kecuali jika ibu mengalami edema paru atau gagal jantung akut.", pearl: "Diuretik menurunkan volume darah plasenta yang sudah menyusut di preeklampsia.", rationale: "Pada preeklampsia, pasien sebenarnya mengalami 'intravascular volume depletion' karena cairan bocor ke jaringan (edema). Diuretik akan makin mengeringkan perfusi darah rahim ke janin." },
+            { id: 64, topic: "Arrhythmia", urgency: "Class IIa", badgeClass: "badge-amber", q: "Jika kardioversi listrik/DC shock gagal mengatasi AF hemodinamik tidak stabil, apa obat IV pilihan?", a: "Amiodarone IV atau Flecainide IV dosis terkontrol, sebagai tindakan *life-saving* (Penyelamatan Jiwa).", pearl: "Amiodarone bahaya untuk tiroid, tapi nyawa ibu adalah prioritas utama.", rationale: "Meskipun amiodarone rutin sangat dilarang, penggunaan dosis darurat tunggal (single dose IV) demi menyelamatkan nyawa ibu dari henti jantung AF cepat dibenarkan secara etis dan klinis." },
+            { id: 65, topic: "Arrhythmia", urgency: "Class I", badgeClass: "badge-green", q: "Apakah teknik Ablasi Kateter (Catheter Ablation) boleh dilakukan selama kehamilan?", a: "Sebaiknya ditunda paska-persalinan, namun BOLEH JIKA SVT/VT sangat refrakter obat.", pearl: "Harus menggunakan panduan 3D Electroanatomical Mapping (EAM) tanpa radiasi fluoroskopi.", rationale: "Inovasi EAM modern memungkinkan ahli aritmia melihat peta listrik jantung secara 3D tanpa memancarkan radiasi sinar-X sedikitpun ke rahim." },
+            { id: 66, topic: "Arrhythmia", urgency: "Must Know", badgeClass: "badge-blue", q: "Apa implikasi Sindrom QT Panjang (LQTS) bagi ibu hamil?", a: "Risiko aritmia mematikan (Torsades de Pointes) justru sangat meningkat PASCAPERSALINAN, bukan saat hamil.", pearl: "Jangan hentikan Beta-blocker setelah melahirkan. Terus lanjutkan hingga masa nifas selesai.", rationale: "Hormon kehamilan meningkatkan denyut jantung basal, yang secara paradoks 'melindungi' pasien LQTS. Saat takikardia reda pascasalin, interval QT kembali memanjang ekstrem, memicu Torsades." },
+            { id: 67, topic: "Emergency", urgency: "Red Flag", badgeClass: "badge-red", q: "Jika ibu hamil (>20 minggu) mengalami henti jantung (Cardiac Arrest) di IGD, kapan indikasi Perimortem Caesarean Section (PMCS) / Resuscitative Hysterotomy?", a: "Dalam 4-5 MENIT pertama jika ROSC (sirkulasi kembali) belum tercapai.", pearl: "Tujuan PMCS bukan cuma selamatkan bayi, tapi SELAMATKAN IBU.", rationale: "Mengeluarkan janin seketika akan membebaskan vena kava inferior dari kompresi uterus raksasa, mengembalikan 'venous return' jantung ibu hingga 60%, membuat RJP berpotensi berhasil." },
+            { id: 68, topic: "Emergency", urgency: "Class I", badgeClass: "badge-green", q: "Berapa tinggi posisi kompresi dada (RJP) pada ibu hamil tua?", a: "Geser titik kompresi dada sedikit lebih TINGGI dari pertengahan sternum (dibanding orang normal).", pearl: "Diafragma dan jantung ibu terdorong ke atas oleh rahim yang membesar.", rationale: "Mengikuti anatomi jantung yang terdesak naik di trimester 3, menekan sedikit lebih ke atas (1-2 ruas tulang rawan) meningkatkan efektivitas pompa pompa jantung buatan saat RJP." },
+            { id: 69, topic: "Delivery", urgency: "Must Know", badgeClass: "badge-blue", q: "Kapan usia kehamilan optimal yang disarankan untuk induksi/persalinan pada pasien kardiak stabil (mWHO I-II)?", a: "Usia kehamilan 39 - 40 minggu.", pearl: "Tidak perlu persalinan prematur tanpa indikasi medis mendesak.", rationale: "Pemotongan masa hamil hanya mengorbankan pematangan paru janin. Jika ibu secara hemodinamik kompensata, kehamilan dapat diteruskan (term) di bawah pengawasan." },
+            { id: 70, topic: "Delivery", urgency: "Red Flag", badgeClass: "badge-red", q: "Obat pencegah perdarahan (Uterotonika) apa yang DILARANG pada penderita Penyakit Jantung Koroner (CAD) atau Hipertensi Pulmonal?", a: "Ergometrine (Methylergonovine) dan Prostaglandin F2-alpha (Carboprost).", pearl: "Obat ini memicu vasokonstriksi sistemik ekstrem dan bronkospasme.", rationale: "Ergometrine dapat menyebabkan spasme otot polos difus, memicu serangan jantung (infark) atau krisis hipertensi pulmonal mematikan. Gunakan Oksitosin infus lambat sebagai gantinya." },
+            { id: 71, topic: "Delivery", urgency: "Must Know", badgeClass: "badge-blue", q: "Bagaimana cara aman memberikan Oksitosin pada ibu penderita kelainan jantung saat perdarahan postpartum (PPH)?", a: "Diberikan melalui infus lambat (slow infusion), JANGAN bolus IV cepat.", pearl: "Bolus oksitosin menyebabkan hipotensi kolaps akibat vasodilatasi mendadak.", rationale: "Oksitosin dosis tinggi via bolus memicu efek relaksasi otot polos pembuluh darah sistemik seketika. Hal ini fatal untuk ibu dengan defisit pompa atau katup (misal Stenosis Aorta) yang butuh tekanan perifer stabil." },
+            { id: 72, topic: "ACHD", urgency: "Class IIa", badgeClass: "badge-amber", q: "Wanita riwayat Tetralogy of Fallot (TOF) yang sudah dioperasi sering mengalami Regurgitasi Pulmonal. Bolehkah hamil?", a: "Mayoritas BOLEH dan ditoleransi baik, asalkan tidak ada gagal jantung kanan parah (RV dysfunction) pra-konsepsi.", pearl: "Regurgitasi sisi kanan (paru/trikuspid) jauh lebih ditoleransi hamil dibanding regurgitasi sisi kiri.", rationale: "Meski volume darah membanjiri bilik kanan akibat regurgitasi pulmonal, sistem vena paru bersuhu rendah mampu beradaptasi luas tanpa langsung memicu bendungan atau edema organ vital." },
+            { id: 73, topic: "ACHD", urgency: "Red Flag", badgeClass: "badge-red", q: "Apa bahaya kehamilan pada pasien Transposisi Arteri Besar (TGA) yang dikoreksi dengan operasi 'Mustard' atau 'Senning' (Atrial Switch)?", a: "Ventrikel Kanan Berfungsi Sistemik (Systemic Right Ventricle) sangat rentan Gagal Jantung Irreversibel.", pearl: "Otot bilik kanan tidak dirancang menahan tekanan darah kehamilan raksasa seumur hidup.", rationale: "Pada operasi atrial switch masa lalu, Ventrikel Kanan dipertahankan sebagai pompa utama ke seluruh tubuh. Saat beban hamil +50% tiba, dinding tipis RV sering gagal kompensasi dan kolaps." },
+            { id: 74, topic: "ACHD", urgency: "Class I", badgeClass: "badge-green", q: "Bolehkah pasien PDA (Patent Ductus Arteriosus) ukuran kecil yang asimtomatik untuk hamil?", a: "Sangat aman (mWHO Class I), risiko mortalitas tidak berbeda dengan populasi normal.", pearl: "Pastikan tidak ada Hipertensi Pulmonal pra-hamil.", rationale: "Pirau/bocor kecil kiri-ke-kanan tidak membebani hemodinamik ibu. Namun jika pirau sudah memicu peningkatan tekanan paru (Eisenmenger), maka risiko berubah total menjadi mWHO Kelas IV." },
+            { id: 75, topic: "Aorta Disease", urgency: "Must Know", badgeClass: "badge-blue", q: "Berapa diameter aorta maksimal (cut-off) untuk mengizinkan pasien Bicuspid Aortic Valve (BAV) hamil?", a: "Kurang dari 50 mm.", pearl: "Jika Aorta >50 mm, operasi penggantian akar aorta disarankan SEBELUM hamil.", rationale: "Arsitektur jaringan dinding aorta pada pasien katup bicuspid sangat rapuh mirip Marfan. Pelebaran melampaui 5 cm sangat rentan robek (diseksi tipe A) saat menahan hormon relaksin kehamilan." },
+            { id: 76, topic: "Aorta Disease", urgency: "Red Flag", badgeClass: "badge-red", q: "Apa ciri khas diseksi aorta Tipe B pada kehamilan yang sering menjebak diagnosis?", a: "Nyeri robekan sering mirip dengan kontraksi palsu, radang perut, atau nyeri punggung bawah (LBP) biasa.", pearl: "Selalu curigai ibu hamil dengan nyeri punggung yang menembus ke depan, terutama bila penderita Marfan.", rationale: "Gejala diseksi aorta torakalis desendens (Tipe B) sering tidak menyebar ke dada atas, melainkan ke abdomen. Misdiagnosis sebagai pre-term labor (mules prematur) sangat mematikan." },
+            { id: 77, topic: "Valvular", urgency: "Must Know", badgeClass: "badge-blue", q: "Mengapa Regurgitasi Mitral (MR) atau Aorta (AR) lebih baik ditoleransi ibu hamil dibanding Stenosis katup?", a: "Hamil menyebabkan vasodilatasi sistemik perifer (SVR turun). Ini mempermudah darah mengalir maju ke tubuh, BUKAN bocor mundur ke paru.", pearl: "Stenosis buntu menahan darah; Regurgitasi diringankan oleh pelebaran selang tubuh.", rationale: "Pada regurgitasi, besarnya darah yang bocor mundur bergantung pada tahanan/hambatan (afterload). Semakin rendah tahanan ibu hamil, katup yang bocor justru makin efisien memompa maju." },
+            { id: 78, topic: "Valvular", urgency: "Class I", badgeClass: "badge-green", q: "Pasien hamil dengan Katup Mekanik. LMWH sudah mencapai Anti-Xa target, tapi masih khawatir. Kapan TTE wajib?", a: "Setiap bulan (Monthly Echocardiography) untuk mengecek laju darah trans-katup.", pearl: "Peningkatan gradien tekanan mendadak adalah tanda awal trombus mengganjal katup.", rationale: "Tingkat koagulasi sangat fluktuatif tiap minggu. Ekokardiografi rutin menangkap formasi bekuan mikro yang mulai menghalangi pergerakan cakram logam katup, sebelum ibu pingsan." },
+            { id: 79, topic: "Lactation", urgency: "Must Know", badgeClass: "badge-blue", q: "Ibu post-PCI (pasang stent) minum Aspirin dan Clopidogrel. Bolehkah ia menyusui?", a: "Boleh (Aspirin dosis rendah <150mg) dan Dipertimbangkan (Clopidogrel).", pearl: "Aspirin dosis tinggi memicu Reye's syndrome, tapi dosis rendah (antiplatelet) relatif aman di ASI.", rationale: "Dosis Aspirin <150mg tidak mencapai konsentrasi toksik di ASI. Clopidogrel ekskresinya minimal, meski data panjang pada bayi terbatas, manfaat menyusui sering melebihi risiko teoretis." },
+            { id: 80, topic: "Lactation", urgency: "Red Flag", badgeClass: "badge-red", q: "Ibu penderita gagal jantung sedang menyusui. Obat apa yang harus dihentikan?", a: "ARNI (Sacubitril/Valsartan) dan SGLT2 Inhibitor.", pearl: "Ganti dengan ACE-inhibitor yang aman untuk ASI seperti Enalapril atau Captopril.", rationale: "Molekul SGLT2i berisiko mengganggu glukoneogenesis dan ginjal neonatus via ASI. ARNI belum memiliki profil keamanan bayi sama sekali." },
+            { id: 81, topic: "Contraception", urgency: "Class I", badgeClass: "badge-green", q: "Waktu paling ideal untuk memasang IUD pada penderita kelainan jantung pascapersalinan?", a: "Segera pascasalin (Immediate Post-partum) atau 4-6 minggu kemudian.", pearl: "Hati-hati risiko perdarahan insersi pada pasien yang masih mengonsumsi Warfarin rutin.", rationale: "Pemasangan IUD segera setelah ari-ari (plasenta) lahir sangat menghemat waktu dan kunjungan rumah sakit ibu yang lelah, sekaligus menjamin cegah-hamil sangat dini." },
+            { id: 82, topic: "Device", urgency: "Must Know", badgeClass: "badge-blue", q: "Bagaimana cara meminimalkan risiko syok nyasar dari ICD saat tindakan SC (Sectio Caesarea)?", a: "Gunakan Pisau Bedah Bipolar (Bipolar Electrocautery) atau letakkan magnet tebal di atas alat ICD.", pearl: "Pisau Monopolar bisa menipu ICD karena sinyal potongnya mirip Fibrilasi Ventrikel (VF).", rationale: "Arus listrik alat pemotong bedah monopolar sangat besar dan menyebar. ICD yang mendeteksinya dapat mengira pasien mati suri dan menembakkan sengatan 80 Joule langsung ke jantung ibu." },
+            { id: 83, topic: "Postpartum", urgency: "Class IIa", badgeClass: "badge-amber", q: "Kapan Bromocriptine juga digunakan di luar PPCM berat?", a: "Pada pasien dengan gagal jantung stadium lanjut atau kematian janin dalam rahim (Stillbirth).", pearl: "Menghentikan ASI menghemat energi besar dari beban laktasi bagi ibu yang gagal jantung.", rationale: "Produksi ASI membakar hingga 500 kkal dan memicu retensi cairan hebat. Memutuskan ASI via Bromocriptine meringankan beban kerja pompa jantung yang sudah hampir gagal." },
+            { id: 84, topic: "Risk Stratification", urgency: "Class I", badgeClass: "badge-green", q: "Jika ada 2 sistem skor risiko, mWHO vs CARPREG II, mana yang wajib dipakai?", a: "mWHO Classification adalah Gold Standard panduan ESC 2025.", pearl: "CARPREG bisa dipakai berdampingan, tapi keputusan akhir (boleh hamil atau dilarang) mengacu mWHO.", rationale: "mWHO mencakup spektrum spesifik penyakit (seperti sindrom aorta dan pulmonal) yang tidak tertangkap sempurna oleh skoring poin-poin generik di CARPREG." },
+            { id: 85, topic: "Diagnosis", urgency: "Must Know", badgeClass: "badge-blue", q: "Pemeriksaan fungsi jantung MRI (Cardiac MRI) pada ibu hamil. Apakah kontras Gadolinium aman?", a: "TIDAK AMAN (Dihindari). Gunakan scan tanpa kontras (Non-contrast CMR).", pearl: "Gadolinium larut melintasi rahim dan terakumulasi lama di dalam cairan ketuban bayi.", rationale: "Janin menelan dan membuang cairan ketuban yang sudah tercemar logam gadolinium berulang kali, yang berisiko meracuni organ dan memicu sindrom kulit/jaringan fibrosis mematikan." },
+            { id: 86, topic: "Valvular", urgency: "Red Flag", badgeClass: "badge-red", q: "Bolehkah pasien Stenosis Aorta (AS) berat dites latih jantung (Treadmill Test) pra-konsepsi?", a: "HANYA jika Asimtomatik. Jika simtomatik, KONTRAINDIKASI MUTLAK.", pearl: "Provokasi treadmill bisa langsung memicu henti jantung.", rationale: "Uji jalan cepat/treadmill meniru beban volumetrik ekstrem hamil. Pada katup AS berat yang sudah menimbulkan sesak, beban mendadak ini akan memicu iskemia miokard global dan shock." },
+            { id: 87, topic: "Valvular", urgency: "Class I", badgeClass: "badge-green", q: "Pasien Katup Mekanik Aorta butuh Warfarin (VKA). Berapa target INR selama TM2 dan TM3?", a: "Target ketat INR 2.0 - 3.0 (Atau 2.5 - 3.5 tergantung katup generasi lama).", pearl: "Pemeriksaan INR wajib dilakukan minimal setiap 1-2 minggu sekali.", rationale: "Darah kehamilan yang memecah obat (clearance tinggi) sering membuat dosis VKA lama menjadi subterapeutik. INR harus dikalibrasi terus tanpa lengah hingga trimester akhir." },
+            { id: 88, topic: "Postpartum", urgency: "Must Know", badgeClass: "badge-blue", q: "Penderita hipertensi diberi terapi Methyldopa saat hamil. Kapan obat ini harus diganti pascasalin?", a: "Dalam 2 hari pascapersalinan, Methyldopa harus diganti obat lini lain (ACEi/Amlodipine).", pearl: "Methyldopa terkait kuat memicu Depresi Postpartum ibu (PPD) yang parah.", rationale: "Methyldopa bekerja menekan sinyal adrenergik sentral otak. Pada fase nifas yang rentan hormon tak stabil, obat ini mencetuskan kemurungan berat, halusinasi, atau penolakan merawat bayi." },
+            { id: 89, topic: "ACHD", urgency: "Red Flag", badgeClass: "badge-red", q: "Kehamilan pada wanita usia di atas 40 tahun dengan kelainan jantung. Apa risiko ekstra terbesarnya?", a: "Penyakit Komorbid Superposisi: Preeklampsia, Gestational Diabetes, dan Risiko Infark (ACS).", pearl: "Usia ibu (Maternal Age > 40) merupakan prediktor independen mematikan di semua sistem skor.", rationale: "Arsitektur pembuluh darah ibu yang menua tidak selentur wanita muda saat menahan curah jantung ekstra +50%. Plak aterosklerosis laten sangat mudah robek." },
+            { id: 90, topic: "Arrhythmia", urgency: "Class I", badgeClass: "badge-green", q: "Diagnosis pasti aritmia janin (Fetal Arrhythmia). Pemeriksaan apa yang wajib dilakukan?", a: "Fetal Echocardiography terperinci (termasuk Doppler M-Mode).", pearl: "Bukan sekadar CTG (Cardiotocography) perut standar bidan.", rationale: "M-mode ekokardiografi janin secara akurat melacak gelombang kontraksi atrium vs ventrikel janin secara mekanik. Ini mutlak diperlukan membedakan denyut blok jantung vs SVT janin." },
+            { id: 91, topic: "Arrhythmia", urgency: "Class IIa", badgeClass: "badge-amber", q: "Jika Janin mengalami SVT konstan >200 bpm dalam rahim (Hydrops Fetalis), obat apa diberikan pada ibunya?", a: "Ibu diberikan Digoxin, Sotalol, atau Flecainide dosis tinggi agar meresap ke darah bayi.", pearl: "Plasenta berfungsi ganda sebagai jalur 'infus antiaritmia' untuk menyelamatkan bayi.", rationale: "Obat-obatan antiaritmia tertentu sangat handal melintasi sawar darah plasenta. Ibulah yang menelan obat dosis besar, demi menormalkan kembali ritme sirkuit jantung mungil sang bayi." },
+            { id: 92, topic: "Aorta Disease", urgency: "Class I", badgeClass: "badge-green", q: "Berapa frekuensi USG Aorta yang disarankan untuk penderita Sindrom Marfan saat hamil?", a: "Ekokardiografi Aorta rutin SETIAP trimester, dan SETIAP BULAN jika diameter >40 mm.", pearl: "Ukuran aorta bisa membengkak 5-10 mm hanya dalam hitungan minggu (Rapid Growth).", rationale: "Pemantauan serial ketat ini krusial. Jika ada ekspansi ukuran >3 mm mendadak di trimester 3, dokter jantung dapat segera mengkoordinasikan persalinan prematur Caesar darurat sebelum robek." },
+            { id: 93, topic: "Delivery", urgency: "Must Know", badgeClass: "badge-blue", q: "Pada persalinan pervaginam pasien Kardiomiopati, apa yang dimaksud persalinan 'Kala II Berbantu'?", a: "Menggunakan Vakum / Forsep Ekstraksi pada kepala bayi saat bukaan lengkap.", pearl: "Ibu dilarang keras 'ngeden' (Mengejan / Manuver Valsalva aktif).", rationale: "Manuver mengejan lama meningkatkan tekanan rongga dada ibu secara ekstrem, menghentikan darah masuk ke jantung kanan sementara, lalu membanjirinya. Ini dihilangkan dengan menarik bayi via forsep." },
+            { id: 94, topic: "Emergency", urgency: "Red Flag", badgeClass: "badge-red", q: "Diagnosis kebiruan mendadak (Sianosis Sentral) dan sesak napas pascasalin pada ibu berisiko VTE?", a: "Kecurigaan Mutlak Emboli Paru Masif (Massive PE).", pearl: "Segera lakukan USG TTE bedside (Cari: Pembesaran/Dilatasi Ventrikel Kanan Akut).", rationale: "Bekuan darah besar dari panggul yang copot saat turun ranjang langsung menyumbat sirkuit paru utama, mencetuskan gagal pompa ventrikel kanan mematikan dalam hitungan menit." },
+            { id: 95, topic: "Drugs", urgency: "Class I", badgeClass: "badge-green", q: "Pemberian Dexamethasone/Betamethasone untuk matangkan paru janin (jika akan prematur). Apa waspada kardionya?", a: "Steroid dosis tinggi ini menahan air/garam. Risiko Overload Cairan di bilik Jantung (Fluid Overload).", pearl: "Waspada perburukan gejala gagal jantung kongestif dalam 48 jam paska suntikan steroid.", rationale: "Kortikosteroid meniru efek aldosteron memblokir buang air kecil ibu. Volume plasma membengkak cepat, bisa memprovokasi edema paru pada pasien yang sebelumnya stabil (kompensata)." },
+            { id: 96, topic: "Ischemic", urgency: "Class IIa", badgeClass: "badge-amber", q: "Obat Trombofilik (seperti Heparin) untuk SCAD (Spontaneous Coronary Artery Dissection), bolehkah?", a: "SANGAT KONTROVERSIAL, cenderung dihindari setelah fase awal terlewati.", pearl: "Obat pengencer darah (Antikoagulan) justru bisa memperluas perdarahan robekan SCAD.", rationale: "SCAD ditandai adanya memar/hematom intramural (di dalam dinding pembuluh darah). Mengencerkan darah bisa menyebabkan hematom membesar, mencekik total ruang rongga koroner normal." },
+            { id: 97, topic: "Postpartum", urgency: "Must Know", badgeClass: "badge-blue", q: "Kapan risiko mortalitas maksimal terjadi pada ibu pasien Sindrom Eisenmenger (PAH shunt)?", a: "Minggu pertama pascapersalinan (Postpartum Week 1).", pearl: "Ibu sering wafat justru setelah bayinya lahir, bukan saat di kamar operasi.", rationale: "Penurunan resistensi tubuh dan autotransfusi rahim yang menyusut ke sirkulasi tubuh membuat tekanan darah kanan-kiri kacau balau, langsung memicu kegagalan curah jantung." },
+            { id: 98, topic: "Valvular", urgency: "Class I", badgeClass: "badge-green", q: "Ibu hamil terdiagnosis Penyakit Jantung Rematik (RHD) dengan Lesi Stenosis Mitral ringan-sedang. Apa obat rutin terpentingnya?", a: "Profilaksis Penisilin Benzatin rutin (Suntik Bulanan) untuk mencegah demam rematik berulang.", pearl: "Kehamilan justru periode imun melemah, mudah kena strep-throat mematikan.", rationale: "Penyakit katup rematik sering memburuk agresif (fusion kommisura daun katup) jika terinfeksi ulang kuman Streptokokus A. Penisilin tetap aman untuk janin." },
+            { id: 99, topic: "Diagnosis", urgency: "Class IIa", badgeClass: "badge-amber", q: "Kapan pemeriksaan rontgen dada (Chest X-Ray / CXR) diizinkan untuk ibu hamil?", a: "Boleh dilakukan KAPAN SAJA jika keluhan sesak memburuk untuk cek edema paru akut (Class IIa).", pearl: "Pasang perisai perut (abdominopelvic shield) dari timbal pelindung X-ray.", rationale: "Meski masyarakat fobia X-Ray, pajanan sinar tunggal ke arah paru ibu (0.01 mGy) sama dengan radiasi lingkungan alami harian, tanpa efek teratogen pada organ janin panggul bawah." },
+            { id: 100, topic: "Heart Failure", urgency: "Must Know", badgeClass: "badge-blue", q: "Apa kunci sukses utama keselamatan kehamilan pada seluruh klasifikasi penyakit jantung (mWHO)?", a: "Konseling Pra-Konsepsi Terencana (Pre-pregnancy Counseling Multidisciplinary).", pearl: "Jangan datang saat hamil, datanglah SEBELUM memutuskan hamil.", rationale: "Mengoptimalkan jenis obat-obatan (stop obat toksik), memperbaiki fungsi katup rusak, dan menilai fungsi LV sebelum proses pembuahan terjadi adalah jalan pintas mengurangi kematian ibu." },
+            // TAMBAHAN BARU 24-48H POSTPARTUM
+            { id: 101, topic: "Postpartum", urgency: "Red Flag", badgeClass: "badge-red", q: "Kapan jendela waktu paling kritis untuk risiko edema paru akut dan syok pasca persalinan pada ibu dengan penyakit jantung (mWHO III-IV)?", a: "24 hingga 48 jam pertama pasca persalinan.", pearl: "Autotransfusi rahim mengembalikan hingga 500 mL darah ke sirkulasi seketika.", rationale: "Saat plasenta lahir, rahim berkontraksi kuat. Darah yang sebelumnya mengisi rahim 'diperas' masuk kembali ke sirkulasi sistemik ibu (autotransfusi), disertai pergeseran cairan cepat dari ruang interstisial kembali ke intravaskular. Pada mWHO III-IV, lonjakan volume mendadak ini sering melampaui kapasitas cadangan pompa ventrikel." },
+            { id: 102, topic: "Postpartum", urgency: "Must Know", badgeClass: "badge-blue", q: "Bagaimana rekomendasi pengawasan (monitoring) hemodinamik pasca-persalinan untuk pasien berisiko tinggi (mWHO III atau IV)?", a: "Wajib diawasi secara intensif di ruang khusus (ICU/HCU/Telemetri) selama minimal 24 hingga 48 jam.", pearl: "Jangan buru-buru memindahkan ibu ke bangsal nifas biasa meski tampak stabil pasca melahirkan.", rationale: "Fluid shift (pergeseran cairan) masif dan perubahan resistensi vaskular sistemik (SVR) yang ekstrem mencapai puncaknya justru pada fase ini. Pengawasan ketat cairan (input/output) diperlukan untuk segera memulai protokol diuresis aktif jika muncul tanda dini kongesti." }
+        ];
+
+        // 19 KOMPARASI UNTUK MODE COMPARATOR (HANYA MATRIX)
+        const comparatorRaw = [
+            { id: 1, topic: "Hypertension Threshold", old: "Inisiasi obat jika TD ≥150/95 mmHg.", new: "Inisiasi obat untuk SEMUA wanita hamil jika TD persisten ≥140/90 mmHg.", rationale: "Hasil studi CHAP membuktikan inisiasi awal pada batas <140/90 terbukti signifikan menekan insidensi preeklampsia progresif berat tanpa menyebabkan gangguan hipoperfusi nutrisi pada janin." },
+            { id: 2, topic: "DOAC Usage", old: "Dikatakan 'sebaiknya dihindari', namun minim penegasan klinis empiris.", new: "KONTRAINDIKASI MUTLAK saat hamil dan menyusui (Class III).", rationale: "Akumulasi bukti empiris memastikan DOAC molekul kecil melintasi plasenta secara bebas, meracuni sistem pembekuan darah, memicu perdarahan intrakranial fatal pada fetus serta ekskresi tinggi di ASI." },
+            { id: 3, topic: "Biomarker (NT-proBNP)", old: "Tidak direkomendasikan rutin. Hanya dikerjakan jika dicurigai ada gagal jantung simtomatik saat itu.", new: "Direkomendasikan pengecekan rutin (Baseline) di awal Trimester 1.", rationale: "Sangat penting sebagai baseline (patokan dasar) tiap pasien, berguna untuk memisahkan keluhan sesak fisiologis ibu di TM3 vs dekompensasi jantung patologis betulan." },
+            { id: 4, topic: "Bromocriptine in PPCM", old: "Dapat dipertimbangkan (Class IIb) pada kasus tertentu dengan disfungsi sedang.", new: "Direkomendasikan lebih kuat (Class IIa) wajib pada LVEF <25% atau jika syok kardiogenik.", rationale: "Pemutusan dini jalur sekresi prolaktin (fragmen 16kDa) berkontribusi sangat besar terhadap persentase perbaikan anatomis (full-recovery) sel ventrikel ibu pascasalin." },
+            { id: 5, topic: "Statin Use", old: "Kontraindikasi mutlak semua kasus kehamilan (Label Kategori X FDA).", new: "Dapat dipertimbangkan HANYA pada risiko infark miokard/ASCVD ekstrem (mis. Hiperkolesterolemia Familial homozigot).", rationale: "Pergeseran paradigma medis: Pada penderita genetik ekstrem, ancaman pecahnya plak dan kematian mendadak ibu melebihi risiko teoretis cacat pembentukan organ (teratogenesis) statin pada janin." },
+            { id: 6, topic: "Marfan Syndrome Aorta Surgery", old: "Batas diameter operasi pelebaran aorta pre-konsepsi profilaksis adalah ≥45 mm.", new: "Batas diturunkan lebih agresif menjadi ≥40 mm JIKA pasien memiliki riwayat keluarga mematikan diseksi atau laju dilatasi aorta yg cepat.", rationale: "Insidensi kematian ibu dari robekan Aorta Tipe A ternyata sangat tinggi di atas ukuran 40mm akibat paparan relaksasi kolagen masif dari hormon relaksin TM3." },
+            { id: 7, topic: "Turner Syndrome Aorta Surgery", old: "Rekomendasi operasi pencegahan sebelum hamil jika Aortic Size Index (ASI) >27.5 mm/m².", new: "Ambang batas diketatkan: Pembedahan pra-hamil diindikasikan bila ASI >25 mm/m².", rationale: "Postur pasien Turner pendek sehingga ukuran dinding aorta kecil pun sudah rapuh. Indeks baru ASI 25 mempercepat deteksi kelemahan sebelum terlambat robek di persalinan." },
+            { id: 8, topic: "Mitral Stenosis Intervention", old: "Intervensi katup invasif hanya untuk pasien yang simtomatik sesak saat pra-hamil.", new: "Intervensi (BMV/PTMC) sebelum konsepsi sangat direkomendasikan pada luas MVA <1.5 cm² MESKIPUN pasien merasa asimtomatik (sehat).", rationale: "Pasien MS berat yg asimtomatik terbukti tidak akan mampu menahan lonjakan +50% volume plasma di trimester dua; pasti jatuh pada edema paru akut. Profilaksis wajib." },
+            { id: 9, topic: "HFrEF New Pillars (SGLT2i & ARNI)", old: "SGLT2i & ARNI belum banyak disinggung dalam konteks kehamilan HFrEF karena obat masih baru.", new: "Wajib dihentikan mutlak sebelum pembuahan terjadi (Washout period pra-konsepsi).", rationale: "ARNI memicu Potter's sequence anomali ginjal janin (mirip ACE-i). SGLT2i berpotensi berat mengacaukan jalur metabolisme energi primitif janin dan tulang." },
+            { id: 10, topic: "Mechanical Valve LMWH Protocol", old: "LMWH boleh dipakai di TM1 dengan 'monitoring klinis'.", new: "LMWH BOLEH jika disertai protokol ketat monitoring Anti-Xa Peak (1.0-1.2) dan Trough (>0.6) mingguan.", rationale: "Filtrasi glomerulus (GFR) yang meningkat pesat membuang molekul LMWH dari tubuh. Pemakaian LMWH tanpa tes fungsi Anti-Xa hampir selalu berakhir pada trombosis logam mati." },
+            { id: 11, topic: "Fetal Echocardiography Timing", old: "Optimal di sekitar usia pertengahan TM2 (minggu 20-22).", new: "Bisa diajukan deteksi dini (Early Scan) di minggu ke 14-16 via probe transvaginal pada wanita risiko tinggi PJB bawaan.", rationale: "Ekokardiografi janin dini memberi waktu jeda berharga bagi orangtua dan tim medis merencanakan tindakan lanjutan jika ditemukan cacat genetik/jantung berat sedari awal." },
+            { id: 12, topic: "Exercise Stress Testing (TMT)", old: "Terbatas dilakukan bila ada kecurigaan klinis atau keluhan saja.", new: "Direkomendasikan secara rutin pra-kehamilan pada hampir semua kelainan jantung bawaan asimtomatik (ACHD) dan penyakit Katup.", rationale: "Uji beban fisik membongkar ketidakmampuan laten sirkulasi kompensata. Wanita yang tak bisa menyelesaikan stress-test terbukti akan memburuk fungsi kardiaknya saat stres hamil kelak." },
+            { id: 13, topic: "VTE D-Dimer Utility", old: "D-Dimer meningkat secara natural pada kehamilan, sehingga dianggap sama sekali tidak bernilai diagnostik.", new: "Nilai D-Dimer negatif / normal divalidasi sangat berguna mengeksklusi (rule-out) Trombosis Vena/Emboli Paru.", rationale: "Meskipun sering positif-palsu di TM3, jika angkanya NEGATIF, maka High Negative Predictive Value (NPV) sangat handal mencegah ibu harus di-CT Scan (CTPA) paru dengan sinar radiasi." },
+            { id: 14, topic: "Contraception Prioritization", old: "Rekomendasi metode kontrasepsi umum pasca bersalin.", new: "Sangat menekankan penggunaan LARC (Long-Acting Reversible Contraceptives) seperti IUD atau Implan, dan menegaskan estrogen haram di mWHO III/IV.", rationale: "Estrogen adalah koagulan potent mematikan bagi defek jantung struktural. Tingkat kegagalan LARC <1%, memastikan ibu tercegah dari beban kehamilan maut yang tidak direncanakan." },
+            { id: 15, topic: "Ergometrine Usage in PPH", old: "Digunakan dengan perhatian / hati-hati pada pasien gangguan fungsi jantung.", new: "DIKONTRAINDIKASIKAN MUTLAK penderita Koroner (CAD), Hipertensi Sistemik ekstrem, & Hipertensi Pulmonal.", rationale: "Ergometrine (Methylergonovine) dapat memicu kejang tonus otot polos (spasme luas) difus. Terjadi infark miokard mendadak sekunder karena penyempitan pembuluh nadi koroner." },
+            { id: 16, topic: "Choice of Beta-Blockers", old: "Secara longgar merekomendasikan Beta-blocker untuk pengontrol detak/aritmia.", new: "Secara selektif mengedepankan Beta-1 (Bisoprolol/Metoprolol) & MELARANG TEGAS Atenolol.", rationale: "Atenolol bersifat spesifik memicu penyusutan dan memotong aliran masuk ke ari-ari (vasokonstriksi plasenta), menyebabkan pertumbuhan janin terhambat parah (IUGR absolut)." },
+            { id: 17, topic: "Delivery Choice (Vaginal vs SC)", old: "Kecenderungan lama lebih memilih bedah Caesar proaktif untuk kasus ibu sakit jantung.", new: "Merubah arah angin medis: VAGINAL DELIVERY didorong kuat sebagai pilihan terbaik bagi hampir >90% wanita berkondisi jantung.", rationale: "Tindakan SC ternyata memicu infeksi rahim tinggi, aktivasi trombosis tinggi (terutama di panggul bedah), dan lompatan volume sirkulasi 500cc masif yang dapat membunuh miokardium ibu." },
+            { id: 18, topic: "Maternal Postpartum Hemorrhage Tx", old: "Protokol bolus cepat (rapid IV) Oksitosin sesuai tradisi PONEK obstetrik standar.", new: "Wajib diubah: Oksitosin harus dilarutkan & drip INFUS LAMBAT (slow IV infusion) khusus penderita Kardiak.", rationale: "Bolus langsung 10 unit Oksitosin akan merelaksasi pembuluh tubuh ekstrem. Pasien Aortic Stenosis (AS) dan PPCM butuh tahanan vaskular untuk memompa; bolus oksitosin buat syok sirkulasi seketika." },
+            { id: 19, topic: "Intensive Postpartum Care (24-48h)", old: "Pemantauan ketat pascasalin direkomendasikan secara umum untuk pasien risiko tinggi minimal 24 jam.", new: "Penegasan kewajiban pengawasan HCU/ICU minimal 24-48 jam untuk mWHO III-IV, waspada autotransfusi rahim (500mL fluid shift) dan protokol diuresis aktif jika terjadi kongesti.", rationale: "Data mortalitas maternal menyoroti tingginya angka gagal jantung akut yang terjadi tepat di jendela 24-48 jam pertama pasca melahirkan. Hal ini terjadi karena autotransfusi dari rahim yang menyusut dan pergerakan cairan ruang ketiga (interstisial) yang kembali membanjiri intravaskular ibu secara cepat." }
+        ];
+
+        // Unique Topics Extraction (Learner Only)
+        const allTopics = ['All', ...new Set(learnerRaw.map(item => item.topic))];
+
+        // ==========================================
+        // 2. STATE MANAGEMENT (DASHBOARD & DATA)
+        // ==========================================
+        let state = {
+            mode: 'learner', 
+            tab: 'flashcard', 
+            flashcardIdx: 0,
+            isFlipped: false,
+            isShuffled: false,
+            currentTopic: 'All',
+            activeData: [...learnerRaw],      // Currently filtered/displayed array
+            
+            db: {
+                masteredCards: new Set(),
+                bookmarkedCards: new Set()
+            },
+            searchQuery: ''
+        };
+
+        // Initialize state arrays based on mode and filter
+        function applyFilters() {
+            let baseData = state.mode === 'learner' ? learnerRaw : comparatorRaw;
+            
+            if (state.mode === 'learner' && state.currentTopic !== 'All') {
+                baseData = baseData.filter(item => item.topic === state.currentTopic);
+            }
+            
+            if (state.isShuffled) {
+                state.activeData = shuffleArray(baseData);
+            } else {
+                state.activeData = [...baseData];
+            }
+            
+            state.flashcardIdx = 0;
+            state.isFlipped = false;
+        }
+
+        // Fisher-Yates Shuffle
+        function shuffleArray(array) {
+            let shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function toggleShuffle() {
+            state.isShuffled = !state.isShuffled;
+            applyFilters();
+            updateFlashcardContent('none');
+        }
+
+        function setTopic(topicName) {
+            state.currentTopic = topicName;
+            applyFilters();
+            updateUI(); // Re-render chips and layout
+        }
+
+        // Mastery Controls
+        function toggleMastery() {
+            const cardId = state.activeData[state.flashcardIdx].id;
+            const prefix = state.mode === 'learner' ? 'L_' : 'C_';
+            const uniqueId = prefix + cardId;
+            
+            if (state.db.masteredCards.has(uniqueId)) {
+                state.db.masteredCards.delete(uniqueId);
+            } else {
+                state.db.masteredCards.add(uniqueId);
+            }
+            updateDashboard();
+            updateFlashcardContent('none'); // Update icon states immediately
+        }
+
+        function toggleBookmark() {
+            const cardId = state.activeData[state.flashcardIdx].id;
+            const prefix = state.mode === 'learner' ? 'L_' : 'C_';
+            const uniqueId = prefix + cardId;
+            
+            if (state.db.bookmarkedCards.has(uniqueId)) {
+                state.db.bookmarkedCards.delete(uniqueId);
+            } else {
+                state.db.bookmarkedCards.add(uniqueId);
+            }
+            updateDashboard();
+            updateFlashcardContent('none');
+        }
+
+        function resetProgress() {
+            state.db.masteredCards.clear();
+            state.db.bookmarkedCards.clear();
+            updateDashboard();
+            updateUI();
+        }
+
+        function updateDashboard() {
+            document.getElementById('kpi-mastered').innerHTML = `<i class="fa-solid fa-check-circle text-green-400"></i> ${state.db.masteredCards.size} Mastered`;
+            document.getElementById('kpi-bookmarked').innerHTML = `<i class="fa-solid fa-bookmark text-amber-400"></i> ${state.db.bookmarkedCards.size} Saved`;
+        }
+
+        // ==========================================
+        // 3. UI/UX CONTROLLERS
+        // ==========================================
+        function getActiveTheme() {
+            return state.mode === 'learner' 
+                ? { bg: 'bg-blue-600', text: 'text-blue-600', border: 'border-blue-600', hover: 'hover:bg-blue-700', light: 'bg-blue-50' }
+                : { bg: 'bg-emerald-600', text: 'text-emerald-600', border: 'border-emerald-600', hover: 'hover:bg-emerald-700', light: 'bg-emerald-50' };
+        }
+
+        function setMode(mode) {
+            state.mode = mode;
+            // Force Tab logic based on mode: Comparator = CheatSheet Matrix ONLY. Learner = Default Flashcard.
+            state.tab = mode === 'comparator' ? 'cheatsheet' : 'flashcard'; 
+            state.currentTopic = 'All'; // Reset filter on mode change
+            applyFilters();
+            updateUI();
+        }
+
+        function setTab(tab) {
+            state.tab = tab;
+            updateUI();
+        }
+
+        function updateUI() {
+            updateDashboard();
+
+            // Toggle Mode Buttons (Learner vs Comparator)
+            const btnL = document.getElementById('btnModeLearner');
+            const btnC = document.getElementById('btnModeComparator');
+            if (state.mode === 'learner') {
+                btnL.className = "flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-300 bg-blue-600 text-white shadow-md";
+                btnC.className = "flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-300 text-slate-400 hover:text-white hover:bg-white/10";
+            } else {
+                btnL.className = "flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-300 text-slate-400 hover:text-white hover:bg-white/10";
+                btnC.className = "flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-300 bg-emerald-600 text-white shadow-md";
+            }
+
+            // Tab Container Visibility (Hidden completely if Comparator mode)
+            const tabContainerWrapper = document.getElementById('tabContainerWrapper');
+            if (state.mode === 'comparator') {
+                tabContainerWrapper.classList.add('hidden');
+            } else {
+                tabContainerWrapper.classList.remove('hidden');
+            }
+
+            // Tab Buttons Styling (Flashcard vs Cheatsheet - Learner Mode Only)
+            const theme = getActiveTheme();
+            ['flashcard', 'cheatsheet'].forEach(t => {
+                const btn = document.getElementById(`btnTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                if(btn) {
+                    if (state.tab === t) {
+                        btn.className = `whitespace-nowrap flex items-center justify-center flex-1 gap-2 px-4 py-3 min-w-[100px] min-h-[44px] text-sm font-bold border-b-2 ${theme.border} ${theme.text} transition-colors`;
+                    } else {
+                        btn.className = `whitespace-nowrap flex items-center justify-center flex-1 gap-2 px-4 py-3 min-w-[100px] min-h-[44px] text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors`;
+                    }
+                }
+            });
+
+            // Filter Chips Visibility & Render (Only in Learner mode for Matrix/Flashcard)
+            const filterContainer = document.getElementById('filterContainer');
+            if (state.mode === 'learner') {
+                filterContainer.classList.remove('hidden');
+                renderFilterChips();
+            } else {
+                filterContainer.classList.add('hidden');
+            }
+
+            // Mobile Action Bar Visibility (Only in Flashcard Tab)
+            const mobileActionBar = document.getElementById('mobileActionBar');
+            if (state.tab === 'flashcard') mobileActionBar.classList.remove('hidden');
+            else mobileActionBar.classList.add('hidden');
+
+            // Render Main Content
+            const container = document.getElementById('mainContent');
+            if (state.tab === 'flashcard') buildFlashcardLayout(container);
+            else if (state.tab === 'cheatsheet') renderCheatSheet(container);
+        }
+
+        function renderFilterChips() {
+            const chipsDiv = document.getElementById('filterChips');
+            chipsDiv.innerHTML = allTopics.map(topic => {
+                const isActive = state.currentTopic === topic;
+                const activeClass = isActive ? "bg-blue-600 text-white border-blue-600 font-bold shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100 font-medium";
+                return `<button onclick="setTopic('${topic}')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-xs sm:text-sm border transition-colors ${activeClass}">${topic}</button>`;
+            }).join('');
+        }
+
+        // ==========================================
+        // 4. FLASHCARD COMPONENT (Progressive & Mobile-first)
+        // ==========================================
+        let touchstartX = 0; let touchstartY = 0;
+        let isSwiping = false; let isNavigating = false;
+
+        function buildFlashcardLayout(container) {
+            const theme = getActiveTheme();
+            const data = state.activeData;
+
+            if(data.length === 0) {
+                container.innerHTML = `
+                    <div class="fade-in w-full max-w-lg mx-auto flex flex-col items-center justify-center h-[50vh] text-center px-4">
+                        <i class="fa-solid fa-box-open text-6xl text-slate-300 mb-4"></i>
+                        <h2 class="text-xl font-bold text-slate-700">Tidak ada kartu.</h2>
+                        <p class="text-slate-500 text-sm mt-2">Coba ubah filter topik Anda.</p>
+                        <button onclick="setTopic('All')" class="mt-6 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold">Tampilkan Semua</button>
+                    </div>`;
+                return;
+            }
+
+            const html = `
+                <div class="fade-in w-full max-w-lg mx-auto flex flex-col items-center">
+                    <div class="w-full flex justify-between items-center mb-4 px-1">
+                        <div class="flex flex-col">
+                            <span class="text-xs sm:text-sm font-bold text-slate-400 tracking-wide uppercase" id="cardCounter">Card ${state.flashcardIdx + 1} of ${data.length}</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="toggleBookmark()" id="btnTopBookmark" class="w-10 h-10 flex items-center justify-center rounded-full transition-all border-2 bg-white text-slate-400 border-slate-200 hover:bg-amber-50 hover:text-amber-500 shadow-sm active:scale-90 hidden md:flex">
+                                <i class="fa-regular fa-bookmark"></i>
+                            </button>
+                            <button onclick="toggleMastery()" id="btnTopMastery" class="w-10 h-10 flex items-center justify-center rounded-full transition-all border-2 bg-white text-slate-400 border-slate-200 hover:bg-green-50 hover:text-green-500 shadow-sm active:scale-90 hidden md:flex">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                            <button onclick="toggleShuffle()" class="w-10 h-10 flex items-center justify-center rounded-full transition-all border-2 ${state.isShuffled ? theme.bg + ' text-white border-transparent' : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-100'} shadow-sm active:scale-90">
+                                <i class="fa-solid fa-shuffle"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Flashcard Area -->
+                    <div id="touchWrapper" class="relative w-full h-[58vh] min-h-[420px] max-h-[550px] perspective-1000">
+                        <div id="slideBox" class="w-full h-full">
+                            <div id="flipBox" class="w-full h-full card-transition transform-style-preserve-3d shadow-xl rounded-2xl cursor-pointer">
+                                <!-- Front -->
+                                <div id="cardFront" class="absolute inset-0 backface-hidden bg-white border-2 border-slate-100 rounded-2xl flex flex-col p-6 sm:p-8">
+                                    <!-- Injected by JS -->
+                                </div>
+                                <!-- Back -->
+                                <div id="cardBack" class="absolute inset-0 backface-hidden rotate-y-180 bg-white border-2 ${state.mode === 'learner' ? 'border-blue-300' : 'border-emerald-300'} rounded-2xl p-5 sm:p-8 overflow-hidden flex flex-col">
+                                    <!-- Injected by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Desktop Navigation (Hidden on Mobile) -->
+                    <div class="hidden md:flex justify-between w-full mt-6 gap-3">
+                        <button onclick="navigateCard('prev')" class="flex-1 flex justify-center items-center gap-2 py-3.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 font-bold text-slate-600 shadow-sm active:scale-95 transition-transform">
+                            <i class="fa-solid fa-arrow-left"></i> Prev
+                        </button>
+                        <button onclick="flipCard()" class="flex-[2] flex justify-center items-center gap-2 py-3.5 bg-slate-800 text-white rounded-xl hover:bg-slate-900 font-bold shadow-md active:scale-95 transition-transform">
+                            <i class="fa-solid fa-rotate"></i> Flip to Reveal
+                        </button>
+                        <button onclick="navigateCard('next')" class="flex-1 flex justify-center items-center gap-2 py-3.5 ${theme.bg} rounded-xl ${theme.hover} font-bold text-white shadow-md active:scale-95 transition-transform">
+                            Next <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+
+            // Touch Listeners
+            const touchWrapper = document.getElementById('touchWrapper');
+            touchWrapper.addEventListener('touchstart', e => {
+                touchstartX = e.changedTouches[0].screenX;
+                touchstartY = e.changedTouches[0].screenY;
+                isSwiping = false;
+            }, {passive: true});
+
+            touchWrapper.addEventListener('touchmove', e => {
+                let touchEndX = e.changedTouches[0].screenX;
+                let touchEndY = e.changedTouches[0].screenY;
+                if (Math.abs(touchEndX - touchstartX) > 15 || Math.abs(touchEndY - touchstartY) > 15) isSwiping = true;
+            }, {passive: true});
+
+            touchWrapper.addEventListener('touchend', e => {
+                let touchendX = e.changedTouches[0].screenX;
+                let diffX = touchstartX - touchendX;
+                
+                if (isSwiping && Math.abs(diffX) > 40) {
+                    if (diffX > 0) navigateCard('next'); else navigateCard('prev');
+                } else if (!isSwiping) {
+                    flipCard(); // Tap to flip
+                }
+            });
+
+            // Desktop Click
+            touchWrapper.addEventListener('click', e => {
+                if(!isSwiping && e.pointerType === 'mouse') flipCard();
+            });
+
+            updateFlashcardContent('none');
+        }
+
+        window.flipCard = () => {
+            const flipBox = document.getElementById('flipBox');
+            state.isFlipped = !state.isFlipped;
+            if(state.isFlipped) flipBox.classList.add('rotate-y-180');
+            else flipBox.classList.remove('rotate-y-180');
+        };
+
+        window.navigateCard = (direction) => {
+            if (isNavigating || state.activeData.length === 0) return;
+            isNavigating = true;
+
+            const flipBox = document.getElementById('flipBox');
+            state.isFlipped = false;
+            flipBox.style.transition = 'none'; 
+            flipBox.classList.remove('rotate-y-180');
+            
+            if (direction === 'next') state.flashcardIdx = (state.flashcardIdx + 1) % state.activeData.length;
+            else state.flashcardIdx = state.flashcardIdx === 0 ? state.activeData.length - 1 : state.flashcardIdx - 1;
+
+            requestAnimationFrame(() => { requestAnimationFrame(() => {
+                flipBox.style.transition = 'transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1)';
+            });});
+
+            updateFlashcardContent(direction);
+            setTimeout(() => { isNavigating = false; }, 300);
+        };
+
+        function updateFlashcardContent(animationDir) {
+            if(state.activeData.length === 0) return;
+            
+            const card = state.activeData[state.flashcardIdx];
+            const prefix = state.mode === 'learner' ? 'L_' : 'C_';
+            const uniqueId = prefix + card.id;
+            const isMastered = state.db.masteredCards.has(uniqueId);
+            const isBookmarked = state.db.bookmarkedCards.has(uniqueId);
+            
+            // 1. Update Counters & Buttons
+            const counter = document.getElementById('cardCounter');
+            if (counter) counter.innerText = `Card ${state.flashcardIdx + 1} / ${state.activeData.length}`;
+
+            // Sync Mobile Action Bar states
+            const btnMobMastery = document.getElementById('btnActionMastery');
+            const btnMobBookmark = document.getElementById('btnActionBookmark');
+            const iconMobBookmark = document.getElementById('iconActionBookmark');
+            
+            if (btnMobMastery) {
+                if(isMastered) { btnMobMastery.className = "flex-1 flex flex-col items-center justify-center min-h-[48px] px-2 rounded-xl bg-green-50 text-green-600 border border-green-200 active:bg-green-100 transition-colors"; }
+                else { btnMobMastery.className = "flex-1 flex flex-col items-center justify-center min-h-[48px] px-2 rounded-xl text-slate-400 border border-slate-200 active:bg-slate-50 transition-colors"; }
+            }
+            if (btnMobBookmark) {
+                if(isBookmarked) { btnMobBookmark.classList.add('text-amber-500'); btnMobBookmark.classList.remove('text-slate-400'); iconMobBookmark.className = "fa-solid fa-bookmark text-lg mb-0.5"; }
+                else { btnMobBookmark.classList.add('text-slate-400'); btnMobBookmark.classList.remove('text-amber-500'); iconMobBookmark.className = "fa-regular fa-bookmark text-lg mb-0.5"; }
+            }
+
+            // Sync Desktop Top buttons
+            const btnTopM = document.getElementById('btnTopMastery');
+            if(btnTopM) {
+                if(isMastered) btnTopM.innerHTML = `<i class="fa-solid fa-check text-green-500"></i>`;
+                else btnTopM.innerHTML = `<i class="fa-solid fa-check"></i>`;
+            }
+            const btnTopB = document.getElementById('btnTopBookmark');
+            if(btnTopB) {
+                if(isBookmarked) btnTopB.innerHTML = `<i class="fa-solid fa-bookmark text-amber-500"></i>`;
+                else btnTopB.innerHTML = `<i class="fa-regular fa-bookmark"></i>`;
+            }
+
+            // 2. Generate Inner Content (Only Learner logic applies here since Flashcards are hidden in Comparator)
+            let frontHTML, backHTML;
+            
+            frontHTML = `
+                <div class="w-full flex justify-between items-start mb-auto">
+                    <span class="text-[0.65rem] sm:text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-md uppercase tracking-wider">${card.topic}</span>
+                    ${isMastered ? '<i class="fa-solid fa-check-circle text-green-500 text-xl"></i>' : ''}
+                </div>
+                <div class="flex flex-col items-center justify-center my-auto w-full px-2">
+                    <div class="mb-5"><span class="px-3 py-1.5 rounded-full text-[0.7rem] sm:text-xs font-bold uppercase tracking-wider ${card.badgeClass} shadow-sm">${card.urgency}</span></div>
+                    <h2 class="text-[1.15rem] sm:text-2xl font-bold text-slate-800 text-center leading-snug">${card.q}</h2>
+                </div>
+                <div class="w-full flex justify-between items-end mt-auto text-slate-300">
+                    <div class="flex items-center gap-2 text-xs font-semibold animate-swipe-hint text-blue-400"><i class="fa-solid fa-angles-left"></i></div>
+                    <div class="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest"><i class="fa-solid fa-hand-pointer mr-1"></i> Tap to flip</div>
+                    <div class="flex items-center gap-2 text-xs font-semibold animate-swipe-hint text-blue-400"><i class="fa-solid fa-angles-right"></i></div>
+                </div>
+            `;
+            backHTML = `
+                <div class="h-full overflow-y-auto hide-scrollbar flex flex-col pt-1">
+                    <div class="bg-blue-50 text-blue-800 font-bold px-3 py-1.5 rounded w-max mb-4 text-[0.7rem] sm:text-xs border border-blue-200 uppercase tracking-wide">Core Answer</div>
+                    <p class="text-[1.05rem] sm:text-xl font-bold text-slate-800 mb-5 leading-tight">${card.a}</p>
+                    
+                    <div class="bg-amber-50/50 p-3 sm:p-4 rounded-xl border border-amber-200/60 mb-3 flex gap-3">
+                        <i class="fa-solid fa-gem text-amber-500 mt-1"></i>
+                        <div><p class="text-[0.8rem] sm:text-[0.9rem] text-amber-900 font-semibold leading-snug">${card.pearl}</p></div>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mt-auto">
+                        <span class="font-bold text-slate-800 block mb-1 text-xs uppercase"><i class="fa-solid fa-microscope text-slate-400 mr-1"></i> Rationale / Details:</span> 
+                        <p class="text-[0.85rem] sm:text-[0.95rem] text-slate-600 leading-relaxed">${card.rationale}</p>
+                    </div>
+                </div>
+            `;
+            
+
+            const cFront = document.getElementById('cardFront');
+            const cBack = document.getElementById('cardBack');
+            if(cFront) cFront.innerHTML = frontHTML;
+            if(cBack) cBack.innerHTML = backHTML;
+
+            const slideBox = document.getElementById('slideBox');
+            if (slideBox && animationDir !== 'none') {
+                slideBox.className = 'w-full h-full'; 
+                void slideBox.offsetWidth; 
+                slideBox.className = `w-full h-full ${animationDir === 'next' ? 'slide-next' : 'slide-prev'}`;
+            }
+        }
+
+        // ==========================================
+        // 5. MATRIX (Responsive Cards/Table)
+        // ==========================================
+        function renderCheatSheet(container) {
+            const isLearner = state.mode === 'learner';
+            
+            // Build the shell (hanya dirender sekali saat tab dibuka)
+            const html = `
+                <div class="fade-in bg-white md:rounded-2xl md:shadow-sm md:border border-slate-200 overflow-hidden flex flex-col h-[70vh] md:h-[75vh] -mx-4 md:mx-0">
+                    <div class="p-3 sm:p-4 bg-slate-800 flex flex-col sm:flex-row gap-3 items-center sticky top-0 z-10">
+                        <h2 class="text-white text-sm sm:text-base font-bold flex items-center gap-2 w-full sm:w-auto"><i class="fa-solid fa-table-cells-large"></i> ${isLearner ? 'Guideline Matrix' : 'Comparison Matrix'}</h2>
+                        <div class="relative w-full sm:flex-1">
+                            <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="text" id="searchInput" placeholder="Cari topik atau kata kunci..." value="${state.searchQuery}"
+                                class="w-full pl-9 pr-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-white placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all"
+                                oninput="handleSearch(event)">
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-y-auto flex-grow hide-scrollbar p-4 md:p-0 bg-slate-50 md:bg-white">
+                        <!-- Desktop Table -->
+                        <table class="w-full text-left border-collapse hidden md:table">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-[0.65rem] uppercase tracking-widest sticky top-0 z-10 shadow-sm">
+                                ${isLearner ? '<tr><th class="p-4 w-1/4 font-bold">Kategori</th><th class="p-4 w-1/3 font-bold">Situasi Klinis</th><th class="p-4 w-2/3 font-bold text-blue-700">Rekomendasi ESC 2025</th></tr>' 
+                                            : '<tr><th class="p-4 w-1/4 font-bold">Topik Kunci</th><th class="p-4 w-1/3 font-bold text-slate-500">ESC 2018 (Pedoman Lama)</th><th class="p-4 w-auto font-bold text-emerald-700">ESC 2025 (Pembaruan)</th></tr>'}
+                            </thead>
+                            <tbody id="matrixTableBody">
+                                <!-- Data akan di-inject ke sini oleh updateCheatSheetResults -->
+                            </tbody>
+                        </table>
+                        
+                        <!-- Mobile Cards -->
+                        <div id="matrixMobileCards" class="md:hidden flex flex-col gap-3 pb-8">
+                             <!-- Data mobile akan di-inject ke sini -->
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+            
+            // Panggil injeksi data pertama kali
+            updateCheatSheetResults();
+        }
+
+        function updateCheatSheetResults() {
+            const isLearner = state.mode === 'learner';
+            const data = isLearner ? state.activeData : comparatorRaw;
+
+            const searchStr = state.searchQuery.toLowerCase();
+            const filteredData = data.filter(item => {
+                if (isLearner) return item.q.toLowerCase().includes(searchStr) || item.a.toLowerCase().includes(searchStr) || item.topic.toLowerCase().includes(searchStr);
+                return item.topic.toLowerCase().includes(searchStr) || item.new.toLowerCase().includes(searchStr);
+            });
+
+            // DESKTOP TABLE
+            let desktopRows = filteredData.map(item => {
+                if(isLearner) {
+                    return `
+                    <tr class="hover:bg-blue-50/50 border-b border-slate-100 group transition-colors">
+                        <td class="p-4 align-top w-1/4">
+                            <span class="px-2 py-1 rounded text-[0.65rem] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 mb-2 inline-block">${item.topic}</span><br>
+                            <span class="text-[0.7rem] font-bold px-2 py-0.5 rounded ${item.badgeClass} mb-2 inline-block">${item.urgency}</span>
+                        </td>
+                        <td class="p-4 text-sm font-semibold text-slate-800 align-top w-1/3 leading-snug">${item.q}</td>
+                        <td class="p-4 align-top w-2/3">
+                            <span class="font-bold text-sm text-blue-700 block mb-2 leading-snug">${item.a}</span>
+                            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-[0.8rem] text-slate-600"><span class="font-semibold text-slate-800">Rasional:</span> ${item.rationale}</div>
+                        </td>
+                    </tr>`;
+                } else {
+                    return `
+                    <tr class="hover:bg-emerald-50/50 border-b border-slate-100">
+                        <td class="p-4 text-sm font-bold text-slate-800 align-top w-1/4">${item.topic}</td>
+                        <td class="p-4 align-top w-1/3 text-[0.85rem] text-slate-500 line-through decoration-slate-300">${item.old}</td>
+                        <td class="p-4 align-top w-auto bg-emerald-50/20">
+                            <div class="text-[0.95rem] font-bold text-emerald-800 mb-2">${item.new}</div>
+                            <div class="text-[0.8rem] text-slate-600 mt-2 p-2 bg-emerald-100/50 rounded border border-emerald-200/50"><span class="font-bold text-emerald-900">Rasional: </span>${item.rationale}</div>
+                        </td>
+                    </tr>`;
+                }
+            }).join('');
+
+            // MOBILE CARDS
+            let mobileCards = filteredData.map(item => {
+                if(isLearner) {
+                    return `
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-2">
+                        <div class="flex justify-between items-start">
+                            <span class="text-[0.65rem] font-bold uppercase tracking-wider text-slate-500">${item.topic}</span>
+                            <span class="text-[0.6rem] font-bold px-2 py-0.5 rounded ${item.badgeClass}">${item.urgency}</span>
+                        </div>
+                        <h4 class="font-bold text-[0.95rem] text-slate-800 leading-snug mt-1">${item.q}</h4>
+                        <div class="bg-blue-50/50 mt-2 p-3 rounded-xl border border-blue-100">
+                            <p class="font-bold text-[0.9rem] text-blue-800 leading-snug mb-2">${item.a}</p>
+                            <p class="text-[0.75rem] text-slate-600"><strong class="text-slate-800">Why:</strong> ${item.rationale}</p>
+                        </div>
+                    </div>`;
+                } else {
+                    return `
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-2">
+                        <h4 class="font-bold text-sm text-slate-800 border-b pb-2 mb-1">${item.topic}</h4>
+                        <div class="flex gap-2 items-start mt-1">
+                            <span class="mt-1 text-[0.6rem] font-bold bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded">2018</span>
+                            <p class="text-[0.8rem] text-slate-500 line-through leading-tight">${item.old}</p>
+                        </div>
+                        <div class="flex gap-2 items-start bg-emerald-50 p-3 rounded-lg border border-emerald-200 mt-1 flex-col">
+                            <div class="flex items-start gap-2">
+                                <span class="mt-0.5 text-[0.6rem] font-bold bg-emerald-200 text-emerald-800 px-1.5 py-0.5 rounded shadow-sm">2025</span>
+                                <p class="text-[0.85rem] font-bold text-emerald-900 leading-tight">${item.new}</p>
+                            </div>
+                            <p class="text-[0.75rem] text-slate-600 mt-2 pt-2 border-t border-emerald-200/60"><strong class="text-slate-800">Rasional:</strong> ${item.rationale}</p>
+                        </div>
+                    </div>`;
+                }
+            }).join('');
+
+            const emptyState = `<div class="p-10 text-center w-full"><i class="fa-solid fa-magnifying-glass text-4xl text-slate-300 mb-3"></i><p class="text-slate-500 font-medium">Data tidak ditemukan.</p></div>`;
+
+            // Hanya mengganti isi tbody dan div mobile tanpa menghancurkan kerangka input search
+            const tbody = document.getElementById('matrixTableBody');
+            const mCards = document.getElementById('matrixMobileCards');
+
+            if (tbody) tbody.innerHTML = filteredData.length > 0 ? desktopRows : `<tr><td colspan="3">${emptyState}</td></tr>`;
+            if (mCards) mCards.innerHTML = filteredData.length > 0 ? mobileCards : emptyState;
+        }
+
+        window.handleSearch = (e) => {
+            state.searchQuery = e.target.value;
+            updateCheatSheetResults();
+        };
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        applyFilters();
+        updateUI();
+
+    </script>
+</body>
+</html>
