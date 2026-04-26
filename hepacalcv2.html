@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HeparinCalc - CardiologyVault</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        html, body { overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #060913; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        .table-row-transition { transition: all 0.3s ease; }
+
+        /* --- MAX PROTECTION CSS --- */
+        /* Prevent text selection and highlighting */
+        * {
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            user-select: none !important;
+            -webkit-touch-callout: none !important;
+        }
+        /* Allow inputs to be selectable so the app still works */
+        input, select, textarea {
+            -webkit-user-select: auto !important;
+            -moz-user-select: auto !important;
+            -ms-user-select: auto !important;
+            user-select: auto !important;
+        }
+        /* Blank page if they try to print / save as PDF */
+        @media print {
+            html, body {
+                display: none !important;
+                background-color: white !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-[#060913] text-slate-300 min-h-screen p-2 sm:p-4 md:p-8 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#060913] to-[#030408] selection:bg-transparent">
+
+    <!-- Main Vault Container -->
+    <div class="max-w-4xl mx-auto bg-slate-900/40 backdrop-blur-xl rounded-[1.5rem] md:rounded-[2rem] shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-slate-700/50 relative z-10 overflow-hidden">
+        
+        <!-- Abstract Background Glows -->
+        <div class="absolute top-0 right-0 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-rose-600/10 rounded-full blur-[80px] md:blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+        <div class="absolute bottom-0 left-0 w-[200px] md:w-[400px] h-[200px] md:h-[400px] bg-cyan-600/10 rounded-full blur-[80px] md:blur-[100px] translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
+
+        <!-- Header Section -->
+        <div class="relative border-b border-slate-700/50 bg-slate-900/50 p-5 md:p-8">
+            <div class="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
+                <div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <i data-lucide="shield" class="w-4 h-4 md:w-5 md:h-5 text-rose-500 drop-shadow-[0_0_8px_rgba(225,29,72,0.8)]"></i>
+                        <span class="text-[10px] md:text-xs font-bold tracking-[0.2em] text-rose-500 uppercase">Part of CardiologyVault™</span>
+                    </div>
+                    <h1 class="text-3xl md:text-5xl font-extrabold text-white tracking-tight flex items-center gap-1 md:gap-2 flex-wrap">
+                        Heparin<span class="text-rose-500 font-light">Calc</span><span class="text-rose-500 text-4xl md:text-5xl">.</span>
+                    </h1>
+                    <p class="text-slate-400 text-xs md:text-sm mt-2 md:mt-3 font-medium">
+                        Developed by <strong class="text-slate-200">Bayushi Eka Putra, MD, FIHA</strong>
+                    </p>
+                </div>
+                
+                <div class="bg-rose-950/40 border border-rose-500/30 rounded-full px-3 py-1.5 md:px-4 md:py-2 flex items-center gap-2 w-fit shadow-[0_0_15px_rgba(225,29,72,0.15)] backdrop-blur-md self-start md:self-auto">
+                    <i data-lucide="activity" class="w-3 h-3 md:w-4 md:h-4 text-rose-400 animate-pulse"></i>
+                    <span class="text-[10px] md:text-xs font-bold text-rose-300 tracking-wider">LIVE DOSING PROTOCOL</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Global Settings -->
+        <div class="relative p-5 md:p-8 border-b border-slate-700/50 bg-black/20">
+            <h2 class="text-xs md:text-sm font-bold tracking-widest text-slate-400 mb-4 flex items-center gap-2 uppercase">
+                <i data-lucide="beaker" class="w-4 h-4 text-cyan-400"></i>
+                Parameter Klinis & Sediaan
+            </h2>
+            
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-5">
+                <div class="space-y-1.5 md:space-y-2 col-span-2 md:col-span-1">
+                    <label class="text-[10px] md:text-xs font-semibold text-slate-400 uppercase tracking-wider">Berat Badan (kg)</label>
+                    <div class="relative">
+                        <input type="number" id="inputWeight" value="60" class="w-full bg-[#0B0F19] border border-slate-700 text-white rounded-lg md:rounded-xl p-2.5 md:p-3 pl-3 md:pl-4 pr-10 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all outline-none font-mono text-base md:text-lg shadow-inner" />
+                        <span class="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs md:text-sm font-bold pointer-events-none">KG</span>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5 md:space-y-2 col-span-2 md:col-span-1">
+                    <label class="text-[10px] md:text-xs font-semibold text-slate-400 uppercase tracking-wider">Protokol</label>
+                    <div class="relative">
+                        <select id="inputProtocol" class="w-full bg-[#0B0F19] border border-slate-700 text-white rounded-lg md:rounded-xl p-2.5 md:p-3 pr-8 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all outline-none text-xs md:text-sm shadow-inner appearance-none cursor-pointer">
+                            <option value="acs">ACS / Low Intensity</option>
+                            <option value="vte">DVT & PE / Standard</option>
+                        </select>
+                        <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5 md:space-y-2 col-span-2 md:col-span-1">
+                    <label class="text-[10px] md:text-xs font-semibold text-slate-400 uppercase tracking-wider">aPTT Kontrol</label>
+                    <div class="relative">
+                        <input type="number" id="inputControlAptt" value="30" class="w-full bg-[#0B0F19] border border-slate-700 text-white rounded-lg md:rounded-xl p-2.5 md:p-3 pr-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none font-mono text-base md:text-lg shadow-inner" />
+                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-[10px] md:text-xs font-bold pointer-events-none">DTK</span>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5 md:space-y-2 col-span-1">
+                    <label class="text-[10px] md:text-xs font-semibold text-slate-400 uppercase tracking-wider">Sediaan</label>
+                    <div class="relative">
+                        <input type="number" id="inputUnits" value="25000" class="w-full bg-[#0B0F19] border border-slate-700 text-white rounded-lg md:rounded-xl p-2.5 md:p-3 pr-8 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all outline-none font-mono text-sm md:text-lg shadow-inner" />
+                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-[10px] md:text-xs font-bold pointer-events-none">IU</span>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5 md:space-y-2 col-span-1">
+                    <label class="text-[10px] md:text-xs font-semibold text-slate-400 uppercase tracking-wider">Pelarut</label>
+                    <div class="relative">
+                        <input type="number" id="inputVolume" value="50" class="w-full bg-[#0B0F19] border border-slate-700 text-white rounded-lg md:rounded-xl p-2.5 md:p-3 pr-8 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all outline-none font-mono text-sm md:text-lg shadow-inner" />
+                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-[10px] md:text-xs font-bold pointer-events-none">ML</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 flex flex-col sm:flex-row items-end sm:items-center justify-end gap-2 md:gap-3">
+                <div class="bg-indigo-950/30 border border-indigo-800/50 rounded-lg px-3 md:px-4 py-1.5 md:py-2 text-[10px] md:text-xs font-medium text-indigo-300 flex items-center gap-1.5 md:gap-2">
+                    <i data-lucide="crosshair" class="w-3 h-3 md:w-3.5 md:h-3.5"></i>
+                    Target: <span id="dispTargetAptt" class="font-mono text-indigo-100 text-xs md:text-sm bg-indigo-900/50 px-1.5 py-0.5 rounded">50 - 70 dtk</span>
+                </div>
+                <div class="bg-cyan-950/30 border border-cyan-800/50 rounded-lg px-3 md:px-4 py-1.5 md:py-2 text-[10px] md:text-xs font-medium text-cyan-300 flex items-center gap-1.5 md:gap-2">
+                    <i data-lucide="droplet" class="w-3 h-3 md:w-3.5 md:h-3.5"></i>
+                    Konsentrasi: <span id="dispConcentration" class="font-mono text-cyan-100 text-xs md:text-sm bg-cyan-900/50 px-1.5 py-0.5 rounded">100.0 Unit/mL</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="flex border-b border-slate-700/50 relative bg-slate-900/30">
+            <button id="tabInitialBtn" onclick="switchTab('initial')" class="flex-1 py-4 md:py-5 text-xs md:text-sm font-bold tracking-wider uppercase transition-all duration-300 relative text-rose-400 bg-rose-500/5">
+                Dosis Inisial
+                <div id="tabInitialIndicator" class="absolute bottom-0 left-0 w-full h-0.5 bg-rose-500 shadow-[0_0_10px_rgba(225,29,72,0.8)]"></div>
+            </button>
+            <button id="tabTitrationBtn" onclick="switchTab('titration')" class="flex-1 py-4 md:py-5 text-xs md:text-sm font-bold tracking-wider uppercase transition-all duration-300 relative text-slate-500 hover:text-slate-300 hover:bg-white/5">
+                Titrasi aPTT
+                <div id="tabTitrationIndicator" class="absolute bottom-0 left-0 w-full h-0.5 bg-rose-500 shadow-[0_0_10px_rgba(225,29,72,0.8)] hidden"></div>
+            </button>
+        </div>
+
+        <!-- Content Area -->
+        <div class="p-5 md:p-8 relative min-h-[400px]">
+            
+            <!-- TAB 1: INITIAL DOSING -->
+            <div id="viewInitial" class="space-y-5 md:space-y-6 animate-[fadeIn_0.5s_ease-out]">
+                <div class="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
+                    <div id="iconProtocol" class="text-rose-500"><i data-lucide="heart-pulse" class="w-6 h-6 md:w-7 md:h-7"></i></div>
+                    <h3 id="dispProtocolTitle" class="text-lg md:text-xl font-bold text-white">
+                        Sindrom Koroner Akut (ACS) Target
+                    </h3>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <!-- Bolus Card -->
+                    <div class="bg-slate-800/40 border border-slate-700 rounded-xl md:rounded-2xl p-5 md:p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] relative overflow-hidden group hover:border-indigo-500/50 transition-colors">
+                        <div class="absolute top-0 right-0 w-24 md:w-32 h-24 md:h-32 bg-indigo-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-indigo-500/20 transition-all pointer-events-none"></div>
+                        
+                        <div class="flex items-center gap-2 md:gap-3 text-slate-300 mb-3 md:mb-4">
+                            <div class="p-1.5 md:p-2 bg-indigo-500/20 rounded-lg">
+                                <i data-lucide="syringe" class="w-4 h-4 md:w-5 md:h-5 text-indigo-400"></i>
+                            </div>
+                            <span class="font-bold tracking-wide text-xs md:text-sm">BOLUS IV AWAL</span>
+                        </div>
+                        
+                        <div class="flex items-end gap-2 mb-1 md:mb-2">
+                            <div id="dispBolusU" class="text-3xl sm:text-4xl md:text-5xl font-mono font-bold text-white tracking-tight break-all">4.000</div>
+                            <div class="text-slate-400 font-semibold mb-1 text-sm md:text-base">Unit</div>
+                        </div>
+                        
+                        <div class="text-xl md:text-2xl font-mono font-semibold text-indigo-400 mb-4 md:mb-6 flex items-center gap-2">
+                            <i data-lucide="zap" class="w-4 h-4 md:w-5 md:h-5 opacity-50"></i>
+                            <span id="dispBolusML">40.0</span> <span class="text-sm md:text-base font-sans font-medium opacity-70">mL</span>
+                        </div>
+                        
+                        <div class="text-[10px] md:text-xs font-mono text-slate-500 bg-[#0B0F19] p-2 md:p-3 rounded-lg md:rounded-xl border border-slate-800">
+                            <span class="text-slate-400">Aturan:</span> <span id="dispRuleBolus">60 U/kg (Max 4.000 U)</span>
+                        </div>
+                    </div>
+
+                    <!-- Infusion Card -->
+                    <div class="bg-slate-800/40 border border-slate-700 rounded-xl md:rounded-2xl p-5 md:p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] relative overflow-hidden group hover:border-teal-500/50 transition-colors">
+                        <div class="absolute top-0 right-0 w-24 md:w-32 h-24 md:h-32 bg-teal-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-teal-500/20 transition-all pointer-events-none"></div>
+                        
+                        <div class="flex items-center gap-2 md:gap-3 text-slate-300 mb-3 md:mb-4">
+                            <div class="p-1.5 md:p-2 bg-teal-500/20 rounded-lg">
+                                <i data-lucide="clock" class="w-4 h-4 md:w-5 md:h-5 text-teal-400"></i>
+                            </div>
+                            <span class="font-bold tracking-wide text-xs md:text-sm">INFUS KONTINU (DRIP)</span>
+                        </div>
+                        
+                        <div class="flex items-end gap-2 mb-0">
+                            <div id="dispInfusionU" class="text-3xl sm:text-4xl md:text-5xl font-mono font-bold text-white tracking-tight break-all">840</div>
+                            <div class="text-slate-400 font-semibold mb-1 text-sm md:text-base">Unit/jam</div>
+                        </div>
+                        <div class="text-[10px] md:text-xs font-mono text-teal-400/60 mb-2 md:mb-3">
+                            ≈ <span id="dispInfusionU24">20.160</span> Unit/24 jam
+                        </div>
+                        
+                        <div class="text-xl md:text-2xl font-mono font-semibold text-teal-400 mb-0 flex items-center gap-2">
+                            <i data-lucide="zap" class="w-4 h-4 md:w-5 md:h-5 opacity-50"></i>
+                            <span id="dispInfusionML">8.4</span> <span class="text-sm md:text-base font-sans font-medium opacity-70">mL/jam</span>
+                        </div>
+                        <div class="text-[10px] md:text-xs font-mono text-teal-400/60 mb-4 md:mb-6 ml-6 md:ml-7">
+                            ≈ <span id="dispInfusionML24">201.6</span> mL/24 jam
+                        </div>
+                        
+                        <div class="text-[10px] md:text-xs font-mono text-slate-500 bg-[#0B0F19] p-2 md:p-3 rounded-lg md:rounded-xl border border-slate-800">
+                            <span class="text-slate-400">Aturan:</span> <span id="dispRuleInfusion">12 U/kg/jam (Max 1.000 U)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-rose-950/30 border border-rose-900/50 p-3 md:p-4 rounded-xl text-xs md:text-sm flex gap-2 md:gap-3 shadow-inner">
+                    <i data-lucide="alert-triangle" class="w-4 h-4 md:w-5 md:h-5 text-rose-500 flex-shrink-0 mt-0.5"></i>
+                    <p class="text-rose-200/80 leading-relaxed">
+                        Cek aPTT pertama pada <strong class="text-rose-400">6 jam</strong> setelah dimulainya infus awal. Pastikan tidak ada perdarahan aktif sebelum memulai terapi antikoagulan.
+                    </p>
+                </div>
+            </div>
+
+            <!-- TAB 2: TITRATION -->
+            <div id="viewTitration" class="space-y-5 md:space-y-6 hidden animate-[fadeIn_0.5s_ease-out]">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 bg-black/40 p-4 md:p-5 rounded-xl md:rounded-2xl border border-slate-700/50 shadow-inner">
+                    <div class="space-y-1.5 md:space-y-2">
+                        <label class="text-[10px] md:text-xs font-semibold text-slate-400 uppercase tracking-wider">Hasil aPTT Aktual (detik)</label>
+                        <input type="number" id="inputAptt" value="" placeholder="Contoh: 55" class="w-full bg-[#0B0F19] border border-slate-700 text-white rounded-lg md:rounded-xl p-3 md:p-4 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-xl md:text-2xl font-mono shadow-inner outline-none transition-all" />
+                    </div>
+                    <div class="space-y-1.5 md:space-y-2">
+                        <label class="text-[10px] md:text-xs font-semibold text-slate-400 uppercase tracking-wider">Laju Infus Saat Ini</label>
+                        <div class="flex gap-2">
+                            <input type="number" id="inputCurrentRate" value="" placeholder="Contoh: 1000" class="w-2/3 bg-[#0B0F19] border border-slate-700 text-white rounded-lg md:rounded-xl p-3 md:p-4 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-xl md:text-2xl font-mono shadow-inner outline-none transition-all" />
+                            <select id="inputRateMode" class="w-1/3 bg-[#0B0F19] border border-slate-700 text-white rounded-lg md:rounded-xl p-3 md:p-4 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-xs md:text-sm font-semibold outline-none shadow-inner cursor-pointer appearance-none text-center">
+                                <option value="hourly">U / jam</option>
+                                <option value="daily">U / 24 jam</option>
+                            </select>
+                        </div>
+                        <div class="text-[10px] md:text-xs text-slate-500 mt-2 font-mono flex flex-col gap-1.5 bg-[#0B0F19]/50 p-2.5 rounded-lg border border-slate-700/50">
+                            <div class="flex items-center gap-1.5">
+                                <i data-lucide="activity" class="w-3.5 h-3.5 text-cyan-400"></i>
+                                <span class="text-slate-400">Laju / Jam:</span>
+                                <strong id="dispCurrentRateHourly" class="text-white ml-auto">0.0 mL/jam (0 U)</strong>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <i data-lucide="clock" class="w-3.5 h-3.5 text-indigo-400"></i>
+                                <span class="text-slate-400">Total / 24 Jam:</span>
+                                <strong id="dispCurrentRateDaily" class="text-white ml-auto">0.0 mL/24j (0 U)</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="titrationEmpty" class="flex flex-col items-center justify-center p-8 md:p-12 text-slate-500 border-2 border-dashed border-slate-700/50 rounded-xl md:rounded-3xl bg-black/20">
+                    <i data-lucide="activity" class="w-10 h-10 md:w-12 h-12 mb-3 md:mb-4 opacity-20"></i>
+                    <p class="text-xs md:text-sm text-center font-medium">Input nilai aPTT aktual dan laju infus<br/>untuk melihat rekomendasi sistem.</p>
+                </div>
+
+                <!-- Result State -->
+                <div id="titrationResultPanel" class="hidden p-5 md:p-8 rounded-xl md:rounded-3xl border transition-all duration-500 relative">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-current animate-pulse"></div>
+                            <h3 class="text-[10px] md:text-sm font-bold tracking-widest uppercase opacity-80">Rekomendasi Sistem</h3>
+                        </div>
+                        
+                        <!-- Ratio Badge -->
+                        <div id="dispRatioBadge" class="bg-black/40 border border-white/20 px-3 py-1.5 rounded-lg text-xs md:text-sm font-mono font-medium flex items-center gap-2 w-fit">
+                            <i data-lucide="activity" class="w-3.5 h-3.5 opacity-70"></i>
+                            Rasio Aktual: <strong class="text-white" id="dispCurrentRatioText">0.0x Kontrol</strong>
+                        </div>
+                    </div>
+                    
+                    <p id="dispActionText" class="text-lg md:text-2xl font-medium mb-6 md:mb-8 leading-relaxed text-white">
+                        <!-- Action text goes here -->
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
+                        
+                        <!-- Hold Action -->
+                        <div id="cardHold" class="hidden bg-[#0B0F19]/60 backdrop-blur-sm p-4 md:p-5 rounded-xl md:rounded-2xl border border-white/10 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-rose-500"></div>
+                            <div class="text-[10px] md:text-xs font-bold tracking-wider mb-1 md:mb-2 text-slate-400 uppercase">1. Hentikan Infus</div>
+                            <div class="text-2xl md:text-3xl font-mono font-bold text-white">
+                                <span id="dispHoldMinutes">60</span> <span class="text-sm md:text-base font-sans font-medium text-slate-500">Menit</span>
+                            </div>
+                        </div>
+
+                        <!-- Bolus Action -->
+                        <div id="cardBolus" class="bg-[#0B0F19]/60 backdrop-blur-sm p-4 md:p-5 rounded-xl md:rounded-2xl border border-white/10 relative overflow-hidden transition-opacity">
+                            <div id="cardBolusLine" class="absolute top-0 left-0 w-1 h-full bg-indigo-500 hidden"></div>
+                            <div id="cardBolusTitle" class="text-[10px] md:text-xs font-bold tracking-wider mb-1 md:mb-2 text-slate-400 uppercase">
+                                Bolus Tambahan
+                            </div>
+                            <div class="text-2xl md:text-3xl font-mono font-bold text-white">
+                                <span id="dispTitrationBolusU">0</span> <span class="text-sm md:text-base font-sans font-medium text-slate-500">Unit</span>
+                            </div>
+                            <div id="dispTitrationBolusMLWrap" class="hidden text-xs md:text-sm font-mono font-medium text-indigo-400 mt-1.5 md:mt-2 flex items-center gap-1">
+                                <i data-lucide="zap" class="w-3 h-3 md:w-3.5 md:h-3.5"></i> ≈ <span id="dispTitrationBolusML">0</span> mL
+                            </div>
+                        </div>
+
+                        <!-- New Rate Action -->
+                        <div class="bg-[#0B0F19]/60 backdrop-blur-sm p-4 md:p-5 rounded-xl md:rounded-2xl border border-white/10 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-teal-500"></div>
+                            <div id="cardRateTitle" class="text-[10px] md:text-xs font-bold tracking-wider mb-1 md:mb-2 text-slate-400 uppercase">
+                                Laju Syringe Pump
+                            </div>
+                            
+                            <!-- mL/hr & 24h -->
+                            <div class="text-2xl md:text-3xl font-mono font-bold text-teal-400 flex items-baseline gap-1 break-all mb-0">
+                                <span id="dispNewRateML">0.0</span> <span class="text-sm md:text-base font-sans font-medium text-teal-500/70">mL/jam</span>
+                            </div>
+                            <div class="text-[10px] md:text-xs font-mono text-teal-500/70 mb-2">
+                                ≈ <span id="dispNewRateML24">0.0</span> mL/24 jam
+                            </div>
+
+                            <!-- U/hr & 24h -->
+                            <div class="text-xs md:text-sm font-mono text-slate-300 mt-1">
+                                <span id="dispNewRateU">0</span> Unit/jam
+                            </div>
+                            <div class="text-[10px] md:text-xs font-mono text-slate-500 mt-0.5">
+                                ≈ <span id="dispNewRateU24">0</span> Unit/24 jam
+                            </div>
+
+                            <!-- Delta -->
+                            <div class="text-[10px] md:text-xs font-mono mt-2 pt-2 border-t border-white/10 opacity-70">
+                                Δ <span id="dispRateChangeU">+0</span> U/jam
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                
+                <!-- Dynamic Reference Table -->
+                <div class="mt-6 md:mt-8 bg-slate-900/60 border border-slate-700/50 rounded-xl overflow-hidden shadow-lg">
+                    <div class="bg-black/30 p-3 md:p-4 border-b border-slate-700/50 flex flex-col md:flex-row md:items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="list" class="w-4 h-4 text-slate-400"></i>
+                            <h4 class="text-xs md:text-sm font-bold text-slate-200 uppercase tracking-wider">Tabel Panduan Protokol</h4>
+                        </div>
+                        <div class="text-[10px] md:text-xs font-mono text-slate-400 bg-black/50 px-2 py-1 rounded">
+                            Berbasis aPTT Kontrol: <span id="dispRefControl" class="text-white font-bold">30 dtk</span>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-[10px] md:text-xs min-w-[500px]">
+                            <thead>
+                                <tr class="bg-[#0B0F19] text-slate-400 border-b border-slate-700/80">
+                                    <th class="p-3 font-semibold uppercase tracking-wider w-1/4">aPTT & Rasio</th>
+                                    <th class="p-3 font-semibold uppercase tracking-wider w-1/4">Status</th>
+                                    <th class="p-3 font-semibold uppercase tracking-wider w-1/4">Tindakan Bolus</th>
+                                    <th class="p-3 font-semibold uppercase tracking-wider w-1/4">Tindakan Infus (Drip)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="protocolTableBody" class="font-mono">
+                                <!-- Table rows injected by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-[#030408] p-4 md:p-5 text-[10px] md:text-xs text-slate-600 text-center border-t border-slate-800/80 leading-relaxed">
+            <span class="text-rose-900 font-bold uppercase tracking-widest mr-1 md:mr-2 block sm:inline mb-1 sm:mb-0">DISCLAIMER</span>
+            Sistem menggunakan algoritma nomogram berbasis berat badan (Protokol ACC/AHA). Hanya sebagai alat bantu komputasi presisi tinggi dan <strong class="text-slate-500">TIDAK MENGGANTIKAN PENILAIAN KLINIS MEDIS</strong>.
+        </div>
+    </div>
+
+    <!-- Application Logic & Protection Scripts -->
+    <script>
+        // --- MAX PROTECTION LOGIC (Obfuscated & Compact) ---
+        (function(){
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            document.addEventListener('dragstart', e => e.preventDefault());
+            document.addEventListener('selectstart', function(e) {
+                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT' && e.target.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                }
+            });
+            document.addEventListener('keydown', function(e) {
+                if (e.keyCode === 123) { e.preventDefault(); return false; } 
+                if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) { e.preventDefault(); return false; }
+                if (e.ctrlKey && (e.keyCode === 85 || e.keyCode === 83 || e.keyCode === 80 || e.keyCode === 67)) { e.preventDefault(); return false; }
+            });
+            try {
+                if (window.top !== window.self) { 
+                    window.top.location.href = window.self.location.href; 
+                }
+            } catch (err) {}
+            setInterval(function(){ Function('debugger')(); }, 50);
+        })();
+        // --- END PROTECTION LOGIC ---
+
+        // State variables
+        let state = {
+            activeTab: 'initial',
+            weight: 60,
+            protocol: 'acs',
+            controlAptt: 30,
+            heparinUnits: 25000,
+            heparinVolume: 50,
+            currentAptt: null,
+            currentRateU: null // Selalu disimpan dalam bentuk Unit/jam secara internal
+        };
+
+        // DOM Elements
+        const els = {
+            weight: document.getElementById('inputWeight'),
+            protocol: document.getElementById('inputProtocol'),
+            controlAptt: document.getElementById('inputControlAptt'),
+            units: document.getElementById('inputUnits'),
+            volume: document.getElementById('inputVolume'),
+            aptt: document.getElementById('inputAptt'),
+            currentRate: document.getElementById('inputCurrentRate'),
+            rateMode: document.getElementById('inputRateMode'),
+            
+            // Displays
+            dispConcentration: document.getElementById('dispConcentration'),
+            dispTargetAptt: document.getElementById('dispTargetAptt'),
+            dispProtocolTitle: document.getElementById('dispProtocolTitle'),
+            iconProtocol: document.getElementById('iconProtocol'),
+            
+            // Initial Dosing Displays
+            dispBolusU: document.getElementById('dispBolusU'),
+            dispBolusML: document.getElementById('dispBolusML'),
+            dispRuleBolus: document.getElementById('dispRuleBolus'),
+            dispInfusionU: document.getElementById('dispInfusionU'),
+            dispInfusionU24: document.getElementById('dispInfusionU24'),
+            dispInfusionML: document.getElementById('dispInfusionML'),
+            dispInfusionML24: document.getElementById('dispInfusionML24'),
+            dispRuleInfusion: document.getElementById('dispRuleInfusion'),
+            
+            // Titration Displays
+            dispCurrentRateHourly: document.getElementById('dispCurrentRateHourly'),
+            dispCurrentRateDaily: document.getElementById('dispCurrentRateDaily'),
+            titrationEmpty: document.getElementById('titrationEmpty'),
+            titrationResultPanel: document.getElementById('titrationResultPanel'),
+            dispActionText: document.getElementById('dispActionText'),
+            dispCurrentRatioText: document.getElementById('dispCurrentRatioText'),
+            dispRatioBadge: document.getElementById('dispRatioBadge'),
+            
+            cardHold: document.getElementById('cardHold'),
+            dispHoldMinutes: document.getElementById('dispHoldMinutes'),
+            
+            cardBolus: document.getElementById('cardBolus'),
+            cardBolusTitle: document.getElementById('cardBolusTitle'),
+            cardBolusLine: document.getElementById('cardBolusLine'),
+            dispTitrationBolusU: document.getElementById('dispTitrationBolusU'),
+            dispTitrationBolusMLWrap: document.getElementById('dispTitrationBolusMLWrap'),
+            dispTitrationBolusML: document.getElementById('dispTitrationBolusML'),
+            
+            cardRateTitle: document.getElementById('cardRateTitle'),
+            dispNewRateML: document.getElementById('dispNewRateML'),
+            dispNewRateML24: document.getElementById('dispNewRateML24'),
+            dispNewRateU: document.getElementById('dispNewRateU'),
+            dispNewRateU24: document.getElementById('dispNewRateU24'),
+            dispRateChangeU: document.getElementById('dispRateChangeU'),
+
+            // Reference Table
+            dispRefControl: document.getElementById('dispRefControl'),
+            protocolTableBody: document.getElementById('protocolTableBody'),
+
+            // Tabs
+            tabInitialBtn: document.getElementById('tabInitialBtn'),
+            tabTitrationBtn: document.getElementById('tabTitrationBtn'),
+            tabInitialIndicator: document.getElementById('tabInitialIndicator'),
+            tabTitrationIndicator: document.getElementById('tabTitrationIndicator'),
+            viewInitial: document.getElementById('viewInitial'),
+            viewTitration: document.getElementById('viewTitration')
+        };
+
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Utility: Format Number
+        const formatNum = (num) => new Intl.NumberFormat('id-ID').format(num);
+
+        // Generate Dynamic Table
+        function renderProtocolTable(C, l1, l2, l2_acs, l3, l4, protocol, currentAptt) {
+            els.dispRefControl.innerText = `${C} dtk`;
+            let rowsHtml = '';
+            
+            let activeTier = -1;
+            if (currentAptt !== null && currentAptt > 0) {
+                if (protocol === 'acs') {
+                    if (currentAptt < l1) activeTier = 0;
+                    else if (currentAptt >= l1 && currentAptt < l2_acs) activeTier = 1;
+                    else if (currentAptt >= l2_acs && currentAptt <= l3) activeTier = 2;
+                    else if (currentAptt > l3 && currentAptt <= l4) activeTier = 3;
+                    else activeTier = 4;
+                } else {
+                    if (currentAptt < l1) activeTier = 0;
+                    else if (currentAptt >= l1 && currentAptt <= l2) activeTier = 1;
+                    else if (currentAptt > l2 && currentAptt <= l3) activeTier = 2;
+                    else if (currentAptt > l3 && currentAptt <= l4) activeTier = 3;
+                    else activeTier = 4;
+                }
+            }
+
+            const getRowClass = (index) => {
+                if (index === activeTier) {
+                    return 'bg-indigo-500/20 shadow-[inset_0_0_15px_rgba(99,102,241,0.2)] border-l-4 border-indigo-400 table-row-transition text-white';
+                }
+                return 'border-b border-slate-800/50 hover:bg-slate-800/30 table-row-transition text-slate-400 border-l-4 border-transparent';
+            };
+
+            const getStatusBadge = (status) => {
+                if(status.includes('Terapeutik Jauh') || status.includes('Supra')) return `<span class="text-rose-400 font-sans font-bold text-[10px] md:text-xs">${status}</span>`;
+                if(status.includes('Sub-Terapeutik')) return `<span class="text-amber-400 font-sans font-bold text-[10px] md:text-xs">${status}</span>`;
+                if(status === 'Terapeutik') return `<span class="text-emerald-400 font-sans font-bold text-[10px] md:text-xs">${status}</span>`;
+                return status;
+            };
+
+            if (protocol === 'acs') {
+                const rules = [
+                    { range: `< ${l1} dtk`, ratio: '< 1.2x', status: 'Sub-Terapeutik Jauh', bolus: '30 U/kg (Max 2.000)', drip: '+ 2 U/kg/jam' },
+                    { range: `${l1} - ${l2_acs-1} dtk`, ratio: '1.2x - 1.6x', status: 'Sub-Terapeutik', bolus: 'Tidak Ada', drip: '+ 1 U/kg/jam' },
+                    { range: `${l2_acs} - ${l3} dtk`, ratio: '1.6x - 2.3x', status: 'Terapeutik', bolus: 'Tidak Ada', drip: 'Tetap (Tanpa Perubahan)' },
+                    { range: `${l3+1} - ${l4} dtk`, ratio: '2.3x - 3.0x', status: 'Supra-Terapeutik', bolus: 'Tidak Ada', drip: '- 1 U/kg/jam' },
+                    { range: `> ${l4} dtk`, ratio: '> 3.0x', status: 'Supra-Terapeutik Jauh', bolus: 'HOLD 60 Menit', drip: '- 2 U/kg/jam' },
+                ];
+                
+                rules.forEach((r, i) => {
+                    rowsHtml += `
+                        <tr class="${getRowClass(i)}">
+                            <td class="p-3"><div class="font-bold text-slate-200">${r.range}</div><div class="text-[10px] opacity-70 mt-0.5">Rasio: ${r.ratio}</div></td>
+                            <td class="p-3">${getStatusBadge(r.status)}</td>
+                            <td class="p-3">${r.bolus}</td>
+                            <td class="p-3">${r.drip}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                const rules = [
+                    { range: `< ${l1} dtk`, ratio: '< 1.2x', status: 'Sub-Terapeutik Jauh', bolus: '80 U/kg (Max 5.000)', drip: '+ 4 U/kg/jam' },
+                    { range: `${l1} - ${l2} dtk`, ratio: '1.2x - 1.5x', status: 'Sub-Terapeutik', bolus: '40 U/kg (Max 2.500)', drip: '+ 2 U/kg/jam' },
+                    { range: `${l2+1} - ${l3} dtk`, ratio: '1.5x - 2.3x', status: 'Terapeutik', bolus: 'Tidak Ada', drip: 'Tetap (Tanpa Perubahan)' },
+                    { range: `${l3+1} - ${l4} dtk`, ratio: '2.3x - 3.0x', status: 'Supra-Terapeutik', bolus: 'Tidak Ada', drip: '- 2 U/kg/jam' },
+                    { range: `> ${l4} dtk`, ratio: '> 3.0x', status: 'Supra-Terapeutik Jauh', bolus: 'HOLD 60 Menit', drip: '- 3 U/kg/jam' },
+                ];
+                
+                rules.forEach((r, i) => {
+                    rowsHtml += `
+                        <tr class="${getRowClass(i)}">
+                            <td class="p-3"><div class="font-bold text-slate-200">${r.range}</div><div class="text-[10px] opacity-70 mt-0.5">Rasio: ${r.ratio}</div></td>
+                            <td class="p-3">${getStatusBadge(r.status)}</td>
+                            <td class="p-3">${r.bolus}</td>
+                            <td class="p-3">${r.drip}</td>
+                        </tr>
+                    `;
+                });
+            }
+            
+            els.protocolTableBody.innerHTML = rowsHtml;
+        }
+
+        // Handle Mode Selection UI Changes
+        els.rateMode.addEventListener('change', (e) => {
+            if (e.target.value === 'daily') {
+                els.currentRate.placeholder = "Contoh: 24000";
+            } else {
+                els.currentRate.placeholder = "Contoh: 1000";
+            }
+            updateCalculations();
+        });
+
+        // Main Calculation Engine
+        function updateCalculations() {
+            // Read Inputs
+            state.weight = Number(els.weight.value) || 0;
+            state.protocol = els.protocol.value;
+            state.controlAptt = Number(els.controlAptt.value) || 30;
+            state.heparinUnits = Number(els.units.value) || 0;
+            state.heparinVolume = Number(els.volume.value) || 0;
+            
+            const rawAptt = els.aptt.value;
+            const rawRate = els.currentRate.value;
+            
+            state.currentAptt = rawAptt === '' ? null : Number(rawAptt);
+            
+            // Handle Rate Mode (Hourly vs Daily)
+            if (rawRate === '') {
+                state.currentRateU = null;
+            } else {
+                let rRate = Number(rawRate);
+                if (els.rateMode.value === 'daily') {
+                    state.currentRateU = rRate / 24; // convert to hourly for core logic
+                } else {
+                    state.currentRateU = rRate;
+                }
+            }
+
+            // Calculate Concentration
+            const concentration = state.heparinVolume > 0 ? state.heparinUnits / state.heparinVolume : 0;
+            els.dispConcentration.innerText = `${concentration.toFixed(1)} Unit/mL`;
+
+            // Setup Protocol Titles & Icons
+            if (state.protocol === 'acs') {
+                els.dispProtocolTitle.innerText = 'Sindrom Koroner Akut (ACS) Target';
+                els.iconProtocol.innerHTML = '<i data-lucide="heart-pulse" class="w-6 h-6 md:w-7 md:h-7 text-rose-500"></i>';
+                els.dispRuleBolus.innerText = '60 U/kg (Max 4.000 U)';
+                els.dispRuleInfusion.innerText = '12 U/kg/jam (Max 1.000 U)';
+            } else {
+                els.dispProtocolTitle.innerText = 'Tromboemboli Vena (VTE) Target';
+                els.iconProtocol.innerHTML = '<i data-lucide="activity" class="w-6 h-6 md:w-7 md:h-7 text-cyan-400"></i>';
+                els.dispRuleBolus.innerText = '80 U/kg (Max 5.000 U)';
+                els.dispRuleInfusion.innerText = '18 U/kg/jam (Max 2.000 U)';
+            }
+            lucide.createIcons(); // Refresh dynamic icons
+
+            // Calculate Initial Dosing
+            let bolusU = 0, infusionU = 0;
+            if (state.protocol === 'acs') {
+                bolusU = Math.min(state.weight * 60, 4000);
+                infusionU = Math.min(state.weight * 12, 1000);
+            } else {
+                bolusU = Math.min(state.weight * 80, 5000);
+                infusionU = Math.min(state.weight * 18, 2000);
+            }
+
+            const bolusML = concentration > 0 ? (bolusU / concentration).toFixed(1) : "0.0";
+            const infusionML = concentration > 0 ? (infusionU / concentration).toFixed(1) : "0.0";
+            
+            // 24 Hour Initial Dosing Estimates
+            const infusionU24 = infusionU * 24;
+            const infusionML24 = concentration > 0 ? (infusionU24 / concentration).toFixed(1) : "0.0";
+
+            els.dispBolusU.innerText = formatNum(Math.round(bolusU));
+            els.dispBolusML.innerText = bolusML;
+            
+            els.dispInfusionU.innerText = formatNum(Math.round(infusionU));
+            els.dispInfusionU24.innerText = formatNum(Math.round(infusionU24));
+            
+            els.dispInfusionML.innerText = infusionML;
+            els.dispInfusionML24.innerText = infusionML24;
+
+            // Titration Context Display (Hourly and Daily Breakdowns)
+            if (concentration > 0 && state.currentRateU !== null) {
+                const hourlyML = (state.currentRateU / concentration).toFixed(1);
+                const hourlyU = Math.round(state.currentRateU);
+                const dailyML = ((state.currentRateU * 24) / concentration).toFixed(1);
+                const dailyU = Math.round(state.currentRateU * 24);
+                
+                els.dispCurrentRateHourly.innerText = `${hourlyML} mL/jam (${formatNum(hourlyU)} U)`;
+                els.dispCurrentRateDaily.innerText = `${dailyML} mL/24j (${formatNum(dailyU)} U)`;
+            } else {
+                els.dispCurrentRateHourly.innerText = `0.0 mL/jam (0 U)`;
+                els.dispCurrentRateDaily.innerText = `0.0 mL/24j (0 U)`;
+            }
+
+            // Dynamic Threshold Calculations based on Control aPTT
+            const C = state.controlAptt > 0 ? state.controlAptt : 30;
+            const l1 = Math.round(1.16 * C); 
+            const l2 = Math.round(1.5 * C);  
+            const l3 = Math.round(2.33 * C); 
+            const l4 = Math.round(3.0 * C);  
+            const l2_acs = Math.round(1.66 * C); 
+
+            // Update Target Display
+            if (state.protocol === 'acs') {
+                els.dispTargetAptt.innerText = `${l2_acs} - ${l3} dtk`;
+            } else {
+                els.dispTargetAptt.innerText = `${l2 + 1} - ${l3} dtk`;
+            }
+
+            renderProtocolTable(C, l1, l2, l2_acs, l3, l4, state.protocol, state.currentAptt);
+
+            // Calculate Titration Results
+            if (state.currentAptt === null || state.currentRateU === null || state.currentAptt <= 0 || state.currentRateU <= 0 || state.weight <= 0) {
+                els.titrationEmpty.classList.remove('hidden');
+                els.titrationResultPanel.classList.add('hidden');
+                return;
+            }
+
+            els.titrationEmpty.classList.add('hidden');
+            els.titrationResultPanel.classList.remove('hidden');
+
+            const aPTT = state.currentAptt;
+            
+            // Calculate Ratio
+            const ratioVal = (aPTT / C).toFixed(2);
+            els.dispCurrentRatioText.innerText = `${ratioVal}x Kontrol`;
+
+            let actionText = '';
+            let tBolusU = 0;
+            let rateChangeU = 0;
+            let holdMinutes = 0;
+            let statusColor = 'bg-blue-900/20 text-blue-300 border-blue-800/50';
+            let ratioBadgeColor = 'text-white border-white/20';
+
+            if (state.protocol === 'acs') {
+                if (aPTT < l1) {
+                    tBolusU = Math.min(state.weight * 30, 2000); 
+                    rateChangeU = state.weight * 2;
+                    actionText = 'Sub-Terapeutik Jauh. Berikan bolus dan naikkan kecepatan infus.';
+                    statusColor = 'bg-rose-950/50 text-rose-300 border-rose-800/50 shadow-[0_0_30px_rgba(225,29,72,0.15)]';
+                    ratioBadgeColor = 'text-rose-200 border-rose-500/50 bg-rose-900/40';
+                } else if (aPTT >= l1 && aPTT < l2_acs) {
+                    tBolusU = 0;
+                    rateChangeU = state.weight * 1;
+                    actionText = 'Sub-Terapeutik. Naikkan kecepatan infus tanpa bolus.';
+                    statusColor = 'bg-amber-950/50 text-amber-300 border-amber-800/50 shadow-[0_0_30px_rgba(245,158,11,0.1)]';
+                    ratioBadgeColor = 'text-amber-200 border-amber-500/50 bg-amber-900/40';
+                } else if (aPTT >= l2_acs && aPTT <= l3) {
+                    tBolusU = 0;
+                    rateChangeU = 0;
+                    actionText = 'Terapeutik. Pertahankan kecepatan infus saat ini.';
+                    statusColor = 'bg-emerald-950/50 text-emerald-300 border-emerald-800/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]';
+                    ratioBadgeColor = 'text-emerald-200 border-emerald-500/50 bg-emerald-900/40';
+                } else if (aPTT > l3 && aPTT <= l4) {
+                    tBolusU = 0;
+                    rateChangeU = -(state.weight * 1);
+                    actionText = 'Supra-Terapeutik Ringan. Turunkan kecepatan infus.';
+                    statusColor = 'bg-amber-950/50 text-amber-300 border-amber-800/50 shadow-[0_0_30px_rgba(245,158,11,0.1)]';
+                    ratioBadgeColor = 'text-amber-200 border-amber-500/50 bg-amber-900/40';
+                } else {
+                    tBolusU = 0;
+                    rateChangeU = -(state.weight * 2);
+                    holdMinutes = 60;
+                    actionText = 'Supra-Terapeutik Jauh. HENTIKAN infus sementara, lalu lanjutkan dengan dosis lebih rendah.';
+                    statusColor = 'bg-rose-950/50 text-rose-300 border-rose-800/50 shadow-[0_0_30px_rgba(225,29,72,0.15)]';
+                    ratioBadgeColor = 'text-rose-200 border-rose-500/50 bg-rose-900/40';
+                }
+            } else {
+                // VTE PROTOCOL TITRATION
+                if (aPTT < l1) {
+                    tBolusU = Math.min(state.weight * 80, 5000); 
+                    rateChangeU = state.weight * 4;
+                    actionText = 'Sub-Terapeutik Jauh. Berikan bolus dan naikkan kecepatan infus signifikan.';
+                    statusColor = 'bg-rose-950/50 text-rose-300 border-rose-800/50 shadow-[0_0_30px_rgba(225,29,72,0.15)]';
+                    ratioBadgeColor = 'text-rose-200 border-rose-500/50 bg-rose-900/40';
+                } else if (aPTT >= l1 && aPTT <= l2) {
+                    tBolusU = Math.min(state.weight * 40, 2500); 
+                    rateChangeU = state.weight * 2;
+                    actionText = 'Sub-Terapeutik. Berikan bolus kecil dan naikkan kecepatan infus.';
+                    statusColor = 'bg-amber-950/50 text-amber-300 border-amber-800/50 shadow-[0_0_30px_rgba(245,158,11,0.1)]';
+                    ratioBadgeColor = 'text-amber-200 border-amber-500/50 bg-amber-900/40';
+                } else if (aPTT > l2 && aPTT <= l3) {
+                    tBolusU = 0;
+                    rateChangeU = 0;
+                    actionText = 'Terapeutik. Pertahankan kecepatan infus saat ini.';
+                    statusColor = 'bg-emerald-950/50 text-emerald-300 border-emerald-800/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]';
+                    ratioBadgeColor = 'text-emerald-200 border-emerald-500/50 bg-emerald-900/40';
+                } else if (aPTT > l3 && aPTT <= l4) {
+                    tBolusU = 0;
+                    rateChangeU = -(state.weight * 2);
+                    actionText = 'Supra-Terapeutik. Turunkan kecepatan infus.';
+                    statusColor = 'bg-amber-950/50 text-amber-300 border-amber-800/50 shadow-[0_0_30px_rgba(245,158,11,0.1)]';
+                    ratioBadgeColor = 'text-amber-200 border-amber-500/50 bg-amber-900/40';
+                } else {
+                    tBolusU = 0;
+                    rateChangeU = -(state.weight * 3);
+                    holdMinutes = 60;
+                    actionText = 'Supra-Terapeutik Jauh. HENTIKAN infus sementara, lalu lanjutkan dengan dosis lebih rendah.';
+                    statusColor = 'bg-rose-950/50 text-rose-300 border-rose-800/50 shadow-[0_0_30px_rgba(225,29,72,0.15)]';
+                    ratioBadgeColor = 'text-rose-200 border-rose-500/50 bg-rose-900/40';
+                }
+            }
+
+            const newRateU = Math.max(0, state.currentRateU + rateChangeU);
+            const newRateML = concentration > 0 ? (newRateU / concentration).toFixed(1) : "0.0";
+            const tBolusML = concentration > 0 ? (tBolusU / concentration).toFixed(1) : "0.0";
+            
+            // 24 Hour Titration Rate Estimate
+            const newRateU24 = newRateU * 24;
+            const newRateML24 = concentration > 0 ? (newRateU24 / concentration).toFixed(1) : "0.0";
+
+            // Update Titration UI
+            els.titrationResultPanel.className = `p-5 md:p-8 rounded-xl md:rounded-3xl border transition-all duration-500 relative ${statusColor}`;
+            els.dispActionText.innerText = actionText;
+            els.dispRatioBadge.className = `border px-3 py-1.5 rounded-lg text-xs md:text-sm font-mono font-medium flex items-center gap-2 w-fit ${ratioBadgeColor}`;
+
+            // Handle Hold UI
+            if (holdMinutes > 0) {
+                els.cardHold.classList.remove('hidden');
+                els.dispHoldMinutes.innerText = holdMinutes;
+            } else {
+                els.cardHold.classList.add('hidden');
+            }
+
+            // Handle Bolus UI
+            if (tBolusU > 0) {
+                els.cardBolus.classList.remove('opacity-40');
+                els.cardBolusLine.classList.remove('hidden');
+                els.dispTitrationBolusMLWrap.classList.remove('hidden');
+                els.cardBolusTitle.innerText = holdMinutes > 0 ? '2. Bolus Tambahan' : '1. Bolus Tambahan';
+                els.dispTitrationBolusU.innerText = formatNum(Math.round(tBolusU));
+                els.dispTitrationBolusML.innerText = tBolusML;
+            } else {
+                els.cardBolus.classList.add('opacity-40');
+                els.cardBolusLine.classList.add('hidden');
+                els.dispTitrationBolusMLWrap.classList.add('hidden');
+                els.cardBolusTitle.innerText = holdMinutes > 0 ? '2. Bolus Tambahan' : '1. Bolus Tambahan';
+                els.dispTitrationBolusU.innerText = '0';
+            }
+
+            // Handle Rate UI
+            els.cardRateTitle.innerText = holdMinutes > 0 ? '3. Laju Syringe Pump' : tBolusU > 0 ? '2. Laju Syringe Pump' : '1. Laju Syringe Pump';
+            
+            els.dispNewRateML.innerText = newRateML;
+            els.dispNewRateML24.innerText = newRateML24;
+            
+            els.dispNewRateU.innerText = formatNum(Math.round(newRateU));
+            els.dispNewRateU24.innerText = formatNum(Math.round(newRateU24));
+            
+            const rChangeRounded = Math.round(rateChangeU);
+            els.dispRateChangeU.innerText = (rChangeRounded > 0 ? '+' : '') + formatNum(rChangeRounded);
+        }
+
+        // Tab Switching Logic
+        function switchTab(tab) {
+            state.activeTab = tab;
+            
+            if (tab === 'initial') {
+                els.tabInitialBtn.className = "flex-1 py-4 md:py-5 text-xs md:text-sm font-bold tracking-wider uppercase transition-all duration-300 relative text-rose-400 bg-rose-500/5";
+                els.tabTitrationBtn.className = "flex-1 py-4 md:py-5 text-xs md:text-sm font-bold tracking-wider uppercase transition-all duration-300 relative text-slate-500 hover:text-slate-300 hover:bg-white/5";
+                els.tabInitialIndicator.classList.remove('hidden');
+                els.tabTitrationIndicator.classList.add('hidden');
+                
+                els.viewInitial.classList.remove('hidden');
+                els.viewTitration.classList.add('hidden');
+            } else {
+                els.tabTitrationBtn.className = "flex-1 py-4 md:py-5 text-xs md:text-sm font-bold tracking-wider uppercase transition-all duration-300 relative text-rose-400 bg-rose-500/5";
+                els.tabInitialBtn.className = "flex-1 py-4 md:py-5 text-xs md:text-sm font-bold tracking-wider uppercase transition-all duration-300 relative text-slate-500 hover:text-slate-300 hover:bg-white/5";
+                els.tabTitrationIndicator.classList.remove('hidden');
+                els.tabInitialIndicator.classList.add('hidden');
+                
+                els.viewTitration.classList.remove('hidden');
+                els.viewInitial.classList.add('hidden');
+            }
+        }
+
+        // Event Listeners
+        [els.weight, els.protocol, els.controlAptt, els.units, els.volume, els.aptt, els.currentRate].forEach(el => {
+            el.addEventListener('input', updateCalculations);
+        });
+
+        // Initial render
+        updateCalculations();
+
+    </script>
+</body>
+</html>
