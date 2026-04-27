@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EP Nexus v4.2 — AVNRT vs AVRT Simulator | CardiologyVault</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* ─── DESIGN TOKENS ─── */
+        :root {
+            --font-body: 'Inter', system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --text-xs:   clamp(0.7rem, 0.65rem + 0.2vw, 0.8rem);
+            --text-sm:   clamp(0.8rem, 0.75rem + 0.2vw, 0.9rem);
+            --text-base: clamp(0.9rem, 0.85rem + 0.2vw, 1rem);
+            --text-lg:   clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
+            --text-xl:   clamp(1.2rem, 1rem + 0.8vw, 1.6rem);
+            --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem;
+            --space-4: 1rem; --space-5: 1.25rem; --space-6: 1.5rem;
+            --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px;
+            --transition: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        /* ─── DARK MODE (default) ─── */
+        [data-theme="dark"] {
+            --bg: #080d14; --surface: #0d1520; --surface-2: #111c2a; --surface-3: #162235;
+            --border: rgba(255,255,255,0.08); --border-soft: rgba(255,255,255,0.04);
+            --text: #d4dce8; --text-muted: #6c7e96; --text-faint: #3a4a5c;
+            --cyan: #22d3ee; --cyan-dim: rgba(34,211,238,0.15); --cyan-glow: rgba(34,211,238,0.4);
+            --purple: #c084fc; --purple-dim: rgba(192,132,252,0.15);
+            --gold: #fbbf24; --gold-dim: rgba(251,191,36,0.2);
+            --blue: #60a5fa; --magenta: #e879f9; --magenta-dim: rgba(232,121,249,0.2);
+            --green: #34d399; --red: #f87171;
+            --shadow-md: 0 4px 24px rgba(0,0,0,0.5);
+        }
+        /* ─── LIGHT MODE ─── */
+        [data-theme="light"] {
+            --bg: #f0f4f8; --surface: #ffffff; --surface-2: #f7f9fc; --surface-3: #edf1f7;
+            --border: rgba(0,0,0,0.1); --border-soft: rgba(0,0,0,0.05);
+            --text: #1a2535; --text-muted: #556070; --text-faint: #a0adb8;
+            --cyan: #0891b2; --cyan-dim: rgba(8,145,178,0.1); --cyan-glow: rgba(8,145,178,0.3);
+            --purple: #7c3aed; --purple-dim: rgba(124,58,237,0.1);
+            --gold: #d97706; --gold-dim: rgba(217,119,6,0.15);
+            --blue: #2563eb; --magenta: #a21caf; --magenta-dim: rgba(162,28,175,0.15);
+            --green: #059669; --red: #dc2626;
+            --shadow-md: 0 4px 24px rgba(0,0,0,0.1);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { -webkit-font-smoothing: antialiased; height: 100%; }
+        
+        /* FIXED: Added overflow-y: auto so the page scrolls if preview window is too short */
+        body {
+            height: 100dvh; min-height: 100dvh; overflow-y: auto; overflow-x: hidden;
+            font-family: var(--font-body); font-size: var(--text-sm);
+            color: var(--text); background: var(--bg);
+            display: flex; flex-direction: column;
+            transition: background var(--transition), color var(--transition);
+        }
+        
+        /* FIXED: Canvas pinned accurately so it never stretches parent unexpectedly */
+        canvas { 
+            display: block; position: absolute; 
+            top: 0; left: 0; width: 100%; height: 100%; 
+        }
+        button { cursor: pointer; font-family: inherit; border: none; background: none; }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
+        
+        /* ─── HEADER ─── */
+        .header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: var(--space-2) var(--space-5);
+            background: var(--surface); border-bottom: 1px solid var(--border);
+            flex-shrink: 0; gap: var(--space-4); flex-wrap: wrap;
+        }
+        .header-brand { display: flex; align-items: center; gap: var(--space-4); }
+        .header-meta { display: flex; flex-direction: column; gap: 2px; }
+        .header-top-meta {
+            display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap;
+            background: var(--surface-2); padding: 3px 10px 3px 3px;
+            border-radius: 100px; border: 1px solid var(--border-soft);
+        }
+        .org-badge {
+            display: flex; align-items: center; gap: 4px; font-size: 0.65rem; font-weight: 800;
+            color: #111; background: linear-gradient(90deg, #fbbf24, #f59e0b);
+            box-shadow: 0 0 10px rgba(251,191,36,0.3);
+            padding: 3px 9px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em;
+        }
+        [data-theme="light"] .org-badge { color: #fff; }
+        .author-name { font-size: var(--text-xs); font-weight: 800; color: var(--text); letter-spacing: 0.05em; text-transform: uppercase; }
+        .author-title { color: var(--cyan); font-weight: 700; }
+        .header-title {
+            font-size: var(--text-lg); font-weight: 800;
+            background: linear-gradient(90deg, var(--cyan), var(--purple));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            letter-spacing: -0.02em; line-height: 1.1;
+        }
+        .header-sub { font-size: var(--text-xs); color: var(--text-muted); font-weight: 500; }
+        .header-controls { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+        .speed-group { display: flex; align-items: center; gap: var(--space-1); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 3px; }
+        .speed-label { font-size: var(--text-xs); color: var(--text-muted); padding: 0 var(--space-2); }
+        .speed-btn { padding: 4px var(--space-3); font-size: var(--text-xs); font-weight: 600; border-radius: calc(var(--radius-md) - 2px); color: var(--text-muted); transition: all var(--transition); }
+        .speed-btn:hover { color: var(--text); background: var(--surface-3); }
+        .speed-btn.active { background: var(--red); color: white; }
+        .theme-btn { width: 32px; height: 32px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--surface-2); color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-size: 15px; transition: all var(--transition); }
+        .theme-btn:hover { color: var(--text); background: var(--surface-3); }
+        
+        /* ─── MAIN LAYOUT ─── */
+        .main {
+            flex: 1 0 auto; display: flex; flex-direction: column;
+            padding: var(--space-3); gap: var(--space-3);
+        }
+        
+        /* ─── TOP TAB BAR ─── */
+        .tab-bar {
+            display: flex; align-items: stretch; gap: var(--space-2);
+            flex-shrink: 0;
+        }
+        .tab-btn {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 3px; padding: var(--space-2) var(--space-3);
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); cursor: pointer;
+            transition: all var(--transition); color: var(--text-muted);
+            font-family: var(--font-body);
+        }
+        .tab-btn:hover { background: var(--surface-2); color: var(--text); }
+        .tab-btn.active-A { background: var(--cyan-dim); border-color: var(--cyan); color: var(--cyan); }
+        .tab-btn.active-B { background: var(--purple-dim); border-color: var(--purple); color: var(--purple); }
+        .tab-label-main { font-size: var(--text-sm); font-weight: 800; letter-spacing: 0.02em; }
+        .tab-label-sub { font-size: 10px; font-weight: 500; opacity: 0.7; white-space: nowrap; }
+        .tab-indicator {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: currentColor; margin-top: 2px;
+            transition: transform var(--transition);
+        }
+        .tab-btn.active-A .tab-indicator, .tab-btn.active-B .tab-indicator { transform: scale(1.4); }
+        
+        /* ─── CONTENT AREA (SIDE BY SIDE FLEX) ─── */
+        .content-area {
+            flex: 1 0 auto; min-height: 550px; /* FIXED: Guarantee total height */
+            display: flex; flex-direction: row !important; /* FORCE SIDE BY SIDE */
+            flex-wrap: nowrap;
+            gap: var(--space-3);
+        }
+        
+        /* ─── PANEL ─── */
+        .panel {
+            flex: 1 1 50%; /* Force 50% split */
+            width: 50%;
+            display: flex; flex-direction: column; gap: var(--space-2);
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius-xl); padding: var(--space-3);
+            overflow: hidden; 
+            transition: all var(--transition);
+        }
+        .panel.hidden { display: none; }
+        .panel.fullscreen {
+            position: fixed; inset: 60px var(--space-3) var(--space-3);
+            z-index: 100; border-radius: var(--radius-xl);
+        }
+        .panel-A { border-top: 3px solid var(--cyan); }
+        .panel-B { border-top: 3px solid var(--purple); }
+        
+        /* ─── PANEL HEADER ─── */
+        .panel-header {
+            display: flex; align-items: center; gap: var(--space-2);
+            flex-shrink: 0; flex-wrap: wrap;
+        }
+        .panel-label {
+            font-size: var(--text-xs); font-weight: 800; letter-spacing: 0.08em;
+            text-transform: uppercase; padding: 3px 8px; border-radius: var(--radius-sm);
+        }
+        .panel-A .panel-label { background: var(--cyan-dim); color: var(--cyan); }
+        .panel-B .panel-label { background: var(--purple-dim); color: var(--purple); }
+        .mode-badge {
+            font-size: var(--text-xs); font-weight: 600; padding: 2px 8px;
+            border-radius: var(--radius-sm);
+        }
+        .panel-A .mode-badge { background: var(--cyan-dim); color: var(--cyan); border: 1px solid rgba(34,211,238,0.2); }
+        .panel-B .mode-badge { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(192,132,252,0.2); }
+        .panel-actions { display: flex; align-items: center; gap: 5px; margin-left: auto; }
+        .pac-btn, .focus-btn, .copy-btn {
+            font-size: var(--text-xs); padding: 4px 8px; border-radius: var(--radius-sm);
+            border: 1px solid var(--border); transition: all var(--transition); font-weight: 600;
+        }
+        .pac-btn { color: var(--gold); background: var(--gold-dim); border-color: rgba(251,191,36,0.3); }
+        .pac-btn:hover { background: rgba(251,191,36,0.3); }
+        .focus-btn { color: var(--text-muted); background: var(--surface-2); }
+        .focus-btn:hover { color: var(--text); background: var(--surface-3); }
+        .focus-active { background: var(--cyan-dim) !important; color: var(--cyan) !important; border-color: rgba(34,211,238,0.4) !important; }
+        .copy-btn { color: var(--text-faint); background: transparent; }
+        .copy-btn:hover { color: var(--text-muted); background: var(--surface-3); }
+        
+        /* ─── MODE SELECTOR (Segmented) ─── */
+        .mode-seg {
+            flex-shrink: 0; display: flex; gap: 2px;
+            background: var(--surface-2); border: 1px solid var(--border);
+            border-radius: var(--radius-md); padding: 3px;
+            overflow-x: auto; scrollbar-width: none;
+        }
+        .mode-seg::-webkit-scrollbar { display: none; }
+        .seg-btn {
+            flex-shrink: 0; padding: 5px 11px; font-size: 11px; font-weight: 700;
+            border-radius: calc(var(--radius-md) - 2px); color: var(--text-muted);
+            white-space: nowrap; transition: all var(--transition); cursor: pointer;
+        }
+        .seg-btn:hover { color: var(--text); background: var(--surface-3); }
+        .panel-A .seg-btn.active { background: var(--cyan); color: #050d14; }
+        .panel-B .seg-btn.active { background: var(--purple); color: white; }
+        
+        /* ─── HEART + ECG WRAPPERS ─── */
+        .heart-wrap {
+            flex: 1 1 220px; /* FIXED: Guarantee minimum 220px height for Heart anatomy */
+            min-height: 220px; 
+            position: relative;
+            background: var(--surface-2); border: 1px solid var(--border-soft);
+            border-radius: var(--radius-lg); overflow: hidden;
+        }
+        .canvas-label {
+            position: absolute; top: var(--space-2); left: var(--space-3);
+            font-size: var(--text-xs); font-weight: 700; color: var(--text-faint);
+            letter-spacing: 0.08em; text-transform: uppercase; z-index: 2;
+        }
+        .ecg-wrap {
+            height: 100px; flex-shrink: 0; position: relative;
+            background: var(--surface-2); border: 1px solid var(--border-soft);
+            border-radius: var(--radius-lg); overflow: hidden;
+        }
+        
+        /* ─── INFO BOX ─── */
+        .info-box {
+            flex-shrink: 0; background: var(--surface-2);
+            border: 1px solid var(--border-soft); border-radius: var(--radius-lg);
+            padding: var(--space-2) var(--space-3); height: 88px;
+            overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+        }
+        .info-title { font-size: var(--text-sm); font-weight: 700; margin-bottom: 3px; }
+        .panel-A .info-title { color: var(--cyan); }
+        .panel-B .info-title { color: var(--purple); }
+        .info-text { font-size: var(--text-xs); line-height: 1.6; color: var(--text-muted); }
+        .info-text .hi-cyan { color: var(--cyan); font-weight: 600; }
+        .info-text .hi-purple { color: var(--purple); font-weight: 600; }
+        .info-text .hi-gold { color: var(--gold); font-weight: 600; }
+        .info-text .hi-magenta { color: var(--magenta); font-weight: 600; }
+        .info-text .hi-green { color: var(--green); font-weight: 600; }
+        .info-text .hi-red { color: var(--red); font-weight: 600; }
+        .info-text strong { color: var(--text); font-weight: 600; }
+        
+        /* ─── FOOTER ─── */
+        .footer {
+            flex-shrink: 0; padding: var(--space-2) var(--space-4);
+            background: var(--surface); border-top: 1px solid var(--border);
+            display: flex; justify-content: center; align-items: center;
+            gap: var(--space-4); flex-wrap: wrap;
+        }
+        .legend-item { display: flex; align-items: center; gap: 6px; font-size: var(--text-xs); color: var(--text-muted); }
+        .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        
+        /* ─── SCROLLBAR ─── */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        
+        /* ─── MOBILE ONLY: BREAKPOINT DITURUNKAN ─── */
+        @media (max-width: 500px) {
+            .content-area { flex-direction: column !important; }
+            .panel { width: 100%; min-height: 500px; flex: none; }
+            .tab-bar { flex-wrap: wrap; }
+            .tab-btn { flex: none; min-width: calc(33.3% - var(--space-1)); }
+            .tab-label-sub { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+    <div class="header-brand">
+        <div class="header-meta">
+            <div class="header-top-meta">
+                <span class="org-badge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    CardiologyVault
+                </span>
+                <span class="author-name">Bayushi Eka Putra <span class="author-title">MD, FIHA</span></span>
+            </div>
+            <div class="header-title">EP Nexus: Dinamika Sirkuit Reentry</div>
+            <div class="header-sub">Advanced Simulator: AVNRT vs AVRT (v4.2)</div>
+        </div>
+    </div>
+    <div class="header-controls">
+        <div class="speed-group">
+            <span class="speed-label">Kecepatan:</span>
+            <button onclick="setSpeed(1.0)" id="sp-10" class="speed-btn">1× Real</button>
+            <button onclick="setSpeed(0.4)" id="sp-04" class="speed-btn active">0.4× Slow</button>
+            <button onclick="setSpeed(0.15)" id="sp-02" class="speed-btn">0.15× Ultra</button>
+        </div>
+        <button class="theme-btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle light/dark">🌙</button>
+    </div>
+</header>
+
+<!-- MAIN -->
+<main class="main">
+    <!-- TAB BAR: 6 mode buttons for the ACTIVE panel -->
+    <div class="tab-bar" id="tab-bar">
+        <button class="tab-btn" data-mode="NSR" onclick="setActiveMode('NSR')">
+            <span class="tab-label-main">NSR</span>
+            <span class="tab-label-sub">Sinus Normal</span>
+            <span class="tab-indicator"></span>
+        </button>
+        <button class="tab-btn" data-mode="AVNRT_SF" onclick="setActiveMode('AVNRT_SF')">
+            <span class="tab-label-main">Slow-Fast</span>
+            <span class="tab-label-sub">AVNRT Typical</span>
+            <span class="tab-indicator"></span>
+        </button>
+        <button class="tab-btn" data-mode="AVNRT_FS" onclick="setActiveMode('AVNRT_FS')">
+            <span class="tab-label-main">Fast-Slow</span>
+            <span class="tab-label-sub">AVNRT Atypical</span>
+            <span class="tab-indicator"></span>
+        </button>
+        <button class="tab-btn" data-mode="AVNRT_SS" onclick="setActiveMode('AVNRT_SS')">
+            <span class="tab-label-main">Slow-Slow</span>
+            <span class="tab-label-sub">AVNRT Atypical</span>
+            <span class="tab-indicator"></span>
+        </button>
+        <button class="tab-btn" data-mode="AVRT_ORTHO" onclick="setActiveMode('AVRT_ORTHO')">
+            <span class="tab-label-main">AVRT Ortho</span>
+            <span class="tab-label-sub">Orthodromic WPW</span>
+            <span class="tab-indicator"></span>
+        </button>
+        <button class="tab-btn" data-mode="AVRT_ANTI" onclick="setActiveMode('AVRT_ANTI')">
+            <span class="tab-label-main">AVRT Anti</span>
+            <span class="tab-label-sub">Antidromic WPW</span>
+            <span class="tab-indicator"></span>
+        </button>
+    </div>
+
+    <!-- CONTENT: TWO PANELS SIDE-BY-SIDE -->
+    <div class="content-area">
+        <!-- PANEL A -->
+        <div class="panel panel-A" id="panelA">
+            <div class="panel-header">
+                <span class="panel-label">Panel A</span>
+                <span class="mode-badge" id="badge-A">NSR</span>
+                <div class="panel-actions">
+                    <button class="pac-btn" id="btn-pac-A" onclick="triggerPAC('A')" title="Trigger Premature Atrial Contraction" aria-label="Trigger PAC Panel A">⚡ PAC</button>
+                    <button class="focus-btn" id="btn-focus-A" onclick="toggleFocus('A')" aria-label="Focus Panel A">⛶ Focus</button>
+                    <button class="copy-btn" onclick="copyMode('A','B')" title="Salin mode ke Panel B" aria-label="Copy to Panel B">→ B</button>
+                </div>
+            </div>
+            <div class="mode-seg" id="seg-A">
+                <button class="seg-btn active" onclick="setMode('A','NSR')" id="btn-A-NSR">NSR</button>
+                <button class="seg-btn" onclick="setMode('A','AVNRT_SF')" id="btn-A-AVNRT_SF">Slow-Fast</button>
+                <button class="seg-btn" onclick="setMode('A','AVNRT_FS')" id="btn-A-AVNRT_FS">Fast-Slow</button>
+                <button class="seg-btn" onclick="setMode('A','AVNRT_SS')" id="btn-A-AVNRT_SS">Slow-Slow</button>
+                <button class="seg-btn" onclick="setMode('A','AVRT_ORTHO')" id="btn-A-AVRT_ORTHO">AVRT Ortho</button>
+                <button class="seg-btn" onclick="setMode('A','AVRT_ANTI')" id="btn-A-AVRT_ANTI">AVRT Anti</button>
+            </div>
+            <div class="heart-wrap">
+                <div class="canvas-label">Anatomi Konduksi A</div>
+                <canvas id="heartA"></canvas>
+            </div>
+            <div class="ecg-wrap">
+                <div class="canvas-label">EKG A (Lead II)</div>
+                <canvas id="ecgA"></canvas>
+            </div>
+            <div class="info-box">
+                <div class="info-title" id="title-A">Normal Sinus Rhythm</div>
+                <div class="info-text" id="desc-A">
+                    Impuls berawal dari <span class="hi-gold">SA Node</span>, melewati AV Node, lalu menyebar ke ventrikel lewat Berkas His &amp; Purkinje.
+                    <strong>EKG:</strong> gelombang <span class="hi-cyan">P normal</span> mendahului tiap QRS, interval PR normal (120–200 ms).
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL B -->
+        <div class="panel panel-B" id="panelB">
+            <div class="panel-header">
+                <span class="panel-label">Panel B</span>
+                <span class="mode-badge" id="badge-B">AVNRT Slow-Fast</span>
+                <div class="panel-actions">
+                    <button class="pac-btn" id="btn-pac-B" onclick="triggerPAC('B')" title="Trigger Premature Atrial Contraction" aria-label="Trigger PAC Panel B">⚡ PAC</button>
+                    <button class="focus-btn" id="btn-focus-B" onclick="toggleFocus('B')" aria-label="Focus Panel B">⛶ Focus</button>
+                    <button class="copy-btn" onclick="copyMode('B','A')" title="Salin mode ke Panel A" aria-label="Copy to Panel A">→ A</button>
+                </div>
+            </div>
+            <div class="mode-seg" id="seg-B">
+                <button class="seg-btn" onclick="setMode('B','NSR')" id="btn-B-NSR">NSR</button>
+                <button class="seg-btn active" onclick="setMode('B','AVNRT_SF')" id="btn-B-AVNRT_SF">Slow-Fast</button>
+                <button class="seg-btn" onclick="setMode('B','AVNRT_FS')" id="btn-B-AVNRT_FS">Fast-Slow</button>
+                <button class="seg-btn" onclick="setMode('B','AVNRT_SS')" id="btn-B-AVNRT_SS">Slow-Slow</button>
+                <button class="seg-btn" onclick="setMode('B','AVRT_ORTHO')" id="btn-B-AVRT_ORTHO">AVRT Ortho</button>
+                <button class="seg-btn" onclick="setMode('B','AVRT_ANTI')" id="btn-B-AVRT_ANTI">AVRT Anti</button>
+            </div>
+            <div class="heart-wrap">
+                <div class="canvas-label">Anatomi Konduksi B</div>
+                <canvas id="heartB"></canvas>
+            </div>
+            <div class="ecg-wrap">
+                <div class="canvas-label">EKG B (Lead II)</div>
+                <canvas id="ecgB"></canvas>
+            </div>
+            <div class="info-box">
+                <div class="info-title" id="title-B">AVNRT Slow-Fast (Typical)</div>
+                <div class="info-text" id="desc-B">
+                    Tipe paling sering (~90%). Impuls turun lambat via <span class="hi-purple">Slow Pathway</span> (antegrade), lalu naik cepat via <span class="hi-cyan">Fast Pathway</span> (retrograde).
+                    <strong>EKG:</strong> <span class="hi-green">RP sangat pendek (&lt;70 ms)</span>, P retrograde tersembunyi di akhir QRS (<strong>pseudo r'</strong> di V1).
+                </div>
+            </div>
+        </div>
+    </div><!-- .content-area -->
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+    <div class="legend-item"><span class="legend-dot" style="background:#fbbf24;box-shadow:0 0 6px #fbbf24;"></span>SA Node / His-Purkinje</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#22d3ee;box-shadow:0 0 6px #22d3ee;"></span>Fast Pathway</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#60a5fa;box-shadow:0 0 6px #60a5fa;"></span>Slow Pathway 1</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#818cf8;box-shadow:0 0 6px #818cf8;"></span>Slow Pathway 2</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#e879f9;box-shadow:0 0 6px #e879f9;"></span>Accessory Pathway</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#a78bfa;box-shadow:0 0 6px #a78bfa;"></span>Retrograde Atrium</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#f472b6;box-shadow:0 0 6px #f472b6;"></span>PAC / Ectopic</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#ef4444;box-shadow:0 0 6px #ef4444;"></span>Wide QRS (Muscle)</div>
+</footer>
+
+<script>
+// ─── EXPLANATIONS ─────────────────────────────────────────────────────────────
+const EXP = {
+    NSR: { badge:"NSR", title:"Normal Sinus Rhythm", html:`Impuls berawal dari <span class="hi-gold">SA Node</span>, melewati AV Node dengan delay normal, lalu menyebar ke ventrikel. <strong>EKG:</strong> gelombang <span class="hi-cyan">P normal</span> mendahului tiap QRS. Interval PR 120–200 ms. HR ~75 bpm.` },
+    AVNRT_SF: { badge:"AVNRT Slow-Fast", title:"AVNRT Slow-Fast (Typical)", html:`Tipe paling sering (~90%). Antegrade via <span class="hi-purple">Slow Pathway</span>, retrograde via <span class="hi-cyan">Fast Pathway</span>. <strong>EKG:</strong> <span class="hi-green">RP sangat pendek (&lt;70 ms)</span>. P retrograde tersembunyi berhimpitan di akhir QRS → <strong>pseudo r' di V1</strong>.` },
+    AVNRT_FS: { badge:"AVNRT Fast-Slow", title:"AVNRT Fast-Slow (Atypical)", html:`Antegrade via <span class="hi-cyan">Fast Pathway</span>, retrograde sangat lambat via <span class="hi-purple">Slow Pathway</span>. <strong>EKG:</strong> <span class="hi-green">RP panjang (RP &gt; PR)</span>. Gelombang P terbalik tampak jauh setelah QRS, mendekati QRS berikutnya.` },
+    AVNRT_SS: { badge:"AVNRT Slow-Slow", title:"AVNRT Slow-Slow (Atypical)", html:`Menggunakan <b>dua slow pathway berbeda</b>: antegrade via <span class="hi-purple">SP1</span> (posterior-inferior kiri), retrograde via <span style="color:#818cf8;font-weight:600">SP2</span> (inferior, dekat ostium sinus koroner). <strong>EKG:</strong> <span class="hi-green">RP panjang</span>, P retrograde persis di tengah R-R. Jarang terjadi.` },
+    AVRT_ORTHO: { badge:"AVRT Ortho", title:"Orthodromic AVRT (WPW)", html:`Macro-reentry: turun via <span class="hi-cyan">AV Node normal</span>, naik kembali via <span class="hi-magenta">Accessory Pathway</span>. <strong>EKG:</strong> <span class="hi-green">RP pendek tapi &gt;70 ms</span>. P terbalik jelas setelah QRS. <strong>QRS sempit</strong>.` },
+    AVRT_ANTI: { badge:"AVRT Anti", title:"Antidromic AVRT (WPW)", html:`Macro-reentry terbalik: turun via <span class="hi-magenta">Accessory Pathway</span>, naik retrograde via <span class="hi-cyan">AV Node</span>. <strong>EKG:</strong> <span class="hi-red">QRS lebar (Wide Complex)</span> dengan morfologi pre-eksitasi maksimal. Mirip VT!` }
+};
+
+// ─── TIMING CONFIGS ───────────────────────────────────────────────────────────
+const CFG = {
+    NSR: { cycle:800, events:[{type:'SA_AV',s:0.0,e:0.15},{type:'PURK_LBB',s:0.28,e:0.42},{type:'PURK_RBB',s:0.28,e:0.40}],
+        ecg:{p:0.10,qrs:0.31,t:0.58,p_amp:0.17,p_w:0.032,p_retro:-1,pr_amp:-0.1} },
+    AVNRT_SF: { cycle:390, events:[{type:'AV_DOWN_SLOW',s:0.0,e:0.5},{type:'PURK_LBB',s:0.5,e:0.62},{type:'PURK_RBB',s:0.5,e:0.60},{type:'AV_UP_FAST',s:0.5,e:0.62},{type:'RETRO_ATRIUM',s:0.62,e:0.75}],
+        ecg:{p:-1,qrs:0.5,t:0.78,p_amp:-0.25,p_w:0.015,p_retro:0.545,pr_amp:-0.1} },
+    AVNRT_FS: { cycle:410, events:[{type:'AV_DOWN_FAST',s:0.0,e:0.18},{type:'PURK_LBB',s:0.18,e:0.30},{type:'PURK_RBB',s:0.18,e:0.28},{type:'AV_UP_SLOW',s:0.18,e:0.78},{type:'RETRO_ATRIUM',s:0.78,e:0.92}],
+        ecg:{p:-1,qrs:0.18,t:0.45,p_amp:-0.14,p_w:0.028,p_retro:0.82,pr_amp:-0.1} },
+    AVNRT_SS: { cycle:460, events:[{type:'SS_DOWN_SP1',s:0.0,e:0.36},{type:'PURK_LBB',s:0.36,e:0.48},{type:'PURK_RBB',s:0.36,e:0.46},{type:'SS_UP_SP2',s:0.36,e:0.82},{type:'RETRO_ATRIUM',s:0.82,e:0.95}],
+        ecg:{p:-1,qrs:0.36,t:0.61,p_amp:-0.13,p_w:0.028,p_retro:0.88,pr_amp:-0.1} },
+    AVRT_ORTHO: { cycle:400, events:[{type:'AV_DOWN_FAST',s:0.0,e:0.22},{type:'PURK_LBB',s:0.22,e:0.34},{type:'PURK_RBB',s:0.22,e:0.32},{type:'VENT_AP',s:0.28,e:0.44},{type:'AP_UP',s:0.44,e:0.55},{type:'RETRO_ATRIUM',s:0.55,e:0.80}],
+        ecg:{p:-1,qrs:0.22,t:0.50,p_amp:-0.18,p_w:0.026,p_retro:0.57,pr_amp:-0.1} },
+    AVRT_ANTI: { cycle:420, events:[{type:'AP_DOWN',s:0.0,e:0.15},{type:'VENT_FROM_AP',s:0.15,e:0.45},{type:'VENT_HIS',s:0.30,e:0.45},{type:'AV_UP_FAST',s:0.45,e:0.65},{type:'RETRO_ATRIUM',s:0.65,e:0.85}],
+        ecg:{p:-1,qrs:0.22,t:0.65,p_amp:-0.18,p_w:0.026,p_retro:0.70,pr_amp:-0.2,wide_qrs:true} }
+};
+
+// ─── GLOBAL STATE ─────────────────────────────────────────────────────────────
+let speed = 0.4;
+let simTime = 0;
+let lastT = performance.now();
+let focusState = null;
+
+let activeTabPanel = null;
+const stA = { mode:'NSR', buf:[], timeOffset:0, pacActive:false, pacProgress:0 };
+const stB = { mode:'AVNRT_SF', buf:[], timeOffset:0, pacActive:false, pacProgress:0 };
+
+const CV = {
+    hA: document.getElementById('heartA'), hB: document.getElementById('heartB'),
+    eA: document.getElementById('ecgA'),   eB: document.getElementById('ecgB'),
+};
+const CX = {
+    hA: CV.hA.getContext('2d'), hB: CV.hB.getContext('2d'),
+    eA: CV.eA.getContext('2d'), eB: CV.eB.getContext('2d'),
+};
+
+// ─── RESIZE ───────────────────────────────────────────────────────────────────
+function resizeAll() {
+    Object.values(CV).forEach(c => {
+        const r = c.parentElement.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) { c.width = r.width; c.height = r.height; }
+    });
+    const resizeBuf = (st, cv) => {
+        if (cv.width > 0 && st.buf.length !== cv.width) {
+            const old = st.buf;
+            st.buf = new Array(cv.width).fill(0);
+            for (let i = 0; i < Math.min(old.length, st.buf.length); i++)
+                st.buf[st.buf.length-1-i] = old[old.length-1-i];
+        }
+    };
+    resizeBuf(stA, CV.eA); resizeBuf(stB, CV.eB);
+}
+window.addEventListener('resize', resizeAll);
+
+// ─── NODE POSITIONS ───────────────────────────────────────────────────────────
+function nodes(w, h) {
+    const cx = w*0.5, cy = h*0.5;
+    return {
+        SA:{x:cx-w*0.12,y:cy-h*0.36}, AV_TOP:{x:cx,y:cy-h*0.12}, AV_BOT:{x:cx,y:cy+h*0.08},
+        HIS_L:{x:cx-w*0.08,y:cy+h*0.30}, HIS_R:{x:cx+w*0.08,y:cy+h*0.30},
+        LBB_TIP:{x:cx-w*0.22,y:cy+h*0.42}, RBB_TIP:{x:cx+w*0.20,y:cy+h*0.42},
+        LA:{x:cx-w*0.18,y:cy-h*0.30}, RA:{x:cx+w*0.14,y:cy-h*0.30},
+        AP_V:{x:cx+w*0.28,y:cy+h*0.18}, AP_A:{x:cx+w*0.28,y:cy-h*0.12},
+        SP2_TOP:{x:cx+w*0.06,y:cy-h*0.04}, SP2_BOT:{x:cx+w*0.04,y:cy+h*0.08},
+    };
+}
+
+// ─── DRAW HEART ───────────────────────────────────────────────────────────────
+function drawHeart(ctx, w, h, mode, phase, st) {
+    ctx.clearRect(0,0,w,h);
+    const n = nodes(w,h);
+    const cfg = CFG[mode];
+    const isAVRT = mode==='AVRT_ORTHO'||mode==='AVRT_ANTI';
+    const isAnti = mode==='AVRT_ANTI';
+    const isSS   = mode==='AVNRT_SS';
+    const useSlowDown = mode==='AVNRT_SF'||isSS;
+    const useFastDown = mode==='AVNRT_FS'||mode==='AVRT_ORTHO'||mode==='NSR';
+    const useSlowUp   = mode==='AVNRT_FS';
+    const useFastUp   = mode==='AVNRT_SF'||isAnti;
+    const useSP2Up    = isSS;
+
+    ctx.beginPath(); ctx.ellipse(w*0.5,h*0.36,w*0.3,h*0.22,0,0,Math.PI*2);
+    ctx.fillStyle='rgba(34,211,238,0.018)'; ctx.fill();
+    ctx.strokeStyle='rgba(34,211,238,0.06)'; ctx.lineWidth=1; ctx.stroke();
+    
+    ctx.beginPath(); ctx.ellipse(w*0.5,h*0.68,w*0.32,h*0.24,0,0,Math.PI*2);
+    ctx.fillStyle='rgba(96,165,250,0.018)'; ctx.fill();
+    ctx.strokeStyle='rgba(96,165,250,0.06)'; ctx.stroke();
+    
+    ctx.beginPath(); ctx.moveTo(w*0.12,h*0.495); ctx.lineTo(w*0.88,h*0.495);
+    ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=2; ctx.stroke();
+
+    ctx.beginPath(); ctx.roundRect(n.AV_TOP.x-w*0.08,n.AV_TOP.y-h*0.05,w*0.16,n.AV_BOT.y-n.AV_TOP.y+h*0.1,8);
+    ctx.fillStyle='rgba(15,25,40,0.7)'; ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.lineWidth=1; ctx.stroke();
+    ctx.font=`bold ${Math.max(9,w*0.022)}px Inter,sans-serif`; ctx.fillStyle='rgba(255,255,255,0.2)';
+    ctx.textAlign='center'; ctx.fillText('AV',n.AV_TOP.x,n.AV_TOP.y+(n.AV_BOT.y-n.AV_TOP.y)*0.5+4);
+
+    function drawPath(pts,color,alpha,lw,dash) {
+        ctx.beginPath(); if(dash) ctx.setLineDash([5,5]); else ctx.setLineDash([]);
+        ctx.moveTo(pts[0].x,pts[0].y);
+        if(pts.length===3) ctx.quadraticCurveTo(pts[1].x,pts[1].y,pts[2].x,pts[2].y);
+        else pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
+        ctx.strokeStyle=`${color}${Math.round(alpha*255).toString(16).padStart(2,'0')}`;
+        ctx.lineWidth=lw; if(alpha>0.4){ctx.shadowColor=color;ctx.shadowBlur=8;}
+        ctx.stroke(); ctx.shadowBlur=0; ctx.setLineDash([]);
+    }
+
+    drawPath([n.SA,n.AV_TOP],'#fbbf24',mode==='NSR'?0.5:0.15,2);
+    
+    const fa=(useFastDown||useFastUp)?0.6:0.15;
+    drawPath([{x:n.AV_TOP.x+w*0.03,y:n.AV_TOP.y},{x:n.AV_BOT.x+w*0.03,y:n.AV_BOT.y}],'#22d3ee',fa,fa>0.4?2.5:1.5);
+    ctx.font=`${Math.max(8,w*0.018)}px Inter,sans-serif`; ctx.fillStyle=`rgba(34,211,238,${fa})`;
+    ctx.textAlign='left'; ctx.fillText('F',n.AV_TOP.x+w*0.055,(n.AV_TOP.y+n.AV_BOT.y)*0.5+4);
+    
+    const sa=(useSlowDown||useSlowUp)?0.6:0.15;
+    drawPath([{x:n.AV_TOP.x-w*0.03,y:n.AV_TOP.y},{x:n.AV_TOP.x-w*0.1,y:(n.AV_TOP.y+n.AV_BOT.y)*0.5},{x:n.AV_BOT.x-w*0.03,y:n.AV_BOT.y}],'#60a5fa',sa,sa>0.4?2.5:1.5);
+    ctx.fillStyle=`rgba(96,165,250,${sa})`; ctx.textAlign='right'; ctx.fillText('S1',n.AV_TOP.x-w*0.055,(n.AV_TOP.y+n.AV_BOT.y)*0.5+4);
+    
+    if(isSS){
+        const s2a=useSP2Up?0.65:0.15;
+        drawPath([{x:n.SP2_TOP.x,y:n.SP2_TOP.y},{x:n.AV_TOP.x+w*0.12,y:(n.AV_TOP.y+n.AV_BOT.y)*0.5+h*0.04},{x:n.SP2_BOT.x,y:n.SP2_BOT.y}],'#818cf8',s2a,2.5);
+        ctx.fillStyle=`rgba(129,140,248,${s2a})`; ctx.textAlign='left'; ctx.fillText('S2',n.SP2_TOP.x+w*0.04,(n.AV_TOP.y+n.AV_BOT.y)*0.5+h*0.04+4);
+    }
+    
+    const ha=isAnti?0.05:0.22;
+    ctx.strokeStyle=`rgba(251,191,36,${ha})`; ctx.lineWidth=2; ctx.beginPath();
+    ctx.moveTo(n.AV_BOT.x,n.AV_BOT.y); ctx.lineTo(n.AV_BOT.x,n.AV_BOT.y+h*0.08);
+    ctx.lineTo(n.HIS_L.x,n.HIS_L.y); ctx.lineTo(n.LBB_TIP.x,n.LBB_TIP.y);
+    ctx.moveTo(n.AV_BOT.x,n.AV_BOT.y+h*0.08); ctx.lineTo(n.HIS_R.x,n.HIS_R.y); ctx.lineTo(n.RBB_TIP.x,n.RBB_TIP.y); ctx.stroke();
+    ctx.font=`${Math.max(7,w*0.015)}px Inter,sans-serif`; ctx.fillStyle=`rgba(251,191,36,${ha+0.15})`;
+    ctx.textAlign='right'; ctx.fillText('LBB',n.LBB_TIP.x-4,n.LBB_TIP.y);
+    ctx.textAlign='left'; ctx.fillText('RBB',n.RBB_TIP.x+4,n.RBB_TIP.y);
+    
+    if(mode!=='NSR'){
+        ctx.strokeStyle='rgba(255,255,255,0.18)'; ctx.lineWidth=1; ctx.setLineDash([3,4]);
+        ctx.beginPath(); ctx.moveTo(n.AV_TOP.x,n.AV_TOP.y); ctx.lineTo(n.LA.x,n.LA.y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(n.AV_TOP.x,n.AV_TOP.y); ctx.lineTo(n.RA.x,n.RA.y); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.beginPath(); ctx.arc(n.SA.x,n.SA.y,7,0,Math.PI*2); ctx.strokeStyle='rgba(251,191,36,0.15)'; ctx.stroke();
+    }
+    
+    if(isAVRT){
+        drawPath([n.HIS_R,n.AP_V],'#e879f9',isAnti?0.1:0.35,1.8,true);
+        drawPath([n.AP_V,n.AP_A],'#e879f9',0.85,3);
+        drawPath([n.AP_A,n.AV_TOP],'#e879f9',isAnti?0.1:0.35,1.8,true);
+        ctx.font=`bold ${Math.max(9,w*0.022)}px Inter,sans-serif`; ctx.fillStyle='rgba(232,121,249,0.7)';
+        ctx.textAlign='center'; ctx.fillText('AP',(n.AP_V.x+n.AP_A.x)*0.5+w*0.04,(n.AP_V.y+n.AP_A.y)*0.5);
+    }
+    
+    if(st&&st.pacActive){
+        const sx=w*0.75,sy=h*0.18,tx=n.AV_TOP.x+w*0.02,ty=n.AV_TOP.y;
+        const px=sx+(tx-sx)*st.pacProgress, py=sy+(ty-sy)*st.pacProgress;
+        if(st.pacProgress<0.5){
+            ctx.beginPath(); ctx.arc(sx,sy,st.pacProgress*150,0,Math.PI*2);
+            ctx.strokeStyle=`rgba(244,114,182,${1-st.pacProgress/0.5})`; ctx.lineWidth=2; ctx.stroke();
+        }
+        drawParticle(ctx,px,py,'#f472b6');
+        ctx.font=`bold ${Math.max(10,w*0.025)}px Inter,sans-serif`;
+        ctx.fillStyle=`rgba(244,114,182,${Math.max(0,1-st.pacProgress*1.5)})`;
+        ctx.textAlign='left'; ctx.fillText('PAC',sx+12,sy-10);
+    }
+    
+    drawNode(ctx,n.SA.x,n.SA.y,'#fbbf24',5,'SA');
+    drawNode(ctx,n.AV_TOP.x,n.AV_TOP.y,'#22d3ee',4,'');
+    
+    if(!(st&&st.pacActive&&mode==='NSR'&&phase>0.8)){
+        cfg.events.forEach(ev=>{
+            if(phase>=ev.s&&phase<=ev.e){
+                const prog=(phase-ev.s)/(ev.e-ev.s);
+                const pos=particlePos(ev.type,prog,w,h,n);
+                if(pos) drawParticle(ctx,pos.x,pos.y,pos.color);
+            }
+        });
+    }
+}
+
+function drawNode(ctx,x,y,color,r,label){
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle=color;
+    ctx.shadowColor=color; ctx.shadowBlur=12; ctx.fill(); ctx.shadowBlur=0;
+    if(label){ctx.font='bold 9px Inter,sans-serif'; ctx.fillStyle=color; ctx.textAlign='left'; ctx.fillText(label,x+r+3,y+3);}
+}
+
+function drawParticle(ctx,x,y,color){
+    ctx.beginPath(); ctx.arc(x,y,7,0,Math.PI*2);
+    const g=ctx.createRadialGradient(x,y,0,x,y,7);
+    g.addColorStop(0,color+'cc'); g.addColorStop(1,color+'00');
+    ctx.fillStyle=g; ctx.fill();
+    ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2);
+    ctx.fillStyle='#ffffff'; ctx.shadowColor=color; ctx.shadowBlur=10; ctx.fill(); ctx.shadowBlur=0;
+}
+
+// ─── PARTICLE POSITIONS ───────────────────────────────────────────────────────
+function particlePos(type,prog,w,h,n){
+    const cpX=n.AV_TOP.x-w*0.1, cpY=(n.AV_TOP.y+n.AV_BOT.y)*0.5;
+    const bez=(t,p0,p1,p2)=>({x:(1-t)*(1-t)*p0.x+2*(1-t)*t*p1.x+t*t*p2.x,y:(1-t)*(1-t)*p0.y+2*(1-t)*t*p1.y+t*t*p2.y});
+    
+    switch(type){
+        case 'SA_AV': return {x:n.SA.x+(n.AV_TOP.x-n.SA.x)*prog,y:n.SA.y+(n.AV_TOP.y-n.SA.y)*prog,color:'#fbbf24'};
+        case 'AV_DOWN_FAST': return {x:n.AV_TOP.x+w*0.03,y:n.AV_TOP.y+(n.AV_BOT.y-n.AV_TOP.y)*prog,color:'#22d3ee'};
+        case 'AV_UP_FAST': return {x:n.AV_BOT.x+w*0.03,y:n.AV_BOT.y-(n.AV_BOT.y-n.AV_TOP.y)*prog,color:'#22d3ee'};
+        case 'AV_DOWN_SLOW': case 'SS_DOWN_SP1': return {...bez(prog,{x:n.AV_TOP.x-w*0.03,y:n.AV_TOP.y},{x:cpX,y:cpY},{x:n.AV_BOT.x-w*0.03,y:n.AV_BOT.y}),color:'#60a5fa'};
+        case 'AV_UP_SLOW': return {...bez(1-prog,{x:n.AV_TOP.x-w*0.03,y:n.AV_TOP.y},{x:cpX,y:cpY},{x:n.AV_BOT.x-w*0.03,y:n.AV_BOT.y}),color:'#60a5fa'};
+        case 'SS_UP_SP2': return {...bez(1-prog,{x:n.SP2_TOP.x,y:n.SP2_TOP.y},{x:n.AV_TOP.x+w*0.12,y:(n.AV_TOP.y+n.AV_BOT.y)*0.5+h*0.04},{x:n.SP2_BOT.x,y:n.SP2_BOT.y}),color:'#818cf8'};
+        case 'PURK_LBB': {
+            const hm={x:n.AV_BOT.x,y:n.AV_BOT.y+h*0.08};
+            return prog<0.5?{x:hm.x+(n.HIS_L.x-hm.x)*(prog/0.5),y:hm.y+(n.HIS_L.y-hm.y)*(prog/0.5),color:'#fbbf24'}:{x:n.HIS_L.x+(n.LBB_TIP.x-n.HIS_L.x)*((prog-0.5)/0.5),y:n.HIS_L.y+(n.LBB_TIP.y-n.HIS_L.y)*((prog-0.5)/0.5),color:'#fbbf24'};
+        }
+        case 'PURK_RBB': {
+            const hm={x:n.AV_BOT.x,y:n.AV_BOT.y+h*0.08};
+            return prog<0.5?{x:hm.x+(n.HIS_R.x-hm.x)*(prog/0.5),y:hm.y+(n.HIS_R.y-hm.y)*(prog/0.5),color:'#fbbf24'}:{x:n.HIS_R.x+(n.RBB_TIP.x-n.HIS_R.x)*((prog-0.5)/0.5),y:n.HIS_R.y+(n.RBB_TIP.y-n.HIS_R.y)*((prog-0.5)/0.5),color:'#fbbf24'};
+        }
+        case 'RETRO_ATRIUM':
+            return prog<0.4?{x:n.AV_TOP.x+(n.LA.x-n.AV_TOP.x)*(prog/0.4),y:n.AV_TOP.y+(n.LA.y-n.AV_TOP.y)*(prog/0.4),color:'#a78bfa'}
+                  :prog<0.7?{x:n.AV_TOP.x+(n.RA.x-n.AV_TOP.x)*((prog-0.4)/0.3),y:n.AV_TOP.y+(n.RA.y-n.AV_TOP.y)*((prog-0.4)/0.3),color:'#a78bfa'}
+                  :{x:n.LA.x+(n.SA.x-n.LA.x)*((prog-0.7)/0.3),y:n.LA.y+(n.SA.y-n.LA.y)*((prog-0.7)/0.3),color:'#f472b6'};
+        case 'VENT_AP': return {x:n.HIS_R.x+(n.AP_V.x-n.HIS_R.x)*prog,y:n.HIS_R.y+(n.AP_V.y-n.HIS_R.y)*prog,color:'#e879f9'};
+        case 'AP_UP':   return {x:n.AP_V.x+(n.AP_A.x-n.AP_V.x)*prog,y:n.AP_V.y+(n.AP_A.y-n.AP_V.y)*prog,color:'#e879f9'};
+        case 'AP_DOWN': return {x:n.AP_A.x+(n.AP_V.x-n.AP_A.x)*prog,y:n.AP_A.y+(n.AP_V.y-n.AP_A.y)*prog,color:'#e879f9'};
+        case 'VENT_FROM_AP': return {x:n.AP_V.x+(n.LBB_TIP.x-n.AP_V.x)*prog,y:n.AP_V.y+(n.LBB_TIP.y-n.AP_V.y)*prog,color:'#ef4444'};
+        case 'VENT_HIS': return {x:n.LBB_TIP.x+(n.AV_BOT.x-n.LBB_TIP.x)*prog,y:n.LBB_TIP.y+(n.AV_BOT.y-n.LBB_TIP.y)*prog,color:'#ef4444'};
+        default: return null;
+    }
+}
+
+// ─── ECG MATH ─────────────────────────────────────────────────────────────────
+function gauss(x,a,mu,sig){ return a*Math.exp(-((x-mu)**2)/(2*sig*sig)); }
+
+function calcECG(phase,c,pacProg){
+    let y=Math.sin(phase*Math.PI*2*0.3)*0.008+(Math.random()-0.5)*0.004;
+    
+    if(c.p>0) y+=gauss(phase,c.p_amp,c.p,c.p_w);
+    
+    if(c.p_retro>0){
+        y+=gauss(phase,c.p_amp,c.p_retro,c.p_w)
+          +gauss(phase+1,c.p_amp,c.p_retro,c.p_w)
+          +gauss(phase-1,c.p_amp,c.p_retro,c.p_w);
+    }
+    
+    if(c.qrs>0){
+        if(c.wide_qrs){
+            y+=gauss(phase,c.pr_amp*0.5,c.qrs-0.04,0.025);
+            y+=gauss(phase,0.9,c.qrs,0.035);
+            y+=gauss(phase,-0.6,c.qrs+0.08,0.030);
+        } else {
+            y+=gauss(phase,c.pr_amp*0.8,c.qrs-0.025,0.012);
+            y+=gauss(phase,1.3,c.qrs,0.013);
+            y+=gauss(phase,-0.35,c.qrs+0.022,0.012);
+        }
+    }
+    
+    if(c.t>0) y+=gauss(phase,c.wide_qrs?-0.35:0.28,c.t,0.055);
+    if(pacProg!=null) y+=gauss(pacProg,-0.15,0.3,0.08);
+    
+    return -y;
+}
+
+function drawECGGrid(ctx,w,h){
+    ctx.clearRect(0,0,w,h);
+    ctx.strokeStyle='rgba(239,68,68,0.07)'; ctx.lineWidth=1; ctx.beginPath();
+    for(let x=0;x<w;x+=40){ctx.moveTo(x,0);ctx.lineTo(x,h);}
+    for(let y=0;y<h;y+=40){ctx.moveTo(0,y);ctx.lineTo(w,y);} ctx.stroke();
+    
+    ctx.strokeStyle='rgba(239,68,68,0.035)'; ctx.beginPath();
+    for(let x=0;x<w;x+=8){ctx.moveTo(x,0);ctx.lineTo(x,h);}
+    for(let y=0;y<h;y+=8){ctx.moveTo(0,y);ctx.lineTo(w,y);} ctx.stroke();
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function renderPanel(side,st,cvH,cxH,cvE,cxE,dt){
+    if(!cvH.width||!cvH.height) return;
+    const cfg=CFG[st.mode];
+    
+    if(st.pacActive){
+        st.pacProgress+=dt*speed*0.0018;
+        if(st.pacProgress>=1.0){ st.pacActive=false; setMode(side,'AVNRT_SF',true); }
+    }
+    
+    const localT=simTime-st.timeOffset;
+    let phase=(localT%cfg.cycle)/cfg.cycle;
+    if(phase<0) phase+=1;
+    
+    drawHeart(cxH,cvH.width,cvH.height,st.mode,phase,st);
+    
+    const ecgVal=calcECG(phase,cfg.ecg,st.pacActive?st.pacProgress:null);
+    st.buf.push(ecgVal);
+    if(st.buf.length>cvE.width) st.buf.shift();
+    
+    drawECGGrid(cxE,cvE.width,cvE.height);
+    
+    cxE.beginPath();
+    cxE.strokeStyle=side==='A'?'#22d3ee':'#c084fc';
+    cxE.lineWidth=1.8; cxE.lineJoin='round'; cxE.lineCap='round';
+    cxE.shadowColor=side==='A'?'#22d3ee':'#c084fc'; cxE.shadowBlur=4;
+    
+    const bl=cvE.height*0.58, sc=32;
+    for(let i=0;i<st.buf.length;i++){
+        const x=i, y=bl+st.buf[i]*sc;
+        if(i===0) cxE.moveTo(x,y); else cxE.lineTo(x,y);
+    }
+    cxE.stroke(); cxE.shadowBlur=0;
+    
+    const sx2=st.buf.length-1;
+    cxE.beginPath(); cxE.strokeStyle=side==='A'?'rgba(34,211,238,0.5)':'rgba(192,132,252,0.5)';
+    cxE.lineWidth=1; cxE.setLineDash([3,3]); cxE.moveTo(sx2,0); cxE.lineTo(sx2,cvE.height); cxE.stroke(); cxE.setLineDash([]);
+}
+
+function animate(){
+    const now=performance.now();
+    let dt=now-lastT; if(dt>80) dt=16; lastT=now;
+    simTime+=dt*speed;
+    
+    renderPanel('A',stA,CV.hA,CX.hA,CV.eA,CX.eA,dt);
+    renderPanel('B',stB,CV.hB,CX.hB,CV.eB,CX.eB,dt);
+    
+    requestAnimationFrame(animate);
+}
+
+// ─── UI ACTIONS ───────────────────────────────────────────────────────────────
+function setMode(side, mode, keepBuffer=false){
+    const st=side==='A'?stA:stB;
+    st.mode=mode; st.timeOffset=simTime; st.pacActive=false;
+    
+    if(!keepBuffer){ const cv=side==='A'?CV.eA:CV.eB; st.buf=new Array(cv.width).fill(0); }
+    
+    document.querySelectorAll(`[id^="btn-${side}-"]`).forEach(b=>b.classList.remove('active'));
+    const pill=document.getElementById(`btn-${side}-${mode}`);
+    if(pill) pill.classList.add('active');
+    
+    const exp=EXP[mode];
+    document.getElementById(`title-${side}`).textContent=exp.title;
+    document.getElementById(`desc-${side}`).innerHTML=exp.html;
+    document.getElementById(`badge-${side}`).textContent=exp.badge;
+    
+    updateTabBar();
+}
+
+function setActiveMode(mode){
+    setMode('A', mode);
+    setMode('B', mode);
+}
+
+function updateTabBar(){
+    const modeA = stA.mode;
+    document.querySelectorAll('.tab-btn').forEach(btn=>{
+        const m = btn.dataset.mode;
+        btn.classList.remove('active-A','active-B');
+        if(m===modeA) btn.classList.add('active-A');
+        if(m===stB.mode) btn.classList.add('active-B');
+    });
+}
+
+function triggerPAC(side){
+    const st=side==='A'?stA:stB;
+    const btn=document.getElementById(`btn-pac-${side}`);
+    if(st.mode!=='NSR'){
+        const t=btn.innerHTML; btn.innerHTML='❌ Hanya NSR'; btn.style.color='var(--red)'; btn.style.borderColor='var(--red)';
+        setTimeout(()=>{btn.innerHTML=t;btn.style.color='';btn.style.borderColor='';},1500);
+        return;
+    }
+    if(st.pacActive) return;
+    st.pacActive=true; st.pacProgress=0;
+}
+
+function toggleFocus(side){
+    const pA=document.getElementById('panelA');
+    const pB=document.getElementById('panelB');
+    const bA=document.getElementById('btn-focus-A');
+    const bB=document.getElementById('btn-focus-B');
+    
+    if(focusState===side){
+        focusState=null;
+        pA.classList.remove('hidden','fullscreen');
+        pB.classList.remove('hidden','fullscreen');
+        bA.innerHTML='⛶ Focus'; bA.classList.remove('focus-active');
+        bB.innerHTML='⛶ Focus'; bB.classList.remove('focus-active');
+    } else {
+        focusState=side;
+        if(side==='A'){ pA.classList.add('fullscreen'); pB.classList.add('hidden'); bA.innerHTML='✕ Kembali'; bA.classList.add('focus-active'); }
+        else { pB.classList.add('fullscreen'); pA.classList.add('hidden'); bB.innerHTML='✕ Kembali'; bB.classList.add('focus-active'); }
+    }
+    setTimeout(resizeAll,80);
+}
+
+function copyMode(from, to){ const src=from==='A'?stA:stB; setMode(to,src.mode); }
+
+function setSpeed(val){
+    speed=val;
+    document.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('active'));
+    const map={1.0:'sp-10',0.4:'sp-04',0.15:'sp-02'};
+    const el=document.getElementById(map[val]); if(el) el.classList.add('active');
+}
+
+// ─── THEME ────────────────────────────────────────────────────────────────────
+let currentTheme='dark';
+document.getElementById('theme-toggle').addEventListener('click',()=>{
+    currentTheme=currentTheme==='dark'?'light':'dark';
+    document.documentElement.setAttribute('data-theme',currentTheme);
+    document.getElementById('theme-toggle').textContent=currentTheme==='dark'?'🌙':'☀️';
+});
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+window.addEventListener('load',()=>{
+    resizeAll();
+    setMode('A','NSR');
+    setMode('B','AVNRT_SF');
+    updateTabBar();
+    animate();
+});
+</script>
+</body>
+</html>
