@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Lipid & Statin v3 - CardiologyVault</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #FCFBF7; /* Refined warm cream background */
+        }
+        .pdf-template { width: 794px; height: 1123px; box-sizing: border-box; display: none; }
+        @media print { .no-print { display: none; } }
+        
+        /* Elegant golden scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #FEFCE8; } 
+        ::-webkit-scrollbar-thumb { background: #FDE047; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #FACC15; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div id="app-container" class="min-h-screen p-4 md:p-6 lg:p-8 flex flex-col items-center">
+        
+        <!-- HEADER -->
+        <div class="w-full max-w-7xl bg-white rounded-2xl p-6 shadow-sm border border-[#FDE68A] mb-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <div class="flex items-center gap-3 mb-1">
+                        <!-- Golden Heart Icon -->
+                        <div class="p-2 bg-gradient-to-br from-amber-100 to-yellow-50 rounded-xl border border-amber-200">
+                            <i data-lucide="droplets" class="text-amber-500 w-7 h-7 drop-shadow-sm"></i>
+                        </div>
+                        <h1 class="text-2xl font-bold text-slate-900">
+                            Lipid & Statin Decision Support
+                            <span class="text-sm font-black text-amber-700 ml-2 uppercase tracking-tighter bg-amber-100/80 px-2 py-0.5 rounded border border-amber-300">v3.0</span>
+                        </h1>
+                    </div>
+                    <p class="text-md text-slate-600 font-medium">Clinical Support System berbasis Prinsip Guideline ESC / ACC / AHA</p>
+                    <p class="text-sm text-slate-500 mt-1">Developed by Bayushi Eka Putra, MD, FIHA • <span class="font-bold text-amber-700">CardiologyVault</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-6 mb-10">
+            <!-- INPUT PANEL -->
+            <div class="lg:col-span-6 space-y-6">
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2 text-slate-800 border-b border-slate-100 pb-2">
+                        <i data-lucide="activity" class="w-5 h-5 text-amber-500"></i> Parameter Klinis & Laboratorium
+                    </h2>
+                    
+                    <div class="space-y-5">
+                        <!-- Seksi 1: Klinis Utama -->
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Status Pencegahan & Terapi Saat Ini</h3>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-800 mb-1">Konteks Klinis (Target Populasi)</label>
+                                <select id="prevention" class="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:ring-2 focus:ring-amber-500 outline-none transition-shadow">
+                                    <option value="primary">Primary Prevention (Belum Ada Riwayat ASCVD)</option>
+                                    <option value="secondary">Secondary Prevention (Riwayat ACS, Stroke, PAD, Post-Revaskularisasi)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-800 mb-1">Status Terapi Penurun Lipid Saat Ini</label>
+                                <select id="currentStatin" class="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:ring-2 focus:ring-amber-500 outline-none transition-shadow">
+                                    <option value="none">Belum dalam terapi (Statin Naïve) / Gaya Hidup Saja</option>
+                                    <option value="low_mod">Statin Intensitas Rendah - Sedang</option>
+                                    <option value="high">Statin Intensitas Tinggi (Atorva 40-80mg / Rosuva 20-40mg)</option>
+                                    <option value="combo">Kombinasi Statin + Ezetimibe</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Seksi 2: Demografi & Klasik -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Usia (Thn)</label>
+                                <input type="number" id="age" value="50" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Jenis Kelamin</label>
+                                <select id="gender" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none">
+                                    <option value="male">Laki-laki</option>
+                                    <option value="female">Perempuan</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Merokok Aktif?</label>
+                                <select id="smoker" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none">
+                                    <option value="no">Tidak</option>
+                                    <option value="yes">Ya</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Diabetes Mellitus?</label>
+                                <select id="dm" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none">
+                                    <option value="no">Tidak</option>
+                                    <option value="yes">Ya</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Seksi 3: Laboratorium Profil Lipid & TD (Golden Highlight) -->
+                        <div class="bg-gradient-to-br from-[#FFFBEB] to-[#FEF3C7] p-4 rounded-xl border border-[#FDE68A]">
+                            <h3 class="text-xs font-bold text-amber-800 uppercase tracking-wider mb-3">Tanda Vital & Profil Lipid Aktual</h3>
+                            <div class="grid grid-cols-2 gap-4 mb-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-amber-900/80 mb-1">TD Sistolik (mmHg)</label>
+                                    <input type="number" id="sbp" value="130" class="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-400 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-amber-900/80 mb-1">Dalam Terapi Hipertensi?</label>
+                                    <select id="htnTreated" class="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-400 outline-none">
+                                        <option value="no">Tidak</option>
+                                        <option value="yes">Ya (Treated)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3 mb-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-amber-900/80 mb-1">Tot. Chol (mg/dL)</label>
+                                    <input type="number" id="tc" value="220" class="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-400 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-amber-900/80 mb-1">HDL-C (mg/dL)</label>
+                                    <input type="number" id="hdl" value="45" class="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-400 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-amber-900/80 mb-1">Trigliserida (mg/dL)</label>
+                                    <input type="number" id="tg" value="150" class="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-400 outline-none">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-amber-900 mb-1">Kadar LDL-C Aktual (mg/dL)</label>
+                                <input type="number" id="ldl" value="145" class="w-full p-2.5 bg-white border-2 border-amber-400 rounded-lg font-black text-amber-900 text-lg shadow-sm focus:ring-2 focus:ring-amber-500 outline-none">
+                            </div>
+                        </div>
+
+                        <!-- Seksi 4: Imaging & Risk Enhancers -->
+                        <div class="space-y-3 pt-2">
+                            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100 pb-1">Risk Modifiers / Enhancers</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Skor Kalsium (CAC) / Plak</label>
+                                    <select id="cac" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 outline-none">
+                                        <option value="unknown">Tidak Diketahui / Belum CT</option>
+                                        <option value="zero">CAC = 0 (Tidak ada plak)</option>
+                                        <option value="mild">CAC 1 - 99 (Plak Ringan)</option>
+                                        <option value="high">CAC ≥ 100 / Plak Obstruktif</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Penyakit Ginjal Kronis (CKD)</label>
+                                    <select id="ckd" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 outline-none">
+                                        <option value="no">Tidak</option>
+                                        <option value="yes">Ya (eGFR < 60 / Albuminuria)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Riwayat ASCVD Prematur (Keluarga)</label>
+                                    <select id="fh" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 outline-none">
+                                        <option value="no">Tidak</option>
+                                        <option value="yes">Ya (Laki < 55 thn, Pr < 65 thn)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Lp(a) Tinggi (>50 mg/dL)</label>
+                                    <select id="lpa" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 outline-none">
+                                        <option value="no">Normal / Belum Diperiksa</option>
+                                        <option value="yes">Ya (> 50 mg/dL atau > 125 nmol/L)</option>
+                                    </select>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Kondisi Inflamasi / Risiko Lainnya</label>
+                                    <select id="inflam" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 outline-none">
+                                        <option value="no">Tidak Ada</option>
+                                        <option value="yes">Ya (RA, Lupus, Psoriasis, HIV, Preeklampsia, dll)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- RESULT PANEL -->
+            <div class="lg:col-span-6 space-y-4">
+                <!-- Risk Card -->
+                <div id="risk-card" class="rounded-2xl p-6 border-2 transition-all duration-300 bg-white">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Klasifikasi Keputusan Klinis</h3>
+                    <div class="flex flex-col gap-1">
+                        <div id="res-category" class="text-2xl font-black text-slate-900 leading-tight">Menghitung...</div>
+                        <div id="res-context" class="text-sm font-semibold text-slate-700 border-t border-slate-200/50 pt-2 mt-2">Konteks Klinis</div>
+                    </div>
+                </div>
+
+                <!-- Targets -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                    <h3 class="text-md font-bold mb-4 flex items-center gap-2 text-slate-800">
+                        <i data-lucide="target" class="w-5 h-5 text-amber-500"></i> Target Pencapaian (Guideline)
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="p-4 rounded-xl border border-[#FDE68A] bg-gradient-to-br from-[#FFFBEB] to-white relative overflow-hidden shadow-sm">
+                            <div class="text-xs text-amber-800 font-bold mb-1 uppercase tracking-wider">Target Utama: LDL-C</div>
+                            <div id="res-target-ldl" class="text-xl font-black text-amber-900">-</div>
+                            <div id="res-actual-ldl" class="text-xs font-semibold text-amber-700 mt-2 bg-amber-100/60 border border-amber-200 p-1.5 rounded inline-block">Aktual: -</div>
+                        </div>
+                        <div class="p-4 rounded-xl border bg-slate-50 border-slate-200">
+                            <div class="text-xs text-slate-600 font-bold mb-1 uppercase tracking-wider">Target Sekunder: Non-HDL</div>
+                            <div id="res-target-nonhdl" class="text-lg font-bold text-slate-800">-</div>
+                            <div id="res-actual-nonhdl" class="text-xs font-semibold text-slate-600 mt-2 bg-white p-1.5 rounded inline-block border shadow-sm">Aktual: -</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                    <div class="mb-5">
+                        <h3 class="text-md font-bold mb-3 flex items-center gap-2 text-amber-800">
+                            <i data-lucide="pill" class="w-5 h-5"></i> Rekomendasi Terapi Saat Ini
+                        </h3>
+                        <div id="statin-box" class="border-2 p-5 rounded-xl transition-all shadow-sm">
+                            <p id="res-statin" class="text-lg font-black tracking-tight leading-snug">-</p>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold mb-2 flex items-center gap-2 text-amber-700">
+                            <i data-lucide="stethoscope" class="w-4 h-4"></i> Dasar Strategi & Evaluasi Lanjut
+                        </h3>
+                        <ul id="res-strategy" class="space-y-2 bg-[#FCFBF7] p-4 rounded-xl border border-slate-200/60 text-sm"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DOWNLOAD BUTTON (Elegant Golden Gradient) -->
+        <button id="download-btn" class="flex items-center justify-center gap-3 w-full max-w-md mx-auto bg-gradient-to-r from-[#D97706] to-[#B45309] hover:from-[#B45309] hover:to-[#92400E] text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all shadow-xl shadow-amber-600/20 active:scale-95 mb-12 border border-amber-700">
+            <i data-lucide="printer" class="w-5 h-5"></i> Cetak / Unduh Laporan (PDF)
+        </button>
+
+    </div>
+
+    <!-- PDF OVERLAY TEMPLATE -->
+    <div id="pdf-overlay" class="fixed inset-0 z-50 bg-slate-900/90 hidden flex justify-center items-start overflow-auto py-10 backdrop-blur-sm">
+        <div id="pdf-document-node" class="bg-white px-10 py-10 font-sans text-slate-900 flex flex-col shadow-2xl relative" style="width: 794px; min-height: 1123px; box-sizing: border-box;">
+            
+            <div class="z-10 flex flex-col h-full">
+                <!-- Header -->
+                <div class="flex justify-between items-end border-b-[3px] border-amber-800 pb-3 mb-6">
+                    <div>
+                        <h1 class="text-2xl font-black text-slate-900 mb-1 tracking-tight">Laporan Keputusan Klinis Lipid & Statin</h1>
+                        <p class="text-sm text-slate-600 font-semibold">Guideline-Directed Medical Therapy Assessment (v3.0)</p>
+                    </div>
+                    <div class="text-right pb-1">
+                        <span class="text-[10px] font-black text-amber-800 bg-amber-50 px-3 py-1.5 rounded-md uppercase tracking-widest border border-amber-200">CardiologyVault</span>
+                    </div>
+                </div>
+
+                <!-- Identitas & Data -->
+                <div class="mb-6">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs text-slate-900 shadow-sm">
+                        <div class="grid grid-cols-2 gap-y-2 gap-x-8">
+                            <div class="flex items-end border-b border-dotted border-slate-300 pb-1">
+                                <strong class="whitespace-nowrap mr-2 w-28 text-slate-600">Nama Pasien</strong>: <span class="w-full font-bold"></span>
+                            </div>
+                            <div class="flex items-end border-b border-dotted border-slate-300 pb-1">
+                                <strong class="whitespace-nowrap mr-2 w-28 text-slate-600">Tanggal</strong>: <span id="pdf-date" class="w-full font-bold"></span>
+                            </div>
+                            <div class="col-span-2 mt-2 pt-2 border-t border-slate-200">
+                                <strong class="text-slate-600 block mb-1">Baseline Profil:</strong>
+                                <span id="pdf-params" class="font-medium text-slate-800 leading-relaxed block"></span>
+                            </div>
+                            <div class="col-span-2 mt-1">
+                                <strong class="text-slate-600 block mb-1">Enhancers / Subklinis:</strong>
+                                <span id="pdf-enhancers" class="font-medium text-slate-800 leading-relaxed block italic"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hasil Penilaian -->
+                <div class="space-y-4 flex-grow">
+                    <div id="pdf-risk-card" class="p-4 rounded-xl border-2">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Prioritas Intervensi Utama</div>
+                        <div id="pdf-res-category" class="text-lg font-black text-slate-900">Sangat Tinggi</div>
+                        <div id="pdf-res-context" class="text-[11px] font-semibold text-slate-700 mt-1">Context</div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-3 rounded-xl border border-amber-200 bg-amber-50/50 shadow-sm">
+                            <div class="text-[9px] text-amber-800 font-black mb-1 uppercase tracking-widest text-center border-b border-amber-200 pb-1">TARGET LDL-C</div>
+                            <div id="pdf-res-target-ldl" class="text-lg font-black text-amber-900 text-center py-1">-</div>
+                            <div id="pdf-actual-ldl" class="text-[10px] font-bold text-amber-700 text-center mt-1">Aktual: -</div>
+                        </div>
+                        <div class="p-3 rounded-xl border bg-slate-50 border-slate-300">
+                            <div class="text-[9px] text-slate-600 font-bold mb-1 uppercase tracking-widest text-center border-b border-slate-200 pb-1">TARGET NON-HDL</div>
+                            <div id="pdf-res-target-nonhdl" class="text-base font-bold text-slate-900 text-center py-1.5">-</div>
+                            <div id="pdf-actual-nonhdl" class="text-[10px] font-bold text-slate-600 text-center mt-1">Aktual: -</div>
+                        </div>
+                    </div>
+
+                    <div class="border border-amber-200 bg-white rounded-xl p-4 mt-2 shadow-sm">
+                        <div class="text-[10px] font-black text-amber-800 uppercase mb-2 tracking-widest">Rekomendasi Terapi Saat Ini</div>
+                        <div id="pdf-statin-box" class="border p-3 rounded-lg mb-4 bg-slate-50">
+                            <p id="pdf-res-statin" class="text-sm font-black">-</p>
+                        </div>
+                        
+                        <div class="text-[10px] font-black text-amber-700 uppercase mb-2 tracking-widest border-t border-slate-100 pt-3">Dasar Strategi Klinis</div>
+                        <ul id="pdf-res-strategy" class="space-y-1.5 text-xs text-slate-800 font-medium pl-1"></ul>
+                    </div>
+                </div>
+
+                <!-- Signature -->
+                <div class="mt-8 pt-4 border-t-[3px] border-amber-800">
+                    <p class="text-[9px] text-slate-500 mb-8 text-justify leading-relaxed">
+                        <strong>Disclaimer Klinis:</strong> Dokumen ini merupakan alat bantu <em>clinical decision support</em> berbasis <em>guideline principles</em> (ACC/AHA & ESC). Tidak identik 100% dengan luaran persamaan kalkulator murni (SCORE2/PCE) dan tidak ditujukan sebagai pengganti penilaian klinis komprehensif dokter terhadap pasien individu. Rekomendasi di atas adalah arahan umum yang tunduk pada keputusan akhir Dokter Penanggung Jawab Pelayanan (DPJP).
+                    </p>
+                    <div class="flex justify-between items-end">
+                        <div class="text-[10px] text-slate-400 font-medium">
+                            Dicetak melalui: CardiologyVault App - Module v3.0 (Gold Ed.)
+                        </div>
+                        <div class="text-center w-64">
+                            <p class="mb-14 text-slate-800 text-[11px] font-medium">Tangerang Selatan, ........................</p>
+                            <p class="font-black text-slate-900 text-sm border-b border-slate-800 pb-1">dr. Bayushi Eka Putra, MD, FIHA</p>
+                            <p class="text-[9px] text-slate-600 mt-1 font-bold uppercase tracking-widest">Dokter Penanggung Jawab (DPJP)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Elemen Input
+        const preventionEl = document.getElementById('prevention');
+        const currentStatinEl = document.getElementById('currentStatin');
+        const ageEl = document.getElementById('age');
+        const genderEl = document.getElementById('gender');
+        const smokerEl = document.getElementById('smoker');
+        const dmEl = document.getElementById('dm');
+        const htnTreatedEl = document.getElementById('htnTreated');
+        const sbpEl = document.getElementById('sbp');
+        const tcEl = document.getElementById('tc');
+        const hdlEl = document.getElementById('hdl');
+        const tgEl = document.getElementById('tg');
+        const ldlEl = document.getElementById('ldl');
+        
+        // Enhancers
+        const cacEl = document.getElementById('cac');
+        const ckdEl = document.getElementById('ckd');
+        const fhEl = document.getElementById('fh');
+        const lpaEl = document.getElementById('lpa');
+        const inflamEl = document.getElementById('inflam');
+
+        const inputs = [preventionEl, currentStatinEl, ageEl, genderEl, smokerEl, dmEl, htnTreatedEl, sbpEl, tcEl, hdlEl, tgEl, ldlEl, cacEl, ckdEl, fhEl, lpaEl, inflamEl];
+
+        function updateUI() {
+            const data = calculateRisk();
+
+            // Screen UI Updates
+            document.getElementById('res-category').innerText = data.category;
+            document.getElementById('res-context').innerText = data.context;
+            
+            document.getElementById('res-target-ldl').innerText = data.targetLdl;
+            document.getElementById('res-actual-ldl').innerText = `Aktual: ${data.actualLdl} mg/dL`;
+            
+            document.getElementById('res-target-nonhdl').innerText = data.targetNonHdl;
+            document.getElementById('res-actual-nonhdl').innerText = `Aktual: ${data.actualNonHdl} mg/dL`;
+
+            document.getElementById('res-statin').innerText = data.statin;
+
+            const strategyList = document.getElementById('res-strategy');
+            strategyList.innerHTML = '';
+            data.strategy.forEach(step => {
+                const li = document.createElement('li');
+                li.className = 'flex items-start gap-3';
+                li.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5"></i> <span class="text-slate-700 font-medium leading-relaxed">${step}</span>`;
+                strategyList.appendChild(li);
+            });
+
+            // Warna Kartu Prioritas (Klinis tetap dipertahankan warna klasiknya untuk fungsi medis, namun diselaraskan)
+            const riskCard = document.getElementById('risk-card');
+            riskCard.className = 'rounded-2xl p-6 border-2 shadow-sm transition-all ' + getRiskColor(data.category);
+            
+            // Statin Box Styling
+            const statinBox = document.getElementById('statin-box');
+            if (data.statin.includes('Ezetimibe') || data.statin.includes('Intensifikasi') || data.statin.includes('PCSK9')) {
+                statinBox.className = 'border-2 p-5 rounded-xl transition-all shadow-sm bg-rose-50 border-rose-200';
+                document.getElementById('res-statin').className = 'text-lg font-black tracking-tight text-rose-900';
+            } else if (data.statin.includes('Gaya Hidup') || data.statin.includes('Pertahankan')) {
+                statinBox.className = 'border-2 p-5 rounded-xl transition-all shadow-sm bg-emerald-50 border-emerald-200';
+                document.getElementById('res-statin').className = 'text-lg font-black tracking-tight text-emerald-900';
+            } else {
+                // Default Inisiasi (Tema Golden/Amber)
+                statinBox.className = 'border-2 p-5 rounded-xl transition-all shadow-sm bg-[#FFFBEB] border-[#FDE68A]';
+                document.getElementById('res-statin').className = 'text-lg font-black tracking-tight text-amber-900';
+            }
+
+            syncPDF(data);
+            lucide.createIcons();
+        }
+
+        // Warna Kaidah Klinis (Risiko)
+        function getRiskColor(cat) {
+            cat = cat.toLowerCase();
+            if (cat.includes('sangat tinggi')) return 'bg-red-50 border-red-300';
+            if (cat.includes('tinggi')) return 'bg-orange-50 border-orange-300';
+            if (cat.includes('sedang')) return 'bg-yellow-50 border-yellow-300';
+            return 'bg-emerald-50 border-emerald-300';
+        }
+
+        function calculateRisk() {
+            const isSecondary = preventionEl.value === 'secondary';
+            const curStatin = currentStatinEl.value; // none, low_mod, high, combo
+            
+            const age = Number(ageEl.value);
+            const tc = Number(tcEl.value);
+            const hdl = Number(hdlEl.value);
+            const tg = Number(tgEl.value);
+            const ldl = Number(ldlEl.value);
+            const sbp = Number(sbpEl.value);
+            
+            const isMale = genderEl.value === 'male';
+            const isSmoker = smokerEl.value === 'yes';
+            const hasDM = dmEl.value === 'yes';
+            const htnTreated = htnTreatedEl.value === 'yes';
+            
+            const cac = cacEl.value; // unknown, zero, mild, high
+            const hasCKD = ckdEl.value === 'yes';
+            const hasFH = fhEl.value === 'yes';
+            const hasLpa = lpaEl.value === 'yes';
+            const hasInflam = inflamEl.value === 'yes';
+            const hasHighTg = tg >= 175;
+
+            const actualNonHdl = tc - hdl;
+            
+            let hasPrimaryEnhancers = hasCKD || hasFH || hasLpa || hasInflam || hasHighTg;
+            
+            let category = '';
+            let context = '';
+            let targetLdlNum = 116;
+            
+            let statin = '';
+            let strategy = [];
+
+            // === 1. KLASIFIKASI RISIKO & TARGET ===
+
+            if (isSecondary) {
+                category = 'Prioritas Intervensi Sangat Tinggi';
+                context = 'Secondary Prevention (Clinical ASCVD Terkonfirmasi)';
+                targetLdlNum = 55;
+            } 
+            else if (ldl >= 190) {
+                category = (hasDM || hasCKD || cac === 'high') ? 'Prioritas Intervensi Sangat Tinggi' : 'Prioritas Intervensi Tinggi';
+                context = 'Kecurigaan Severe Hypercholesterolemia / FH (LDL ≥ 190)';
+                targetLdlNum = category.includes('Sangat Tinggi') ? 55 : 70;
+            }
+            else {
+                if (age < 40) {
+                    if (hasDM && hasPrimaryEnhancers) {
+                        category = 'Prioritas Intervensi Tinggi';
+                        context = 'Usia Muda, DM dengan Komplikasi/Risk Enhancer';
+                        targetLdlNum = 70;
+                    } else if (hasDM) {
+                        category = 'Prioritas Intervensi Sedang';
+                        context = 'Usia Muda dengan DM (Nilai Lifetime Risk)';
+                        targetLdlNum = 100;
+                    } else if (hasPrimaryEnhancers || cac === 'mild') {
+                        category = 'Prioritas Intervensi Sedang';
+                        context = 'Terdapat Risk Modifiers Bermakna';
+                        targetLdlNum = 100;
+                    } else if (cac === 'high') {
+                        category = 'Prioritas Intervensi Tinggi';
+                        context = 'Bukti Plak Signifikan di Usia Muda';
+                        targetLdlNum = 70;
+                    } else {
+                        category = 'Prioritas Intervensi Rendah';
+                        context = 'Fokus pada Gaya Hidup & Pencegahan Jangka Panjang';
+                        targetLdlNum = 116;
+                    }
+                } 
+                else { 
+                    if (hasDM) {
+                        if (hasCKD || hasPrimaryEnhancers || isSmoker || sbp >= 160 || cac === 'high') {
+                            category = 'Prioritas Intervensi Sangat Tinggi';
+                            context = 'DM dengan Penyakit Target Organ / Faktor Risiko Ganda';
+                            targetLdlNum = 55;
+                        } else {
+                            category = 'Prioritas Intervensi Tinggi';
+                            context = 'Diabetes Mellitus tanpa Komplikasi Berat';
+                            targetLdlNum = 70;
+                        }
+                    } else if (hasCKD || cac === 'high') {
+                        category = 'Prioritas Intervensi Tinggi';
+                        context = 'Penyakit Ginjal Kronis atau Plak Subklinis Signifikan (CAC ≥ 100)';
+                        targetLdlNum = 70;
+                    } else {
+                        let score = 0;
+                        if (age >= 60) score += 3; else if (age >= 50) score += 2; else score += 1;
+                        if (isMale) score += 1;
+                        if (isSmoker) score += 2;
+                        if (sbp >= 140) score += (htnTreated ? 2 : 1);
+                        if (tc >= 240) score += 2; else if (tc >= 200) score += 1;
+
+                        if (sbp >= 180 || tc >= 310) {
+                            category = 'Prioritas Intervensi Tinggi';
+                            context = 'Faktor Risiko Tunggal Ekstrem';
+                            targetLdlNum = 70;
+                        } else if (score >= 6) {
+                            category = (age >= 70) ? 'Prioritas Intervensi Tinggi' : 'Prioritas Intervensi Sangat Tinggi'; 
+                            context = 'Estimasi Proksi Beban Risiko Tinggi';
+                            targetLdlNum = (age >= 70) ? 70 : 55;
+                        } else if (score >= 4) {
+                            category = 'Prioritas Intervensi Tinggi';
+                            context = 'Estimasi Proksi Risiko Menengah-Tinggi';
+                            targetLdlNum = 70;
+                        } else if (score >= 2) {
+                            category = 'Prioritas Intervensi Sedang';
+                            context = 'Estimasi Proksi Risiko Menengah (Borderline)';
+                            targetLdlNum = 100;
+                        } else {
+                            category = 'Prioritas Intervensi Rendah';
+                            context = 'Estimasi Risiko Mayor Minimal';
+                            targetLdlNum = 116;
+                        }
+
+                        if (category === 'Prioritas Intervensi Sedang') {
+                            if (cac === 'zero') {
+                                category = 'Prioritas Intervensi Rendah';
+                                context += ' → Diturunkan karena CAC = 0';
+                                targetLdlNum = 116;
+                            } else if (cac === 'mild') {
+                                context += ' → Mendukung terapi karena CAC 1-99';
+                            }
+                        } else if (category === 'Prioritas Intervensi Rendah' && cac === 'mild') {
+                            category = 'Prioritas Intervensi Sedang';
+                            context += ' → Dinaikkan karena deteksi plak (CAC 1-99)';
+                            targetLdlNum = 100;
+                        }
+                    }
+                }
+            }
+
+            let targetLdlText = `< ${targetLdlNum} mg/dL`;
+            if (targetLdlNum <= 70) targetLdlText += ' (& ↓ ≥ 50%)';
+            let targetNonHdlNum = targetLdlNum + 30;
+            let targetNonHdlText = `< ${targetNonHdlNum} mg/dL`;
+
+            // === 2. ALGORITME KEPUTUSAN TERAPI TERARAH (ACC/AHA/ESC) ===
+            const isTargetAchieved = (ldl <= targetLdlNum);
+
+            if (category.includes('Sangat Tinggi') || category.includes('Tinggi')) {
+                if (ldl >= 190 && curStatin === 'none') {
+                    statin = 'Inisiasi Langsung Statin Intensitas Tinggi (HIS)';
+                    strategy = [
+                        'Pada kecurigaan severe hypercholesterolemia (LDL ≥ 190), mulai Atorvastatin 40-80mg atau Rosuvastatin 20-40mg tanpa perlu menghitung 10-year risk.',
+                        'Evaluasi profil lipid dalam 4-12 minggu.',
+                        'Jika respons LDL masih menetap ≥ 100 mg/dL setelah terapi statin maksimal toleransi, tambahkan Ezetimibe.'
+                    ];
+                } 
+                else if (isTargetAchieved) {
+                    if (curStatin === 'none') {
+                        statin = 'Pertimbangkan Intervensi Gaya Hidup / Monitor Lanjut';
+                        strategy = ['Target tercapai secara *baseline* tanpa medikasi.', 'Lanjutkan gaya hidup sehat dan kendalikan faktor risiko penyerta.'];
+                    } else {
+                        statin = 'Target Tercapai: Pertahankan Terapi Saat Ini';
+                        strategy = [
+                            `Nilai aktual LDL (${ldl} mg/dL) sudah memenuhi target (< ${targetLdlNum} mg/dL).`,
+                            'Pertahankan regimen intensitas yang sedang berjalan.',
+                            'Follow-up klinis dan lipid secara berkala (6-12 bulan).'
+                        ];
+                    }
+                } 
+                else {
+                    if (curStatin === 'none') {
+                        statin = 'Mulai Statin Intensitas Tinggi (HIS)';
+                        strategy = [
+                            `Butuh penurunan LDL mencapai target < ${targetLdlNum} mg/dL.`,
+                            'Inisiasi Atorvastatin 40-80mg atau Rosuvastatin 20-40mg.',
+                            'Evaluasi profil lipid dalam 4-12 minggu pasca-inisiasi.'
+                        ];
+                    } else if (curStatin === 'low_mod') {
+                        statin = 'Intensifikasi ke Statin Intensitas Tinggi (HIS)';
+                        strategy = [
+                            'Regimen saat ini belum mencapai target.',
+                            'Tingkatkan dosis menjadi Atorvastatin 40-80mg atau Rosuvastatin 20-40mg (jika toleran).',
+                            'Evaluasi ulang dalam 4-12 minggu.'
+                        ];
+                    } else if (curStatin === 'high') {
+                        statin = 'Tambahkan Ezetimibe 10mg (Kombinasi)';
+                        strategy = [
+                            'Pasien gagal mencapai target dengan Statin Intensitas Tinggi (HIS) maksimal.',
+                            'Tambahkan Ezetimibe 10 mg/hari.',
+                            isSecondary ? 'Jika LDL tetap menetap pasca-kombinasi, PCSK9 inhibitor direkomendasikan secara guideline.' : 'Evaluasi ulang respons dalam 4-12 minggu.'
+                        ];
+                    } else if (curStatin === 'combo') {
+                        statin = 'Evaluasi Rujukan / Tambahan PCSK9 Inhibitor';
+                        strategy = [
+                            'Target belum tercapai meski dengan statin intensitas tinggi + ezetimibe.',
+                            'Nilai kepatuhan minum obat secara ketat.',
+                            'Pertimbangkan pemberian PCSK9 inhibitor, terutama pada pasien Secondary Prevention atau FH profil.'
+                        ];
+                    }
+                }
+            } 
+            else if (category.includes('Sedang')) {
+                if (isTargetAchieved) {
+                    statin = curStatin === 'none' ? 'Gaya Hidup (Target Tercapai)' : 'Pertahankan Terapi Saat Ini';
+                    strategy = ['Nilai LDL saat ini sudah memenuhi target populasi.', 'Evaluasi berkala secara rutin.'];
+                } else {
+                    if (curStatin === 'none') {
+                        statin = 'Pertimbangkan Inisiasi Statin Intensitas Sedang';
+                        strategy = [
+                            'Kategori risiko *borderline*/menengah. Terapkan shared-decision making.',
+                            hasPrimaryEnhancers || cac === 'mild' ? 'Terdapat risk modifier/enhancer (contoh: inflamasi, riwayat keluarga, atau CAC > 0) yang sangat mendukung inisiasi statin.' : 'Fokus modifikasi gaya hidup 3-6 bulan. Jika tidak tercapai, mulai statin.',
+                            'Opsi: Atorvastatin 10-20mg atau Rosuvastatin 5-10mg.'
+                        ];
+                    } else {
+                        statin = 'Optimalkan Gaya Hidup & Dosis Saat Ini';
+                        strategy = ['Evaluasi kepatuhan. Jika perlu, eskalasi secara bertahap.', 'Monitor dalam 4-12 minggu.'];
+                    }
+                }
+            } 
+            else { 
+                statin = 'Intervensi Gaya Hidup Murni';
+                strategy = [
+                    'Terapi farmakologi penurun lipid saat ini tidak diindikasikan secara rutin.',
+                    cac === 'zero' ? 'Terutama dengan adanya skor CAC = 0, profil risiko re-klasifikasi sangat rendah.' : '',
+                    'Optimasi diet pola mediterania, aktivitas fisik 150 menit/minggu.',
+                    'Skrining ulang faktor risiko konvensional setiap 4-6 tahun pada usia muda.'
+                ].filter(Boolean);
+            }
+
+            return { 
+                category, context, 
+                targetLdl: targetLdlText, actualLdl: ldl,
+                targetNonHdl: targetNonHdlText, actualNonHdl,
+                statin, strategy 
+            };
+        }
+
+        function syncPDF(data) {
+            document.getElementById('pdf-res-category').innerText = data.category;
+            document.getElementById('pdf-res-context').innerText = data.context;
+            
+            document.getElementById('pdf-res-target-ldl').innerText = data.targetLdl;
+            document.getElementById('pdf-actual-ldl').innerText = `Aktual: ${data.actualLdl} mg/dL`;
+            
+            document.getElementById('pdf-res-target-nonhdl').innerText = data.targetNonHdl;
+            document.getElementById('pdf-actual-nonhdl').innerText = `Aktual: ${data.actualNonHdl} mg/dL`;
+            
+            document.getElementById('pdf-res-statin').innerText = data.statin;
+            
+            const gdr = genderEl.value === 'male' ? 'L' : 'P';
+            const htnTxt = htnTreatedEl.value === 'yes' ? '(Dalam Terapi)' : '(Untreated)';
+            const curStatTxt = currentStatinEl.options[currentStatinEl.selectedIndex].text;
+            
+            document.getElementById('pdf-params').innerHTML = 
+                `Usia ${ageEl.value} thn (${gdr}) | Perokok: ${smokerEl.value==='yes'?'Ya':'Tidak'} | DM: ${dmEl.value==='yes'?'Ya':'Tidak'}<br>` +
+                `TD: ${sbpEl.value} mmHg ${htnTxt}<br>` +
+                `Lipid: TC ${tcEl.value} / HDL ${hdlEl.value} / TG ${tgEl.value} / LDL ${ldlEl.value} mg/dL<br>` +
+                `<span class="text-amber-800 font-bold">Status Terapi: ${curStatTxt}</span>`;
+            
+            let enhancers = [];
+            if (cacEl.value !== 'unknown') {
+                const cText = cacEl.options[cacEl.selectedIndex].text;
+                enhancers.push(cText);
+            }
+            if (ckdEl.value === 'yes') enhancers.push('CKD (eGFR<60)');
+            if (fhEl.value === 'yes') enhancers.push('Riwayat ASCVD Prematur');
+            if (lpaEl.value === 'yes') enhancers.push('Lp(a) > 50 mg/dL');
+            if (inflamEl.value === 'yes') enhancers.push('Penyakit Inflamasi Kronis');
+            
+            document.getElementById('pdf-enhancers').innerText = enhancers.length > 0 ? enhancers.join(' • ') : 'Tidak ada modifier tambahan.';
+
+            const today = new Date();
+            document.getElementById('pdf-date').innerText = today.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+
+            const pdfStrategy = document.getElementById('pdf-res-strategy');
+            pdfStrategy.innerHTML = '';
+            data.strategy.forEach(s => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span class="mr-1 text-slate-400">•</span> ${s}`;
+                pdfStrategy.appendChild(li);
+            });
+
+            const pdfRiskBox = document.getElementById('pdf-risk-card');
+            pdfRiskBox.className = 'p-3 rounded-xl border-2 mb-3 ' + getRiskColor(data.category);
+            
+            const pdfStatinBox = document.getElementById('pdf-statin-box');
+            if (data.statin.includes('Ezetimibe') || data.statin.includes('Intensifikasi')) {
+                pdfStatinBox.className = 'border p-3 rounded-lg mb-4 shadow-sm bg-rose-50 border-rose-300 text-rose-900';
+            } else if (data.statin.includes('Gaya Hidup') || data.statin.includes('Pertahankan')) {
+                pdfStatinBox.className = 'border p-3 rounded-lg mb-4 shadow-sm bg-emerald-50 border-emerald-300 text-emerald-900';
+            } else {
+                // PDF Golden Theme
+                pdfStatinBox.className = 'border p-3 rounded-lg mb-4 shadow-sm bg-[#FFFBEB] border-[#FDE68A] text-amber-900';
+            }
+        }
+
+        function downloadPDF() {
+            const overlay = document.getElementById('pdf-overlay');
+            overlay.classList.remove('hidden');
+            
+            setTimeout(() => {
+                const element = document.getElementById('pdf-document-node');
+                const opt = {
+                    margin: 0,
+                    filename: `CardiologyVault_Lipid_${ageEl.value}Thn_${new Date().getTime()}.pdf`,
+                    image: { type: 'jpeg', quality: 1 },
+                    html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+
+                html2pdf().set(opt).from(element).save().then(() => {
+                    overlay.classList.add('hidden');
+                }).catch(err => {
+                    console.error('PDF error', err);
+                    overlay.classList.add('hidden');
+                });
+            }, 800);
+        }
+
+        // Event Listeners
+        inputs.forEach(input => input.addEventListener('change', updateUI));
+        document.getElementById('download-btn').addEventListener('click', downloadPDF);
+
+        updateUI();
+    </script>
+</body>
+</html>
