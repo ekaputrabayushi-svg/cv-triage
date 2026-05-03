@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kalkulator Titrasi Insulin CVCU</title>
+  
+  <!-- Google Fonts: Rajdhani untuk teks UI, Space Mono untuk angka digital -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <style>
+    /* Custom Scrollbar Dark Mode */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #020617; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #334155; }
+    
+    /* Hilangkan panah spinner di input number */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background-color: #030712; /* Slate 950 */
+      /* Efek Grid Monitor Medis */
+      background-image: 
+        linear-gradient(rgba(15, 23, 42, 0.8) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15, 23, 42, 0.8) 1px, transparent 1px);
+      background-size: 30px 30px;
+      color: #f8fafc;
+    }
+
+    .font-digital {
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* Animasi pulse untuk peringatan kritis */
+    @keyframes pulse-red {
+      0%, 100% { box-shadow: 0 0 15px rgba(225, 29, 72, 0.2); border-color: rgba(225, 29, 72, 0.4); }
+      50% { box-shadow: 0 0 30px rgba(225, 29, 72, 0.6); border-color: rgba(225, 29, 72, 0.8); }
+    }
+    .alert-pulse {
+      animation: pulse-red 2s infinite;
+    }
+
+    /* Glassmorphism Panel */
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(51, 65, 85, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    // SVG Icons
+    const ActivityIcon = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>;
+    const AlertTriangleIcon = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>;
+    const CheckCircleIcon = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>;
+    const InfoIcon = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>;
+    const DropletIcon = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"></path></svg>;
+    const ClockIcon = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>;
+    const PhoneCallIcon = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>;
+    const BookOpenIcon = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>;
+    const ChevronDownIcon = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="6 9 12 15 18 9"></polyline></svg>;
+
+    const parseNumber = (value) => {
+      if (value === '' || value === null || value === undefined) return null;
+      const n = parseFloat(value);
+      return Number.isFinite(n) ? n : null;
+    };
+
+    function App() {
+      const [isInitial, setIsInitial] = useState(true);
+      const [currentGDS, setCurrentGDS] = useState('');
+      const [prevGDS, setPrevGDS] = useState('');
+      const [currentRate, setCurrentRate] = useState('');
+      const [consecInc, setConsecInc] = useState(0); 
+      const [showGuide, setShowGuide] = useState(false);
+
+      const toggleMode = (initialMode) => {
+        setIsInitial(initialMode);
+        setPrevGDS('');
+        setCurrentRate('');
+        setConsecInc(0);
+        setCurrentGDS(''); 
+      };
+
+      const calculateResult = () => {
+        const cGDS = parseNumber(currentGDS);
+        const pGDS = parseNumber(prevGDS);
+        const cRate = parseNumber(currentRate);
+
+        if (cGDS === null) return null;
+
+        // 1. HIPOGLIKEMIA (< 70 mg/dL)
+        if (cGDS < 70) {
+          return {
+            action: "STOP DRIP INSULIN SEGERA!",
+            rate: 0,
+            bolus: "Berikan 1 flakon (25 mL) Dextrose 40% IV bolus cepat. (Berikan 2 flakon bila GDS < 50 atau pasien tidak sadar).",
+            nextCheck: "15 Menit",
+            status: "critical"
+          };
+        }
+
+        // 2. MODE INISIASI
+        if (isInitial) {
+          if (cGDS >= 70 && cGDS < 140) {
+            return { action: "Tidak perlu drip insulin. GDS di bawah target ACS; monitor ketat.", rate: 0, bolus: null, nextCheck: "1 Jam / sesuai advis", status: "danger" };
+          }
+          if (cGDS >= 140 && cGDS <= 180) {
+            return { action: "Tidak perlu drip insulin. GDS sudah dalam target ACS.", rate: 0, bolus: null, nextCheck: "Sesuai advis", status: "success" };
+          }
+          if (cGDS > 180 && cGDS <= 240) {
+            return { action: "Mulai Drip Insulin", rate: 2, bolus: null, nextCheck: "1 Jam", status: "warning" };
+          }
+          if (cGDS > 240 && cGDS <= 300) {
+            return { action: "Mulai Drip Insulin", rate: 3, bolus: null, nextCheck: "1 Jam", status: "warning" };
+          }
+          if (cGDS > 300) {
+            return { action: "Mulai Drip Insulin & Pertimbangkan Bolus", rate: 4, bolus: "Pertimbangkan Bolus IV Insulin Reguler (mis. 4-6 Unit) sebelum memulai syringe pump.", nextCheck: "1 Jam", status: "danger" };
+          }
+        }
+
+        // 3. MODE TITRASI (MAINTENANCE)
+        if (!isInitial) {
+          if (pGDS === null || cRate === null) {
+            return { error: "Mohon isi GDS 1 jam sebelumnya dan Laju saat ini secara lengkap untuk kalkulasi titrasi." };
+          }
+
+          const delta = pGDS - cGDS; 
+          const maxRate = cGDS > 240 ? 30 : 20;
+
+          // Pra-Hipo
+          if (cGDS >= 70 && cGDS <= 99) {
+            return { action: "STOP DRIP INSULIN. Pasien berisiko masuk ke fase hipoglikemia.", rate: 0, bolus: null, nextCheck: "30 - 60 Menit", status: "critical" };
+          }
+
+          // Bawah target
+          if (cGDS >= 100 && cGDS <= 139) {
+            const newRate = cRate > 1 ? cRate * 0.5 : 0;
+            return {
+              action: newRate === 0 ? "STOP Drip (Laju sebelumnya sudah ≤ 1 Unit/jam)." : "Turunkan laju insulin 50% untuk meredam tren penurunan.",
+              rate: parseFloat(Math.max(0, newRate).toFixed(1)), bolus: null, nextCheck: "1 Jam", status: "danger",
+              resetWarning: consecInc > 0 ? "Catatan: Eskalasi tereset karena GDS turun adekuat." : null
+            };
+          }
+
+          // TARGET (140 - 180)
+          if (cGDS >= 140 && cGDS <= 180) {
+            if (delta > 50) {
+              return {
+                action: "TARGET TERCAPAI, namun penurunan sangat cepat (>50 mg/dL/jam). Turunkan laju 50%.",
+                rate: parseFloat(Math.max(0, cRate * 0.5).toFixed(1)), bolus: null, nextCheck: "1 Jam", status: "warning",
+                resetWarning: consecInc > 0 ? "Catatan: Status Eskalasi diabaikan karena GDS mencapai target." : null
+              };
+            } else {
+              return {
+                action: "TARGET TERCAPAI. Pertahankan laju saat ini.",
+                rate: cRate, bolus: null, nextCheck: "1 Jam", status: "success",
+                resetWarning: consecInc > 0 ? "Catatan: Status Eskalasi diabaikan karena GDS mencapai target." : null
+              };
+            }
+          }
+
+          // > 180 (DI ATAS TARGET)
+          if (cGDS > 180) {
+            
+            // 1. GDS NAIK (delta < 0)
+            if (delta < 0) {
+              const add = cGDS > 300 ? 3 : 2;
+              const newRate = Math.min(cRate + add, maxRate);
+              return {
+                action: `GDS NAIK ${Math.abs(delta)} mg/dL dari jam sebelumnya. Naikkan laju ${add} Unit/jam.`,
+                rate: parseFloat(newRate.toFixed(1)),
+                bolus: cGDS > 240 ? "BOLUS 10 Unit IV Insulin Reguler sekarang." : "BOLUS 6 Unit IV Insulin Reguler sekarang.",
+                nextCheck: "30 Menit", status: cGDS > 300 ? "danger" : "warning", checkIVPatency: true,
+                resetWarning: consecInc > 0 ? "Catatan: Eskalasi dihitung ulang (reset) karena terjadi fluktuasi naik." : null
+              };
+            }
+            
+            // 2. Turun Tajam
+            if (delta > 50) {
+              return {
+                action: "Penurunan GDS tajam (>50 mg/dL/jam). LAJU TETAP untuk mencegah overshoot.",
+                rate: cRate, bolus: null, nextCheck: "1 Jam", status: "warning",
+                resetWarning: consecInc > 0 ? "Catatan: Penurunan adekuat, status eskalasi sebelumnya diabaikan." : null
+              };
+            } 
+            
+            // 3. Turun Adekuat
+            if (delta >= 30 && delta <= 50) {
+              return {
+                action: "Penurunan GDS adekuat (30-50 mg/dL/jam). LAJU TETAP.",
+                rate: cRate, bolus: null, nextCheck: "1 Jam", status: "warning",
+                resetWarning: consecInc > 0 ? "Catatan: Penurunan adekuat, status eskalasi sebelumnya diabaikan." : null
+              };
+            } 
+            
+            // 4. Turun KURANG ADEKUAT (<30) -> AREA EVALUASI NON-RESPONSIF
+            if (delta >= 0 && delta < 30) {
+              if (consecInc >= 2) {
+                const doubledRate = Math.min(cRate * 2, maxRate);
+                return {
+                  action: "⚠️ PASIEN NON-RESPONSIF! (Gagal turun adekuat setelah 3x eskalasi berturut-turut).",
+                  rate: parseFloat(doubledRate.toFixed(1)),
+                  bolus: cGDS > 240 ? "BOLUS GANDA: 10-20 Unit IV (Maksimal 40 Unit)." : "BOLUS GANDA: 6-12 Unit IV (Maksimal 24 Unit).",
+                  nextCheck: "30 Menit", status: "critical", shouldCallDoctor: true, checkIVPatency: true
+                };
+              }
+
+              const add = cGDS > 240 ? 2 : 1;
+              const newRate = Math.min(cRate + add, maxRate);
+              return {
+                action: `Penurunan GDS kurang adekuat (<30 mg/dL/jam). Naikkan laju ${add} Unit/jam.`,
+                rate: parseFloat(newRate.toFixed(1)), bolus: null, nextCheck: "1 Jam", status: "warning",
+                consecNotice: `(Ini adalah penyesuaian/eskalasi ke-${consecInc + 1} berturut-turut)`
+              };
+            }
+          }
+        }
+        return null;
+      };
+
+      const result = calculateResult();
+
+      // Desain Neon High-Tech untuk Status
+      const getStatusStyles = (status) => {
+        switch(status) {
+          case 'critical': return 'bg-rose-950/40 border-rose-500/50 text-rose-300 shadow-[0_0_20px_rgba(225,29,72,0.15)] alert-pulse';
+          case 'danger': return 'bg-amber-950/40 border-amber-500/50 text-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.1)]';
+          case 'warning': return 'bg-cyan-950/40 border-cyan-500/50 text-cyan-300 shadow-[0_0_20px_rgba(6,182,212,0.1)]';
+          case 'success': return 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.1)]';
+          default: return 'bg-slate-900/40 border-slate-700 text-slate-300';
+        }
+      };
+
+      const getStatusIcon = (status) => {
+        switch(status) {
+          case 'critical': return <AlertTriangleIcon className="w-8 h-8 text-rose-500 shrink-0 mt-1" />;
+          case 'danger': return <AlertTriangleIcon className="w-8 h-8 text-amber-500 shrink-0 mt-1" />;
+          case 'success': return <CheckCircleIcon className="w-8 h-8 text-emerald-400 shrink-0 mt-1" />;
+          case 'warning': return <InfoIcon className="w-8 h-8 text-cyan-400 shrink-0 mt-1" />;
+          default: return null;
+        }
+      };
+
+      return (
+        <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
+          <div className="w-full max-w-5xl space-y-6">
+            
+            {/* Header bergaya Monitor */}
+            <div className="glass-panel rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-start md:items-center gap-4">
+                <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-500 rounded-xl shadow-[0_0_15px_rgba(225,29,72,0.2)] mt-1 md:mt-0">
+                  <ActivityIcon className="w-8 h-8" />
+                </div>
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold tracking-wider text-slate-100 uppercase">SYS-INSULIN<span className="text-rose-500">.CVCU</span></h1>
+                  <div className="flex items-center gap-2 mt-1 mb-3">
+                    <span className="flex h-2 w-2 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <p className="text-slate-400 font-medium text-sm tracking-widest">TARGET ACS: 140-180 MG/DL | YALE PROTOCOL</p>
+                  </div>
+                  
+                  {/* System Attribution Badges - Moved here */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 text-[10px] text-slate-400 font-digital tracking-widest uppercase">
+                    <span className="flex items-center gap-1.5 bg-slate-950/80 px-2.5 py-1 rounded border border-slate-700/50 shadow-inner">
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_5px_rgba(6,182,212,0.8)]"></span>
+                      Part of <span className="text-cyan-400 font-bold">CardiologyVault</span>
+                    </span>
+                    <span className="bg-slate-950/80 px-2.5 py-1 rounded border border-slate-700/50 shadow-inner">
+                      Developed by <span className="text-slate-200">Bayushi Eka Putra, MD, FIHA</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="hidden md:block text-right border-l border-slate-700 pl-6">
+                <p className="text-xs text-slate-500 tracking-widest mb-1">KONSENTRASI INFUS</p>
+                <p className="font-digital text-cyan-400 text-xl font-bold">1 UNIT = 1 CC</p>
+                <p className="text-xs text-slate-500">50 IU / 50CC NaCl 0.9%</p>
+              </div>
+            </div>
+
+            {/* User Guide / Manual (Collapsible) - MOVED HERE */}
+            <div className="glass-panel rounded-2xl border-slate-700/50 overflow-hidden">
+              <button 
+                onClick={() => setShowGuide(!showGuide)}
+                className="w-full px-6 py-4 flex items-center justify-between bg-slate-900/50 hover:bg-slate-800/50 transition-colors"
+              >
+                <div className="flex items-center gap-3 text-cyan-400">
+                  <BookOpenIcon className="w-5 h-5" />
+                  <span className="font-bold tracking-widest uppercase text-sm">Panduan Penggunaan Sistem</span>
+                </div>
+                <ChevronDownIcon className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${showGuide ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {showGuide && (
+                <div className="p-6 pt-2 text-slate-300 text-sm space-y-6 bg-slate-950/30">
+                  <p className="leading-relaxed text-slate-400">
+                    Aplikasi ini dirancang untuk memandu titrasi <strong>Insulin Intravena (Syringe Pump)</strong> pada pasien kritis (CVCU/ICU) guna mencapai target glukosa darah <strong>140-180 mg/dL</strong> dengan aman, mencegah hipoglikemia <em>overshoot</em>, dan mendeteksi resistensi insulin secara otomatis.
+                  </p>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {/* Persiapan */}
+                    <div className="space-y-2">
+                      <h4 className="font-bold tracking-widest text-cyan-400 uppercase border-b border-slate-700 pb-1">1. Persiapan Sediaan</h4>
+                      <ul className="list-disc list-inside space-y-1.5 opacity-90 marker:text-cyan-600">
+                        <li>Siapkan spuit 50 cc.</li>
+                        <li>Masukkan <strong>50 Unit Insulin Reguler/Rapid</strong> (mis. Novorapid/Actrapid).</li>
+                        <li>Encerkan dengan <strong>NaCl 0.9%</strong> hingga volume mencapai 50 cc.</li>
+                        <li>Konsentrasi akhir: <strong>1 Unit = 1 cc</strong>.</li>
+                      </ul>
+                    </div>
+
+                    {/* Inisiasi */}
+                    <div className="space-y-2">
+                      <h4 className="font-bold tracking-widest text-cyan-400 uppercase border-b border-slate-700 pb-1">2. Memulai Drip (Inisiasi)</h4>
+                      <ul className="list-disc list-inside space-y-1.5 opacity-90 marker:text-cyan-600">
+                        <li>Gunakan tab <span className="text-cyan-300 font-semibold bg-cyan-900/30 px-1.5 rounded">INISIASI DRIP</span> pada admisi awal.</li>
+                        <li>Drip umumnya dimulai bila GDS persisten &gt; 180 mg/dL.</li>
+                        <li>Lakukan bolus awal (jika direkomendasikan layar) sebelum menyalakan <em>syringe pump</em>.</li>
+                      </ul>
+                    </div>
+
+                    {/* Maintenance */}
+                    <div className="space-y-2">
+                      <h4 className="font-bold tracking-widest text-amber-400 uppercase border-b border-slate-700 pb-1">3. Titrasi (Setiap 1 Jam)</h4>
+                      <ul className="list-disc list-inside space-y-1.5 opacity-90 marker:text-amber-600">
+                        <li>Gunakan tab <span className="text-amber-300 font-semibold bg-amber-900/30 px-1.5 rounded">MAINTENANCE</span>.</li>
+                        <li>Wajib isi lengkap: GDS saat ini, GDS 1 jam lalu, dan Laju (cc/jam) saat ini.</li>
+                        <li>Sistem akan menghitung <span className="italic">delta</span> (kecepatan penurunan) untuk mencegah hipoglikemia.</li>
+                      </ul>
+                    </div>
+
+                    {/* Riwayat Eskalasi & Hipo */}
+                    <div className="space-y-2">
+                      <h4 className="font-bold tracking-widest text-rose-400 uppercase border-b border-slate-700 pb-1">4. Alarm Kritis & Non-Responsif</h4>
+                      <ul className="list-disc list-inside space-y-1.5 opacity-90 marker:text-rose-600">
+                        <li><strong>Hipoglikemia (&lt;70):</strong> Stop drip, bolus Dextrose 40%.</li>
+                        <li><strong>Fitur Eskalasi:</strong> Jika GDS gagal turun adekuat, sistem menyuruh menaikkan dosis. Gunakan <em>dropdown</em> <strong>Riwayat Eskalasi</strong> untuk mencatat sudah berapa kali Anda menaikkan laju berturut-turut tanpa respons.</li>
+                        <li>Bila mencapai 3x berturut-turut, sistem otomatis memicu <strong>Protokol Hubungi DPJP</strong> dan <strong>Bolus Ganda</strong>.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="grid lg:grid-cols-12 gap-6">
+              
+              {/* INPUT PANEL (Left Side) */}
+              <div className="lg:col-span-5 glass-panel rounded-2xl p-6 space-y-6 flex flex-col">
+                
+                {/* Segemented Control Cyberpunk Style */}
+                <div className="flex bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+                  <button 
+                    onClick={() => toggleMode(true)}
+                    className={`flex-1 py-2.5 text-sm tracking-wider font-bold rounded-lg transition-all ${isInitial ? 'bg-cyan-900/30 border border-cyan-500/30 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.2)]' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-900'}`}
+                  >
+                    INISIASI DRIP
+                  </button>
+                  <button 
+                    onClick={() => toggleMode(false)}
+                    className={`flex-1 py-2.5 text-sm tracking-wider font-bold rounded-lg transition-all ${!isInitial ? 'bg-cyan-900/30 border border-cyan-500/30 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.2)]' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-900'}`}
+                  >
+                    MAINTENANCE
+                  </button>
+                </div>
+
+                <div className="space-y-6 flex-grow">
+                  <div className="relative group">
+                    <label className="block text-xs font-bold tracking-widest text-slate-400 mb-2 uppercase">GDS Saat Ini (mg/dL)</label>
+                    <input 
+                      type="number" min="0" 
+                      value={currentGDS} 
+                      onChange={(e) => setCurrentGDS(e.target.value)} 
+                      className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-5 py-4 font-digital text-3xl text-cyan-400 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all placeholder:text-slate-800" 
+                      placeholder="000" 
+                    />
+                  </div>
+
+                  {!isInitial && (
+                    <div className="space-y-6 pt-6 border-t border-slate-800/80">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="relative">
+                          <label className="block text-xs font-bold tracking-widest text-slate-400 mb-2 uppercase">GDS 1 Jam Lalu</label>
+                          <input 
+                            type="number" min="0" 
+                            value={prevGDS} 
+                            onChange={(e) => setPrevGDS(e.target.value)} 
+                            className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-4 py-3 font-digital text-2xl text-slate-300 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all placeholder:text-slate-800" 
+                            placeholder="000" 
+                          />
+                        </div>
+                        <div className="relative">
+                          <label className="block text-xs font-bold tracking-widest text-slate-400 mb-2 uppercase">Laju Saat Ini <span className="text-slate-600">(U/jam)</span></label>
+                          <input 
+                            type="number" min="0" step="0.1" 
+                            value={currentRate} 
+                            onChange={(e) => setCurrentRate(e.target.value)} 
+                            className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-4 py-3 font-digital text-2xl text-slate-300 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all placeholder:text-slate-800" 
+                            placeholder="0.0" 
+                          />
+                        </div>
+                      </div>
+
+                      <div className="bg-amber-950/20 p-4 rounded-xl border border-amber-900/30">
+                        <label className="block text-xs font-bold tracking-widest text-amber-500/80 mb-2 uppercase">Riwayat Eskalasi <span className="lowercase normal-case font-normal italic opacity-70">(Jam Sebelumnya)</span></label>
+                        <select 
+                          value={consecInc} 
+                          onChange={(e) => setConsecInc(parseInt(e.target.value))} 
+                          className="w-full bg-slate-950 border border-amber-700/50 rounded-lg px-3 py-3 text-sm font-semibold text-amber-400 focus:ring-2 focus:ring-amber-500/50 outline-none appearance-none cursor-pointer"
+                        >
+                          <option value={0}>[0] Stabil / Baru Mulai / Sempat Turun</option>
+                          <option value={1}>[1] Sudah 1x naik dosis tanpa respons</option>
+                          <option value={2}>[2] Sudah 2x naik dosis tanpa respons</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* RESULT PANEL (Right Side) */}
+              <div className="lg:col-span-7 h-full">
+                {result ? (
+                  result.error ? (
+                    <div className="glass-panel border-amber-500/30 text-amber-400 rounded-2xl p-8 h-full flex flex-col items-center justify-center text-center">
+                      <AlertTriangleIcon className="w-12 h-12 mb-4 opacity-50" />
+                      <p className="font-semibold tracking-wide">{result.error}</p>
+                    </div>
+                  ) : (
+                    <div className={`rounded-2xl p-6 md:p-8 h-full flex flex-col justify-between border ${getStatusStyles(result.status)}`}>
+                      <div className="space-y-5">
+                        <div className="flex items-start gap-4">
+                          {getStatusIcon(result.status)}
+                          <h3 className="text-xl md:text-2xl font-bold leading-snug tracking-wide">
+                            {result.action}
+                            {result.consecNotice && <span className="block text-sm font-mono opacity-70 mt-2 text-amber-400">{result.consecNotice}</span>}
+                          </h3>
+                        </div>
+
+                        {result.resetWarning && (
+                          <div className="bg-slate-950/40 p-3 rounded-lg border border-emerald-500/20 text-emerald-400 text-xs font-mono flex items-start gap-3 mt-3">
+                            <InfoIcon className="w-4 h-4 shrink-0 mt-0.5" />
+                            <p>{result.resetWarning}</p>
+                          </div>
+                        )}
+
+                        {result.checkIVPatency && (
+                          <div className="bg-amber-500/10 p-4 rounded-xl border border-amber-500/30 text-amber-300 text-sm font-medium flex items-start gap-3 mt-3 shadow-inner">
+                            <InfoIcon className="w-5 h-5 shrink-0 mt-0.5" />
+                            <p><strong className="tracking-widest uppercase">Cek Patensi IV Line:</strong> Pastikan tidak ada sumbatan/ekstravasasi, masa berlaku insulin aktif, evaluasi stres fisiologis (sepsis/steroid).</p>
+                          </div>
+                        )}
+
+                        {result.shouldCallDoctor && (
+                          <div className="bg-rose-600 p-4 rounded-xl text-white text-sm font-bold flex items-center gap-4 shadow-[0_0_20px_rgba(225,29,72,0.5)] mt-3">
+                            <div className="bg-white/20 p-2 rounded-full animate-bounce">
+                              <PhoneCallIcon className="w-6 h-6 shrink-0" />
+                            </div>
+                            <p className="tracking-wider uppercase">Hubungi DPJP Segera! Batas eskalasi tercapai tanpa respons.</p>
+                          </div>
+                        )}
+
+                        {result.bolus && (
+                          <div className="bg-rose-950/60 p-4 rounded-xl border border-rose-500/50 font-bold text-rose-400 flex items-center gap-4 shadow-sm mt-3">
+                            <div className="bg-rose-500/20 p-2 rounded-full">
+                              <DropletIcon className="w-6 h-6 shrink-0 text-rose-400" />
+                            </div>
+                            <p className="text-lg tracking-wide uppercase">{result.bolus}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Box Laju Baru */}
+                      <div className="mt-8 pt-6 border-t border-slate-700/50 space-y-5">
+                        <div className="bg-slate-950/60 p-5 rounded-2xl border border-slate-800 flex justify-between items-center shadow-inner relative overflow-hidden">
+                          {/* Glow effect behind text */}
+                          <div className={`absolute -right-10 -top-10 w-32 h-32 rounded-full blur-3xl opacity-20 ${result.status === 'critical' ? 'bg-rose-500' : result.status === 'danger' ? 'bg-amber-500' : result.status === 'success' ? 'bg-emerald-500' : 'bg-cyan-500'}`}></div>
+                          
+                          <span className="font-bold tracking-widest uppercase text-slate-400 text-sm md:text-base">Target Laju Syringe:</span>
+                          <div className="flex items-baseline gap-2">
+                            <span className="font-digital text-5xl md:text-7xl font-bold drop-shadow-md">
+                              {result.rate} 
+                            </span>
+                            <span className="text-lg font-bold opacity-60 tracking-widest uppercase">U/jam</span>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-center px-2">
+                          <span className="font-bold tracking-widest uppercase text-slate-500 text-xs flex items-center gap-2">
+                            <ClockIcon className="w-4 h-4"/> Next Check:
+                          </span>
+                          <span className="font-digital font-bold text-lg text-slate-300 bg-slate-800/50 px-3 py-1 rounded-md border border-slate-700">{result.nextCheck}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                ) : (
+                  <div className="glass-panel border-dashed border-slate-700 rounded-2xl p-8 h-full flex flex-col items-center justify-center text-slate-500 text-center">
+                    <div className="relative mb-6">
+                      <div className="absolute inset-0 border-2 border-cyan-500/20 rounded-full animate-ping"></div>
+                      <div className="bg-slate-900 p-4 rounded-full border border-slate-700 relative z-10">
+                        <ActivityIcon className="w-10 h-10 text-cyan-600/50" />
+                      </div>
+                    </div>
+                    <p className="font-medium tracking-widest text-sm uppercase">Standby Mode</p>
+                    <p className="text-xs opacity-60 mt-2">Input GDS kapiler pasien untuk kalkulasi target</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Disclaimer Medis (Stealth Mode) */}
+            <div className="glass-panel rounded-xl p-5 border-slate-800 text-xs text-slate-500">
+              <div className="flex items-start gap-3">
+                <InfoIcon className="w-4 h-4 shrink-0 text-slate-600 mt-0.5" />
+                <div>
+                  <p className="font-bold tracking-widest uppercase text-slate-400 mb-1">Disclaimer Klinis</p>
+                  <p className="leading-relaxed opacity-80">Aplikasi ini adalah <strong>Clinical Decision Support Tool</strong> berbasis modifikasi <em>Yale Insulin Infusion Protocol</em> untuk pasien CVCU/ICU (Target 140-180 mg/dL). Disediakan sebagai referensi navigasi cepat dan <strong>tidak menggantikan clinical judgment</strong>. Keputusan klinis final (bolus, hold, titrasi) adalah tanggung jawab DPJP yang mengevaluasi parameter hemodinamik dan profil fisiologis pasien di lapangan.</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
