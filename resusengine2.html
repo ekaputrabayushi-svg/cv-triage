@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ResusEngine CDSS (SHOCK Protocol) - CardiologyVault</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
+
+        :root {
+            --bg-dark: #0b1120; /* Slightly warmer dark background */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: #f8fafc;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.05), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.05), transparent 25%);
+            background-attachment: fixed;
+        }
+
+        .font-mono-num {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Base clinical panel with warmer slate tones */
+        .clinical-panel {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.9));
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            border-radius: 12px;
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.25), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            margin-top: -8px;
+            border: 2px solid #64748b;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #475569;
+            border-radius: 2px;
+        }
+        .drug-active input[type=range]::-webkit-slider-runnable-track { background: #94a3b8; }
+        .drug-active input[type=range]::-webkit-slider-thumb { border-color: currentColor; box-shadow: 0 0 10px currentColor; }
+
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="pb-8 selection:bg-blue-500/30">
+
+    <!-- Global Disclaimer Banner -->
+    <div class="bg-gradient-to-r from-amber-600/20 via-amber-500/15 to-amber-600/20 border-b border-amber-500/30 px-4 py-2.5 text-center text-[10px] md:text-xs text-amber-100/90 font-medium z-50 relative flex items-center justify-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-400 flex-shrink-0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        <span><span class="font-bold text-amber-400">PERINGATAN KLINIS:</span> CDSS ini adalah alat bantu simulasi profesional. BUKAN pengganti asesmen komprehensif. Sesuaikan dengan protokol RS.</span>
+    </div>
+
+    <div class="max-w-7xl mx-auto p-3 md:p-6 space-y-4 relative z-10">
+        
+        <!-- HEADER -->
+        <header class="clinical-panel p-4 flex flex-col md:flex-row items-center justify-between gap-4 relative overflow-hidden bg-gradient-to-br from-blue-900/10 to-slate-900/80 border-b-0">
+            <div class="flex items-center gap-4 relative z-10">
+                <div class="p-2.5 bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-600/50 rounded-xl shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-white tracking-wide flex flex-wrap items-baseline gap-2">
+                        <span>Resus<span class="text-blue-400">Engine</span></span>
+                        <span class="text-[10px] md:text-[11px] font-bold bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full border border-slate-600 tracking-wider uppercase">SHOCK Protocol</span>
+                    </h1>
+                    <div class="text-[11px] mt-1.5 flex flex-wrap items-center gap-2">
+                        <span class="font-semibold text-slate-300 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-600/50">Part of CardiologyVault</span>
+                        <span class="hidden sm:inline text-slate-600">|</span>
+                        <span class="text-slate-400 font-medium">Dev: Bayushi Eka Putra, MD, FIHA</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex gap-2 relative z-10">
+                <button onclick="UIManager.toggleModal('ref-modal')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg border border-slate-600 transition-colors font-medium flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    Referensi
+                </button>
+                <button onclick="UIManager.toggleModal('guide-modal')" class="text-xs bg-blue-900/30 hover:bg-blue-800/40 text-blue-300 px-3 py-2 rounded-lg border border-blue-500/30 transition-colors font-medium flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    Panduan
+                </button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            
+            <!-- LEFT COLUMN: PATIENT INPUTS (BLUE ZONE) -->
+            <div class="lg:col-span-4 space-y-4">
+                
+                <div class="clinical-panel p-4 border-t-4 border-t-blue-500/80">
+                    <h2 class="text-sm font-bold text-white mb-4 border-b border-slate-700 pb-2 uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                        Data & Asesmen Pasien
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <!-- Weight Input -->
+                        <div class="bg-slate-800/30 p-3 rounded-lg border border-slate-700/50">
+                            <label class="block text-xs font-semibold text-slate-300 mb-2 flex items-center justify-between">
+                                Berat Badan Aktual (kg)
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-500"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+                            </label>
+                            <input type="number" id="input-weight" value="70" min="10" max="250" class="w-full bg-slate-900/80 p-2.5 rounded-lg text-xl text-blue-50 font-mono-num font-bold focus:outline-none border border-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-center transition-all shadow-inner" />
+                        </div>
+
+                        <!-- Vital Signs Input -->
+                        <div class="bg-slate-800/30 p-3 rounded-lg border border-slate-700/50" id="vital-container">
+                            <label class="block text-xs font-semibold text-slate-300 mb-2 flex items-center justify-between">
+                                Tanda Vital (Hemodinamik)
+                            </label>
+                            <div class="grid grid-cols-2 gap-3 mb-3">
+                                <div>
+                                    <span class="text-[10px] text-slate-400 uppercase block mb-1 font-bold">Tensi (SBP/DBP)</span>
+                                    <div class="flex items-center space-x-1">
+                                        <input type="number" id="input-sbp" value="120" class="w-full bg-slate-900/80 p-2 rounded-lg text-sm text-white font-mono-num font-bold focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-center border border-slate-600 transition-all shadow-inner">
+                                        <span class="text-slate-500">/</span>
+                                        <input type="number" id="input-dbp" value="80" class="w-full bg-slate-900/80 p-2 rounded-lg text-sm text-white font-mono-num font-bold focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-center border border-slate-600 transition-all shadow-inner">
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-400 uppercase block mb-1 font-bold">Heart Rate (bpm)</span>
+                                    <input type="number" id="input-hr" value="80" class="w-full bg-slate-900/80 p-2 rounded-lg text-sm text-white font-mono-num font-bold focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-center border border-slate-600 transition-all shadow-inner">
+                                </div>
+                            </div>
+
+                            <!-- Live Calculated Metrics (State Chips) -->
+                            <div class="grid grid-cols-3 gap-2 pt-3 border-t border-slate-700/80 text-center bg-slate-900/30 -mx-3 -mb-3 p-3 rounded-b-lg">
+                                <!-- MAP Chip -->
+                                <div id="box-map" class="flex flex-col items-center justify-center p-1.5 rounded-lg border border-transparent transition-colors duration-300">
+                                    <span class="text-[9px] text-slate-400 uppercase font-bold block mb-0.5">MAP</span>
+                                    <span class="font-mono-num text-lg font-bold" id="disp-map">--</span>
+                                </div>
+                                
+                                <!-- Pulse Pressure Chip -->
+                                <div id="box-pp" class="flex flex-col items-center justify-center p-1.5 rounded-lg border border-transparent transition-colors duration-300 cursor-help" title="Pulse Pressure (SBP - DBP)">
+                                    <span class="text-[9px] text-slate-400 uppercase font-bold block mb-0.5">Pulse Press.</span>
+                                    <div class="flex flex-col items-center gap-0.5">
+                                        <span class="font-mono-num text-lg font-bold" id="disp-pp">--</span>
+                                        <span id="lbl-pp" class="text-[8px] px-1.5 py-0.5 rounded font-medium hidden"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Shock Index Chip -->
+                                <div id="box-si" class="flex flex-col items-center justify-center p-1.5 rounded-lg border border-transparent transition-colors duration-300 cursor-help" title="Shock Index (HR / SBP)">
+                                    <span class="text-[9px] text-slate-400 uppercase font-bold block mb-0.5">Shock Index</span>
+                                    <div class="flex flex-col items-center gap-0.5">
+                                        <span class="font-mono-num text-lg font-bold" id="disp-si">--</span>
+                                        <span id="lbl-si" class="text-[8px] px-1.5 py-0.5 rounded font-medium hidden"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Clinical Toggles -->
+                        <div class="space-y-3">
+                            <!-- Fluid (Teal/Cyan touch) -->
+                            <div class="bg-slate-800/30 p-2.5 rounded-lg border border-slate-700/50">
+                                <label class="block text-xs font-semibold text-slate-300 mb-2">Status Kongesti Paru/Sistemik</label>
+                                <div class="flex bg-slate-900/80 rounded-lg border border-slate-700 p-1 gap-1 shadow-inner">
+                                    <button id="btn-cong-no" class="flex-1 py-2 px-1 rounded-md flex flex-col items-center justify-center border border-transparent transition-all">
+                                        <span class="text-xs font-bold">Clear / Dry</span>
+                                        <span class="text-[9px] font-normal opacity-70 mt-0.5 text-center leading-tight">JVP N, Paru Bersih</span>
+                                    </button>
+                                    <button id="btn-cong-yes" class="flex-1 py-2 px-1 rounded-md flex flex-col items-center justify-center border border-transparent transition-all">
+                                        <span class="text-xs font-bold">Edema / Wet</span>
+                                        <span class="text-[9px] font-normal opacity-70 mt-0.5 text-center leading-tight">JVP ↑, Rales, Ortopnea</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Perfusion (Blue touch) -->
+                            <div class="bg-slate-800/30 p-2.5 rounded-lg border border-slate-700/50">
+                                <label class="block text-xs font-semibold text-slate-300 mb-2">Perfusi Perifer</label>
+                                <div class="flex bg-slate-900/80 rounded-lg border border-slate-700 p-1 gap-1 shadow-inner">
+                                    <button id="btn-perf-good" class="flex-1 py-2 px-1 rounded-md flex flex-col items-center justify-center border border-transparent transition-all">
+                                        <span class="text-xs font-bold">Warm</span>
+                                        <span class="text-[9px] font-normal opacity-70 mt-0.5 text-center leading-tight">CRT < 2s, Hangat</span>
+                                    </button>
+                                    <button id="btn-perf-poor" class="flex-1 py-2 px-1 rounded-md flex flex-col items-center justify-center border border-transparent transition-all">
+                                        <span class="text-xs font-bold">Cold</span>
+                                        <span class="text-[9px] font-normal opacity-70 mt-0.5 text-center leading-tight">CRT > 2s, Dingin</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="UIManager.resetApp()" class="w-full mt-4 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-lg text-xs font-bold transition-colors border border-slate-600 flex items-center justify-center gap-2 group">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:-rotate-180 transition-transform duration-500"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                            Reset / Mulai Baru
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: ENGINE & CALCULATOR -->
+            <div class="lg:col-span-8 space-y-4">
+                
+                <!-- Output Box (DYNAMIC ZONE) -->
+                <div id="output-panel" class="clinical-panel p-5 md:p-6 transition-colors duration-500 border-l-4 border-l-slate-500 relative overflow-hidden bg-slate-900/50">
+                    
+                    <div class="mb-5 pb-3 border-b border-slate-700/50 relative z-10">
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <span class="w-2 h-2 rounded-full bg-slate-500" id="status-dot"></span>
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Diagnosis Asesmen CDSS</span>
+                        </div>
+                        <h2 id="out-shock-type" class="text-xl md:text-2xl font-bold text-slate-300 leading-snug">Menunggu Input Klinis...</h2>
+                    </div>
+
+                    <!-- Clinical Warnings Injector -->
+                    <div id="clinical-alerts-container" class="mb-5 space-y-2 hidden relative z-10"></div>
+
+                    <!-- Action Steps -->
+                    <div id="steps-container" class="space-y-3 relative z-10">
+                        <div class="bg-slate-800/30 p-5 rounded-lg border border-slate-700 border-dashed text-center mt-6">
+                            <p class="text-sm text-slate-400 italic">Silakan lengkapi data berat badan, tanda vital, dan profil klinis pasien di panel sebelah kiri untuk mendapatkan rekomendasi awal berbasis panduan.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calculator (PURPLE ZONE) -->
+                <div class="clinical-panel p-4 md:p-5 border-t-4 border-t-purple-500/80">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 border-b border-slate-700/80 pb-3 gap-2">
+                        <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                            Kalkulator Syringe Pump
+                        </h2>
+                        <span class="text-[10px] text-slate-300 bg-slate-800/80 px-2 py-1 rounded border border-slate-600">Cek/Ubah pelarutan (mg/cc) sesuai RS</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="drugs-container">
+                        <!-- Rendered via JS -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Referensi & Limitasi -->
+    <!-- (Modal content is identical, hidden for brevity in logic explanation, kept full in implementation) -->
+    <div id="ref-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-slate-900 border border-slate-700 p-5 md:p-6 rounded-xl w-full max-w-2xl shadow-2xl relative transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-white font-bold text-lg mb-4 border-b border-slate-800 pb-3 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                Asumsi Klinis, Limitasi & Referensi
+            </h3>
+            
+            <div class="space-y-4 text-xs text-slate-300 leading-relaxed">
+                <div class="bg-slate-800/30 p-3.5 rounded-lg border border-slate-700/50">
+                    <h4 class="font-bold text-blue-400 mb-2 uppercase tracking-wide text-[10px]">Batasan & Asumsi Populasi</h4>
+                    <ul class="list-disc pl-4 space-y-1">
+                        <li>Algoritme dirancang untuk <b>pasien dewasa (>18 tahun)</b> di ruang intensif/IGD.</li>
+                        <li><b>TIDAK</b> divalidasi untuk populasi pediatrik, kehamilan, trauma perdarahan aktif (hemoragik murni), atau syok anafilaksis.</li>
+                        <li>Sistem mengasumsikan tidak ada kontraindikasi spesifik obat (misal: alergi, HOCM berat untuk inotropik) pada pasien. Dokter wajib memverifikasi secara mandiri.</li>
+                    </ul>
+                </div>
+                <div class="bg-slate-800/30 p-3.5 rounded-lg border border-slate-700/50">
+                    <h4 class="font-bold text-emerald-400 mb-2 uppercase tracking-wide text-[10px]">Justifikasi Ambang Batas (Cut-offs)</h4>
+                    <ul class="list-disc pl-4 space-y-1">
+                        <li><b>MAP < 65 mmHg:</b> Standar universal definisi hipotensi pada syok yang memerlukan resusitasi (Surviving Sepsis Campaign 2021).</li>
+                        <li><b>Shock Index (SI):</b> Normal 0.5-0.7. SI > 0.7 dikaitkan dengan peningkatan risiko syok kompensata (hidden shock). SI > 1.0 merupakan prediktor kuat mortalitas dan perburukan hemodinamik (Rady et al., 1994).</li>
+                        <li><b>Pulse Pressure (PP):</b> Normal 30-60 mmHg. PP < 30 mmHg (Narrow) berkorelasi dengan penurunan <i>Stroke Volume</i> (misal kardiogenik). PP > 60 mmHg (Wide) dikaitkan dengan penurunan <i>Systemic Vascular Resistance/SVR</i> (misal sepsis awal).</li>
+                    </ul>
+                </div>
+                <div class="bg-slate-800/30 p-3.5 rounded-lg border border-slate-700/50">
+                    <h4 class="font-bold text-purple-400 mb-2 uppercase tracking-wide text-[10px]">Referensi Algoritme (Guideline Sources)</h4>
+                    <ul class="list-decimal pl-4 space-y-1 text-slate-400">
+                        <li>McDonagh TA, et al. 2021 ESC Guidelines for the diagnosis and treatment of acute and chronic heart failure. <i>Eur Heart J.</i> 2021. (Klasifikasi Profil Stevenson & Manajemen Syok Kardiogenik).</li>
+                        <li>Evans L, et al. Surviving Sepsis Campaign: International Guidelines for Management of Sepsis and Septic Shock 2021. <i>Crit Care Med.</i> 2021. (Manajemen Cairan & Vasoaktif awal).</li>
+                        <li>Standar Pelayanan Medik PERKI / INA-SH (sebagai adaptasi dosis dan algoritme lokal).</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <button onclick="UIManager.toggleModal('ref-modal')" class="w-full mt-5 bg-slate-800 hover:bg-slate-700 text-white py-2.5 rounded-lg font-bold transition-colors">Tutup</button>
+        </div>
+    </div>
+
+    <!-- Modal: Panduan -->
+    <div id="guide-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-slate-900 border border-slate-700 p-5 md:p-6 rounded-xl w-full max-w-md shadow-2xl relative transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-white font-bold text-lg mb-4 border-b border-slate-800 pb-3 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                Panduan Kriteria Klinis
+            </h3>
+            
+            <div class="space-y-3.5 text-xs text-slate-300">
+                <div class="p-3.5 bg-rose-900/10 rounded-lg border border-rose-500/20">
+                    <span class="font-bold text-rose-400 block mb-1.5 flex items-center gap-1.5 text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg>
+                        Definisi Syok (Shock)
+                    </span>
+                    <p class="leading-relaxed mb-2">Kegagalan sirkulasi akut yang mengancam nyawa, ditandai dengan <b>ketidakcukupan perfusi jaringan dan pengiriman oksigen</b>, berujung pada hipoksia seluler dan disfungsi organ.</p>
+                    <div class="bg-rose-950/40 p-2 rounded border border-rose-800/30 text-amber-200/80 font-medium">
+                        ⚠️ <i>Syok BUKAN sekadar hipotensi.</i> Pasien dapat mengalami syok kompensata (tensi normal) yang ditandai dengan takikardia (Shock Index > 0.7), akral dingin/perubahan mental, atau peningkatan laktat darah.
+                    </div>
+                </div>
+
+                <div class="p-3.5 bg-slate-800/40 rounded-lg border border-slate-700/50">
+                    <span class="font-bold text-blue-400 block mb-2 text-sm border-b border-slate-700/50 pb-1">Pulse Pressure (Sistolik - Diastolik)</span>
+                    <ul class="list-disc pl-4 space-y-1 text-slate-300">
+                        <li><span class="text-slate-100 font-medium">Normal:</span> 30 - 60 mmHg</li>
+                        <li><span class="text-blue-300 font-bold">< 30 mmHg (NARROW):</span> Indikasi Stroke Volume rendah (Kardiogenik, Hipovolemia).</li>
+                        <li><span class="text-orange-400 font-bold">> 60 mmHg (WIDE):</span> Indikasi SVR rendah/Vasodilatasi (Distributif/Sepsis).</li>
+                    </ul>
+                </div>
+                <div class="p-3.5 bg-slate-800/40 rounded-lg border border-slate-700/50">
+                    <span class="font-bold text-slate-200 block mb-2 text-sm border-b border-slate-700/50 pb-1">COLD (Hipoperfusi) vs WARM</span>
+                    <p class="mb-1"><b class="text-rose-400">COLD:</b> Akral dingin/basah, CRT > 2 detik, nadi halus, oliguria, laktat ↑.</p>
+                    <p><b class="text-emerald-400">WARM:</b> Akral hangat/pink, CRT < 2 detik, nadi kuat.</p>
+                </div>
+                <div class="p-3.5 bg-slate-800/40 rounded-lg border border-slate-700/50">
+                    <span class="font-bold text-slate-200 block mb-2 text-sm border-b border-slate-700/50 pb-1">WET (Kongesti) vs DRY</span>
+                    <p class="mb-1"><b class="text-cyan-400">WET:</b> Ronki basah (rales), JVP meningkat, edema perifer, ortopnea.</p>
+                    <p><b class="text-slate-400">DRY:</b> Paru bersih, JVP normal, tidak ada tanda overload cairan.</p>
+                </div>
+            </div>
+            
+            <button onclick="UIManager.toggleModal('guide-modal')" class="w-full mt-5 bg-slate-800 hover:bg-slate-700 text-white py-2.5 rounded-lg font-bold transition-colors">Tutup</button>
+        </div>
+    </div>
+
+    <!-- APPLICATION SCRIPTS (MODULARIZED ARCHITECTURE) -->
+    <script>
+        /**
+         * 1. APP CONFIGURATION
+         */
+        const AppConfig = {
+            thresholds: {
+                map: 65,            
+                siElevated: 0.7,    
+                siSevere: 1.0,      
+                ppNarrow: 30,       
+                ppWide: 60,         
+                hrBrady: 50,        
+                hrTachy: 100        
+            },
+            doseWarnings: {
+                norepinephrine: 0.3,
+                epinephrine: 0.3,
+                dobutamine: 15.0,
+                dopamine: 15.0
+            },
+            defaultDrugs: {
+                norepinephrine: { id: 'norepinephrine', class: 'Vasopresor', mg: 4, ml: 50, name: 'Norepinephrine', unit: 'mcg/kg/mnt', step: 0.01, max: 1.0, color: 'blue' },
+                dobutamine: { id: 'dobutamine', class: 'Inotropik', mg: 250, ml: 50, name: 'Dobutamine', unit: 'mcg/kg/mnt', step: 0.5, max: 20, color: 'purple' },
+                dopamine: { id: 'dopamine', class: 'Ino-Vasopresor', mg: 200, ml: 50, name: 'Dopamine', unit: 'mcg/kg/mnt', step: 0.5, max: 20, color: 'emerald' },
+                epinephrine: { id: 'epinephrine', class: 'Vaso-Inotropik', mg: 4, ml: 50, name: 'Epinephrine', unit: 'mcg/kg/mnt', step: 0.01, max: 1.0, color: 'orange' }
+            }
+        };
+
+        /**
+         * 2. APPLICATION STATE
+         */
+        const AppState = {
+            isPristine: true, 
+            weight: 70, sbp: 120, dbp: 80, hr: 80,
+            congestion: 'no', 
+            perfusion: 'good', 
+            drugs: JSON.parse(JSON.stringify(AppConfig.defaultDrugs)), 
+            activeDrugs: { norepinephrine: false, dobutamine: false, dopamine: false, epinephrine: false },
+            drugDoses: { norepinephrine: 0.05, dobutamine: 5.0, dopamine: 5.0, epinephrine: 0.05 }
+        };
+
+        /**
+         * 3. CLINICAL ENGINE (PURE LOGIC)
+         */
+        const ClinicalEngine = {
+            evaluate: function(state) {
+                if (state.isPristine) {
+                    return {
+                        isPristine: true,
+                        map: '--', pp: '--', siNum: 0, siText: '--',
+                        statusColor: 'neutral',
+                        diagnosisTitle: 'Menunggu Input Klinis...',
+                        alerts: [],
+                        steps: [],
+                        recommendedDrugs: { norepinephrine: false, dobutamine: false, dopamine: false, epinephrine: false }
+                    };
+                }
+
+                const map = Math.round((state.sbp + 2 * state.dbp) / 3);
+                const pp = state.sbp - state.dbp;
+                const siNum = state.sbp > 0 ? (state.hr / state.sbp) : 0;
+                const siText = siNum.toFixed(2);
+                
+                const t = AppConfig.thresholds;
+                const isMapLow = map < t.map;
+                const isBrady = state.hr < t.hrBrady;
+                
+                let result = {
+                    isPristine: false,
+                    map: map, pp: pp, siNum: siNum, siText: siText,
+                    statusColor: 'safe', 
+                    diagnosisTitle: '',
+                    alerts: [],
+                    steps: [],
+                    recommendedDrugs: { norepinephrine: false, dobutamine: false, dopamine: false, epinephrine: false }
+                };
+
+                if (isMapLow || siNum >= t.siSevere) result.statusColor = 'alert';
+                else if (siNum > t.siElevated || pp < t.ppNarrow || pp > t.ppWide) result.statusColor = 'warn';
+
+                if (siNum >= t.siSevere) {
+                    result.alerts.push({ type: 'alert', text: `SI KRITIS (${siText}): Indikasi syok berat / defisit perfusi dalam. Risiko perburukan hemodinamik tinggi.` });
+                } else if (siNum > t.siElevated && !isMapLow) {
+                    result.alerts.push({ type: 'warn', text: `SI MENINGKAT (${siText}): Waspada Syok Kompensata (Hidden Shock) meski MAP target $\\ge$ 65 telah tercapai.` });
+                }
+
+                if (pp < t.ppNarrow && state.perfusion === 'poor') {
+                    result.alerts.push({ type: 'info', text: `NARROW PP (${pp} mmHg): Indikasi kuat Low Stroke Volume. Waspada kegagalan pompa (pump failure) atau defisit volume berat.` });
+                } else if (pp > t.ppWide && isMapLow) {
+                    result.alerts.push({ type: 'warn', text: `WIDE PP (${pp} mmHg): Indikasi SVR rendah. Curigai komponen penyerta Syok Distributif (mis. Sepsis/Vasoplegia).` });
+                }
+
+                if (state.congestion === 'yes') {
+                    result.diagnosisTitle = 'Kecurigaan Profil Kardiogenik / Dekompensasi';
+                    result.steps.push('HINDARI resusitasi cairan agresif (Fluid Challenge). Pertimbangkan Diuretik IV (mis. Furosemide) JIKA tekanan darah/MAP memungkinkan. Sesuaikan klinis.');
+                    
+                    if (isMapLow) {
+                        result.steps.push('Pertimbangkan Vasopresor (mis. Norepinephrine lini 1) untuk menaikkan target MAP > 65 mmHg, jika tidak ada kontraindikasi.');
+                        result.steps.push('Pertimbangkan Inotropik (mis. Dobutamine) BERSAMAAN dengan vasopresor untuk mengatasi pump failure. Monitor aritmia.');
+                        result.recommendedDrugs.norepinephrine = true;
+                        result.recommendedDrugs.dobutamine = true;
+                        
+                        if (state.perfusion === 'poor') {
+                            result.steps.push('Jika syok persisten (refrakter) dan perfusi sangat buruk (COLD), pertimbangkan tambahan Epinephrine. Konsul intensivis/kardiolog.');
+                            result.recommendedDrugs.epinephrine = true;
+                        }
+                    } else {
+                        result.steps.push('Target MAP aman. Pertimbangkan Vasodilator (mis. Nitrogliserin) hati-hati untuk menurunkan preload/afterload jika SBP adekuat (> 100 mmHg).');
+                        if (state.perfusion === 'poor') {
+                            result.steps.push('Pertimbangkan inotropik (mis. Dobutamine). Waspada efek vasodilatasi β2; jika MAP drop < 65, siap tambahkan Norepinephrine.');
+                            result.recommendedDrugs.dobutamine = true;
+                        } else {
+                            result.steps.push('Lanjutkan monitoring keseimbangan cairan & diuresis (target UO > 0.5 cc/kg/jam).');
+                        }
+                    }
+                } else {
+                    if (isMapLow || state.perfusion === 'poor') {
+                        result.diagnosisTitle = 'Kecurigaan Profil Distributif / Hipovolemik';
+                        result.steps.push('Pertimbangkan Fluid Challenge (Kristaloid 30cc/kgBB). Evaluasi klinis respon cairan tiap 250-500ml. Hentikan bila muncul tanda overload (rales, JVP ↑).');
+                        result.steps.push('Jika MAP menetap < 65 pasca resusitasi cairan awal adekuat, pertimbangkan inisiasi Norepinephrine segera sesuai protokol RS.');
+                        result.recommendedDrugs.norepinephrine = true;
+                        
+                        if (state.perfusion === 'poor') {
+                            result.steps.push('Jika disfungsi miokard penyerta dicurigai (atau persisten walau MAP aman), pertimbangkan penambahan Dobutamine.');
+                            result.recommendedDrugs.dobutamine = true;
+                            if (isMapLow) {
+                                result.steps.push('Pertimbangkan Epinephrine sebagai lini lanjutan jika syok refrakter terhadap norepinefrin dosis tinggi.');
+                                result.recommendedDrugs.epinephrine = true;
+                            }
+                        }
+                    } else {
+                        result.diagnosisTitle = 'Euvolemik / Hemodinamik Stabil';
+                        result.steps.push('Perfusi jaringan tampak baik (WARM & DRY). Berikan cairan maintenance sesuai kebutuhan klinis dan toleransi jantung pasien.');
+                        result.steps.push('Observasi klinis & re-evaluasi parameter hemodinamik secara berkala.');
+                    }
+                }
+
+                if (isBrady && isMapLow) {
+                    result.diagnosisTitle += ' + Bradikardia Simtomatik';
+                    result.steps.splice(1, 0, 'PRIORITAS: Tata laksana bradikardia (Atropin, siapkan Pacing Transkutan/Transvena).');
+                    result.steps.push('Jembatan farmakologis: Pertimbangkan Dopamine atau Epinephrine drip sambil menunggu Pacing.');
+                    result.recommendedDrugs.dopamine = true;
+                    result.recommendedDrugs.epinephrine = true;
+                }
+
+                return result;
+            }
+        };
+
+        /**
+         * 4. UI MANAGER (DOM MANIPULATION)
+         */
+        const UIManager = {
+            currentRecommendations: {}, 
+
+            init: function() {
+                this.bindInputs();
+                this.updateToggleVisuals('congestion', AppState.congestion);
+                this.updateToggleVisuals('perfusion', AppState.perfusion);
+                this.updateAll();
+            },
+
+            bindInputs: function() {
+                const markDirty = () => { AppState.isPristine = false; this.updateAll(); };
+                
+                document.getElementById('input-weight').addEventListener('input', (e) => { AppState.weight = parseFloat(e.target.value) || 70; this.renderDrugs(); });
+                document.getElementById('input-sbp').addEventListener('input', (e) => { AppState.sbp = parseFloat(e.target.value) || 0; markDirty(); });
+                document.getElementById('input-dbp').addEventListener('input', (e) => { AppState.dbp = parseFloat(e.target.value) || 0; markDirty(); });
+                document.getElementById('input-hr').addEventListener('input', (e) => { AppState.hr = parseFloat(e.target.value) || 0; markDirty(); });
+
+                document.getElementById('btn-cong-no').addEventListener('click', () => { AppState.congestion = 'no'; markDirty(); this.updateToggleVisuals('congestion', 'no'); });
+                document.getElementById('btn-cong-yes').addEventListener('click', () => { AppState.congestion = 'yes'; markDirty(); this.updateToggleVisuals('congestion', 'yes'); });
+                document.getElementById('btn-perf-good').addEventListener('click', () => { AppState.perfusion = 'good'; markDirty(); this.updateToggleVisuals('perfusion', 'good'); });
+                document.getElementById('btn-perf-poor').addEventListener('click', () => { AppState.perfusion = 'poor'; markDirty(); this.updateToggleVisuals('perfusion', 'poor'); });
+            },
+
+            updateToggleVisuals: function(key, value) {
+                // Fluid = Cyan/Teal touch, Perfusion = Blue touch
+                const activeCyan = 'bg-cyan-900/30 border-cyan-500/60 shadow-sm text-cyan-200';
+                const activeBlue = 'bg-blue-900/30 border-blue-500/60 shadow-sm text-blue-200';
+                const inactiveClass = 'bg-slate-900/40 border-transparent opacity-60 hover:bg-slate-800 text-slate-400';
+                
+                if (key === 'congestion') {
+                    document.getElementById('btn-cong-no').className = `flex-1 py-2 px-1 rounded-md flex flex-col items-center justify-center border transition-all duration-300 ${value === 'no' ? activeCyan : inactiveClass}`;
+                    document.getElementById('btn-cong-yes').className = `flex-1 py-2 px-1 rounded-md flex flex-col items-center justify-center border transition-all duration-300 ${value === 'yes' ? activeCyan : inactiveClass}`;
+                } else {
+                    document.getElementById('btn-perf-good').className = `flex-1 py-2 px-1 rounded-md flex flex-col items-center justify-center border transition-all duration-300 ${value === 'good' ? activeBlue : inactiveClass}`;
+                    document.getElementById('btn-perf-poor').className = `flex-1 py-2 px-1 rounded-md flex flex-col items-center justify-center border transition-all duration-300 ${value === 'poor' ? activeBlue : inactiveClass}`;
+                }
+            },
+
+            updateAll: function() {
+                const result = ClinicalEngine.evaluate(AppState);
+                this.currentRecommendations = result.recommendedDrugs;
+
+                // Render Vital Signs HR Warning Colors
+                const elHrInput = document.getElementById('input-hr');
+                if (!AppState.isPristine && (AppState.hr < AppConfig.thresholds.hrBrady || AppState.hr > AppConfig.thresholds.hrTachy)) {
+                    elHrInput.classList.remove('text-white', 'focus:border-blue-500');
+                    elHrInput.classList.add('text-amber-400', 'border-amber-500/50', 'focus:border-amber-500', 'focus:ring-amber-500');
+                } else {
+                    elHrInput.classList.remove('text-amber-400', 'border-amber-500/50', 'focus:border-amber-500', 'focus:ring-amber-500');
+                    elHrInput.classList.add('text-white', 'focus:border-blue-500', 'focus:ring-blue-500');
+                }
+
+                // Render Top Calculated Metrics (State Chips)
+                const dispMap = document.getElementById('disp-map');
+                const boxMap = document.getElementById('box-map');
+                
+                const dispPp = document.getElementById('disp-pp');
+                const boxPp = document.getElementById('box-pp');
+                const lblPp = document.getElementById('lbl-pp');
+                
+                const dispSi = document.getElementById('disp-si');
+                const boxSi = document.getElementById('box-si');
+                const lblSi = document.getElementById('lbl-si');
+
+                const classNeutralBox = 'flex flex-col items-center justify-center p-1.5 rounded-lg border border-transparent transition-colors duration-300';
+                
+                if (AppState.isPristine) {
+                    dispMap.innerText = '--'; dispMap.className = 'font-mono-num text-lg font-bold text-slate-500';
+                    boxMap.className = classNeutralBox;
+                    
+                    dispPp.innerText = '--'; dispPp.className = 'font-mono-num text-lg font-bold text-slate-500';
+                    boxPp.className = classNeutralBox;
+                    lblPp.classList.add('hidden');
+                    
+                    dispSi.innerText = '--'; dispSi.className = 'font-mono-num text-lg font-bold text-slate-500';
+                    boxSi.className = classNeutralBox;
+                    lblSi.classList.add('hidden');
+                } else {
+                    // MAP Updates
+                    dispMap.innerText = result.map;
+                    if (result.map < AppConfig.thresholds.map) {
+                        dispMap.className = 'font-mono-num text-lg font-bold text-red-400';
+                        boxMap.className = 'flex flex-col items-center justify-center p-1.5 rounded-lg border border-red-500/30 bg-red-900/20 transition-colors duration-300';
+                    } else {
+                        dispMap.className = 'font-mono-num text-lg font-bold text-emerald-400';
+                        boxMap.className = 'flex flex-col items-center justify-center p-1.5 rounded-lg border border-emerald-500/30 bg-emerald-900/20 transition-colors duration-300';
+                    }
+
+                    // PP Updates
+                    dispPp.innerText = result.pp;
+                    lblPp.classList.remove('hidden');
+                    if (result.pp < AppConfig.thresholds.ppNarrow) {
+                        dispPp.className = 'font-mono-num text-lg font-bold text-blue-400';
+                        boxPp.className = 'flex flex-col items-center justify-center p-1.5 rounded-lg border border-blue-500/30 bg-blue-900/20 transition-colors duration-300 cursor-help';
+                        lblPp.innerText = 'NARROW'; lblPp.className = 'text-[8px] px-1.5 py-0.5 rounded font-medium bg-blue-500/10 text-blue-300 border border-blue-500/20';
+                    } else if (result.pp > AppConfig.thresholds.ppWide) {
+                        dispPp.className = 'font-mono-num text-lg font-bold text-amber-400';
+                        boxPp.className = 'flex flex-col items-center justify-center p-1.5 rounded-lg border border-amber-500/30 bg-amber-900/20 transition-colors duration-300 cursor-help';
+                        lblPp.innerText = 'WIDE'; lblPp.className = 'text-[8px] px-1.5 py-0.5 rounded font-medium bg-amber-500/10 text-amber-300 border border-amber-500/20';
+                    } else {
+                        dispPp.className = 'font-mono-num text-lg font-bold text-emerald-400';
+                        boxPp.className = 'flex flex-col items-center justify-center p-1.5 rounded-lg border border-emerald-500/30 bg-emerald-900/20 transition-colors duration-300 cursor-help';
+                        lblPp.innerText = 'NORM'; lblPp.className = 'text-[8px] px-1.5 py-0.5 rounded font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/20';
+                    }
+
+                    // SI Updates
+                    dispSi.innerText = result.siText;
+                    lblSi.classList.remove('hidden');
+                    if (result.siNum >= AppConfig.thresholds.siSevere) {
+                        dispSi.className = 'font-mono-num text-lg font-bold text-red-400';
+                        boxSi.className = 'flex flex-col items-center justify-center p-1.5 rounded-lg border border-red-500/30 bg-red-900/20 transition-colors duration-300 cursor-help';
+                        lblSi.innerText = 'SEVERE'; lblSi.className = 'text-[8px] px-1.5 py-0.5 rounded font-medium bg-red-500/10 text-red-300 border border-red-500/20';
+                    } else if (result.siNum > AppConfig.thresholds.siElevated) {
+                        dispSi.className = 'font-mono-num text-lg font-bold text-amber-400';
+                        boxSi.className = 'flex flex-col items-center justify-center p-1.5 rounded-lg border border-amber-500/30 bg-amber-900/20 transition-colors duration-300 cursor-help';
+                        lblSi.innerText = 'ELEVATED'; lblSi.className = 'text-[8px] px-1.5 py-0.5 rounded font-medium bg-amber-500/10 text-amber-300 border border-amber-500/20';
+                    } else {
+                        dispSi.className = 'font-mono-num text-lg font-bold text-emerald-400';
+                        boxSi.className = 'flex flex-col items-center justify-center p-1.5 rounded-lg border border-emerald-500/30 bg-emerald-900/20 transition-colors duration-300 cursor-help';
+                        lblSi.innerText = 'NORM'; lblSi.className = 'text-[8px] px-1.5 py-0.5 rounded font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/20';
+                    }
+                }
+
+                // Render Engine Output Panel (DYNAMIC BACKGROUND)
+                const panel = document.getElementById('output-panel');
+                const titleEl = document.getElementById('out-shock-type');
+                const dotEl = document.getElementById('status-dot');
+                
+                titleEl.innerText = result.diagnosisTitle;
+                
+                if (result.statusColor === 'alert') {
+                    panel.className = 'clinical-panel p-5 md:p-6 transition-colors duration-500 border-l-4 relative overflow-hidden border-l-red-500 bg-gradient-to-br from-red-950/20 to-slate-900';
+                    titleEl.className = 'text-xl md:text-2xl font-bold text-red-100 leading-snug drop-shadow-md';
+                    dotEl.className = 'w-2 h-2 rounded-full transition-colors duration-500 bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]';
+                }
+                else if (result.statusColor === 'warn') {
+                    panel.className = 'clinical-panel p-5 md:p-6 transition-colors duration-500 border-l-4 relative overflow-hidden border-l-amber-500 bg-gradient-to-br from-amber-950/20 to-slate-900';
+                    titleEl.className = 'text-xl md:text-2xl font-bold text-amber-100 leading-snug drop-shadow-md';
+                    dotEl.className = 'w-2 h-2 rounded-full transition-colors duration-500 bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]';
+                }
+                else if (result.statusColor === 'safe') {
+                    panel.className = 'clinical-panel p-5 md:p-6 transition-colors duration-500 border-l-4 relative overflow-hidden border-l-emerald-500 bg-gradient-to-br from-emerald-950/20 to-slate-900';
+                    titleEl.className = 'text-xl md:text-2xl font-bold text-emerald-100 leading-snug drop-shadow-md';
+                    dotEl.className = 'w-2 h-2 rounded-full transition-colors duration-500 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]';
+                }
+                else {
+                    panel.className = 'clinical-panel p-5 md:p-6 transition-colors duration-500 border-l-4 relative overflow-hidden border-l-slate-500 bg-slate-900/50';
+                    titleEl.className = 'text-xl md:text-2xl font-bold text-slate-300 leading-snug drop-shadow-md opacity-80';
+                    dotEl.className = 'w-2 h-2 rounded-full transition-colors duration-500 bg-slate-500';
+                }
+
+                // Alerts rendering
+                const alertsContainer = document.getElementById('clinical-alerts-container');
+                alertsContainer.innerHTML = '';
+                if (result.alerts.length > 0) {
+                    alertsContainer.classList.remove('hidden');
+                    result.alerts.forEach(alert => {
+                        let colorClass = alert.type === 'alert' ? 'text-red-300 bg-red-900/30 border-red-500/40' : 
+                                         alert.type === 'warn' ? 'text-amber-300 bg-amber-900/30 border-amber-500/40' : 
+                                         'text-blue-300 bg-blue-900/30 border-blue-500/40';
+                        alertsContainer.innerHTML += `<div class="text-[11px] p-2.5 rounded-lg border ${colorClass} font-medium flex gap-2.5 items-start"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span class="leading-relaxed">${alert.text}</span></div>`;
+                    });
+                } else {
+                    alertsContainer.classList.add('hidden');
+                }
+
+                // Steps rendering
+                const stepsContainer = document.getElementById('steps-container');
+                if (result.isPristine) {
+                    stepsContainer.innerHTML = `<div class="bg-slate-800/30 p-5 rounded-lg border border-slate-700/50 border-dashed text-center mt-6"><p class="text-sm text-slate-400 italic">Silakan lengkapi parameter data pasien di panel sebelah kiri untuk mendapatkan rekomendasi klinis.</p></div>`;
+                } else {
+                    stepsContainer.innerHTML = result.steps.map((step, idx) => `
+                        <div class="flex items-start gap-3.5 bg-slate-800/30 p-3 rounded-lg border border-slate-700/40">
+                            <div class="w-5 h-5 rounded-full bg-slate-700 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-200 flex-shrink-0 mt-0.5">${idx + 1}</div>
+                            <p class="text-xs text-slate-300 leading-relaxed font-medium">${step}</p>
+                        </div>
+                    `).join('');
+                }
+
+                this.renderDrugs();
+            },
+
+            renderDrugs: function() {
+                const container = document.getElementById('drugs-container');
+                let html = '';
+
+                Object.values(AppState.drugs).forEach(drug => {
+                    const isActive = AppState.activeDrugs[drug.id];
+                    const dose = AppState.drugDoses[drug.id];
+                    const rate = this.calculateRate(drug.id);
+                    const isRecommended = this.currentRecommendations[drug.id] && !AppState.isPristine;
+                    
+                    const borderClass = isActive ? `border-${drug.color}-500/60 bg-gradient-to-br from-${drug.color}-900/20 to-slate-900/50 shadow-[0_4px_15px_rgba(0,0,0,0.15)]` : (isRecommended ? 'border-slate-500 bg-slate-800/80 shadow-md' : 'border-slate-700 bg-slate-800/40 opacity-80');
+                    const toggleClass = isActive ? `bg-${drug.color}-500 shadow-[0_0_8px_currentColor]` : 'bg-slate-600';
+                    const knobClass = isActive ? 'translate-x-4' : '';
+
+                    let doseWarningHtml = '';
+                    if (isActive && AppConfig.doseWarnings[drug.id] && dose >= AppConfig.doseWarnings[drug.id]) {
+                        doseWarningHtml = `<div class="text-[10px] text-amber-300 mt-2 flex items-center gap-1.5 font-medium bg-amber-950/40 p-1.5 rounded border border-amber-800/60 shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> Dosis tinggi. Evaluasi klinis.</div>`;
+                    }
+
+                    html += `
+                    <div class="p-3.5 rounded-xl border transition-all duration-300 ${borderClass}">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h3 class="text-sm font-bold text-slate-100 tracking-wide">${drug.name}</h3>
+                                    ${isRecommended && !isActive ? `<span class="text-[8px] bg-${drug.color}-900/50 text-${drug.color}-300 px-1.5 py-0.5 rounded border border-${drug.color}-600/50 font-bold tracking-widest uppercase animate-pulse">Disarankan</span>` : ''}
+                                </div>
+                                <span class="text-[9px] bg-${drug.color}-900/30 text-${drug.color}-300 px-1.5 py-0.5 rounded border border-${drug.color}-700/50 font-medium tracking-wide uppercase">${drug.class}</span>
+                            </div>
+                            <div class="cursor-pointer mt-1" onclick="UIManager.toggleDrug('${drug.id}')" title="Manual Toggle ON/OFF">
+                                <div class="w-8 h-4 rounded-full relative transition-colors duration-300 ${toggleClass}">
+                                    <div class="w-3 h-3 bg-white rounded-full absolute top-0.5 left-0.5 transition-transform duration-300 ${knobClass}"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-1.5 mb-3 bg-slate-900/60 p-1.5 rounded-lg border border-slate-700/50 w-max">
+                            <input type="number" value="${drug.mg}" onchange="UIManager.updateConfig('${drug.id}', 'mg', this.value)" class="w-10 bg-transparent text-center text-xs font-mono-num font-bold text-${drug.color}-200 focus:outline-none focus:text-white transition-colors">
+                            <span class="text-[10px] text-slate-500 font-medium">mg /</span>
+                            <input type="number" value="${drug.ml}" onchange="UIManager.updateConfig('${drug.id}', 'ml', this.value)" class="w-10 bg-transparent text-center text-xs font-mono-num font-bold text-${drug.color}-200 focus:outline-none focus:text-white transition-colors">
+                            <span class="text-[10px] text-slate-500 font-medium">cc</span>
+                        </div>
+
+                        <div class="bg-slate-900/80 rounded-lg p-2.5 border border-slate-700/80 shadow-inner">
+                            <div class="flex justify-between items-end mb-3">
+                                <div class="flex items-center space-x-2 w-1/2 ${isActive ? 'drug-active' : ''}">
+                                    <button onclick="UIManager.adjustDose('${drug.id}', -1)" class="w-6 h-6 rounded-full bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center text-sm leading-none transition-colors shadow-sm">-</button>
+                                    <input type="range" min="0" max="${drug.max}" step="${drug.step}" value="${dose}" oninput="UIManager.setDose('${drug.id}', this.value)" class="flex-1 drop-shadow-sm">
+                                    <button onclick="UIManager.adjustDose('${drug.id}', 1)" class="w-6 h-6 rounded-full bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center text-sm leading-none transition-colors shadow-sm">+</button>
+                                </div>
+                                <div class="text-right pl-2">
+                                    <div class="text-[9px] text-slate-400 font-medium mb-0.5">Dosis (${drug.unit})</div>
+                                    <span class="text-sm font-bold font-mono-num ${isActive ? 'text-white drop-shadow-md' : 'text-slate-400'}">${dose.toFixed(2)}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="pt-2.5 border-t border-slate-700/80 flex justify-between items-center">
+                                <span class="text-[10px] text-slate-400 font-medium">Rate Pump:</span>
+                                <div>
+                                    <span class="text-lg font-bold font-mono-num ${isActive ? `text-${drug.color}-100 drop-shadow-md` : 'text-slate-500'}">${rate}</span>
+                                    <span class="text-[10px] text-slate-500 ml-0.5">cc/jam</span>
+                                </div>
+                            </div>
+                            ${doseWarningHtml}
+                        </div>
+                    </div>`;
+                });
+                container.innerHTML = html;
+            },
+
+            calculateRate: function(drugId) {
+                const config = AppState.drugs[drugId];
+                const dose = AppState.drugDoses[drugId];
+                const concMcgMl = (config.mg * 1000) / config.ml;
+                if (concMcgMl === 0) return "0.0";
+                return ((dose * AppState.weight * 60) / concMcgMl).toFixed(1);
+            },
+
+            updateConfig: function(drugId, field, value) {
+                const val = parseFloat(value);
+                if (!isNaN(val) && val > 0) { AppState.drugs[drugId][field] = val; this.renderDrugs(); }
+            },
+
+            adjustDose: function(drugId, dir) {
+                const step = AppState.drugs[drugId].step;
+                const max = AppState.drugs[drugId].max;
+                let newDose = Math.round((AppState.drugDoses[drugId] + (dir * step)) * 100) / 100;
+                if (newDose >= 0 && newDose <= max) {
+                    AppState.drugDoses[drugId] = newDose;
+                    AppState.activeDrugs[drugId] = newDose > 0;
+                    this.renderDrugs();
+                }
+            },
+
+            setDose: function(drugId, value) {
+                AppState.drugDoses[drugId] = parseFloat(value);
+                AppState.activeDrugs[drugId] = AppState.drugDoses[drugId] > 0;
+                this.renderDrugs();
+            },
+
+            toggleDrug: function(drugId) {
+                AppState.activeDrugs[drugId] = !AppState.activeDrugs[drugId];
+                this.renderDrugs();
+            },
+
+            toggleModal: function(id) {
+                const modal = document.getElementById(id);
+                if (modal.classList.contains('opacity-0')) {
+                    modal.classList.remove('opacity-0', 'pointer-events-none');
+                    modal.firstElementChild.classList.remove('scale-95');
+                } else {
+                    modal.classList.add('opacity-0', 'pointer-events-none');
+                    modal.firstElementChild.classList.add('scale-95');
+                }
+            },
+
+            resetApp: function() {
+                AppState.isPristine = true;
+                AppState.weight = 70; AppState.sbp = 120; AppState.dbp = 80; AppState.hr = 80;
+                AppState.congestion = 'no';
+                AppState.perfusion = 'good';
+                
+                document.getElementById('input-weight').value = 70;
+                document.getElementById('input-sbp').value = 120;
+                document.getElementById('input-dbp').value = 80;
+                document.getElementById('input-hr').value = 80;
+                
+                this.updateToggleVisuals('congestion', 'no');
+                this.updateToggleVisuals('perfusion', 'good');
+                
+                AppState.activeDrugs = { norepinephrine: false, dobutamine: false, dopamine: false, epinephrine: false };
+                AppState.drugDoses = { norepinephrine: 0.05, dobutamine: 5.0, dopamine: 5.0, epinephrine: 0.05 };
+                
+                this.updateAll();
+            }
+        };
+
+        UIManager.init();
+        
+    </script>
+</body>
+</html>
