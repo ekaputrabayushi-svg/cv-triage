@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BGA Studio - ICU Edition (v2.8 Expert)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+        .accordion-content { transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out; max-height: 0; opacity: 0; overflow: hidden; }
+        .accordion-content.open { max-height: 1200px; opacity: 1; }
+        .mobile-scroll::-webkit-scrollbar { height: 6px; }
+        .mobile-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        
+        /* Tab Styles */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        .tab-btn.active { color: #2563eb; border-bottom-width: 3px; border-color: #2563eb; font-weight: 800; background-color: #eff6ff; }
+        .tab-btn { color: #64748b; border-bottom-width: 3px; border-color: transparent; font-weight: 600; transition: all 0.2s; border-radius: 8px 8px 0 0; }
+        .tab-btn:hover:not(.active) { color: #475569; background-color: #f8fafc; border-color: #cbd5e1; }
+
+        /* Print Styles */
+        @media print {
+            body { background: white !important; font-size: 11pt; color: black !important; }
+            /* Hide inputs and non-essential UI */
+            .lg\:col-span-4, #tab-navigation, #simulator-banner, button, .border-t.border-slate-100.pt-4.grid, .bg-slate-50.text-slate-600.text-xs.px-4.py-2\.5 { display: none !important; }
+            /* Expand main result container */
+            .lg\:col-span-8 { grid-column: span 12 / span 12 !important; display: block !important; width: 100% !important; margin: 0 !important; }
+            #tab-analysis { display: block !important; }
+            .shadow-sm, .shadow-md, .shadow-lg { box-shadow: none !important; }
+            .border { border-color: #cbd5e1 !important; border-width: 1px !important; }
+            .bg-slate-800, .bg-slate-900 { background: white !important; color: black !important; border-color: #94a3b8 !important; }
+            .text-white { color: black !important; }
+            .bg-white { background: transparent !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            @page { margin: 1.5cm; }
+            /* Ensure text breaks cleanly */
+            h3, h4 { page-break-after: avoid; }
+            ul { page-break-inside: avoid; }
+            .break-inside-avoid { break-inside: avoid; }
+            #res-primary { font-size: 1.5rem !important; }
+            #disclaimer-footer { font-size: 9pt !important; padding-top: 15px !important; margin-top: 20px !important; border-top: 1px solid #000 !important; }
+        }
+    </style>
+</head>
+<body class="bg-[#F1F5F9] text-slate-800 font-sans relative min-h-screen pb-12 md:pb-10">
+
+    <!-- Background Gradient -->
+    <div class="absolute top-0 left-0 w-full h-72 bg-gradient-to-b from-blue-600 to-transparent pointer-events-none z-0 opacity-10"></div>
+
+    <div class="max-w-7xl mx-auto space-y-4 md:space-y-5 relative z-10 p-3 md:p-6">
+        
+        <!-- Header -->
+        <div class="bg-white border border-slate-200 rounded-3xl p-4 md:p-6 shadow-sm flex flex-col gap-4">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="flex items-center gap-4 w-full md:w-auto">
+                    <div class="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shrink-0 shadow-md">
+                        <i data-lucide="activity" class="text-white w-7 h-7 md:w-8 md:h-8"></i>
+                    </div>
+                    <div>
+                        <div class="text-blue-600 font-bold tracking-widest uppercase text-[10px] md:text-xs mb-1 flex items-center gap-1.5">
+                            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Clinical Decision Support <span class="mx-1 opacity-50">•</span> CardiologyVault
+                        </div>
+                        <h1 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight leading-none">
+                            BGA Studio <span class="text-slate-300 font-light hidden md:inline">|</span> <span class="text-sm md:text-xl font-bold text-slate-500 block md:inline mt-1 md:mt-0">ICU Edition v2.8 Expert</span>
+                        </h1>
+                    </div>
+                </div>
+                <div class="w-full md:w-auto flex justify-end">
+                    <div class="bg-slate-50 text-slate-600 text-xs px-4 py-2.5 rounded-xl border border-slate-200 font-bold flex items-center gap-2 shadow-sm w-full md:w-auto justify-center md:justify-start">
+                        <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                        Dev: Bayushi Eka Putra, MD, FIHA
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-slate-100 pt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="flex items-start gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0 mt-0.5">
+                        <i data-lucide="lightbulb" class="w-4 h-4 text-amber-600"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs md:text-sm font-bold text-slate-700">Clinical Thinking</p>
+                        <p class="text-[11px] md:text-xs text-slate-500 leading-relaxed mt-0.5">Diferensial diagnosis otomatis. Melacak *underlying disease* dari HAGMA/NAGMA/LAGMA.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0 mt-0.5">
+                        <i data-lucide="syringe" class="w-4 h-4 text-rose-600"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs md:text-sm font-bold text-slate-700">Dosis Defisit & Koreksi</p>
+                        <p class="text-[11px] md:text-xs text-slate-500 leading-relaxed mt-0.5">Menghitung dosis defisit elektrolit & Bikarbonat dengan jadwal *monitoring* spesifik.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-teal-50 border border-teal-100 flex items-center justify-center shrink-0 mt-0.5">
+                        <i data-lucide="cpu" class="w-4 h-4 text-teal-600"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs md:text-sm font-bold text-slate-700">Protokol Lanjut ICU</p>
+                        <p class="text-[11px] md:text-xs text-slate-500 leading-relaxed mt-0.5">Algoritma ARDSNet LPV, clearance Laktat, kalkulasi sekunder (A-a, Delta Ratio).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SIMULATOR BANNER -->
+        <div id="simulator-banner" class="hidden bg-indigo-600 text-white rounded-xl p-3 md:p-4 shadow-md flex items-center justify-between fade-in">
+            <div class="flex items-center gap-3">
+                <i data-lucide="flask-conical" class="w-5 h-5 md:w-6 md:h-6 animate-pulse text-indigo-200"></i>
+                <span class="text-sm md:text-base font-bold">MODE SIMULATOR: Data kasus klinis fiktif telah diisi otomatis.</span>
+            </div>
+            <button onclick="dismissSimulatorBanner()" class="text-indigo-200 hover:text-white bg-indigo-700/50 p-2 rounded-lg transition-colors">
+                <i data-lucide="x" class="w-4 h-4 md:w-5 md:h-5"></i>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
+            
+            <!-- ====== KIRI: INPUT PANEL ====== -->
+            <div class="lg:col-span-4 xl:col-span-3 space-y-4 md:space-y-5">
+                
+                <!-- Action Buttons -->
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="simulateRandomCase()" class="bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-indigo-700 text-xs font-bold py-3 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-sm" title="Simulasikan Kasus Acak">
+                        <i data-lucide="shuffle" class="w-4 h-4"></i> Simulator
+                    </button>
+                    <button onclick="resetApp()" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold py-3 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-sm">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Reset Form
+                    </button>
+                </div>
+
+                <!-- BGA Parameters -->
+                <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                    <div class="bg-slate-50 border-b border-slate-200 px-4 py-3 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="droplet" class="w-4 h-4 text-rose-500"></i>
+                            <h2 class="text-sm font-bold text-slate-800">1. Data Gas Darah</h2>
+                        </div>
+                    </div>
+                    <div class="p-4 grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">pH</label>
+                            <input type="number" step="0.01" id="inp-ph" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 font-bold focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-sm" placeholder="7.35 - 7.45">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">pCO2 <span class="font-normal text-[9px] text-slate-400">mmHg</span></label>
+                            <input type="number" step="0.1" id="inp-pco2" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 font-bold focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-sm" placeholder="35-45">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">HCO3 <span class="font-normal text-[9px] text-slate-400">mEq/L</span></label>
+                            <input type="number" step="0.1" id="inp-hco3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 font-bold focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-sm" placeholder="22-26">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">pO2 <span class="font-normal text-[9px] text-slate-400">mmHg</span></label>
+                            <input type="number" step="1" id="inp-po2" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 font-bold focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-sm" placeholder="80-100">
+                        </div>
+                        
+                        <div class="col-span-2 pt-2 border-t border-slate-100">
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1.5">Fraksi Oksigen (FiO2) %</label>
+                            <div class="flex gap-1.5 mb-2">
+                                <button onclick="setFiO2('21')" class="fio2-btn px-2 py-1 text-[10px] font-bold rounded-lg border bg-blue-50 border-blue-200 text-blue-700 flex-1" data-val="21">Room</button>
+                                <button onclick="setFiO2('32')" class="fio2-btn px-2 py-1 text-[10px] font-bold rounded-lg border bg-white border-slate-200 text-slate-600 flex-1" data-val="32">Nasal</button>
+                                <button onclick="setFiO2('40')" class="fio2-btn px-2 py-1 text-[10px] font-bold rounded-lg border bg-white border-slate-200 text-slate-600 flex-1" data-val="40">Mask</button>
+                                <button onclick="setFiO2('80')" class="fio2-btn px-2 py-1 text-[10px] font-bold rounded-lg border bg-white border-slate-200 text-slate-600 flex-1" data-val="80">Vent</button>
+                            </div>
+                            <input type="number" step="1" id="inp-fio2" value="21" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 font-bold focus:bg-white focus:border-blue-400 outline-none text-sm" placeholder="21">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Demografi & Metabolik -->
+                <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                    <div class="bg-slate-50 border-b border-slate-200 px-4 py-3 flex items-center gap-2">
+                        <i data-lucide="test-tubes" class="w-4 h-4 text-emerald-500"></i>
+                        <h2 class="text-sm font-bold text-slate-800">2. Demografi & Lab Lanjut</h2>
+                    </div>
+                    <div class="p-4 flex flex-col gap-4">
+                        <!-- Demografi -->
+                        <div class="grid grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-700 mb-1">Gender</label>
+                                <select id="inp-gender" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-slate-900 font-bold outline-none text-xs focus:border-emerald-400">
+                                    <option value="M">Laki-laki</option>
+                                    <option value="F">Perempuan</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-700 mb-1">BB (kg)</label>
+                                <input type="number" id="inp-weight" value="60" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-slate-900 font-bold text-sm outline-none focus:border-emerald-400">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-700 mb-1">TB (cm)</label>
+                                <input type="number" id="inp-height" placeholder="170" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-slate-900 font-bold text-sm outline-none focus:border-emerald-400">
+                            </div>
+                        </div>
+
+                        <hr class="border-slate-100">
+
+                        <!-- Lab Lanjut -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="block text-[10px] font-bold text-slate-700 mb-1">Natrium (Na+)</label><input type="number" id="inp-na" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-slate-900 font-bold text-sm outline-none focus:border-emerald-400"></div>
+                            <div><label class="block text-[10px] font-bold text-slate-700 mb-1">Klorida (Cl-)</label><input type="number" id="inp-cl" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-slate-900 font-bold text-sm outline-none focus:border-emerald-400"></div>
+                            
+                            <div class="col-span-2"><label class="block text-[10px] font-bold text-slate-700 mb-1">Kalium (K+)</label><input type="number" step="0.1" id="inp-k" class="w-full bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-slate-900 font-bold text-sm outline-none focus:border-amber-400" placeholder="3.5 - 5.0"></div>
+                            
+                            <div><label class="block text-[10px] font-bold text-slate-700 mb-1">Albumin</label><input type="number" step="0.1" id="inp-albumin" value="4.0" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-slate-900 font-bold text-sm outline-none focus:border-emerald-400"></div>
+                            <div><label class="block text-[10px] font-bold text-slate-700 mb-1">Ca2+ Total</label><input type="number" step="0.1" id="inp-ca" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-slate-900 font-bold text-sm outline-none focus:border-emerald-400"></div>
+                            
+                            <div class="col-span-2"><label class="block text-[10px] font-bold text-slate-700 mb-1">Laktat <span class="font-normal text-[9px] text-slate-400">mmol/L</span></label><input type="number" step="0.1" id="inp-lactate" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-slate-900 font-bold text-sm outline-none focus:border-emerald-400"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ventilator Params -->
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm transition-colors" id="vent-container">
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="flex items-center gap-2">
+                            <div class="p-1.5 rounded-lg bg-slate-100 text-slate-500" id="vent-icon-bg">
+                                <i data-lucide="cpu" class="w-4 h-4"></i>
+                            </div>
+                            <h3 class="font-bold text-sm text-slate-700" id="vent-title">Pasien on Ventilator?</h3>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                            <input type="checkbox" id="inp-onVent" class="sr-only peer">
+                            <div class="w-10 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                        </label>
+                    </div>
+                    
+                    <div id="vent-details-container" class="hidden pt-3 mt-3 border-t border-blue-100/60 fade-in space-y-2">
+                        <div id="live-pbw-container" class="hidden bg-blue-100/50 border border-blue-200 text-blue-800 text-[10px] p-2 rounded-lg flex justify-between items-center mb-2">
+                            <span>PBW: <b id="live-pbw-val" class="text-xs">-</b> kg</span>
+                            <span>Target VT: <b id="live-vt-val" class="text-xs">-</b> mL</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] font-bold text-blue-800 mb-1">Mode</label>
+                                <select id="inp-ventMode" class="w-full bg-blue-50/50 border border-blue-200 rounded-lg p-2 text-blue-900 font-bold outline-none text-xs">
+                                    <option value="VCV">VCV / VAC</option>
+                                    <option value="PCV">PCV / PAC</option>
+                                    <option value="SIMV">SIMV</option>
+                                    <option value="PSV">PSV / Spontan</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-blue-800 mb-1">RR Aktual</label>
+                                <input type="number" id="inp-rr" class="w-full bg-blue-50/50 border border-blue-200 rounded-lg p-2 text-blue-900 font-bold outline-none text-xs" placeholder="14">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-blue-800 mb-1">VT (mL)</label>
+                                <input type="number" id="inp-vt" class="w-full bg-blue-50/50 border border-blue-200 rounded-lg p-2 text-blue-900 font-bold outline-none text-xs" placeholder="400">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-blue-800 mb-1">PEEP</label>
+                                <input type="number" id="inp-peep" class="w-full bg-blue-50/50 border border-blue-200 rounded-lg p-2 text-blue-900 font-bold outline-none text-xs" placeholder="5">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-blue-800 mb-1">P.Plateau</label>
+                                <input type="number" id="inp-pplat" class="w-full bg-blue-50/50 border border-blue-200 rounded-lg p-2 text-blue-900 font-bold outline-none text-xs" placeholder="25">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-blue-800 mb-1">SpO2 (%)</label>
+                                <input type="number" id="inp-spo2" class="w-full bg-blue-50/50 border border-blue-200 rounded-lg p-2 text-blue-900 font-bold outline-none text-xs" placeholder="95">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ====== KANAN: ANALYSIS & OUTPUT PANEL ====== -->
+            <div class="lg:col-span-8 xl:col-span-9 flex flex-col min-h-[600px]">
+                
+                <!-- Tab Navigation -->
+                <div id="tab-navigation" class="mb-4 flex gap-1 overflow-x-auto mobile-scroll fade-in">
+                    <button onclick="switchTab('tab-analysis')" id="btn-tab-analysis" class="tab-btn active px-4 py-3 whitespace-nowrap text-sm flex items-center gap-2">
+                        <i data-lucide="stethoscope" class="w-4 h-4"></i> Analisis & Tata Laksana
+                    </button>
+                    <button onclick="switchTab('tab-education')" id="btn-tab-education" class="tab-btn px-4 py-3 whitespace-nowrap text-sm flex items-center gap-2">
+                        <i data-lucide="book-open" class="w-4 h-4"></i> Pojok Edukasi
+                    </button>
+                    <button onclick="switchTab('tab-history')" id="btn-tab-history" class="tab-btn px-4 py-3 whitespace-nowrap text-sm flex items-center gap-2">
+                        <i data-lucide="history" class="w-4 h-4"></i> History
+                    </button>
+                </div>
+
+                <!-- ====== TAB 1: ANALISIS & TINDAKAN ====== -->
+                <div id="tab-analysis" class="tab-content active w-full flex-1 flex flex-col">
+                    
+                    <!-- WAITING STATE -->
+                    <div id="waiting-state" class="flex-1 bg-white border-2 border-slate-200 border-dashed rounded-3xl p-8 text-center flex flex-col items-center justify-center shadow-sm h-full min-h-[400px]">
+                        <div class="w-20 h-20 bg-blue-50 rounded-full border border-blue-100 flex items-center justify-center mb-5 shadow-inner">
+                            <i data-lucide="clipboard-list" class="w-10 h-10 text-blue-400"></i>
+                        </div>
+                        <h3 class="text-xl md:text-2xl font-black text-slate-800">Menunggu Data Klinis</h3>
+                        <p class="text-sm md:text-base text-slate-500 mt-2 max-w-md mx-auto leading-relaxed">Silakan masukkan nilai <b class="text-slate-700">pH, pCO2, dan HCO3</b> di panel sebelah kiri untuk memunculkan analisis dan rencana tindakan otomatis.</p>
+                        
+                        <div class="mt-8 pt-6 border-t border-slate-100 w-full max-w-sm">
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Atau Coba Fitur Ini</p>
+                            <button onclick="simulateRandomCase()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg">
+                                <i data-lucide="zap" class="w-5 h-5"></i> Jalankan Simulasi Kasus Acak
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ERROR STATE (Hard Limits) -->
+                    <div id="error-state" class="hidden flex-1 bg-red-50 border border-red-200 rounded-3xl p-8 text-center shadow-sm fade-in h-full flex flex-col items-center justify-center min-h-[400px]">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                            <i data-lucide="octagon-alert" class="w-8 h-8 text-red-600"></i>
+                        </div>
+                        <h3 class="text-lg font-black text-red-800 mb-3">Peringatan: Nilai Tidak Fisiologis</h3>
+                        <div class="bg-white p-4 rounded-xl border border-red-100 w-full max-w-md text-left shadow-sm">
+                            <ul id="error-list" class="text-sm text-red-700 space-y-2 font-medium"></ul>
+                        </div>
+                    </div>
+
+                    <!-- ANALYSIS RESULTS WRAPPER -->
+                    <div id="analysis-results" class="hidden space-y-4 md:space-y-5 pb-4 flex-1 break-inside-avoid relative">
+                        
+                        <!-- Top Actions -->
+                        <div class="flex justify-between items-center">
+                            <!-- H-H Warning inline -->
+                            <div id="hh-warning" class="hidden bg-orange-50 border border-orange-200 rounded-lg px-3 py-1.5 shadow-sm flex items-center gap-2">
+                                <i data-lucide="alert-triangle" class="w-4 h-4 text-orange-600"></i>
+                                <span class="text-[11px] font-bold text-orange-800">Cek ulang H-H Equation!</span>
+                            </div>
+                            <div class="flex-1"></div> <!-- Spacer -->
+                            <div class="flex gap-2">
+                                <button id="btn-save-history" onclick="saveToHistory()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center gap-1.5 transition-colors shadow-sm">
+                                    <i data-lucide="bookmark" class="w-3.5 h-3.5"></i> Simpan
+                                </button>
+                                <button id="btn-copy" onclick="copyResults()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center gap-1.5 transition-colors shadow-sm">
+                                    <i data-lucide="copy" class="w-3.5 h-3.5"></i> Salin Laporan
+                                </button>
+                                <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center gap-1.5 transition-colors shadow-sm">
+                                    <i data-lucide="printer" class="w-3.5 h-3.5"></i> Cetak PDF
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 1. Primary Result -->
+                        <div class="bg-white border border-slate-200 rounded-3xl p-5 md:p-7 shadow-sm relative overflow-hidden break-inside-avoid">
+                            <div class="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-blue-400 to-indigo-600"></div>
+                            <div class="pl-2">
+                                <h3 class="text-xs uppercase tracking-widest text-slate-400 font-extrabold mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="activity-square" class="w-4 h-4 text-blue-500"></i> Diagnosis Utama Gas Darah
+                                </h3>
+                                <div id="res-primary" class="text-2xl md:text-4xl font-black text-slate-800 mb-4 leading-tight tracking-tight">-</div>
+                                
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <div id="res-compensation-container" class="hidden inline-flex items-center gap-1.5 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-lg text-xs font-bold text-indigo-700">
+                                        <i data-lucide="git-merge" class="w-3.5 h-3.5"></i> <span id="res-compensation"></span>
+                                    </div>
+                                    <div id="res-oxygen-badge" class="hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 🌟 1.5 CLINICAL THINKING & DIFERENSIAL DIAGNOSIS (EDUKASI) 🌟 -->
+                        <div id="clinical-thinking-section" class="bg-amber-50/50 border border-amber-200 rounded-3xl p-4 md:p-6 shadow-sm mt-6 break-inside-avoid">
+                            <h3 class="text-sm md:text-base uppercase tracking-widest font-black text-amber-800 mb-3 md:mb-4 flex items-center gap-2 border-b border-amber-200/60 pb-3">
+                                <i data-lucide="lightbulb" class="w-5 h-5 text-amber-600"></i> Clinical Thinking & Diferensial Diagnosis
+                            </h3>
+                            <ul id="clinical-thinking-list" class="space-y-3"></ul>
+                        </div>
+
+                        <!-- 🌟 2. KLINIKAL ACTION PLAN (DOKTER & PERAWAT) 🌟 -->
+                        <div class="mt-6 break-inside-avoid">
+                            <h3 class="text-sm md:text-base uppercase tracking-widest font-black text-slate-700 mb-3 flex items-center gap-2">
+                                <i data-lucide="clipboard-check" class="w-5 h-5 text-slate-500"></i> Clinical Action Plan (Tatalaksana)
+                            </h3>
+                            
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <!-- Dokter -->
+                                <div class="bg-indigo-50/70 border border-indigo-200 rounded-2xl p-4 shadow-sm relative break-inside-avoid">
+                                    <div class="absolute top-0 right-0 p-3 opacity-10 pointer-events-none"><i data-lucide="stethoscope" class="w-16 h-16 text-indigo-900"></i></div>
+                                    <div class="flex items-center gap-2.5 mb-4 pb-3 border-b border-indigo-200/60 relative z-10">
+                                        <div class="p-1.5 bg-indigo-600 text-white rounded-lg shadow-sm"><i data-lucide="stethoscope" class="w-4 h-4"></i></div>
+                                        <h4 class="font-extrabold text-indigo-900 text-sm md:text-base">Medical Action (IGD / ICU)</h4>
+                                    </div>
+                                    <ul id="doctor-actions-list" class="space-y-3 relative z-10"></ul>
+                                </div>
+
+                                <!-- Perawat -->
+                                <div class="bg-teal-50/70 border border-teal-200 rounded-2xl p-4 shadow-sm relative break-inside-avoid">
+                                    <div class="absolute top-0 right-0 p-3 opacity-10 pointer-events-none"><i data-lucide="user-plus" class="w-16 h-16 text-teal-900"></i></div>
+                                    <div class="flex items-center gap-2.5 mb-4 pb-3 border-b border-teal-200/60 relative z-10">
+                                        <div class="p-1.5 bg-teal-600 text-white rounded-lg shadow-sm"><i data-lucide="user-plus" class="w-4 h-4"></i></div>
+                                        <h4 class="font-extrabold text-teal-900 text-sm md:text-base">Nursing Action (Perawat Jaga)</h4>
+                                    </div>
+                                    <ul id="nurse-actions-list" class="space-y-3 relative z-10"></ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Additional Calculated Params (Gap, Ca, Oxygen) -->
+                        <div id="res-gap-section" class="hidden mt-6 break-inside-avoid">
+                            <h3 class="text-sm md:text-base uppercase tracking-widest font-black text-slate-700 mb-3 flex items-center gap-2">
+                                <i data-lucide="calculator" class="w-5 h-5 text-slate-500"></i> Kalkulasi Sekunder & Koreksi
+                            </h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                                <!-- Anion Gap -->
+                                <div id="res-ag-card" class="hidden bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                                    <h4 class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1.5">Anion Gap (Koreksi Alb)</h4>
+                                    <div class="text-2xl font-black text-slate-800 mb-2"><span id="res-ag-corr">-</span> <span class="text-xs font-semibold text-slate-400">mEq/L</span></div>
+                                    <div id="res-ag-interp" class="text-[10px] font-bold uppercase tracking-wider p-2 rounded-lg border text-center"></div>
+                                </div>
+                                <!-- Delta Ratio -->
+                                <div id="res-delta-card" class="hidden bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                                    <h4 class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1.5">Delta Ratio (Δ/Δ)</h4>
+                                    <div class="text-2xl font-black text-slate-800 mb-2" id="res-delta-val">-</div>
+                                    <div id="res-delta-interp" class="hidden text-[10px] font-bold p-2 bg-slate-50 text-slate-700 rounded-lg border border-slate-200 text-center"></div>
+                                </div>
+                                <!-- Ca Koreksi -->
+                                <div id="res-ca-section" class="hidden bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                                    <h4 class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1.5">Ca2+ Terkoreksi</h4>
+                                    <div class="text-2xl font-black text-slate-800 mb-2"><span id="res-ca-val">-</span> <span class="text-xs font-semibold text-slate-400">mg/dL</span></div>
+                                    <div id="res-ca-interp" class="text-[10px] font-bold uppercase tracking-wider p-2 rounded-lg border text-center"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- A-a Gradient -->
+                            <div id="res-aa-gradient" class="hidden mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3 flex justify-between items-center text-xs">
+                                <span class="font-bold text-slate-600 flex flex-col gap-0.5">
+                                    <span class="flex items-center gap-1.5"><i data-lucide="wind" class="w-4 h-4"></i> Estimasi A-a Gradient</span>
+                                    <span class="text-[9px] font-normal text-slate-400">*Asumsi Patm 760 mmHg</span>
+                                </span>
+                                <span class="font-black text-slate-800 text-sm" id="res-aa-val"></span>
+                            </div>
+                        </div>
+
+                        <!-- VENTILATOR LPV PROTOCOL (ARDSNet) -->
+                        <div id="res-vent-protocol" class="hidden mt-6 bg-slate-800 rounded-3xl shadow-lg overflow-hidden border border-slate-700 break-inside-avoid">
+                            <div class="bg-slate-900 border-b border-slate-700 p-4 md:p-5 flex items-center justify-between flex-wrap gap-2">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2 bg-cyan-500/20 rounded-lg"><i data-lucide="activity" class="w-5 h-5 md:w-6 md:h-6 text-cyan-400"></i></div>
+                                    <div>
+                                        <h2 class="text-sm md:text-base font-black text-white">Panduan Ventilator (ARDSNet)</h2>
+                                        <p class="text-[10px] text-slate-400 uppercase tracking-widest mt-0.5" id="res-pbw-display">PBW: - kg | Target VT: - mL</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 md:p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Modul A -->
+                                <div class="bg-slate-800/80 border border-slate-600 rounded-2xl p-4 break-inside-avoid">
+                                    <h3 class="text-[10px] uppercase tracking-widest font-black text-cyan-400 mb-2 flex items-center gap-1.5"><i data-lucide="wind" class="w-3.5 h-3.5"></i> Modul A: Asam Basa & CO2</h3>
+                                    <div id="vent-mod-a" class="text-xs md:text-sm text-slate-300 leading-relaxed space-y-1.5"></div>
+                                </div>
+                                <!-- Modul B -->
+                                <div class="bg-slate-800/80 border border-slate-600 rounded-2xl p-4 break-inside-avoid">
+                                    <div class="flex items-center justify-between mb-2 gap-2">
+                                        <h3 class="text-[10px] uppercase tracking-widest font-black text-blue-400 flex items-center gap-1.5"><i data-lucide="droplets" class="w-3.5 h-3.5"></i> Modul B: Oksigenasi & PEEP</h3>
+                                        <span id="ardsnet-table-status" class="px-2 py-1 rounded text-[9px] font-bold text-center"></span>
+                                    </div>
+                                    <div id="vent-mod-b" class="text-xs md:text-sm text-slate-300 leading-relaxed space-y-1.5"></div>
+
+                                    <!-- SBT Readiness Checklist -->
+                                    <div id="sbt-checklist" class="hidden mt-3 bg-emerald-900/30 border border-emerald-700/50 rounded-xl p-3">
+                                        <h4 class="text-[10px] font-black text-emerald-400 uppercase flex items-center gap-1 mb-2"><i data-lucide="check-square" class="w-3.5 h-3.5"></i> SBT Readiness (Persiapan Weaning)</h4>
+                                        <ul class="text-[11px] text-emerald-200/80 space-y-1">
+                                            <li class="flex items-start gap-1"><i data-lucide="check" class="w-3 h-3 mt-0.5 text-emerald-500 shrink-0"></i> Kebutuhan oksigen minimal (FiO2 ≤ 40%, PEEP ≤ 8).</li>
+                                            <li class="flex items-start gap-1"><i data-lucide="circle" class="w-3 h-3 mt-0.5 text-emerald-600 shrink-0"></i> Hemodinamik stabil (vasopresor stop/minimal).</li>
+                                            <li class="flex items-start gap-1"><i data-lucide="circle" class="w-3 h-3 mt-0.5 text-emerald-600 shrink-0"></i> GCS adekuat & refleks batuk (+).</li>
+                                            <li class="pt-1.5 mt-1 border-t border-emerald-800/50 italic text-emerald-300 font-bold">Instruksi: Lakukan Spontaneous Breathing Trial (SBT) dengan PSV 5-8 cmH2O selama 30-120 menit.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <!-- Modul C -->
+                                <div class="bg-red-950/30 border border-red-800/50 rounded-2xl p-4 md:col-span-2 break-inside-avoid">
+                                    <h3 class="text-[10px] uppercase tracking-widest font-black text-red-400 mb-2 flex items-center gap-1.5"><i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Modul C: Proteksi Paru (Barotrauma/Volutrauma)</h3>
+                                    <div id="vent-mod-c" class="text-xs md:text-sm text-red-200/80 leading-relaxed space-y-1.5"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Bicarbonate Protocol -->
+                        <div id="res-bicarb-protocol" class="hidden break-inside-avoid"></div>
+
+                        <!-- DISCLAIMER FOOTER -->
+                        <div id="disclaimer-footer" class="mt-8 pt-4 border-t border-slate-200 flex flex-col items-center justify-center gap-2 pb-2">
+                            <p class="text-[10px] md:text-xs text-slate-400 text-center font-bold uppercase tracking-widest leading-relaxed">
+                                ⚠️ Disclaimer: Hasil estimasi algoritma CDS.<br class="block md:hidden">Evaluasi klinis pasien secara langsung tetap diutamakan.
+                            </p>
+                        </div>
+
+                    </div> <!-- End of analysis-results -->
+                </div> <!-- End of tab-analysis -->
+
+                <!-- ====== TAB 2: POJOK EDUKASI ====== -->
+                <div id="tab-education" class="tab-content w-full flex-1">
+                    <div class="space-y-3 pb-4">
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-3xl p-5 mb-6">
+                            <h2 class="text-base md:text-lg font-black text-blue-900 flex items-center gap-2 mb-1">
+                                <i data-lucide="book-open" class="w-5 h-5 md:w-6 md:h-6 text-blue-600"></i> Pojok Edukasi Klinis BGA
+                            </h2>
+                            <p class="text-xs md:text-sm text-blue-700 leading-relaxed">Gunakan referensi ini untuk mereview ulang patofisiologi dasar gas darah secara cepat di waktu luang jaga klinik atau bangsal.</p>
+                        </div>
+
+                        <!-- Accordion 1: Dasar -->
+                        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden transition-all hover:border-blue-300">
+                            <button onclick="toggleAccordion('edu-ph')" class="w-full flex items-center justify-between p-4 md:p-5 text-left bg-white transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0"><i data-lucide="scale" class="w-4 h-4"></i></div>
+                                    <span class="text-sm font-bold text-slate-800">Gangguan Asam-Basa Dasar (pH, pCO2, HCO3)</span>
+                                </div>
+                                <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform" id="ico-edu-ph"></i>
+                            </button>
+                            <div class="accordion-content px-5 pb-5" id="edu-ph">
+                                <div class="space-y-3 text-xs md:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-4">
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
+                                            <div class="font-black text-slate-800 mb-0.5">pH Normal</div>
+                                            <div class="text-blue-600 font-black text-lg">7.35 – 7.45</div>
+                                        </div>
+                                        <div class="bg-rose-50 border border-rose-200 rounded-xl p-3 text-center">
+                                            <div class="font-black text-rose-800 mb-0.5">Asidemia</div>
+                                            <div class="text-rose-600 font-black text-lg">pH &lt; 7.35</div>
+                                        </div>
+                                        <div class="bg-violet-50 border border-violet-200 rounded-xl p-3 text-center">
+                                            <div class="font-black text-violet-800 mb-0.5">Alkalemia</div>
+                                            <div class="text-violet-600 font-black text-lg">pH &gt; 7.45</div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 relative overflow-hidden">
+                                        <div class="absolute right-0 top-0 opacity-5 p-2"><i data-lucide="lungs" class="w-16 h-16"></i></div>
+                                        <p class="font-black text-slate-800 mb-1">🫁 Asidosis Respiratorik (pCO2 &gt; 45 mmHg)</p>
+                                        <p>Paru menahan (meretensi) CO2. Karena CO2 + H2O → H2CO3 (asam karbonat), maka pH akan turun. Penyebab tersering adalah hipoventilasi akibat PPOK eksaserbasi, kelelahan napas, atau sedasi berlebih.</p>
+                                    </div>
+                                    <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 relative overflow-hidden">
+                                        <div class="absolute right-0 top-0 opacity-5 p-2"><i data-lucide="lungs" class="w-16 h-16"></i></div>
+                                        <p class="font-black text-slate-800 mb-1">🫁 Alkalosis Respiratorik (pCO2 &lt; 35 mmHg)</p>
+                                        <p>Pasien bernapas terlalu cepat (hiperventilasi) sehingga CO2 terbuang banyak. Sering terjadi pada fase awal syok/sepsis, nyeri hebat, hipoksia, atau ansietas.</p>
+                                    </div>
+                                    <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 relative overflow-hidden">
+                                        <div class="absolute right-0 top-0 opacity-5 p-2"><i data-lucide="kidneys" class="w-16 h-16"></i></div>
+                                        <p class="font-black text-slate-800 mb-1">🧪 Asidosis Metabolik (HCO3 &lt; 22 mEq/L)</p>
+                                        <p>Stok <i>buffer</i> basa tubuh habis dipakai untuk menetralisir penambahan asam organik (seperti Laktat pada syok, Keton pada KAD) atau basa memang terbuang keluar tubuh (Diare massal) / Ginjal gagal ekskresi H+.</p>
+                                    </div>
+                                    <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 relative overflow-hidden">
+                                        <div class="absolute right-0 top-0 opacity-5 p-2"><i data-lucide="kidneys" class="w-16 h-16"></i></div>
+                                        <p class="font-black text-slate-800 mb-1">🧪 Alkalosis Metabolik (HCO3 &gt; 26 mEq/L)</p>
+                                        <p>Peningkatan basa darah absolut. Sering iatrogenik (penggunaan diuretik Loop/Furosemid membuang ion Cl- dan H+) atau hilangnya asam lambung akut karena muntah proyektil/NGT terbuka.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Accordion 2: Anion Gap -->
+                        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden transition-all hover:border-rose-300">
+                            <button onclick="toggleAccordion('edu-ag')" class="w-full flex items-center justify-between p-4 md:p-5 text-left bg-white transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0"><i data-lucide="flask-conical" class="w-4 h-4"></i></div>
+                                    <span class="text-sm font-bold text-slate-800">Anion Gap (AG) — HAGMA vs NAGMA vs LAGMA</span>
+                                </div>
+                                <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform" id="ico-edu-ag"></i>
+                            </button>
+                            <div class="accordion-content px-5 pb-5" id="edu-ag">
+                                <div class="space-y-3 text-xs md:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-4">
+                                    <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+                                        <p class="font-black text-indigo-900 mb-2">📐 Formula Anion Gap</p>
+                                        <p class="font-mono text-sm text-indigo-800 bg-white p-3 rounded-lg text-center font-bold shadow-sm">AG = Na⁺ − (Cl⁻ + HCO3⁻)</p>
+                                        <p class="mt-3 text-indigo-800"><b>Normal: 8–12 mEq/L</b>. Jika pasien hipoalbumin, AG harus dikoreksi: <i>Tambahkan 2.5 ke nilai AG untuk tiap penurunan 1 g/dL albumin dari batas 4.0.</i></p>
+                                    </div>
+                                    <div class="grid grid-cols-1 gap-3 mt-2">
+                                        <div class="bg-rose-50 border border-rose-200 rounded-xl p-4">
+                                            <div class="font-black text-rose-800 mb-1.5 flex items-center gap-1.5"><i data-lucide="trending-up" class="w-4 h-4"></i> HAGMA (High Anion Gap > 12)</div>
+                                            <p class="text-xs text-rose-700">Ada tambahan "asam asing" beracun atau patologis yang masuk ke darah (anion tidak terukur meningkat). Hapal diferensial diagnosisnya dengan mnemonik <b>MUDPILES</b> atau <b>GOLD MARK</b> (Glikol, Oksoprolin, L-Laktat, D-Laktat, Metanol, Aspirin, Renal failure/Uremia, Ketoasidosis).</p>
+                                        </div>
+                                        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                                            <div class="font-black text-emerald-800 mb-1.5 flex items-center gap-1.5"><i data-lucide="minus" class="w-4 h-4"></i> NAGMA (Normal Anion Gap 8-12)</div>
+                                            <p class="text-xs text-emerald-700">Juga dikenal sebagai <b>Asidosis Hiperkloremik</b>. Asidosis terjadi bukan karena ketambahan racun, melainkan karena tubuh "bocor" membuang HCO3, lalu kompensasi tubuh menahan Klorida (Cl) agar muatan listrik stabil. Penyebab utama: Diare masif, <i>Renal Tubular Acidosis</i> (RTA), atau resusitasi cairan NaCl 0.9% secara masif.</p>
+                                        </div>
+                                        <div class="bg-violet-50 border border-violet-200 rounded-xl p-4">
+                                            <div class="font-black text-violet-800 mb-1.5 flex items-center gap-1.5"><i data-lucide="trending-down" class="w-4 h-4"></i> LAGMA (Low Anion Gap < 8)</div>
+                                            <p class="text-xs text-violet-700">Jarang terjadi tetapi sangat spesifik. Penyebab paling umum adalah <b>Hipoalbuminemia</b> berat yang tidak dikoreksi. Penyebab lain: Peningkatan kation tak terukur parah (Multiple Myeloma/Hiperproteinemia, hiperkalsemia, intoksikasi Litium).</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- ====== TAB 3: RIWAYAT SESI ====== -->
+                <div id="tab-history" class="tab-content w-full flex-1">
+                    <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden h-full flex flex-col min-h-[400px]">
+                        <div class="bg-slate-50 border-b border-slate-200 px-5 py-4 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="history" class="w-5 h-5 text-slate-500"></i>
+                                <h2 class="text-base font-black text-slate-800">Riwayat Sesi Ini</h2>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="clearHistory()" class="text-[10px] md:text-xs bg-slate-200 hover:bg-rose-100 hover:text-rose-600 text-slate-500 font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Bersihkan
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex-1 overflow-y-auto bg-white p-2 md:p-3">
+                            <ul id="history-list" class="divide-y divide-slate-100">
+                                <li id="history-empty" class="text-center p-10 text-slate-400 text-sm font-medium flex flex-col items-center justify-center gap-3">
+                                    <i data-lucide="inbox" class="w-10 h-10 text-slate-200"></i>
+                                    Belum ada riwayat BGA yang disimpan.<br>Tekan tombol "Simpan" setelah perhitungan.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Script / Logic -->
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // ====== UI / TAB LOGIC ======
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            document.getElementById(`btn-${tabId}`).classList.add('active');
+        }
+
+        function toggleAccordion(id) {
+            const el = document.getElementById(id);
+            const ico = document.getElementById('ico-' + id);
+            if (el.classList.contains('open')) {
+                el.classList.remove('open');
+                if (ico) ico.style.transform = 'rotate(0deg)';
+            } else {
+                el.classList.add('open');
+                if (ico) ico.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        function dismissSimulatorBanner() {
+            document.getElementById('simulator-banner').classList.add('hidden');
+        }
+
+        // ====== STATE / INPUTS ======
+        let sessionHistory = [];
+        
+        const inputs = {
+            ph: document.getElementById('inp-ph'),
+            pco2: document.getElementById('inp-pco2'),
+            hco3: document.getElementById('inp-hco3'),
+            po2: document.getElementById('inp-po2'),
+            fio2: document.getElementById('inp-fio2'),
+            na: document.getElementById('inp-na'),
+            k: document.getElementById('inp-k'),
+            cl: document.getElementById('inp-cl'),
+            albumin: document.getElementById('inp-albumin'),
+            ca: document.getElementById('inp-ca'),
+            lactate: document.getElementById('inp-lactate'),
+            weight: document.getElementById('inp-weight'),
+            onVent: document.getElementById('inp-onVent'),
+            gender: document.getElementById('inp-gender'),
+            height: document.getElementById('inp-height'),
+            ventMode: document.getElementById('inp-ventMode'),
+            rr: document.getElementById('inp-rr'),
+            vt: document.getElementById('inp-vt'),
+            peep: document.getElementById('inp-peep'),
+            pplat: document.getElementById('inp-pplat'),
+            spo2: document.getElementById('inp-spo2')
+        };
+
+        // ====== EVENTS ======
+        function updateLivePBW() {
+            let h = parseFloat(inputs.height.value);
+            let g = inputs.gender.value;
+            let container = document.getElementById('live-pbw-container');
+            // Show PBW only if vent is checked and height is valid
+            if(inputs.onVent.checked && !isNaN(h) && h >= 100 && h <= 250) {
+                let pbw = g === 'M' ? 50 + 0.91 * (h - 152.4) : 45.5 + 0.91 * (h - 152.4);
+                if (pbw < 30) pbw = 30; // Failsafe for extreme calculation minimums
+                container.classList.remove('hidden');
+                document.getElementById('live-pbw-val').innerText = pbw.toFixed(1);
+                document.getElementById('live-vt-val').innerText = (pbw * 6).toFixed(0);
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+        inputs.height.addEventListener('input', updateLivePBW);
+        inputs.gender.addEventListener('change', () => {
+            updateLivePBW();
+            runAnalysis(); // Gender affects hypernatremia tbw
+        });
+
+        Object.values(inputs).forEach(input => {
+            if (input !== inputs.gender) { // Avoid duplicate listener
+                input.addEventListener('input', () => {
+                    dismissSimulatorBanner();
+                    runAnalysis();
+                });
+                input.addEventListener('change', runAnalysis);
+            }
+        });
+
+        function setFiO2(val) {
+            inputs.fio2.value = val;
+            document.querySelectorAll('.fio2-btn').forEach(btn => {
+                if(btn.dataset.val === val) {
+                    btn.classList.replace('bg-white', 'bg-blue-50');
+                    btn.classList.replace('text-slate-600', 'text-blue-700');
+                    btn.classList.replace('border-slate-200', 'border-blue-200');
+                } else {
+                    btn.classList.replace('bg-blue-50', 'bg-white');
+                    btn.classList.replace('text-blue-700', 'text-slate-600');
+                    btn.classList.replace('border-blue-200', 'border-slate-200');
+                }
+            });
+            runAnalysis();
+        }
+
+        inputs.onVent.addEventListener('change', (e) => {
+            const isVent = e.target.checked;
+            const container = document.getElementById('vent-container');
+            const iconBg = document.getElementById('vent-icon-bg');
+            const title = document.getElementById('vent-title');
+            const detailsContainer = document.getElementById('vent-details-container');
+            
+            if(isVent) {
+                container.classList.add('bg-blue-50/40', 'border-blue-300');
+                iconBg.classList.replace('bg-slate-100', 'bg-blue-600');
+                iconBg.classList.replace('text-slate-500', 'text-white');
+                title.classList.replace('text-slate-700', 'text-blue-900');
+                detailsContainer.classList.remove('hidden');
+                updateLivePBW();
+            } else {
+                container.classList.remove('bg-blue-50/40', 'border-blue-300');
+                iconBg.classList.replace('bg-blue-600', 'bg-slate-100');
+                iconBg.classList.replace('text-white', 'text-slate-500');
+                title.classList.replace('text-blue-900', 'text-slate-700');
+                detailsContainer.classList.add('hidden');
+                document.getElementById('live-pbw-container').classList.add('hidden');
+            }
+            runAnalysis();
+        });
+
+        function saveToHistory() {
+            const primaryText = document.getElementById('res-primary').innerText;
+            if(!primaryText || primaryText === '-') return;
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+            
+            const entry = {
+                time: timeStr,
+                ph: inputs.ph.value,
+                pco2: inputs.pco2.value,
+                hco3: inputs.hco3.value,
+                diagnosis: primaryText
+            };
+
+            sessionHistory.unshift(entry);
+            
+            const histList = document.getElementById('history-list');
+            const emptyState = document.getElementById('history-empty');
+            if (emptyState) emptyState.remove();
+            
+            const li = document.createElement('li');
+            li.className = "p-4 flex flex-col md:flex-row md:items-center justify-between gap-2 hover:bg-slate-50 transition-colors text-sm border-b border-slate-100 last:border-0";
+            li.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <span class="text-[10px] font-black text-slate-500 bg-slate-100 px-2 py-1 rounded-lg shrink-0">${entry.time}</span>
+                    <div class="font-black text-slate-700">${entry.diagnosis}</div>
+                </div>
+                <div class="text-xs font-mono font-bold text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl self-start md:self-auto">
+                    pH ${entry.ph} | pCO2 ${entry.pco2} | HCO3 ${entry.hco3}
+                </div>
+            `;
+            histList.insertBefore(li, histList.firstChild);
+
+            // Button Feedback
+            const btn = document.getElementById('btn-save-history');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i> Tersimpan`;
+            btn.classList.replace('bg-emerald-600', 'bg-slate-700');
+            btn.classList.replace('hover:bg-emerald-700', 'hover:bg-slate-800');
+            lucide.createIcons();
+            
+            switchTab('tab-history');
+            
+            setTimeout(() => { 
+                btn.innerHTML = originalHtml; 
+                btn.classList.replace('bg-slate-700', 'bg-emerald-600');
+                btn.classList.replace('hover:bg-slate-800', 'hover:bg-emerald-700');
+                lucide.createIcons(); 
+            }, 1500);
+        }
+
+        function clearHistory() {
+            sessionHistory = [];
+            const histList = document.getElementById('history-list');
+            histList.innerHTML = `
+                <li id="history-empty" class="text-center p-10 text-slate-400 text-sm font-medium flex flex-col items-center justify-center gap-3">
+                    <i data-lucide="inbox" class="w-10 h-10 text-slate-200"></i>
+                    Belum ada riwayat BGA yang disimpan.<br>Tekan tombol "Simpan" setelah perhitungan.
+                </li>
+            `;
+            lucide.createIcons();
+        }
+
+        function copyResults() {
+            const primary = document.getElementById('res-primary').innerText;
+            const comp = document.getElementById('res-compensation').innerText;
+            
+            let textToCopy = `[BGA Studio - ICU Report]\nDiagnosis Utama: ${primary}\nKompensasi: ${comp ? comp : '-'}`;
+            
+            // Extract Clinical Thinking
+            let thinkingList = document.querySelectorAll('#clinical-thinking-list li');
+            if(thinkingList.length > 0) {
+                textToCopy += `\n\n--- CLINICAL THINKING (DIFFERENTIAL) ---`;
+                thinkingList.forEach(li => {
+                    textToCopy += `\n• ${li.innerText.replace(/[\n\r]+/g, ' ')}`;
+                });
+            }
+
+            // Extract Doctor Actions
+            let doctorActions = document.querySelectorAll('#doctor-actions-list li');
+            if (doctorActions.length > 0) {
+                textToCopy += `\n\n--- MEDICAL ACTION (DOKTER) ---`;
+                doctorActions.forEach(li => {
+                    textToCopy += `\n• ${li.innerText.replace(/[\n\r]+/g, ' ')}`;
+                });
+            }
+
+            // Extract Nurse Actions
+            let nurseActions = document.querySelectorAll('#nurse-actions-list li');
+            if (nurseActions.length > 0) {
+                textToCopy += `\n\n--- NURSING ACTION (PERAWAT) ---`;
+                nurseActions.forEach(li => {
+                    textToCopy += `\n• ${li.innerText.replace(/[\n\r]+/g, ' ')}`;
+                });
+            }
+
+            // More robust check for secondary calculations visibility using offsetParent
+            const agSection = document.getElementById('res-gap-section');
+            if (agSection && agSection.offsetParent !== null) {
+                const agCard = document.getElementById('res-ag-card');
+                if (agCard && agCard.offsetParent !== null) {
+                    const agVal = document.getElementById('res-ag-corr').innerText;
+                    const agInterp = document.getElementById('res-ag-interp').innerText;
+                    if (agVal && agVal !== '-') textToCopy += `\n\n[Data Lanjutan]\nAnion Gap (Koreksi): ${agVal} mEq/L (${agInterp})`;
+                }
+
+                const caSection = document.getElementById('res-ca-section');
+                if (caSection && caSection.offsetParent !== null) {
+                    const caVal = document.getElementById('res-ca-val').innerText;
+                    textToCopy += `\nKalsium Terkoreksi: ${caVal} mg/dL`;
+                }
+                
+                const aaGradient = document.getElementById('res-aa-gradient');
+                if (aaGradient && aaGradient.offsetParent !== null) {
+                    const aaVal = document.getElementById('res-aa-val').innerText;
+                    textToCopy += `\nEstimasi A-a Gradient: ${aaVal}`;
+                }
+            }
+
+            const badgeOxy = document.getElementById('res-oxygen-badge');
+            if (badgeOxy && badgeOxy.style.display === 'inline-flex') {
+                textToCopy += `\nOksigenasi: ${badgeOxy.innerText}`;
+            }
+
+            const ventSection = document.getElementById('res-vent-protocol');
+            if(ventSection && ventSection.style.display === 'block') {
+                textToCopy += `\n\n--- REKOMENDASI VENTILATOR (ARDSNet) ---`;
+                textToCopy += `\n${document.getElementById('res-pbw-display').innerText}`;
+                
+                const tableStatusEl = document.getElementById('ardsnet-table-status');
+                if(tableStatusEl && tableStatusEl.innerText) textToCopy += `\nStatus PEEP: ${tableStatusEl.innerText}`;
+                
+                textToCopy += `\n\nModul A (Ventilasi & pH):\n${document.getElementById('vent-mod-a').innerText.replace(/<[^>]*>?/gm, '')}`;
+                let modBText = document.getElementById('vent-mod-b').innerHTML.split('<div class="hidden mt-3')[0];
+                textToCopy += `\n\nModul B (Oksigenasi):\n${modBText.replace(/<[^>]*>?/gm, '')}`;
+                textToCopy += `\n\nModul C (Safety Proteksi Paru):\n${document.getElementById('vent-mod-c').innerText.replace(/<[^>]*>?/gm, '')}`;
+            }
+            
+            textToCopy += `\n\nDisclaimer: Hasil estimasi algoritma CDS, evaluasi klinis pasien secara langsung tetap diutamakan.`;
+            
+            // Clipboard API implementation with graceful execCommand fallback
+            const copyToClipboardFallback = (text) => {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.top = "0";
+                textArea.style.left = "0";
+                textArea.style.position = "fixed";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showCopySuccess();
+                } catch (err) { 
+                    console.error('Fallback: Oops, unable to copy', err); 
+                }
+                document.body.removeChild(textArea);
+            };
+
+            const showCopySuccess = () => {
+                const btn = document.getElementById('btn-copy');
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i> Laporan Tersalin!`;
+                btn.classList.replace('bg-blue-600', 'bg-emerald-600');
+                btn.classList.replace('hover:bg-blue-700', 'hover:bg-emerald-700');
+                lucide.createIcons();
+                setTimeout(() => { 
+                    btn.innerHTML = originalHtml; 
+                    btn.classList.replace('bg-emerald-600', 'bg-blue-600');
+                    btn.classList.replace('hover:bg-emerald-700', 'hover:bg-blue-700');
+                    lucide.createIcons(); 
+                }, 2000);
+            };
+
+            if (!navigator.clipboard) {
+                copyToClipboardFallback(textToCopy);
+                return;
+            }
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showCopySuccess();
+            }).catch(err => {
+                console.error('Async: Could not copy text: ', err);
+                copyToClipboardFallback(textToCopy); // Fallback if blocked by iframe policy
+            });
+        }
+
+        // ====== CORE ENGINE ======
+        function checkValidations(vals) {
+            let errs = [];
+            const check = (val, min, max, name) => {
+                if(!isNaN(val) && (val < min || val > max)) errs.push(`<b>${name}</b> (${val}) di luar batas wajar (${min}-${max})`);
+            };
+            check(vals.ph, 6.8, 7.8, 'pH');
+            check(vals.pco2, 5, 150, 'pCO2');
+            check(vals.hco3, 2, 60, 'HCO3');
+            check(vals.po2, 10, 500, 'pO2');
+            check(vals.fio2, 21, 100, 'FiO2'); 
+            check(vals.na, 110, 170, 'Na+');
+            check(vals.k, 1.0, 10.0, 'K+');
+            check(vals.ca, 4.0, 20.0, 'Ca2+');
+            check(vals.lactate, 0.1, 30, 'Laktat');
+            
+            if(vals.isVent) {
+                check(vals.height, 100, 250, 'Tinggi Badan');
+                check(vals.vt, 50, 1500, 'Tidal Volume');
+                check(vals.peep, 0, 35, 'PEEP');
+                check(vals.pplat, 5, 70, 'Plateau Pressure');
+                check(vals.spo2, 30, 100, 'SpO2');
+                check(vals.rr, 4, 60, 'RR Aktual');
+            }
+            return errs;
+        }
+
+        function runAnalysis() {
+            const vals = {
+                ph: parseFloat(inputs.ph.value),
+                pco2: parseFloat(inputs.pco2.value),
+                hco3: parseFloat(inputs.hco3.value),
+                po2: parseFloat(inputs.po2.value),
+                fio2: parseFloat(inputs.fio2.value) || 21,
+                na: parseFloat(inputs.na.value),
+                k: parseFloat(inputs.k.value),
+                cl: parseFloat(inputs.cl.value),
+                albumin: parseFloat(inputs.albumin.value) || 4.0,
+                ca: parseFloat(inputs.ca.value),
+                lactate: parseFloat(inputs.lactate.value),
+                weight: parseFloat(inputs.weight.value) || 60,
+                isVent: inputs.onVent.checked,
+                gender: inputs.gender.value,
+                height: parseFloat(inputs.height.value),
+                ventMode: inputs.ventMode.value,
+                rr: parseFloat(inputs.rr.value),
+                vt: parseFloat(inputs.vt.value),
+                peep: parseFloat(inputs.peep.value),
+                pplat: parseFloat(inputs.pplat.value),
+                spo2: parseFloat(inputs.spo2.value)
+            };
+
+            const btnSave = document.getElementById('btn-save-history');
+            btnSave.disabled = true;
+            btnSave.classList.add('opacity-50', 'cursor-not-allowed');
+
+            if (isNaN(vals.ph) || isNaN(vals.pco2) || isNaN(vals.hco3)) {
+                document.getElementById('waiting-state').style.display = 'flex';
+                document.getElementById('error-state').style.display = 'none';
+                document.getElementById('analysis-results').style.display = 'none';
+                return;
+            }
+
+            const errors = checkValidations(vals);
+            if (errors.length > 0) {
+                document.getElementById('waiting-state').style.display = 'none';
+                document.getElementById('error-state').style.display = 'flex';
+                document.getElementById('analysis-results').style.display = 'none';
+                document.getElementById('error-list').innerHTML = errors.map(e => `<li class="flex gap-2 items-start"><i data-lucide="x-circle" class="w-4 h-4 mt-0.5 shrink-0"></i> <span>${e}</span></li>`).join('');
+                lucide.createIcons();
+                return;
+            }
+
+            let pfRatioGlob = (!isNaN(vals.po2) && !isNaN(vals.fio2)) ? (vals.po2 / (vals.fio2 / 100)) : null;
+
+            // Henderson-Hasselbalch Check
+            const hhWarning = document.getElementById('hh-warning');
+            const expectedPh = 6.1 + Math.log10(vals.hco3 / (0.03 * vals.pco2));
+            if (Math.abs(expectedPh - vals.ph) > 0.04) {
+                hhWarning.style.display = 'flex';
+            } else {
+                hhWarning.style.display = 'none';
+            }
+
+            // Show Analysis UI
+            document.getElementById('waiting-state').style.display = 'none';
+            document.getElementById('error-state').style.display = 'none';
+            document.getElementById('analysis-results').style.display = 'block';
+
+            btnSave.disabled = false;
+            btnSave.classList.remove('opacity-50', 'cursor-not-allowed');
+
+            let primary = '';
+            let compensation = '';
+            let clinicalThinking = []; 
+            let doctorActions = [];
+            let nurseActions = [];
+            
+            let isAcidemia = vals.ph < 7.35;
+            let isAlkalemia = vals.ph > 7.45;
+
+            // --- 1. PRIMARY DISORDER ---
+            if (isAcidemia) {
+                if (vals.pco2 > 45 && vals.hco3 >= 22) primary = 'Respiratory Acidosis';
+                else if (vals.hco3 < 22 && vals.pco2 <= 45) primary = 'Metabolic Acidosis';
+                else if (vals.pco2 > 45 && vals.hco3 < 22) primary = 'Mixed Acidosis (Resp + Met)';
+                else primary = 'Metabolic Acidosis (Compensated)';
+            } else if (isAlkalemia) {
+                if (vals.pco2 < 35 && vals.hco3 <= 26) primary = 'Respiratory Alkalosis';
+                else if (vals.hco3 > 26 && vals.pco2 >= 35) primary = 'Metabolic Alkalosis';
+                else if (vals.pco2 < 35 && vals.hco3 > 26) primary = 'Mixed Alkalosis (Resp + Met)';
+                else primary = 'Metabolic Alkalosis (Compensated)';
+            } else {
+                if (vals.pco2 > 45 && vals.hco3 > 26) primary = vals.ph <= 7.40 ? 'Fully Compensated Resp. Acidosis' : 'Fully Compensated Met. Alkalosis';
+                else if (vals.pco2 < 35 && vals.hco3 < 22) primary = vals.ph >= 7.40 ? 'Fully Compensated Resp. Alkalosis' : 'Fully Compensated Met. Acidosis';
+                else if (vals.pco2 < 35 || vals.pco2 > 45 || vals.hco3 < 22 || vals.hco3 > 26) primary = 'Mixed Disorder (Normal pH Target)';
+                else primary = 'Normal / Acceptable BGA';
+            }
+
+            // Populate Clinical Thinking Base
+            if (primary.includes('Respiratory Acidosis')) {
+                clinicalThinking.push(`<b>Asidosis Respiratorik:</b> Pasien menahan CO2 (hipoventilasi). Pikirkan DDx: <b>PPOK Eksaserbasi</b>, kelelahan otot napas berat, hambatan jalan napas, atau depresi pusat napas akibat <b>opioid/sedatif</b>.`);
+            }
+            if (primary.includes('Respiratory Alkalosis')) {
+                clinicalThinking.push(`<b>Alkalosis Respiratorik:</b> Pasien membuang terlalu banyak CO2 (hiperventilasi). Pikirkan DDx: Fase awal dari <b>Syok/Sepsis</b>, <b>Nyeri/Ansietas</b> hebat, kehamilan, atau <b>Emboli Paru</b>.`);
+            }
+            if (primary.includes('Metabolic Alkalosis')) {
+                clinicalThinking.push(`<b>Alkalosis Metabolik:</b> Terjadi akumulasi basa atau hilangnya asam klorida (HCl). Pikirkan DDx: Penggunaan <b>Diuretik Loop (Furosemid)</b> jangka panjang, <b>muntah proyektil</b> terus menerus, NGT dialirkan masif, atau Hipokalemia.`);
+            }
+            if (primary.includes('Mixed')) {
+                clinicalThinking.push(`<b>Mixed Disorder:</b> Terdapat lebih dari satu gangguan asam-basa primer yang berjalan bersamaan. Membutuhkan pencarian underlying disease secara holistik.`);
+            }
+
+            // --- 2. COMPENSATION ---
+            if (primary.includes('Metabolic Acidosis')) {
+                const expPco2Mid = (1.5 * vals.hco3) + 8;
+                if (Math.abs(vals.pco2 - expPco2Mid) <= 2) compensation = 'Kompensasi Respiratorik Sesuai';
+                else if (vals.pco2 < expPco2Mid - 2) compensation = 'Komp. Berlebih (Concurrent Resp. Alkalosis)';
+                else compensation = 'Komp. Gagal (Concurrent Resp. Acidosis)';
+            } else if (primary.includes('Metabolic Alkalosis')) {
+                const expPco2Mid = (0.7 * (vals.hco3 - 24)) + 40;
+                if (Math.abs(vals.pco2 - expPco2Mid) <= 2) compensation = 'Kompensasi Respiratorik Sesuai';
+                else if (vals.pco2 > expPco2Mid + 2) compensation = 'Concurrent Resp. Acidosis';
+                else compensation = 'Concurrent Resp. Alkalosis';
+            } else if (primary.includes('Respiratory Acidosis')) {
+                let acuteHco3 = 24 + 0.1 * (vals.pco2 - 40);
+                let chronicHco3 = 24 + 0.4 * (vals.pco2 - 40);
+                if (Math.abs(vals.hco3 - acuteHco3) <= 2.5) compensation = 'Fase Akut (Uncompensated)';
+                else if (Math.abs(vals.hco3 - chronicHco3) <= 2.5) compensation = 'Fase Kronik (Full Comp)';
+                else if (vals.hco3 > acuteHco3 && vals.hco3 < chronicHco3) compensation = 'Partial Comp. (Acute on Chronic)';
+                else if (vals.hco3 > chronicHco3) compensation = 'Concurrent Metabolic Alkalosis';
+                else compensation = 'Concurrent Metabolic Acidosis';
+            } else if (primary.includes('Respiratory Alkalosis')) {
+                let acuteHco3 = 24 - 0.2 * (40 - vals.pco2);
+                let chronicHco3 = 24 - 0.5 * (40 - vals.pco2);
+                if (Math.abs(vals.hco3 - acuteHco3) <= 3) compensation = 'Fase Akut (Uncompensated)'; 
+                else if (Math.abs(vals.hco3 - chronicHco3) <= 3) compensation = 'Fase Kronik (Full Comp)';
+                else if (vals.hco3 < acuteHco3 && vals.hco3 > chronicHco3) compensation = 'Partial Comp. (Acute on Chronic)';
+                else if (vals.hco3 < chronicHco3) compensation = 'Concurrent Metabolic Acidosis';
+                else compensation = 'Concurrent Metabolic Alkalosis';
+            } else if (primary.includes('Mixed')) {
+                compensation = 'Kompensasi tidak dikalkulasi (Mixed Disorder)';
+            }
+
+            document.getElementById('res-primary').innerText = primary;
+            let compContainer = document.getElementById('res-compensation-container');
+            if (compensation) {
+                compContainer.style.display = 'inline-flex';
+                document.getElementById('res-compensation').innerText = compensation;
+            } else compContainer.style.display = 'none';
+
+            // --- 3. CLINICAL ACTION PLAN GENERATOR (DOKTER & PERAWAT) ---
+            
+            // Baseline Nursing actions
+            nurseActions.push("Pantau hemodinamik kontinu (TD, HR, RR, SpO2) dan dokumentasikan status kesadaran (GCS/RASS).");
+            nurseActions.push("Catat balance cairan (Intake/Output) ketat tiap jam. Laporkan jika diuresis < 0.5 cc/kgBB/jam.");
+
+            // A. PH Actions
+            if (vals.ph < 7.20) {
+                doctorActions.push(`<b>Manajemen Asidemia Berat (pH < 7.20):</b> Evaluasi stabilitas kardiovaskular. Asidemia berat dapat menurunkan respons miokard terhadap katekolamin. Identifikasi segera kausa primer.`);
+                doctorActions.push(`<b>Akses Vaskular Invasif:</b> Pertimbangkan pemasangan <i>Central Venous Catheter (CVC)</i> untuk obat vasoaktif sentral dan <i>Arterial Line (A-Line)</i> untuk BGA serial.`);
+                nurseActions.push("Siapkan <b>Troli Emergensi</b> (Laringoskop, ETT, Suction) dan obat resusitasi (Epinefrin, SA) di dekat bed pasien. Waspada henti napas/jantung mendadak.");
+            } else if (vals.ph > 7.55) {
+                doctorActions.push(`<b>Manajemen Alkalemia Berat (pH > 7.55):</b> Hati-hati tingginya risiko aritmia dan kejang akibat pergeseran K+ dan Ca++ ke intrasel. Cek panel elektrolit lengkap.`);
+                doctorActions.push(`<b>Evaluasi Iatrogenik:</b> Hentikan obat pemicu seperti diuretik Loop (Furosemid) jika ada, atau kurangi volume sedot NGT berlebih yang membuang asam lambung.`);
+            }
+
+            // B. Respiratory Actions
+            if (primary.includes('Respiratory Acidosis')) {
+                doctorActions.push(`<b>Manajemen Retensi CO2:</b> Berikan bronkodilator nebulisasi & kortikosteroid jika PPOK. Jika apneu/letargi, pertimbangkan intubasi atau <i>Non-Invasive Ventilation (NIV)</i>.`);
+                nurseActions.push("Posisikan pasien <b>Semi-Fowler (30-45 derajat)</b> untuk ekspansi paru optimal. <i>Suctioning</i> jalan napas jika gurgling.");
+            }
+
+            // C. Oxygenation Actions (P/F Ratio & O2)
+            let badgeOxy = document.getElementById('res-oxygen-badge');
+            if(pfRatioGlob !== null) {
+                badgeOxy.style.display = 'inline-flex';
+                
+                if (pfRatioGlob < 150) {
+                    clinicalThinking.push(`<b>Hipoksia Berat (P/F < 150):</b> Tanda nyata gagal napas hipoksemik. Memenuhi kriteria ARDS Berat jika ada infiltrat bilateral.`);
+                    badgeOxy.innerHTML = `<i data-lucide="wind" class="w-3.5 h-3.5"></i> P/F ${pfRatioGlob.toFixed(0)} (Severe Hypoxia)`;
+                    badgeOxy.className = "hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border bg-rose-50 border-rose-200 text-rose-700";
+                    doctorActions.push(`<b>Manajemen Oksigenasi Kritis (P/F < 150):</b> Eskalasi ke <i>High-Flow Nasal Cannula (HFNC)</i> (Flow 40-60 L/m, FiO2 100%) atau <b>Intubasi elektif</b>. <b>Re-check BGA 1 jam kemudian.</b>`);
+                    nurseActions.push("Siapkan sirkuit penyalur oksigen konsentrasi tinggi (NRM/HFNC) atau set mesin Ventilator.");
+                } else if (pfRatioGlob < 300) {
+                    badgeOxy.innerHTML = `<i data-lucide="wind" class="w-3.5 h-3.5"></i> P/F ${pfRatioGlob.toFixed(0)} (Mild Hypoxia)`;
+                    badgeOxy.className = "hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border bg-amber-50 border-amber-200 text-amber-700";
+                    doctorActions.push(`<b>Manajemen Hipoksia Ringan (P/F < 300):</b> Berikan suplementasi oksigen target SpO2 92-96%. Evaluasi rontgen toraks.`);
+                } else {
+                    badgeOxy.innerHTML = `<i data-lucide="wind" class="w-3.5 h-3.5"></i> P/F ${pfRatioGlob.toFixed(0)} (Normal)`;
+                    badgeOxy.className = "hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border bg-emerald-50 border-emerald-200 text-emerald-700";
+                }
+            } else {
+                badgeOxy.style.display = 'none';
+            }
+
+            // D. Natrium (Na) Correction
+            if (!isNaN(vals.na)) {
+                let tbw = vals.weight * (vals.gender === 'M' ? 0.6 : 0.5);
+                if (vals.na < 130) {
+                    let naTarget = vals.na + 8; // Max 8 mEq/24h to be safe
+                    if(naTarget > 135) naTarget = 135;
+                    let deficitNa = (naTarget - vals.na) * tbw;
+                    clinicalThinking.push(`<b>Hiponatremia Berat (Na < 130):</b> Waspada edema serebri. Target koreksi MAX ≤ 8-10 mEq/24 jam untuk mencegah Osmotic Demyelination Syndrome (ODS).`);
+                    doctorActions.push(`<b>Koreksi Hiponatremia (Na: ${vals.na}):</b> Defisit Na untuk target aman (${naTarget} mEq/L) adalah <b>~${deficitNa.toFixed(0)} mEq</b>. Berikan infus NaCl 3% perlahan via *syringe pump*. Pantau ketat status neurologis.`);
+                    nurseActions.push(`<b>Monitoring Hiponatremia:</b> <b>Cek elektrolit ulang tiap 4-6 jam</b> saat drip NaCl 3% berjalan. Hentikan drip & lapor DPJP jika Na naik > 8 mEq dalam 24 jam.`);
+                } else if (vals.na > 150) {
+                    let fwd = tbw * ((vals.na / 140) - 1);
+                    clinicalThinking.push(`<b>Hipernatremia Berat (Na > 150):</b> Tanda dehidrasi intraseluler absolut (Free Water Deficit). Target penurunan MAX 10 mEq/24 jam.`);
+                    doctorActions.push(`<b>Koreksi Hipernatremia (Na: ${vals.na}):</b> <i>Free Water Deficit (FWD)</i> pasien <b>~${fwd.toFixed(1)} Liter</b>. Ganti defisit cairan dengan D5W atau NaCl 0.45% secara bertahap dalam 48-72 jam. Cek Na tiap 6 jam.`);
+                }
+            }
+
+            // E. Potassium (K) Correction
+            if (!isNaN(vals.k)) {
+                if (vals.k < 2.5) {
+                    let kTarget = 4.0;
+                    let deficitK = (kTarget - vals.k) * vals.weight * 0.4;
+                    clinicalThinking.push(`<b>Hipokalemia Kritis (< 2.5):</b> Risiko tinggi aritmia letal (Torsades de pointes), ileus paralitik, dan kelemahan otot napas berat.`);
+                    doctorActions.push(`<b>Emergensi Hipokalemia (K: ${vals.k}):</b> Pasang monitor EKG. Order KCl drip IV (Maks 20 mEq/jam via Sentral/CVC). <b>Periksa dan koreksi profil Magnesium segera.</b>`);
+                    nurseActions.push("Siapkan EKG monitor kontinu. Waspada gelombang U dan perpanjangan QT. Berikan infus KCl ketat menggunakan *syringe pump*.");
+                } else if (vals.k <= 3.0) {
+                    let kTarget = 4.0;
+                    let deficitK = (kTarget - vals.k) * vals.weight * 0.4;
+                    doctorActions.push(`<b>Koreksi Hipokalemia (K: ${vals.k}):</b> Total defisit K <b>~${deficitK.toFixed(0)} mEq</b>. Order KCl drip IV (Maks 10 mEq/jam perifer, 20 mEq/jam sentral/CVC). <b>Re-check Kalium 4 jam paska drip selesai.</b>`);
+                    nurseActions.push("Siapkan spuit *syringe pump* untuk KCL Drip. Waspada flebitis perifer. Pantau gelombang EKG (U wave, PVC).");
+                } else if (vals.k >= 6.0) {
+                    clinicalThinking.push(`<b>Hiperkalemia Fatal (K > 6.0):</b> Mengancam nyawa. Risiko tinggi <i>Ventricular Fibrillation (VF)</i> atau Asystole.`);
+                    doctorActions.push(`<b>Emergensi Hiperkalemia (K: ${vals.k}):</b> Berikan <b>Calcium Gluconate 10% 1 ampul (10mL) IV bolus pelan 5-10 menit</b> untuk stabilisasi miokardium. Lanjutkan <i>Shift Therapy</i> (D40% 1 Flakon + Insulin Reg 10 IU IV). <b>Re-check K dalam 2 jam.</b>`);
+                    nurseActions.push("Lakukan rekam <b>EKG 12-lead</b> SEGERA. Siapkan *Calcium Gluconate*. Waspada bradikardia/aritmia selama injeksi kalsium.");
+                }
+            }
+
+            // F. Lactate Target Clearance
+            if (!isNaN(vals.lactate) && vals.lactate > 2.0) {
+                clinicalThinking.push(`<b>Hiperlaktatemia (> 2.0):</b> Tanda hipoperfusi seluler / metabolisme anaerob. DDx: <b>Syok Sepsis</b>, Kardiogenik, Hipovolemia.`);
+                doctorActions.push(`<b>Resusitasi Syok Laktat:</b> Lakukan <i>Fluid Challenge</i> kristaloid (contoh: Ringer Asetat) jika *fluid responsive*. <b>Re-check laktat dalam 2 jam (Target: Lactate Clearance ≥ 10-20% per jam).</b>`);
+                nurseActions.push("Pastikan 2 jalur IV besar (18G) paten. Ambil sampel kultur darah jika curiga sepsis. Siapkan *vasopressor* jika MAP tetap < 65 mmHg paska loading cairan.");
+            }
+
+            // G. Calcium Treatment
+            let correctedCa = 4.0; // dummy base
+            let showCaSection = false;
+            if(!isNaN(vals.ca)) {
+                showCaSection = true;
+                correctedCa = vals.ca + 0.8 * (4.0 - (vals.albumin || 4.0));
+                if (correctedCa < 8.0) {
+                    doctorActions.push(`<b>Koreksi Hipokalsemia:</b> Ca Koreksi ${correctedCa.toFixed(1)} mg/dL. Berikan <b>Calcium Gluconate 10% 1 ampul (10 mL) IV pelan 10-20 menit</b> (dapat diencerkan di 50cc D5W/NS). <b>Re-check Ca 6 jam paska koreksi.</b>`);
+                    nurseActions.push(`<b>Monitoring Kalsium:</b> Pantau EKG selama injeksi Calcium Gluconate (risiko bradikardia parah). Pasang pada jalur vena yang besar.`);
+                }
+            }
+
+            // H. Anion Gap & Bicarb Logic
+            let showAgSection = false;
+            let agVal = 0;
+            let correctedAg = 0;
+            
+            if (!isNaN(vals.na) && !isNaN(vals.cl)) {
+                showAgSection = true;
+                agVal = vals.na - (vals.cl + vals.hco3);
+                correctedAg = agVal + 2.5 * (4.0 - (vals.albumin || 4.0));
+                
+                if (correctedAg > 12 && primary.includes('Metabolic Acidosis')) {
+                    clinicalThinking.push(`<b>Asidosis Metabolik HAGMA:</b> Anion Gap tinggi (${correctedAg.toFixed(1)}). Gunakan mnemonik <b>GOLD MARK</b>: Glycols, Oxoproline, L-Lactate (Syok), D-Lactate, Methanol, Aspirin, Renal Failure (Uremia), atau Ketoacidosis.`);
+                    doctorActions.push(`<b>Evaluasi HAGMA:</b> Telusuri & obati kausa sumber asam tambahan (KAD, Ketoasidosis Alkoholik, Gagal Ginjal/Uremia).`);
+                } else if (correctedAg >= 8 && correctedAg <= 12 && primary.includes('Metabolic Acidosis')) {
+                    clinicalThinking.push(`<b>Asidosis Metabolik NAGMA:</b> Asidosis Hiperkloremik (AG normal). Tubuh kehilangan HCO3. Pikirkan DDx: <b>Diare Masif</b>, Fistula, RTA, atau iatrogenik akibat resusitasi cairan NaCl 0.9% masif.`);
+                    doctorActions.push(`<b>Evaluasi NAGMA:</b> Jika nilai Klorida (Cl) aktual tinggi, ganti cairan infus NaCl 0.9% ke cairan <i>Balanced Crystalloid</i> (Ringer Asetat / Plasmalyte).`);
+                } else if (correctedAg < 8) {
+                    clinicalThinking.push(`<b>LAGMA (Low Anion Gap):</b> AG sangat rendah (${correctedAg.toFixed(1)}). Evaluasi kemungkinan Hipoalbuminemia berat (koreksi AG jika perlu), Hiperproteinemia (Multiple Myeloma), Intoksikasi Litium, atau Hipermagnesemia.`);
+                }
+
+                // Drip Bicarb
+                if (vals.ph < 7.20 && vals.hco3 < 15) { 
+                    let deficit = 0.5 * vals.weight * (24 - vals.hco3);
+                    let target = deficit / 2;
+                    doctorActions.push(`<b>Koreksi Bikarbonat Drip:</b> Asidemia refrakter (pH < 7.20). Order <b>Meylon 8.4%</b> sebanyak ~${(target/25).toFixed(0)} flakon (Target parsial 50%: ${target.toFixed(0)} mEq). <b>Re-check BGA 1-2 jam paska drip selesai.</b>`);
+                    nurseActions.push(`<b>Persiapan Meylon:</b> Siapkan Meylon 8.4%. <b>WAJIB diencerkan</b> ke pelarut hipotonik (D5W) jika via perifer (cegah flebitis/nekrosis).`);
+                }
+            }
+
+            // Fallback for Clinical Thinking if nothing specific triggered
+            if(clinicalThinking.length === 0) {
+                clinicalThinking.push(`<b>BGA Relatif Stabil:</b> Parameter pH, CO2, dan HCO3 masih dalam rentang kompensasi adaptif atau normal. Korelasi langsung dengan presentasi klinis pasien saat ini.`);
+            }
+
+            // Render Clinical Thinking
+            document.getElementById('clinical-thinking-list').innerHTML = clinicalThinking.map(thought => 
+                `<li class="flex items-start gap-2.5 text-amber-900 bg-white/70 p-3 rounded-xl border border-amber-200/50 shadow-sm text-xs md:text-sm leading-relaxed"><i data-lucide="check-circle" class="w-4 h-4 mt-0.5 text-amber-500 shrink-0"></i> <span>${thought}</span></li>`
+            ).join('');
+
+            // I. Ventilator Action Append
+            if (vals.isVent) {
+                doctorActions.push(`<b>Ventilator Protocol (ARDSNet):</b> Sesuaikan PEEP, FiO2, dan VT (6 mL/kg PBW) sesuai modul di bawah. <b>Re-check BGA 1-2 jam setiap ada perubahan *setting* mesin ventilator.</b>`);
+                nurseActions.push(`<b>VAP Bundle (Ventilator-Associated Pneumonia):</b><br>• Elevasi kepala tempat tidur (HOB) 30-45 derajat.<br>• Lakukan <i>oral hygiene</i> klorheksidin rutin.<br>• Cek <i>Cuff pressure</i> balon ETT berkala (20-30 cmH2O).<br>• Pantau alarm <i>High Pressure Limit</i> (indikasi butuh *suction*, ETT tergigit, pneumothorax).`);
+            }
+
+            // Remove duplicates (just in case)
+            doctorActions = [...new Set(doctorActions)];
+            nurseActions = [...new Set(nurseActions)];
+
+            // Fallback actions if completely healthy (very rare if they use this app)
+            if (doctorActions.length === 0) doctorActions.push("Pertahankan manajemen klinis saat ini. Tidak ada intervensi koreksi akut yang terindikasi berdasarkan BGA.");
+
+            // Render Actions
+            document.getElementById('doctor-actions-list').innerHTML = doctorActions.map(action => 
+                `<li class="flex items-start gap-2.5 bg-white/60 p-3 rounded-xl border border-indigo-100 shadow-sm text-xs md:text-sm"><i data-lucide="check-circle-2" class="w-4 h-4 mt-0.5 text-indigo-500 shrink-0"></i> <span class="leading-relaxed text-indigo-900">${action}</span></li>`
+            ).join('');
+
+            document.getElementById('nurse-actions-list').innerHTML = nurseActions.map(action => 
+                `<li class="flex items-start gap-2.5 bg-white/60 p-3 rounded-xl border border-teal-100 shadow-sm text-xs md:text-sm"><i data-lucide="check-circle-2" class="w-4 h-4 mt-0.5 text-teal-500 shrink-0"></i> <span class="leading-relaxed text-teal-900">${action}</span></li>`
+            ).join('');
+
+
+            // --- 4. VENTILATOR PROTOCOL (ARDSNet) ---
+            let ventProtocolSection = document.getElementById('res-vent-protocol');
+            let sbtChecklist = document.getElementById('sbt-checklist');
+
+            if(vals.isVent && !isNaN(vals.height) && !isNaN(vals.vt) && !isNaN(vals.rr)) {
+                ventProtocolSection.style.display = 'block';
+                sbtChecklist.style.display = 'none';
+                
+                let pbw = vals.gender === 'M' ? 50 + 0.91 * (vals.height - 152.4) : 45.5 + 0.91 * (vals.height - 152.4);
+                if(pbw < 30) pbw = 30; // safety floor
+                let vt_pbw = vals.vt / pbw;
+                document.getElementById('res-pbw-display').innerText = `PBW: ${pbw.toFixed(1)} kg | VT Aktual: ${vt_pbw.toFixed(1)} mL/kg PBW`;
+
+                let modA = ""; let modB = ""; let modC = "";
+
+                if (vals.ventMode === 'PSV') {
+                    modA = `<b>Mode Spontan (PSV):</b> Karena RR ditentukan oleh pasien, pembuangan CO2 dikontrol via <i>Pressure Support</i> (PS). Jika napas letih (asidosis respiratorik refrakter), ganti ke mode kontrol.`;
+                } else {
+                    if(vals.ph < 7.25 && vals.pco2 > 45) { 
+                        if(vt_pbw < 6 && (!isNaN(vals.pplat) && vals.pplat < 30)) {
+                            modA = `<b>Naikkan VT:</b> pH asidemia akibat CO2. Targetkan pCO2 membaik dengan menaikkan VT 0.5 - 1.0 mL/kg PBW (Max target VT 8 mL/kg PBW).`;
+                        } else if (vals.rr < 30) {
+                            modA = `<b>Naikkan RR:</b> Naikkan RR 2-4 x/mnt (Maks limit ~35 x/mnt) untuk membuang CO2. <b>Waspada:</b> Risiko Auto-PEEP akibat *expiratory time* memendek.`;
+                        } else {
+                            modA = `<b>Limit Tercapai:</b> RR & VT maksimal. Toleransi <i>Permissive Hypercapnia</i> (biarkan pCO2 tinggi asal pH > 7.15).`;
+                        }
+                    } else if (vals.ph > 7.45 && vals.pco2 < 35) { 
+                        modA = `<b>Turunkan Minute Ventilation:</b> Turunkan RR 2-4 x/mnt. Jika VT aktual > 8 mL/kg PBW, turunkan VT terlebih dahulu menuju target 6 mL/kg PBW.`;
+                    } else {
+                        modA = `<b>Ventilasi CO2 Adekuat:</b> pH dan pCO2 dalam rentang target <i>Lung Protective Ventilation</i>.`;
+                    }
+                }
+
+                let tableStatusEl = document.getElementById('ardsnet-table-status');
+                if(!isNaN(vals.spo2) && !isNaN(vals.peep) && !isNaN(vals.fio2)) {
+                    let fio2Tenth = Math.ceil(vals.fio2 / 10) * 10;
+                    if (fio2Tenth < 30) fio2Tenth = 30;
+                    if (fio2Tenth > 100) fio2Tenth = 100;
+                    
+                    const ardsnetLower = {
+                        30: {min: 5, max: 5}, 40: {min: 5, max: 8}, 50: {min: 8, max: 10}, 60: {min: 10, max: 10},
+                        70: {min: 10, max: 14}, 80: {min: 14, max: 14}, 90: {min: 14, max: 18}, 100: {min: 18, max: 24}
+                    };
+                    
+                    let targetPeep = ardsnetLower[fio2Tenth];
+                    
+                    if (vals.peep < targetPeep.min) {
+                        tableStatusEl.innerText = "Under PEEP";
+                        tableStatusEl.className = "px-2 py-1 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30";
+                    } else if (vals.peep > targetPeep.max) {
+                        tableStatusEl.innerText = "Over PEEP";
+                        tableStatusEl.className = "px-2 py-1 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30";
+                    } else {
+                        tableStatusEl.innerText = "ARDSNet Target";
+                        tableStatusEl.className = "px-2 py-1 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+                    }
+
+                    if (vals.spo2 < 88 || vals.po2 < 55) {
+                        modB = `<b>Aksi (Hipoksia):</b> Saturasi belum mencapai target (88-95%). Naikkan PEEP ke ${targetPeep.max} cmH2O atau naikkan FiO2 1 *step* berikutnya (${fio2Tenth + 10}%).`;
+                    } else if (vals.spo2 > 95 || vals.po2 > 80) {
+                        modB = `<b>Aksi (Weaning O2):</b> Target oksigenasi berlebih. Prioritas utama turunkan FiO2 bertahap 5-10% (mencegah toksisitas radikal bebas O2).`;
+                        if (vals.fio2 <= 40 && vals.peep <= 8) {
+                            sbtChecklist.style.display = 'block';
+                        }
+                    } else {
+                        modB = `<b>Oksigenasi Ideal:</b> SpO2 berada di target (88-95%). Pertahankan strategi protektif saat ini.`;
+                    }
+
+                    if (pfRatioGlob && pfRatioGlob < 150 && vals.fio2 >= 60 && vals.peep >= 5) {
+                        modB += `<br><br><span class="text-rose-400 font-bold">🛏️ Rekomendasi Prone Positioning:</span> P/F ratio < 150. Evaluasi indikasi manuver <i>Prone</i> selama 16 jam per hari.`;
+                    }
+                } else {
+                    tableStatusEl.innerText = "Data Kosong"; tableStatusEl.className = "px-2 py-1 rounded text-[9px] font-bold bg-slate-700 text-slate-400";
+                    modB = `<i class="opacity-70">Input SpO2, PEEP, dan FiO2 diperlukan.</i>`;
+                }
+
+                let safetyFlags = [];
+                if (!isNaN(vals.pplat) && vals.pplat > 30) {
+                    safetyFlags.push(`🚨 <b>DANGER (Plateau > 30 cmH2O):</b> Risiko fatal barotrauma (Pneumothorax). TURUNKAN Volume Tidal 1 mL/kg PBW secara bertahap hingga minimum 4 mL/kg!`);
+                }
+                if (!isNaN(vals.pplat) && !isNaN(vals.peep)) {
+                    let dp = vals.pplat - vals.peep;
+                    if (dp > 15) {
+                        safetyFlags.push(`🚨 <b>WARNING (Driving Pressure > 15):</b> DP aktual ${dp} cmH2O. Regangan alveolar berbahaya. <b>Turunkan VT 1 mL/kg PBW</b> (min 4 mL/kg) atau optimalkan PEEP. <b>Re-check BGA & mekanika 1 jam kemudian.</b>`);
+                    } else {
+                        safetyFlags.push(`✔️ <span class="text-emerald-400">Driving Pressure Aman:</span> DP aktual ${dp} cmH2O (≤ 15).`);
+                    }
+                }
+                if (vt_pbw > 8.0) safetyFlags.push(`⚠️ <b>WARNING (Volutrauma):</b> VT aktual (${vt_pbw.toFixed(1)} mL/kg PBW) melebihi batas protektif. Dapat merusak paru.`);
+                
+                modC = safetyFlags.length > 0 ? safetyFlags.join('<br>') : `✔️ <span class="text-emerald-400">Paru Terlindungi:</span> Parameter <i>Lung Protective Ventilation</i> terpenuhi secara komprehensif.`;
+
+                document.getElementById('vent-mod-a').innerHTML = modA;
+                document.getElementById('vent-mod-b').innerHTML = modB;
+                document.getElementById('vent-mod-c').innerHTML = modC;
+
+            } else ventProtocolSection.style.display = 'none';
+
+            // --- 5. SECONDARY CALCULATIONS (Gap, Ca, A-a Gradient) ---
+            let agCard = document.getElementById('res-ag-card');
+            let deltaCard = document.getElementById('res-delta-card');
+            let caCard = document.getElementById('res-ca-section');
+            let aaGradientCard = document.getElementById('res-aa-gradient');
+            let gapSection = document.getElementById('res-gap-section');
+            
+            let showSecondarySection = false;
+
+            // A-a Gradient Check
+            if (!isNaN(vals.po2) && !isNaN(vals.fio2) && !isNaN(vals.pco2)) {
+                showSecondarySection = true;
+                // Formula PAO2 = FiO2(Patm - PH2O) - PaCO2/0.8 (Assume Patm 760, PH2O 47)
+                let pao2 = (vals.fio2 / 100) * 713 - (vals.pco2 / 0.8);
+                let aaGrad = pao2 - vals.po2;
+                document.getElementById('res-aa-val').innerText = `${aaGrad.toFixed(1)} mmHg`;
+                aaGradientCard.style.display = 'flex';
+            } else {
+                aaGradientCard.style.display = 'none';
+            }
+
+            // Anion Gap & Delta Check
+            if (showAgSection) {
+                showSecondarySection = true;
+                agCard.style.display = 'block';
+                document.getElementById('res-ag-corr').innerText = correctedAg.toFixed(1);
+
+                let agInterp = '';
+                if (correctedAg > 12) {
+                    agInterp = 'HAGMA';
+                    let deltaGap = correctedAg - 12;
+                    let deltaHco3 = 24 - vals.hco3;
+                    let deltaRatio = deltaHco3 !== 0 ? (deltaGap / deltaHco3) : Infinity; 
+                    
+                    document.getElementById('res-delta-val').innerText = deltaRatio === Infinity ? '∞' : deltaRatio.toFixed(2);
+                    deltaCard.style.display = 'block';
+
+                    if (deltaRatio < 0.4) {
+                        agInterp += ' + NAGMA';
+                        document.getElementById('res-delta-interp').innerText = 'MIX: HAGMA + PURE NAGMA (< 0.4)';
+                    } else if (deltaRatio >= 0.4 && deltaRatio <= 1.0) {
+                        agInterp += ' + NAGMA (Mix)';
+                        document.getElementById('res-delta-interp').innerText = 'MIX: HAGMA + NAGMA (0.4 - 1.0)';
+                    } else if (deltaRatio > 1.0 && deltaRatio <= 2.0) {
+                        agInterp += ' (Pure HAGMA)';
+                        document.getElementById('res-delta-interp').innerText = 'PURE HAGMA (1.0 - 2.0)';
+                    } else {
+                        agInterp += ' + Met. Alk';
+                        document.getElementById('res-delta-interp').innerText = 'MIX: HAGMA + MET. ALK (> 2.0)';
+                    }
+                    
+                    document.getElementById('res-ag-interp').className = "text-[10px] font-bold uppercase tracking-wider p-2 rounded-lg border text-center bg-rose-50 text-rose-700 border-rose-200 mt-2";
+                } else {
+                    agInterp = correctedAg < 8 ? 'LAGMA' : 'NAGMA';
+                    document.getElementById('res-ag-interp').className = `text-[10px] font-bold uppercase tracking-wider p-2 rounded-lg border text-center mt-2 ${correctedAg < 8 ? 'bg-violet-50 text-violet-700 border-violet-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`;
+                    document.getElementById('res-delta-val').innerText = '-';
+                    deltaCard.style.display = 'none';
+                }
+                document.getElementById('res-ag-interp').innerText = agInterp;
+            } else {
+                agCard.style.display = 'none';
+                deltaCard.style.display = 'none';
+            }
+
+            // Calcium Check
+            if (showCaSection) {
+                showSecondarySection = true;
+                caCard.style.display = 'block';
+            } else {
+                caCard.style.display = 'none';
+            }
+
+            gapSection.style.display = showSecondarySection ? 'block' : 'none';
+            
+            // Bicarbonate Drip Protocol Module
+            let bicarbEl = document.getElementById('res-bicarb-protocol');
+            if (vals.ph < 7.20 && vals.hco3 < 15) { 
+                let deficit = 0.5 * vals.weight * (24 - vals.hco3);
+                let target = deficit / 2;
+                let vials = (target / 25).toFixed(1);
+                
+                bicarbEl.style.display = 'block';
+                bicarbEl.innerHTML = `
+                    <div class="bg-indigo-900 border border-indigo-700 rounded-2xl p-4 md:p-5 mt-4 shadow-sm text-indigo-50">
+                        <h3 class="font-bold text-indigo-200 text-xs md:text-sm mb-3 flex items-center gap-2"><i data-lucide="syringe" class="w-4 h-4 md:w-5 md:h-5"></i> Protokol Bikarbonat Drip (Hanya untuk Asidemia Refrakter)</h3>
+                        <div class="bg-indigo-950/50 p-3 rounded-lg border border-rose-500/50 text-xs mb-3 text-rose-300 font-medium">⚠️ <b>PERHATIAN:</b> Target koreksi adalah <b>50% dari defisit total</b> dalam 4-6 jam pertama. JANGAN dikoreksi penuh sekaligus untuk mencegah overshoot alkalosis paradoksikal.</div>
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <div class="bg-indigo-950/40 p-3 rounded-xl border border-indigo-800">
+                                <div class="text-[11px] text-indigo-400">Total Defisit Absolut</div>
+                                <div class="text-xl font-bold">${deficit.toFixed(0)} <span class="text-xs font-normal">mEq</span></div>
+                            </div>
+                            <div class="bg-indigo-950/40 p-3 rounded-xl border border-indigo-500 ring-1 ring-indigo-500">
+                                <div class="text-[11px] text-indigo-400">Target Dosis (50% Defisit)</div>
+                                <div class="text-xl font-bold">${target.toFixed(0)} <span class="text-xs font-normal">mEq</span></div>
+                            </div>
+                        </div>
+                        <div class="text-xs text-indigo-300 mt-2">Dibutuhkan <b>~${vials} flakon</b> Meylon 8.4%. <span class="text-emerald-400 font-bold">Wajib Re-Check BGA dalam 1-2 jam paska drip selesai.</span></div>
+                    </div>`;
+            } else {
+                bicarbEl.style.display = 'none';
+            }
+
+            lucide.createIcons();
+        }
+
+        // SIMULATOR & RESET LOGIC
+        function resetApp() {
+            Object.values(inputs).forEach(input => {
+                if(input.type === 'checkbox') input.checked = false;
+                else if(input.tagName === 'SELECT') input.selectedIndex = 0;
+                else if(input.id !== 'inp-fio2' && input.id !== 'inp-albumin' && input.id !== 'inp-weight') input.value = '';
+            });
+            inputs.fio2.value = '21';
+            inputs.albumin.value = '4.0';
+            inputs.weight.value = '60';
+            inputs.onVent.dispatchEvent(new Event('change'));
+            setFiO2('21');
+            dismissSimulatorBanner();
+            
+            document.getElementById('waiting-state').style.display = 'flex';
+            document.getElementById('error-state').style.display = 'none';
+            document.getElementById('analysis-results').style.display = 'none';
+            switchTab('tab-analysis');
+        }
+
+        function getRandom(min, max, decimals = 1) { return parseFloat((Math.random() * (max - min) + min).toFixed(decimals)); }
+
+        function simulateRandomCase() {
+            resetApp();
+            document.getElementById('simulator-banner').classList.remove('hidden');
+
+            const scenarios = [
+                () => { // Sepsis / Syok Laktat (HAGMA)
+                    inputs.onVent.checked = false;
+                    inputs.ph.value = getRandom(7.15, 7.24, 2);
+                    inputs.pco2.value = getRandom(20, 26); 
+                    inputs.hco3.value = getRandom(10, 14);
+                    inputs.po2.value = getRandom(75, 90);
+                    inputs.na.value = getRandom(135, 142);
+                    inputs.k.value = getRandom(4.5, 5.5);
+                    inputs.cl.value = getRandom(98, 102);
+                    inputs.albumin.value = getRandom(2.5, 3.2);
+                    inputs.ca.value = getRandom(7.5, 8.2);
+                    inputs.lactate.value = getRandom(4.5, 8.0);
+                    setFiO2('40');
+                },
+                () => { // ARDS Berat on Vent + DP Tinggi
+                    inputs.onVent.checked = true;
+                    inputs.gender.value = 'M'; inputs.height.value = 165; 
+                    inputs.ventMode.value = 'VCV';
+                    inputs.rr.value = getRandom(26, 32, 0);
+                    inputs.vt.value = getRandom(500, 600, 0); 
+                    inputs.peep.value = getRandom(10, 14, 0);
+                    inputs.pplat.value = getRandom(32, 38, 0); 
+                    inputs.spo2.value = getRandom(85, 89, 0); 
+                    inputs.ph.value = getRandom(7.20, 7.30, 2);
+                    inputs.pco2.value = getRandom(50, 60); 
+                    inputs.hco3.value = getRandom(22, 26);
+                    inputs.po2.value = getRandom(50, 60); 
+                    inputs.na.value = 140; inputs.k.value = 4.0; inputs.cl.value = 100;
+                    inputs.albumin.value = 4.0; inputs.ca.value = 9.0; inputs.lactate.value = 1.5;
+                    setFiO2('80'); 
+                },
+                () => { // PPOK Eksaserbasi (Respiratory Acidosis)
+                    inputs.onVent.checked = false;
+                    inputs.ph.value = 7.28;
+                    inputs.pco2.value = 65; 
+                    inputs.hco3.value = 30;
+                    inputs.po2.value = 60;
+                    inputs.na.value = 138;
+                    inputs.k.value = 4.2;
+                    inputs.cl.value = 98;
+                    inputs.albumin.value = 3.8;
+                    inputs.lactate.value = 1.2;
+                    setFiO2('32');
+                },
+                () => { // Hipokalemia Kritis & DKA (HAGMA)
+                    inputs.onVent.checked = false;
+                    inputs.ph.value = 7.15;
+                    inputs.pco2.value = 25; 
+                    inputs.hco3.value = 12;
+                    inputs.po2.value = 95;
+                    inputs.na.value = 126;
+                    inputs.k.value = 2.1; 
+                    inputs.cl.value = 100;
+                    inputs.albumin.value = 4.0;
+                    inputs.lactate.value = 1.2;
+                    inputs.weight.value = 70;
+                    setFiO2('21');
+                }
+            ];
+            scenarios[Math.floor(Math.random() * scenarios.length)]();
+            const formContainer = document.querySelector('.lg\\:col-span-4');
+            formContainer.classList.add('opacity-50');
+            setTimeout(() => { formContainer.classList.remove('opacity-50'); }, 150);
+            inputs.onVent.dispatchEvent(new Event('change'));
+        }
+    </script>
+</body>
+</html>
