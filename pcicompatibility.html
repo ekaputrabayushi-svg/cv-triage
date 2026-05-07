@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LumenMatrix v2.9 Extended: PCI Compatibility Engine | CardiologyVault</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #12141a; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #374151; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+        .animate-spin-slow { animation: spin 3s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+        }
+        select option { background-color: #1f2937; color: #e5e7eb; }
+        select optgroup { background-color: #111827; color: #9ca3af; font-weight: 600; }
+
+        .visual-circle { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .visual-circle:hover { transform: scale(1.1); box-shadow: 0 0 15px rgba(255,255,255,0.4); z-index: 10; }
+
+        @media print {
+            body { background: white !important; color: black !important; padding: 0 !important; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            #status-header, #math-container, .bg-gray-900, .bg-\[\#12141a\] {
+                background: white !important; border: 1px solid #ccc !important;
+                color: black !important; box-shadow: none !important;
+            }
+            .text-emerald-400 { color: #059669 !important; }
+            .text-amber-400, .text-yellow-400 { color: #d97706 !important; }
+            .text-red-400, .text-red-500 { color: #dc2626 !important; }
+            .text-gray-400, .text-gray-300 { color: #374151 !important; }
+            .text-white { color: black !important; }
+            * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
+        }
+
+        .tip-badge {
+            display: inline-block;
+            font-size: 9px;
+            padding: 1px 5px;
+            border-radius: 9999px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+        }
+        .tip-soft { background: #064e3b; color: #6ee7b7; border: 1px solid #059669; }
+        .tip-medium { background: #78350f; color: #fcd34d; border: 1px solid #d97706; }
+        .tip-stiff { background: #7f1d1d; color: #fca5a5; border: 1px solid #dc2626; }
+    </style>
+</head>
+<body class="min-h-screen bg-[#0b0c10] text-gray-200 font-sans selection:bg-teal-500/30 p-4 md:p-8">
+
+    <!-- HEADER -->
+    <header class="max-w-7xl mx-auto mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-800 pb-6 no-print">
+        <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-2 mb-1">
+                <span class="text-[10px] font-bold tracking-widest text-emerald-500 uppercase bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Part of CardiologyVault</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="bg-emerald-500/20 p-2 rounded-lg text-emerald-400">
+                    <i data-lucide="cpu" class="w-6 h-6"></i>
+                </div>
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                    LumenMatrix: PCI Compatibility Engine
+                </h1>
+            </div>
+            <p class="text-sm text-gray-400">Simulasi 1D Lumen Clearance &mdash; Wire, Microcatheter, IVUS, Balloon, Atherectomy & More</p>
+        </div>
+        <div class="flex flex-col items-end gap-3">
+            <div class="text-xs text-gray-400 font-medium bg-gray-900 px-4 py-2 rounded-lg border border-gray-800 flex items-center gap-2 shadow-lg">
+                <i data-lucide="user-check" class="w-4 h-4 text-emerald-500"></i>
+                Bayushi Eka Putra, MD, FIHA
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="text-[10px] text-gray-600 flex items-center gap-1 uppercase tracking-tighter mr-2">
+                    <i data-lucide="circle-dashed" class="w-3 h-3 text-emerald-500 animate-spin-slow"></i>
+                    Workspace v2.9 Extended
+                </div>
+                <button onclick="copyConfig()" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors border border-gray-700">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i> Salin Link
+                </button>
+                <button onclick="window.print()" class="text-xs bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400 px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors border border-emerald-500/30">
+                    <i data-lucide="printer" class="w-3.5 h-3.5"></i> Cetak PDF
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- PRINT ONLY HEADER -->
+    <div class="hidden print-only mb-6 border-b border-gray-300 pb-4">
+        <h1 class="text-2xl font-bold text-black">LumenMatrix Report &mdash; CardiologyVault</h1>
+        <p class="text-sm text-gray-600">Simulasi 1D Lumen Clearance (v2.9 Extended)</p>
+        <p class="text-xs text-gray-500 mt-2">Dokter: Bayushi Eka Putra, MD, FIHA | Waktu: <span id="print-time"></span></p>
+    </div>
+
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LEFT PANEL -->
+        <div class="lg:col-span-5 flex flex-col gap-6 no-print">
+            <div class="flex flex-col gap-4">
+                <!-- GC Selector -->
+                <div class="bg-[#12141a] rounded-2xl p-5 border border-gray-800 shadow-xl">
+                    <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <i data-lucide="shield-alert" class="w-4 h-4"></i> 1. Base Guiding Catheter
+                    </h2>
+                    <div id="gc-dropdown-container"></div>
+                </div>
+                <!-- Extension Selector -->
+                <div class="bg-[#12141a] rounded-2xl p-5 border border-gray-800 shadow-xl relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-16 h-16 bg-purple-500/5 rounded-bl-full pointer-events-none"></div>
+                    <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <i data-lucide="crosshair" class="w-4 h-4 text-purple-400"></i> 2. Guiding Extension (Opsional)
+                    </h2>
+                    <div id="ext-dropdown-container" class="relative z-10"></div>
+                </div>
+            </div>
+
+            <!-- Tools Selector -->
+            <div class="bg-[#12141a] rounded-2xl p-5 border border-gray-800 shadow-xl flex-1 flex flex-col">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                        <i data-lucide="box-select" class="w-4 h-4 text-cyan-400"></i> 3. Masukkan Alat
+                    </h2>
+                    <span class="text-[10px] bg-gray-900 px-2 py-1 rounded text-gray-400 font-mono" id="tool-counter">0/4 Alat</span>
+                </div>
+                <div id="tools-dropdown-container" class="mb-4"></div>
+                <div class="flex-1 overflow-y-auto custom-scrollbar pr-2">
+                    <div id="active-tools-container" class="space-y-2"></div>
+                    <div id="empty-tools-state" class="text-center py-8 text-gray-600 flex flex-col items-center gap-2">
+                        <i data-lucide="plus-circle" class="w-8 h-8 opacity-50"></i>
+                        <p class="text-xs">Pilih alat dari menu dropdown di atas.<br>Maksimal 4 alat simultan.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wire Escalation Legend -->
+            <div class="bg-[#12141a] rounded-2xl p-4 border border-gray-800 shadow-xl">
+                <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <i data-lucide="trending-up" class="w-4 h-4 text-orange-400"></i> Tip Load Legend (CTO Escalation)
+                </h2>
+                <div class="flex flex-wrap gap-2 text-[10px]">
+                    <span class="tip-badge tip-soft">SOFT &lt;2g</span>
+                    <span class="tip-badge tip-medium">MEDIUM 2-6g</span>
+                    <span class="tip-badge tip-stiff">STIFF &gt;6g</span>
+                    <span class="text-gray-500 self-center ml-1">Ditampilkan di tooltip &#9432;</span>
+                </div>
+                <p class="text-[10px] text-gray-600 mt-2">Tip load (gram) = penetration force at tip. Semakin tinggi = semakin agresif/risiko perforasi.</p>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="lg:col-span-7 flex flex-col gap-6">
+
+            <!-- Fatal Alert -->
+            <div id="fatal-alert-container" class="hidden bg-red-950/80 border-2 border-red-500 text-red-200 p-4 rounded-xl shadow-2xl flex items-center gap-4 animate-pulse">
+                <i data-lucide="alert-octagon" class="w-8 h-8 text-red-500 shrink-0"></i>
+                <div>
+                    <h3 class="font-bold text-lg text-red-400">KESALAHAN KONFIGURASI FATAL</h3>
+                    <p class="text-sm" id="fatal-alert-msg"></p>
+                </div>
+            </div>
+
+            <!-- Visualizer Card -->
+            <div class="bg-[#12141a] rounded-2xl border border-gray-800 shadow-xl overflow-hidden flex flex-col">
+                <div id="status-header" class="p-4 border-b flex items-center justify-between transition-colors bg-emerald-950/30 border-emerald-900 text-emerald-400">
+                    <div class="flex items-center gap-3" id="status-header-content"></div>
+                    <div id="zone-indicator" class="hidden md:flex items-center gap-2 text-xs font-bold px-3 py-1 rounded-full border"></div>
+                </div>
+                <div class="p-6 md:p-8 flex-1 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-900 via-[#12141a] to-[#12141a] print:bg-none">
+                    <div class="relative w-56 h-56 md:w-64 md:h-64 shrink-0 flex items-center justify-center">
+                        <div id="visualizer-container" class="absolute inset-0"></div>
+                        <div id="lumen-label" class="absolute -top-6 bg-gray-900 px-3 py-1 rounded-full text-xs font-mono border border-gray-700 shadow-lg z-10 print:border-gray-300"></div>
+                    </div>
+                    <div class="flex-1 w-full max-w-sm space-y-4">
+                        <h4 class="text-sm font-bold text-gray-400 uppercase border-b border-gray-800 pb-2 flex justify-between print:border-gray-300 print:text-black">
+                            <span>Kalkulasi 1D Profil</span>
+                            <i data-lucide="calculator" class="w-4 h-4"></i>
+                        </h4>
+                        <div id="math-container" class="space-y-2 font-mono text-sm bg-gray-950/50 p-4 rounded-xl border border-gray-800 print:border-gray-300"></div>
+                        <div class="mt-4 text-[10px] text-gray-500 bg-gray-900/80 p-3 rounded-lg border border-gray-800 leading-relaxed print:bg-gray-100 print:border-gray-300 print:text-gray-700">
+                            <span class="text-cyan-500/80 font-bold print:text-cyan-700">Smart Wire Logic:</span> Guidewire di dalam alat (Rx/OTW) dipotong dari kalkulasi friksi OD total.<br>
+                            <span class="text-yellow-500/80 font-bold print:text-yellow-700">*Disclaimer:</span> Kalkulasi ini menjumlahkan profil linier (OD). Dalam realita cross-section (2D), friction points sangat bergantung pada susunan alat. Selalu gunakan safety margin minimum 0.005".
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clinical Scenarios -->
+            <div class="bg-[#12141a] rounded-2xl p-6 border border-gray-800 shadow-xl no-print">
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <i data-lucide="zap" class="w-5 h-5 text-yellow-400"></i> Clinical Scenario Insight
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-gray-900 p-4 rounded-xl border border-gray-800 transition hover:border-cyan-500/30">
+                        <h4 class="text-sm font-bold text-cyan-400 mb-2 flex items-center gap-2"><i data-lucide="arrow-left-right" class="w-4 h-4"></i> IVUS &amp; Balloon Exchange</h4>
+                        <ul class="text-xs text-gray-300 space-y-2 list-disc pl-4">
+                            <li><strong>OptiCross HD (0.040") + SC Ryujin (0.025"):</strong> Total ~0.065". Aman di 6Fr (0.070"). Clearance 0.005" cukup.</li>
+                            <li><strong>Eagle Eye (0.038") + NC Trek (0.025"):</strong> Total ~0.063". Clearance 0.007" - aman untuk optimalisasi.</li>
+                            <li><strong>OptiCross HD (0.040") + Wolverine CB (0.037"):</strong> Total ~0.077". <span class="text-yellow-400">TIDAK MUAT di 6Fr!</span> Cabut bergantian.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-gray-900 p-4 rounded-xl border border-gray-800 transition hover:border-purple-500/30">
+                        <h4 class="text-sm font-bold text-purple-400 mb-2 flex items-center gap-2"><i data-lucide="git-merge" class="w-4 h-4"></i> CTO Wire Escalation</h4>
+                        <ul class="text-xs text-gray-300 space-y-2 list-disc pl-4">
+                            <li><strong>Step 1:</strong> Fielder XT-A (1.0g) atau Whisper (0.7g) &rarr; Antegrade soft entry.</li>
+                            <li><strong>Step 2:</strong> Gaia First (1.7g) &rarr; Gaia Second (3.5g) jika gagal.</li>
+                            <li><strong>Step 3:</strong> Confianza Pro 9 (9g) / Confianza Pro 12 (12g) &rarr; Hard calcified cap.</li>
+                            <li><strong>Exchange:</strong> Gunakan Caravel (0.024") atau Corsair (0.034") untuk stabilitas exchange.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-gray-900 p-4 rounded-xl border border-gray-800 transition hover:border-emerald-500/30">
+                        <h4 class="text-sm font-bold text-emerald-400 mb-2 flex items-center gap-2"><i data-lucide="layers" class="w-4 h-4"></i> Calcification Management</h4>
+                        <ul class="text-xs text-gray-300 space-y-2 list-disc pl-4">
+                            <li><strong>RotaWire Floppy (0.009"):</strong> Wajib untuk Rotablator &mdash; tidak bisa pakai wire lain.</li>
+                            <li><strong>Shockwave C2 (0.046"):</strong> Butuh 6Fr min. Tidak kompatibel dengan extension catheter 6Fr!</li>
+                            <li><strong>CVX-300 Laser 0.9mm (0.035"):</strong> ISR treatment, bisa bersamaan dengan wire 0.014".</li>
+                        </ul>
+                    </div>
+                    <div class="bg-gray-900 p-4 rounded-xl border border-gray-800 transition hover:border-red-500/30">
+                        <h4 class="text-sm font-bold text-red-400 mb-2 flex items-center gap-2"><i data-lucide="droplets" class="w-4 h-4"></i> STEMI: Aspiration Thrombectomy</h4>
+                        <ul class="text-xs text-gray-300 space-y-2 list-disc pl-4">
+                            <li><strong>Export Advance (0.041"):</strong> Over-the-wire. Wire (0.014") berjalan di dalam = profil efektif ~0.041".</li>
+                            <li><strong>Pronto V3 (0.041"):</strong> Setara Export, profil identik.</li>
+                            <li><strong>Di 6Fr (0.070"):</strong> Clearance 0.029" &mdash; <span class="text-emerald-400">sangat aman</span> untuk aspirasi manual.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('print-time').innerText = new Date().toLocaleString('id-ID');
+
+        const guidingCatheters = [
+            { id: 'gc_6fr_std',       fr: '6Fr', name: 'Standard 6Fr GC',       brand: 'Generic',             innerD: 0.070, color: '#3b82f6' },
+            { id: 'gc_6fr_heartrail', fr: '6Fr', name: 'Heartrail IL/EBU',       brand: 'Terumo',              innerD: 0.071, color: '#10b981' },
+            { id: 'gc_6fr_medtronic', fr: '6Fr', name: 'Launcher (6Fr)',         brand: 'Medtronic',           innerD: 0.071, color: '#10b981' },
+            { id: 'gc_6fr_ansel',     fr: '6Fr', name: 'Ansel/EBU',             brand: 'Boston Scientific',   innerD: 0.070, color: '#3b82f6' },
+            { id: 'gc_6fr_jb1',       fr: '6Fr', name: 'JB1/EBU',              brand: 'Cordis',              innerD: 0.070, color: '#3b82f6' },
+            { id: 'gc_6fr_franchise', fr: '6Fr', name: 'Franchise/EBU',         brand: 'Abbott',              innerD: 0.070, color: '#3b82f6' },
+            { id: 'gc_7fr_std',       fr: '7Fr', name: 'Standard 7Fr GC',       brand: 'Generic',             innerD: 0.081, color: '#f59e0b' },
+            { id: 'gc_7fr_heartrail', fr: '7Fr', name: 'Heartrail II / Climber', brand: 'Terumo',              innerD: 0.082, color: '#f59e0b' },
+            { id: 'gc_7fr_medtronic', fr: '7Fr', name: 'Launcher (7Fr)',         brand: 'Medtronic',           innerD: 0.081, color: '#f59e0b' },
+            { id: 'gc_8fr_std',       fr: '8Fr', name: 'Standard 8Fr GC',       brand: 'Generic',             innerD: 0.088, color: '#ef4444' },
+        ];
+
+        const extensions = [
+            { id: 'ext_none',            name: 'Tanpa Extension (Direct GC)',  brand: '-',                   innerD: 0,     profile: 0,     color: 'transparent' },
+            { id: 'ext_guideliner_v3_6', name: 'GuideLiner V3 6Fr',            brand: 'Vascular Solutions',  innerD: 0.056, profile: 0.067, color: '#8b5cf6' },
+            { id: 'ext_guidezilla_2_6',  name: 'Guidezilla II 6Fr',            brand: 'Boston Scientific',   innerD: 0.056, profile: 0.066, color: '#a855f7' },
+            { id: 'ext_trapliner',       name: 'TrapLiner 6Fr',                brand: 'Medtronic',           innerD: 0.056, profile: 0.067, color: '#7c3aed' },
+            { id: 'ext_child',           name: 'Child-in-Child 6Fr',           brand: 'Abbott',              innerD: 0.057, profile: 0.067, color: '#9333ea' },
+            { id: 'ext_guidezilla_7',    name: 'Guidezilla 7Fr',               brand: 'Boston Scientific',   innerD: 0.062, profile: 0.077, color: '#c084fc' },
+        ];
+
+        // =============================================
+        // EXTENDED TOOLSET v2.9 — 52 DEVICES TOTAL
+        // =============================================
+        const interventionalTools = [
+
+            // ─── WORKHORSE WIRES ──────────────────────────────────────────────────────
+            { id: 'wire_sion',       name: 'SION Blue',       brand: 'Asahi',            category: 'wire_workhorse', profile: 0.014, tipLoad: 0.5, color: '#cbd5e1' },
+            { id: 'wire_runthrough', name: 'Runthrough NS',   brand: 'Terumo',           category: 'wire_workhorse', profile: 0.014, tipLoad: 1.0, color: '#94a3b8' },
+            { id: 'wire_bmw',        name: 'BMW Universal',   brand: 'Abbott',           category: 'wire_workhorse', profile: 0.014, tipLoad: 0.7, color: '#e2e8f0' },
+
+            // ─── TORTUOSITY & SOFT POLYMER WIRES ────────────────────────────────────
+            { id: 'wire_whisper',     name: 'Whisper',        brand: 'Abbott',           category: 'wire_polymer', profile: 0.014, tipLoad: 0.7, color: '#c084fc' },
+            { id: 'wire_fielder_xt',  name: 'Fielder XT',     brand: 'Asahi',            category: 'wire_polymer', profile: 0.014, tipLoad: 0.8, color: '#a78bfa' },
+            { id: 'wire_fielder_xta', name: 'Fielder XT-A',   brand: 'Asahi',            category: 'wire_polymer', profile: 0.014, tipLoad: 1.0, color: '#8b5cf6' },
+            { id: 'wire_fielder_xtr', name: 'Fielder XT-R',   brand: 'Asahi',            category: 'wire_polymer', profile: 0.014, tipLoad: 0.6, color: '#c4b5fd' },
+            { id: 'wire_fielder_fc',  name: 'Fielder FC',     brand: 'Asahi',            category: 'wire_polymer', profile: 0.014, tipLoad: 0.8, color: '#a78bfa' },
+            { id: 'wire_sion_black',  name: 'SION Black',     brand: 'Asahi',            category: 'wire_polymer', profile: 0.014, tipLoad: 0.8, color: '#7dd3fc' },
+            { id: 'wire_pilot50',     name: 'Pilot 50',       brand: 'Abbott',           category: 'wire_polymer', profile: 0.014, tipLoad: 1.5, color: '#818cf8' },
+
+            // ─── CTO MODERATE WIRES ──────────────────────────────────────────────────
+            { id: 'wire_gaia1',    name: 'Gaia First',   brand: 'Asahi',            category: 'wire_cto_mod', profile: 0.014, tipLoad: 1.7, color: '#fb923c' },
+            { id: 'wire_gaia2',    name: 'Gaia Second',  brand: 'Asahi',            category: 'wire_cto_mod', profile: 0.014, tipLoad: 3.5, color: '#f87171' },
+            { id: 'wire_gaia3',    name: 'Gaia Third',   brand: 'Asahi',            category: 'wire_cto_mod', profile: 0.014, tipLoad: 4.5, color: '#ef4444' },
+            { id: 'wire_pilot200', name: 'Pilot 200',    brand: 'Abbott',           category: 'wire_cto_mod', profile: 0.014, tipLoad: 4.1, color: '#f43f5e' },
+            { id: 'wire_miracle3', name: 'Miracle 3',    brand: 'Asahi',            category: 'wire_cto_mod', profile: 0.014, tipLoad: 3.0, color: '#fb7185' },
+            { id: 'wire_miracle6', name: 'Miracle 6',    brand: 'Asahi',            category: 'wire_cto_mod', profile: 0.014, tipLoad: 6.0, color: '#e11d48' },
+            { id: 'wire_pt2',      name: 'PT2',          brand: 'Boston Scientific', category: 'wire_cto_mod', profile: 0.014, tipLoad: 2.5, color: '#fca5a5' },
+            { id: 'wire_gladius',  name: 'Gladius',      brand: 'Asahi',            category: 'wire_cto_mod', profile: 0.014, tipLoad: 3.0, color: '#f87171' },
+
+            // ─── CTO HIGH PENETRATION ────────────────────────────────────────────────
+            { id: 'wire_confianza9',  name: 'Confianza Pro 9',  brand: 'Asahi',            category: 'wire_cto_high', profile: 0.014, tipLoad: 9.0,  color: '#b91c1c' },
+            { id: 'wire_confianza12', name: 'Confianza Pro 12', brand: 'Asahi',            category: 'wire_cto_high', profile: 0.014, tipLoad: 12.0, color: '#991b1b' },
+            { id: 'wire_hornet14',    name: 'Hornet 14',        brand: 'Boston Scientific', category: 'wire_cto_high', profile: 0.014, tipLoad: 14.0, color: '#7f1d1d' },
+            { id: 'wire_astato20',    name: 'Astato 20',        brand: 'Asahi',            category: 'wire_cto_high', profile: 0.014, tipLoad: 20.0, color: '#450a0a' },
+
+            // ─── SUPPORT WIRES ───────────────────────────────────────────────────────
+            { id: 'wire_bmw_xs',    name: 'BMW Extra Support', brand: 'Abbott',  category: 'wire_support', profile: 0.014, tipLoad: 1.0, color: '#60a5fa' },
+            { id: 'wire_grandslam', name: 'Grand Slam',        brand: 'Asahi',   category: 'wire_support', profile: 0.014, tipLoad: 0.7, color: '#2563eb' },
+            { id: 'wire_ironman',   name: 'Iron Man',          brand: 'Abbott',  category: 'wire_support', profile: 0.014, tipLoad: 1.0, color: '#1d4ed8' },
+
+            // ─── SPECIALTY WIRES ─────────────────────────────────────────────────────
+            { id: 'wire_rota',   name: 'RotaWire Floppy',  brand: 'Boston Scientific', category: 'wire_specialty', profile: 0.009, tipLoad: null, color: '#f59e0b' },
+            { id: 'wire_rg3',    name: 'RG3 (300cm)',      brand: 'Asahi',             category: 'wire_specialty', profile: 0.010, tipLoad: null, color: '#14b8a6' },
+            { id: 'wire_viper',  name: 'ViperWire (CSI)',  brand: 'CSI',               category: 'wire_specialty', profile: 0.014, tipLoad: null, color: '#059669' },
+            { id: 'wire_wiggle', name: 'Wiggle Wire',      brand: 'Abbott',            category: 'wire_specialty', profile: 0.014, tipLoad: null, color: '#10b981' },
+
+            // ─── MICROCATHETERS ──────────────────────────────────────────────────────
+            { id: 'micro_caravel',   name: 'Caravel',     brand: 'Asahi',  category: 'micro', profile: 0.024, tipLoad: null, color: '#d8b4fe' },
+            { id: 'micro_finecross', name: 'Finecross MG', brand: 'Terumo', category: 'micro', profile: 0.026, tipLoad: null, color: '#c084fc' },
+            { id: 'micro_corsair',   name: 'Corsair Pro', brand: 'Asahi',  category: 'micro', profile: 0.034, tipLoad: null, color: '#a855f7' },
+
+            // ─── THROMBECTOMY / ASPIRATION ───────────────────────────────────────────
+            { id: 'thrombus_export', name: 'Export Advance (6Fr)', brand: 'Medtronic',          category: 'thrombectomy', profile: 0.041, tipLoad: null, color: '#ef4444' },
+            { id: 'thrombus_pronto', name: 'Pronto V3',            brand: 'Vascular Solutions', category: 'thrombectomy', profile: 0.041, tipLoad: null, color: '#dc2626' },
+            { id: 'thrombus_diver',  name: 'Diver CE',             brand: 'Invatec',            category: 'thrombectomy', profile: 0.042, tipLoad: null, color: '#b91c1c' },
+
+            // ─── IVUS / OCT IMAGING ──────────────────────────────────────────────────
+            { id: 'ivus_eagle_eye',    name: 'Eagle Eye (Shaft OD)',       brand: 'Philips',          category: 'imaging', profile: 0.038, tipLoad: null, color: '#38bdf8' },
+            { id: 'ivus_opticross_hd', name: 'OptiCross HD (Shaft OD)',    brand: 'Boston Scientific', category: 'imaging', profile: 0.040, tipLoad: null, color: '#06b6d4' },
+            { id: 'oct_dragonfly',     name: 'Dragonfly OpStar (OCT)',     brand: 'Abbott',           category: 'imaging', profile: 0.035, tipLoad: null, color: '#0284c7' },
+
+            // ─── INTRAVASCULAR LITHOTRIPSY ───────────────────────────────────────────
+            { id: 'ivl_shockwave', name: 'Shockwave C2/C2+', brand: 'Shockwave Medical', category: 'ivl', profile: 0.046, tipLoad: null, color: '#ec4899' },
+
+            // ─── EXCIMER LASER ───────────────────────────────────────────────────────
+            { id: 'laser_09', name: 'CVX-300 Laser 0.9mm', brand: 'Philips/Spectranetics', category: 'laser', profile: 0.035, tipLoad: null, color: '#f43f5e' },
+            { id: 'laser_14', name: 'CVX-300 Laser 1.4mm', brand: 'Philips/Spectranetics', category: 'laser', profile: 0.055, tipLoad: null, color: '#e11d48' },
+
+            // ─── SC BALLOONS ─────────────────────────────────────────────────────────
+            { id: 'balloon_sc_ryujin',  name: 'Ryujin Plus SC (Shaft)', brand: 'Terumo',  category: 'balloon_sc', profile: 0.025, tipLoad: null, color: '#7dd3fc' },
+            { id: 'balloon_sc_semiper', name: 'Semiper SC (Shaft)',     brand: 'Livzon',  category: 'balloon_sc', profile: 0.025, tipLoad: null, color: '#bae6fd' },
+            { id: 'balloon_sc_trek',    name: 'Trek SC (Shaft)',        brand: 'Abbott',  category: 'balloon_sc', profile: 0.027, tipLoad: null, color: '#0284c7' },
+
+            // ─── NC BALLOONS ─────────────────────────────────────────────────────────
+            { id: 'balloon_nc_trek', name: 'NC Trek / Euphora (Shaft)', brand: 'Abbott', category: 'balloon_nc', profile: 0.025, tipLoad: null, color: '#3b82f6' },
+
+            // ─── SPECIALTY BALLOONS ──────────────────────────────────────────────────
+            { id: 'balloon_score', name: 'Scoreflex (Scoring)',   brand: 'Generic',          category: 'balloon_sp', profile: 0.033, tipLoad: null, color: '#fbbf24' },
+            { id: 'balloon_cut',   name: 'Wolverine (Cutting)',   brand: 'Boston Scientific', category: 'balloon_sp', profile: 0.037, tipLoad: null, color: '#eab308' },
+
+            // ─── STENTS ──────────────────────────────────────────────────────────────
+            { id: 'stent_synergy', name: 'SYNERGY (Prox Shaft)', brand: 'Boston Scientific', category: 'stent', profile: 0.025, tipLoad: null, color: '#2dd4bf' },
+            { id: 'stent_xience',  name: 'XIENCE (Prox Shaft)',  brand: 'Abbott',            category: 'stent', profile: 0.026, tipLoad: null, color: '#115e59' },
+
+            // ─── ATHERECTOMY ─────────────────────────────────────────────────────────
+            { id: 'rota_125', name: 'Rotablator 1.25mm', brand: 'Boston Scientific', category: 'atherectomy', profile: 0.049, tipLoad: null, color: '#fdba74' },
+            { id: 'rota_150', name: 'Rotablator 1.50mm', brand: 'Boston Scientific', category: 'atherectomy', profile: 0.059, tipLoad: null, color: '#f97316' },
+            { id: 'rota_175', name: 'Rotablator 1.75mm', brand: 'Boston Scientific', category: 'atherectomy', profile: 0.069, tipLoad: null, color: '#c2410c' },
+        ];
+
+        const toolCategories = [
+            { id: 'wire_workhorse', label: '🔵 Workhorse Wires' },
+            { id: 'wire_polymer',   label: '🟣 Tortuosity & Soft Polymer Wires' },
+            { id: 'wire_cto_mod',   label: '🟠 CTO Moderate Wires' },
+            { id: 'wire_cto_high',  label: '🔴 CTO High Penetration Wires' },
+            { id: 'wire_support',   label: '🔷 Support Wires' },
+            { id: 'wire_specialty', label: '⭐ Specialty Wires' },
+            { id: 'micro',          label: 'Microcatheters' },
+            { id: 'thrombectomy',   label: 'Aspiration Catheters (Thrombectomy)' },
+            { id: 'imaging',        label: 'IVUS / OCT Imaging' },
+            { id: 'ivl',            label: 'Intravascular Lithotripsy (IVL)' },
+            { id: 'laser',          label: 'Excimer Laser' },
+            { id: 'balloon_sc',     label: 'SC Balloons' },
+            { id: 'balloon_nc',     label: 'NC Balloons' },
+            { id: 'balloon_sp',     label: 'Specialty Balloons' },
+            { id: 'stent',          label: 'Stents (DES)' },
+            { id: 'atherectomy',    label: 'Atherectomy (Rotablator)' },
+        ];
+
+        let state = {
+            selectedGC: 'gc_6fr_heartrail',
+            selectedExt: 'ext_none',
+            activeTools: ['wire_whisper', 'ivus_opticross_hd', 'balloon_sc_semiper']
+        };
+
+        function getTipBadge(tipLoad) {
+            if (!tipLoad) return '';
+            if (tipLoad < 2) return `<span class="tip-badge tip-soft">${tipLoad}g SOFT</span>`;
+            if (tipLoad <= 6) return `<span class="tip-badge tip-medium">${tipLoad}g MED</span>`;
+            return `<span class="tip-badge tip-stiff">${tipLoad}g STIFF</span>`;
+        }
+
+        function renderGCSelector() {
+            const container = document.getElementById('gc-dropdown-container');
+            const groups = ['6Fr', '7Fr', '8Fr'];
+            let html = `<select id="gc-select" onchange="handleGCChange(this.value)" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-200 focus:border-emerald-500 focus:outline-none transition-colors shadow-inner">`;
+            groups.forEach(group => {
+                html += `<optgroup label="Size ${group}">`;
+                guidingCatheters.filter(gc => gc.fr === group).forEach(gc => {
+                    const sel = state.selectedGC === gc.id ? 'selected' : '';
+                    html += `<option value="${gc.id}" ${sel}>${gc.name} (ID: ${gc.innerD.toFixed(3)}") — ${gc.brand}</option>`;
+                });
+                html += `</optgroup>`;
+            });
+            html += `</select>`;
+            container.innerHTML = html;
+        }
+
+        function renderExtSelector() {
+            const container = document.getElementById('ext-dropdown-container');
+            let html = `<select id="ext-select" onchange="handleExtChange(this.value)" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-200 focus:border-purple-500 focus:outline-none transition-colors shadow-inner">`;
+            extensions.forEach(ext => {
+                const sel = state.selectedExt === ext.id ? 'selected' : '';
+                const label = ext.innerD > 0 ? `ID: ${ext.innerD.toFixed(3)}"` : 'Langsung GC';
+                html += `<option value="${ext.id}" ${sel}>${ext.name} [${label}]</option>`;
+            });
+            html += `</select>`;
+            container.innerHTML = html;
+        }
+
+        function renderToolSelector() {
+            const container = document.getElementById('tools-dropdown-container');
+            const isFull = state.activeTools.length >= 4;
+            let html = `<select id="tool-select" onchange="handleAddTool(this.value)" ${isFull ? 'disabled' : ''}
+                class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-200 focus:border-cyan-500 focus:outline-none shadow-inner disabled:opacity-50">
+                <option value="" selected disabled hidden>${isFull ? 'Limit Tercapai (Maks. 4)' : 'Tambah Alat ke Simulasi...'}</option>`;
+            toolCategories.forEach(cat => {
+                const catTools = interventionalTools.filter(t => t.category === cat.id && !state.activeTools.includes(t.id));
+                if (catTools.length === 0) return;
+                html += `<optgroup label="${cat.label}">`;
+                catTools.forEach(t => {
+                    const tipStr = t.tipLoad ? ` | Tip: ${t.tipLoad}g` : '';
+                    html += `<option value="${t.id}">${t.name} (OD: ${t.profile.toFixed(3)}"${tipStr})</option>`;
+                });
+                html += `</optgroup>`;
+            });
+            html += `</select>`;
+            container.innerHTML = html;
+            document.getElementById('tool-counter').innerText = `${state.activeTools.length}/4 Alat`;
+            document.getElementById('tool-counter').className = `text-[10px] px-2 py-1 rounded font-mono ${isFull ? 'bg-red-900/50 text-red-400' : 'bg-gray-900 text-gray-400'}`;
+        }
+
+        function renderActiveTools() {
+            const container = document.getElementById('active-tools-container');
+            const emptyState = document.getElementById('empty-tools-state');
+            if (state.activeTools.length === 0) {
+                container.innerHTML = '';
+                emptyState.style.display = 'flex';
+                return;
+            }
+            emptyState.style.display = 'none';
+            let html = '';
+            state.activeTools.forEach(toolId => {
+                const tool = interventionalTools.find(t => t.id === toolId);
+                if (!tool) return;
+                const tipTooltip = tool.tipLoad ? `\nTip Load: ${tool.tipLoad}g` : '';
+                const tipBadge = getTipBadge(tool.tipLoad);
+                html += `
+                    <div class="flex items-center justify-between bg-gray-900/60 border border-gray-800 p-3 rounded-xl transition hover:border-gray-700">
+                        <div class="flex items-center gap-3">
+                            <div class="w-3 h-3 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.2)] shrink-0" style="background-color: ${tool.color};"></div>
+                            <div>
+                                <div class="font-semibold text-sm leading-tight text-gray-200 flex items-center gap-1.5 flex-wrap">
+                                    ${tool.name}
+                                    ${tipBadge}
+                                    <i data-lucide="info" class="w-3.5 h-3.5 text-gray-500 cursor-help" title="Mfr: ${tool.brand}${tipTooltip}\nData: Proximal Shaft OD (if applicable)"></i>
+                                </div>
+                                <div class="text-[10px] text-gray-500 mt-0.5">${tool.brand}</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 shrink-0">
+                            <span class="text-xs font-mono bg-black/40 border border-white/5 px-2 py-1 rounded text-gray-300">OD: ${tool.profile.toFixed(3)}"</span>
+                            <button onclick="handleRemoveTool('${tool.id}')" class="text-gray-500 hover:text-red-400 transition-colors p-1 bg-gray-800 hover:bg-red-500/10 rounded-md">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>`;
+            });
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function handleGCChange(id)   { state.selectedGC   = id; updateLogic(); }
+        function handleExtChange(id)  { state.selectedExt  = id; updateLogic(); }
+        function handleAddTool(id)    { if (id && state.activeTools.length < 4) { state.activeTools.push(id); updateLogic(); } }
+        function handleRemoveTool(id) { state.activeTools = state.activeTools.filter(t => t !== id); updateLogic(); }
+
+        function updateLogic() {
+            const gcObj  = guidingCatheters.find(gc => gc.id === state.selectedGC);
+            const extObj = extensions.find(ext => ext.id === state.selectedExt);
+            const currentLumenID = extObj.id !== 'ext_none' ? extObj.innerD : gcObj.innerD;
+
+            // Fatal Extension Check
+            const fatalAlert = document.getElementById('fatal-alert-container');
+            if (extObj.id !== 'ext_none' && extObj.profile > gcObj.innerD) {
+                fatalAlert.style.display = 'flex';
+                document.getElementById('fatal-alert-msg').innerText =
+                    `OD ${extObj.name} (${extObj.profile.toFixed(3)}") > ID ${gcObj.name} (${gcObj.innerD.toFixed(3)}"). Extension tidak bisa masuk!`;
+            } else {
+                fatalAlert.style.display = 'none';
+            }
+
+            // Smart Wire Logic — multi-category aware
+            let wireCount = 0, rxDeviceCount = 0;
+            state.activeTools.forEach(tId => {
+                const t = interventionalTools.find(t => t.id === tId);
+                if (t.category.includes('wire')) wireCount++;
+                else rxDeviceCount++;
+            });
+
+            let freeWires = Math.max(0, wireCount - rxDeviceCount);
+            let totalToolProfile = 0;
+
+            state.activeTools.forEach(toolId => {
+                const tool = interventionalTools.find(t => t.id === toolId);
+                if (tool.category.includes('wire')) {
+                    if (freeWires > 0) { totalToolProfile += tool.profile; freeWires--; }
+                } else {
+                    totalToolProfile += tool.profile;
+                }
+            });
+
+            const clearance = currentLumenID - totalToolProfile;
+            let status = 'safe', statusMsg = 'Kompatibel & Aman meluncur bersamaan.';
+
+            if (clearance < 0) {
+                status = 'danger'; statusMsg = 'TIDAK MUAT! Total profil alat melebihi diameter lumen efektif.';
+            } else if (clearance < 0.005) {
+                status = 'danger'; statusMsg = 'RED ZONE! Gesekan ekstrim / stuck. Segera cabut alat atau upsize GC.';
+            } else if (clearance <= 0.010) {
+                status = 'warning'; statusMsg = 'YELLOW ZONE! Minimal safe margin. Berisiko friksi tinggi, hati-hati saat manipulasi.';
+            } else if (state.activeTools.length > 3) {
+                status = 'warning'; statusMsg = 'Device Wrap Risk! Terlalu banyak alat dapat terlilit di dalam GC.';
+            }
+
+            // Contraindication Rules
+            if (state.activeTools.includes('rota_175') && gcObj.id.includes('6fr')) {
+                status = 'danger'; statusMsg = 'KONTRAINDIKASI: Rotablator 1.75mm butuh minimal 7Fr GC.';
+            }
+            if (state.activeTools.includes('rota_150') && extObj.id !== 'ext_none' && extObj.innerD < 0.059) {
+                status = 'danger'; statusMsg = `KONTRAINDIKASI: Burr 1.50mm tidak muat melewati ${extObj.name}.`;
+            }
+            if (state.activeTools.includes('ivl_shockwave') && extObj.id !== 'ext_none') {
+                status = 'danger'; statusMsg = 'KONTRAINDIKASI: Shockwave IVL tidak kompatibel dengan guiding extension!';
+            }
+
+            renderToolSelector();
+            renderActiveTools();
+            renderStatus(status, statusMsg, clearance);
+            renderVisualizer(currentLumenID, status, gcObj, extObj);
+            renderMath(currentLumenID, clearance, gcObj, extObj, wireCount, rxDeviceCount);
+
+            try {
+                const urlParams = new URLSearchParams({ gc: state.selectedGC, ext: state.selectedExt, tools: state.activeTools.join(',') });
+                window.history.replaceState({}, '', `${window.location.pathname}?${urlParams}`);
+            } catch (e) { /* sandbox/blob env */ }
+        }
+
+        function renderStatus(status, statusMsg, clearance) {
+            const header  = document.getElementById('status-header');
+            const content = document.getElementById('status-header-content');
+            const zoneInd = document.getElementById('zone-indicator');
+            let classes = 'p-4 border-b flex items-center justify-between transition-colors ';
+            let iconHtml = '', title = '';
+
+            if (status === 'safe') {
+                classes += 'bg-emerald-950/30 border-emerald-900 text-emerald-400';
+                iconHtml = `<i data-lucide="check-circle" class="w-6 h-6 shrink-0"></i>`; title = 'System Compatible';
+                zoneInd.className = 'hidden md:flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border bg-emerald-900/40 border-emerald-500/50 text-emerald-400';
+                zoneInd.innerHTML = `<div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div> GREEN ZONE (>0.010")`;
+            } else if (status === 'warning') {
+                classes += 'bg-amber-950/30 border-amber-900 text-amber-400';
+                iconHtml = `<i data-lucide="alert-triangle" class="w-6 h-6 shrink-0"></i>`; title = 'High Friction Warning';
+                zoneInd.className = 'hidden md:flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border bg-yellow-900/40 border-yellow-500/50 text-yellow-400';
+                zoneInd.innerHTML = `<div class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></div> YELLOW ZONE (0.005-0.010")`;
+            } else {
+                classes += 'bg-red-950/30 border-red-900 text-red-400';
+                iconHtml = `<i data-lucide="x-circle" class="w-6 h-6 shrink-0"></i>`; title = 'System Incompatible';
+                zoneInd.className = 'hidden md:flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border bg-red-900/40 border-red-500/50 text-red-400';
+                zoneInd.innerHTML = `<div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div> RED ZONE (<0.005")`;
+            }
+
+            header.className = classes;
+            content.innerHTML = `${iconHtml}<div><h3 class="font-bold text-lg mb-1">${title}</h3><p class="text-xs opacity-90">${statusMsg}</p></div>`;
+            lucide.createIcons();
+        }
+
+        function renderVisualizer(currentLumenID, status, gcObj, extObj) {
+            const container = document.getElementById('visualizer-container');
+            document.getElementById('lumen-label').innerText = extObj.id !== 'ext_none'
+                ? `Lumen Efektif: ${currentLumenID.toFixed(3)}"`
+                : `Lumen GC: ${currentLumenID.toFixed(3)}"`;
+
+            const containerSize = 256;
+            const scale = (containerSize * 0.85) / (gcObj.innerD + 0.020);
+
+            let html = `<div class="absolute inset-0 rounded-full border-[14px] shadow-[inset_0_0_30px_rgba(0,0,0,0.8)]" style="border-color: ${gcObj.color}; background-color: #000;">`;
+
+            if (extObj.id !== 'ext_none') {
+                const extSizePx = Math.round(extObj.profile * scale);
+                const extBorderPx = Math.max(4, Math.round((extObj.profile - extObj.innerD) * scale));
+                html += `<div class="absolute rounded-full border top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style="border-color: ${extObj.color}; background-color: #050507; width: ${extSizePx}px; height: ${extSizePx}px; border-width: ${extBorderPx}px;">`;
+            }
+
+            // Position wires/devices in available lumen
+            const activePosRadius = Math.round(currentLumenID * scale * 0.25);
+
+            state.activeTools.forEach((toolId, idx) => {
+                const tool = interventionalTools.find(t => t.id === toolId);
+                if (!tool) return;
+                const sizePx = Math.max(3, Math.round(tool.profile * scale));
+                const angle  = (idx / Math.max(state.activeTools.length, 1)) * 2 * Math.PI;
+                const tx = Math.round(Math.cos(angle) * activePosRadius);
+                const ty = Math.round(Math.sin(angle) * activePosRadius);
+                html += `<div class="visual-circle absolute rounded-full top-1/2 left-1/2 shadow-[0_0_6px_rgba(255,255,255,0.3)]" 
+                    title="${tool.name} OD: ${tool.profile.toFixed(3)}\""
+                    style="width: ${sizePx}px; height: ${sizePx}px; margin-top: ${-sizePx/2+ty}px; margin-left: ${-sizePx/2+tx}px; background-color: ${tool.color};"></div>`;
+            });
+
+            if (extObj.id !== 'ext_none') html += `</div>`;
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        function renderMath(currentLumenID, clearance, gcObj, extObj, wireCount, rxDeviceCount) {
+            const container = document.getElementById('math-container');
+            const activeToolObjs = state.activeTools.map(id => interventionalTools.find(t => t.id === id)).filter(Boolean);
+
+            let html = `<div class="text-gray-500 text-[10px] mb-2 uppercase tracking-wider">Lumen Efektif: <span class="text-white font-bold">${currentLumenID.toFixed(3)}"</span></div>`;
+
+            let runningSum = 0;
+            let wiresFree = Math.max(0, wireCount - rxDeviceCount);
+
+            activeToolObjs.forEach(tool => {
+                let counted = true;
+                if (tool.category.includes('wire')) {
+                    if (wiresFree > 0) { wiresFree--; }
+                    else { counted = false; }
+                }
+                const tipStr = tool.tipLoad ? ` <span class="text-gray-500">(${tool.tipLoad}g)</span>` : '';
+                if (counted) {
+                    runningSum += tool.profile;
+                    html += `<div class="flex justify-between items-center py-1 border-b border-gray-800">
+                        <span class="text-gray-300 flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full inline-block" style="background: ${tool.color}"></span>
+                            ${tool.name}${tipStr}
+                        </span>
+                        <span class="text-white">+${tool.profile.toFixed(3)}"</span>
+                    </div>`;
+                } else {
+                    html += `<div class="flex justify-between items-center py-1 border-b border-gray-800 opacity-40">
+                        <span class="text-gray-400 flex items-center gap-1 line-through">
+                            <span class="w-2 h-2 rounded-full inline-block" style="background: ${tool.color}"></span>
+                            ${tool.name} <span class="text-[9px] text-cyan-500 no-underline" style="text-decoration:none">[Rx — dipotong]</span>
+                        </span>
+                        <span class="text-cyan-500 text-[10px]">0.000"</span>
+                    </div>`;
+                }
+            });
+
+            const clearanceColor = clearance < 0 ? '#ef4444' : clearance < 0.005 ? '#ef4444' : clearance <= 0.010 ? '#f59e0b' : '#10b981';
+            html += `<div class="flex justify-between items-center pt-2 mt-1 border-t-2 border-gray-700">
+                <span class="font-bold text-gray-200">Total Profil</span>
+                <span class="font-bold text-white">${runningSum.toFixed(3)}"</span>
+            </div>
+            <div class="flex justify-between items-center pt-1 pb-1">
+                <span class="font-bold text-gray-200">Clearance</span>
+                <span class="font-bold" style="color: ${clearanceColor}">${clearance >= 0 ? '+' : ''}${clearance.toFixed(3)}"</span>
+            </div>`;
+
+            container.innerHTML = html;
+        }
+
+        function copyConfig() {
+            const urlParams = new URLSearchParams({ gc: state.selectedGC, ext: state.selectedExt, tools: state.activeTools.join(',') });
+            const url = `${window.location.origin}${window.location.pathname}?${urlParams}`;
+            navigator.clipboard.writeText(url).then(() => {
+                const btn = document.querySelector('[onclick="copyConfig()"]');
+                const orig = btn.innerHTML;
+                btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i> Disalin!`;
+                btn.classList.replace('bg-gray-800', 'bg-emerald-800');
+                lucide.createIcons();
+                setTimeout(() => { btn.innerHTML = orig; btn.classList.replace('bg-emerald-800', 'bg-gray-800'); lucide.createIcons(); }, 2000);
+            }).catch(() => alert('URL: ' + url));
+        }
+
+        // Load config from URL on init
+        function loadFromURL() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('gc')) state.selectedGC = params.get('gc');
+                if (params.get('ext')) state.selectedExt = params.get('ext');
+                if (params.get('tools')) state.activeTools = params.get('tools').split(',').filter(Boolean);
+            } catch (e) {}
+        }
+
+        // Init
+        loadFromURL();
+        renderGCSelector();
+        renderExtSelector();
+        updateLogic();
+        lucide.createIcons();
+    </script>
+</body>
+</html>
