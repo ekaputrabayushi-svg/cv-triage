@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElectroCardioVault Pro | Smart EKG Edu-Scribe</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            safelist: [
+                'bg-emerald-950/30', 'border-emerald-500/50', 'bg-emerald-900/50', 'text-emerald-400', 'bg-emerald-500', 'text-emerald-950', 'text-emerald-200',
+                'bg-amber-950/30', 'border-amber-500/50', 'bg-amber-900/50', 'text-amber-400', 'bg-amber-500', 'text-amber-950', 'text-amber-200',
+                'bg-orange-950/30', 'border-orange-500/50', 'bg-orange-900/50', 'text-orange-400', 'bg-orange-500', 'text-orange-950', 'text-orange-200',
+                'bg-rose-950/30', 'border-rose-500/50', 'bg-rose-900/50', 'text-rose-400', 'bg-rose-500', 'text-rose-950', 'text-rose-200',
+                'alert-triangle', 'shield-check', 'opacity-0'
+            ],
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        vault: {
+                            900: '#0f172a',
+                            800: '#1e293b',
+                            700: '#334155',
+                            accent: '#06b6d4',
+                            glow: '#22d3ee',
+                        }
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'ping-slow': 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-5px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            background-color: #020617; 
+            background-image: radial-gradient(circle at 50% 0%, #0f172a 0%, #020617 70%);
+            color: #f8fafc;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        select, input[type="text"], input[type="number"], textarea {
+            background-color: #1e293b;
+            border-color: #334155;
+            color: #f1f5f9;
+            transition: all 0.3s ease;
+        }
+        select:focus, input[type="text"]:focus, input[type="number"]:focus, textarea:focus {
+            border-color: #06b6d4;
+            box-shadow: 0 0 0 1px #06b6d4, 0 0 15px rgba(6, 182, 212, 0.2);
+            outline: none;
+        }
+        
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .modal-enter { animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .artery { transition: all 0.4s ease; stroke-dasharray: 200; stroke-dashoffset: 0; }
+        .artery-glow { 
+            stroke: #ef4444 !important; 
+            stroke-width: 5;
+            filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.9));
+            animation: artery-pulse 1.5s infinite alternate;
+        }
+        @keyframes artery-pulse {
+            0% { filter: drop-shadow(0 0 3px rgba(239, 68, 68, 0.4)); stroke-width: 4; }
+            100% { filter: drop-shadow(0 0 12px rgba(239, 68, 68, 1)); stroke-width: 6; }
+        }
+        
+        .tap-active { transform: scale(0.95); background-color: #0891b2 !important; }
+
+        .ecg-grid {
+            background-image: 
+                linear-gradient(to right, rgba(6, 182, 212, 0.2) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(6, 182, 212, 0.2) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        .ecg-grid-fine {
+            background-image: 
+                linear-gradient(to right, rgba(6, 182, 212, 0.08) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(6, 182, 212, 0.08) 1px, transparent 1px);
+            background-size: 10px 10px;
+        }
+
+        .toggle-checkbox { transform: translateX(0); }
+        .toggle-checkbox:checked { transform: translateX(1.25rem); border-color: #06b6d4; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #06b6d4; }
+        
+        .axis-quadrant { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0.1; }
+        .axis-active { opacity: 0.8 !important; fill: #06b6d4; animation: pulse-glow 2s infinite alternate;}
+        .axis-danger { fill: #f43f5e; opacity: 0.8 !important; animation: pulse-glow-danger 2s infinite alternate; }
+        .axis-warn { fill: #f59e0b; opacity: 0.8 !important; animation: pulse-glow-warn 2s infinite alternate; }
+        
+        @keyframes pulse-glow { 0% { filter: drop-shadow(0 0 2px #06b6d4); } 100% { filter: drop-shadow(0 0 10px #06b6d4); } }
+        @keyframes pulse-glow-danger { 0% { filter: drop-shadow(0 0 2px #f43f5e); } 100% { filter: drop-shadow(0 0 10px #f43f5e); } }
+        @keyframes pulse-glow-warn { 0% { filter: drop-shadow(0 0 2px #f59e0b); } 100% { filter: drop-shadow(0 0 10px #f59e0b); } }
+
+        .fade-in { animation: fadeIn 0.4s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media print {
+            body { background: #fff !important; color: #000 !important; }
+            body * { visibility: hidden; }
+            
+            /* Print Default (EMR Textarea) */
+            body:not(.print-mode-drawer) #outputText, body:not(.print-mode-drawer) #outputText * { visibility: visible; }
+            body:not(.print-mode-drawer) #outputText {
+                position: absolute; left: 0; top: 0; width: 100%; height: auto !important; 
+                border: none; overflow: visible; font-size: 12pt; font-family: monospace;
+                background: #fff !important; color: #000 !important; white-space: pre-wrap;
+            }
+
+            /* Print Khusus Drawer (Tutor Notes) */
+            body.print-mode-drawer #tutorDrawer, 
+            body.print-mode-drawer #clinicalPearlText, 
+            body.print-mode-drawer #clinicalPearlText * { visibility: visible; }
+            
+            body.print-mode-drawer #tutorDrawer {
+                position: absolute; left: 0; top: 0; width: 100%; height: auto !important; transform: none !important;
+                background: #fff !important; color: #000 !important; border: none; box-shadow: none;
+            }
+            body.print-mode-drawer #clinicalPearlText,
+            body.print-mode-drawer .overflow-y-auto {
+                overflow: visible !important;
+                height: auto !important;
+                max-height: none !important;
+            }
+            body.print-mode-drawer .print-hidden { display: none !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-6 lg:p-8 font-sans antialiased selection:bg-cyan-500 selection:text-white pb-24">
+
+    <div id="medicalDisclaimer" class="max-w-7xl mx-auto mb-4 bg-rose-950/40 border border-rose-900/50 rounded-xl p-3 flex justify-between items-start md:items-center text-xs md:text-sm text-rose-200">
+        <div class="flex items-start">
+            <i data-lucide="alert-triangle" class="w-4 h-4 mr-2 mt-0.5 flex-shrink-0 text-rose-400"></i>
+            <p><strong>Disclaimer Medis:</strong> Aplikasi ini (ElectroCardioVault Pro) dirancang khusus untuk keperluan edukasi dan referensi klinis. Tidak untuk menggantikan penilaian, diagnosis, atau tindakan medis oleh dokter profesional.</p>
+        </div>
+        <button onclick="document.getElementById('medicalDisclaimer').style.display='none'" class="ml-4 text-rose-400 hover:text-white" aria-label="Tutup disclaimer">
+            <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+    </div>
+
+    <div id="visualModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 hidden">
+        <div class="glass-panel w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden modal-enter border border-slate-700">
+            <div class="bg-slate-800/80 p-5 flex items-center justify-between border-b border-slate-700">
+                <div class="flex items-center space-x-3">
+                    <div id="modalIconContainer" class="p-2 rounded-lg bg-slate-900">
+                        <i data-lucide="activity" class="w-6 h-6 text-cyan-400"></i>
+                    </div>
+                    <h2 id="modalTitle" class="text-white text-lg font-bold tracking-wide">Visual Guide</h2>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="hidden sm:flex items-center bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">
+                        <div class="w-3 h-3 border border-cyan-400/50 bg-cyan-400/10 mr-2"></div>
+                        <span class="text-[10px] text-slate-400 font-mono">1 kotak kecil = 0.04s / 1mm</span>
+                    </div>
+                    <button onclick="closeModal()" aria-label="Tutup Panduan Visual" class="text-slate-400 hover:text-white bg-slate-700/50 hover:bg-slate-700 rounded-full p-2 transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="w-full h-64 bg-[#f8fafc] border border-slate-700 rounded-2xl overflow-hidden relative shadow-inner ecg-grid">
+                    <div class="absolute inset-0 ecg-grid-fine"></div>
+                    <svg id="modalSvg" viewBox="0 0 500 200" class="w-full h-full relative z-10 text-slate-800" preserveAspectRatio="xMidYMid meet">
+                        <defs>
+                            <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" />
+                            </marker>
+                        </defs>
+                        <line x1="0" y1="120" x2="1000" y2="120" stroke="rgba(0,0,0,0.2)" stroke-width="1.5" />
+                        <g id="modalSvgContent"></g>
+                    </svg>
+                </div>
+                <div class="mt-5 text-sm text-slate-300 bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 flex items-start">
+                    <i data-lucide="book-open" class="w-5 h-5 text-cyan-500 mt-0.5 mr-3 flex-shrink-0"></i>
+                    <p id="modalDesc" class="leading-relaxed"></p>
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <button onclick="closeModal()" aria-label="Tutup" class="px-6 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-xl transition-colors">Paham, Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button id="tutorFab" onclick="toggleTutorDrawer()" class="fixed bottom-6 right-4 sm:right-6 z-50 bg-amber-500 hover:bg-amber-400 text-amber-950 font-black p-3.5 md:px-5 md:py-3.5 rounded-2xl shadow-[0_10px_25px_rgba(245,158,11,0.5)] flex items-center gap-2 transition-all hover:scale-105 active:scale-95 group border border-amber-300">
+        <i data-lucide="graduation-cap" class="w-5 h-5 group-hover:animate-bounce"></i>
+        <span class="hidden sm:inline">Clinical Tutor</span>
+        <span class="relative flex h-3 w-3 ml-1" title="Data updated">
+            <span id="tutorBadgePing" class="absolute inline-flex h-full w-full rounded-full bg-amber-100 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-amber-200"></span>
+        </span>
+    </button>
+
+    <div id="tutorBackdrop" class="fixed inset-0 z-[80] bg-slate-950/60 backdrop-blur-sm hidden transition-opacity duration-300 opacity-0" onclick="closeTutorDrawer()"></div>
+
+    <div id="tutorDrawer" class="fixed inset-y-0 right-0 z-[90] w-full max-w-md sm:max-w-lg bg-[#0b1120] border-l border-amber-500/30 shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+        <div class="bg-gradient-to-r from-amber-900/60 to-orange-900/40 p-4 sm:p-5 border-b border-amber-500/30 flex justify-between items-center shrink-0 print-hidden">
+            <div class="flex items-center">
+                <i data-lucide="graduation-cap" class="w-6 h-6 text-amber-400 mr-3 animate-pulse"></i>
+                <div>
+                    <h2 class="text-amber-100 font-bold text-base sm:text-lg tracking-wide leading-tight">Clinical Tutor</h2>
+                    <p class="text-[10px] text-amber-400/80 font-mono tracking-wider">Pathophysiology & Pearls</p>
+                </div>
+            </div>
+            <div class="flex items-center">
+                <span id="eduModeBadgeDrawer" class="hidden sm:inline-block text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded border mr-3 bg-emerald-900/50 text-emerald-400 border-emerald-800">Edu Mode: ON</span>
+                <span class="hidden sm:inline-block text-[10px] text-amber-500/50 font-mono mr-2">Alt + T</span>
+                <button onclick="closeTutorDrawer()" aria-label="Tutup Tutor" class="text-amber-400 hover:text-white bg-amber-950/50 hover:bg-amber-800 rounded-full p-2 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="p-4 sm:p-6 overflow-y-auto flex-grow scrollbar-thin scrollbar-thumb-amber-700/50 scrollbar-track-slate-900">
+            <div id="clinicalPearlText" class="flex flex-col gap-5 fade-in">
+                <!-- Content injected dynamically -->
+            </div>
+            <button onclick="printDrawer()" class="print-hidden w-full mt-6 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 font-bold py-3 rounded-xl flex items-center justify-center transition-colors">
+                <i data-lucide="printer" class="w-4 h-4 mr-2"></i> Print Tutor Notes
+            </button>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-8 p-6 lg:p-7 bg-slate-800/30 border border-slate-700/60 rounded-3xl backdrop-blur-md shadow-2xl flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+            <div class="flex items-start md:items-center space-x-5 lg:space-x-6">
+                <div class="p-4 lg:p-5 bg-gradient-to-br from-cyan-500 via-blue-600 to-indigo-700 rounded-2xl shadow-[0_0_25px_rgba(6,182,212,0.3)] relative group flex-shrink-0">
+                    <div class="absolute inset-0 bg-cyan-400 opacity-20 group-hover:opacity-40 rounded-2xl blur-lg transition-all duration-500"></div>
+                    <i data-lucide="activity-square" class="w-9 h-9 lg:w-11 lg:h-11 text-white relative z-10 animate-float"></i>
+                </div>
+                
+                <div class="flex flex-col space-y-2">
+                    <div class="flex items-center flex-wrap gap-3">
+                        <h1 class="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight drop-shadow-md">ElectroCardio<span class="text-cyan-400">Vault</span></h1>
+                        <span class="px-3 py-1 bg-gradient-to-r from-violet-500 to-fuchsia-600 text-white text-[10px] md:text-xs font-black rounded-lg uppercase tracking-widest shadow-lg transform -translate-y-1">PRO EDITION</span>
+                    </div>
+                    <p class="text-cyan-100/70 text-xs md:text-sm lg:text-base font-medium tracking-wide">
+                        Advanced AI-Assisted Clinical ECG Interpreter & Triage Engine
+                    </p>
+                    
+                    <div class="flex items-center flex-wrap gap-2 pt-1">
+                        <span class="text-[10px] md:text-xs text-slate-300 font-bold flex items-center bg-slate-900/60 px-3 py-1.5 rounded-lg border border-slate-700/50 shadow-inner">
+                            <i data-lucide="book-open" class="w-3.5 h-3.5 mr-2 text-amber-400"></i> AHA / ACC Guidelines
+                        </span>
+                        <span class="text-[10px] md:text-xs text-slate-300 font-bold flex items-center bg-slate-900/60 px-3 py-1.5 rounded-lg border border-slate-700/50 shadow-inner">
+                            <i data-lucide="shield-alert" class="w-3.5 h-3.5 mr-2 text-rose-400"></i> STEMI Protocol
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex flex-col gap-3 w-full xl:w-auto xl:min-w-[320px]">
+                <div class="bg-[#0b1120]/80 p-4 rounded-2xl border border-slate-700/80 shadow-inner flex flex-col justify-center">
+                    <div class="flex justify-between items-start mb-2.5">
+                        <span class="text-[9px] md:text-[10px] text-slate-400 tracking-widest uppercase font-black bg-slate-800 px-2 py-0.5 rounded">Part of CardiologyVault</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-[0_0_10px_rgba(6,182,212,0.4)] flex-shrink-0">
+                            <i data-lucide="stethoscope" class="w-5 h-5 text-white"></i>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-0.5">Lead Architect & Developer</span>
+                            <span class="text-sm lg:text-base text-cyan-50 font-bold tracking-wide">Bayushi Eka Putra, MD, FIHA</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between bg-slate-800 border border-slate-600/50 p-3.5 rounded-2xl shadow-lg hover:border-cyan-500/50 transition-colors">
+                    <div class="flex items-center">
+                        <span class="relative flex h-2 w-2 mr-2.5">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                        </span>
+                        <span class="text-xs lg:text-sm font-black text-slate-200 uppercase tracking-widest">Edu / Tutor Mode</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="help-circle" class="w-4 h-4 text-slate-400 hover:text-cyan-400 cursor-pointer transition-colors" title="Mengaktifkan mode edukasi pada algoritma kesimpulan."></i>
+                        <div class="relative inline-block w-11 h-6 align-middle select-none">
+                            <input type="checkbox" name="toggle" id="beginnerToggle" aria-label="Toggle Tutor Mode" checked class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-400 appearance-none cursor-pointer z-10 top-0 left-0 transition-transform duration-300 ease-in-out shadow-md"/>
+                            <label for="beginnerToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-600 cursor-pointer transition-colors duration-300"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+            
+            <div class="lg:col-span-4 flex flex-col gap-6">
+                <!-- Triage Panel -->
+                <div id="triagePanel" class="rounded-3xl overflow-hidden shadow-xl border-2 flex-shrink-0 transition-all duration-500 bg-emerald-950/30 border-emerald-500/50">
+                    <div id="triageHeader" class="bg-emerald-900/50 p-4 flex items-center justify-between transition-colors duration-500">
+                        <div class="flex items-center space-x-3">
+                            <i id="triageIcon" data-lucide="shield-check" class="w-6 h-6 text-emerald-400"></i>
+                            <h2 class="text-emerald-100 font-bold tracking-wide text-sm uppercase">Triage Status</h2>
+                        </div>
+                        <span id="triageBadge" class="text-[10px] bg-emerald-500 text-emerald-950 font-black px-2 py-1 rounded shadow-sm">LOW RISK</span>
+                    </div>
+                    <div class="p-5">
+                        <p id="triageText" class="text-emerald-200 text-sm font-semibold leading-relaxed transition-colors duration-500">
+                            Aktivitas elektrik stabil. Pasien dapat diobservasi rutin atau rawat jalan.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Dual Visualizer -->
+                <div class="glass-panel rounded-3xl overflow-hidden border border-slate-700/60 shadow-xl flex-grow flex flex-col">
+                    <div class="bg-slate-800/80 p-3 border-b border-slate-700/50 shrink-0">
+                        <div class="flex space-x-2 bg-slate-900/50 p-1.5 rounded-xl border border-slate-700/50">
+                            <button id="tabMapperBtn" onclick="switchVisualizer('mapper')" aria-label="Tampilkan Anatomi" class="flex-1 bg-cyan-600/20 text-cyan-400 border border-cyan-500/30 shadow-sm text-xs font-bold py-2 rounded-lg transition-all flex justify-center items-center">
+                                <i data-lucide="heart" class="w-3.5 h-3.5 mr-1.5"></i> Anatomy
+                            </button>
+                            <button id="tabAxisBtn" onclick="switchVisualizer('axis')" aria-label="Tampilkan Axis Radar" class="flex-1 text-slate-400 hover:text-white hover:bg-slate-700 text-xs font-bold py-2 rounded-lg transition-all flex justify-center items-center">
+                                <i data-lucide="compass" class="w-3.5 h-3.5 mr-1.5"></i> Axis Radar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="viewMapper" class="p-6 flex flex-col items-center justify-center relative bg-[#0b1120] flex-grow min-h-[300px]">
+                        <span id="mapperStatus" class="absolute top-4 right-4 text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-emerald-900/50 text-emerald-400 border border-emerald-800">No Ischemia</span>
+                        <svg viewBox="0 0 240 240" class="w-52 md:w-60 h-auto drop-shadow-2xl mt-4">
+                            <path d="M120,210 C70,210 30,160 30,100 C30,50 70,30 120,50 C170,30 210,50 210,100 C210,160 170,210 120,210 Z" fill="#1e293b" stroke="#334155" stroke-width="2" opacity="0.8"/>
+                            <path d="M100,45 C100,20 140,20 140,45" fill="none" stroke="#475569" stroke-width="12" stroke-linecap="round"/>
+                            <path id="pathRCA" d="M110,65 C90,75 70,90 65,120 C60,150 75,180 110,195" fill="none" stroke="#334155" stroke-width="3.5" stroke-linecap="round" class="artery"/>
+                            <text id="labelRCA" x="40" y="115" class="text-[10px] font-mono fill-slate-500 font-bold transition-colors">RCA</text>
+                            <path id="pathLAD" d="M130,65 C135,100 130,150 120,205" fill="none" stroke="#334155" stroke-width="3.5" stroke-linecap="round" class="artery"/>
+                            <text id="labelLAD" x="145" y="160" class="text-[10px] font-mono fill-slate-500 font-bold transition-colors">LAD</text>
+                            <path id="pathLCX" d="M135,68 C160,75 185,95 180,140" fill="none" stroke="#334155" stroke-width="3.5" stroke-linecap="round" class="artery"/>
+                            <text id="labelLCX" x="190" y="110" class="text-[10px] font-mono fill-slate-500 font-bold transition-colors">LCx</text>
+                            <circle cx="120" cy="55" r="4" fill="#475569" />
+                        </svg>
+                        <p id="mapperDesc" class="text-[11px] text-slate-400 text-center mt-6 h-8 px-4 leading-tight">Ubah parameter Segmen ST / Q Patologis untuk melihat lokasi kelainan.</p>
+                    </div>
+
+                    <div id="viewAxis" class="p-6 flex flex-col items-center justify-center relative bg-[#0b1120] flex-grow min-h-[300px] hidden">
+                        <span id="axisStatus" class="absolute top-4 right-4 text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-cyan-900/50 text-cyan-400 border border-cyan-800">Normoaxis</span>
+                        <svg viewBox="0 0 200 200" class="w-52 md:w-60 h-auto drop-shadow-2xl mt-4">
+                            <circle cx="100" cy="100" r="90" fill="#0f172a" stroke="#334155" stroke-width="2" />
+                            <path id="quadNormo" d="M100,100 L190,100 A90,90 0 0,1 100,190 Z" fill="#334155" class="axis-quadrant axis-active" />
+                            <path id="quadLAD" d="M100,100 L100,10 L190,100 A90,90 0 0,0 100,10 Z" fill="#334155" class="axis-quadrant" />
+                            <path id="quadRAD" d="M100,100 L100,190 A90,90 0 0,1 10,100 Z" fill="#334155" class="axis-quadrant" />
+                            <path id="quadExt" d="M100,100 L10,100 A90,90 0 0,1 100,10 Z" fill="#334155" class="axis-quadrant" />
+                            <line x1="10" y1="100" x2="190" y2="100" stroke="#475569" stroke-width="1.5" stroke-dasharray="4 2"/>
+                            <line x1="100" y1="10" x2="100" y2="190" stroke="#475569" stroke-width="1.5" stroke-dasharray="4 2"/>
+                            <text x="175" y="95" class="text-[8px] font-bold fill-slate-300">I (+)</text>
+                            <text x="10" y="95" class="text-[8px] font-bold fill-slate-500">I (-)</text>
+                            <text x="105" y="185" class="text-[8px] font-bold fill-slate-300">aVF (+)</text>
+                            <text x="105" y="20" class="text-[8px] font-bold fill-slate-500">aVF (-)</text>
+                            <circle cx="100" cy="100" r="3" fill="#cbd5e1" />
+                        </svg>
+                        <p id="axisDesc" class="text-[11px] text-slate-400 text-center mt-6 h-8 px-4 leading-tight">Lead I (+), aVF (+). Vektor kelistrikan jantung mengarah normal ke kiri bawah.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-8 glass-panel rounded-3xl flex flex-col h-full overflow-hidden shadow-2xl border border-slate-700/60">
+                <form id="ekgForm" class="flex flex-col h-full">
+                    <div class="p-5 border-b border-slate-700/50 flex flex-col sm:flex-row sm:items-center justify-between bg-slate-800/60 gap-3 shrink-0">
+                        <h2 class="text-lg font-bold text-white flex items-center tracking-wide">
+                            <i data-lucide="cpu" class="w-5 h-5 mr-2 text-cyan-400"></i>
+                            Parameter Klinis EKG
+                        </h2>
+                        <div class="flex items-center gap-3">
+                            <button type="button" onclick="resetForm()" aria-label="Reset Form" class="text-[10px] text-slate-400 hover:text-white transition-colors bg-slate-700/50 px-3 py-1.5 rounded-lg border border-slate-600 font-bold uppercase tracking-widest flex items-center">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5 mr-1.5"></i> Reset
+                            </button>
+                            <span class="text-[10px] text-cyan-200 bg-cyan-900/50 px-3 py-1.5 rounded-full border border-cyan-700 flex items-center w-fit font-mono uppercase font-bold tracking-wider">
+                                <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse mr-2"></span> Auto-Interpreter
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6 flex-grow grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6 overflow-y-auto">
+                        <div class="space-y-4 md:col-span-2 bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-emerald-400 uppercase tracking-wider block mb-2"><i data-lucide="user" class="w-3.5 h-3.5 inline mb-0.5"></i> Presentasi Klinis (Penting)</label>
+                                <select id="gejala" name="gejala" class="w-full p-3.5 rounded-xl border border-slate-600 focus:border-emerald-500 appearance-none cursor-pointer text-sm bg-slate-800">
+                                    <option value="Asimtomatik (Medical Check Up)">Asimtomatik / Medical Check Up</option>
+                                    <option value="Nyeri Dada Tipikal">Nyeri Dada Tipikal (Angina)</option>
+                                    <option value="Nyeri Dada Atipikal">Nyeri Dada Atipikal</option>
+                                    <option value="Sesak Napas">Sesak Napas (Dyspnea)</option>
+                                    <option value="Sinkop">Sinkop / Hampir Pingsan</option>
+                                    <option value="Palpitasi">Palpitasi / Berdebar</option>
+                                </select>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-emerald-400 uppercase tracking-wider block mb-2"><i data-lucide="users" class="w-3.5 h-3.5 inline mb-0.5"></i> Jenis Kelamin (Untuk QTc)</label>
+                                <select id="gender" name="gender" class="w-full p-3.5 rounded-xl border border-slate-600 focus:border-emerald-500 appearance-none cursor-pointer text-sm bg-slate-800">
+                                    <option value="Pria">Pria (Batas QTc > 440ms)</option>
+                                    <option value="Wanita">Wanita (Batas QTc > 460ms)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Irama -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center group">
+                                Irama Dasar
+                                <button type="button" onclick="triggerGuide('irama')" aria-label="Visual Guide Irama" class="text-cyan-600 hover:text-cyan-400 bg-cyan-950/50 px-2 py-1 rounded text-[10px] flex items-center transition-colors">
+                                    <i data-lucide="image" class="w-3 h-3 mr-1"></i> Visual
+                                </button>
+                            </label>
+                            <select id="irama" name="irama" class="w-full p-3.5 rounded-xl border appearance-none cursor-pointer text-sm">
+                                <option value="Sinus Rhythm">Normal Sinus Rhythm</option>
+                                <option value="Sinus Bradycardia">Sinus Bradycardia</option>
+                                <option value="Sinus Tachycardia">Sinus Tachycardia</option>
+                                <option value="Sinus Arrhythmia">Sinus Arrhythmia</option>
+                                <option value="Atrial Fibrillation (AF)">Atrial Fibrillation (AF)</option>
+                                <option value="Atrial Flutter">Atrial Flutter</option>
+                                <option value="SVT">SVT (Supraventricular Tachycardia)</option>
+                                <option value="Ventricular Tachycardia (VT)">Ventricular Tachycardia (VT)</option>
+                                <option value="Ventricular Fibrillation (VF)">Ventricular Fibrillation (VF)</option>
+                                <option value="Asystole">Asystole</option>
+                            </select>
+                        </div>
+
+                        <!-- HR with TAPPER -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Heart Rate & Reguleritas</label>
+                            <div class="flex gap-2">
+                                <div class="relative w-1/3">
+                                    <input type="number" id="hr" name="hr" value="75" min="1" max="300" class="w-full p-3.5 pl-4 rounded-xl border font-mono font-bold text-cyan-300 bg-slate-800" placeholder="BPM" />
+                                </div>
+                                <button type="button" id="tapBtn" onclick="tapBPM()" aria-label="Tap untuk menghitung BPM" class="w-1/3 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white rounded-xl text-[10px] sm:text-xs font-bold transition-all flex flex-col items-center justify-center active:scale-95 shadow-inner">
+                                    <i data-lucide="mouse-pointer-click" class="w-4 h-4 mb-0.5 text-cyan-400"></i>
+                                    TAP BPM
+                                </button>
+                                <select id="reguler" name="reguler" class="w-1/3 p-3.5 rounded-xl border appearance-none cursor-pointer text-sm">
+                                    <option value="Reguler">Reguler</option>
+                                    <option value="Irreguler">Irreguler</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Aksis -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center group">
+                                Aksis (Lead I & aVF)
+                                <button type="button" onclick="switchVisualizer('axis')" aria-label="Radar Aksis" class="text-amber-600 hover:text-amber-400 bg-amber-950/50 px-2 py-1 rounded text-[10px] flex items-center transition-colors">
+                                    <i data-lucide="compass" class="w-3 h-3 mr-1"></i> Radar
+                                </button>
+                            </label>
+                            <select id="aksis" name="aksis" class="w-full p-3.5 rounded-xl border appearance-none cursor-pointer text-sm">
+                                <option value="Normoaxis">Normoaxis [ I(+), aVF(+) ]</option>
+                                <option value="LAD (Left Axis Deviation)">LAD [ I(+), aVF(-) ]</option>
+                                <option value="RAD (Right Axis Deviation)">RAD [ I(-), aVF(+) ]</option>
+                                <option value="Extreme Axis Deviation">Extreme Axis [ I(-), aVF(-) ]</option>
+                            </select>
+                        </div>
+
+                        <!-- Gelombang P -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center group">
+                                Gelombang P (Lead II)
+                                <button type="button" onclick="triggerGuide('gelP')" aria-label="Visual Guide Gelombang P" class="text-violet-600 hover:text-violet-400 bg-violet-950/50 px-2 py-1 rounded text-[10px] flex items-center transition-colors">
+                                    <i data-lucide="image" class="w-3 h-3 mr-1"></i> Visual
+                                </button>
+                            </label>
+                            <select id="gelP" name="gelP" class="w-full p-3.5 rounded-xl border appearance-none cursor-pointer text-sm">
+                                <option value="Normal">Normal (Tegak & < 3 kotak kecil)</option>
+                                <option value="P Mitrale (LAE)">P Mitrale / Lebar (> 3 kotak kecil)</option>
+                                <option value="P Pulmonale (RAE)">P Pulmonale / Tinggi (> 2.5 kotak kecil)</option>
+                                <option value="Tidak terlihat / Absen">Tidak terlihat (Tertutup / Absen)</option>
+                            </select>
+                        </div>
+
+                        <!-- PR Interval -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center group">
+                                PR Interval
+                                <button type="button" onclick="triggerGuide('prInterval')" aria-label="Visual Guide PR Interval" class="text-indigo-600 hover:text-indigo-400 bg-indigo-950/50 px-2 py-1 rounded text-[10px] flex items-center transition-colors">
+                                    <i data-lucide="image" class="w-3 h-3 mr-1"></i> Visual
+                                </button>
+                            </label>
+                            <select id="prInterval" name="prInterval" class="w-full p-3.5 rounded-xl border appearance-none cursor-pointer text-sm">
+                                <option value="Normal (0.12 - 0.20s)">Normal (3 - 5 kotak kecil)</option>
+                                <option value="Memanjang (> 0.20s - AV Block)">Memanjang (> 5 kotak kecil / AV Block)</option>
+                                <option value="Memendek (< 0.12s - WPW)">Memendek (< 3 kotak kecil / Pre-excitation)</option>
+                            </select>
+                        </div>
+
+                        <!-- QRS Kompleks -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center group">
+                                QRS Kompleks
+                                <button type="button" onclick="triggerGuide('qrs')" aria-label="Visual Guide QRS" class="text-orange-600 hover:text-orange-400 bg-orange-950/50 px-2 py-1 rounded text-[10px] flex items-center transition-colors">
+                                    <i data-lucide="image" class="w-3 h-3 mr-1"></i> Visual
+                                </button>
+                            </label>
+                            <select id="qrs" name="qrs" class="w-full p-3.5 rounded-xl border appearance-none cursor-pointer text-sm">
+                                <option value="Normal / Sempit">Normal / Sempit (< 3 kotak kecil)</option>
+                                <option value="RBBB (rSR' di V1)">RBBB (> 0.12s, rSR' / Telinga Kelinci di V1-V2)</option>
+                                <option value="LBBB (QS Lebar di V5-V6)">LBBB (> 0.12s, QS broad di V5-V6) - STEMI Eqv.</option>
+                                <option value="Kriteria LVH (+)">Kriteria LVH (+) - Voltase Tinggi</option>
+                                <option value="Kriteria RVH (+)">Kriteria RVH (+) - R Tinggi di V1</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Zona Transisi -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center group">
+                                Zona Transisi QRS (V1-V6)
+                                <button type="button" onclick="triggerGuide('transisi')" aria-label="Visual Guide Transisi" class="text-slate-500 hover:text-slate-300 bg-slate-800 px-2 py-1 rounded text-[10px] flex items-center transition-colors">
+                                    <i data-lucide="image" class="w-3 h-3 mr-1"></i> Visual
+                                </button>
+                            </label>
+                            <select id="transisi" name="transisi" class="w-full p-3.5 rounded-xl border appearance-none cursor-pointer text-sm">
+                                <option value="Normal (V3-V4)">Normal (R/S seimbang di V3-V4)</option>
+                                <option value="Early / Counter-Clockwise (V1-V2)">Early / Counter-Clockwise (V1-V2)</option>
+                                <option value="Late / Clockwise (V5-V6)">Late / Clockwise (V5-V6)</option>
+                            </select>
+                        </div>
+
+                        <!-- Gelombang Q Patologis -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-rose-300 uppercase tracking-wider flex justify-between items-center group">
+                                Gelombang Q Patologis
+                                <button type="button" onclick="triggerGuide('gelQ')" aria-label="Visual Guide Q Patologis" class="text-rose-600 hover:text-rose-400 bg-rose-950/50 px-2 py-1 rounded text-[10px] flex items-center transition-colors">
+                                    <i data-lucide="image" class="w-3 h-3 mr-1"></i> Visual
+                                </button>
+                            </label>
+                            <select id="gelQ" name="gelQ" class="w-full p-3.5 rounded-xl border appearance-none cursor-pointer text-sm">
+                                <option value="Tidak Ada / Normal">Tidak Ada / Normal</option>
+                                <option value="Anteroseptal (V1-V4)">Ada di Anteroseptal (V1-V4)</option>
+                                <option value="Inferior (II, III, aVF)">Ada di Inferior (II, III, aVF)</option>
+                                <option value="Lateral (I, aVL, V5-V6)">Ada di Lateral (I, aVL, V5-V6)</option>
+                            </select>
+                        </div>
+
+                        <!-- Segmen ST & RV Infarction -->
+                        <div class="space-y-3 bg-rose-950/20 p-4 rounded-xl border border-rose-900/30">
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-rose-500 uppercase tracking-wider flex justify-between items-center group">
+                                    Segmen ST (Injury Marker)
+                                    <button type="button" onclick="triggerGuide('st')" aria-label="Visual Guide Segmen ST" class="text-rose-600 hover:text-rose-400 bg-rose-950/50 px-2 py-1 rounded text-[10px] flex items-center transition-colors">
+                                        <i data-lucide="image" class="w-3 h-3 mr-1"></i> Visual
+                                    </button>
+                                </label>
+                                <select id="st" name="st" class="w-full p-3.5 rounded-xl border border-slate-600 focus:border-rose-500 appearance-none cursor-pointer bg-slate-800 text-sm">
+                                    <option value="Isoelektrik (Normal)">Isoelektrik (Sejajar Baseline)</option>
+                                    <option value="ST Elevasi (Anterior V1-V4)">ST Elevasi / Naik (Anterior V1-V4)</option>
+                                    <option value="ST Elevasi (Inferior II, III, aVF)">ST Elevasi / Naik (Inferior II, III, aVF)</option>
+                                    <option value="ST Elevasi (Lateral I, aVL, V5-V6)">ST Elevasi / Naik (Lateral I, aVL, V5-V6)</option>
+                                    <option value="ST Depresi (V1-V3) - Posterior Suspect">ST Depresi (V1-V3) - Cermin Posterior STEMI</option>
+                                    <option value="ST Depresi">ST Depresi Lainnya (> 1 kotak kecil)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex items-center gap-2 mt-2 pt-2 border-t border-rose-900/40">
+                                <input type="checkbox" id="rvInfarct" name="rvInfarct" class="w-4 h-4 rounded bg-slate-800 border-slate-600 text-rose-500 focus:ring-rose-500 cursor-pointer">
+                                <label for="rvInfarct" class="text-[11px] font-bold text-slate-300 cursor-pointer">Right-Sided Leads (V4R) Elevasi (Suspect RV Infarction)</label>
+                            </div>
+                        </div>
+
+                        <!-- Gelombang T -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center group">
+                                Gelombang T
+                                <button type="button" onclick="triggerGuide('gelT')" aria-label="Visual Guide Gelombang T" class="text-cyan-600 hover:text-cyan-400 bg-cyan-950/50 px-2 py-1 rounded text-[10px] flex items-center transition-colors">
+                                    <i data-lucide="image" class="w-3 h-3 mr-1"></i> Visual
+                                </button>
+                            </label>
+                            <select id="gelT" name="gelT" class="w-full p-3.5 rounded-xl border appearance-none cursor-pointer text-sm">
+                                <option value="Normal (Positif, asimetris)">Normal (Positif, asimetris)</option>
+                                <option value="T Inverted (Iskemia)">T Inverted / Terbalik (Suspect Ischemia)</option>
+                                <option value="Tall T (Hiperkalemia suspect)">Tall Peaked T (Tinggi Lancip / Hiperkalemia)</option>
+                                <option value="Hyperacute T (Early STEMI)">Hyperacute T (Tinggi Lebar / Early STEMI)</option>
+                                <option value="Flat T">Flat T (Datar)</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Gelombang U -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center group">
+                                Gelombang U
+                                <button type="button" onclick="triggerGuide('gelU')" aria-label="Visual Guide Gelombang U" class="text-slate-500 hover:text-slate-300 bg-slate-800 px-2 py-1 rounded text-[10px] flex items-center transition-colors">
+                                    <i data-lucide="image" class="w-3 h-3 mr-1"></i> Visual
+                                </button>
+                            </label>
+                            <select id="gelU" name="gelU" class="w-full p-3.5 rounded-xl border appearance-none cursor-pointer text-sm">
+                                <option value="Tidak Ada / Normal">Tidak Ada / Normal</option>
+                                <option value="Prominent (> 1mm)">Prominent / Tinggi (Suspect Hipokalemia)</option>
+                                <option value="Inverted">Inverted / Terbalik (Suspect Iskemia)</option>
+                            </select>
+                        </div>
+
+                        <!-- QT Interval & Auto QTc -->
+                        <div class="space-y-2 md:col-span-2 bg-slate-800/40 p-4 rounded-2xl border border-slate-700/50">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-3">QT Interval & QTc (Bazett)</label>
+                            <div class="flex flex-col sm:flex-row gap-4">
+                                <div class="relative w-full sm:w-1/2">
+                                    <input type="number" id="qt" name="qt" value="380" min="1" class="w-full p-3.5 rounded-xl border text-sm bg-slate-800 font-mono font-bold" placeholder="Nilai QT" />
+                                    <span class="absolute right-3 top-3.5 text-xs text-slate-500 font-bold">ms</span>
+                                </div>
+                                <div class="relative w-full sm:w-1/2">
+                                    <input type="text" id="qtc" name="qtc" readonly class="w-full p-3.5 rounded-xl border border-slate-700 bg-slate-900/80 text-emerald-400 font-bold font-mono text-sm cursor-not-allowed" placeholder="Kalkulasi..." />
+                                    <span class="absolute right-3 top-3.5 text-[10px] text-emerald-600 font-bold uppercase">QTc</span>
+                                </div>
+                            </div>
+                            <p class="text-[9px] text-slate-500 mt-2 pl-1 leading-tight"><strong class="text-amber-500/80">Info:</strong> Formula Bazett bias under-corrects pada HR &lt; 60 bpm dan over-corrects pada HR &gt; 100 bpm. Harap korelasi klinis.</p>
+                        </div>
+
+                        <!-- AI KESIMPULAN -->
+                        <div class="space-y-2 md:col-span-2 mt-2">
+                            <label class="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center">
+                                <i data-lucide="brain-circuit" class="w-4 h-4 mr-1.5 animate-pulse"></i> Kesimpulan Final (Auto-Generated)
+                            </label>
+                            <input type="text" id="kesimpulan" name="kesimpulan" class="w-full p-4 bg-cyan-950/30 border border-cyan-600/50 text-cyan-100 font-bold rounded-xl focus:border-cyan-400 shadow-inner text-sm sm:text-base transition-colors" placeholder="Menganalisis..." />
+                        </div>
+                    </div>
+                </form>
+
+                <!-- OUTPUT BOX -->
+                <div class="p-6 border-t border-slate-700/80 bg-[#0b1120] relative rounded-b-3xl shrink-0">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+                        <h3 class="text-cyan-500 font-mono text-sm tracking-widest font-bold flex items-center">
+                            <i data-lucide="printer" class="w-4 h-4 mr-2"></i> EMR REPORT PRINTOUT
+                        </h3>
+                        <div class="flex flex-wrap gap-2">
+                            <button id="printBtn" onclick="window.print()" aria-label="Print Laporan" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-sm font-bold rounded-xl transition-all active:scale-95 border border-slate-600 flex-1 sm:flex-none">
+                                <i data-lucide="printer" class="w-4 h-4"></i>
+                                <span class="hidden sm:inline">Print</span>
+                            </button>
+                            <button id="exportJsonBtn" onclick="exportJSON()" aria-label="Export JSON" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 text-sm font-bold rounded-xl transition-all active:scale-95 border border-slate-600 flex-1 sm:flex-none">
+                                <i data-lucide="braces" class="w-4 h-4"></i>
+                                <span id="exportJsonStr" class="hidden sm:inline">JSON</span>
+                            </button>
+                            <button id="copyBtn" onclick="copyText()" aria-label="Salin Laporan ke Clipboard" class="flex items-center justify-center space-x-2 px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-bold rounded-xl shadow-[0_0_15px_rgba(8,145,178,0.5)] transition-all active:scale-95 flex-1 sm:flex-none">
+                                <i id="copyIcon" data-lucide="copy" class="w-4 h-4"></i>
+                                <span id="copyTextStr">Salin Laporan</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <textarea id="outputText" readonly class="w-full h-96 bg-[#0f172a] text-cyan-50 p-5 rounded-2xl border border-slate-700/80 font-mono text-xs focus:outline-none resize-none shadow-inner leading-relaxed selection:bg-cyan-900 scrollbar-thin scrollbar-thumb-slate-600"></textarea>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const form = document.getElementById('ekgForm');
+        const outputText = document.getElementById('outputText');
+        const inputKesimpulan = document.getElementById('kesimpulan');
+        const inputHR = document.getElementById('hr');
+        const inputQT = document.getElementById('qt');
+        const inputQTc = document.getElementById('qtc');
+        const inputs = form.querySelectorAll('input, select');
+        const beginnerToggle = document.getElementById('beginnerToggle');
+        
+        const triagePanel = document.getElementById('triagePanel');
+        const triageHeader = document.getElementById('triageHeader');
+        const triageIcon = document.getElementById('triageIcon');
+        const triageBadge = document.getElementById('triageBadge');
+        const triageText = document.getElementById('triageText');
+
+        const pathLAD = document.getElementById('pathLAD');
+        const pathRCA = document.getElementById('pathRCA');
+        const pathLCX = document.getElementById('pathLCX');
+        const labelLAD = document.getElementById('labelLAD');
+        const labelRCA = document.getElementById('labelRCA');
+        const labelLCX = document.getElementById('labelLCX');
+        const mapperStatus = document.getElementById('mapperStatus');
+        const mapperDesc = document.getElementById('mapperDesc');
+
+        const quadNormo = document.getElementById('quadNormo');
+        const quadLAD = document.getElementById('quadLAD');
+        const quadRAD = document.getElementById('quadRAD');
+        const quadExt = document.getElementById('quadExt');
+        const axisStatus = document.getElementById('axisStatus');
+        const axisDesc = document.getElementById('axisDesc');
+
+        let isDrawerOpen = false;
+        let lastTriageScore = 0;
+        let isFirstRun = true;
+
+        window.resetForm = function() {
+            form.reset();
+            inputQTc.value = '';
+            tapTimes = [];
+            isFirstRun = true;
+            lastTriageScore = 0;
+            setTimeout(() => updateOutput(), 10);
+        };
+
+        window.toggleTutorDrawer = function() {
+            if(isDrawerOpen) closeTutorDrawer();
+            else openTutorDrawer();
+        }
+
+        window.openTutorDrawer = function() {
+            const drawer = document.getElementById('tutorDrawer');
+            const backdrop = document.getElementById('tutorBackdrop');
+            drawer.classList.remove('translate-x-full');
+            backdrop.classList.remove('hidden');
+            backdrop.classList.remove('opacity-0');
+            isDrawerOpen = true;
+        }
+
+        window.closeTutorDrawer = function() {
+            const drawer = document.getElementById('tutorDrawer');
+            const backdrop = document.getElementById('tutorBackdrop');
+            drawer.classList.add('translate-x-full');
+            backdrop.classList.add('opacity-0');
+            setTimeout(() => backdrop.classList.add('hidden'), 300);
+            isDrawerOpen = false;
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.altKey && (e.key === 't' || e.key === 'T')) {
+                e.preventDefault();
+                toggleTutorDrawer();
+            }
+        });
+
+        let touchstartX = 0;
+        let touchendX = 0;
+        const drawerElement = document.getElementById('tutorDrawer');
+        drawerElement.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; }, {passive: true});
+        drawerElement.addEventListener('touchend', e => {
+            touchendX = e.changedTouches[0].screenX;
+            if (touchendX - touchstartX > 50) closeTutorDrawer();
+        }, {passive: true});
+
+        window.printDrawer = function() {
+            document.body.classList.add('print-mode-drawer');
+            window.print();
+            setTimeout(() => document.body.classList.remove('print-mode-drawer'), 1000);
+        }
+
+        window.switchVisualizer = function(view) {
+            const btnMapper = document.getElementById('tabMapperBtn');
+            const btnAxis = document.getElementById('tabAxisBtn');
+            const viewMapper = document.getElementById('viewMapper');
+            const viewAxis = document.getElementById('viewAxis');
+
+            if(view === 'mapper') {
+                viewMapper.classList.remove('hidden'); viewAxis.classList.add('hidden');
+                btnMapper.className = "flex-1 bg-cyan-600/20 text-cyan-400 border border-cyan-500/30 shadow-sm text-xs font-bold py-2 rounded-lg transition-all flex justify-center items-center";
+                btnAxis.className = "flex-1 text-slate-400 hover:text-white hover:bg-slate-700 text-xs font-bold py-2 rounded-lg transition-all flex justify-center items-center";
+            } else {
+                viewMapper.classList.add('hidden'); viewAxis.classList.remove('hidden');
+                btnAxis.className = "flex-1 bg-amber-600/20 text-amber-400 border border-amber-500/30 shadow-sm text-xs font-bold py-2 rounded-lg transition-all flex justify-center items-center";
+                btnMapper.className = "flex-1 text-slate-400 hover:text-white hover:bg-slate-700 text-xs font-bold py-2 rounded-lg transition-all flex justify-center items-center";
+            }
+        }
+
+        let tapTimes = [];
+        window.tapBPM = function() {
+            const now = Date.now();
+            const btn = document.getElementById('tapBtn');
+            btn.classList.add('tap-active');
+            setTimeout(() => btn.classList.remove('tap-active'), 100);
+            if(tapTimes.length > 0 && (now - tapTimes[tapTimes.length-1]) > 3000) tapTimes = [];
+            tapTimes.push(now);
+            if(tapTimes.length > 5) tapTimes.shift();
+            if(tapTimes.length > 1) {
+                let diffs = [];
+                for(let i = 1; i < tapTimes.length; i++) diffs.push(tapTimes[i] - tapTimes[i-1]);
+                let avgDiff = diffs.reduce((a,b) => a+b, 0) / diffs.length;
+                let bpm = Math.round(60000 / avgDiff);
+                inputHR.value = Math.max(1, Math.min(300, bpm));
+                
+                document.getElementById('reguler').value = 'Reguler'; 
+                let iramaSelect = document.getElementById('irama');
+                if (bpm > 100 && iramaSelect.value === 'Sinus Rhythm') iramaSelect.value = 'Sinus Tachycardia';
+                if (bpm < 60 && iramaSelect.value === 'Sinus Rhythm') iramaSelect.value = 'Sinus Bradycardia';
+                if (bpm >= 60 && bpm <= 100 && (iramaSelect.value === 'Sinus Tachycardia' || iramaSelect.value === 'Sinus Bradycardia')) iramaSelect.value = 'Sinus Rhythm';
+
+                updateOutput(inputHR);
+            }
+        };
+
+        const pearls = {
+            gejala: "Selalu cocokkan temuan EKG dengan gejala. Nyeri dada + ST Elevasi = Tatalaksana reperfusi segera. Asimtomatik + kelainan = Mungkin temuan kronis (ACC/AHA).",
+            irama: "Pastikan irama dari Nodus SA dengan melihat gelombang P tegak di Lead II. Rate sinus normal 60-100 x/mnt (Baltazar).",
+            hr: "Cara cepat HR reguler = 300 dibagi jumlah kotak besar antara R ke R. Jika ireguler, hitung jumlah QRS dalam 6 detik lalu kalikan 10 (Wang).",
+            aksis: "Gunakan Aturan Jempol. I(+) dan aVF(+) berarti aksis normal. Jika I(+), aVF(-) berarti deviasi ke kiri/LAD (Baltazar).",
+            gelP: "P Mitrale (M-shape, lebar >3 kotak) = pembesaran atrium kiri. P Pulmonale (lancip tinggi >2.5 kotak) = pembesaran atrium kanan (Wang).",
+            prInterval: "PR Normal adalah 120-200ms (3-5 kotak kecil). Jika >5 kotak kecil secara konsisten, itu adalah 1st Degree AV Block (Baltazar).",
+            qrs: "QRS sempit (<3 kotak kecil) = berasal dari supraventrikular. LBBB baru (QS di V5-V6 >120ms) dengan nyeri dada adalah ekuivalen STEMI (AHA). RBBB (rSR' di V1) bisa jinak atau indikasi regangan ventrikel kanan.",
+            transisi: "Zona transisi normal di V3-V4. Bergeser ke V1-V2 (Counter-Clockwise) curigai RVH/Posterior MI. Jika ke V5-V6 (Clockwise) curigai LVH/PPOK (Baltazar).",
+            gelQ: "Q Patologis (lebar >1mm, dalam >1/3 R) menandakan nekrosis miokard / Old Myocardial Infarction. Otot mati tidak mengalirkan listrik (Wang).",
+            st: "Elevasi J-point 1mm di 2 sadapan berdekatan adalah tanda oklusi koroner akut (STEMI). Depresi spesifik di V1-V3 patut dicurigai sebagai Posterior STEMI (Cermin V7-V9).",
+            gelT: "T inverted simetris & dalam = iskemia miokard. T memuncak tinggi dan sempit (Tall Peaked) sangat spesifik untuk Hiperkalemia fase awal (Wang).",
+            gelU: "Gelombang ekstra setelah T. U Prominent = khas Hipokalemia. U Inverted sangat spesifik untuk Iskemia LAD / Left Main berat (Baltazar).",
+            qt: "Batas QTc memanjang adalah >440ms untuk pria dan >460ms untuk wanita. QTc memanjang sangat berkaitan dengan konsumsi obat (Makrolida, Antipsikotik, Antiaritmia) atau gangguan elektrolit."
+        };
+
+        function calculateQTc(qt, hr) {
+            if(!qt || !hr || hr <= 0) return 0;
+            const rrSeconds = 60 / hr;
+            return Math.round(qt / Math.sqrt(rrSeconds));
+        }
+
+        function calculateTriage(data) {
+            let score = 0;
+            let triage = "ROUTINE (Low Risk)";
+            let colorTheme = "emerald";
+            let action = "Elektrofisiologi stabil. Tidak ada indikasi intervensi akut. Rawat jalan / observasi klinis rutin.";
+
+            const isFemale = data.gender === 'Wanita';
+            const qtcThreshold = isFemale ? 460 : 440;
+            let stemiAlert = false;
+
+            if(data.gejala === 'Nyeri Dada Tipikal' || data.gejala === 'Sinkop') score += 3;
+            else if(data.gejala === 'Nyeri Dada Atipikal' || data.gejala === 'Sesak Napas' || data.gejala === 'Palpitasi') score += 1;
+
+            if(data.hr > 130 || data.hr < 40) score += 2;
+
+            if(data.st.includes('Elevasi') || data.st.includes('Posterior Suspect')) {
+                score += 10; 
+                stemiAlert = true;
+            }
+            if(data.st.includes('Depresi') && !data.st.includes('Posterior')) score += 2;
+            
+            // RV Infarction Penalty
+            if(data.rvInfarct) score += 2;
+
+            // LBBB Logic Penalty
+            if(data.qrs.includes('LBBB')) {
+                score += 5;
+                if(data.gejala === 'Nyeri Dada Tipikal') stemiAlert = true;
+            }
+
+            if(data.gelT.includes('Inverted') || data.gelT.includes('Hyperacute')) score += 2;
+            if(data.irama.includes('Ventricular') || data.irama.includes('Asystole')) score += 10;
+            if(data.gelT.includes('Tall') || data.gelU.includes('Prominent')) score += 2; 
+            if(data.qtcVal > qtcThreshold) score += 1;
+
+            if(score >= 5 || stemiAlert) { 
+                triage = "CRITICAL (Code Red)"; 
+                colorTheme = "rose"; 
+                if(stemiAlert) {
+                    action = "AKTIVASI CODE STEMI! Tatalaksana Reperfusi (Primary PCI / Fibrinolitik) segera. Waktu adalah otot!";
+                } else {
+                    action = "Kondisi LETAL/KRITIS! Segera mulai protokol resusitasi (AHA ACLS), siapkan Defibrillator, atau observasi ketat CVCU!";
+                }
+            } else if(score >= 3) { 
+                triage = "URGENT (High Risk)"; 
+                colorTheme = "orange"; 
+                action = "Risiko tinggi iskemia/aritmia. Admit ICU/CVCU. Lakukan serial EKG, cek Enzim Jantung (Troponin), pertimbangkan angiografi diagnostik.";
+            } else if(score >= 1) { 
+                triage = "OBSERVATION (Moderate)"; 
+                colorTheme = "amber"; 
+                action = "Observasi di IGD / Bangsal. Ulangi EKG bila keluhan berulang. Evaluasi faktor risiko kardiovaskular dan elektrolit.";
+            }
+
+            return {triage, colorTheme, action, score};
+        }
+
+        function generateConclusion(data) {
+            let parts = [data.irama];
+            let eduNotes = [];
+
+            if (data.aksis.includes('LAD')) { parts.push('LAD'); eduNotes.push("- LAD: Curigai Left Anterior Hemiblock (LAHB) atau hipertrofi kiri (LVH)."); }
+            if (data.aksis.includes('RAD')) { parts.push('RAD'); eduNotes.push("- RAD: Curigai RVH, Emboli Paru, atau hipertrofi kanan/LPHB."); }
+            if (data.aksis.includes('Extreme')) { parts.push('Extreme Axis'); eduNotes.push("- Extreme Axis: Arah vektor menjauh dari apeks (sering pada VT)."); }
+            
+            if (data.gelP.includes('Mitrale')) { parts.push('LAE'); eduNotes.push("- P Mitrale (LAE): Gel. P melebar akibat atrium kiri membesar dan lambat depolarisasi."); }
+            if (data.gelP.includes('Pulmonale')) { parts.push('RAE'); eduNotes.push("- P Pulmonale (RAE): Tegangan tinggi di atrium kanan karena beban paru kronis (PPOK/Cor Pulmonale)."); }
+            
+            if (data.prInterval.includes('Memanjang')) { parts.push('1st Degree AV Block'); eduNotes.push("- 1° AV Block: PR > 200ms perlambatan konduksi patologis di nodus AV."); }
+            if (data.prInterval.includes('Memendek')) { parts.push('WPW Pattern'); eduNotes.push("- WPW: PR memendek akibat impuls melewati jalur pintas aksesori (Bundle of Kent)."); }
+            
+            if (data.qrs.includes('RBBB')) { parts.push('RBBB'); eduNotes.push("- RBBB: Konduksi bundle branch kanan terhambat. Bisa normal variant atau cor pulmonale."); }
+            else if (data.qrs.includes('LBBB')) { 
+                parts.push('LBBB (New? → STEMI Eqv)'); 
+                eduNotes.push("- LBBB: Konduksi ventrikel kiri terhambat total. LBBB baru dengan keluhan iskemik ekuivalen dengan STEMI (Evaluasi Sgarbossa Criteria: ST Elevasi/Depresi konkordan)."); 
+            }
+            else if (data.qrs.includes('LVH')) { parts.push('LVH'); eduNotes.push("- LVH: Otot ventrikel kiri menebal menghasilkan voltase gelombang R di lateral tinggi."); }
+            else if (data.qrs.includes('RVH')) { parts.push('RVH'); eduNotes.push("- RVH: Gelombang R > S di V1 menandakan hipertrofi ventrikel kanan."); }
+
+            if (data.transisi.includes('Early')) { eduNotes.push("- CCW Rotation: Transisi dini (V1-V2). Vektor jantung berotasi ke anterior (RVH/Posterior infarct)."); }
+            if (data.transisi.includes('Late')) { eduNotes.push("- CW Rotation: Transisi lambat (V5-V6). Jantung berotasi ke belakang karena LVH/PPOK."); }
+
+            // Flutter Specific Logic
+            if (data.irama.includes('Flutter')) {
+                eduNotes.push("- Atrial Flutter: Waspada blok konduksi 2:1 yang sering menyerupai sinus takikardia pada HR ~150 bpm.");
+            }
+
+            let ischemiaParts = [];
+            let culprit = "";
+
+            if (!data.gelQ.includes('Tidak Ada')) {
+                if(data.gelQ.includes('Antero')) { ischemiaParts.push('Anterior OMI'); culprit = "LAD (Old)"; }
+                else if(data.gelQ.includes('Inferior')) { ischemiaParts.push('Inferior OMI'); culprit = "RCA/LCx (Old)"; }
+                else if(data.gelQ.includes('Lateral')) { ischemiaParts.push('Lateral OMI'); culprit = "LCx (Old)"; }
+                eduNotes.push(`- Pathologic Q: Tanda nekrosis jaringan parut pada infark miokard lama (OMI).`);
+            }
+
+            if (data.st.includes('Elevasi')) {
+                if (data.st.includes('Anterior')) { ischemiaParts.push('Acute Anterior STEMI'); culprit = "LAD"; }
+                else if (data.st.includes('Inferior')) { ischemiaParts.push('Acute Inferior STEMI'); culprit = "RCA/LCx"; }
+                else if (data.st.includes('Lateral')) { ischemiaParts.push('Acute Lateral STEMI'); culprit = "LCx"; }
+                else ischemiaParts.push('STEMI');
+                eduNotes.push(`- STEMI (${culprit}): Oklusi total miokard mengakibatkan arus cedera transmural (ST Elevasi).`);
+                
+                if (data.gejala === 'Asimtomatik (Medical Check Up)') {
+                    eduNotes.push("- PERHATIAN: ST Elevasi asimtomatik bisa merupakan Varian Normal (Early Repolarization), Brugada, atau Vasospasme. Korelasikan klinis dengan ketat sebelum reperfusi.");
+                }
+            } else if (data.st.includes('Posterior Suspect')) {
+                ischemiaParts.push('Suspect Acute Posterior STEMI');
+                culprit = "LCx / RCA";
+                eduNotes.push("- ST Depresi V1-V3: Sering merupakan bayangan cermin (mirror image) dari ST Elevasi di dinding posterior (V7-V9). Lakukan perekaman EKG Posterior.");
+            } else if (data.st.includes('Depresi')) {
+                ischemiaParts.push('Ischemia / NSTEMI');
+                eduNotes.push("- ST Depresi: Menandakan iskemia subendokardial akut yang butuh observasi/terapi anti-iskemik.");
+            }
+            
+            if (document.getElementById('rvInfarct').checked) {
+                ischemiaParts.push('RV Infarction');
+                if(!culprit.includes('RCA')) culprit = culprit ? culprit + " & RCA (Proximal)" : "RCA (Proximal)";
+                eduNotes.push("- RV Infarction: Elevasi di V4R sangat spesifik untuk infark ventrikel kanan. HINDARI Nitrat / Diuretik, berikan loading cairan IV.");
+            }
+            
+            if (data.gelT.includes('Inverted') && !data.st.includes('Depresi')) { ischemiaParts.push('Ischemic T-wave'); eduNotes.push("- T Inverted: Perubahan repolarisasi miokard akibat defisit oksigen."); }
+            if (data.gelT.includes('Tall')) { ischemiaParts.push('Suspect Hyperkalemia'); eduNotes.push("- Tall Peaked T: Repolarisasi sangat cepat khas gangguan elektrolit (Hiperkalemia)."); }
+            if (data.gelT.includes('Hyperacute')) { ischemiaParts.push('Hyperacute T-wave'); eduNotes.push("- Hyperacute T: Respons paling awal (<30 menit) dari oklusi koroner sebelum J-point naik."); }
+            
+            if (data.gelU.includes('Prominent')) { ischemiaParts.push('Suspect Hypokalemia'); eduNotes.push("- Prominent U: Pemanjangan proses repolarisasi serat purkinje (sering karena Kalium rendah)."); }
+            if (data.gelU.includes('Inverted')) { ischemiaParts.push('Severe Ischemia Marker'); eduNotes.push("- Inverted U: Sangat spesifik untuk oklusi berat pada Left Main atau proksimal LAD."); }
+
+            if (ischemiaParts.length > 0) parts.push(ischemiaParts.join(' + '));
+            
+            const qtcThreshold = data.gender === 'Wanita' ? 460 : 440;
+            if(data.qtcVal > qtcThreshold) { 
+                parts.push(`Prolonged QTc`); 
+                eduNotes.push(`- QTc ${data.qtcVal}ms (Batas ${data.gender} ${qtcThreshold}ms): Evaluasi riwayat konsumsi obat yang berpotensi memperpanjang QT (Makrolida, Fluoroquinolone, Antipsikotik, Antiaritmia) dan panel elektrolit.`); 
+            }
+
+            let finalConclusion = parts.join(', ');
+            if (finalConclusion === 'Sinus Rhythm' && data.hr >= 60 && data.hr <= 100 && data.gejala.includes('Asimtomatik')) {
+                finalConclusion = 'Normal Sinus Rhythm, Normal ECG';
+            }
+
+            return { text: finalConclusion, culprit: culprit, eduNotes: eduNotes };
+        }
+
+        function updateCoronaryMap(stValue, qValue, uValue) {
+            [pathLAD, pathRCA, pathLCX].forEach(p => { p.classList.remove('artery-glow'); p.setAttribute('stroke', '#334155'); });
+            [labelLAD, labelRCA, labelLCX].forEach(l => { l.classList.remove('fill-red-400'); l.classList.add('fill-slate-500'); });
+            
+            let targetArea = stValue.includes('Elevasi') || stValue.includes('Posterior') ? stValue : qValue;
+            let isInvertedU = uValue && uValue.includes('Inverted');
+            
+            if(targetArea.includes('Antero') || isInvertedU) {
+                pathLAD.classList.add('artery-glow'); labelLAD.classList.replace('fill-slate-500', 'fill-red-400');
+                mapperStatus.className = "absolute top-4 right-4 text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-rose-900/50 text-rose-400 border border-rose-800 animate-pulse";
+                mapperStatus.textContent = "LAD Territory Lesion";
+                mapperDesc.innerHTML = isInvertedU && !targetArea.includes('Antero') 
+                    ? "Inverted U menandakan oklusi kritis di <span class='text-rose-400 font-bold'>LAD/Left Main</span>." 
+                    : "Jejak kelainan di dinding anterior. Teritori arteri <span class='text-rose-400 font-bold'>LAD</span>.";
+            } else if (targetArea.includes('Inferior') || document.getElementById('rvInfarct').checked) {
+                pathRCA.classList.add('artery-glow'); labelRCA.classList.replace('fill-slate-500', 'fill-red-400');
+                mapperStatus.className = "absolute top-4 right-4 text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-rose-900/50 text-rose-400 border border-rose-800 animate-pulse";
+                mapperStatus.textContent = "RCA Territory Lesion";
+                mapperDesc.innerHTML = "Jejak kelainan di dinding inferior/ventrikel kanan. Teritori arteri dominan <span class='text-rose-400 font-bold'>RCA</span>.";
+            } else if (targetArea.includes('Lateral') || targetArea.includes('Posterior')) {
+                pathLCX.classList.add('artery-glow'); labelLCX.classList.replace('fill-slate-500', 'fill-red-400');
+                mapperStatus.className = "absolute top-4 right-4 text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-rose-900/50 text-rose-400 border border-rose-800 animate-pulse";
+                mapperStatus.textContent = targetArea.includes('Posterior') ? "Posterior Lesion" : "LCx Territory Lesion";
+                mapperDesc.innerHTML = targetArea.includes('Posterior') ? "Jejak di dinding posterior (Cermin V1-V3). Keterlibatan <span class='text-rose-400 font-bold'>LCx/RCA</span>." : "Jejak kelainan di dinding lateral. Teritori cabang arteri <span class='text-rose-400 font-bold'>LCx</span>.";
+            } else {
+                 mapperStatus.className = "absolute top-4 right-4 text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-emerald-900/50 text-emerald-400 border border-emerald-800";
+                 mapperStatus.textContent = "Anatomy Clear";
+                 mapperDesc.innerHTML = "Tidak tampak oklusi total akut atau riwayat infark secara teritorial.";
+            }
+        }
+
+        function updateAxisRadar(axisValue) {
+            [quadNormo, quadLAD, quadRAD, quadExt].forEach(q => { q.className.baseVal = "axis-quadrant"; });
+            
+            if(axisValue.includes('Normo')) {
+                quadNormo.className.baseVal = "axis-quadrant axis-active";
+                axisStatus.className = "absolute top-4 right-4 text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-cyan-900/50 text-cyan-400 border border-cyan-800";
+                axisStatus.textContent = "Normoaxis (Normal)";
+                axisDesc.innerHTML = "Lead I (+), aVF (+). Vektor kelistrikan berarah normal ke kiri bawah (0° s/d 90°).";
+            } else if (axisValue.includes('LAD')) {
+                quadLAD.className.baseVal = "axis-quadrant axis-warn";
+                axisStatus.className = "absolute top-4 right-4 text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-amber-900/50 text-amber-400 border border-amber-800";
+                axisStatus.textContent = "Left Axis Dev";
+                axisDesc.innerHTML = "Lead I (+), aVF (-). Vektor terdorong ekstrem ke arah kiri atas (0° s/d -90°).";
+            } else if (axisValue.includes('RAD')) {
+                quadRAD.className.baseVal = "axis-quadrant axis-warn";
+                axisStatus.className = "absolute top-4 right-4 text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-amber-900/50 text-amber-400 border border-amber-800";
+                axisStatus.textContent = "Right Axis Dev";
+                axisDesc.innerHTML = "Lead I (-), aVF (+). Vektor bergeser ke arah kuadran kanan bawah (+90° s/d 180°).";
+            } else {
+                quadExt.className.baseVal = "axis-quadrant axis-danger";
+                axisStatus.className = "absolute top-4 right-4 text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-rose-900/50 text-rose-400 border border-rose-800";
+                axisStatus.textContent = "Extreme Axis (NW)";
+                axisDesc.innerHTML = "Lead I (-), aVF (-). Vektor terbalik sepenuhnya mengarah ke 'No Man's Land' (-90° s/d -180°).";
+            }
+        }
+
+        function updateTutorPanel(analysis, data) {
+            let tutorHTML = '';
+
+            if (analysis.eduNotes && analysis.eduNotes.length > 0) {
+                tutorHTML += `
+                <div class="bg-emerald-950/30 border border-emerald-800/50 rounded-xl p-4 sm:p-5 shadow-inner">
+                    <h4 class="text-emerald-400 font-bold text-xs uppercase tracking-wider mb-4 flex items-center border-b border-emerald-800/50 pb-3">
+                        <i data-lucide="microscope" class="w-4 h-4 mr-2"></i> Pathophysiology Rationale
+                    </h4>
+                    <ul class="list-disc pl-5 space-y-3 text-emerald-100/90 text-sm leading-relaxed font-medium">
+                        ${analysis.eduNotes.map(note => `<li>${note.replace('- ', '')}</li>`).join('')}
+                    </ul>
+                </div>`;
+            } else {
+                tutorHTML += `
+                <div class="bg-emerald-950/20 border border-emerald-800/50 rounded-xl p-4 sm:p-5 shadow-inner">
+                    <h4 class="text-emerald-400 font-bold text-xs uppercase tracking-wider mb-4 flex items-center border-b border-emerald-800/50 pb-3">
+                        <i data-lucide="check-circle" class="w-4 h-4 mr-2"></i> Pathophysiology Rationale
+                    </h4>
+                    <p class="text-emerald-100/80 text-sm leading-relaxed font-medium pl-1">
+                        Interpretasi EKG masuk dalam batas normal fisiologis. Tidak ada defek konduksi, blokade, hipertrofi, maupun tanda iskemia koroner.
+                    </p>
+                </div>`;
+            }
+
+            let activePearlsHtml = `
+                <div class="bg-amber-950/20 border border-amber-800/50 rounded-xl p-4 sm:p-5 shadow-inner mt-5">
+                    <h4 class="text-amber-400 font-bold text-xs uppercase tracking-wider mb-4 flex items-center border-b border-amber-800/50 pb-3">
+                        <i data-lucide="book-open" class="w-4 h-4 mr-2"></i> Full Educational Pearls (ACC/AHA)
+                    </h4>
+                    <div class="space-y-4 text-slate-300 text-xs sm:text-sm leading-relaxed">
+                        <div class="border-l-2 border-amber-500/40 pl-3.5"><strong class="text-amber-200 block mb-1">Konteks Klinis:</strong> ${pearls['gejala']}</div>
+                        <div class="border-l-2 border-amber-500/40 pl-3.5"><strong class="text-amber-200 block mb-1">Irama Dasar:</strong> ${pearls['irama']}</div>
+                        <div class="border-l-2 border-amber-500/40 pl-3.5"><strong class="text-amber-200 block mb-1">Heart Rate:</strong> ${pearls['hr']}</div>
+                        <div class="border-l-2 border-amber-500/40 pl-3.5"><strong class="text-amber-200 block mb-1">Aksis Jantung:</strong> ${pearls['aksis']}</div>
+                        <div class="border-l-2 border-amber-500/40 pl-3.5"><strong class="text-amber-200 block mb-1">Gelombang P:</strong> ${pearls['gelP']}</div>
+                        <div class="border-l-2 border-amber-500/40 pl-3.5"><strong class="text-amber-200 block mb-1">PR Interval:</strong> ${pearls['prInterval']}</div>
+                        <div class="border-l-2 border-amber-500/40 pl-3.5"><strong class="text-amber-200 block mb-1">QRS Kompleks:</strong> ${pearls['qrs']}</div>
+                        <div class="border-l-2 border-amber-500/40 pl-3.5"><strong class="text-amber-200 block mb-1">Zona Transisi:</strong> ${pearls['transisi']}</div>
+                        <div class="border-l-2 border-amber-500/40 pl-3.5"><strong class="text-amber-200 block mb-1">Gelombang Q:</strong> ${pearls['gelQ']}</div>
+                        <div class="border-l-2 border-amber-500/40 pl-3.5"><strong class="text-amber-200 block mb-1">Segmen ST:</strong> ${pearls['st']}</div>
+                        <div class="border-l-2 border-amber-500/40 pl-3.5"><strong class="text-amber-200 block mb-1">Gelombang T:</strong> ${pearls['gelT']}</div>
+                        <div class="border-l-2 border-amber-500/40 pl-3.5"><strong class="text-amber-200 block mb-1">Gelombang U:</strong> ${pearls['gelU']}</div>
+                        <div class="border-l-2 border-amber-500/40 pl-3.5"><strong class="text-amber-200 block mb-1">Interval QTc:</strong> ${pearls['qt']}</div>
+                    </div>
+                </div>
+            `;
+
+            tutorHTML += activePearlsHtml;
+
+            const tutorContainer = document.getElementById('clinicalPearlText');
+            tutorContainer.innerHTML = tutorHTML;
+            lucide.createIcons();
+        }
+
+        function updateOutput(triggerEl) {
+            let data = {};
+            inputs.forEach(el => {
+                if(el.type === 'checkbox') data[el.name] = el.checked;
+                else data[el.name] = el.value;
+            });
+            const hrNum = parseInt(data.hr) || 0;
+            const qtNum = parseInt(data.qt) || 0;
+            
+            data.qtcVal = calculateQTc(qtNum, hrNum);
+            inputQTc.value = data.qtcVal > 0 ? `${data.qtcVal} ms` : '-';
+            
+            const analysis = generateConclusion(data);
+            const triageData = calculateTriage(data);
+
+            if (triggerEl && triggerEl.name !== 'kesimpulan') {
+                inputKesimpulan.value = analysis.text;
+                data.kesimpulan = analysis.text;
+            } else if (!triggerEl) {
+                data.kesimpulan = inputKesimpulan.value || analysis.text;
+            }
+            
+            updateCoronaryMap(data.st, data.gelQ, data.gelU);
+            updateAxisRadar(data.aksis);
+            
+            triagePanel.className = `rounded-3xl overflow-hidden shadow-xl border-2 flex-shrink-0 transition-all duration-500 bg-${triageData.colorTheme}-950/30 border-${triageData.colorTheme}-500/50`;
+            triageHeader.className = `bg-${triageData.colorTheme}-900/50 p-4 flex items-center justify-between transition-colors duration-500`;
+            triageIcon.className = `w-6 h-6 text-${triageData.colorTheme}-400`;
+            if(triageData.score >= 5) triageIcon.setAttribute('data-lucide', 'alert-triangle');
+            else triageIcon.setAttribute('data-lucide', 'shield-check');
+            triageBadge.className = `text-[10px] bg-${triageData.colorTheme}-500 text-${triageData.colorTheme}-950 font-black px-2 py-1 rounded shadow-sm`;
+            triageBadge.textContent = triageData.triage;
+            triageText.className = `text-${triageData.colorTheme}-200 text-sm font-semibold leading-relaxed transition-colors duration-500`;
+            triageText.textContent = triageData.action;
+
+            updateTutorPanel(analysis, data);
+
+            const eduModeBadge = document.getElementById('eduModeBadgeDrawer');
+            if(beginnerToggle.checked) {
+                eduModeBadge.textContent = "Edu Mode: ON";
+                eduModeBadge.className = "hidden sm:inline-block text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded border mr-3 bg-emerald-900/50 text-emerald-400 border-emerald-800";
+            } else {
+                eduModeBadge.textContent = "Edu Mode: OFF";
+                eduModeBadge.className = "hidden sm:inline-block text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded border mr-3 bg-slate-800 text-slate-400 border-slate-600";
+            }
+
+            const ping = document.getElementById('tutorBadgePing');
+            ping.classList.remove('animate-ping');
+            void ping.offsetWidth; 
+            ping.classList.add('animate-ping');
+
+            if (triageData.score >= 3 && lastTriageScore < 3 && beginnerToggle.checked && !isFirstRun) {
+                openTutorDrawer();
+            }
+            lastTriageScore = triageData.score;
+            isFirstRun = false;
+
+            const isEduMode = beginnerToggle.checked;
+            const dateStr = new Date().toLocaleString('id-ID', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+
+            let text = `=======================================================
+HOSPITAL EMR REPORT | ELECTRO-CARDIO-VAULT PRO
+=======================================================
+Consultant Cardiologist : Bayushi Eka Putra, MD, FIHA
+Date/Time of Analysis   : ${dateStr}
+Clinical Presentation   : ${data.gejala}
+Gender (QTc Threshold)  : ${data.gender}
+-------------------------------------------------------
+[ ECG MEASUREMENTS & FINDINGS ]
+Rhythm          : ${data.irama}
+Rate            : ${data.hr} bpm (${data.reguler})
+Axis (I, aVF)   : ${data.aksis}
+P Wave          : ${data.gelP}
+PR Interval     : ${data.prInterval}
+QRS Complex     : ${data.qrs}
+QRS Transition  : ${data.transisi}
+Pathologic Q    : ${data.gelQ}
+ST Segment      : ${data.st}${data.rvInfarct ? '\nRight-Sided   : V4R Elevation (+)' : ''}
+T Wave          : ${data.gelT}
+U Wave          : ${data.gelU}
+QT / QTc        : ${qtNum} ms / ${data.qtcVal} ms
+-------------------------------------------------------
+[ FINAL CLINICAL IMPRESSION ]
+=> ${data.kesimpulan}
+${analysis.culprit ? '\n[ SUSPECTED CULPRIT VESSEL ]\n=> ' + analysis.culprit + ' Territory' : ''}
+
+[ TRIAGE & ACTION PLAN ]
+Category        : ${triageData.triage}
+Recommendation  : ${triageData.action}`;
+
+            if(isEduMode && analysis.eduNotes.length > 0) {
+                text += `\n\n-------------------------------------------------------
+[ EDUCATIONAL NOTES (PATHOPHYSIOLOGY RATIONALE) ]
+${analysis.eduNotes.join('\n')}`;
+            }
+
+            text += `\n=======================================================`;
+            outputText.value = text;
+        }
+
+        inputs.forEach(el => {
+            el.addEventListener('input', (e) => updateOutput(e.target));
+            el.addEventListener('change', (e) => updateOutput(e.target));
+        });
+        beginnerToggle.addEventListener('change', () => updateOutput());
+
+        const guideData = {
+            sinus_rhythm: { viewBox: "0 0 500 200", title: "Normal Sinus Rhythm", color: "text-cyan-400", desc: "Baltazar: Gelombang P tegak di Lead II diikuti oleh QRS. R-R Interval reguler.", svg: `
+                <path d="M0,120 L20,120 C25,105 35,105 40,120 L50,120 L55,130 L65,30 L75,140 L80,120 L90,120 C100,120 110,90 125,90 C140,90 150,120 160,120 L180,120 C185,105 195,105 200,120 L210,120 L215,130 L225,30 L235,140 L240,120 L250,120 C260,120 270,90 285,90 C300,90 310,120 320,120 L340,120 C345,105 355,105 360,120 L370,120 L375,130 L385,30 L395,140 L400,120 L410,120 C420,120 430,90 445,90 C460,90 470,120 480,120 L500,120" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round" class="text-cyan-600"/>
+                <line x1="65" y1="35" x2="225" y2="35" stroke="#0ea5e9" stroke-width="1.5" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+                <line x1="225" y1="35" x2="385" y2="35" stroke="#0ea5e9" stroke-width="1.5" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+                <text x="145" y="25" class="text-[10px] fill-cyan-700 font-bold" text-anchor="middle">R-R Reguler</text>
+                <text x="305" y="25" class="text-[10px] fill-cyan-700 font-bold" text-anchor="middle">R-R Reguler</text>` 
+            },
+            sinus_brady: { viewBox: "0 0 500 200", title: "Sinus Bradycardia", color: "text-cyan-400", desc: "Wang: Jarak R-R sangat panjang (> 5 kotak besar). Heart rate < 60 bpm.", svg: `
+                <path d="M0,120 L50,120 C55,105 65,105 70,120 L80,120 L85,130 L95,30 L105,140 L110,120 L120,120 C130,120 140,90 155,90 C170,90 180,120 190,120 L310,120 C315,105 325,105 330,120 L340,120 L345,130 L355,30 L365,140 L370,120 L380,120 C390,120 400,90 415,90 C430,90 440,120 450,120 L500,120" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round" class="text-cyan-600"/>
+                <line x1="95" y1="35" x2="355" y2="35" stroke="#0ea5e9" stroke-width="1.5" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+                <text x="225" y="25" class="text-[10px] fill-cyan-700 font-bold" text-anchor="middle">R-R Sangat Panjang (> 5 kotak besar)</text>` 
+            },
+            sinus_tachy: { viewBox: "0 0 500 200", title: "Sinus Tachycardia", color: "text-cyan-400", desc: "Baltazar: Jarak R-R memendek (< 3 kotak besar). Rate > 100 bpm.", svg: `
+                <path d="M0,120 L10,120 C15,105 25,105 30,120 L35,120 L40,130 L50,30 L60,140 L65,120 L70,120 C80,120 90,95 105,95 C120,95 125,120 135,120 L145,120 C150,105 160,105 165,120 L170,120 L175,130 L185,30 L195,140 L200,120 L205,120 C215,120 225,95 240,95 C255,95 260,120 270,120 L280,120 C285,105 295,105 300,120 L305,120 L310,130 L320,30 L330,140 L335,120 L340,120 C350,120 360,95 375,95 C390,95 395,120 405,120 L415,120 C420,105 430,105 435,120 L440,120 L445,130 L455,30 L465,140 L470,120 L475,120 C485,120 495,95 510,95 C525,95 530,120 540,120" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round" class="text-cyan-600"/>
+                <line x1="50" y1="20" x2="185" y2="20" stroke="#0ea5e9" stroke-width="1.5" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+                <text x="117" y="12" class="text-[9px] fill-cyan-700 font-bold" text-anchor="middle">R-R Pendek</text>` 
+            },
+            sinus_arrhythmia: { viewBox: "0 0 500 200", title: "Sinus Arrhythmia", color: "text-amber-500", desc: "Variasi fisiologis. R-R panjang saat ekspirasi, pendek saat inspirasi.", svg: `
+                <path d="M0,120 L20,120 C25,105 35,105 40,120 L50,120 L55,130 L65,30 L75,140 L80,120 L90,120 C100,120 110,90 125,90 C140,90 150,120 160,120 L170,120 C175,105 185,105 190,120 L200,120 L205,130 L215,30 L225,140 L230,120 L240,120 C250,120 260,90 275,90 C290,90 300,120 310,120 L350,120 C355,105 365,105 370,120 L380,120 L385,130 L395,30 L405,140 L410,120 L420,120 C430,120 440,90 455,90 C470,90 480,120 490,120 L500,120" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round" class="text-amber-600"/>
+                <line x1="65" y1="35" x2="215" y2="35" stroke="#f43f5e" stroke-width="1.5" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+                <line x1="215" y1="35" x2="395" y2="35" stroke="#0ea5e9" stroke-width="1.5" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+                <text x="140" y="25" class="text-[10px] fill-rose-600 font-bold" text-anchor="middle">Pendek (Inspirasi)</text>
+                <text x="305" y="25" class="text-[10px] fill-cyan-700 font-bold" text-anchor="middle">Panjang (Ekspirasi)</text>` 
+            },
+            af: { viewBox: "0 0 500 200", title: "Atrial Fibrillation (AF)", color: "text-rose-500", desc: "Irregularly Irregular. Fibrillatory waves menggantikan gelombang P.", svg: `
+                <path d="M0,120 Q5,115 10,125 T20,115 T30,125 T40,120 L45,130 L55,30 L65,140 L70,120 Q80,115 90,125 T110,115 T130,125 T150,120 L155,130 L165,30 L175,140 L180,120 Q190,115 210,125 T240,115 T270,125 T300,120 L305,130 L315,30 L325,140 L330,120 Q340,115 350,125 T370,115 T390,125 T410,120 L415,130 L425,30 L435,140 L440,120 Q450,115 470,125 T490,115 T500,120" stroke="currentColor" stroke-width="2.5" fill="none" class="text-rose-600"/>
+                <line x1="55" y1="20" x2="165" y2="20" stroke="#0ea5e9" stroke-width="1.5" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+                <line x1="165" y1="20" x2="315" y2="20" stroke="#f43f5e" stroke-width="1.5" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+                <line x1="315" y1="20" x2="425" y2="20" stroke="#10b981" stroke-width="1.5" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+                <text x="110" y="10" class="text-[10px] fill-cyan-700 font-bold" text-anchor="middle">Jarak X</text>
+                <text x="240" y="10" class="text-[10px] fill-rose-600 font-bold" text-anchor="middle">Jarak Y (Tidak Sama)</text>
+                <text x="370" y="10" class="text-[10px] fill-emerald-600 font-bold" text-anchor="middle">Jarak Z</text>
+                <text x="250" y="160" class="text-[11px] fill-rose-600 font-bold" text-anchor="middle">Fibrillatory (f) waves tanpa gelombang P</text>` 
+            },
+            aflutter: { viewBox: "0 0 500 200", title: "Atrial Flutter", color: "text-rose-500", desc: "Gelombang P membentuk pola gigi gergaji (Sawtooth 'F' waves).", svg: `
+                <path d="M0,120 L10,85 L20,125 L30,85 L40,125 L50,85 L60,125 L70,85 L80,125 L85,135 L95,30 L105,140 L110,120 L120,85 L130,125 L140,85 L150,125 L160,85 L170,125 L180,85 L190,125 L195,135 L205,30 L215,140 L220,120 L230,85 L240,125 L250,85 L260,125 L270,85 L280,125 L290,85 L300,125 L305,135 L315,30 L325,140 L330,120 L340,85 L350,125 L360,85 L370,125 L380,85 L390,125 L400,85 L410,125 L415,135 L425,30 L435,140 L440,120 L450,85 L460,125 L470,85 L480,125 L490,85 L500,125" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round" class="text-rose-600"/>
+                <text x="260" y="160" class="text-[11px] fill-rose-700 font-bold" text-anchor="middle">Sawtooth "F" Waves (Contoh Rasio Blok 4:1)</text>
+                <text x="235" y="75" class="text-[10px] fill-rose-500 font-bold" text-anchor="middle">F</text>
+                <text x="255" y="75" class="text-[10px] fill-rose-500 font-bold" text-anchor="middle">F</text>
+                <text x="275" y="75" class="text-[10px] fill-rose-500 font-bold" text-anchor="middle">F</text>
+                <text x="295" y="75" class="text-[10px] fill-rose-500 font-bold" text-anchor="middle">F</text>` 
+            },
+            svt: { viewBox: "0 0 500 200", title: "Supraventricular Tachycardia (SVT)", color: "text-rose-500", desc: "Takikardia QRS sempit, reguler, sangat cepat (>150 bpm).", svg: `
+                <path d="M0,120 L10,130 L20,30 L30,140 L35,120 C45,120 50,95 60,95 C70,95 75,120 80,120 L90,130 L100,30 L110,140 L115,120 C125,120 130,95 140,95 C150,95 155,120 160,120 L170,130 L180,30 L190,140 L195,120 C205,120 210,95 220,95 C230,95 235,120 240,120 L250,130 L260,30 L270,140 L275,120 C285,120 290,95 300,95 C310,95 315,120 320,120 L330,130 L340,30 L350,140 L355,120 C365,120 370,95 380,95 C390,95 395,120 400,120 L410,130 L420,30 L430,140 L435,120 C445,120 450,95 460,95 C470,95 475,120 480,120 L490,130 L500,30" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round" class="text-rose-600"/>
+                <line x1="100" y1="20" x2="180" y2="20" stroke="#f43f5e" stroke-width="1.5" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+                <text x="140" y="10" class="text-[9px] fill-rose-600 font-bold" text-anchor="middle">Sangat Cepat & Reguler</text>
+                <text x="250" y="160" class="text-[11px] fill-rose-700 font-bold" text-anchor="middle">QRS Sempit, Tidak ada gelombang P yang jelas terlihat</text>` 
+            },
+            vt: { viewBox: "0 0 500 200", title: "Ventricular Tachycardia (VT)", color: "text-orange-500", desc: "Takikardia QRS Lebar, Monomorfik.", svg: `
+                <path d="M0,120 L20,30 L50,170 L80,120 L100,30 L130,170 L160,120 L180,30 L210,170 L240,120 L260,30 L290,170 L320,120 L340,30 L370,170 L400,120 L420,30 L450,170 L480,120 L500,30" stroke="currentColor" stroke-width="3.5" fill="none" stroke-linejoin="round" class="text-orange-600"/>
+                <text x="250" y="185" class="text-[11px] fill-orange-700 font-bold" text-anchor="middle">Wide QRS Complex Tachycardia (Monomorphic)</text>` 
+            },
+            vf: { viewBox: "0 0 500 200", title: "Ventricular Fibrillation (VF)", color: "text-rose-600", desc: "Aktivitas ventrikel sangat kacau, tanpa kompleks QRS terstruktur.", svg: `
+                <path d="M0,120 Q15,40 30,130 T60,80 T90,160 T120,50 T150,140 T180,30 T220,150 T250,70 T280,180 T310,40 T340,140 T370,60 T410,170 T440,50 T470,140 T500,100" stroke="currentColor" stroke-width="3" fill="none" stroke-linejoin="round" class="text-rose-600" />
+                <text x="250" y="15" class="text-[12px] fill-rose-600 font-black animate-pulse" text-anchor="middle">!! LETHAL RHYTHM - NO CARDIAC OUTPUT !!</text>` 
+            },
+            asystole: { viewBox: "0 0 500 200", title: "Asystole", color: "text-slate-500", desc: "Flatline - Tidak ada aktivitas elektrik.", svg: `
+                <path d="M0,120 Q40,122 80,118 T160,121 T240,119 T320,122 T400,118 T500,120" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round" class="text-slate-500" />
+                <text x="250" y="90" class="text-[11px] fill-slate-500 font-bold" text-anchor="middle">Absence of electrical activity (Flatline)</text>` 
+            },
+
+            p_mitrale: { viewBox: "0 0 300 200", title: "P Mitrale (LAE)", color: "text-violet-500", desc: "Gelombang P melebar dengan M-Shape.", svg: `
+                <path d="M20,120 L40,120 C45,100 50,100 55,110 C60,100 65,100 70,120 L85,120 L88,125 L95,35 L102,140 L108,120 L130,120 C140,120 150,90 165,90 C180,90 190,120 200,120 L300,120" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round" class="text-violet-600"/>
+                <line x1="40" y1="135" x2="70" y2="135" stroke="#7c3aed" stroke-width="1.5" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+                <text x="55" y="150" class="text-[10px] fill-violet-700 font-bold" text-anchor="middle">Lebar > 3 kotak kecil</text>` 
+            },
+            p_pulmonale: { viewBox: "0 0 300 200", title: "P Pulmonale (RAE)", color: "text-violet-500", desc: "Gelombang P lancip dan tinggi.", svg: `
+                <path d="M20,120 L40,120 Q55,60 70,120 L85,120 L88,125 L95,35 L102,140 L108,120 L130,120 C140,120 150,90 165,90 C180,90 190,120 200,120 L300,120" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round" class="text-violet-600"/>
+                <line x1="55" y1="120" x2="55" y2="60" stroke="#7c3aed" stroke-width="1.5" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+                <text x="90" y="80" class="text-[10px] fill-violet-700 font-bold">Tinggi > 2.5 kotak</text>` 
+            },
+            av_block: { viewBox: "0 0 300 200", title: "1st Degree AV Block", color: "text-indigo-500", desc: "PR Interval konsisten panjang statis > 5 kotak kecil.", svg: `
+                <path d="M20,120 C30,120 35,105 45,105 C55,105 60,120 70,120 L125,120 L128,125 L135,35 L142,140 L148,120 L170,120 C180,120 190,90 205,90 C220,90 230,120 240,120 L300,120" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round" class="text-indigo-600"/>
+                <line x1="20" y1="140" x2="125" y2="140" stroke="#4f46e5" stroke-width="1.5" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+                <text x="75" y="155" class="text-[10px] fill-indigo-700 font-bold" text-anchor="middle">PR > 5 kotak kecil</text>` 
+            },
+            pr_short: { viewBox: "0 0 300 200", title: "WPW Pattern", color: "text-emerald-500", desc: "PR Pendek diikuti kemiringan Delta Wave.", svg: `
+                <path d="M20,120 C30,120 35,105 45,105 C55,105 60,120 70,120 L75,120 Q85,105 95,35 L102,140 L108,120 L130,120 C140,120 150,90 165,90 C180,90 190,120 200,120 L300,120" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round" class="text-emerald-600"/>
+                <circle cx="82" cy="90" r="15" fill="none" stroke="#059669" stroke-width="1.5" stroke-dasharray="3 3"/>
+                <text x="82" y="65" class="text-[10px] fill-emerald-700 font-bold" text-anchor="middle">Slurred upstroke (Delta Wave)</text>
+                <line x1="20" y1="140" x2="75" y2="140" stroke="#059669" stroke-width="1.5" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+                <text x="45" y="155" class="text-[10px] fill-emerald-700 font-bold" text-anchor="middle">PR Pendek</text>` 
+            },
+            qrs_wide: { viewBox: "0 0 300 200", title: "QRS Lebar (BBB Suspect)", color: "text-orange-500", desc: "Kompleks QRS >3 kotak kecil (>120ms), ciri khas Bundle Branch Block (RBBB/LBBB).", svg: `
+                <path d="M20,120 C30,120 35,105 45,105 C55,105 60,120 70,120 L80,120 L85,45 L95,65 L105,35 L115,120 L130,120 C145,120 155,150 170,150 C180,150 185,120 195,120 L300,120" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round" class="text-orange-600"/>
+                <line x1="80" y1="140" x2="115" y2="140" stroke="#ea580c" stroke-width="1.5" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+                <text x="97" y="155" class="text-[10px] fill-orange-700 font-bold" text-anchor="middle">Lebar > 3 kotak kecil (Notched)</text>` 
+            },
+            qrs_lvh: { viewBox: "0 0 300 200", title: "LVH / High Voltage", color: "text-orange-500", desc: "Gelombang R/S menjulang sangat tinggi melebihi batas (Voltase tinggi).", svg: `
+                <path d="M20,120 C30,120 35,105 45,105 C55,105 60,120 70,120 L85,120 L88,125 L95,25 L102,210 L108,120 L130,120 C145,120 155,90 170,90 C180,90 185,120 195,120 L300,120" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round" class="text-orange-600"/>
+                <line x1="102" y1="25" x2="102" y2="210" stroke="#ea580c" stroke-width="1.5" stroke-dasharray="4 4"/>
+                <text x="115" y="195" class="text-[10px] fill-orange-700 font-bold">Deep S</text>
+                <text x="115" y="40" class="text-[10px] fill-orange-700 font-bold">Tall R</text>` 
+            },
+            transisi: { viewBox: "0 0 300 200", title: "Zona Transisi (R/S)", color: "text-slate-400", desc: "Diukur di Prekordial (V1-V6). Normal titik ekuilibrium di V3-V4.", svg: `
+                <text x="50" y="100" class="text-xs fill-slate-500 font-bold">V1 (R<S)</text>
+                <text x="150" y="100" class="text-xs fill-emerald-500 font-bold">V3 (R=S)</text>
+                <text x="250" y="100" class="text-xs fill-slate-500 font-bold">V6 (R>S)</text>
+                <path d="M30,140 L40,120 L50,180 L60,140" stroke="#64748b" stroke-width="2" fill="none" stroke-linejoin="round" />
+                <path d="M130,140 L150,80 L170,180 L180,140" stroke="#10b981" stroke-width="2.5" fill="none" stroke-linejoin="round" />
+                <path d="M230,140 L250,60 L260,150 L270,140" stroke="#64748b" stroke-width="2" fill="none" stroke-linejoin="round" />` 
+            },
+            gelQ: { viewBox: "0 0 300 200", title: "Q Patologis (Old MI)", color: "text-rose-400", desc: "Defleksi awal negatif, lebar >1mm & dalam >1/3 tinggi R. Nekrosis OMI.", svg: `
+                <path d="M20,120 C30,120 35,105 45,105 C55,105 60,120 70,120 L75,120 L85,180 L95,35 L102,140 L108,120 C115,120 125,90 140,90 C155,90 165,120 175,120 L300,120" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round" class="text-rose-500"/>
+                <line x1="85" y1="120" x2="85" y2="180" stroke="#f43f5e" stroke-width="1.5" stroke-dasharray="4 4"/>
+                <text x="110" y="170" class="text-[10px] fill-rose-700 font-bold">Deep & Wide Q</text>` 
+            },
+            st_elev: { viewBox: "0 0 300 200", title: "ST Elevasi", color: "text-rose-600", desc: "J-point naik >1mm membentuk tombstone (Marker Oklusi Akut).", svg: `
+                <path d="M20,120 C30,120 35,105 45,105 C55,105 60,120 70,120 L85,120 L88,125 L95,35 L102,80 C120,80 140,70 170,120 L300,120" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round" class="text-rose-600"/>
+                <line x1="102" y1="120" x2="102" y2="80" stroke="#e11d48" stroke-width="1.5" stroke-dasharray="4 4"/>
+                <circle cx="102" cy="80" r="4" fill="#e11d48"/>
+                <text x="145" y="65" class="text-[10px] fill-rose-700 font-bold" text-anchor="middle">J-point Elevation (Injury)</text>` 
+            },
+            st_dep: { viewBox: "0 0 300 200", title: "ST Depresi / T Invert", color: "text-blue-500", desc: "J-point merosot / T terbalik (Marker Iskemia atau Posterior STEMI).", svg: `
+                <path d="M20,120 C30,120 35,105 45,105 C55,105 60,120 70,120 L85,120 L88,125 L95,35 L102,150 L130,150 C150,150 160,170 170,170 C180,170 190,120 200,120 L300,120" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round" class="text-blue-600"/>
+                <line x1="102" y1="120" x2="102" y2="150" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4 4"/>
+                <circle cx="102" cy="150" r="4" fill="#2563eb"/>
+                <text x="145" y="140" class="text-[10px] fill-blue-700 font-bold" text-anchor="middle">ST Depression (> 1 kotak kecil)</text>` 
+            },
+            tall_t: { viewBox: "0 0 300 200", title: "Tall Peaked T", color: "text-purple-500", desc: "Tinggi sempit simetris (Tenting). Khas Hiperkalemia.", svg: `
+                <path d="M20,120 C30,120 35,105 45,105 C55,105 60,120 70,120 L85,120 L88,125 L95,35 L102,140 L108,120 L130,120 C140,120 145,35 155,35 C165,35 170,120 180,120 L300,120" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round" class="text-purple-600"/>
+                <line x1="155" y1="35" x2="155" y2="120" stroke="#9333ea" stroke-width="1.5" stroke-dasharray="4 4"/>
+                <text x="210" y="65" class="text-[10px] fill-purple-700 font-bold" text-anchor="middle">Peaked & Symmetric (Tenting)</text>` 
+            },
+            gelU: { viewBox: "0 0 300 200", title: "Gelombang U Prominent", color: "text-cyan-500", desc: "Gelombang ekstra positif setelah T membesar (>1mm). Khas Hipokalemia.", svg: `
+                <path d="M20,120 C30,120 35,105 45,105 C55,105 60,120 70,120 L85,120 L88,125 L95,35 L102,140 L108,120 C115,120 125,90 140,90 C155,90 160,120 170,120 C175,120 180,105 185,105 C190,105 195,120 200,120 L300,120" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round" class="text-cyan-600"/>
+                <text x="140" y="80" class="text-[10px] fill-slate-500 font-bold">T wave</text>
+                <circle cx="185" cy="105" r="8" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="2 2"/>
+                <text x="185" y="80" class="text-[10px] fill-cyan-600 font-bold">U wave</text>` 
+            }
+        };
+
+        function getGuideKey(field, val) {
+            val = val.toLowerCase();
+            if (field === 'irama') {
+                if (val.includes('fibrillation') && val.includes('ventricular')) return 'vf';
+                if (val.includes('fibrillation')) return 'af';
+                if (val.includes('flutter')) return 'aflutter';
+                if (val === 'svt' || val.includes('supraventricular')) return 'svt';
+                if (val.includes('ventricular tachycardia') || val === 'vt') return 'vt';
+                if (val.includes('arrhythmia')) return 'sinus_arrhythmia';
+                if (val.includes('bradycardia')) return 'sinus_brady';
+                if (val.includes('tachycardia')) return 'sinus_tachy';
+                if (val.includes('asystole')) return 'asystole';
+            } else if (field === 'gelP') {
+                if (val.includes('mitrale')) return 'p_mitrale';
+                if (val.includes('pulmonale')) return 'p_pulmonale';
+            } else if (field === 'prInterval') {
+                if (val.includes('memanjang')) return 'av_block';
+                if (val.includes('memendek')) return 'pr_short';
+            } else if (field === 'qrs') {
+                if (val.includes('lebar') || val.includes('rbbb') || val.includes('lbbb')) return 'qrs_wide';
+                if (val.includes('lvh') || val.includes('rvh')) return 'qrs_lvh';
+            } else if (field === 'st') {
+                if (val.includes('elevasi')) return 'st_elev';
+                if (val.includes('depresi')) return 'st_dep';
+            } else if (field === 'gelT') {
+                if (val.includes('inverted')) return 'st_dep';
+                if (val.includes('hyperacute')) return 'tall_t';
+                if (val.includes('tall')) return 'tall_t';
+            } else if (field === 'gelQ') {
+                if (!val.includes('tidak ada')) return 'gelQ';
+            } else if (field === 'transisi') {
+                return 'transisi';
+            } else if (field === 'gelU') {
+                if (val.includes('prominent')) return 'gelU';
+                if (val.includes('inverted')) return 'st_dep';
+            }
+            return 'sinus_rhythm'; 
+        }
+
+        window.triggerGuide = function(field) {
+            const val = document.getElementById(field).value;
+            const key = getGuideKey(field, val);
+            const guide = guideData[key] || guideData['sinus_rhythm'];
+            if(!guide) return;
+            
+            document.getElementById('modalTitle').textContent = guide.title;
+            document.getElementById('modalDesc').textContent = guide.desc;
+            document.getElementById('modalSvgContent').innerHTML = guide.svg;
+            document.getElementById('modalSvg').setAttribute('viewBox', guide.viewBox);
+            document.getElementById('modalIconContainer').innerHTML = `<i data-lucide="book-open" class="w-6 h-6 ${guide.color}"></i>`;
+            lucide.createIcons();
+            document.getElementById('visualModal').classList.remove('hidden');
+        };
+
+        window.closeModal = () => document.getElementById('visualModal').classList.add('hidden');
+        document.getElementById('visualModal').addEventListener('click', (e) => { if (e.target === document.getElementById('visualModal')) closeModal(); });
+
+        window.copyText = async function() {
+            try {
+                await navigator.clipboard.writeText(outputText.value);
+                triggerCopySuccess('copyTextStr', 'copyIcon', 'Tersalin!', 'Salin Laporan', 'check-circle', 'copy');
+            } catch(err) {
+                outputText.select();
+                document.execCommand('copy');
+                triggerCopySuccess('copyTextStr', 'copyIcon', 'Tersalin!', 'Salin Laporan', 'check-circle', 'copy');
+            }
+        };
+
+        window.exportJSON = async function() {
+            let data = {};
+            inputs.forEach(el => {
+                if(el.type === 'checkbox') data[el.name] = el.checked;
+                else data[el.name] = el.value;
+            });
+            const analysis = generateConclusion(data);
+            data.ai_analysis = analysis;
+            const jsonStr = JSON.stringify(data, null, 2);
+
+            try {
+                await navigator.clipboard.writeText(jsonStr);
+                triggerExportSuccess();
+            } catch(e) {
+                const tempTextArea = document.createElement("textarea");
+                tempTextArea.value = jsonStr;
+                document.body.appendChild(tempTextArea);
+                tempTextArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempTextArea);
+                triggerExportSuccess();
+            }
+        }
+
+        function triggerCopySuccess(strId, iconId, successText, originalText, successIcon, originalIcon) {
+            const copyStr = document.getElementById(strId);
+            const copyIcon = document.getElementById(iconId);
+            copyStr.textContent = successText;
+            copyIcon.setAttribute('data-lucide', successIcon);
+            lucide.createIcons();
+            setTimeout(() => {
+                copyStr.textContent = originalText;
+                copyIcon.setAttribute('data-lucide', originalIcon);
+                lucide.createIcons();
+            }, 2000);
+        }
+
+        function triggerExportSuccess() {
+            const btnStr = document.getElementById('exportJsonStr');
+            const originalText = btnStr.textContent;
+            btnStr.textContent = 'Copied!';
+            setTimeout(() => btnStr.textContent = originalText, 2000);
+        }
+        
+        updateOutput();
+    </script>
+</body>
+</html>
