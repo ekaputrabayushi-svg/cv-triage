@@ -26,7 +26,6 @@
                     keyframes: {
                         fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
                         slideUp: { '0%': { opacity: '0', transform: 'translateY(15px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
-                        ekgDash: { '0%': { strokeDashoffset: '400' }, '100%': { strokeDashoffset: '0' } },
                         pulseGlow: { '0%, 100%': { opacity: '1' }, '50%': { opacity: '0.6' } }
                     }
                 }
@@ -37,60 +36,34 @@
     <style>
         body { 
             background: linear-gradient(135deg, #0a0a14 0%, #111222 100%);
-            color: #f8fafc;
-            overflow: hidden; 
-            font-size: 13.5px; 
+            color: #f8fafc; overflow: hidden; font-size: 13.5px; 
         }
-        
-        .glass-panel {
-            background: rgba(26, 27, 46, 0.65);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-        }
-
-        .input-dark {
-            background: rgba(10, 10, 20, 0.6);
-            border: 1px solid rgba(71, 85, 105, 0.4);
-            color: white;
-            transition: all 0.3s ease;
-        }
+        .glass-panel { background: rgba(26, 27, 46, 0.65); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); }
+        .input-dark { background: rgba(10, 10, 20, 0.6); border: 1px solid rgba(71, 85, 105, 0.4); color: white; transition: all 0.3s ease; }
         .input-dark:focus { border-color: #a855f7; outline: none; box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2); }
-
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #8b5cf6; }
-
         .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
-
-        /* Multi-color Tab Styling */
         .tab-btn { position: relative; overflow: hidden; }
         .tab-btn::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 0; height: 3px; background: currentColor; transition: width 0.3s ease; border-radius: 3px 3px 0 0; }
         .tab-btn.active { color: white; background: rgba(255,255,255,0.05); }
         .tab-btn.active::after { width: 80%; }
-        
         .tab-summary.active { color: #10b981; } .tab-summary.active::after { background: #10b981; }
         .tab-ddi.active { color: #f43f5e; } .tab-ddi.active::after { background: #f43f5e; }
         .tab-clinical.active { color: #0ea5e9; } .tab-clinical.active::after { background: #0ea5e9; }
         .tab-timing.active { color: #f59e0b; } .tab-timing.active::after { background: #f59e0b; }
-
         #idle-state { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         #idle-state.hidden { display: none !important; opacity: 0; transform: scale(0.95); }
-        
         .toast-enter { animation: toastIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-        details > summary { list-style: none; }
-        details > summary::-webkit-details-marker { display: none; }
-
+        details > summary { list-style: none; } details > summary::-webkit-details-marker { display: none; }
         .bg-gradient-btn { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
         .bg-gradient-btn:hover { background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%); }
-
         @media print {
             body { background: white !important; color: black !important; font-size: 11pt; overflow: visible !important; }
-            .no-print, header, #side-drawer, #drawer-backdrop, .tab-navigation { display: none !important; }
+            .no-print, header, #side-drawer, #drawer-backdrop, .tab-navigation, #preg-alert { display: none !important; }
             #main-content-wrapper { display: block !important; width: 100% !important; background: transparent !important; }
             .tab-content { display: block !important; opacity: 1 !important; visibility: visible !important; margin-bottom: 2rem !important; page-break-inside: avoid; }
             .glass-panel { background: white !important; border: 1px solid #ccc !important; color: black !important; box-shadow: none !important; backdrop-filter: none !important; }
@@ -112,7 +85,7 @@
     <!-- SIDE DRAWER -->
     <aside id="side-drawer" class="fixed inset-y-0 left-0 z-50 w-[85vw] md:w-[380px] bg-dark-900 border-r border-white/5 transform -translate-x-full lg:translate-x-0 lg:static lg:block transition-transform duration-300 ease-in-out flex flex-col h-full shadow-2xl lg:shadow-none">
         
-        <!-- Drawer Header (Colorful) -->
+        <!-- Drawer Header -->
         <div class="px-5 py-4 border-b border-white/10 bg-gradient-to-r from-dark-900 via-indigo-950/30 to-purple-950/30 sticky top-0 z-20 flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-[0_0_15px_rgba(99,102,241,0.4)]">
@@ -120,12 +93,10 @@
                 </div>
                 <div>
                     <h1 class="font-bold text-white text-lg leading-none tracking-wide">CardioSafe</h1>
-                    <span class="text-[10px] text-purple-300 font-semibold tracking-widest uppercase">CDSS Polypharmacy</span>
+                    <span class="text-[9px] text-purple-300 font-semibold tracking-widest uppercase block mt-0.5">Part of CardiologyVault</span>
                 </div>
             </div>
-            <button class="lg:hidden text-slate-400 hover:text-white p-2" onclick="toggleDrawer(false)">
-                <i class="fas fa-times text-xl"></i>
-            </button>
+            <button class="lg:hidden text-slate-400 hover:text-white p-2" onclick="toggleDrawer(false)"><i class="fas fa-times text-xl"></i></button>
         </div>
 
         <div class="flex-grow overflow-y-auto custom-scrollbar">
@@ -156,28 +127,37 @@
                             <label class="block text-[11px] text-slate-400 mb-1.5">S.Kreatinin (mg/dL)</label>
                             <input type="number" step="0.1" id="inp-scr" class="w-full input-dark rounded-lg p-2 text-sm text-center font-bold text-sky-300" placeholder="Cth: 1.2">
                         </div>
-                        <div class="col-span-2">
-                            <label class="block text-[11px] text-slate-400 mb-1.5">Tekanan Darah Sistolik (mmHg)</label>
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1.5">Sistolik (mmHg)</label>
                             <input type="number" id="inp-sbp" class="w-full input-dark rounded-lg p-2 text-sm text-center font-bold" placeholder="Cth: 140">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1.5">Nadi (x/mnt)</label>
+                            <input type="number" id="inp-hr" class="w-full input-dark rounded-lg p-2 text-sm text-center font-bold" placeholder="Cth: 80">
                         </div>
                     </div>
                     
-                    <!-- Clinical Scores (Colorful) -->
-                    <div class="grid grid-cols-3 gap-2">
+                    <!-- Clinical Scores (Fixed 2x2 Grid) -->
+                    <div class="grid grid-cols-2 gap-2 mt-2">
+                        <!-- eGFR -->
                         <div class="bg-dark-800 border border-white/5 rounded-lg p-2 flex flex-col justify-center items-center text-center relative overflow-hidden group">
-                            <div class="absolute inset-0 bg-sky-500/10 translate-y-full group-hover:translate-y-0 transition-transform"></div>
-                            <span class="text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider relative z-10">eGFR (ml/min)</span>
-                            <span id="display-egfr" class="text-lg font-black text-slate-600 relative z-10">--</span>
+                            <span class="text-[9px] text-slate-500 font-bold mb-0.5 uppercase tracking-wider relative z-10">eGFR (Ginjal)</span>
+                            <span id="display-egfr" class="text-xl font-black text-slate-600 relative z-10"><span class="text-xs text-slate-500">Isi SCr</span></span>
                         </div>
-                        <div class="bg-dark-800 border border-white/5 rounded-lg p-2 flex flex-col justify-center items-center text-center relative overflow-hidden group">
-                            <div class="absolute inset-0 bg-fuchsia-500/10 translate-y-full group-hover:translate-y-0 transition-transform"></div>
-                            <span class="text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider relative z-10">CHA₂DS₂-VASc</span>
-                            <span id="score-chads" class="text-lg font-black text-slate-600 relative z-10">--</span>
+                        <!-- GRACE -->
+                        <div class="bg-dark-800 border border-white/5 rounded-lg p-2 flex flex-col justify-center items-center text-center relative overflow-hidden group" title="Risiko mortalitas ACS (Global Registry of Acute Coronary Events)">
+                            <span class="text-[9px] text-slate-500 font-bold mb-0.5 uppercase tracking-wider relative z-10">GRACE Score</span>
+                            <span id="score-grace" class="text-xl font-black text-slate-600 relative z-10"><span class="text-xs text-slate-500">Lengkapi Data</span></span>
                         </div>
-                        <div class="bg-dark-800 border border-white/5 rounded-lg p-2 flex flex-col justify-center items-center text-center relative overflow-hidden group">
-                            <div class="absolute inset-0 bg-rose-500/10 translate-y-full group-hover:translate-y-0 transition-transform"></div>
-                            <span class="text-[9px] text-slate-500 font-bold mb-1 uppercase tracking-wider relative z-10">HAS-BLED</span>
-                            <span id="score-hasbled" class="text-lg font-black text-slate-600 relative z-10">--</span>
+                        <!-- CHA2DS2-VASc -->
+                        <div class="bg-dark-800 border border-white/5 rounded-lg p-2 flex flex-col justify-center items-center text-center relative overflow-hidden group" title="Skor risiko stroke pada pasien Atrial Fibrilasi">
+                            <span class="text-[9px] text-slate-500 font-bold mb-0.5 uppercase tracking-wider relative z-10">CHA₂DS₂-VASc</span>
+                            <span id="score-chads" class="text-xl font-black text-slate-600 relative z-10"><span class="text-xs text-slate-500">Pilih AF</span></span>
+                        </div>
+                        <!-- HAS-BLED -->
+                        <div class="bg-dark-800 border border-white/5 rounded-lg p-2 flex flex-col justify-center items-center text-center relative overflow-hidden group" title="Skor risiko perdarahan mayor (Hanya indikator, bukan kontraindikasi mutlak)">
+                            <span class="text-[9px] text-slate-500 font-bold mb-0.5 uppercase tracking-wider relative z-10">HAS-BLED</span>
+                            <span id="score-hasbled" class="text-xl font-black text-slate-600 relative z-10">0</span>
                         </div>
                     </div>
                 </div>
@@ -195,17 +175,13 @@
             </details>
 
             <!-- Library Search -->
-            <div class="p-4 flex flex-col h-[400px]"> <!-- Fixed height for scrollable area -->
-                <h2 class="text-[11px] font-bold text-teal-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                    <i class="fas fa-pills"></i> Database Obat (Pilih Obat)
-                </h2>
+            <div class="p-4 flex flex-col h-[400px]">
+                <h2 class="text-[11px] font-bold text-teal-400 uppercase tracking-widest mb-3 flex items-center gap-2"><i class="fas fa-pills"></i> Database Obat (Pilih Obat)</h2>
                 <div class="relative mb-3">
                     <i class="fas fa-search absolute left-3 top-3 text-slate-500 text-sm"></i>
                     <input type="text" id="drug-search" class="w-full input-dark rounded-xl pl-9 pr-3 py-2.5 text-sm" placeholder="Ketik nama atau golongan obat...">
                 </div>
-                <div id="drug-list-container" class="flex-grow space-y-2 overflow-y-auto custom-scrollbar pb-2 pr-1">
-                    <!-- Populated by JS -->
-                </div>
+                <div id="drug-list-container" class="flex-grow space-y-2 overflow-y-auto custom-scrollbar pb-2 pr-1"></div>
             </div>
         </div>
 
@@ -234,60 +210,57 @@
 
     <!-- MAIN CONTENT AREA -->
     <main id="main-content-wrapper" class="flex-1 flex flex-col h-screen overflow-hidden relative">
-        
-        <!-- Background Decorative Elements -->
         <div class="absolute top-[-10%] right-[-5%] w-[40vw] h-[40vw] bg-purple-600/10 rounded-full blur-[100px] pointer-events-none"></div>
         <div class="absolute bottom-[-10%] left-[20%] w-[30vw] h-[30vw] bg-sky-600/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-        <!-- Disclaimer Banner -->
+        <!-- Alerts -->
         <div class="bg-amber-500/10 border-b border-amber-500/20 text-amber-400 text-[11px] sm:text-xs px-4 py-2 text-center font-medium z-30 no-print flex-shrink-0 backdrop-blur-sm">
             <i class="fas fa-balance-scale mr-2"></i> <strong>Peringatan Medis:</strong> CDSS ini adalah alat bantu komputasi, bukan pengganti penilaian atau kewenangan klinis dokter.
+        </div>
+        <!-- Pregnancy Dynamic Alert -->
+        <div id="preg-alert" class="hidden bg-rose-500/20 border-b border-rose-500/50 text-rose-300 text-[11px] sm:text-xs px-4 py-2 text-center font-bold z-30 no-print flex-shrink-0 backdrop-blur-sm animate-pulse shadow-[0_4px_15px_rgba(244,63,94,0.2)]">
+            <i class="fas fa-baby mr-2 text-rose-400"></i> <strong>PERINGATAN KEHAMILAN:</strong> Pasien hamil/menyusui. Sistem mengaktifkan filter teratogenik ketat!
         </div>
 
         <!-- Top Navbar -->
         <header class="glass-panel text-white shadow-md z-20 no-print border-b-0 flex-shrink-0">
             <div class="w-full px-5 py-4 flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                    <button class="lg:hidden bg-white/5 hover:bg-white/10 p-2.5 rounded-lg text-slate-300 transition-colors border border-white/10" onclick="toggleDrawer(true)">
-                        <i class="fas fa-bars text-lg"></i>
-                    </button>
+                    <button class="lg:hidden bg-white/5 hover:bg-white/10 p-2.5 rounded-lg text-slate-300 transition-colors border border-white/10" onclick="toggleDrawer(true)"><i class="fas fa-bars text-lg"></i></button>
                     <div>
-                        <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white hidden sm:block">
-                            Dashboard <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-400">Evaluasi Klinis</span>
-                        </h1>
+                        <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white hidden sm:block">Dashboard <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-400">Evaluasi Klinis</span></h1>
                         <p class="text-[11px] text-slate-400 hidden sm:block uppercase tracking-widest mt-0.5">Sistem Pendukung Keputusan Peresepan</p>
                     </div>
                 </div>
-                <button onclick="window.print()" class="bg-dark-800 hover:bg-dark-900 border border-slate-600/50 text-white text-[12px] font-bold px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 hover:border-slate-400 shadow-sm">
-                    <i class="fas fa-print text-sky-400"></i> Cetak Laporan
-                </button>
+                <div class="flex items-center gap-4">
+                    <div class="text-right hidden md:block">
+                        <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Developed By</p>
+                        <p class="text-[13px] font-semibold text-white">Bayushi Eka Putra, MD, FIHA</p>
+                    </div>
+                    <button onclick="window.print()" class="bg-dark-800 hover:bg-dark-900 border border-slate-600/50 text-white text-[12px] font-bold px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 hover:border-slate-400 shadow-sm"><i class="fas fa-print text-sky-400"></i> Cetak</button>
+                </div>
             </div>
         </header>
 
-        <!-- Print Information (Hidden on screen) -->
+        <!-- Print Information -->
         <div id="print-header-info" class="hidden print:block border-b-2 border-black pb-4 pt-4 px-8 mb-6">
             <h1 class="text-2xl font-bold uppercase mb-1">Laporan Evaluasi Polifarmasi & Edukasi Pasien</h1>
-            <p class="text-sm text-gray-600 mb-3">CardioSafe CDSS Generated Report</p>
-            <div id="print-patient-summary" class="text-sm p-4 border border-gray-300 bg-gray-50 rounded">
-                <!-- Diisi via JS saat print -->
-            </div>
+            <p class="text-sm text-gray-600 mb-1">CardioSafe CDSS Generated Report — Part of CardiologyVault</p>
+            <p class="text-xs text-gray-500 mb-3 italic">Developed by: Bayushi Eka Putra, MD, FIHA</p>
+            <div id="print-patient-summary" class="text-sm p-4 border border-gray-300 bg-gray-50 rounded"></div>
         </div>
 
         <!-- Working Area -->
         <div class="flex-1 relative overflow-hidden flex flex-col">
-            
             <!-- Idle State -->
             <div id="idle-state" class="absolute inset-0 flex flex-col items-center justify-center text-center p-6 z-20">
-                
                 <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(99,102,241,0.2)] border border-white/5 animate-pulse-glow">
                     <i class="fas fa-laptop-medical text-5xl sm:text-6xl text-transparent bg-clip-text bg-gradient-to-br from-sky-400 to-purple-400"></i>
                 </div>
-
                 <h2 class="text-2xl sm:text-3xl font-bold text-white mb-3 tracking-wide">Sistem Siap Digunakan</h2>
                 <p class="text-[14px] text-slate-400 max-w-lg mx-auto mb-10 leading-relaxed">
-                    Mulai dengan memasukkan <strong class="text-indigo-400">Parameter Pasien</strong> di panel kiri, lalu cari dan tambahkan obat ke <strong class="text-amber-400">Nampan Resep</strong> untuk mendeteksi bahaya interaksi secara real-time.
+                    Mulai dengan memasukkan <strong class="text-indigo-400">Parameter Pasien</strong> di panel kiri, lalu tambahkan obat ke <strong class="text-amber-400">Nampan Resep</strong> untuk deteksi interaksi real-time.
                 </p>
-                
                 <div class="glass-panel p-6 rounded-2xl border-t-4 border-t-amber-400 text-left w-full max-w-md relative overflow-hidden">
                     <div class="absolute -right-4 -top-4 text-6xl text-amber-500/10"><i class="fas fa-quote-right"></i></div>
                     <p class="text-[10px] text-amber-400 font-bold uppercase tracking-widest mb-3 flex items-center gap-2"><i class="fas fa-lightbulb text-lg"></i> Mutiara Klinis</p>
@@ -297,62 +270,45 @@
 
             <!-- Active Analysis State -->
             <div id="analysis-state" class="hidden w-full h-full z-10 flex-col bg-transparent">
-                
-                <!-- Tab Navigation (Colorful) -->
+                <!-- Tab Navigation -->
                 <div class="flex px-2 sm:px-6 pt-4 bg-dark-900/40 backdrop-blur-md shrink-0 tab-navigation overflow-x-auto custom-scrollbar gap-1 border-b border-white/5">
-                    <button class="tab-btn tab-summary active px-4 py-3 text-[13px] font-bold rounded-t-xl text-slate-400 hover:text-white transition-all whitespace-nowrap flex items-center gap-2" data-target="tab-summary">
-                        <i class="fas fa-clipboard-check text-emerald-400 text-lg"></i> Ringkasan Eksekutif
-                    </button>
+                    <button class="tab-btn tab-summary active px-4 py-3 text-[13px] font-bold rounded-t-xl text-slate-400 hover:text-white transition-all whitespace-nowrap flex items-center gap-2" data-target="tab-summary"><i class="fas fa-clipboard-check text-emerald-400 text-lg"></i> Ringkasan Eksekutif</button>
                     <button class="tab-btn tab-ddi px-4 py-3 text-[13px] font-bold rounded-t-xl text-slate-400 hover:text-white transition-all whitespace-nowrap flex items-center gap-2 relative" data-target="tab-ddi">
-                        <i class="fas fa-bolt text-rose-400 text-lg"></i> Interaksi Obat (DDI)
-                        <span id="count-ddi" class="bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-md ml-1 shadow-[0_0_5px_rgba(244,63,94,0.5)]">0</span>
+                        <i class="fas fa-bolt text-rose-400 text-lg"></i> Interaksi (DDI) <span id="count-ddi" class="bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-md ml-1 shadow-[0_0_5px_rgba(244,63,94,0.5)]">0</span>
                     </button>
-                    <button class="tab-btn tab-clinical px-4 py-3 text-[13px] font-bold rounded-t-xl text-slate-400 hover:text-white transition-all whitespace-nowrap flex items-center gap-2" data-target="tab-clinical">
-                        <i class="fas fa-microscope text-sky-400 text-lg"></i> Evaluasi Farmakologi
-                    </button>
-                    <button class="tab-btn tab-timing px-4 py-3 text-[13px] font-bold rounded-t-xl text-slate-400 hover:text-white transition-all whitespace-nowrap flex items-center gap-2" data-target="tab-timing">
-                        <i class="fas fa-clock text-amber-400 text-lg"></i> Jadwal Edukasi
-                    </button>
+                    <button class="tab-btn tab-clinical px-4 py-3 text-[13px] font-bold rounded-t-xl text-slate-400 hover:text-white transition-all whitespace-nowrap flex items-center gap-2" data-target="tab-clinical"><i class="fas fa-microscope text-sky-400 text-lg"></i> Evaluasi Farmakologi</button>
+                    <button class="tab-btn tab-timing px-4 py-3 text-[13px] font-bold rounded-t-xl text-slate-400 hover:text-white transition-all whitespace-nowrap flex items-center gap-2" data-target="tab-timing"><i class="fas fa-clock text-amber-400 text-lg"></i> Jadwal Edukasi</button>
                 </div>
 
                 <!-- Tab Views -->
                 <div class="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 relative custom-scrollbar z-0">
-                    
-                    <div id="tab-summary" class="tab-content block animate-slide-up">
-                        <div id="summary-container" class="max-w-5xl mx-auto space-y-6"></div>
-                    </div>
-
+                    <div id="tab-summary" class="tab-content block animate-slide-up"><div id="summary-container" class="max-w-5xl mx-auto space-y-6"></div></div>
                     <div id="tab-ddi" class="tab-content hidden animate-slide-up">
-                        <div class="print:block print-border mb-6 no-print max-w-5xl mx-auto">
-                            <h2 class="text-2xl font-bold text-white mb-2 flex items-center gap-3"><i class="fas fa-exclamation-triangle text-rose-500"></i> Deteksi Interaksi Silang</h2>
-                            <p class="text-[14px] text-slate-400">Analisis potensi bahaya dari kombinasi obat yang berada di dalam nampan resep.</p>
-                        </div>
+                        <div class="print:block print-border mb-6 no-print max-w-5xl mx-auto"><h2 class="text-2xl font-bold text-white mb-2 flex items-center gap-3"><i class="fas fa-exclamation-triangle text-rose-500"></i> Deteksi Interaksi Silang</h2><p class="text-[14px] text-slate-400">Analisis potensi bahaya dari kombinasi obat yang berada di dalam nampan resep.</p></div>
                         <div id="ddi-container" class="space-y-4 max-w-5xl mx-auto"></div>
                     </div>
-
                     <div id="tab-clinical" class="tab-content hidden animate-slide-up">
-                        <div class="print:block print-border mb-6 mt-8 print:mt-0 no-print max-w-5xl mx-auto">
-                            <h2 class="text-2xl font-bold text-white mb-2 flex items-center gap-3"><i class="fas fa-vials text-sky-400"></i> Evaluasi Klinis Per Obat</h2>
-                            <p class="text-[14px] text-slate-400">Panduan dosis lazim, parameter monitoring, dan penyesuaian terkait fungsi ginjal (eGFR) atau usia.</p>
-                        </div>
+                        <div class="print:block print-border mb-6 mt-8 print:mt-0 no-print max-w-5xl mx-auto"><h2 class="text-2xl font-bold text-white mb-2 flex items-center gap-3"><i class="fas fa-vials text-sky-400"></i> Evaluasi Klinis Per Obat</h2><p class="text-[14px] text-slate-400">Panduan dosis lazim, parameter monitoring, dan penyesuaian terkait fungsi ginjal (eGFR) atau usia.</p></div>
                         <div id="clinical-container" class="space-y-6 max-w-5xl mx-auto"></div>
                     </div>
-
                     <div id="tab-timing" class="tab-content hidden animate-slide-up">
-                        <div class="print:block print-border mb-6 mt-8 print:mt-0 text-center max-w-5xl mx-auto">
-                            <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500 print:text-black mb-3 uppercase tracking-wide">Jadwal Minum Obat Anda</h2>
-                            <p class="text-[14px] text-slate-300 print:text-gray-600 mb-4">Panduan praktis visual untuk meningkatkan kepatuhan pasien.</p>
-                        </div>
+                        <div class="print:block print-border mb-6 mt-8 print:mt-0 text-center max-w-5xl mx-auto"><h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500 print:text-black mb-3 uppercase tracking-wide">Jadwal Minum Obat Anda</h2><p class="text-[14px] text-slate-300 print:text-gray-600 mb-4">Panduan praktis visual untuk meningkatkan kepatuhan pasien.</p></div>
                         <div id="timing-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-6xl mx-auto"></div>
                     </div>
-
                 </div>
             </div>
         </div>
     </main>
 
     <script>
-        // --- 1. UI Setup & Colors ---
+        // --- 1. Global State & Styling ---
+        let state = { 
+            flags: [], 
+            trayIds: [], 
+            searchQuery: '', 
+            inputs: { age: null, weight: null, scr: null, sex: 'M', sbp: null, hr: null } 
+        };
+
         const CLASS_COLORS = {
             'nsaid': { bg: 'bg-orange-500/10', border: 'border-orange-500/30', text: 'text-orange-400', glow: 'shadow-[0_0_10px_rgba(249,115,22,0.2)]' },
             'htn': { bg: 'bg-teal-500/10', border: 'border-teal-500/30', text: 'text-teal-400', glow: 'shadow-[0_0_10px_rgba(20,184,166,0.2)]' },
@@ -365,109 +321,243 @@
             'neuro': { bg: 'bg-violet-500/10', border: 'border-violet-500/30', text: 'text-violet-400', glow: 'shadow-[0_0_10px_rgba(139,92,246,0.2)]' },
             'lipid': { bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-400', glow: 'shadow-[0_0_10px_rgba(168,85,247,0.2)]' },
             'diuretik': { bg: 'bg-cyan-500/10', border: 'border-cyan-500/30', text: 'text-cyan-400', glow: 'shadow-[0_0_10px_rgba(6,182,212,0.2)]' },
-            'herbal': { bg: 'bg-lime-500/10', border: 'border-lime-500/30', text: 'text-lime-400', glow: 'shadow-[0_0_10px_rgba(132,204,22,0.2)]' }
+            'herbal': { bg: 'bg-lime-500/10', border: 'border-lime-500/30', text: 'text-lime-400', glow: 'shadow-[0_0_10px_rgba(132,204,22,0.2)]' },
+            'respirasi': { bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', text: 'text-yellow-400', glow: 'shadow-[0_0_10px_rgba(234,179,8,0.2)]' },
+            'ed': { bg: 'bg-pink-500/10', border: 'border-pink-500/30', text: 'text-pink-400', glow: 'shadow-[0_0_10px_rgba(236,72,153,0.2)]' }
         };
 
         const PATIENT_FLAGS = [
-            { id: 'hf', label: 'Gagal Jantung / CAD', color: 'red' },
+            { id: 'hf', label: 'Gagal Jantung (HF)', color: 'red' },
+            { id: 'vasc', label: 'Penyakit Vaskular (CAD/PAD)', color: 'orange' },
+            { id: 'stroke', label: 'Riwayat Stroke / TIA', color: 'purple' },
             { id: 'af', label: 'Fibrilasi Atrium (AF)', color: 'rose' },
-            { id: 'qt', label: 'Prolonged QT Interval', color: 'pink' },
-            { id: 'liver', label: 'Gangguan Hati / Sirosis', color: 'amber' },
             { id: 'ht', label: 'Hipertensi', color: 'teal' },
             { id: 'dm', label: 'Diabetes Melitus', color: 'fuchsia' },
-            { id: 'ulcer', label: 'Riwayat Tukak Lambung', color: 'orange' },
-            { id: 'preg', label: 'Kehamilan / Menyusui', color: 'purple' }
+            { id: 'liver', label: 'Gangguan Hati / Sirosis', color: 'amber' },
+            { id: 'qt', label: 'Prolonged QT Interval', color: 'pink' },
+            { id: 'ulcer', label: 'Riwayat Tukak Lambung', color: 'rose' },
+            { id: 'preg', label: 'Kehamilan / Menyusui', color: 'purple' },
+            { id: 'asma', label: 'Asma / PPOK', color: 'sky' },
+            { id: 'gout', label: 'Gout / Asam Urat', color: 'lime' },
+            { id: 'st_dev', label: 'ST Deviasi (EKG)', color: 'orange' },
+            { id: 'trop', label: 'Enzim Jantung Naik (Trop)', color: 'rose' }
         ];
 
-        let state = { flags: [], trayIds: [], searchQuery: '', inputs: { age: null, weight: null, scr: null, sex: 'M', sbp: null } };
-
-        // --- 2. Expanded Drug Database ---
+        // --- STREAMING_CHUNK:Defining Extensive Drug Database with 50+ New Drugs... ---
+        // Shared Logic for NSAIDs (Pregnancy is Priority #1)
         const NSAID_SHARED = {
             classId: 'nsaid', dose: 'Dosis terendah efektif', monitor: 'Tekanan Darah, SCr (jika >1 mgg), Nyeri Lambung',
             getVerdict: (ctx) => {
+                if (ctx.flags.includes('preg')) return { status: 'danger', text: 'TERATOGENIK: Kontraindikasi absolut pada kehamilan trimester 3.'};
                 if (ctx.flags.includes('hf') || (ctx.eGFR > 0 && ctx.eGFR < 45)) return { status: 'danger', text: 'KONTRAINDIKASI RELATIF: Retensi cairan perburuk HF & GFR turun drastis.'};
                 if (ctx.flags.includes('ulcer')) return { status: 'danger', text: 'KONTRAINDIKASI: Risiko perdarahan GI aktif.'};
-                if (ctx.flags.includes('ht') || ctx.sbp > 150) return { status: 'warning', text: 'WASPADA: Retensi Na+ menaikkan tensi darah.'};
+                if (ctx.flags.includes('ht') || (ctx.sbp !== null && ctx.sbp > 150)) return { status: 'warning', text: 'WASPADA: Retensi Na+ menaikkan tensi darah.'};
                 if (ctx.age > 65) return { status: 'warning', text: 'Lansia: Risiko perdarahan GI & AKI meningkat.'};
                 return { status: 'safe', text: 'Aman dengan durasi tersingkat.'};
             },
-            eval: ["Pastikan eGFR > 45 ml/min.", "Tanyakan riwayat maag/melena.", "Gunakan PPI jika ada indikasi lambung."],
-            mechanism: "Menghambat prostaglandin ginjal (vasodilator), memicu retensi cairan, iritasi mukosa GI.",
-            substitutions: [ { level: "Aman Lambung/Ginjal", text: "Paracetamol (max 3-4g/hari)." }, { level: "Nyeri Lokal", text: "NSAID Topikal (Gel/Patch)." } ]
+            eval: ["Pastikan eGFR > 45 ml/min.", "Gunakan PPI jika ada riwayat dispepsia."], mechanism: "Menghambat prostaglandin ginjal (vasodilator), memicu retensi cairan.",
+            substitutions: [ { level: "Aman Lambung/Ginjal", text: "Paracetamol (max 3-4g/hari)." } ]
         };
 
         const DRUG_DB = {
-            // Analgesik & NSAID
-            ibuprofen: { name: 'Ibuprofen', class: 'NSAID (Non-Selektif)', icon: 'fa-capsules', timing: 'Sesudah Makan', timeVal: 'Segera sesudah makan', reason: 'Mengurangi iritasi mukosa lambung.', ...NSAID_SHARED, dose: '400mg tiap 6-8 jam PRN' },
-            meloxicam: { name: 'Meloxicam', class: 'NSAID (COX-2 Preferensial)', icon: 'fa-capsules', timing: 'Sesudah Makan', timeVal: 'Segera sesudah makan', reason: 'Lebih aman dari Ibuprofen, tapi tetap butuh makanan.', ...NSAID_SHARED, dose: '7.5 - 15mg 1x sehari' },
-            celecoxib: { name: 'Celecoxib', class: 'NSAID (COX-2 Selektif)', icon: 'fa-capsules', timing: 'Sesudah Makan', timeVal: 'Sesudah makan', reason: 'Aman lambung, bahaya kardio.', ...NSAID_SHARED, dose: '100 - 200mg 1-2x sehari', getVerdict: (ctx) => (ctx.flags.includes('hf') || ctx.flags.includes('ht')) ? {status:'danger', text:'KONTRA KARDIOVASKULAR TINGGI (Trombosis).'} : NSAID_SHARED.getVerdict(ctx), substitutions: [{level: "Aman Kardio", text: "Naproxen atau PCT"}] },
-            pct: { name: 'Paracetamol', classId: 'nsaid', class: 'Analgesik/Antipiretik', dose: '500-1000mg tiap 6-8 jam', monitor: 'Fungsi hati (jika >3g/hari)', icon: 'fa-tablets', timing: 'Bebas', timeVal: 'Kapan saja saat nyeri', reason: 'Tidak mengiritasi lambung.', getVerdict: (ctx) => ctx.flags.includes('liver') ? { status: 'warning', text: 'Batas max 2g/hari pada sirosis.'} : { status: 'safe', text: 'Analgesik teraman untuk pasien KV.'}, eval: ["Max 4000 mg/hari dewasa normal."], mechanism: "Penghambatan COX sentral murni.", substitutions: [] },
-            tramadol: { name: 'Tramadol', classId: 'neuro', class: 'Opioid Lemah', dose: '50mg tiap 6-8 jam', monitor: 'Depresi napas, konstipasi, mual', icon: 'fa-pills', timing: 'Bebas', timeVal: 'Kapan saja', reason: 'Dapat memicu mual di awal.', getVerdict: (ctx) => ctx.age > 65 ? {status: 'warning', text: 'Lansia: Risiko jatuh & kebingungan tinggi.'} : {status: 'safe', text: 'Alternatif kuat pengganti NSAID.'}, eval: ["Waspada konstipasi lansia", "Awas interaksi obat serotogenik"], mechanism: "Agonis reseptor mu-opioid & hambat reuptake serotonin/norepinefrin.", substitutions: [] },
-            
-            // Hipertensi & Gagal Jantung
-            capto: { name: 'Captopril (ACE-i)', classId: 'htn', class: 'Hipertensi / HF', dose: '12.5 - 50mg tiap 8-12 jam', monitor: 'SCr, K+ (Kalium) dlm 1-2 minggu', icon: 'fa-heartbeat', timing: 'Sebelum Makan', timeVal: '1 jam sebelum', reason: 'Makanan menurunkan absorpsi 40%.', getVerdict: (ctx) => { if(ctx.flags.includes('preg')) return { status:'danger', text:'TERATOGENIK ABSOLUT.' }; if(ctx.eGFR>0 && ctx.eGFR<30) return { status:'warning', text:'Mulai dosis sangat rendah, pantau K+.'}; return {status:'safe', text:'Pilar utama Gagal Jantung & DM.'}; }, eval: ["Pantau batuk kering (Efek bradikinin)", "Cek Kreatinin 1 mgg pasca inisiasi"], mechanism: "Menghambat RAAS, vasodilator kuat, proteksi ginjal.", substitutions: [{ level: "Jika batuk intoleran", text: "ARB (Valsartan/Candesartan)" }] },
-            valsartan: { name: 'Valsartan (ARB)', classId: 'htn', class: 'Hipertensi / HF', dose: '80 - 160mg 1x sehari', monitor: 'SCr, K+ (Kalium)', icon: 'fa-heartbeat', timing: 'Bebas', timeVal: 'Pagi atau Malam', reason: 'Absorpsi tidak dipengaruhi makanan.', getVerdict: (ctx) => { if(ctx.flags.includes('preg')) return { status:'danger', text:'TERATOGENIK.' }; return {status:'safe', text:'Pengganti ACE-i jika batuk.'}; }, eval: ["Cek SCr & Kalium berkala"], mechanism: "Blok selektif reseptor Angiotensin II (AT1).", substitutions: [] },
-            amlo: { name: 'Amlodipine (CCB)', classId: 'htn', class: 'Hipertensi', dose: '5 - 10mg 1x sehari', monitor: 'Edema perifer (kaki bengkak), TD', icon: 'fa-heartbeat', timing: 'Bebas', timeVal: 'Kapan saja', reason: 'Efektif menjaga tensi 24 jam.', getVerdict: (ctx) => ctx.flags.includes('hf') ? { status: 'warning', text: 'Aman untuk HF, tapi bukan terapi utama penyembuh.' } : { status: 'safe', text: 'Antihipertensi poten lini pertama.'}, eval: ["Evaluasi bengkak kaki (bukan karena gagal ginjal)"], mechanism: "Blok saluran kalsium (vasodilatasi perifer kuat).", substitutions: [] },
-            bisoprolol: { name: 'Bisoprolol', classId: 'cardio', class: 'Beta-Blocker', dose: '1.25 - 10mg 1x sehari', monitor: 'Nadi (HR > 60), TD, Tanda sesak', icon: 'fa-heart', timing: 'Bebas', timeVal: 'Pagi hari', reason: 'Mencegah insomnia.', getVerdict: (ctx) => (ctx.sbp > 0 && ctx.sbp < 90) ? {status:'danger', text:'Syok / Hipotensi berat.'} : {status:'safe', text:'Pilar utama Gagal Jantung (Kardioselektif).'}, eval: ["Awas pada asma berat (bronkospasme)", "Titrasi lambat pada HF"], mechanism: "Blok reseptor Beta-1 (menurunkan HR & beban kerja jantung).", substitutions: [] },
-            isdn: { name: 'ISDN (Nitrat)', classId: 'cardio', class: 'Anti-Angina', dose: '5mg Sublingual (Akut) / 5-20mg (Rutin)', monitor: 'TD (Awas hipotensi postural)', icon: 'fa-wind', timing: 'Sebelum Makan', timeVal: 'Perut kosong', reason: 'Mempercepat efek vasodilatasi.', getVerdict: (ctx) => ctx.sbp < 100 ? {status:'danger', text:'KONTRA: Hipotensi membahayakan.'} : {status:'warning', text:'Waspada sakit kepala berdenyut.'}, eval: ["Pastikan tidak pakai Sildenafil (Viagra)"], mechanism: "Donor Nitric Oxide (NO) vena sistemik.", substitutions: [] },
+            // === ANALGESIK & NSAID ===
+            ibuprofen: { name: 'Ibuprofen', class: 'NSAID', icon: 'fa-capsules', timing: 'Sesudah Makan', timeVal: 'Segera sesudah makan', reason: 'Iritasi mukosa lambung.', ...NSAID_SHARED, dose: '400mg tiap 6-8 jam PRN' },
+            meloxicam: { name: 'Meloxicam', class: 'NSAID (COX-2 Pref)', icon: 'fa-capsules', timing: 'Sesudah Makan', timeVal: 'Segera sesudah makan', reason: 'Tetap butuh makanan.', ...NSAID_SHARED, dose: '7.5 - 15mg 1x sehari' },
+            celecoxib: { name: 'Celecoxib', class: 'NSAID (COX-2 Selektif)', icon: 'fa-capsules', timing: 'Sesudah Makan', timeVal: 'Sesudah makan', reason: 'Aman lambung, bahaya kardio.', ...NSAID_SHARED, dose: '100 - 200mg 1-2x sehari', getVerdict: (ctx) => (ctx.flags.includes('hf') || ctx.flags.includes('ht') || ctx.flags.includes('vasc')) ? {status:'danger', text:'KONTRA KARDIOVASKULAR TINGGI (Trombosis).'} : NSAID_SHARED.getVerdict(ctx) },
+            ketorolac: { name: 'Ketorolac', class: 'NSAID (Injeksi/Kuat)', icon: 'fa-syringe', timing: 'Bebas', timeVal: 'Sesuai Nyeri', reason: 'Analgesik pasca operasi', ...NSAID_SHARED, dose: 'Max 30mg IV / 5 hari maks', getVerdict: (ctx) => (ctx.eGFR > 0 && ctx.eGFR < 50) ? {status:'danger', text:'KONTRA MUTLAK GANGGUAN GINJAL'} : NSAID_SHARED.getVerdict(ctx) },
+            dexketoprofen: { name: 'Dexketoprofen', class: 'NSAID', icon: 'fa-capsules', timing: 'Sebelum Makan', timeVal: '30 menit sebelum makan', reason: 'Absorpsi lebih cepat', ...NSAID_SHARED, dose: '25mg tiap 8 jam' },
+            pct: { name: 'Paracetamol', classId: 'nsaid', class: 'Analgesik/Antipiretik', dose: '500-1000mg tiap 6-8 jam', monitor: 'Fungsi hati (jika >3g/hari)', icon: 'fa-tablets', timing: 'Bebas', timeVal: 'Kapan saja', reason: 'Tidak mengiritasi lambung.', getVerdict: (ctx) => ctx.flags.includes('liver') ? { status: 'warning', text: 'Batas max 2g/hari pada sirosis.'} : { status: 'safe', text: 'Analgesik teraman untuk pasien KV.'}, eval: ["Max 4000 mg/hari dewasa normal."], mechanism: "Penghambatan COX sentral murni.", substitutions: [] },
+            pct_iv: { name: 'Paracetamol (Injeksi)', classId: 'nsaid', class: 'Analgesik IV', dose: '1000mg tiap 6-8 jam IV', monitor: 'Fungsi hati', icon: 'fa-syringe', timing: 'Bebas', timeVal: 'Infus Lambat', reason: 'Bypass gastrointestinal.', getVerdict: (ctx) => ctx.flags.includes('liver') ? { status: 'danger', text: 'Hati-hati hepatotoksik.'} : { status: 'safe', text: 'Aman untuk bedah/akut.'}, eval: ["Dosis berdasar BB jika <50kg"], mechanism: "Inhibisi COX sentral.", substitutions: [] },
+            tramadol: { name: 'Tramadol', classId: 'neuro', class: 'Opioid Lemah', dose: '50mg tiap 6-8 jam', monitor: 'Depresi napas, mual', icon: 'fa-pills', timing: 'Bebas', timeVal: 'Kapan saja', reason: 'Dapat memicu mual di awal.', getVerdict: (ctx) => ctx.age > 65 ? {status: 'warning', text: 'Lansia: Risiko jatuh & kebingungan tinggi.'} : {status: 'safe', text: 'Alternatif pengganti NSAID.'}, eval: ["Awas konstipasi lansia"], mechanism: "Agonis mu-opioid & hambat reuptake serotonin.", substitutions: [] },
+            fentanyl: { name: 'Fentanyl (Patch/IV)', classId: 'neuro', class: 'Opioid Kuat', dose: 'Titration', monitor: 'Depresi napas', icon: 'fa-band-aid', timing: 'Bebas', timeVal: 'Tiap 72 jam (Patch)', reason: 'Nyeri kronis berat/kanker.', getVerdict: (ctx) => ctx.age > 65 ? {status: 'warning', text: 'Kurangi dosis lansia.'} : {status: 'safe', text: 'Aman untuk ginjal dibanding morfin.'}, eval: ["Risiko depresi napas mematikan"], mechanism: "Agonis mu-opioid poten.", substitutions: [] },
 
-            // Diuretik
-            spiro: { name: 'Spironolactone', classId: 'diuretik', class: 'Diuretik Hemat Kalium', dose: '25 - 50mg 1x sehari', monitor: 'K+ (Kalium wajib), SCr', icon: 'fa-tint', timing: 'Sesudah Makan', timeVal: 'Pagi/Siang bersama makan', reason: 'Meningkatkan absorpsi, hindari kencing malam.', getVerdict: (ctx) => (ctx.eGFR>0 && ctx.eGFR<30) ? { status: 'danger', text: 'KONTRA eGFR<30: Risiko Hiperkalemia fatal.' } : { status: 'safe', text: 'Pilar Gagal Jantung (Antagonis Aldosteron).'}, eval: ["Cek eGFR & Kalium sebelum meresepkan"], mechanism: "Blok reseptor aldosteron di tubulus distal.", substitutions: [] },
-            furosemide: { name: 'Furosemide', classId: 'diuretik', class: 'Loop Diuretik', dose: '20 - 40mg 1-2x sehari', monitor: 'Urine output, BB harian, K+ (Awas hipokalemia)', icon: 'fa-tint', timing: 'Sebelum Makan', timeVal: 'Pagi hari (Max jam 2 siang)', reason: 'Absorpsi baik saat kosong. Hindari pipis malam (nokturia).', getVerdict: () => ({status:'warning', text:'Sering memicu hipokalemia & dehidrasi.'}), eval: ["Restriksi cairan & garam", "Bisa kombinasi dgn Spiro untuk imbang K+"], mechanism: "Hambat reabsorpsi Na-K-2Cl di Loop of Henle.", substitutions: [] },
+            // === ANTIHIPERTENSI & GAGAL JANTUNG ===
+            capto: { name: 'Captopril (ACE-i)', classId: 'htn', class: 'Antihipertensi / HF', dose: '12.5 - 50mg tiap 8-12 jam', monitor: 'SCr, K+', icon: 'fa-heartbeat', timing: 'Sebelum Makan', timeVal: '1 jam sebelum', reason: 'Makanan menurunkan absorpsi 40%.', getVerdict: (ctx) => { if(ctx.flags.includes('preg')) return { status:'danger', text:'TERATOGENIK ABSOLUT.' }; if(ctx.eGFR>0 && ctx.eGFR<30) return { status:'warning', text:'Mulai dosis sangat rendah, pantau K+.'}; if(ctx.flags.includes('hf')) return {status:'safe', text:'Pilar utama / Obat Dewa HFrEF.'}; return {status:'safe', text:'Pilar utama Hipertensi & DM.'}; }, eval: ["Pantau batuk kering (Efek bradikinin)"], mechanism: "Hambat RAAS, vasodilator, proteksi ginjal.", substitutions: [{ level: "Batuk intoleran", text: "ARB (Valsartan/Candesartan)" }] },
+            ramipril: { name: 'Ramipril (ACE-i)', classId: 'htn', class: 'Antihipertensi / HF', dose: '2.5 - 10mg 1x sehari', monitor: 'SCr, K+', icon: 'fa-heartbeat', timing: 'Bebas', timeVal: 'Pagi Hari', reason: 'Compliance lebih baik.', getVerdict: (ctx) => { if(ctx.flags.includes('preg')) return { status:'danger', text:'TERATOGENIK ABSOLUT.' }; return {status:'safe', text:'Sangat baik untuk profilaksis kardiovaskular (HOPE Trial).'}; }, eval: ["Bisa memicu batuk kering"], mechanism: "Hambat RAAS.", substitutions: [] },
+            perindopril: { name: 'Perindopril (ACE-i)', classId: 'htn', class: 'Antihipertensi', dose: '4 - 8mg 1x sehari', monitor: 'SCr, K+', icon: 'fa-heartbeat', timing: 'Bebas', timeVal: 'Pagi Hari', reason: 'Waktu paruh panjang.', getVerdict: (ctx) => { if(ctx.flags.includes('preg')) return { status:'danger', text:'TERATOGENIK ABSOLUT.' }; return {status:'safe', text:'Bukti klinis kuat untuk CAD (EUROPA Trial).'}; }, eval: ["T-half 24 jam"], mechanism: "Hambat RAAS.", substitutions: [] },
+            valsartan: { name: 'Valsartan (ARB)', classId: 'htn', class: 'Antihipertensi / HF', dose: '80 - 160mg 1x sehari', monitor: 'SCr, K+', icon: 'fa-heartbeat', timing: 'Bebas', timeVal: 'Pagi atau Malam', reason: 'Absorpsi bebas makanan.', getVerdict: (ctx) => { if(ctx.flags.includes('preg')) return { status:'danger', text:'TERATOGENIK ABSOLUT.' }; if(ctx.flags.includes('hf')) return { status:'safe', text:'Strongly indicated untuk HF.' }; return {status:'safe', text:'Pengganti ACE-i jika batuk.'}; }, eval: ["Cek SCr & Kalium"], mechanism: "Blok selektif reseptor AT1.", substitutions: [] },
+            candesartan: { name: 'Candesartan (ARB)', classId: 'htn', class: 'Antihipertensi / HF', dose: '8 - 16mg 1x sehari', monitor: 'SCr, K+', icon: 'fa-heartbeat', timing: 'Bebas', timeVal: 'Pagi hari', reason: 'Absorpsi bebas makanan.', getVerdict: (ctx) => { if(ctx.flags.includes('preg')) return { status:'danger', text:'TERATOGENIK ABSOLUT.' }; return {status:'safe', text:'Lini pertama HT.'}; }, eval: ["Bisa untuk HF"], mechanism: "Blok selektif AT1.", substitutions: [] },
+            telmisartan: { name: 'Telmisartan (ARB)', classId: 'htn', class: 'Antihipertensi', dose: '40 - 80mg 1x sehari', monitor: 'SCr, K+', icon: 'fa-heartbeat', timing: 'Bebas', timeVal: 'Pagi Hari', reason: 'Aman untuk lambung.', getVerdict: (ctx) => { if(ctx.flags.includes('preg')) return { status:'danger', text:'TERATOGENIK ABSOLUT.' }; return {status:'safe', text:'Waktu paruh terpanjang dari semua ARB, baik untuk HT pagi hari.'}; }, eval: ["Sedikit agonis PPAR-gamma"], mechanism: "Blok reseptor AT1.", substitutions: [] },
+            irbesartan: { name: 'Irbesartan (ARB)', classId: 'htn', class: 'Antihipertensi', dose: '150 - 300mg 1x sehari', monitor: 'SCr, K+', icon: 'fa-heartbeat', timing: 'Bebas', timeVal: 'Pagi Hari', reason: 'Nefroproteksi diabetik.', getVerdict: (ctx) => { if(ctx.flags.includes('preg')) return { status:'danger', text:'TERATOGENIK ABSOLUT.' }; return {status:'safe', text:'Terbukti baik untuk Nefropati Diabetik.'}; }, eval: ["Bagus untuk HT + DM"], mechanism: "Blok reseptor AT1.", substitutions: [] },
+            amlo: { name: 'Amlodipine (CCB-DHP)', classId: 'htn', class: 'Antihipertensi', dose: '5 - 10mg 1x sehari', monitor: 'Edema perifer (bengkak kaki)', icon: 'fa-heartbeat', timing: 'Bebas', timeVal: 'Pagi hari', reason: 'Efektif 24 jam.', getVerdict: (ctx) => ctx.flags.includes('hf') ? { status: 'warning', text: 'Bukan terapi penyembuh HF, tapi aman.' } : { status: 'safe', text: 'Poten untuk hipertensi sistolik.'}, eval: ["Bengkak kaki bukan krn ginjal"], mechanism: "Blok kalsium perifer.", substitutions: [] },
+            nifedipine: { name: 'Nifedipine OROS', classId: 'htn', class: 'Antihipertensi (Long)', dose: '30mg 1x sehari', monitor: 'Nadi', icon: 'fa-heartbeat', timing: 'Bebas', timeVal: 'Pagi Hari', reason: 'Sistem pelepasan lambat OROS.', getVerdict: () => ({status:'safe', text:'Aman dan stabil.'}), eval: ["Telan utuh, jangan digerus"], mechanism: "Vasodilatasi konstan.", substitutions: [] },
+            diltiazem: { name: 'Diltiazem (CCB Non-DHP)', classId: 'htn', class: 'Rate Control / HTN', dose: '30mg 3x sehari', monitor: 'Nadi, EKG', icon: 'fa-heart-pulse', timing: 'Bebas', timeVal: 'Bebas', reason: 'Mengontrol detak jantung.', getVerdict: (ctx) => ctx.flags.includes('hf') ? {status:'danger', text:'KONTRA PADA HF: Menurunkan pompa jantung (Inotropik Negatif).'} : {status:'safe', text:'Efektif rate control.'}, eval: ["Interaksi bahaya dengan Beta Blocker!"], mechanism: "Blok Kalsium di Nodus AV.", substitutions: [] },
+            bisoprolol: { name: 'Bisoprolol (Beta-1)', classId: 'cardio', class: 'Beta-Blocker', dose: '1.25 - 10mg 1x sehari', monitor: 'Nadi (HR > 60)', icon: 'fa-heart', timing: 'Bebas', timeVal: 'Pagi hari', reason: 'Mencegah insomnia.', getVerdict: (ctx) => { if(ctx.sbp !== null && ctx.sbp < 90) return {status:'danger', text:'Syok / Hipotensi berat.'}; if(ctx.flags.includes('asma')) return {status:'danger', text:'KONTRAINDIKASI: Memicu bronkospasme fatal pada Asma/PPOK.'}; if(ctx.flags.includes('dm')) return {status:'warning', text:'Waspada menutupi gejala takikardia saat hipoglikemia.'}; if(ctx.flags.includes('af')) return {status:'safe', text:'Indikasi utama rate control AF.'}; return {status:'safe', text:'Pilar utama Gagal Jantung & CAD.'}; }, eval: ["Titrasi lambat pada HF"], mechanism: "Blok reseptor Beta-1 (menurunkan HR & beban).", substitutions: [] },
+            carvedilol: { name: 'Carvedilol', classId: 'cardio', class: 'Beta-Blocker (Non-Sel)', dose: '3.125 - 25mg 2x sehari', monitor: 'Tensi, Nadi', icon: 'fa-heart', timing: 'Sesudah Makan', timeVal: 'Sesudah makan', reason: 'Mengurangi hipotensi ortostatik.', getVerdict: (ctx) => { if(ctx.flags.includes('asma')) return {status:'danger', text:'KONTRA MUTLAK PADA ASMA.'}; return {status:'safe', text:'Beta blocker terbaik untuk HF dengan disfungsi ventrikel berat.'}; }, eval: ["Vasodilatasi melalui alfa-blokade"], mechanism: "Blok Beta 1, Beta 2, dan Alpha 1.", substitutions: [] },
+            labetalol: { name: 'Labetalol', classId: 'htn', class: 'Alpha/Beta Blocker', dose: '100 - 200mg 2x sehari', monitor: 'Tensi', icon: 'fa-heartbeat', timing: 'Bebas', timeVal: 'Bebas', reason: 'Cepat menurunkan tensi.', getVerdict: (ctx) => ctx.flags.includes('preg') ? {status:'safe', text:'Lini pertama hipertensi kehamilan / preeklamsia.'} : {status:'safe', text:'Sangat poten untuk HT.'}, eval: ["Aman untuk kehamilan"], mechanism: "Blok reseptor Alpha & Beta.", substitutions: [] },
+            doxazosin: { name: 'Doxazosin', classId: 'htn', class: 'Alpha-1 Blocker', dose: '1 - 4mg 1x sehari', monitor: 'Tensi (Hipotensi Postural)', icon: 'fa-heartbeat', timing: 'Malam Hari', timeVal: 'Sebelum Tidur', reason: 'Mencegah pingsan dosis pertama.', getVerdict: () => ({status:'warning', text:'Hipotensi postural kuat pada dosis awal.'}), eval: ["Baik untuk HT + BPH prostat"], mechanism: "Vasodilatasi via blokade Alpha-1.", substitutions: [] },
+            isdn: { name: 'ISDN (Nitrat)', classId: 'cardio', class: 'Anti-Angina', dose: '5mg Sublingual (Akut) / 5-20mg (Rutin)', monitor: 'TD', icon: 'fa-wind', timing: 'Sebelum Makan', timeVal: 'Perut kosong', reason: 'Percepat efek.', getVerdict: (ctx) => (ctx.sbp !== null && ctx.sbp < 100) ? {status:'danger', text:'KONTRA: Hipotensi membahayakan.'} : {status:'warning', text:'Waspada sakit kepala berdenyut.'}, eval: ["Beri jeda bebas nitrat 8-12 jam"], mechanism: "Donor Nitric Oxide (NO) vena.", substitutions: [] },
+            digoksin: { name: 'Digoksin', classId: 'cardio', class: 'Glikosida Jantung', dose: (ctx) => (ctx.eGFR > 0 && ctx.eGFR < 30) ? '0.125 mg tiap 2 hari' : '0.125 - 0.25 mg 1x sehari', monitor: 'HR, Mual, Kadar K+', icon: 'fa-heart-pulse', timing: 'Sesudah Makan', timeVal: 'Pagi hari', reason: 'Pantau keluhan kuning halo.', getVerdict: (ctx) => ctx.flags.includes('af') ? {status:'safe', text:'Indikasi rate control AF + HF.'} : {status:'warning', text:'Indeks terapeutik sangat sempit.'}, eval: ["Awas toksisitas jika hipokalemia"], mechanism: "Inhibisi Na+/K+ ATPase.", substitutions: [] },
 
-            // Pengencer Darah (Platelet & Koagulan)
-            clopi: { name: 'Clopidogrel', classId: 'antiplatelet', class: 'Anti-Platelet', dose: '75mg 1x sehari', monitor: 'Tanda memar/perdarahan', icon: 'fa-vial', timing: 'Bebas', timeVal: 'Kapan saja', reason: 'Dapat diminum kapan pun.', getVerdict: () => ({ status: 'safe', text: 'Esensial pasca-pemasangan Stent (PCI).' }), eval: ["Cek interaksi bahaya dengan PPI (Omeprazole)"], mechanism: "Blok reseptor P2Y12 (Cegah agregasi trombosit irreversibel).", substitutions: [{level: "Gagal Clopi", text:"Ticagrelor"}] },
-            aspirin: { name: 'Aspirin (Low Dose)', classId: 'antiplatelet', class: 'Anti-Platelet', dose: '80 - 100mg 1x sehari', monitor: 'Gejala lambung (dispepsia)', icon: 'fa-vial', timing: 'Sesudah Makan', timeVal: 'Tepat setelah makan', reason: 'Sangat mengiritasi lambung.', getVerdict: (ctx) => ctx.flags.includes('ulcer') ? {status:'danger', text:'Riwayat tukak: Butuh proteksi PPI ekstra.'} : {status:'safe', text:'Pilar prevensi sekunder CAD/Stroke.'}, eval: ["Waspada asma terinduksi aspirin"], mechanism: "Inhibitor COX-1 ireversibel.", substitutions: [{level:"Alergi/Ulkus", text:"Clopidogrel"}] },
-            warfarin: { name: 'Warfarin', classId: 'anticoag', class: 'Antikoagulan (VKA)', dose: 'Titrasi berdasar INR target 2-3', monitor: 'INR rutin bulanan wajib', icon: 'fa-vial', timing: 'Bebas', timeVal: 'Malam hari jam 18.00 - 20.00', reason: 'Konsistensi kadar darah harian & cek lab pagi.', getVerdict: (ctx) => ctx.flags.includes('preg') ? { status: 'danger', text: 'TERATOGENIK: Malformasi janin.'} : {status: 'warning', text: 'Sangat banyak interaksi obat & makanan.'}, eval: ["Cek INR rutin", "Diet sayur hijau (Vit K) harus stabil"], mechanism: "Antagonis Vitamin K (faktor II, VII, IX, X).", substitutions: [{level:"Sulit INR", text:"DOAC (Rivaroxaban)"}] },
-            rivaroxaban: { name: 'Rivaroxaban (DOAC)', classId: 'anticoag', class: 'Antikoagulan Baru', dose: '15 - 20mg 1x sehari (AF)', monitor: 'Fungsi ginjal tahunan, tidak butuh INR', icon: 'fa-vial', timing: 'Sesudah Makan', timeVal: 'Bersama makan utama', reason: 'Makanan meningkatkan absorpsi dosis >15mg signifikan.', getVerdict: (ctx) => (ctx.eGFR>0 && ctx.eGFR<15) ? {status:'danger', text:'KONTRA eGFR < 15 ml/min.'} : {status:'safe', text:'Aman & praktis tanpa cek INR.'}, eval: ["Hati-hati pada katup jantung mekanik (Kontra)"], mechanism: "Inhibitor Faktor Xa langsung.", substitutions: [] },
+            // === DISFUNGSI EREKSI ===
+            sildenafil: { name: 'Sildenafil (Viagra)', classId: 'ed', class: 'PDE5 Inhibitor', dose: '50mg PRN', monitor: 'Tekanan Darah, Mata', icon: 'fa-mars', timing: 'Bebas', timeVal: '1 jam sebelum aktivitas', reason: 'Onset cepat.', getVerdict: () => ({status:'warning', text:'Menyebabkan hipotensi.'}), eval: ["Kontraindikasi absolut dengan Nitrat"], mechanism: "Inhibisi Fosfodiesterase-5.", substitutions: [] },
+            tadalafil: { name: 'Tadalafil', classId: 'ed', class: 'PDE5 Inhibitor (Long)', dose: '10-20mg PRN', monitor: 'Tekanan Darah', icon: 'fa-mars', timing: 'Bebas', timeVal: 'Kapan saja', reason: 'Waktu paruh 36 jam (The Weekend Pill).', getVerdict: () => ({status:'warning', text:'Efek hipotensi bertahan berhari-hari.'}), eval: ["Interaksi panjang dengan Nitrat"], mechanism: "Inhibisi Fosfodiesterase-5.", substitutions: [] },
 
-            // Lipid & Aritmia
-            atorva: { name: 'Atorvastatin', classId: 'lipid', class: 'Statin', dose: '20 - 40mg 1x sehari', monitor: 'Profil Lipid, Fungsi Hati (SGPT), Nyeri Otot', icon: 'fa-dna', timing: 'Bebas', timeVal: 'Malam hari lebih baik', reason: 'Sintesis kolesterol tubuh aktif malam hari.', getVerdict: (ctx) => ctx.flags.includes('liver') ? {status:'warning', text:'Pantau enzim hati ketat pada sirosis.'} : {status:'safe', text:'Kardioprotektif pleiotropik.'}, eval: ["Waspada miopati/rhabdomyolisis"], mechanism: "Inhibitor HMG-CoA reduktase.", substitutions: [] },
-            amiodaron: { name: 'Amiodaron', classId: 'cardio', class: 'Anti-Aritmia Keras', dose: '100 - 200mg 1x sehari (Maintenance)', monitor: 'EKG (QTc), Fungsi Tiroid, Rontgen Paru, Mata', icon: 'fa-wave-square', timing: 'Sesudah Makan', timeVal: 'Sesudah makan', reason: 'Sangat memicu mual muntah.', getVerdict: (ctx) => ctx.flags.includes('qt') ? {status:'danger', text:'KONTRAINDIKASI: Memicu Torsades de Pointes (Henti Jantung).'} : {status:'warning', text:'Waktu paruh berbulan-bulan, toksik multi-organ.'}, eval: ["Cek interaksi dgn obat lain (sangat banyak)"], mechanism: "Anti-aritmia Kelas III (Blok kanal K+).", substitutions: [] },
+            // === DIURETIK ===
+            hct: { name: 'Hidroklorotiazid (HCT)', classId: 'diuretik', class: 'Diuretik Tiazid', dose: '12.5 - 25mg 1x sehari', monitor: 'K+, Asam Urat, Gula', icon: 'fa-tint', timing: 'Pagi Hari', timeVal: 'Pagi', reason: 'Hindari nokturia.', getVerdict: (ctx) => { if(ctx.flags.includes('gout')) return {status:'danger', text:'KONTRAINDIKASI: Memperburuk hiperurisemia / serangan gout.'}; if(ctx.flags.includes('dm')) return {status:'warning', text:'Memperburuk resistensi insulin.'}; if(ctx.eGFR>0 && ctx.eGFR<30) return {status:'warning', text:'Kehilangan efikasi pada eGFR rendah.'}; return {status:'safe', text:'Lini pertama hipertensi.'}; }, eval: ["Risiko hipokalemia"], mechanism: "Hambat Na-Cl symporter di tubulus distal.", substitutions: [] },
+            furosemide: { name: 'Furosemide', classId: 'diuretik', class: 'Loop Diuretik', dose: '20 - 40mg 1-2x sehari', monitor: 'Urine output, BB, K+', icon: 'fa-tint', timing: 'Sebelum Makan', timeVal: 'Pagi (Max jam 2 siang)', reason: 'Absorpsi baik.', getVerdict: (ctx) => { if(ctx.flags.includes('dm')) return {status:'warning', text:'Sering memicu hipokalemia & memperburuk kontrol glikemik (DM).'}; return {status:'safe', text:'Diuretik paling efektif untuk edem/HF.'}; }, eval: ["Awas hipokalemia"], mechanism: "Hambat Na-K-2Cl di Loop of Henle.", substitutions: [] },
+            spiro: { name: 'Spironolactone', classId: 'diuretik', class: 'Diuretik Hemat Kalium', dose: '25 - 50mg 1x sehari', monitor: 'K+ (Kalium wajib), SCr', icon: 'fa-tint', timing: 'Sesudah Makan', timeVal: 'Siang/Sore', reason: 'Meningkatkan absorpsi.', getVerdict: (ctx) => { if(ctx.flags.includes('preg')) return { status:'danger', text:'KONTRA: Risiko feminisasi janin laki-laki.'}; if(ctx.eGFR>0 && ctx.eGFR<30) return { status: 'danger', text: 'KONTRA eGFR<30: Risiko Hiperkalemia fatal.' }; return { status: 'safe', text: 'Pilar HF (Antagonis Aldosteron).' }; }, eval: ["Cek Kalium"], mechanism: "Blok reseptor aldosteron (K-sparing).", substitutions: [] },
 
-            // Diabetes
-            metformin: { name: 'Metformin', classId: 'dm', class: 'Anti-Diabetik (Biguanid)', dose: '500 - 1000mg 2-3x sehari', monitor: 'eGFR berkala, HbA1c', icon: 'fa-cubes', timing: 'Sesudah Makan', timeVal: 'Tengah / Segera usai makan', reason: 'Meminimalisir diare dan mual (Efek GI).', getVerdict: (ctx) => { if(ctx.eGFR>0 && ctx.eGFR<30) return {status:'danger', text:'KONTRA eGFR<30 (Asidosis Laktat Fatal).'}; if(ctx.eGFR>=30 && ctx.eGFR<=45) return {status:'warning', text:'Max 1000 mg/hari.'}; return {status:'safe', text:'Lini pertama DM.'}; }, eval: ["Cek eGFR wajib sebelum inisiasi", "Bukan pemicu hipoglikemia"], mechanism: "Menurunkan produksi glukosa hati (glukoneogenesis).", substitutions: [{level:"eGFR<30", text:"Insulin"}] },
-            glimepiride: { name: 'Glimepiride', classId: 'dm', class: 'Sulfonilurea', dose: '1 - 4mg 1x sehari', monitor: 'Gula darah puasa (Awas HIPO)', icon: 'fa-cubes', timing: 'Sebelum Makan', timeVal: 'Tepat sebelum sarapan', reason: 'Merangsang insulin untuk makanan yang akan masuk.', getVerdict: (ctx) => ctx.age>65 ? {status:'danger', text:'HINDARI PADA LANSIA: Risiko hipoglikemia berat tak terduga.'} : {status:'warning', text:'Risiko hipoglikemia tinggi jika telat makan.'}, eval: ["Pastikan pasien edukasi tanda hipoglikemia (keringat dingin)"], mechanism: "Merangsang sekresi insulin paksa dari pankreas.", substitutions: [{level:"Lansia", text:"DPP4-i / Metformin"}] },
+            // === ANTIPLATELET, ANTIKOAGULAN & LIPID ===
+            clopi: { name: 'Clopidogrel', classId: 'antiplatelet', class: 'Anti-Platelet', dose: '75mg 1x sehari', monitor: 'Tanda perdarahan', icon: 'fa-vial', timing: 'Bebas', timeVal: 'Kapan saja', reason: 'Mudah diminum.', getVerdict: () => ({ status: 'safe', text: 'Esensial pasca-Stent (PCI).' }), eval: ["Cek interaksi PPI (Omeprazole)"], mechanism: "Blok reseptor P2Y12 ireversibel.", substitutions: [] },
+            ticagrelor: { name: 'Ticagrelor', classId: 'antiplatelet', class: 'Anti-Platelet Poten', dose: '90mg 2x sehari', monitor: 'Sesak napas, Perdarahan', icon: 'fa-vial', timing: 'Bebas', timeVal: 'Bebas', reason: 'Reversibel P2Y12.', getVerdict: (ctx) => ctx.flags.includes('stroke') ? {status:'danger', text:'KONTRA: Riwayat perdarahan intrakranial.'} : {status:'safe', text:'Lebih poten dari Clopidogrel untuk ACS.'}, eval: ["Bisa memicu efek samping dispnea"], mechanism: "Blok reseptor P2Y12 reversibel.", substitutions: [] },
+            prasugrel: { name: 'Prasugrel', classId: 'antiplatelet', class: 'Anti-Platelet', dose: '10mg 1x sehari', monitor: 'Perdarahan', icon: 'fa-vial', timing: 'Bebas', timeVal: 'Bebas', reason: 'Aksi sangat cepat.', getVerdict: (ctx) => (ctx.flags.includes('stroke') || ctx.age >= 75 || (ctx.weight !== null && ctx.weight < 60)) ? {status:'danger', text:'KONTRA pada riwayat TIA/Stroke, usia >75th, atau BB <60kg.'} : {status:'safe', text:'Sangat efektif paska PCI STEMI.'}, eval: ["Risiko perdarahan tertinggi"], mechanism: "Blok reseptor P2Y12.", substitutions: [] },
+            aspirin: { name: 'Aspirin (Low Dose)', classId: 'antiplatelet', class: 'Anti-Platelet', dose: '80 - 100mg 1x sehari', monitor: 'Gejala lambung', icon: 'fa-vial', timing: 'Sesudah Makan', timeVal: 'Setelah makan', reason: 'Iritasi lambung.', getVerdict: (ctx) => ctx.flags.includes('ulcer') ? {status:'danger', text:'Riwayat tukak: Butuh PPI ekstra.'} : {status:'safe', text:'Prevensi sekunder CAD.'}, eval: ["Waspada asma aspirin"], mechanism: "Inhibitor COX-1 ireversibel.", substitutions: [] },
+            warfarin: { name: 'Warfarin', classId: 'anticoag', class: 'Antikoagulan (VKA)', dose: 'Titrasi Target INR 2-3', monitor: 'INR rutin bulanan', icon: 'fa-vial', timing: 'Malam Hari', timeVal: 'Jam 18.00', reason: 'Konsistensi lab pagi.', getVerdict: (ctx) => ctx.flags.includes('preg') ? { status: 'danger', text: 'TERATOGENIK: Malformasi janin.'} : {status: 'warning', text: 'Interaksi obat & makanan masif.'}, eval: ["Diet sayur stabil"], mechanism: "Antagonis Vit K.", substitutions: [] },
+            rivaroxaban: { name: 'Rivaroxaban', classId: 'anticoag', class: 'DOAC', dose: '15 - 20mg 1x sehari', monitor: 'Fungsi ginjal', icon: 'fa-vial', timing: 'Sesudah Makan', timeVal: 'Bersama makan besar', reason: 'Makanan tingkatkan absorpsi.', getVerdict: (ctx) => (ctx.eGFR>0 && ctx.eGFR<15) ? {status:'danger', text:'KONTRA eGFR < 15.'} : {status:'safe', text:'Aman tanpa cek INR.'}, eval: ["Kontra pada katup mekanik"], mechanism: "Hambat Faktor Xa.", substitutions: [] },
+            apixaban: { name: 'Apixaban', classId: 'anticoag', class: 'DOAC', dose: '5mg 2x sehari', monitor: 'Fungsi Ginjal', icon: 'fa-vial', timing: 'Bebas', timeVal: 'Bebas', reason: 'Absorpsi tidak terpengaruh makanan.', getVerdict: (ctx) => (ctx.eGFR>0 && ctx.eGFR<15) ? {status:'danger', text:'KONTRA eGFR < 15.'} : {status:'safe', text:'DOAC paling aman untuk ginjal eGFR 15-30.'}, eval: ["Dosis 2.5mg jika usia >80, BB <60, atau SCr >1.5"], mechanism: "Hambat Faktor Xa.", substitutions: [] },
+            dabigatran: { name: 'Dabigatran', classId: 'anticoag', class: 'DOAC', dose: '150mg 2x sehari', monitor: 'Fungsi Ginjal, GI bleeding', icon: 'fa-vial', timing: 'Bebas', timeVal: 'Bebas', reason: 'Kapsul jangan dibuka.', getVerdict: (ctx) => (ctx.eGFR>0 && ctx.eGFR<30) ? {status:'danger', text:'KONTRA eGFR < 30 (Sangat bergantung ekskresi ginjal).'} : {status:'warning', text:'Sering memicu dispepsia.'}, eval: ["Ada antidotum idarucizumab"], mechanism: "Hambat Trombin Direk (Faktor IIa).", substitutions: [] },
+            heparin: { name: 'Heparin (UFH)', classId: 'anticoag', class: 'Antikoagulan IV', dose: 'Titration by aPTT', monitor: 'aPTT, Trombosit', icon: 'fa-syringe', timing: 'Bebas', timeVal: 'Infus IV', reason: 'Onset cepat.', getVerdict: () => ({status:'safe', text:'Pilihan utama gagal ginjal berat (ESRD).'}), eval: ["Awas HIT (Heparin Induced Thrombocytopenia)"], mechanism: "Aktivasi Antithrombin III.", substitutions: [] },
+            enoxaparin: { name: 'Enoxaparin (LMWH)', classId: 'anticoag', class: 'Antikoagulan SC', dose: '1mg/kg 2x sehari SC', monitor: 'eGFR', icon: 'fa-syringe', timing: 'Bebas', timeVal: 'Subkutan', reason: 'Mudah digunakan, no aPTT monitor.', getVerdict: (ctx) => (ctx.eGFR>0 && ctx.eGFR<30) ? {status:'warning', text:'GFR <30: Kurangi dosis jadi 1x sehari.'} : {status:'safe', text:'Lini pertama ACS.'}, eval: ["Aman untuk kehamilan"], mechanism: "Inhibisi Faktor Xa via AT III.", substitutions: [] },
+            fondaparinux: { name: 'Fondaparinux', classId: 'anticoag', class: 'Antikoagulan SC', dose: '2.5mg 1x sehari SC', monitor: 'eGFR', icon: 'fa-syringe', timing: 'Bebas', timeVal: 'Subkutan', reason: 'Praktis.', getVerdict: (ctx) => (ctx.eGFR>0 && ctx.eGFR<20) ? {status:'danger', text:'KONTRA MUTLAK GFR <20.'} : {status:'safe', text:'Sangat aman, risiko HIT hampir nol.'}, eval: ["Tidak ada antidotum"], mechanism: "Inhibisi selektif Faktor Xa.", substitutions: [] },
+            atorva: { name: 'Atorvastatin', classId: 'lipid', class: 'Statin', dose: '20 - 40mg 1x sehari', monitor: 'SGPT, Nyeri Otot', icon: 'fa-dna', timing: 'Bebas', timeVal: 'Malam hari', reason: 'Sintesis kolesterol malam.', getVerdict: (ctx) => ctx.flags.includes('liver') ? {status:'danger', text:'KONTRAINDIKASI: Penyakit hati aktif / Sirosis.'} : {status:'safe', text:'Kardioprotektif pleiotropik CAD.'}, eval: ["Miopati"], mechanism: "Hambat HMG-CoA reduktase.", substitutions: [] },
+            rosuvastatin: { name: 'Rosuvastatin', classId: 'lipid', class: 'Statin Kuat', dose: '10 - 20mg 1x sehari', monitor: 'SGPT, Fungsi Ginjal', icon: 'fa-dna', timing: 'Bebas', timeVal: 'Kapan saja', reason: 'T-half panjang.', getVerdict: (ctx) => (ctx.eGFR>0 && ctx.eGFR<30) ? {status:'warning', text:'Batas max 10mg pada gagal ginjal berat.'} : {status:'safe', text:'Statin terkuat untuk menurunkan LDL.'}, eval: ["Awas pada ras Asia (dosis lebih rendah)"], mechanism: "Hambat HMG-CoA reduktase poten.", substitutions: [] },
+            simvastatin: { name: 'Simvastatin', classId: 'lipid', class: 'Statin', dose: '10 - 20mg 1x sehari', monitor: 'SGPT, Otot', icon: 'fa-dna', timing: 'Malam Hari', timeVal: 'Malam hari wajib', reason: 'Waktu paruh pendek.', getVerdict: (ctx) => ctx.flags.includes('liver') ? {status:'danger', text:'KONTRAINDIKASI Liver.'} : {status:'warning', text:'Interaksi CYP3A4 sangat banyak dibanding Atorvastatin.'}, eval: ["Waspada interaksi DDI"], mechanism: "Hambat HMG-CoA reduktase.", substitutions: [{level: "Lebih kuat/aman", text: "Atorvastatin"}] },
+            fenofibrate: { name: 'Fenofibrate', classId: 'lipid', class: 'Fibrat', dose: '145 - 160mg 1x sehari', monitor: 'Fungsi Ginjal', icon: 'fa-dna', timing: 'Bersama Makan', timeVal: 'Bersama makan', reason: 'Absorpsi butuh lemak.', getVerdict: (ctx) => (ctx.eGFR>0 && ctx.eGFR<30) ? {status:'danger', text:'KONTRA eGFR < 30.'} : {status:'safe', text:'Baik untuk Hipertrigliseridemia.'}, eval: ["Paling aman digabung Statin"], mechanism: "Agonis PPAR-alpha.", substitutions: [] },
+            gemfibrozil: { name: 'Gemfibrozil', classId: 'lipid', class: 'Fibrat', dose: '600mg 2x sehari', monitor: 'Otot', icon: 'fa-dna', timing: 'Sebelum Makan', timeVal: '30 mnt sebelum makan', reason: 'Aman untuk absorpsi.', getVerdict: () => ({status:'danger', text:'KONTRA MUTLAK DENGAN STATIN (Rhabdomyolisis).'}), eval: ["Hindari jika ada opsi Fenofibrate"], mechanism: "Agonis PPAR-alpha.", substitutions: [{level:"Aman", text:"Fenofibrate"}] },
+            ezetimibe: { name: 'Ezetimibe', classId: 'lipid', class: 'Absorpsi Kolesterol', dose: '10mg 1x sehari', monitor: 'LDL', icon: 'fa-dna', timing: 'Bebas', timeVal: 'Bebas', reason: 'Aman.', getVerdict: () => ({status:'safe', text:'Sangat aman, adjuvan statin ideal.'}), eval: ["Tidak perlu penyesuaian eGFR"], mechanism: "Inhibisi NPC1L1 usus.", substitutions: [] },
 
-            // Gastro
-            omeprazole: { name: 'Omeprazole (PPI)', classId: 'gastro', class: 'Pelindung Lambung', dose: '20 - 40mg 1x sehari', monitor: 'Gejala dispepsia membaik', icon: 'fa-shield-virus', timing: 'Sebelum Makan', timeVal: '30 mnt sebelum sarapan', reason: 'Perlu diserap sebelum pompa asam aktif makan.', getVerdict: () => ({status:'safe', text:'Aman digunakan jangka pendek.'}), eval: ["Awas interaksi mematikan efikasi Clopidogrel (CYP2C19)"], mechanism: "Inhibitor pompa H+/K+ ATPase ireversibel.", substitutions: [{level:"Pakai Clopi", text:"Lansoprazole / Pantoprazole"}] },
-            lansoprazole: { name: 'Lansoprazole', classId: 'gastro', class: 'PPI Aman Clopi', dose: '30mg 1x sehari', monitor: 'Gejala GI', icon: 'fa-shield-virus', timing: 'Sebelum Makan', timeVal: '30 mnt sebelum sarapan', reason: 'Sama seperti Omeprazole.', getVerdict: () => ({status:'safe', text:'PPI pilihan jika pakai Clopidogrel.'}), eval: ["Aman interaksi"], mechanism: "Sama dengan Omeprazole (Inhibisi CYP lebih ringan).", substitutions: [] },
-            antasida: { name: 'Antasida (Sirup/Tablet)', classId: 'gastro', class: 'Penetral Asam', dose: 'Dikunyah 3x sehari', monitor: 'Jeda obat lain', icon: 'fa-spoon', timing: 'Sebelum Makan', timeVal: '1 jam sebelum atau 2 jam sesudah', reason: 'Menetralkan asam, jangan digabung obat lain.', getVerdict: () => ({status:'warning', text:'Mengganggu absorpsi obat lain secara fisik.'}), eval: ["Wajib jeda 2 jam dengan antibiotik / obat KV"], mechanism: "Kelator basa (AlOH, MgOH).", substitutions: [] },
+            // === ARITMIA ===
+            amiodaron: { name: 'Amiodaron', classId: 'cardio', class: 'Anti-Aritmia Keras', dose: '100 - 200mg 1x sehari', monitor: 'EKG, Tiroid, Paru', icon: 'fa-wave-square', timing: 'Sesudah Makan', timeVal: 'Sesudah makan', reason: 'Memicu mual.', getVerdict: (ctx) => ctx.flags.includes('qt') ? {status:'danger', text:'KONTRA: Memicu Torsades de Pointes (Henti Jantung).'} : {status:'warning', text:'Waktu paruh sangat panjang (mingguan/bulanan).'}, eval: ["Interaksi masif dengan CYP"], mechanism: "Blok K+ channel.", substitutions: [] },
 
-            // Neuro & Lainnya
-            fluoxetine: { name: 'Fluoxetine (SSRI)', classId: 'neuro', class: 'Anti-Depresan', dose: '20mg 1x sehari', monitor: 'Mood, Ide bunuh diri, Tanda perdarahan', icon: 'fa-brain', timing: 'Sesudah Makan', timeVal: 'Pagi hari (bisa bikin melek)', reason: 'Cegah mual.', getVerdict: () => ({status:'warning', text:'Menghambat agregasi platelet (Risiko perdarahan).'}), eval: ["Hati-hati gabungan dengan pengencer darah"], mechanism: "Hambat reuptake Serotonin spesifik.", substitutions: [] },
-            cipro: { name: 'Ciprofloxacin', classId: 'abx', class: 'Antibiotik (Fluorokuinolon)', dose: '500mg 2x sehari', monitor: 'Resolusi infeksi, tendon Achilles', icon: 'fa-bug', timing: 'Sesudah Makan', timeVal: 'Sesudah makan', reason: 'Cegah iritasi lambung.', getVerdict: (ctx) => ctx.flags.includes('qt') ? {status:'danger', text:'BAHAYA: Memperpanjang interval QT signifikan.'} : {status:'warning', text:'Risiko tendinitis.'}, eval: ["Jangan minum bareng susu / antasida"], mechanism: "Hambat DNA gyrase bakteri.", substitutions: [] },
-            garlic: { name: 'Ekstrak Bawang Putih', classId: 'herbal', class: 'Suplemen', dose: '1 kapsul / hari', monitor: 'Memar spontan', icon: 'fa-leaf', timing: 'Sesudah Makan', timeVal: 'Bebas', reason: 'Suplemen.', getVerdict: () => ({status:'warning', text:'Sifat anti-platelet alami cukup kuat.'}), eval: ["Stop 2 minggu sebelum operasi / bedah gigi"], mechanism: "Inhibisi tromboxan alami.", substitutions: [] }
+            // === DIABETES ===
+            metformin: { name: 'Metformin', classId: 'dm', class: 'Biguanid', dose: (ctx) => (ctx.eGFR>0 && ctx.eGFR<=45) ? 'Max 1000 mg/hari' : '500 - 1000mg 2x sehari', monitor: 'eGFR, HbA1c', icon: 'fa-cubes', timing: 'Sesudah Makan', timeVal: 'Tengah makan', reason: 'Cegah diare.', getVerdict: (ctx) => { if(ctx.flags.includes('liver') || ctx.flags.includes('hf')) return {status:'danger', text:'KONTRA: Gagal Hati / HF Akut memicu Asidosis Laktat fatal.'}; if(ctx.eGFR>0 && ctx.eGFR<30) return {status:'danger', text:'KONTRA eGFR<30 (Asidosis Laktat).'}; return {status:'safe', text:'Lini pertama DM.'}; }, eval: ["Tidak memicu Hipo"], mechanism: "Hambat glukoneogenesis.", substitutions: [{level:"eGFR<30", text:"Insulin"}] },
+            empagliflozin: { name: 'Empagliflozin (SGLT2i)', classId: 'dm', class: 'SGLT2 Inhibitor', dose: '10mg 1x sehari', monitor: 'Fungsi Ginjal, ISK', icon: 'fa-cubes', timing: 'Bebas', timeVal: 'Pagi hari', reason: 'Memicu poliuria.', getVerdict: (ctx) => (ctx.eGFR>0 && ctx.eGFR<20) ? {status:'danger', text:'KONTRA eGFR<20.'} : {status:'safe', text:'Sangat direkomendasikan untuk HF (EMPEROR-Reduced).'}, eval: ["Awas Ketoasidosis euglikemik"], mechanism: "Membuang glukosa via urin.", substitutions: [] },
+            dapagliflozin: { name: 'Dapagliflozin (SGLT2i)', classId: 'dm', class: 'SGLT2 Inhibitor', dose: '10mg 1x sehari', monitor: 'Fungsi Ginjal, ISK', icon: 'fa-cubes', timing: 'Bebas', timeVal: 'Pagi hari', reason: 'Memicu poliuria.', getVerdict: (ctx) => (ctx.eGFR>0 && ctx.eGFR<25) ? {status:'danger', text:'KONTRA eGFR<25.'} : {status:'safe', text:'Indikasi kuat untuk HFrEF dan CKD.'}, eval: ["Aman untuk Jantung/Ginjal"], mechanism: "Membuang glukosa via urin.", substitutions: [] },
+            glimepiride: { name: 'Glimepiride', classId: 'dm', class: 'Sulfonilurea', dose: '1 - 4mg 1x sehari', monitor: 'Gula Darah (Awas HIPO)', icon: 'fa-cubes', timing: 'Sebelum Makan', timeVal: 'Tepat sebelum makan', reason: 'Rangsang insulin.', getVerdict: (ctx) => { if(ctx.flags.includes('liver')) return {status:'danger', text:'KONTRA: Memperpanjang waktu paruh, HIPO berat.'}; if(ctx.age>65) return {status:'danger', text:'HINDARI LANSIA: Hipoglikemia berat tak terduga.'}; return {status:'warning', text:'Risiko hipo tinggi jika telat makan.'}; }, eval: ["Edukasi Hipo"], mechanism: "Sekresi insulin paksa.", substitutions: [{level:"Aman Lansia", text:"Sitagliptin / Acarbose"}] },
+            glibenklamid: { name: 'Glibenklamid', classId: 'dm', class: 'Sulfonilurea (Panjang)', dose: '2.5 - 5mg 1x sehari', monitor: 'Gula darah ketat', icon: 'fa-cubes', timing: 'Sebelum Makan', timeVal: 'Sebelum makan', reason: 'Rangsang insulin.', getVerdict: (ctx) => { if(ctx.age>60 || ctx.flags.includes('liver') || (ctx.eGFR>0 && ctx.eGFR<60)) return {status:'danger', text:'KONTRAINDIKASI LANSIA/GAGAL GINJAL: Risiko kematian akibat Hipo sangat tinggi!'}; return {status:'warning', text:'Waktu paruh sangat panjang.'}; }, eval: ["Sangat berbahaya pada lansia"], mechanism: "Sekresi insulin paksa.", substitutions: [] },
+            acarbose: { name: 'Acarbose', classId: 'dm', class: 'Alpha-glucosidase Inhibitor', dose: '50 - 100mg 3x sehari', monitor: 'Kembung/Flatus', icon: 'fa-cubes', timing: 'Bersama Makan', timeVal: 'Suapan pertama makan', reason: 'Bekerja di usus menahan karbo.', getVerdict: () => ({status:'safe', text:'Sangat aman, tidak memicu hipoglikemia.'}), eval: ["Efek samping sering kentut"], mechanism: "Hambat pemecahan karbohidrat di usus.", substitutions: [] },
+            sitagliptin: { name: 'Sitagliptin (DPP-4)', classId: 'dm', class: 'DPP-4 Inhibitor', dose: (ctx) => (ctx.eGFR>0 && ctx.eGFR<50) ? '50 mg 1x sehari' : '100mg 1x sehari', monitor: 'Fungsi ginjal', icon: 'fa-cubes', timing: 'Bebas', timeVal: 'Kapan saja', reason: 'Bebas makanan.', getVerdict: () => ({status:'safe', text:'Aman untuk lansia.'}), eval: ["Penyesuaian eGFR"], mechanism: "Inhibisi DPP-4, tingkatkan inkretin.", substitutions: [] },
+            linagliptin: { name: 'Linagliptin (DPP-4)', classId: 'dm', class: 'DPP-4 Inhibitor', dose: '5mg 1x sehari', monitor: 'Gula Darah', icon: 'fa-cubes', timing: 'Bebas', timeVal: 'Kapan saja', reason: 'Bebas makanan.', getVerdict: () => ({status:'safe', text:'Satu-satunya DPP4i yang aman tanpa penyesuaian ginjal berapapun eGFR.'}), eval: ["Aman untuk ESRD"], mechanism: "Inhibisi DPP-4.", substitutions: [] },
+            pioglitazone: { name: 'Pioglitazone', classId: 'dm', class: 'TZD', dose: '15 - 30mg 1x sehari', monitor: 'Edema, BB', icon: 'fa-cubes', timing: 'Bebas', timeVal: 'Kapan saja', reason: 'Aman.', getVerdict: (ctx) => ctx.flags.includes('hf') ? {status:'danger', text:'KONTRAINDIKASI MUTLAK PADA HF: Retensi cairan hebat.'} : {status:'warning', text:'Awas bengkak perifer.'}, eval: ["Meningkatkan sensitivitas insulin"], mechanism: "Agonis PPAR-gamma.", substitutions: [] },
+            semaglutide: { name: 'Semaglutide (GLP-1 RA)', classId: 'dm', class: 'GLP-1 RA', dose: 'Titrasi SC Mingguan', monitor: 'GI, Gula', icon: 'fa-syringe', timing: 'Bebas', timeVal: '1x Seminggu', reason: 'Panjang T-half.', getVerdict: () => ({status:'safe', text:'Sangat poten menurunkan kardiovaskular & BB.'}), eval: ["Efek mual kuat di awal"], mechanism: "Agonis reseptor GLP-1.", substitutions: [] },
+            insulin: { name: 'Insulin (NPH / Reg)', classId: 'dm', class: 'Insulin', dose: 'Titrasi individual (Unit)', monitor: 'Gula Darah Ketat', icon: 'fa-syringe', timing: 'Sesuai Jenis', timeVal: 'Malam (NPH) / Pradiabetes (Reg)', reason: 'Mengganti insulin tubuh.', getVerdict: () => ({status:'warning', text:'Risiko hipoglikemia absolut tinggi, wajib edukasi.'}), eval: ["Aman untuk semua eGFR"], mechanism: "Aktivasi reseptor insulin selular.", substitutions: [] },
+
+            // === GASTRO ===
+            omeprazole: { name: 'Omeprazole (PPI)', classId: 'gastro', class: 'Pelindung Lambung', dose: '20 - 40mg 1x sehari', monitor: 'Gejala lambung', icon: 'fa-shield-virus', timing: 'Sebelum Makan', timeVal: '30 mnt sebelum', reason: 'Serapan awal.', getVerdict: (ctx) => ctx.flags.includes('liver') ? {status:'warning', text:'Sirosis: Turunkan dosis 50%.'} : {status:'safe', text:'Aman jangka pendek.'}, eval: ["Interaksi mematikan Clopidogrel (CYP2C19)"], mechanism: "Inhibitor pompa proton.", substitutions: [] },
+            lansoprazole: { name: 'Lansoprazole (PPI)', classId: 'gastro', class: 'PPI', dose: '30mg 1x sehari', monitor: 'Gejala GI', icon: 'fa-shield-virus', timing: 'Sebelum Makan', timeVal: '30 mnt sebelum', reason: 'Serapan awal.', getVerdict: () => ({status:'safe', text:'Aman digabung Clopidogrel.'}), eval: ["Aman interaksi"], mechanism: "Inhibitor PPI.", substitutions: [] },
+            pantoprazole: { name: 'Pantoprazole (PPI)', classId: 'gastro', class: 'PPI', dose: '40mg 1x sehari / IV', monitor: 'Gejala GI', icon: 'fa-shield-virus', timing: 'Sebelum Makan', timeVal: '30 mnt sebelum', reason: 'Serapan awal.', getVerdict: () => ({status:'safe', text:'Paling minim interaksi CYP dari semua PPI.'}), eval: ["Aman interaksi"], mechanism: "Inhibitor pompa proton.", substitutions: [] },
+            esomeprazole: { name: 'Esomeprazole (PPI)', classId: 'gastro', class: 'PPI', dose: '20-40mg 1x sehari / IV', monitor: 'Gejala GI', icon: 'fa-shield-virus', timing: 'Sebelum Makan', timeVal: '30 mnt sebelum', reason: 'Serapan awal.', getVerdict: () => ({status:'safe', text:'Poten untuk GERD erosif.'}), eval: ["Aman"], mechanism: "Inhibitor pompa proton.", substitutions: [] },
+            ranitidine: { name: 'Ranitidine (H2B)', classId: 'gastro', class: 'H2 Blocker', dose: '150mg 2x sehari', monitor: 'Fungsi Ginjal', icon: 'fa-shield-virus', timing: 'Bebas', timeVal: 'Kapan saja', reason: 'Bebas.', getVerdict: (ctx) => (ctx.eGFR>0 && ctx.eGFR<50) ? {status:'warning', text:'Kurangi dosis GFR<50.'} : {status:'safe', text:'Aman (Catatan: ditarik di bbrp negara krn NDMA).'}, eval: ["Penyesuaian eGFR"], mechanism: "Blok Reseptor Histamin H2 lambung.", substitutions: [] },
+            famotidine: { name: 'Famotidine (H2B)', classId: 'gastro', class: 'H2 Blocker', dose: '20mg 2x sehari', monitor: 'Fungsi Ginjal', icon: 'fa-shield-virus', timing: 'Bebas', timeVal: 'Kapan saja', reason: 'Bebas.', getVerdict: (ctx) => (ctx.eGFR>0 && ctx.eGFR<50) ? {status:'warning', text:'Kurangi dosis GFR<50.'} : {status:'safe', text:'Lebih poten dari Ranitidine.'}, eval: ["Aman"], mechanism: "Blok Reseptor H2.", substitutions: [] },
+            antasida: { name: 'Antasida', classId: 'gastro', class: 'Penetral Asam', dose: 'Dikunyah 3x sehari', monitor: 'Jeda obat', icon: 'fa-spoon', timing: 'Sebelum Makan', timeVal: '1 jam sebelum', reason: 'Cegah interaksi fisik.', getVerdict: () => ({status:'warning', text:'MENGGANGGU ABSORPSI OBAT LAIN.'}), eval: ["Wajib jeda 2 jam"], mechanism: "Kelator basa.", substitutions: [] },
+            sukralfat: { name: 'Sukralfat', classId: 'gastro', class: 'Sitoprotektan', dose: '1g 3-4x sehari', monitor: 'Konstipasi', icon: 'fa-shield-virus', timing: 'Sebelum Makan', timeVal: '1 jam sebelum', reason: 'Melapisi tukak saat kosong.', getVerdict: () => ({status:'warning', text:'Mengganggu penyerapan banyak obat (Kelasi).'}), eval: ["Jeda 2 jam dengan obat lain"], mechanism: "Melapisi ulkus mukosa.", substitutions: [] },
+            domperidon: { name: 'Domperidon', classId: 'gastro', class: 'Anti-emetik', dose: '10mg 3x sehari', monitor: 'EKG', icon: 'fa-hand-holding-water', timing: 'Sebelum Makan', timeVal: '15 mnt sebelum', reason: 'Mempercepat pengosongan.', getVerdict: (ctx) => ctx.flags.includes('qt') ? {status:'danger', text:'KONTRA: Perpanjangan QT.'} : {status:'safe', text:'Aman untuk lansia dibanding Metoklopramid.'}, eval: ["Max 30 mg/hari"], mechanism: "Blok Dopamin D2 perifer.", substitutions: [] },
+            ondansetron: { name: 'Ondansetron', classId: 'gastro', class: 'Anti-emetik Kuat', dose: '4-8mg 2-3x sehari', monitor: 'EKG', icon: 'fa-hand-holding-water', timing: 'Bebas', timeVal: 'Saat Mual', reason: 'Efek sentral.', getVerdict: (ctx) => ctx.flags.includes('qt') ? {status:'danger', text:'KONTRA: Prolonged QT.'} : {status:'safe', text:'Sangat efektif.'}, eval: ["Waspada QT"], mechanism: "Blok Serotonin 5HT3.", substitutions: [] },
+            metoklopramid: { name: 'Metoklopramid', classId: 'gastro', class: 'Prokinetik', dose: '10mg 3x sehari', monitor: 'Kaku otot (EPS)', icon: 'fa-hand-holding-water', timing: 'Sebelum Makan', timeVal: '30 mnt sebelum makan', reason: 'Percepat motilitas.', getVerdict: (ctx) => { if(ctx.age > 65) return {status:'danger', text:'KONTRAINDIKASI LANSIA: Memicu Parkinsonisme / tremor.'}; return {status:'warning', text:'Maksimal 5 hari.'}; }, eval: ["Awas interaksi QT"], mechanism: "Blok Dopamin D2 sentral.", substitutions: [{level:"Aman Lansia", text:"Domperidon"}] },
+            loperamide: { name: 'Loperamide', classId: 'gastro', class: 'Anti-Diare', dose: '2mg tiap mencret', monitor: 'Konstipasi', icon: 'fa-tablets', timing: 'Bebas', timeVal: 'Setiap habis mencret', reason: 'Menekan usus.', getVerdict: () => ({status:'warning', text:'KONTRAINDIKASI pada diare berdarah / demam tinggi.'}), eval: ["Stop jika tidak diare"], mechanism: "Agonis opioid usus lokal.", substitutions: [] },
+            laktulosa: { name: 'Laktulosa', classId: 'gastro', class: 'Pencahar Osmotik', dose: '15-30ml 1x sehari', monitor: 'Efek', icon: 'fa-tablets', timing: 'Bebas', timeVal: 'Pagi hari', reason: 'Kerja di usus besar.', getVerdict: () => ({status:'safe', text:'Aman untuk liver (Hepatic encephalopathy).'}), eval: ["Bisa memicu kembung"], mechanism: "Menarik air ke usus.", substitutions: [] },
+            bisakodil: { name: 'Bisakodil', classId: 'gastro', class: 'Pencahar Stimulan', dose: '5-10mg 1x malam', monitor: 'Kram Perut', icon: 'fa-tablets', timing: 'Malam Hari', timeVal: 'Malam sebelum tidur', reason: 'Kerja 8 jam.', getVerdict: () => ({status:'warning', text:'Jangan rutin jangka panjang.'}), eval: ["Aman pendek"], mechanism: "Stimulasi usus langsung.", substitutions: [] },
+            oralit: { name: 'Oralit', classId: 'gastro', class: 'Garam Rehidrasi', dose: '1 sachet tiap mencret', monitor: 'Tanda vital', icon: 'fa-glass-water', timing: 'Bebas', timeVal: 'Setiap habis mencret', reason: 'Ganti cairan.', getVerdict: (ctx) => ctx.flags.includes('hf') ? {status:'warning', text:'Tinggi Natrium, awas perburukan sesak pada HF.'} : {status:'safe', text:'Aman.'}, eval: ["Campur 200ml air matang"], mechanism: "Rehidrasi.", substitutions: [] },
+            zinc: { name: 'Zinc (Seng)', classId: 'gastro', class: 'Suplemen Diare', dose: '20mg 1x sehari', monitor: 'Diare', icon: 'fa-leaf', timing: 'Bebas', timeVal: 'Pagi hari', reason: 'Regenerasi usus.', getVerdict: () => ({status:'safe', text:'Lanjutkan 10 hari wajib.'}), eval: ["Menghambat serapan antibiotik tertentu"], mechanism: "Regenerasi epitel usus.", substitutions: [] },
+
+            // === NEURO & PSIKIATRI ===
+            fluoxetine: { name: 'Fluoxetine (SSRI)', classId: 'neuro', class: 'Anti-Depresan', dose: '20mg 1x sehari', monitor: 'Mood, Perdarahan', icon: 'fa-brain', timing: 'Sesudah Makan', timeVal: 'Pagi hari', reason: 'Bikin melek.', getVerdict: () => ({status:'warning', text:'Hambat agregasi platelet (Memar).'}), eval: ["Awas pengencer darah"], mechanism: "Hambat reuptake Serotonin.", substitutions: [] },
+            sertraline: { name: 'Sertraline (SSRI)', classId: 'neuro', class: 'Anti-Depresan', dose: '50mg 1x sehari', monitor: 'Mood', icon: 'fa-brain', timing: 'Sesudah Makan', timeVal: 'Pagi', reason: 'Bikin melek.', getVerdict: () => ({status:'safe', text:'SSRI pilihan terbaik untuk pasien pasca ACS/Serangan Jantung.'}), eval: ["Kardioprotektif relatif"], mechanism: "Hambat reuptake Serotonin.", substitutions: [] },
+            escitalopram: { name: 'Escitalopram (SSRI)', classId: 'neuro', class: 'Anti-Depresan', dose: '10mg 1x sehari', monitor: 'EKG', icon: 'fa-brain', timing: 'Bebas', timeVal: 'Pagi', reason: 'Toleransi baik.', getVerdict: (ctx) => ctx.flags.includes('qt') ? {status:'danger', text:'Paling berisiko QT prolongation dibanding SSRI lain.'} : {status:'safe', text:'Sangat efektif dan efek samping GI minimal.'}, eval: ["Awas QT Prolong"], mechanism: "Hambat reuptake Serotonin.", substitutions: [] },
+            amitriptyline: { name: 'Amitriptyline (TCA)', classId: 'neuro', class: 'Anti-Depresan', dose: '25mg 1x malam', monitor: 'EKG, Mulut Kering', icon: 'fa-brain', timing: 'Malam Hari', timeVal: 'Malam', reason: 'Sangat sedatif.', getVerdict: (ctx) => { if(ctx.flags.includes('qt')) return {status:'danger', text:'KONTRA: Memperburuk QT/Aritmia.'}; if(ctx.age>65) return {status:'danger', text:'BEERS CRITERIA: Antikolinergik kuat pada lansia.'}; return {status:'warning', text:'Sedatif kuat.'}; }, eval: ["Bahaya kardio"], mechanism: "TCA, hambat NET/SERT.", substitutions: [] },
+            pregabalin: { name: 'Pregabalin', classId: 'neuro', class: 'Antikonvulsan / Nyeri', dose: '75mg 2x sehari', monitor: 'Edema, Ginjal', icon: 'fa-brain', timing: 'Bebas', timeVal: 'Bebas', reason: 'Neuropati.', getVerdict: (ctx) => (ctx.eGFR>0 && ctx.eGFR<60) ? {status:'warning', text:'Kurangi dosis pada CKD.'} : {status:'safe', text:'Sangat bagus untuk nyeri neuropati DM.'}, eval: ["Dapat memicu bengkak kaki"], mechanism: "Blok kanal kalsium alpha-2-delta.", substitutions: [] },
+            gabapentin: { name: 'Gabapentin', classId: 'neuro', class: 'Antikonvulsan / Nyeri', dose: '300mg 3x sehari', monitor: 'Ginjal, Sedasi', icon: 'fa-brain', timing: 'Bebas', timeVal: 'Bebas', reason: 'Toleransi SSP.', getVerdict: (ctx) => (ctx.eGFR>0 && ctx.eGFR<60) ? {status:'warning', text:'Sangat bergantung ginjal, wajib kurangi dosis.'} : {status:'safe', text:'Aman.'}, eval: ["Dosis titrasi naik"], mechanism: "Blok kanal kalsium.", substitutions: [] },
+            phenytoin: { name: 'Phenytoin', classId: 'neuro', class: 'Antiepilepsi', dose: '100mg 3x sehari', monitor: 'Kadar Obat, Gusi', icon: 'fa-brain', timing: 'Sesudah Makan', timeVal: 'Sesudah makan', reason: 'Iritasi.', getVerdict: () => ({status:'danger', text:'INDEKS SEMPIT & ENZYME INDUCER: Mengacaukan kadar banyak obat.'}), eval: ["Hiperplasia gusi"], mechanism: "Blok kanal Na+.", substitutions: [] },
+            valproate: { name: 'Asam Valproat', classId: 'neuro', class: 'Antiepilepsi', dose: '500mg 2x sehari', monitor: 'Fungsi Hati, Trombosit', icon: 'fa-brain', timing: 'Sesudah Makan', timeVal: 'Sesudah makan', reason: 'Mual.', getVerdict: (ctx) => ctx.flags.includes('preg') ? {status:'danger', text:'TERATOGENIK MUTLAK: Neural tube defects.'} : {status:'warning', text:'Hepatotoksik.'}, eval: ["Aman untuk jantung"], mechanism: "Tingkatkan GABA.", substitutions: [] },
+            levetiracetam: { name: 'Levetiracetam', classId: 'neuro', class: 'Antiepilepsi', dose: '500mg 2x sehari', monitor: 'Fungsi Ginjal, Mood', icon: 'fa-brain', timing: 'Bebas', timeVal: 'Bebas', reason: 'Toleransi baik.', getVerdict: (ctx) => (ctx.eGFR>0 && ctx.eGFR<50) ? {status:'warning', text:'Turunkan dosis pada CKD.'} : {status:'safe', text:'Paling minim interaksi DDI dari semua obat kejang.'}, eval: ["Minim interaksi hati"], mechanism: "Ikat protein SV2A vesikel.", substitutions: [] },
+            haloperidol: { name: 'Haloperidol', classId: 'neuro', class: 'Antipsikotik', dose: '0.5 - 5mg 2x', monitor: 'EKG, EPS', icon: 'fa-brain', timing: 'Bebas', timeVal: 'Bebas', reason: 'Psikiatri.', getVerdict: (ctx) => ctx.flags.includes('qt') ? {status:'danger', text:'KONTRA: QT Prolongation fatal.'} : {status:'warning', text:'Awas efek ekstrapiramidal.'}, eval: ["Monitor EKG"], mechanism: "Blok Dopamin D2.", substitutions: [] },
+            diazepam: { name: 'Diazepam', classId: 'neuro', class: 'Benzodiazepin', dose: '2 - 5mg 2x', monitor: 'Sedasi, Napas', icon: 'fa-brain', timing: 'Bebas', timeVal: 'Malam', reason: 'Tidur.', getVerdict: (ctx) => ctx.age>65 ? {status:'danger', text:'BEERS CRITERIA: Akumulasi panjang pada lansia, risiko jatuh.'} : {status:'warning', text:'Risiko adiksi.'}, eval: ["Bukan untuk insom ringan"], mechanism: "Fasilitasi GABA-A.", substitutions: [] },
+            alprazolam: { name: 'Alprazolam', classId: 'neuro', class: 'Benzodiazepin', dose: '0.5 - 1mg 2x', monitor: 'Sedasi', icon: 'fa-brain', timing: 'Bebas', timeVal: 'Bebas', reason: 'Cemas.', getVerdict: (ctx) => ctx.age>65 ? {status:'danger', text:'BEERS: Risiko jatuh tinggi.'} : {status:'warning', text:'Waktu paruh pendek, risiko withdrawal tinggi.'}, eval: ["Potensi adiksi sangat tinggi"], mechanism: "Fasilitasi GABA-A.", substitutions: [] },
+
+            // === ANTIBIOTIK ===
+            cipro: { name: 'Ciprofloxacin', classId: 'abx', class: 'Fluorokuinolon', dose: '500mg 2x sehari', monitor: 'Tendon, EKG', icon: 'fa-bug', timing: 'Sesudah Makan', timeVal: 'Sesudah', reason: 'Iritasi lambung.', getVerdict: (ctx) => ctx.flags.includes('qt') ? {status:'danger', text:'BAHAYA: QT Prolongation.'} : {status:'warning', text:'Risiko tendinitis.'}, eval: ["Jangan bareng Antasida/Susu"], mechanism: "Hambat DNA gyrase.", substitutions: [] },
+            levofloxacin: { name: 'Levofloxacin', classId: 'abx', class: 'Fluorokuinolon', dose: '500mg 1x sehari', monitor: 'Tendon, EKG, Gula Darah', icon: 'fa-bug', timing: 'Bebas', timeVal: 'Perut kosong/Bebas', reason: 'Absorpsi baik.', getVerdict: (ctx) => ctx.flags.includes('qt') ? {status:'danger', text:'BAHAYA: Sangat aritmogenik (QT Prolongation).'} : {status:'warning', text:'Awas hipo/hiperglikemia pada DM dan ruptur tendon.'}, eval: ["Jangan minum bersama antasida/susu", "Penyesuaian eGFR ketat"], mechanism: "Hambat topoisomerase bakteri.", substitutions: [{level:"Aman Kardio", text:"Cefixime/Azithromycin"}] },
+            amoksisilin: { name: 'Amoksisilin', classId: 'abx', class: 'Penisilin', dose: '500mg 3x sehari', monitor: 'Alergi', icon: 'fa-bug', timing: 'Sesudah Makan', timeVal: 'Sesudah', reason: 'Toleransi GI.', getVerdict: () => ({status:'safe', text:'Aman umum.'}), eval: ["Tanya alergi penisilin"], mechanism: "Hambat dinding sel.", substitutions: [] },
+            cotrim: { name: 'Cotrimoxazole', classId: 'abx', class: 'Sulfonamid', dose: '960mg 2x sehari', monitor: 'Ginjal, Kulit', icon: 'fa-bug', timing: 'Sesudah Makan', timeVal: 'Sesudah', reason: 'Iritasi.', getVerdict: (ctx) => ctx.flags.includes('preg') ? {status:'danger', text:'KONTRA Trimester 1 (Antifolat) & 3 (Kern Ikterus).'} : {status:'warning', text:'Interaksi tinggi.'}, eval: ["Awas alergi sulfa"], mechanism: "Hambat sintesis folat.", substitutions: [] },
+            metro: { name: 'Metronidazole', classId: 'abx', class: 'Nitroimidazol', dose: '500mg 3x sehari', monitor: 'Saraf, GI', icon: 'fa-bug', timing: 'Sesudah Makan', timeVal: 'Sesudah', reason: 'Bikin mual.', getVerdict: () => ({status:'warning', text:'Kontra mutlak alkohol (Disulfiram effect).'}), eval: ["Urine gelap"], mechanism: "Kerusakan DNA parasit/anaerob.", substitutions: [] },
+            rifampisin: { name: 'Rifampisin', classId: 'abx', class: 'OAT (Anti-TB)', dose: '450 - 600mg 1x sehari', monitor: 'Fungsi hati', icon: 'fa-bug', timing: 'Sebelum Makan', timeVal: 'Pagi perut kosong', reason: 'Absorpsi turun dengan makan.', getVerdict: () => ({status:'danger', text:'ENZYME INDUCER MASIF: Menghancurkan level obat kardiovaskular lain di darah!'}), eval: ["Urine merah"], mechanism: "Inhibisi RNA Polimerase.", substitutions: [] },
+            azithromycin: { name: 'Azithromycin', classId: 'abx', class: 'Makrolida', dose: '500mg 1x sehari', monitor: 'EKG', icon: 'fa-bug', timing: 'Bebas', timeVal: 'Kapan saja', reason: 'Praktis.', getVerdict: (ctx) => ctx.flags.includes('qt') ? {status:'danger', text:'KONTRA: Sangat aritmogenik.'} : {status:'safe', text:'Aman.'}, eval: ["Awas interaksi QT"], mechanism: "Inhibisi Ribosom 50S.", substitutions: [] },
+            doxycycline: { name: 'Doxycycline', classId: 'abx', class: 'Tetrasiklin', dose: '100mg 2x sehari', monitor: 'Lambung', icon: 'fa-bug', timing: 'Sesudah Makan', timeVal: 'Sesudah', reason: 'Iritasi.', getVerdict: (ctx) => ctx.flags.includes('preg') ? {status:'danger', text:'KONTRA: Merusak gigi/tulang janin.'} : {status:'safe', text:'Aman ginjal.'}, eval: ["Jangan bareng Antasida/Susu"], mechanism: "Inhibisi Ribosom 30S.", substitutions: [] },
+            ceftriaxone: { name: 'Ceftriaxone', classId: 'abx', class: 'Sefalosporin Gen-3', dose: '1-2g Injeksi/hari', monitor: 'Alergi', icon: 'fa-syringe', timing: 'Bebas', timeVal: 'IV', reason: 'Parenteral.', getVerdict: () => ({status:'safe', text:'Spektrum luas, tidak perlu penyesuaian ginjal.'}), eval: ["Aman ginjal"], mechanism: "Hambat dinding sel.", substitutions: [] },
+            cefixime: { name: 'Cefixime', classId: 'abx', class: 'Sefalosporin Gen-3', dose: '100-200mg 2x sehari', monitor: 'Alergi, Ginjal', icon: 'fa-bug', timing: 'Sesudah Makan', timeVal: 'Sesudah makan', reason: 'Cegah iritasi lambung.', getVerdict: (ctx) => (ctx.eGFR>0 && ctx.eGFR<20) ? {status:'warning', text:'Turunkan dosis 50% pada GFR <20.'} : {status:'safe', text:'Spektrum luas gram negatif.'}, eval: ["Awas resistensi"], mechanism: "Hambat sintesis dinding sel bakteri.", substitutions: [] },
+            isoniazid: { name: 'Isoniazid (INH)', classId: 'abx', class: 'OAT (Anti-TB)', dose: '5mg/kgBB 1x sehari', monitor: 'SGPT, Gejala neuropati', icon: 'fa-lungs', timing: 'Sebelum Makan', timeVal: 'Perut kosong', reason: 'Absorpsi terganggu makanan.', getVerdict: (ctx) => ctx.flags.includes('liver') ? {status:'danger', text:'KONTRA: Sangat hepatotoksik.'} : {status:'warning', text:'Memicu neuropati perifer (Wajib Vit B6).'}, eval: ["Monitor tanda ikterus (kuning)"], mechanism: "Hambat sintesis dinding sel TB.", substitutions: [] },
+
+            // === RESPIRASI / PILEK / ISPA ===
+            salbutamol: { name: 'Salbutamol', classId: 'respirasi', class: 'Beta-2 Agonis', dose: '2-4mg oral / Inhaler', monitor: 'Nadi, Gula, Tremor', icon: 'fa-lungs', timing: 'Bebas', timeVal: 'Saat sesak', reason: 'Kerja cepat.', getVerdict: (ctx) => { if(ctx.flags.includes('hf') || ctx.flags.includes('ht')) return {status:'warning', text:'Memicu takikardia.'}; return {status:'safe', text:'Pelega nafas utama.'}; }, eval: ["Awas tremor"], mechanism: "Stimulasi Beta-2 bronkus.", substitutions: [] },
+            salmeterol: { name: 'Salmeterol', classId: 'respirasi', class: 'LABA (Inhaler)', dose: '50mcg 2x sehari', monitor: 'Napas', icon: 'fa-lungs', timing: 'Bebas', timeVal: 'Pagi & Malam', reason: 'Kerja panjang 12 jam.', getVerdict: () => ({status:'safe', text:'Pengontrol asma, bukan untuk serangan akut.'}), eval: ["Harus dengan kortikosteroid inhalasi"], mechanism: "Stimulasi Beta-2 panjang.", substitutions: [] },
+            budesonide: { name: 'Budesonide (ICS)', classId: 'respirasi', class: 'Kortikosteroid Inhalasi', dose: '200-400mcg 2x sehari', monitor: 'Jamur Mulut', icon: 'fa-lungs', timing: 'Bebas', timeVal: 'Pagi & Malam', reason: 'Terapis maintenance.', getVerdict: () => ({status:'safe', text:'Sangat aman, efek sistemik sangat kecil.'}), eval: ["Wajib kumur setelah pakai"], mechanism: "Supresi inflamasi lokal paru.", substitutions: [] },
+            tiotropium: { name: 'Tiotropium', classId: 'respirasi', class: 'LAMA (Inhaler)', dose: '18mcg 1x sehari', monitor: 'Urin, Mata', icon: 'fa-lungs', timing: 'Bebas', timeVal: 'Pagi hari', reason: 'Bronkodilator 24 jam.', getVerdict: () => ({status:'safe', text:'Terapi utama PPOK.'}), eval: ["Antikolinergik, awas retensi urin/glaukoma"], mechanism: "Blok Reseptor Muskarinik paru.", substitutions: [] },
+            deksametason: { name: 'Deksametason', classId: 'respirasi', class: 'Kortikosteroid', dose: '0.5 - 1.5mg', monitor: 'Gula, Tensi, Lambung', icon: 'fa-lungs', timing: 'Sesudah Makan', timeVal: 'Pagi', reason: 'Ikut ritme sirkadian.', getVerdict: (ctx) => { if(ctx.flags.includes('dm') || ctx.flags.includes('ht') || ctx.flags.includes('hf')) return {status:'danger', text:'HINDARI: Memperburuk DM, Tensi, dan retensi air HF.'}; return {status:'warning', text:'Banyak efek samping.'}; }, eval: ["Jangan tapering off mendadak"], mechanism: "Supresi inflamasi masif.", substitutions: [] },
+            pseudoefedrin: { name: 'Pseudoefedrin', classId: 'respirasi', class: 'Dekongestan (Oral)', dose: '30-60mg 3-4x', monitor: 'TD, Nadi', icon: 'fa-head-side-cough', timing: 'Bebas', timeVal: 'Siang', reason: 'Bikin insomnia.', getVerdict: (ctx) => (ctx.flags.includes('ht') || ctx.flags.includes('hf') || ctx.flags.includes('vasc')) ? {status:'danger', text:'KONTRAINDIKASI KARDIO: Vasokonstriksi parah, menaikkan tensi & beban jantung!'} : {status:'warning', text:'Stimulan kuat.'}, eval: ["Banyak di obat flu warung"], mechanism: "Agonis Alpha & Beta adrenergik.", substitutions: [] },
+            dextromethorphan: { name: 'Dextromethorphan (DMP)', classId: 'respirasi', class: 'Antitusif', dose: '15mg 3x', monitor: 'Napas', icon: 'fa-head-side-cough', timing: 'Bebas', timeVal: 'Saat batuk', reason: 'Sentral.', getVerdict: () => ({status: 'safe', text: 'Aman untuk jantung.'}), eval: ["Awas interaksi SSP"], mechanism: "Supresi pusat batuk.", substitutions: [] },
+            nac: { name: 'N-Acetylcysteine (NAC)', classId: 'respirasi', class: 'Mukolitik / Antioksidan', dose: '200mg 3x sehari', monitor: 'Dahak', icon: 'fa-lungs', timing: 'Sesudah Makan', timeVal: 'Sesudah makan', reason: 'Aman GI.', getVerdict: () => ({status:'safe', text:'Aman kardiovaskular.'}), eval: ["Bisa untuk antidotum toksisitas parasetamol", "Proteksi ginjal dari kontras"], mechanism: "Pecah ikatan disulfida mukus.", substitutions: [] },
+            ambroxol: { name: 'Ambroxol', classId: 'respirasi', class: 'Mukolitik', dose: '30mg 3x', monitor: 'Lambung', icon: 'fa-lungs', timing: 'Sesudah Makan', timeVal: 'Sesudah', reason: 'Iritasi GI ringan.', getVerdict: () => ({status:'safe', text:'Aman.'}), eval: ["Aman umum"], mechanism: "Pecah serat dahak.", substitutions: [] },
+
+            // === ANTIHISTAMIN ===
+            loratadin: { name: 'Loratadin', classId: 'neuro', class: 'Antihistamin Non-Sedatif', dose: '10mg 1x', monitor: 'Alergi', icon: 'fa-allergies', timing: 'Bebas', timeVal: 'Pagi', reason: 'Panjang T1/2.', getVerdict: () => ({ status: 'safe', text: 'Aman lansia.' }), eval: ['Aman kehamilan'], mechanism: 'Blok H1 perifer.', substitutions: [] },
+            cetirizin: { name: 'Cetirizine', classId: 'neuro', class: 'Antihistamin Non-Sedatif', dose: '10mg 1x', monitor: 'Alergi', icon: 'fa-allergies', timing: 'Malam Hari', timeVal: 'Malam', reason: 'Sedasi ringan.', getVerdict: (ctx) => (ctx.eGFR>0 && ctx.eGFR<30) ? { status: 'warning', text: 'Kurangi dosis GFR<30.' } : { status: 'safe', text: 'Aman.' }, eval: ['Penyesuaian ginjal'], mechanism: 'Blok H1 selektif.', substitutions: [] },
+            ctm: { name: 'Klorfeniramin (CTM)', classId: 'neuro', class: 'Antihistamin Gen-1', dose: '4mg 3x', monitor: 'Sedasi', icon: 'fa-allergies', timing: 'Sesudah Makan', timeVal: 'Sesudah', reason: 'GI iritan.', getVerdict: (ctx) => ctx.age > 65 ? { status: 'danger', text: 'HINDARI LANSIA (Beers Criteria).' } : { status: 'warning', text: 'Sedatif.' }, eval: ['Antikolinergik'], mechanism: 'Blok H1 + Muskarinik.', substitutions: [{level:"Aman", text:"Loratadin"}] },
+
+            // === SUPLEMEN & LAINNYA ===
+            allopurinol: { name: 'Allopurinol', classId: 'herbal', class: 'Penurun Asam Urat', dose: '100-300mg 1x sehari', monitor: 'Asam Urat, Kulit, Ginjal', icon: 'fa-leaf', timing: 'Sesudah Makan', timeVal: 'Sesudah makan', reason: 'Cegah mual.', getVerdict: (ctx) => (ctx.eGFR>0 && ctx.eGFR<30) ? {status:'warning', text:'Dosis max 100mg pada GFR <30.'} : {status:'safe', text:'Aman.'}, eval: ["Jangan dimulai saat serangan akut", "Awas Stevens-Johnson Syndrome"], mechanism: "Hambat Xanthine Oxidase.", substitutions: [] },
+            colchicine: { name: 'Colchicine', classId: 'herbal', class: 'Anti-Gout Akut', dose: '0.5mg 2x sehari', monitor: 'Diare', icon: 'fa-leaf', timing: 'Bebas', timeVal: 'Bebas', reason: 'Serangan akut.', getVerdict: (ctx) => (ctx.eGFR>0 && ctx.eGFR<30) ? {status:'danger', text:'KONTRA eGFR <30.'} : {status:'warning', text:'Indeks terapeutik sempit, toksisitas fatal.'}, eval: ["Diare adalah tanda awal toksisitas"], mechanism: "Hambat migrasi leukosit.", substitutions: [] },
+            fe: { name: 'Suplemen Besi (FeSO4)', classId: 'herbal', class: 'Mineral', dose: '60mg 1x', monitor: 'Anemia, Feses Hitam', icon: 'fa-leaf', timing: 'Perut Kosong', timeVal: '1 jam sebelum makan', reason: 'Butuh asam untuk serap.', getVerdict: () => ({status:'warning', text:'Sangat mengiritasi lambung, kelasi dengan banyak obat.'}), eval: ["Feses jadi hitam normal"], mechanism: "Ganti cadangan besi.", substitutions: [] },
+            vit_b_complex: { name: 'Vitamin B Complex', classId: 'herbal', class: 'Vitamin', dose: '1 tab 1x sehari', monitor: '-', icon: 'fa-leaf', timing: 'Bebas', timeVal: 'Bebas', reason: 'Saraf.', getVerdict: () => ({status:'safe', text:'Sangat aman.'}), eval: ["Urine kuning pekat"], mechanism: "Kofaktor sel.", substitutions: [] },
+            vit_c: { name: 'Vitamin C', classId: 'herbal', class: 'Vitamin', dose: '50-500mg 1x sehari', monitor: 'Lambung', icon: 'fa-leaf', timing: 'Sesudah Makan', timeVal: 'Sesudah', reason: 'Cegah maag.', getVerdict: (ctx) => ctx.flags.includes('ulcer') ? {status:'warning', text:'Awas iritasi lambung.'} : {status:'safe', text:'Aman.'}, eval: ["Hindari dosis besar saat gagal ginjal"], mechanism: "Antioksidan.", substitutions: [] }
         };
 
+        // --- STREAMING_CHUNK:Defining Drug Interaction Rules... ---
         const INTERACTIONS = [
-            // TRIPLE WHAMMY (Severe Renal Risk)
-            { drugs: ['capto', 'furosemide', 'ibuprofen'], severity: 'high', title: 'Triple Whammy (Gagal Ginjal)', desc: 'Kombinasi mematikan untuk ginjal: ACEi (dilatasi eferen) + Diuretik (dehidrasi) + NSAID (konstriksi aferen) = Laju filtrasi (GFR) anjlok.', recommendation: 'HENTIKAN NSAID. Gunakan PCT atau rehidrasi segera.' },
-            { drugs: ['valsartan', 'spiro', 'meloxicam'], severity: 'high', title: 'Triple Whammy & Hiperkalemia', desc: 'Sama seperti Triple Whammy, ditambah risiko kalium darah meroket (Spiro + ARB).', recommendation: 'HENTIKAN NSAID mutlak.' },
+            // Fatal ED + Nitrate
+            { drugs: ['isdn', 'sildenafil'], severity: 'high', title: 'Hipotensi Refrakter Fatal', desc: 'Nitrat + PDE5 Inhibitor memicu syok kardiogenik irreversibel.', recommendation: 'KONTRAINDIKASI MUTLAK. Jangan berikan Nitrat < 24 jam setelah Sildenafil.' },
+            { drugs: ['isdn', 'tadalafil'], severity: 'high', title: 'Hipotensi Refrakter Fatal', desc: 'Nitrat + PDE5 Inhibitor memicu syok kardiogenik irreversibel.', recommendation: 'KONTRAINDIKASI MUTLAK.' },
             
-            // BLEEDING RISKS
-            { drugs: ['warfarin', 'ibuprofen'], severity: 'high', title: 'Perdarahan Fatal (GI Bleed)', desc: 'NSAID merusak mukosa lambung & cegah bekuan darah, Warfarin pengencer darah. Kombinasi dilarang keras.', recommendation: 'GANTI NSAID dengan Paracetamol. Cek INR segera.' },
-            { drugs: ['warfarin', 'celecoxib'], severity: 'high', title: 'Perdarahan Fatal', desc: 'Risiko perdarahan serupa meski COX-2 selektif.', recommendation: 'KONTRAINDIKASI.' },
-            { drugs: ['rivaroxaban', 'meloxicam'], severity: 'high', title: 'Perdarahan Masif', desc: 'DOAC dan NSAID akan memicu perdarahan saluran cerna parah.', recommendation: 'HINDARI PENGGUNAAN BERSAMA.' },
-            { drugs: ['clopi', 'aspirin'], severity: 'medium', title: 'DAPT (Dual Antiplatelet)', desc: 'Risiko perdarahan meningkat. Pastikan ini adalah indikasi pasca-PCI (Stent) atau ACS baru.', recommendation: 'Beri profilaksis pelindung lambung (PPI) jika durasi lama.' },
-            { drugs: ['fluoxetine', 'aspirin'], severity: 'medium', title: 'Perdarahan Tersembunyi', desc: 'SSRI (Fluoxetine) menghalangi masuknya serotonin ke platelet, membuat platelet tumpul. Ditambah Aspirin = mudah memar/berdarah.', recommendation: 'Waspada lebam spontan atau BAB hitam.' },
-            { drugs: ['garlic', 'warfarin'], severity: 'high', title: 'Perdarahan Spontan', desc: 'Herbal Bawang Putih menguatkan efek Warfarin secara signifikan tak terprediksi.', recommendation: 'HENTIKAN konsumsi herbal selama terapi Warfarin.' },
+            // Triple Whammy
+            { drugs: ['capto', 'furosemide', 'ibuprofen'], severity: 'high', title: 'Triple Whammy', desc: 'ACEi + Diuretik + NSAID = GFR anjlok.', recommendation: 'HENTIKAN NSAID.' },
+            { drugs: ['valsartan', 'spiro', 'meloxicam'], severity: 'high', title: 'Triple Whammy & HiperK', desc: 'Risiko gagal ginjal & hiperkalemia.', recommendation: 'STOP NSAID.' },
+            { drugs: ['ramipril', 'hct', 'celecoxib'], severity: 'high', title: 'Triple Whammy', desc: 'ACEi + Diuretik + NSAID.', recommendation: 'HENTIKAN NSAID.' },
+            
+            // Dual RAAS
+            { drugs: ['capto', 'valsartan'], severity: 'high', title: 'Dual RAAS Blockade', desc: 'Kombinasi ACEi dan ARB KONTRAINDIKASI absolut.', recommendation: 'Pilih HANYA SALAH SATU.' },
+            { drugs: ['ramipril', 'telmisartan'], severity: 'high', title: 'Dual RAAS Blockade', desc: 'Kombinasi ACEi dan ARB KONTRAINDIKASI absolut.', recommendation: 'Pilih HANYA SALAH SATU.' },
 
-            // CARDIO & METABOLIC RISKS
-            { drugs: ['omeprazole', 'clopi'], severity: 'high', title: 'Clopidogrel Nonaktif (Gagal Stent)', desc: 'Omeprazole memblokir enzim CYP2C19 di hati, sehingga Clopidogrel TIDAK BISA berubah menjadi bentuk aktifnya. Darah tetap kental.', recommendation: 'GANTI Omeprazole dengan Lansoprazole atau Pantoprazole.' },
-            { drugs: ['ibuprofen', 'capto'], severity: 'high', title: 'Obat Tensi Gagal Bekerja', desc: 'NSAID menyebabkan retensi air & garam, membatalkan efek penurunan tensi dari ACE-i / ARB / Diuretik.', recommendation: 'STOP NSAID. Tensi akan naik tajam jika diteruskan.' },
-            { drugs: ['amiodaron', 'warfarin'], severity: 'high', title: 'Lonjakan INR (Perdarahan)', desc: 'Amiodaron memblokir metabolisme Warfarin (CYP2C9). INR bisa meroket tinggi.', recommendation: 'Turunkan dosis Warfarin 30-50% saat inisiasi Amiodaron.' },
-            { drugs: ['amiodaron', 'bisoprolol'], severity: 'high', title: 'Blok Jantung (Bradikardia Parah)', desc: 'Keduanya menekan nodus sinus jantung. Detak jantung bisa drop drastis di bawah 50x/menit.', recommendation: 'Kurangi dosis salah satu, monitor EKG ketat.' },
-            { drugs: ['amiodaron', 'cipro'], severity: 'high', title: 'Henti Jantung (TdP)', desc: 'Keduanya memperpanjang interval QT pada EKG secara aditif.', recommendation: 'GANTI antibiotik Ciprofloxacin dengan golongan lain.' },
+            // Bleeding / Anticoagulant Tox
+            { drugs: ['warfarin', 'ibuprofen'], severity: 'high', title: 'Perdarahan Fatal', desc: 'NSAID + Warfarin.', recommendation: 'GANTI NSAID.' },
+            { drugs: ['warfarin', 'cotrim'], severity: 'high', title: 'INR Meroket (Perdarahan)', desc: 'Cotrimoxazole menghambat CYP2C9 (metabolisme Warfarin).', recommendation: 'GANTI ANTIBIOTIK atau turunkan Warfarin 50%.' },
+            { drugs: ['warfarin', 'metro'], severity: 'high', title: 'INR Meroket (Perdarahan)', desc: 'Metronidazole hambat CYP2C9 kuat.', recommendation: 'GANTI ANTIBIOTIK.' },
+            { drugs: ['warfarin', 'allopurinol'], severity: 'high', title: 'Perdarahan', desc: 'Allopurinol akumulasi Warfarin.', recommendation: 'Pantau INR ketat.' },
+            { drugs: ['clopi', 'omeprazole'], severity: 'high', title: 'Gagal Stent (Inhibisi CYP)', desc: 'Omeprazole blok aktivasi Clopi.', recommendation: 'Ganti Lansoprazole / Pantoprazole.' },
+            { drugs: ['clopi', 'esomeprazole'], severity: 'high', title: 'Gagal Stent (Inhibisi CYP)', desc: 'Esomeprazole dapat hambat aktivasi Clopi.', recommendation: 'Ganti Pantoprazole.' },
+
+            // Digoksin Tox
+            { drugs: ['digoksin', 'furosemide'], severity: 'high', title: 'Aritmia Fatal', desc: 'Hipokalemia memicu toksisitas Digoksin.', recommendation: 'Cek Kalium, beri suplemen K+.' },
+            { drugs: ['digoksin', 'hct'], severity: 'high', title: 'Aritmia Fatal', desc: 'Hipokalemia memicu toksisitas Digoksin.', recommendation: 'Cek Kalium.' },
+            { drugs: ['digoksin', 'bisoprolol'], severity: 'high', title: 'Blok Jantung Total', desc: 'Sinergis menekan AV node.', recommendation: 'Monitor EKG (PR Interval).' },
+            { drugs: ['digoksin', 'spiro'], severity: 'medium', title: 'Digoksin Akumulasi', desc: 'Spiro hambat klirens Digoksin.', recommendation: 'Turunkan dosis Digoksin.' },
+
+            // Rifampisin Inducer
+            { drugs: ['rifampisin', 'warfarin'], severity: 'high', title: 'Gagal Terapi (Clotting)', desc: 'Rifampisin menghancurkan Warfarin di hati.', recommendation: 'Dosis Warfarin harus naik 2-3x lipat.' },
+            { drugs: ['rifampisin', 'glibenklamid'], severity: 'high', title: 'Hiperglikemia', desc: 'Rifampisin menghancurkan Glibenklamid.', recommendation: 'Pakai Insulin.' },
+            { drugs: ['rifampisin', 'simvastatin'], severity: 'high', title: 'Gagal Terapi', desc: 'Statin dihancurkan.', recommendation: 'Naikkan dosis statin.' },
+
+            // Serotonin & Aritmia & Lainnya
+            { drugs: ['fluoxetine', 'dextromethorphan'], severity: 'high', title: 'Sindrom Serotonin', desc: 'Kombinasi fatal SSP.', recommendation: 'HENTIKAN DMP.' },
+            { drugs: ['sertraline', 'dextromethorphan'], severity: 'high', title: 'Sindrom Serotonin', desc: 'Kombinasi fatal SSP.', recommendation: 'HENTIKAN DMP.' },
+            { drugs: ['escitalopram', 'dextromethorphan'], severity: 'high', title: 'Sindrom Serotonin', desc: 'Kombinasi fatal SSP.', recommendation: 'HENTIKAN DMP.' },
+            { drugs: ['amiodaron', 'cipro'], severity: 'high', title: 'Henti Jantung (TdP)', desc: 'Double QT prolongation.', recommendation: 'Ganti Cipro.' },
+            { drugs: ['amiodaron', 'azithromycin'], severity: 'high', title: 'Henti Jantung (TdP)', desc: 'Double QT prolongation.', recommendation: 'Ganti Makrolida.' },
+            { drugs: ['levofloxacin', 'amiodaron'], severity: 'high', title: 'Henti Jantung (TdP)', desc: 'Double QT prolongation.', recommendation: 'GANTI Levofloxacin.' },
+            { drugs: ['simvastatin', 'amlo'], severity: 'high', title: 'Rhabdomyolisis (Miopati)', desc: 'Amlodipine melipatgandakan kadar Simvastatin darah.', recommendation: 'Max Simvastatin 20mg atau ganti Atorvastatin/Rosuvastatin.' },
+            { drugs: ['glibenklamid', 'cotrim'], severity: 'high', title: 'Hipoglikemia Koma', desc: 'Sinergis sulfonamid.', recommendation: 'Hindari.' },
+            { drugs: ['prednison', 'furosemide'], severity: 'medium', title: 'Hipokalemia Berat', desc: 'Keduanya membuang kalium dari tubuh.', recommendation: 'Pantau ketat tanda hipokalemia.' },
             
-            // SEROTONIN & NEURO
-            { drugs: ['fluoxetine', 'tramadol'], severity: 'high', title: 'Sindrom Serotonin', desc: 'Keduanya menaikkan kadar serotonin otak ekstrim. Gejala: kejang, demam tinggi, kaku otot, fatal.', recommendation: 'HINDARI KOMBINSASI INI MUTLAK.' },
-            
-            // ABSORPTION
-            { drugs: ['antasida', 'cipro'], severity: 'high', title: 'Kelasi Antibiotik', desc: 'Logam di Antasida mengikat Ciprofloxacin di perut. Antibiotik terbuang ke feses tanpa diserap.', recommendation: 'PISAHKAN JADWAL min 2 jam.' },
-            { drugs: ['antasida', 'isdn'], severity: 'medium', title: 'Serapan Nitrat Terganggu', desc: 'Antasida melapisi lambung, menghalangi serapan ISDN oral.', recommendation: 'Jeda 1-2 jam.' }
+            // Tambahan DDI
+            { drugs: ['zinc', 'levofloxacin'], severity: 'high', title: 'Gagal Antibiotik (Kelasi)', desc: 'Zinc mengikat Levofloxacin di usus, infeksi tidak sembuh.', recommendation: 'Jeda minimal 2 jam.' },
+            { drugs: ['tetracycline', 'antasida'], severity: 'high', title: 'Kelasi Total', desc: 'Antasida mengikat Tetrasiklin 100%.', recommendation: 'Jeda 2-4 jam.' },
+            { drugs: ['tetracycline', 'fe'], severity: 'high', title: 'Kelasi Total', desc: 'Zat Besi mengikat Tetrasiklin.', recommendation: 'Jeda 2-4 jam.' },
+            { drugs: ['isoniazid', 'rifampisin'], severity: 'medium', title: 'Hepatotoksisitas Ganda', desc: 'Sinergis merusak hati.', recommendation: 'Monitor SGOT/SGPT ketat.' },
+            { drugs: ['isoniazid', 'vit_b_complex'], severity: 'medium', title: 'Kombinasi Baik', desc: 'Piridoksin (B6) mencegah neuropati INH.', recommendation: 'Teruskan kombinasi ini.' },
+            { drugs: ['gemfibrozil', 'atorva'], severity: 'high', title: 'Rhabdomyolisis Akut', desc: 'Fibrat + Statin sangat toksik untuk otot.', recommendation: 'Ganti Gemfibrozil dengan Fenofibrate.' },
+            { drugs: ['gemfibrozil', 'rosuvastatin'], severity: 'high', title: 'Rhabdomyolisis Akut', desc: 'Fibrat + Statin sangat toksik untuk otot.', recommendation: 'Ganti Gemfibrozil dengan Fenofibrate.' }
         ];
 
+        // --- STREAMING_CHUNK:DOM Elements and Core UI Handlers... ---
         const els = {
             drawer: document.getElementById('side-drawer'), backdrop: document.getElementById('drawer-backdrop'),
             condList: document.getElementById('condition-list'), drugSearch: document.getElementById('drug-search'), drugList: document.getElementById('drug-list-container'),
@@ -476,7 +566,8 @@
             tabBtns: document.querySelectorAll('.tab-btn'), tabContents: document.querySelectorAll('.tab-content'), countDdi: document.getElementById('count-ddi'),
             ddiCont: document.getElementById('ddi-container'), clinCont: document.getElementById('clinical-container'), timeCont: document.getElementById('timing-container'),
             egfrDisp: document.getElementById('display-egfr'), printSummary: document.getElementById('print-patient-summary'),
-            scoreChads: document.getElementById('score-chads'), scoreHasbled: document.getElementById('score-hasbled'), summaryCont: document.getElementById('summary-container')
+            scoreChads: document.getElementById('score-chads'), scoreHasbled: document.getElementById('score-hasbled'), scoreGrace: document.getElementById('score-grace'), 
+            summaryCont: document.getElementById('summary-container')
         };
 
         const showToast = (msg, type = 'warning') => {
@@ -498,28 +589,76 @@
         };
 
         const getCtx = () => {
-            let egfr = 0; const { age, weight, scr, sex, sbp } = state.inputs;
+            let egfr = 0; const { age, weight, scr, sex, sbp, hr } = state.inputs;
             if (age && weight && scr > 0) { egfr = ((140 - age) * weight) / (72 * scr); if (sex === 'F') egfr *= 0.85; }
-            return { flags: state.flags, eGFR: egfr, age, sbp };
+            return { flags: state.flags, eGFR: egfr, age, sbp, hr, scr, weight, sex, trayIds: state.trayIds };
         };
 
+        // --- STREAMING_CHUNK:Implementing Fixed Clinical Scorings (CHA2DS2, HASBLED, GRACE)... ---
         const calcScores = (ctx) => {
-            let chads = 0, hasbled = 0;
-            if (ctx.flags.includes('hf')) chads += 1;
-            if (ctx.flags.includes('ht') || ctx.sbp >= 140) { chads += 1; hasbled += 1; }
-            if (ctx.age >= 75) chads += 2; else if (ctx.age >= 65) { chads += 1; hasbled += 1; }
-            if (ctx.flags.includes('dm')) chads += 1;
-            if (state.inputs.sex === 'F') chads += 1;
-            
+            // 1. CHA2DS2-VASc (Hanya untuk AF)
+            if (ctx.flags.includes('af')) {
+                let chads = 0;
+                if (ctx.flags.includes('hf')) chads += 1;
+                if (ctx.flags.includes('ht') || (ctx.sbp !== null && ctx.sbp >= 140)) chads += 1;
+                if (ctx.age >= 75) chads += 2; else if (ctx.age >= 65) chads += 1;
+                if (ctx.flags.includes('dm')) chads += 1;
+                if (ctx.flags.includes('stroke')) chads += 2;
+                if (ctx.flags.includes('vasc')) chads += 1;
+                // FIX #4: Female sex modifier hanya jika ada risk factor lain
+                if (ctx.sex === 'F' && chads > 0) chads += 1;
+                
+                els.scoreChads.textContent = chads;
+                els.scoreChads.className = `text-xl font-black relative z-10 transition-colors ${(chads>=2 && ctx.sex==='M') || (chads>=3 && ctx.sex==='F') ? 'text-rose-400' : 'text-amber-400'}`;
+            } else {
+                els.scoreChads.innerHTML = '<span class="text-xs text-slate-500">Pilih AF</span>';
+                els.scoreChads.className = 'text-xl font-black relative z-10 transition-colors';
+            }
+
+            // 2. HAS-BLED
+            let hasbled = 0;
+            if (ctx.flags.includes('ht') || (ctx.sbp !== null && ctx.sbp > 160)) hasbled += 1;
             if (ctx.eGFR > 0 && ctx.eGFR < 60) hasbled += 1;
             if (ctx.flags.includes('liver')) hasbled += 1;
-            if (state.trayIds.some(id => DRUG_DB[id].classId === 'nsaid' || DRUG_DB[id].classId === 'antiplatelet' || DRUG_DB[id].classId === 'anticoag')) hasbled += 1;
-
-            els.scoreChads.textContent = (ctx.age || ctx.flags.length > 0) ? chads : '--';
-            els.scoreChads.className = `text-xl font-black relative z-10 transition-colors ${(chads>=2 && state.inputs.sex==='M') || (chads>=3 && state.inputs.sex==='F') ? 'text-rose-400' : 'text-sky-400'}`;
+            if (ctx.flags.includes('stroke')) hasbled += 1;
+            if (ctx.flags.includes('ulcer')) hasbled += 1;
+            if (ctx.age >= 65) hasbled += 1;
             
-            els.scoreHasbled.textContent = (ctx.age || ctx.flags.length > 0) ? hasbled : '--';
+            // FIX #2: HAS-BLED tidak double count Warfarin dan Antikoagulan lain.
+            // Cukup 1 poin jika ada obat pemicu bleeding (NSAID, antiplatelet, anticoag).
+            const hasBleedingDrug = ctx.trayIds.some(id => {
+                const cls = DRUG_DB[id]?.classId;
+                return cls === 'nsaid' || cls === 'antiplatelet' || cls === 'anticoag';
+            });
+            if (hasBleedingDrug) hasbled += 1;
+            
+            els.scoreHasbled.textContent = hasbled;
             els.scoreHasbled.className = `text-xl font-black relative z-10 transition-colors ${hasbled>=3 ? 'text-rose-400' : 'text-emerald-400'}`;
+
+            // 3. GRACE Score (Simplified for ACS)
+            let graceCalcable = ctx.age && ctx.hr && ctx.sbp && ctx.scr;
+            if(graceCalcable) {
+                let grace = 0;
+                // Age
+                if(ctx.age>=80) grace+=91; else if(ctx.age>=70) grace+=73; else if(ctx.age>=60) grace+=55; else if(ctx.age>=50) grace+=36; else if(ctx.age>=40) grace+=18;
+                // HR
+                if(ctx.hr>=200) grace+=46; else if(ctx.hr>=150) grace+=36; else if(ctx.hr>=110) grace+=23; else if(ctx.hr>=90) grace+=13; else if(ctx.hr>=70) grace+=7;
+                // SBP
+                if(ctx.sbp<80) grace+=63; else if(ctx.sbp<100) grace+=58; else if(ctx.sbp<120) grace+=47; else if(ctx.sbp<140) grace+=34; else if(ctx.sbp<160) grace+=24; else if(ctx.sbp<200) grace+=11;
+                // SCr
+                if(ctx.scr>=4) grace+=31; else if(ctx.scr>=2) grace+=23; else if(ctx.scr>=1.6) grace+=14; else if(ctx.scr>=1.2) grace+=11; else if(ctx.scr>=0.8) grace+=8; else if(ctx.scr>=0.4) grace+=5; else grace+=2;
+                
+                // Flags
+                if(ctx.flags.includes('hf')) grace += 21; // proxy for killip II+
+                if(ctx.flags.includes('st_dev')) grace += 30;
+                if(ctx.flags.includes('trop')) grace += 15;
+
+                els.scoreGrace.textContent = grace;
+                els.scoreGrace.className = `text-xl font-black relative z-10 transition-colors ${grace > 140 ? 'text-rose-400' : (grace > 108 ? 'text-amber-400' : 'text-emerald-400')}`;
+            } else {
+                els.scoreGrace.innerHTML = '<span class="text-xs text-slate-500">Isi Nadi/BP/SCr</span>';
+                els.scoreGrace.className = 'text-xl font-black relative z-10 transition-colors';
+            }
         };
 
         const updateEgfrDisplay = () => {
@@ -527,8 +666,17 @@
             if (ctx.eGFR > 0) {
                 els.egfrDisp.textContent = ctx.eGFR.toFixed(1);
                 els.egfrDisp.className = `text-xl font-black relative z-10 transition-colors ${ctx.eGFR < 30 ? 'text-rose-400' : (ctx.eGFR < 60 ? 'text-amber-400' : 'text-sky-400')}`;
-            } else els.egfrDisp.innerHTML = '<span class="text-slate-500 relative z-10">--</span>';
-            calcScores(ctx); triggerReanalysis();
+            } else {
+                els.egfrDisp.innerHTML = '<span class="text-xs text-slate-500">Isi SCr & BB</span>';
+                els.egfrDisp.className = 'text-xl font-black relative z-10 transition-colors';
+            }
+            document.getElementById('preg-alert').classList.toggle('hidden', !state.flags.includes('preg'));
+        };
+
+        const onStateChange = () => {
+            updateEgfrDisplay();
+            calcScores(getCtx());
+            triggerReanalysis();
         };
 
         const renderConditions = () => {
@@ -542,12 +690,13 @@
                 label.innerHTML = `<input type="checkbox" value="${f.id}" class="w-4 h-4 rounded accent-${f.color}-500 cursor-pointer" ${isActive?'checked':''}><span class="text-[12px] ${textColor}">${f.label}</span>`;
                 label.querySelector('input').addEventListener('change', (e) => {
                     if (e.target.checked) state.flags.push(f.id); else state.flags = state.flags.filter(id => id !== f.id);
-                    renderConditions(); updateEgfrDisplay();
+                    renderConditions(); onStateChange();
                 });
                 els.condList.appendChild(label);
             });
         };
 
+        // --- STREAMING_CHUNK:Library Search & Prescription Tray Logic... ---
         const renderDrugLibrary = () => {
             els.drugList.innerHTML = '';
             const q = state.searchQuery.toLowerCase();
@@ -561,13 +710,8 @@
                 btn.className = `w-full text-left p-2.5 mb-2 rounded-xl bg-dark-800/80 border border-white/5 hover:border-white/30 hover:bg-white/5 transition-all flex items-center justify-between group`;
                 btn.innerHTML = `
                     <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${cOpts.bg} ${cOpts.text} border ${cOpts.border} transition-all group-hover:${cOpts.glow}">
-                            <i class="fas ${d.icon} text-sm"></i>
-                        </div>
-                        <div class="truncate">
-                            <div class="text-[13px] font-bold text-slate-200 truncate group-hover:text-white transition-colors">${d.name}</div>
-                            <div class="text-[10px] uppercase tracking-widest ${cOpts.text} opacity-80">${d.class}</div>
-                        </div>
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${cOpts.bg} ${cOpts.text} border ${cOpts.border} transition-all group-hover:${cOpts.glow}"><i class="fas ${d.icon} text-sm"></i></div>
+                        <div class="truncate"><div class="text-[13px] font-bold text-slate-200 truncate group-hover:text-white transition-colors">${d.name}</div><div class="text-[10px] uppercase tracking-widest ${cOpts.text} opacity-80">${d.class}</div></div>
                     </div>
                     <i class="fas fa-plus text-slate-600 group-hover:text-sky-400 transition-colors shrink-0 p-2"></i>
                 `;
@@ -593,18 +737,32 @@
                     els.trayChips.appendChild(chip);
                 });
             }
-            updateEgfrDisplay(); // recalculate scores
         };
 
         const addToTray = (id) => { 
-            if (state.trayIds.length >= 10) { showToast('Nampan penuh (Maks 10 obat)', 'error'); return; }
-            if (!state.trayIds.includes(id)) { state.trayIds.push(id); renderDrugLibrary(); renderTray(); els.drugSearch.value = ''; state.searchQuery=''; triggerReanalysis(); showToast(`${DRUG_DB[id].name} ditambahkan`, 'success'); } 
+            if (state.trayIds.length >= 15) { showToast('Nampan penuh (Maks 15 obat)', 'error'); return; }
+            if (!state.trayIds.includes(id)) { 
+                state.trayIds.push(id); 
+                renderDrugLibrary(); renderTray(); els.drugSearch.value = ''; state.searchQuery=''; 
+                onStateChange();
+                showToast(`${DRUG_DB[id].name} ditambahkan`, 'success'); 
+            } 
         };
-        const removeFromTray = (id) => { state.trayIds = state.trayIds.filter(i => i !== id); renderDrugLibrary(); renderTray(); triggerReanalysis(); if(state.trayIds.length===0) switchToIdle(); };
+        const removeFromTray = (id) => { 
+            state.trayIds = state.trayIds.filter(i => i !== id); 
+            renderDrugLibrary(); renderTray(); 
+            onStateChange();
+            if(state.trayIds.length===0) switchToIdle(); 
+        };
         els.btnClearTray.onclick = () => { state.trayIds = []; renderDrugLibrary(); renderTray(); switchToIdle(); showToast('Nampan dikosongkan'); };
 
-        ['age', 'weight', 'scr', 'sbp'].forEach(id => { document.getElementById(`inp-${id}`).addEventListener('input', (e) => { state.inputs[id] = parseFloat(e.target.value) || null; updateEgfrDisplay(); }); });
-        document.getElementById('inp-sex').addEventListener('change', (e) => { state.inputs.sex = e.target.value; updateEgfrDisplay(); });
+        ['age', 'weight', 'scr', 'sbp', 'hr'].forEach(id => { 
+            document.getElementById(`inp-${id}`).addEventListener('input', (e) => { 
+                state.inputs[id] = parseFloat(e.target.value) || null; 
+                onStateChange();
+            }); 
+        });
+        document.getElementById('inp-sex').addEventListener('change', (e) => { state.inputs.sex = e.target.value; onStateChange(); });
         els.drugSearch.addEventListener('input', (e) => { state.searchQuery = e.target.value; renderDrugLibrary(); });
 
         const switchTab = (targetId) => {
@@ -620,6 +778,7 @@
         const switchToIdle = () => { els.idleState.classList.remove('hidden'); els.analysisState.classList.add('hidden'); };
         const switchToActive = () => { els.idleState.classList.add('hidden'); els.analysisState.classList.remove('hidden'); els.analysisState.style.display = 'flex'; };
 
+        // --- STREAMING_CHUNK:Running the Comprehensive CDSS Analysis... ---
         const runAnalysis = (autoSwitchTab = true) => {
             const ctx = getCtx();
             let chads = els.scoreChads.textContent;
@@ -635,27 +794,20 @@
             let dupes = Object.keys(classCounts).filter(cid => classCounts[cid].length > 1);
             let dupesArr = [];
             if(dupes.length > 0) {
-                dupes.forEach(cid => {
-                    // Cek jika triple whammy terdeteksi (jangan double hitung sebagai sekedar duplikasi kelas jika itu kombinasi obat beda dalam satu "whammy" logic, tapi disini filter by classId murni)
-                    dupesArr.push({ class: DRUG_DB[classCounts[cid][0].id].class, names: classCounts[cid].map(x=>x.name) });
-                });
+                dupes.forEach(cid => { dupesArr.push({ class: DRUG_DB[classCounts[cid][0].id].class, names: classCounts[cid].map(x=>x.name) }); });
             }
 
             // 1. DDI (Interactions)
             els.ddiCont.innerHTML = '';
             let activeDDI = [];
-            // Cek kombinasi 2 obat (Standard)
             for (let i = 0; i < state.trayIds.length; i++) {
                 for (let j = i + 1; j < state.trayIds.length; j++) {
                     const matches = INTERACTIONS.filter(rule => rule.drugs.length === 2 && rule.drugs.includes(state.trayIds[i]) && rule.drugs.includes(state.trayIds[j]));
                     matches.forEach(ix => activeDDI.push({ ...ix, names: [DRUG_DB[state.trayIds[i]].name, DRUG_DB[state.trayIds[j]].name] }));
                 }
             }
-            // Cek kombinasi 3 obat (Triple Whammy)
             INTERACTIONS.filter(r => r.drugs.length === 3).forEach(rule => {
-                if (rule.drugs.every(d => state.trayIds.includes(d))) {
-                    activeDDI.push({ ...rule, names: rule.drugs.map(d => DRUG_DB[d].name) });
-                }
+                if (rule.drugs.every(d => state.trayIds.includes(d))) activeDDI.push({ ...rule, names: rule.drugs.map(d => DRUG_DB[d].name) });
             });
             
             els.countDdi.textContent = activeDDI.length;
@@ -663,39 +815,35 @@
                 els.ddiCont.innerHTML = `
                     <div class="glass-panel p-6 rounded-2xl border-l-4 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.15)] flex gap-4 items-center">
                         <div class="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0"><i class="fas fa-shield-check text-2xl text-emerald-400"></i></div>
-                        <div><h3 class="text-emerald-400 font-bold text-xl mb-1">Nampan Aman</h3><p class="text-[14px] text-slate-300">Tidak terdeteksi interaksi bahaya mayor antar obat dalam resep Anda.</p></div>
+                        <div><h3 class="text-emerald-400 font-bold text-xl mb-1">Nampan Aman</h3><p class="text-[14px] text-slate-300">Tidak terdeteksi interaksi bahaya antar obat.</p></div>
                     </div>`;
             } else {
-                // Render Duplications as DDI
                 dupesArr.forEach(d => {
                     els.ddiCont.innerHTML += `
                         <div class="glass-panel p-5 rounded-2xl border border-rose-500/50 bg-rose-500/10 mb-4 shadow-[0_0_15px_rgba(244,63,94,0.15)]">
                             <div class="flex justify-between items-start mb-3"><h3 class="font-bold text-white text-lg"><i class="fas fa-copy text-rose-400 mr-2"></i>Duplikasi Golongan Obat</h3><span class="text-[10px] uppercase font-bold px-2 py-1 rounded bg-rose-500 text-white tracking-widest">KONTRA</span></div>
                             <p class="text-[13px] font-bold bg-dark-900 text-slate-200 px-3 py-2 rounded-lg inline-block mb-3 border border-white/5">${d.names.join(' + ')}</p>
-                            <p class="text-[14px] text-slate-300 mb-4">Nampan memuat ${d.names.length} obat dari kelas yang sama (<strong class="text-white">${d.class}</strong>). Meningkatkan risiko overdosis dan toksisitas tanpa tambahan efikasi.</p>
+                            <p class="text-[14px] text-slate-300 mb-4">Meningkatkan risiko overdosis dan toksisitas (<strong class="text-white">${d.class}</strong>).</p>
                             <div class="bg-dark-900 rounded-xl p-3.5 text-[13px] border border-rose-500/30"><strong class="text-amber-400"><i class="fas fa-exclamation-circle"></i> Aksi:</strong> Hentikan salah satu obat.</div>
                         </div>`;
                 });
-
                 activeDDI.sort((a,b) => a.severity === 'high' ? -1 : 1).forEach(ix => {
                     const isHigh = ix.severity === 'high';
-                    const bg = isHigh ? 'border-rose-500/50 bg-rose-500/10 shadow-[0_0_20px_rgba(244,63,94,0.15)]' : 'border-amber-500/50 bg-amber-500/10 shadow-[0_0_20px_rgba(245,158,11,0.15)]';
+                    const bg = isHigh ? 'border-rose-500/50 bg-rose-500/10' : 'border-amber-500/50 bg-amber-500/10';
                     const badge = isHigh ? 'bg-rose-500 text-white' : 'bg-amber-500 text-dark-900';
-                    const badgeTxt = isHigh ? 'BAHAYA' : 'WASPADA';
-                    
                     els.ddiCont.innerHTML += `
-                        <div class="glass-panel p-5 sm:p-6 rounded-2xl border ${bg} mb-5 print-border print:bg-white print:border-gray-300">
+                        <div class="glass-panel p-5 sm:p-6 rounded-2xl border ${bg} mb-5 print-border print:bg-white">
                             <div class="flex justify-between items-start mb-3">
-                                <h3 class="font-bold text-white text-xl print:text-black leading-tight pr-2 flex items-center gap-2"><i class="fas fa-bolt ${isHigh?'text-rose-400':'text-amber-400'}"></i> ${ix.title}</h3>
-                                <span class="text-[10px] uppercase font-black px-2.5 py-1 rounded-md ${badge} tracking-widest shrink-0 print:text-black print:bg-gray-200 print:border print:border-black">${badgeTxt}</span>
+                                <h3 class="font-bold text-white text-xl print:text-black flex items-center gap-2"><i class="fas fa-bolt ${isHigh?'text-rose-400':'text-amber-400'}"></i> ${ix.title}</h3>
+                                <span class="text-[10px] uppercase font-black px-2.5 py-1 rounded-md ${badge}">${isHigh?'BAHAYA':'WASPADA'}</span>
                             </div>
                             <div class="flex flex-wrap gap-2 mb-4">
-                                ${ix.names.map(n => `<span class="bg-dark-900 print:bg-transparent text-slate-200 print:text-black px-3 py-1.5 rounded-lg text-[13px] font-bold border border-white/5 print:border-none shadow-sm"><i class="fas fa-pills text-slate-500 mr-1.5 opacity-50"></i>${n}</span>`).join('<span class="flex items-center text-slate-500 text-lg font-black">+</span>')}
+                                ${ix.names.map(n => `<span class="bg-dark-900 text-slate-200 px-3 py-1.5 rounded-lg text-[13px] font-bold border border-white/5"><i class="fas fa-pills opacity-50 mr-1.5"></i>${n}</span>`).join('<span class="flex items-center text-slate-500 text-lg font-black">+</span>')}
                             </div>
-                            <p class="text-[14px] text-slate-300 print:text-black mb-5 leading-relaxed bg-dark-800/50 p-4 rounded-xl border border-white/5">${ix.desc}</p>
-                            <div class="bg-gradient-to-r from-dark-900 to-dark-800 print:bg-gray-100 rounded-xl p-4 text-[14px] border-l-4 ${isHigh?'border-l-rose-500':'border-l-amber-500'} shadow-inner">
-                                <strong class="text-amber-400 print:text-black block mb-1 uppercase tracking-wider text-[11px]"><i class="fas fa-hand-holding-medical"></i> Rekomendasi Klinis</strong> 
-                                <span class="text-white print:text-black font-medium block">${ix.recommendation}</span>
+                            <p class="text-[14px] text-slate-300 mb-5 bg-dark-800/50 p-4 rounded-xl border border-white/5">${ix.desc}</p>
+                            <div class="bg-gradient-to-r from-dark-900 to-dark-800 rounded-xl p-4 text-[14px] border-l-4 ${isHigh?'border-l-rose-500':'border-l-amber-500'}">
+                                <strong class="text-amber-400 block mb-1 uppercase text-[11px]"><i class="fas fa-hand-holding-medical"></i> Rekomendasi Klinis</strong> 
+                                <span class="text-white font-medium">${ix.recommendation}</span>
                             </div>
                         </div>`;
                 });
@@ -710,41 +858,38 @@
                 if (v.status === 'danger') { bCls = 'border-rose-500/50 bg-rose-500/10'; hColor = 'text-rose-400'; icon = 'fa-ban'; iconBg = 'bg-rose-500/20 text-rose-400'; clinicalWarnings++; }
                 else if (v.status === 'warning') { bCls = 'border-amber-500/50 bg-amber-500/10'; hColor = 'text-amber-400'; icon = 'fa-exclamation-triangle'; iconBg = 'bg-amber-500/20 text-amber-400'; clinicalWarnings++; }
                 
-                let subs = d.substitutions.map(s => `<div class="mb-2 bg-dark-900 p-2 rounded-lg border border-white/5"><span class="bg-indigo-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider print:bg-gray-200 print:text-black print:border block w-max mb-1">${s.level}</span> <span class="text-[13px] text-sky-200 print:text-black font-bold block"><i class="fas fa-arrow-right text-[10px] mr-1 opacity-50"></i>${s.text}</span></div>`).join('');
-                if(!subs) subs = '<span class="text-[13px] text-slate-500 italic block mt-2 print:text-gray-500 bg-dark-900 p-2 rounded-lg border border-white/5">Tidak ada alternatif wajib.</span>';
-
+                let subs = d.substitutions.map(s => `<div class="mb-2 bg-dark-900 p-2 rounded-lg border border-white/5"><span class="bg-indigo-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider block w-max mb-1">${s.level}</span> <span class="text-[13px] text-sky-200 font-bold block"><i class="fas fa-arrow-right text-[10px] mr-1 opacity-50"></i>${s.text}</span></div>`).join('');
+                if(!subs) subs = '<span class="text-[13px] text-slate-500 italic block mt-2 bg-dark-900 p-2 rounded-lg border border-white/5">Tidak ada substitusi.</span>';
                 const cOpts = CLASS_COLORS[d.classId] || { text: 'text-slate-300' };
 
+                const renderedDose = typeof d.dose === 'function' ? d.dose(ctx) : d.dose;
+
                 els.clinCont.innerHTML += `
-                    <div class="glass-panel rounded-2xl overflow-hidden mb-6 border border-white/5 print-border page-break-inside shadow-xl">
-                        <div class="p-5 border-l-4 ${bCls} print:bg-white print:border-l-4 print:border-black flex gap-5 items-start">
-                            <div class="w-14 h-14 rounded-2xl ${iconBg} flex items-center justify-center shrink-0 border border-white/10 shadow-inner mt-1"><i class="fas ${icon} text-3xl print:text-black"></i></div>
+                    <div class="glass-panel rounded-2xl overflow-hidden mb-6 border border-white/5 print-border shadow-xl">
+                        <div class="p-5 border-l-4 ${bCls} flex gap-5 items-start">
+                            <div class="w-14 h-14 rounded-2xl ${iconBg} flex items-center justify-center shrink-0 border border-white/10 shadow-inner mt-1"><i class="fas ${icon} text-3xl"></i></div>
                             <div class="flex-grow">
-                                <div class="flex justify-between items-center mb-1.5">
-                                    <span class="text-[10px] font-bold uppercase tracking-widest ${cOpts.text} opacity-80 print:text-black bg-dark-900 px-2 py-0.5 rounded border border-white/5">${d.class}</span>
-                                </div>
-                                <h3 class="text-2xl font-black text-white print:text-black mb-1">${d.name}</h3>
-                                <p class="text-[14px] font-bold ${hColor} print:text-black leading-snug bg-dark-900/50 p-2.5 rounded-lg border border-white/5 mt-2">${v.text}</p>
+                                <div class="flex justify-between items-center mb-1.5"><span class="text-[10px] font-bold uppercase tracking-widest ${cOpts.text} opacity-80 bg-dark-900 px-2 py-0.5 rounded border border-white/5">${d.class}</span></div>
+                                <h3 class="text-2xl font-black text-white mb-1">${d.name}</h3>
+                                <p class="text-[14px] font-bold ${hColor} leading-snug bg-dark-900/50 p-2.5 rounded-lg border border-white/5 mt-2">${v.text}</p>
                             </div>
                         </div>
-                        <div class="p-5 bg-dark-900/80 print:bg-white grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 border-t border-white/5">
+                        <div class="p-5 bg-dark-900/80 grid grid-cols-1 lg:grid-cols-3 gap-5 border-t border-white/5">
                             <div class="lg:col-span-2 space-y-4">
                                 <div>
                                     <h4 class="text-[11px] font-bold text-slate-400 mb-2 uppercase tracking-widest"><i class="fas fa-ruler-combined text-slate-500 mr-1"></i> Parameter Resep</h4>
                                     <div class="bg-dark-800 p-3 rounded-xl border border-white/5 text-[13px] text-slate-300 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div><strong class="text-sky-400 block text-[10px] uppercase tracking-wider mb-0.5">Dosis Lazim</strong> <span class="font-medium text-white">${d.dose}</span></div>
+                                        <div><strong class="text-sky-400 block text-[10px] uppercase tracking-wider mb-0.5">Dosis Lazim</strong> <span class="font-medium text-white">${renderedDose}</span></div>
                                         <div><strong class="text-fuchsia-400 block text-[10px] uppercase tracking-wider mb-0.5">Monitor Laboratorium</strong> <span class="font-medium">${d.monitor}</span></div>
                                     </div>
                                 </div>
                                 <div>
                                     <h4 class="text-[11px] font-bold text-slate-400 mb-2 uppercase tracking-widest"><i class="fas fa-clipboard-list text-slate-500 mr-1"></i> Perhatian Khusus</h4>
-                                    <ul class="list-none space-y-1.5 text-[13px] text-slate-300 print:text-black">
-                                        ${d.eval.map(e=>`<li class="flex items-start gap-2"><i class="fas fa-check text-emerald-500 mt-1 text-[10px]"></i> <span>${e}</span></li>`).join('')}
-                                    </ul>
+                                    <ul class="list-none space-y-1.5 text-[13px] text-slate-300">${d.eval.map(e=>`<li class="flex items-start gap-2"><i class="fas fa-check text-emerald-500 mt-1 text-[10px]"></i> <span>${e}</span></li>`).join('')}</ul>
                                 </div>
                             </div>
-                            <div class="bg-gradient-to-br from-dark-800 to-dark-900 print:bg-gray-50 p-4 rounded-xl border border-white/5 print:border-gray-300 flex flex-col h-full">
-                                <h4 class="text-[11px] font-bold text-indigo-400 mb-3 print:text-black uppercase tracking-widest border-b border-white/5 pb-2"><i class="fas fa-exchange-alt mr-1"></i> Opsi Substitusi</h4>
+                            <div class="bg-gradient-to-br from-dark-800 to-dark-900 p-4 rounded-xl border border-white/5 flex flex-col h-full">
+                                <h4 class="text-[11px] font-bold text-indigo-400 mb-3 uppercase tracking-widest border-b border-white/5 pb-2"><i class="fas fa-exchange-alt mr-1"></i> Substitusi</h4>
                                 <div class="flex-grow">${subs}</div>
                             </div>
                         </div>
@@ -752,34 +897,31 @@
             });
 
             // 3. Timing (Edukasi Pasien)
-            els.timeCont.innerHTML = `
-                <div class="col-span-full mb-6 bg-gradient-to-r from-teal-500/20 to-emerald-500/20 border border-teal-500/30 rounded-2xl p-5 text-center shadow-[0_0_20px_rgba(20,184,166,0.15)] no-print backdrop-blur-sm">
-                    <p class="text-[14px] text-teal-100 font-medium"><i class="fas fa-print text-teal-400 mr-2 text-xl align-middle"></i>Cetak halaman ini (Gunakan tombol cetak di pojok kanan atas) untuk diserahkan sebagai lembar panduan visual harian pasien Anda di rumah.</p>
-                </div>
-            `;
+            els.timeCont.innerHTML = `<div class="col-span-full mb-6 bg-gradient-to-r from-teal-500/20 to-emerald-500/20 border border-teal-500/30 rounded-2xl p-5 text-center shadow-[0_0_20px_rgba(20,184,166,0.15)] no-print backdrop-blur-sm"><p class="text-[14px] text-teal-100 font-medium"><i class="fas fa-print text-teal-400 mr-2 text-xl align-middle"></i>Cetak halaman ini untuk panduan pasien.</p></div>`;
             state.trayIds.forEach(id => {
-                const d = DRUG_DB[id];
-                const cOpts = CLASS_COLORS[d.classId] || { text: 'text-slate-400', bg: 'bg-dark-800', border: 'border-white/10' };
+                const d = DRUG_DB[id]; const cOpts = CLASS_COLORS[d.classId] || { text: 'text-slate-400', bg: 'bg-dark-800', border: 'border-white/10' };
                 let tCol = 'text-sky-400 bg-sky-400/10 border-sky-400/30'; let iconTime = 'fa-sun'; let bgGradient = 'from-sky-950 to-dark-900';
                 if(d.timing.includes('Sebelum')) { tCol = 'text-amber-400 bg-amber-400/10 border-amber-400/30'; iconTime = 'fa-coffee'; bgGradient = 'from-amber-950 to-dark-900';}
                 if(d.timing.includes('Sesudah')) { tCol = 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30'; iconTime = 'fa-utensils'; bgGradient = 'from-emerald-950 to-dark-900';}
                 if(d.timing.includes('Malam')) { tCol = 'text-indigo-400 bg-indigo-400/10 border-indigo-400/30'; iconTime = 'fa-moon'; bgGradient = 'from-indigo-950 to-dark-900';}
                 
+                const renderedTime = typeof d.timeVal === 'function' ? d.timeVal(ctx) : d.timeVal;
+
                 els.timeCont.innerHTML += `
-                    <div class="glass-panel rounded-2xl border border-white/5 print-border flex flex-col h-full bg-gradient-to-b ${bgGradient} shadow-xl print:shadow-none overflow-hidden hover:-translate-y-1 transition-transform duration-300">
+                    <div class="glass-panel rounded-2xl border border-white/5 print-border flex flex-col h-full bg-gradient-to-b ${bgGradient} shadow-xl print:shadow-none hover:-translate-y-1 transition-transform">
                         <div class="p-5 border-b border-white/5">
                             <div class="flex justify-between items-start mb-4">
-                                <div class="w-12 h-12 rounded-xl flex items-center justify-center ${cOpts.bg} ${cOpts.text} border ${cOpts.border} print:border-black print:bg-transparent text-2xl shadow-inner shrink-0"><i class="fas ${d.icon}"></i></div>
-                                <span class="text-[11px] font-bold px-3 py-1.5 rounded-lg border ${tCol} print:border-black print:text-black print:bg-transparent tracking-widest uppercase flex items-center gap-2 shadow-sm"><i class="fas ${iconTime}"></i> ${d.timing}</span>
+                                <div class="w-12 h-12 rounded-xl flex items-center justify-center ${cOpts.bg} ${cOpts.text} border ${cOpts.border} text-2xl shadow-inner shrink-0"><i class="fas ${d.icon}"></i></div>
+                                <span class="text-[11px] font-bold px-3 py-1.5 rounded-lg border ${tCol} tracking-widest uppercase flex items-center gap-2 shadow-sm"><i class="fas ${iconTime}"></i> ${d.timing}</span>
                             </div>
-                            <h3 class="font-black text-white text-xl print:text-black mb-1">${d.name}</h3>
-                            <p class="text-[11px] uppercase tracking-widest text-slate-400 print:text-gray-500 font-bold">${d.class}</p>
+                            <h3 class="font-black text-white text-xl mb-1">${d.name}</h3>
+                            <p class="text-[11px] uppercase tracking-widest text-slate-400 font-bold">${d.class}</p>
                         </div>
                         <div class="p-5 flex-grow flex flex-col justify-end bg-dark-900/40 backdrop-blur print:bg-transparent">
-                            <div class="bg-dark-900 p-4 rounded-xl border border-white/5 print:border-gray-400 shadow-inner h-full flex flex-col justify-center">
-                                <p class="text-[16px] font-black text-white print:text-black mb-2 flex items-center gap-2"><i class="far fa-clock text-slate-500 print:hidden text-lg"></i> Waktu: <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-indigo-300">${d.timeVal}</span></p>
+                            <div class="bg-dark-900 p-4 rounded-xl border border-white/5 shadow-inner h-full flex flex-col justify-center">
+                                <p class="text-[16px] font-black text-white mb-2 flex items-center gap-2"><i class="far fa-clock text-slate-500 text-lg"></i> Waktu: <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-indigo-300">${renderedTime}</span></p>
                                 <div class="w-full h-px bg-white/5 my-2"></div>
-                                <p class="text-[13px] text-slate-300 print:text-gray-700 print:italic leading-relaxed"><strong>Tujuan:</strong> ${d.reason}</p>
+                                <p class="text-[13px] text-slate-300 leading-relaxed"><strong>Tujuan:</strong> ${d.reason}</p>
                             </div>
                         </div>
                     </div>`;
@@ -796,22 +938,23 @@
             let statusIcon = totalDanger > 0 ? 'fa-skull-crossbones' : (totalWarn > 0 ? 'fa-exclamation-triangle' : 'fa-check-circle');
 
             let actionList = [];
-            if(dupesArr.length > 0) dupesArr.forEach(d => actionList.push(`<li class="bg-rose-500/20 text-rose-200 font-bold p-3 rounded-xl border border-rose-500/30 flex gap-3 items-start"><i class="fas fa-copy mt-1 text-rose-400"></i> <div><span class="block text-[11px] uppercase tracking-widest text-rose-400 mb-1">Duplikasi Kelas Dideteksi</span> Nampan memuat >1 obat golongan ${d.class}. Hentikan salah satu untuk cegah toksisitas.</div></li>`));
-            if(totalDanger - dupesArr.length > 0) actionList.push(`<li class="bg-rose-500/10 text-rose-200 p-3 rounded-xl border border-rose-500/30 flex gap-3 items-start"><i class="fas fa-bolt text-rose-500 mt-1"></i> <div><span class="font-bold">Interaksi Mayor (Tingkat Fatal).</span> Buka Tab DDI dan segera pisahkan atau ganti obat yang bersilangan merah.</div></li>`);
-            if(clinicalWarnings > 0) actionList.push(`<li class="bg-amber-500/10 text-amber-200 p-3 rounded-xl border border-amber-500/30 flex gap-3 items-start"><i class="fas fa-stethoscope text-amber-500 mt-1"></i> <div><span class="font-bold">Penyesuaian Fungsi Ginjal/Usia.</span> Cek Tab Evaluasi untuk panduan batas dosis eGFR ${ctx.eGFR.toFixed(1)} ml/min.</div></li>`);
-            if(actionList.length === 0) actionList.push(`<li class="bg-emerald-500/10 text-emerald-200 font-bold p-4 rounded-xl border border-emerald-500/30 flex gap-3 items-center"><div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0"><i class="fas fa-check text-emerald-400 text-xl"></i></div> <div>Tidak terdeteksi bendera merah. Anda dapat meneruskan resep dan mencetak lembar edukasi (Tab Jadwal).</div></li>`);
+            if(dupesArr.length > 0) actionList.push(`<li class="bg-rose-500/20 text-rose-200 font-bold p-3 rounded-xl border border-rose-500/30 flex gap-3 items-start"><i class="fas fa-copy mt-1 text-rose-400"></i> <div><span class="block text-[11px] uppercase tracking-widest text-rose-400 mb-1">Duplikasi Kelas Dideteksi</span> Hentikan salah satu untuk cegah toksisitas.</div></li>`);
+            if(totalDanger - dupesArr.length > 0) actionList.push(`<li class="bg-rose-500/10 text-rose-200 p-3 rounded-xl border border-rose-500/30 flex gap-3 items-start"><i class="fas fa-bolt text-rose-500 mt-1"></i> <div><span class="font-bold">Interaksi Mayor (Tingkat Fatal).</span> Buka Tab DDI dan ganti obat yang bersilangan merah.</div></li>`);
+            if(clinicalWarnings > 0) actionList.push(`<li class="bg-amber-500/10 text-amber-200 p-3 rounded-xl border border-amber-500/30 flex gap-3 items-start"><i class="fas fa-stethoscope text-amber-500 mt-1"></i> <div><span class="font-bold">Penyesuaian eGFR/Usia.</span> Cek Tab Evaluasi untuk panduan peringatan.</div></li>`);
+            if(ctx.flags.includes('vasc') && !state.trayIds.some(id => DRUG_DB[id].classId === 'lipid')) actionList.push(`<li class="bg-purple-500/10 text-purple-200 p-3 rounded-xl border border-purple-500/30 flex gap-3 items-start"><i class="fas fa-dna text-purple-400 mt-1"></i> <div><span class="font-bold">Terapi Statin Hilang.</span> Pasien CAD/PAD direkomendasikan wajib mendapat statin intensitas tinggi.</div></li>`);
+            if(actionList.length === 0) actionList.push(`<li class="bg-emerald-500/10 text-emerald-200 font-bold p-4 rounded-xl border border-emerald-500/30 flex gap-3 items-center"><div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0"><i class="fas fa-check text-emerald-400 text-xl"></i></div> <div>Tidak terdeteksi bendera merah. Resep aman.</div></li>`);
 
-            // Build Summary View
             els.summaryCont.innerHTML = `
                 <div class="glass-panel p-8 sm:p-10 rounded-[2rem] border ${statusBg} text-center mb-8 relative overflow-hidden">
-                    <div class="absolute inset-0 bg-gradient-to-t from-dark-950 to-transparent opacity-50 pointer-events-none"></div>
                     <p class="text-[12px] font-bold text-slate-400 uppercase tracking-widest mb-4 relative z-10">Kesimpulan Sistem (Decision Support)</p>
                     <h2 class="text-3xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b ${statusGradient} tracking-tight flex items-center justify-center gap-4 relative z-10"><i class="fas ${statusIcon} ${statusColor}"></i> ${statusText}</h2>
-                    <div class="flex justify-center gap-6 mt-8 relative z-10 border-t border-white/10 pt-6 max-w-2xl mx-auto">
-                        <div class="text-center"><p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Skor Trombo</p><p class="text-2xl font-black text-white">${chads}</p></div>
-                        <div class="w-px bg-white/10"></div>
+                    <div class="flex justify-center flex-wrap gap-4 sm:gap-6 mt-8 relative z-10 border-t border-white/10 pt-6 max-w-3xl mx-auto">
+                        <div class="text-center"><p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Skor Trombo (AF)</p><p class="text-2xl font-black text-white">${chads}</p></div>
+                        <div class="w-px bg-white/10 hidden sm:block"></div>
                         <div class="text-center"><p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Skor Bleed</p><p class="text-2xl font-black text-white">${hasbled}</p></div>
-                        <div class="w-px bg-white/10"></div>
+                        <div class="w-px bg-white/10 hidden sm:block"></div>
+                        <div class="text-center"><p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Skor GRACE</p><p class="text-2xl font-black text-white">${els.scoreGrace.textContent}</p></div>
+                        <div class="w-px bg-white/10 hidden sm:block"></div>
                         <div class="text-center"><p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">eGFR Ginjal</p><p class="text-2xl font-black text-white">${ctx.eGFR>0?ctx.eGFR.toFixed(0):'--'}</p></div>
                     </div>
                 </div>
@@ -823,61 +966,42 @@
                     </div>
                     
                     <div class="bg-dark-800/80 p-6 sm:p-8 rounded-3xl border border-white/5 shadow-2xl backdrop-blur-md flex flex-col justify-between relative overflow-hidden">
-                         <div class="absolute right-0 top-0 w-32 h-32 bg-fuchsia-500/10 rounded-bl-full pointer-events-none"></div>
                          <div class="relative z-10">
                              <h4 class="text-[13px] font-bold text-fuchsia-400 uppercase tracking-widest mb-3 flex items-center gap-3"><i class="fas fa-file-medical text-xl"></i> Rekam Medis (SOAP)</h4>
-                             <p class="text-[12px] text-slate-400 mb-5">Klik area teks di bawah untuk menyalin ringkasan ke sistem EMR/SIMRS.</p>
+                             <p class="text-[12px] text-slate-400 mb-5">Klik area teks untuk menyalin ke EMR.</p>
                          </div>
                          <button onclick="copySoap()" class="bg-dark-950 hover:bg-black text-slate-300 text-[13px] p-5 rounded-2xl border border-white/10 text-left transition-all font-mono relative group shadow-inner flex-grow flex flex-col z-10">
                             <span class="block mb-3 text-emerald-400 font-bold text-[14px]"># Eval CDSS CardioSafe</span>
-                            <span class="block mb-2">A: Polifarmasi (${state.trayIds.length} obat aktif).<br>Risiko Trombo (CHA2DS2-VASc): ${chads}.<br>Risiko Bleed (HAS-BLED): ${hasbled}.<br>eGFR Est: ${ctx.eGFR>0?ctx.eGFR.toFixed(1):'N/A'} ml/min.</span>
-                            <span class="block text-slate-400 italic">P: Edukasi jadwal minum visual diberikan. ${(totalDanger>0) ? 'INTERVENSI DIPERLUKAN: Ditemukan DDI Mayor / Duplikasi. Rencana substitusi.' : 'Lanjutkan terapi sesuai panduan toleransi klinis.'}</span>
-                            <div class="absolute bottom-4 right-4 text-sky-400 bg-sky-400/10 p-3 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2"><i class="fas fa-copy"></i> <span class="text-[10px] uppercase font-bold tracking-wider">Salin Teks</span></div>
+                            <span class="block mb-2">A: Polifarmasi (${state.trayIds.length} obat aktif).<br>Risiko Trombo (CHA2DS2-VASc): ${chads}.<br>Risiko Bleed (HAS-BLED): ${hasbled}.<br>Risiko ACS (GRACE): ${els.scoreGrace.textContent}.<br>eGFR Est: ${ctx.eGFR>0?ctx.eGFR.toFixed(1):'N/A'} ml/min.</span>
+                            <span class="block text-slate-400 italic">P: Edukasi jadwal minum visual diberikan. ${(totalDanger>0) ? 'INTERVENSI DILAKUKAN: Ditemukan DDI Mayor / Duplikasi.' : 'Lanjutkan terapi sesuai panduan toleransi klinis.'}</span>
                          </button>
                     </div>
-                </div>
-            `;
+                </div>`;
 
             // Prepare Print View
-            els.printSummary.innerHTML = `
-                <p><strong>Jumlah Obat:</strong> ${state.trayIds.length}</p>
-                <p><strong>eGFR:</strong> ${ctx.eGFR>0?ctx.eGFR.toFixed(1):'Tidak dihitung'} ml/min</p>
-                <p><strong>Skor Risiko:</strong> CHA2DS2-VASc (${chads}) | HAS-BLED (${hasbled})</p>
-                <p><strong>Status Analisis:</strong> ${statusText}</p>
-            `;
-
+            els.printSummary.innerHTML = `<p><strong>Jumlah Obat:</strong> ${state.trayIds.length}</p><p><strong>eGFR:</strong> ${ctx.eGFR>0?ctx.eGFR.toFixed(1):'N/A'} ml/min</p><p><strong>Skor Risiko:</strong> CHA2DS2-VASc (${chads}) | HAS-BLED (${hasbled}) | GRACE (${els.scoreGrace.textContent})</p><p><strong>Status Analisis:</strong> ${statusText}</p>`;
             if (autoSwitchTab) switchTab('tab-summary');
         };
 
         window.copySoap = () => {
-            const btn = event.currentTarget;
-            const textToCopy = btn.innerText.replace('Salin Teks', '').trim();
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                showToast('Teks SOAP berhasil disalin ke Clipboard!', 'success');
-            }).catch(err => {
-                // Fallback
-                const textArea = document.createElement("textarea");
-                textArea.value = textToCopy; document.body.appendChild(textArea); textArea.select();
-                try { document.execCommand('copy'); showToast('Teks SOAP disalin!', 'success'); } 
-                catch (ex) { showToast('Gagal menyalin.', 'error'); }
-                document.body.removeChild(textArea);
-            });
+            const btn = event.currentTarget; const textToCopy = btn.innerText.trim();
+            navigator.clipboard.writeText(textToCopy).then(() => showToast('Teks SOAP berhasil disalin!', 'success')).catch(() => showToast('Gagal menyalin.', 'error'));
         };
 
         els.btnAnalyze.addEventListener('click', () => {
-            if (state.trayIds.length === 0) { showToast('Nampan masih kosong! Tambahkan obat dulu.', 'error'); return; }
-            if (!state.inputs.age || !state.inputs.weight) { showToast('Isi Profil Usia & Berat Badan terlebih dahulu.', 'warning'); return; }
+            if (state.trayIds.length === 0) { showToast('Nampan masih kosong! Tambahkan obat.', 'error'); return; }
+            if (!state.inputs.age || !state.inputs.weight) { showToast('Isi Profil Usia & Berat Badan.', 'warning'); return; }
             if (window.innerWidth < 1024) toggleDrawer(false);
             switchToActive(); runAnalysis(true);
         });
 
         window.onload = () => {
             renderConditions(); renderDrugLibrary(); renderTray();
-            const pearls = [
+            const pearls = [ 
                 "Lansia sangat rentan hipoglikemia akibat obat golongan Sulfonilurea (Glimepiride).", 
-                "DOAC (Rivaroxaban) + NSAID (Meloxicam) = Peningkatan risiko perdarahan masif.",
-                "Captopril sering memicu batuk kering persisten akibat akumulasi bradikinin.",
-                "Amiodaron memiliki waktu paruh sangat panjang (58 hari) dan banyak interaksi bahaya."
+                "Nitrat dan obat disfungsi ereksi (Sildenafil) = Hipotensi refrakter fatal.", 
+                "Digoksin menjadi sangat toksik saat pasien kekurangan kalium akibat Furosemide.", 
+                "Jangan gabungkan NSAID, ACE Inhibitor, dan Diuretik (Triple Whammy mematikan ginjal)." 
             ];
             let pIdx = 0; const pEl = document.getElementById('clinical-pearl'); pEl.innerText = pearls[0];
             setInterval(() => { pEl.style.opacity = 0; setTimeout(() => { pIdx = (pIdx + 1) % pearls.length; pEl.innerText = pearls[pIdx]; pEl.style.opacity = 1; }, 500); }, 6000);
