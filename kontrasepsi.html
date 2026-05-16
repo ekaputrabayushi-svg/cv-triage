@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CVD Screen-KB</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInRight { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInTop { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes zoomIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .animate-slide-in-right { animation: slideInRight 0.3s ease-out forwards; }
+        .animate-slide-in-top { animation: slideInTop 0.4s ease-out forwards; }
+        .animate-zoom-in { animation: zoomIn 0.4s ease-out forwards; }
+        
+        /* Menyembunyikan panah pada input number */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        
+        /* Fokus outline kustom untuk aksesibilitas keyboard */
+        button:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+    </style>
+</head>
+
+<body class="bg-slate-100 min-h-screen flex flex-col md:py-8 selection:bg-indigo-100 text-slate-800">
+    <noscript>
+        <div class="p-4 bg-red-600 text-white text-center font-bold">
+            Aplikasi ini memerlukan JavaScript agar berfungsi dengan baik. Mohon aktifkan JavaScript di browser Anda.
+        </div>
+    </noscript>
+
+    <!-- Modal Konfirmasi Reset -->
+    <div id="resetModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full mx-4 shadow-2xl transform scale-95 transition-transform duration-300" id="resetModalContent">
+            <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mb-4 mx-auto">
+                <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-lg font-bold text-center text-slate-800 mb-2">Hapus Data Skrining?</h3>
+            <p class="text-sm text-center text-slate-500 mb-6">Data pasien yang sedang Anda masukkan akan hilang. Anda yakin ingin memulai ulang?</p>
+            <div class="flex gap-3">
+                <button onclick="cancelReset()" class="flex-1 py-3 px-4 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors">Batal</button>
+                <button onclick="executeReset()" class="flex-1 py-3 px-4 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition-colors">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kontainer Aplikasi -->
+    <div id="app" class="w-full max-w-lg mx-auto flex-1 flex flex-col relative"></div>
+
+    <script>
+        const MIN_CONTRACEPTIVE_AGE = 10;
+        const MAX_CONTRACEPTIVE_AGE = 60;
+
+        // XSS Sanitizer (Sangat Penting)
+        function escHtml(unsafe) {
+            if (unsafe === null || unsafe === undefined) return '';
+            return String(unsafe)
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+
+        const INITIAL_FORM_STATE = {
+            age: '', postPartumStatus: 'tidak', isBreastfeeding: null,
+            systolicBP: '', diastolicBP: '', isSmoking: false, smokingAmount: 'light',
+            hxHypertension: null, hxCAD: null, hxStroke: null, hxDVT: null,
+            hxHeartFailure: null, hxMigraineAura: null, hxDMComplication: null, hxDrugInteraction: null
+        };
+
+        let state = {
+            step: 0,
+            role: null,
+            validationError: "",
+            isAnalyzing: false,
+            result: null,
+            formData: { ...INITIAL_FORM_STATE }
+        };
+
+        function clearError() {
+            state.validationError = "";
+            const errorAlert = document.getElementById('error-alert');
+            if (errorAlert) errorAlert.remove(); // Hapus pesan error secara instan
+        }
+
+        function setRole(role) {
+            state.role = role;
+            state.step = 1;
+            render();
+        }
+
+        function handleRadioChange(el) {
+            const key = el.name;
+            let val = el.value;
+            
+            // Konversi kembali nilai string dari HTML ke boolean sejati
+            if (val === 'true') val = true;
+            if (val === 'false') val = false;
+
+            state.formData[key] = val;
+            clearError();
+
+            // Atur bagian form yang muncul bersyarat secara langsung (tanpa render ulang)
+            if (key === 'postPartumStatus') {
+                const bfSection = document.getElementById('section-breastfeeding');
+                if (bfSection) {
+                    if (val !== 'tidak') {
+                        bfSection.classList.remove('hidden');
+                        bfSection.classList.add('animate-slide-in-top');
+                    } else {
+                        bfSection.classList.add('hidden');
+                        bfSection.classList.remove('animate-slide-in-top');
+                        state.formData.isBreastfeeding = null;
+                        document.querySelectorAll('input[name="isBreastfeeding"]').forEach(r => r.checked = false);
+                    }
+                }
+            }
+
+            if (key === 'isSmoking') {
+                const smokeSection = document.getElementById('section-smoking');
+                if (smokeSection) {
+                    if (val === true) {
+                        smokeSection.classList.remove('hidden');
+                        smokeSection.classList.add('animate-slide-in-top');
+                    } else {
+                        smokeSection.classList.add('hidden');
+                        smokeSection.classList.remove('animate-slide-in-top');
+                    }
+                }
+            }
+        }
+
+        function handleTextInput(key, value) {
+            state.formData[key] = value;
+            clearError();
+        }
+
+        function syncInputs() {
+            document.querySelectorAll('input[type="number"]').forEach(input => {
+                const match = input.getAttribute('oninput').match(/handleTextInput\('(\w+)'/);
+                if (match) state.formData[match[1]] = input.value;
+            });
+        }
+
+        // --- Logika Reset Modal ---
+        function confirmReset() {
+            if (state.step >= 1) {
+                const modal = document.getElementById('resetModal');
+                const content = document.getElementById('resetModalContent');
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    content.classList.remove('scale-95');
+                }, 10);
+            } else {
+                executeReset();
+            }
+        }
+
+        function cancelReset() {
+            const modal = document.getElementById('resetModal');
+            const content = document.getElementById('resetModalContent');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function executeReset() {
+            cancelReset();
+            state.step = 0;
+            state.role = null;
+            state.validationError = "";
+            state.isAnalyzing = false;
+            state.result = null;
+            state.formData = { ...INITIAL_FORM_STATE };
+            render();
+        }
+
+        function validateStep() {
+            syncInputs(); // Panggil sinkronisasi sebelum validasi
+            const { formData, step } = state;
+            
+            if (step === 1) {
+                if (!formData.age) return "Mohon isi usia pasien.";
+                const age = parseInt(formData.age);
+                if (age < MIN_CONTRACEPTIVE_AGE || age > MAX_CONTRACEPTIVE_AGE) return "Usia tidak valid untuk pengguna KB (Harap isi antara 10-60).";
+                if (formData.postPartumStatus !== 'tidak' && formData.isBreastfeeding === null) return "Mohon tentukan status menyusui pasien.";
+            }
+            if (step === 2) {
+                if (!formData.systolicBP || !formData.diastolicBP) return "Tensi wajib diisi.";
+                const sys = parseInt(formData.systolicBP);
+                const dia = parseInt(formData.diastolicBP);
+                if (sys < 70 || dia < 40) return "Angka tensi terlalu rendah atau tidak valid.";
+                if (sys > 300 || dia > 200) return "Nilai tensi melebihi batas anatomis yang masuk akal.";
+                if (sys <= dia) return "Tensi Sistolik harus lebih tinggi dari Diastolik.";
+            }
+            if (step === 3) {
+                const anamnesisKeys = ['hxHypertension', 'hxCAD', 'hxStroke', 'hxDVT', 'hxHeartFailure', 'hxMigraineAura', 'hxDMComplication', 'hxDrugInteraction'];
+                const unanswered = anamnesisKeys.some(key => state.formData[key] === null);
+                if (unanswered) return "Mohon jawab semua pertanyaan anamnesis (Ya/Tidak).";
+            }
+            return "";
+        }
+
+        function nextStep() {
+            const error = validateStep();
+            if (error) {
+                state.validationError = error;
+                render();
+                return;
+            }
+            
+            state.validationError = "";
+            if (state.step === 3) {
+                state.isAnalyzing = true;
+                render(); // Munculkan loader spin
+                
+                setTimeout(() => {
+                    try {
+                        evaluateRisk();
+                        state.step = 4;
+                    } catch (e) {
+                        state.validationError = "Terjadi kesalahan sistem saat memproses analisis.";
+                        console.error("Clinical Logic Error:", e);
+                    } finally {
+                        state.isAnalyzing = false;
+                        render();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                }, 800);
+                return;
+            }
+            
+            state.step++;
+            render();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function prevStep() {
+            state.step--;
+            state.validationError = "";
+            render();
+        }
+
+        function evaluateRisk() {
+            let mec = 1;
+            let reasons = [];
+            
+            // Helper untuk mencegah downgrading risiko yang lebih berat (MEC 4 tidak bisa ditimpa MEC 3)
+            const raiseMec = (level, reason) => {
+                if (level > mec) mec = level;
+                reasons.push(reason);
+            };
+            
+            const { formData, role } = state;
+            const sys = parseInt(formData.systolicBP);
+            const dia = parseInt(formData.diastolicBP);
+            const age = parseInt(formData.age);
+
+            // 1. EVALUASI VITAL SIGN (Tensi)
+            if (sys >= 160 || dia >= 100) raiseMec(4, `Tensi Sangat Tinggi (${sys}/${dia} mmHg)`);
+            else if ((sys >= 140 && sys < 160) || (dia >= 90 && dia < 100)) raiseMec(3, `Tensi Tinggi (${sys}/${dia} mmHg)`);
+            
+            if (formData.hxHypertension && sys < 140 && dia < 90) {
+                raiseMec(3, "Riwayat Hipertensi, walaupun tensi saat ini terpantau normal");
+            }
+
+            // 2. EVALUASI ANAMNESIS (Red Flags Kardiovaskular)
+            if (formData.hxCAD) raiseMec(4, "Riwayat Penyakit Jantung Koroner / Iskemik");
+            if (formData.hxStroke) raiseMec(4, "Riwayat Stroke atau TIA");
+            if (formData.hxDVT) raiseMec(4, "Riwayat Trombosis Vena Dalam (DVT) / Emboli Paru");
+            if (formData.hxMigraineAura) raiseMec(4, "Migrain dengan Aura (Risiko stroke iskemik mematikan)");
+            if (formData.hxDMComplication) raiseMec(4, "Diabetes dengan komplikasi vaskular / nefropati / retinopati");
+            if (formData.hxHeartFailure) raiseMec(4, "Riwayat Gagal Jantung / Penyakit Katup Berkomplikasi");
+            
+            // 3. EVALUASI FAKTOR RISIKO KOMBINASI (Usia + Merokok)
+            if (age >= 35 && formData.isSmoking) {
+                if (formData.smokingAmount === 'heavy') raiseMec(4, "Usia ≥ 35 tahun dipadu Merokok ≥ 15 batang/hari");
+                else raiseMec(3, "Usia ≥ 35 tahun dipadu Merokok < 15 batang/hari");
+            }
+
+            // 4. EVALUASI LAKTASI & NIFAS (WHO MEC 2015 Update)
+            if (formData.postPartumStatus === 'kurang21') {
+                // <21 Hari mutlak MEC 4 untuk Estrogen karena risiko VTE sangat tinggi paska persalinan
+                raiseMec(4, "Masa nifas < 21 hari (Risiko VTE sistemik paska persalinan sangat tinggi)");
+            } else if (formData.postPartumStatus === 'antara21_42' && formData.isBreastfeeding) {
+                // 21-42 Hari + Laktasi
+                raiseMec(3, "Masa nifas 21-42 hari dan aktif menyusui (Estrogen mengganggu laktasi & sisa risiko VTE)");
+            }
+            // Catatan: Masa nifas > 42 hari atau 21-42 hari tanpa laktasi dinilai MEC 1 untuk CHC (sudah tercover default)
+            
+            // 5. EVALUASI INTERAKSI OBAT
+            if (formData.hxDrugInteraction) {
+                raiseMec(3, "Penggunaan enzim-inducer (Antikonvulsan/Rifampisin/ARV) menurunkan efektivitas hormon");
+            }
+
+            // 6. PENENTUAN OUTCOME BERDASARKAN ROLE
+            let rec_title, rec_subtitle, rec_color, rec_desc, rec_action;
+
+            if (mec === 4) {
+                rec_title = "KONTRAINDIKASI (MEC 4)";
+                rec_subtitle = "DILARANG KERAS BERIKAN ESTROGEN";
+                rec_color = "red";
+                rec_desc = "Pil Kombinasi sangat berbahaya dan dapat memicu kejadian kardiovaskular fatal (serangan jantung, stroke) pada pasien ini.";
+                rec_action = role === 'bidan' 
+                    ? "TINDAKAN BIDAN: JANGAN berikan Pil KB Kombinasi atau Suntik 1 Bulan. Edukasi risiko fatal. Sarankan IUD Tembaga atau Kondom sementara. SEGERA RUJUK pasien ke Dokter Puskesmas untuk konfirmasi diagnosis."
+                    : "TINDAKAN DOKTER: Kontraindikasi absolut Estrogen. Pilihan lini pertama yang aman adalah AKDR (IUD) Tembaga, LNG-IUS, atau Implan Progestin. Rujuk ke Sp.JP/Sp.PD/Sp.S jika penyakit penyerta memburuk.";
+            } else if (mec === 3) {
+                rec_title = "RISIKO TINGGI (MEC 3)";
+                rec_subtitle = "HINDARI PIL KOMBINASI";
+                rec_color = "amber";
+                rec_desc = "Risiko perburukan vaskular/metabolik melebihi manfaat kontrasepsinya. Cari metode alternatif.";
+                
+                if (formData.hxDrugInteraction) {
+                    rec_action = role === 'bidan'
+                        ? "TINDAKAN BIDAN: Obat yang dikonsumsi pasien merusak kerja Pil KB (bisa kebobolan hamil). Tawarkan AKDR (IUD) Tembaga sebagai metode paling efektif tanpa interaksi. Konsultasikan ke Dokter."
+                        : "TINDAKAN DOKTER: Karena adanya penggunaan enzim-inducer, metode hormonal sistemik tidak efektif. Prioritaskan pemasangan AKDR Tembaga (MEC 1) atau Depot Medroxyprogesterone (DMPA) sebagai lini kedua.";
+                } else {
+                    rec_action = role === 'bidan'
+                        ? "TINDAKAN BIDAN: Tunda pemberian Pil Kombinasi. Alihkan ke Pil Progestin (Minipil/POP) atau Implan jika tersedia. Konsulkan ke Dokter Puskesmas untuk tata laksana risiko penyerta."
+                        : "TINDAKAN DOKTER: Ganti dengan Kontrasepsi Progestin Saja (POP, Implan, Suntik 3 Bulan) atau IUD. Lakukan modifikasi gaya hidup dan intervensi farmakologis untuk komorbid pasien.";
+                }
+            } else {
+                rec_title = "AMAN (MEC 1 / 2)";
+                rec_subtitle = "BISA DIBERIKAN";
+                rec_color = "teal";
+                rec_desc = "Tidak ditemukan kontraindikasi kardiovaskular mayor. Pil Kombinasi dapat diberikan dengan pantauan standar.";
+                rec_action = "TINDAKAN: Silakan berikan Pil Kombinasi sesuai SOP Faskes. Ingatkan pasien untuk kembali kontrol jika mengalami pusing berputar hebat, nyeri dada, atau tungkai bengkak tiba-tiba.";
+            }
+
+            state.result = { mec, title: rec_title, subtitle: rec_subtitle, color: rec_color, desc: rec_desc, action: rec_action, reasons };
+        }
+
+        function renderStep0() {
+            return `
+                <div class="space-y-8 animate-zoom-in text-center py-6 px-2">
+                    <div class="space-y-4">
+                        <div class="w-24 h-24 bg-gradient-to-br from-indigo-100 to-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner border-4 border-white shadow-lg">
+                            <i data-lucide="heart-pulse" class="w-12 h-12 text-rose-600"></i>
+                        </div>
+                        <h1 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">CVD Screen-KB</h1>
+                        <p class="text-slate-500 max-w-md mx-auto leading-relaxed text-sm md:text-base px-4">
+                            Sistem pendukung keputusan klinis untuk menentukan keamanan pemberian kontrasepsi hormonal pada wanita dengan komorbid, berdasarkan panduan <span class="font-bold text-slate-700">WHO Medical Eligibility Criteria</span>.
+                        </p>
+                    </div>
+                    
+                    <div class="w-12 h-1 bg-slate-200 mx-auto rounded-full my-6"></div>
+
+                    <div class="space-y-2">
+                        <h2 class="text-xl font-extrabold text-slate-800">Mulai Skrining</h2>
+                        <p class="text-slate-500 text-sm max-w-sm mx-auto">Pilih peran Anda untuk menyesuaikan rekomendasi tata laksana akhir di Faskes.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                        <button type="button" onclick="setRole('bidan')" class="flex flex-col items-center p-6 border-2 border-slate-200 rounded-3xl hover:border-pink-400 hover:bg-pink-50 focus-visible:border-pink-400 transition-all group hover:shadow-md cursor-pointer">
+                            <i data-lucide="user" class="text-slate-400 group-hover:text-pink-500 mb-4 w-12 h-12 transition-colors"></i>
+                            <span class="font-bold text-lg text-slate-700 group-hover:text-pink-600">Bidan Faskes</span>
+                            <span class="text-sm text-slate-500 mt-2 text-center">Alur skrining cepat & Indikasi Rujuk Internal</span>
+                        </button>
+                        <button type="button" onclick="setRole('dokter')" class="flex flex-col items-center p-6 border-2 border-slate-200 rounded-3xl hover:border-teal-400 hover:bg-teal-50 focus-visible:border-teal-400 transition-all group hover:shadow-md cursor-pointer">
+                            <i data-lucide="user-check" class="text-slate-400 group-hover:text-teal-500 mb-4 w-12 h-12 transition-colors"></i>
+                            <span class="font-bold text-lg text-slate-700 group-hover:text-teal-600">Dokter Faskes</span>
+                            <span class="text-sm text-slate-500 mt-2 text-center">Detail patofisiologi & Manajemen Klinis</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStep1() {
+            const fd = state.formData;
+            return `
+                <div class="space-y-6 animate-slide-in-right">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="bg-indigo-100 p-2 rounded-lg text-indigo-600"><i data-lucide="baby"></i></div>
+                        <h3 class="text-lg font-bold text-slate-800">Profil Pasien Dasar</h3>
+                    </div>
+
+                    <div class="space-y-3">
+                        <label for="inputAge" class="text-sm font-bold text-slate-700 block">Usia Pasien</label>
+                        <div class="relative">
+                            <input type="number" id="inputAge" min="0" step="1" value="${escHtml(fd.age)}" oninput="handleTextInput('age', this.value)"
+                                onkeydown="return !['e', 'E', '+', '-', '.'].includes(event.key)"
+                                class="w-full p-4 border-2 border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 outline-none transition-all text-lg font-medium"
+                                placeholder="Masukkan usia...">
+                            <span class="absolute right-5 top-4 text-slate-400 font-medium pointer-events-none">Tahun</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 pt-4">
+                        <span class="text-sm font-bold text-slate-700 block mb-2">Status Kehamilan / Nifas Terakhir</span>
+                        <div class="space-y-3">
+                            ${renderRadioOption('postPartumStatus', 'kurang21', 'Baru Melahirkan (< 21 Hari)', fd.postPartumStatus === 'kurang21', 'Risiko sangat tinggi penggumpalan darah (VTE)', 'amber')}
+                            ${renderRadioOption('postPartumStatus', 'antara21_42', 'Baru Melahirkan (21 - 42 Hari)', fd.postPartumStatus === 'antara21_42', '', 'indigo')}
+                            ${renderRadioOption('postPartumStatus', 'lebih42', 'Baru Melahirkan (> 42 Hari)', fd.postPartumStatus === 'lebih42', '', 'indigo')}
+                            ${renderRadioOption('postPartumStatus', 'tidak', 'Tidak Sedang Nifas', fd.postPartumStatus === 'tidak', '', 'indigo')}
+                        </div>
+                        
+                        <div id="section-breastfeeding" class="pl-6 border-l-4 border-indigo-200 ml-4 py-2 space-y-3 mt-4 ${fd.postPartumStatus !== 'tidak' ? 'animate-slide-in-top' : 'hidden'}">
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Apakah Pasien Menyusui Eksklusif?</span>
+                            <div class="flex gap-3">
+                                <label class="flex-1 text-center py-2 px-3 border-2 border-slate-200 rounded-xl cursor-pointer font-medium text-sm transition-colors text-slate-500 hover:bg-slate-50 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 has-[:checked]:text-indigo-700">
+                                    <input type="radio" name="isBreastfeeding" value="true" ${fd.isBreastfeeding === true ? 'checked' : ''} onchange="handleRadioChange(this)" class="sr-only">
+                                    Ya, Menyusui
+                                </label>
+                                <label class="flex-1 text-center py-2 px-3 border-2 border-slate-200 rounded-xl cursor-pointer font-medium text-sm transition-colors text-slate-500 hover:bg-slate-50 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 has-[:checked]:text-indigo-700">
+                                    <input type="radio" name="isBreastfeeding" value="false" ${fd.isBreastfeeding === false ? 'checked' : ''} onchange="handleRadioChange(this)" class="sr-only">
+                                    Tidak Menyusui
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStep2() {
+            const fd = state.formData;
+            return `
+                <div class="space-y-6 animate-slide-in-right">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="bg-indigo-100 p-2 rounded-lg text-indigo-600"><i data-lucide="activity"></i></div>
+                        <h3 class="text-lg font-bold text-slate-800">Tanda Vital & Kebiasaan</h3>
+                    </div>
+
+                    <div class="space-y-3">
+                        <label class="text-sm font-bold text-slate-700 block">Tekanan Darah Saat Ini</label>
+                        <div class="flex items-center gap-4">
+                            <div class="relative flex-1">
+                                <input type="number" min="0" step="1" value="${escHtml(fd.systolicBP)}" oninput="handleTextInput('systolicBP', this.value)"
+                                    onkeydown="return !['e', 'E', '+', '-', '.'].includes(event.key)" aria-label="Sistolik"
+                                    class="w-full p-4 border-2 border-slate-200 rounded-2xl focus:border-indigo-500 outline-none text-lg font-medium text-center"
+                                    placeholder="Sistolik">
+                                <span class="absolute right-4 top-4 text-xs text-slate-400 pointer-events-none">mmHg</span>
+                            </div>
+                            <span class="text-2xl text-slate-300 font-light">/</span>
+                            <div class="relative flex-1">
+                                <input type="number" min="0" step="1" value="${escHtml(fd.diastolicBP)}" oninput="handleTextInput('diastolicBP', this.value)"
+                                    onkeydown="return !['e', 'E', '+', '-', '.'].includes(event.key)" aria-label="Diastolik"
+                                    class="w-full p-4 border-2 border-slate-200 rounded-2xl focus:border-indigo-500 outline-none text-lg font-medium text-center"
+                                    placeholder="Diastolik">
+                                <span class="absolute right-4 top-4 text-xs text-slate-400 pointer-events-none">mmHg</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 pt-6 border-t border-slate-100 mt-4">
+                        <span class="text-sm font-bold text-slate-700 block">Kebiasaan Merokok</span>
+                        <div class="flex gap-3">
+                            <label class="flex-1 text-center p-4 border-2 border-slate-200 rounded-2xl cursor-pointer transition-colors text-slate-500 hover:bg-slate-50 has-[:checked]:border-teal-500 has-[:checked]:bg-teal-50 has-[:checked]:text-teal-700 has-[:checked]:font-bold">
+                                <input type="radio" name="isSmoking" value="false" ${fd.isSmoking === false ? 'checked' : ''} onchange="handleRadioChange(this)" class="sr-only">
+                                Tidak Merokok
+                            </label>
+                            <label class="flex-1 text-center p-4 border-2 border-slate-200 rounded-2xl cursor-pointer transition-colors text-slate-500 hover:bg-slate-50 has-[:checked]:border-red-500 has-[:checked]:bg-red-50 has-[:checked]:text-red-700 has-[:checked]:font-bold">
+                                <input type="radio" name="isSmoking" value="true" ${fd.isSmoking === true ? 'checked' : ''} onchange="handleRadioChange(this)" class="sr-only">
+                                Ya, Merokok
+                            </label>
+                        </div>
+                        
+                        <div id="section-smoking" class="pl-6 border-l-4 border-red-200 ml-4 py-2 space-y-3 mt-4 ${fd.isSmoking ? 'animate-slide-in-top' : 'hidden'}">
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Jumlah Batang Per Hari?</span>
+                            <div class="flex gap-3">
+                                <label class="flex-1 text-center py-2 px-3 border-2 border-slate-200 rounded-xl cursor-pointer font-medium text-sm transition-colors text-slate-500 hover:bg-slate-50 has-[:checked]:border-red-500 has-[:checked]:bg-red-50 has-[:checked]:text-red-700">
+                                    <input type="radio" name="smokingAmount" value="light" ${fd.smokingAmount === 'light' ? 'checked' : ''} onchange="handleRadioChange(this)" class="sr-only">
+                                    < 15 Batang
+                                </label>
+                                <label class="flex-1 text-center py-2 px-3 border-2 border-slate-200 rounded-xl cursor-pointer font-medium text-sm transition-colors text-slate-500 hover:bg-slate-50 has-[:checked]:border-red-500 has-[:checked]:bg-red-50 has-[:checked]:text-red-700">
+                                    <input type="radio" name="smokingAmount" value="heavy" ${fd.smokingAmount === 'heavy' ? 'checked' : ''} onchange="handleRadioChange(this)" class="sr-only">
+                                    ≥ 15 Batang
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStep3() {
+            const fd = state.formData;
+            const q = [
+                { id: 'hxHypertension', title: 'Riwayat Darah Tinggi', sub: '"Apakah Ibu pernah dibilang punya darah tinggi, termasuk saat hamil (preeklamsia)?"' },
+                { id: 'hxCAD', title: 'Nyeri Dada Jantung', sub: '"Pernahkah nyeri dada kiri seperti tertindih beban berat, menjalar ke lengan?"' },
+                { id: 'hxStroke', title: 'Riwayat Stroke / TIA', sub: '"Pernahkah lumpuh separuh tubuh, bicara pelo, atau pingsan tiba-tiba?"' },
+                { id: 'hxDVT', title: 'Gumpalan Darah (DVT)', sub: '"Pernah salah satu kaki bengkak hebat, merah, nyeri, atau sesak napas mendadak?"' },
+                { id: 'hxHeartFailure', title: 'Gagal Jantung / Katup', sub: '"Sering sesak napas saat tidur telentang, atau punya riwayat katup jantung bocor?"' },
+                { id: 'hxMigraineAura', title: 'Migrain dengan Aura', sub: '"Sering sakit kepala sebelah didahului kilatan cahaya/pandangan kabur sesaat?"' },
+                { id: 'hxDMComplication', title: 'Diabetes Komplikasi Lama', sub: '"Punya sakit gula >20 tahun, atau sudah mengenai mata dan ginjal?"' },
+                { id: 'hxDrugInteraction', title: 'Konsumsi Obat Jangka Panjang', sub: '"Sedang rutin minum obat kejang (Epilepsi), obat TBC (Rifampisin), atau HIV (ARV)?"' }
+            ];
+
+            return `
+                <div class="space-y-4 animate-slide-in-right">
+                    <div class="flex flex-col gap-2 mb-6 bg-red-50 p-4 rounded-2xl border border-red-100">
+                        <div class="flex items-center gap-2 text-red-700 font-bold">
+                            <i data-lucide="shield-alert" class="w-5 h-5"></i> <span>Deteksi Tanda Bahaya (Red Flags)</span>
+                        </div>
+                        <p class="text-sm text-red-600/80">Tanyakan dengan saksama. Jawaban "YA" pada salah satu kondisi di bawah ini berpotensi menjadi kontraindikasi.</p>
+                    </div>
+                    <div class="space-y-4">
+                        ${q.map(item => renderYesNoQuestion(item.id, item.title, item.sub, fd[item.id])).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStep4() {
+            const res = state.result;
+            if (!res) return '';
+
+            // Map untuk menghindari dynamic string class pada Tailwind
+            const themeMap = {
+                red: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-900', iconBg: 'bg-red-100', icon: 'text-red-500', dot: 'bg-red-500', iconName: 'alert-triangle' },
+                amber: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-900', iconBg: 'bg-amber-100', icon: 'text-amber-500', dot: 'bg-amber-500', iconName: 'activity' },
+                teal: { bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-900', iconBg: 'bg-teal-100', icon: 'text-teal-500', dot: 'bg-teal-500', iconName: 'check-circle-2' }
+            };
+            const theme = themeMap[res.color];
+
+            return `
+                <div class="space-y-6 animate-zoom-in">
+                    <!-- Banner Hasil -->
+                    <div class="p-8 rounded-3xl border-2 text-center flex flex-col items-center shadow-sm ${theme.bg} ${theme.border} ${theme.text}">
+                        <div class="w-20 h-20 rounded-full flex items-center justify-center mb-5 ${theme.iconBg} ${theme.icon}">
+                            <i data-lucide="${theme.iconName}" class="w-10 h-10"></i>
+                        </div>
+                        <span class="text-xs font-bold tracking-widest px-4 py-1.5 rounded-full bg-white/60 mb-3 uppercase shadow-sm border border-white">
+                            Kategori WHO MEC : ${escHtml(res.mec)}
+                        </span>
+                        <h2 class="text-2xl font-black mb-2 leading-tight">${escHtml(res.subtitle)}</h2>
+                        <p class="text-sm font-medium opacity-90 px-2 mt-2">${escHtml(res.desc)}</p>
+                    </div>
+
+                    <!-- Breakdown Temuan -->
+                    ${res.reasons.length > 0 ? `
+                    <div class="bg-white border-2 border-slate-100 p-6 rounded-3xl shadow-sm">
+                        <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center uppercase tracking-wider">
+                            <i data-lucide="stethoscope" class="w-5 h-5 mr-2 text-slate-400"></i> Temuan Klinis:
+                        </h3>
+                        <ul class="space-y-3">
+                            ${res.reasons.map(r => `
+                                <li class="flex items-start text-sm text-slate-600 bg-slate-50 p-3 rounded-xl">
+                                    <div class="w-2 h-2 rounded-full mt-1.5 mr-3 flex-shrink-0 ${theme.dot}"></div>
+                                    <span class="font-medium leading-relaxed">${escHtml(r)}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                    ` : ''}
+
+                    <!-- Instruksi Tindakan -->
+                    <div class="border-2 p-6 rounded-3xl shadow-sm ${state.role === 'bidan' ? 'bg-pink-50 border-pink-100' : 'bg-indigo-50 border-indigo-100'}">
+                        <h3 class="text-sm font-bold mb-3 flex items-center uppercase tracking-wider ${state.role === 'bidan' ? 'text-pink-800' : 'text-indigo-800'}">
+                            <i data-lucide="${state.role === 'bidan' ? 'user' : 'user-check'}" class="w-5 h-5 mr-2"></i> Rencana Tindakan
+                        </h3>
+                        <p class="text-sm leading-relaxed font-semibold ${state.role === 'bidan' ? 'text-pink-900' : 'text-indigo-900'}">
+                            ${escHtml(res.action)}
+                        </p>
+                    </div>
+
+                    <button type="button" onclick="confirmReset()" class="w-full bg-slate-900 hover:bg-slate-800 focus-visible:bg-slate-800 text-white font-bold py-4 px-4 rounded-2xl flex items-center justify-center transition-all shadow-xl shadow-slate-200 mt-8">
+                        <i data-lucide="rotate-ccw" class="w-5 h-5 mr-2"></i> Mulai Skrining Pasien Baru
+                    </button>
+                </div>
+            `;
+        }
+
+        function renderRadioOption(name, value, label, isChecked, subtitle = "", colorTheme = "indigo") {
+            const themeMap = {
+                indigo: { wrapper: 'has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 has-[:checked]:text-indigo-800', dot: 'bg-indigo-500', circle: 'peer-checked:border-indigo-500' },
+                amber: { wrapper: 'has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50 has-[:checked]:text-amber-800', dot: 'bg-amber-500', circle: 'peer-checked:border-amber-500' }
+            };
+            const theme = themeMap[colorTheme] || themeMap.indigo;
+            
+            return `
+                <label class="relative w-full text-left flex items-center p-4 border-2 border-slate-200 rounded-2xl cursor-pointer transition-all hover:bg-slate-50 text-slate-700 ${theme.wrapper}">
+                    <input type="radio" name="${name}" value="${value}" ${isChecked ? 'checked' : ''} onchange="handleRadioChange(this)" class="peer sr-only">
+                    <div class="w-5 h-5 rounded-full border-2 border-slate-300 mr-3 flex items-center justify-center flex-shrink-0 transition-colors ${theme.circle}">
+                        <div class="w-2.5 h-2.5 rounded-full ${theme.dot} opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+                    </div>
+                    <div class="flex-1">
+                        <span class="font-bold block">${escHtml(label)}</span>
+                        ${subtitle ? `<p class="text-xs mt-1 opacity-80">${escHtml(subtitle)}</p>` : ''}
+                    </div>
+                </label>
+            `;
+        }
+
+        function renderYesNoQuestion(id, title, subtitle, value) {
+            return `
+                <div class="p-5 border border-slate-200 rounded-2xl bg-white shadow-sm hover:border-indigo-200 transition-colors" role="group" aria-labelledby="${id}-title" aria-describedby="${id}-subtitle">
+                    <div class="mb-3">
+                        <h4 id="${id}-title" class="font-bold text-slate-800 text-base">${escHtml(title)}</h4>
+                        <p id="${id}-subtitle" class="text-sm text-slate-500 mt-1">${escHtml(subtitle)}</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <label class="flex-1 flex items-center justify-center p-3 rounded-xl border-2 border-slate-200 cursor-pointer transition-all font-medium text-slate-600 hover:bg-slate-50 has-[:checked]:border-red-500 has-[:checked]:bg-red-50 has-[:checked]:text-red-700">
+                            <input type="radio" name="${id}" value="true" ${value === true ? 'checked' : ''} onchange="handleRadioChange(this)" class="sr-only">
+                            Ya, Pernah
+                        </label>
+                        <label class="flex-1 flex items-center justify-center p-3 rounded-xl border-2 border-slate-200 cursor-pointer transition-all font-medium text-slate-600 hover:bg-slate-50 has-[:checked]:border-teal-500 has-[:checked]:bg-teal-50 has-[:checked]:text-teal-700">
+                            <input type="radio" name="${id}" value="false" ${value === false ? 'checked' : ''} onchange="handleRadioChange(this)" class="sr-only">
+                            Tidak
+                        </label>
+                    </div>
+                </div>
+            `;
+        }
+
+        function render() {
+            const app = document.getElementById('app');
+            let content = '';
+
+            // Bagian Header & Watermark
+            content += `
+                <!-- Watermark -->
+                <div class="absolute top-0 left-0 w-full z-30 pt-4 flex justify-center pointer-events-none animate-slide-in-top">
+                    <div class="inline-flex flex-col items-center justify-center pointer-events-auto bg-white/70 px-5 py-2 rounded-2xl shadow-sm border border-white/60 backdrop-blur-md">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="heart-pulse" class="w-4 h-4 text-rose-500"></i>
+                            <span class="text-[10px] font-black tracking-widest uppercase text-slate-700">Part of CardiologyVault</span>
+                        </div>
+                        <p class="text-[9px] font-bold text-slate-500 mt-0.5 tracking-wide uppercase">Dev: Bayushi Eka Putra, MD, FIHA</p>
+                    </div>
+                </div>
+
+                <!-- Main Header Dinamis -->
+                ${state.step > 0 ? `
+                <div class="bg-slate-900 text-white p-6 pt-24 md:rounded-t-[2rem] shadow-xl relative overflow-hidden z-20">
+                    <div class="absolute -top-10 -right-10 opacity-5 pointer-events-none">
+                        <i data-lucide="heart-pulse" style="width: 180px; height: 180px;"></i>
+                    </div>
+                    <div class="relative z-10 flex justify-between items-center">
+                        <div>
+                            <h1 class="text-xl font-black tracking-tight flex items-center">
+                                CVD Screen-KB <span class="ml-2 bg-indigo-500 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-widest">${escHtml(state.role)}</span>
+                            </h1>
+                            <p class="text-xs text-slate-400 mt-1 font-medium">Algoritma WHO MEC Faskes Primer</p>
+                        </div>
+                        <button type="button" onclick="confirmReset()" aria-label="Mulai Ulang" class="text-slate-400 hover:text-white focus-visible:text-white transition-colors bg-slate-800 p-2 rounded-full cursor-pointer">
+                            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+                ` : '<div class="pt-24"></div>'}
+            `;
+
+            // Bagian Body & Konten Utama
+            content += `
+                <div class="bg-white flex-1 shadow-2xl relative z-10 ${state.step === 0 ? 'md:rounded-[2rem]' : 'md:rounded-b-[2rem] border-x border-b border-slate-200'}">
+                    
+                    <!-- Progress Bar (Hanya step 1-3) -->
+                    ${state.step > 0 && state.step < 4 ? `
+                    <div class="px-8 pt-8 pb-4" aria-hidden="true">
+                        <div class="flex items-center justify-between relative">
+                            <div class="absolute left-0 top-1/2 w-full h-1.5 bg-slate-100 -z-10 rounded-full"></div>
+                            <div class="absolute left-0 top-1/2 h-1.5 bg-indigo-500 -z-10 rounded-full transition-all duration-700 ease-out" style="width: ${((state.step - 1) / 2) * 100}%"></div>
+                            
+                            ${[1, 2, 3].map(num => `
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-500 ${state.step >= num ? 'bg-indigo-600 text-white ring-4 ring-indigo-50 scale-110' : 'bg-slate-100 text-slate-400 border-2 border-white'}">
+                                ${state.step > num ? '<i data-lucide="check-circle-2" class="w-4 h-4"></i>' : num}
+                            </div>
+                            `).join('')}
+                        </div>
+                        <div class="flex justify-between mt-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            <span class="${state.step >= 1 ? 'text-indigo-600' : ''}">Profil</span>
+                            <span class="${state.step >= 2 ? 'text-indigo-600' : ''}">Vitals</span>
+                            <span class="${state.step >= 3 ? 'text-indigo-600' : ''}">Anamnesis</span>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <!-- Injeksi Dinamis Berdasarkan Step -->
+                    <main class="${state.step === 0 ? 'p-8' : 'px-8 pb-8 pt-4'}">
+                        ${state.step === 0 ? renderStep0() : ''}
+                        ${state.step === 1 ? renderStep1() : ''}
+                        ${state.step === 2 ? renderStep2() : ''}
+                        ${state.step === 3 ? renderStep3() : ''}
+                        ${state.step === 4 ? renderStep4() : ''}
+                    </main>
+
+                    <!-- Footer Navigasi -->
+                    ${state.step > 0 && state.step < 4 ? `
+                    <div class="px-8 pb-8 bg-white md:rounded-b-[2rem]">
+                        ${state.validationError ? `
+                        <div id="error-alert" role="alert" aria-live="assertive" class="mb-4 p-3 bg-red-50 text-red-600 text-sm font-bold rounded-xl flex items-center animate-slide-in-top">
+                            <i data-lucide="alert-triangle" class="w-4 h-4 mr-2 flex-shrink-0"></i> ${escHtml(state.validationError)}
+                        </div>
+                        ` : ''}
+                        
+                        <div class="flex gap-3">
+                            ${state.step > 1 ? `
+                            <button type="button" onclick="prevStep()" aria-label="Kembali ke langkah sebelumnya" class="px-5 py-4 border-2 border-slate-200 text-slate-600 rounded-2xl hover:bg-slate-50 focus-visible:bg-slate-50 transition-colors flex items-center font-bold">
+                                <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                            </button>
+                            ` : ''}
+                            
+                            <button type="button" onclick="nextStep()" ${state.isAnalyzing ? 'disabled' : ''} class="flex-1 bg-indigo-600 hover:bg-indigo-700 focus-visible:bg-indigo-700 text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center transition-all shadow-lg shadow-indigo-200 ${state.isAnalyzing ? 'opacity-80 cursor-wait' : ''}">
+                                ${state.step === 3 ? (
+                                    state.isAnalyzing 
+                                    ? '<i data-lucide="loader-2" class="w-5 h-5 mr-2 animate-spin"></i> Menganalisis...' 
+                                    : '<i data-lucide="activity" class="w-5 h-5 mr-2"></i> Analisis Rekomendasi'
+                                ) : 'Lanjutkan <i data-lucide="chevron-right" class="w-5 h-5 ml-2"></i>'}
+                            </button>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+
+            app.innerHTML = content;
+            lucide.createIcons();
+        }
+
+        // Jalankan render setelah DOM siap
+        document.addEventListener('DOMContentLoaded', render);
+    </script>
+</body>
+</html>
