@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard Kasus Hipertensi Puskesmas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        .card-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        .is-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05); 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2); 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.4); 
+        }
+
+        .answer-text {
+            line-height: 1.5;
+            letter-spacing: 0.01em;
+        }
+        .answer-text strong {
+            color: #0f766e; /* teal-700 */
+        }
+        .answer-text ul {
+            list-style-type: disc;
+            padding-left: 1.25rem;
+            margin-top: 0.25rem;
+            margin-bottom: 0.5rem;
+        }
+        .answer-text li {
+            margin-bottom: 0.25rem;
+        }
+        .answer-text em {
+            color: #64748b; /* Slate 500 */
+            font-style: italic;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen font-sans flex flex-col overflow-x-hidden selection:bg-teal-500 selection:text-white">
+
+    <header class="bg-teal-800 text-white shadow-lg p-3 md:p-4 sticky top-0 z-20 border-b border-teal-900">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0">
+            <div class="text-center sm:text-left">
+                <h1 class="text-lg sm:text-xl md:text-2xl font-bold flex items-center justify-center sm:justify-start gap-2 text-white">
+                    <span>🩺</span> Flashcard Hipertensi (Puskesmas)
+                </h1>
+                <p class="text-[10px] sm:text-xs md:text-sm text-teal-200 font-medium tracking-wide">
+                    50 Situational-Based Challenges untuk Dokter Umum FKTP
+                </p>
+            </div>
+            <div class="text-[10px] sm:text-xs md:text-sm font-medium bg-teal-900 px-3 py-1 rounded-full border border-teal-500 shadow-sm text-center text-white">
+                Panduan Praktis & Pitfalls
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex flex-col items-center justify-start sm:justify-center p-4 md:p-8 max-w-4xl mx-auto w-full">
+        
+        <!-- Progress Info -->
+        <div class="w-full flex justify-between items-center mb-3 md:mb-4">
+            <span id="card-category" class="text-xs md:text-sm uppercase tracking-wider text-teal-700 font-bold bg-teal-100 border border-teal-200 px-3 py-1 rounded shadow-sm">Kategori</span>
+            <span id="card-counter" class="text-xs md:text-sm bg-white px-3 py-1 rounded-full shadow-sm font-bold border border-slate-300 text-slate-700">1 / 50</span>
+        </div>
+
+        <div id="flashcard" tabindex="0" class="relative w-full max-w-2xl h-[68vh] min-h-[480px] md:h-[550px] perspective-1000 cursor-pointer group mb-6 md:mb-8 touch-pan-y focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-teal-500 rounded-2xl md:rounded-3xl select-none" onclick="toggleFlip(event)">
+            <div class="card-inner w-full h-full absolute transform-style-3d shadow-xl rounded-2xl md:rounded-3xl">
+                
+                <!-- Front (Question) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-white rounded-2xl md:rounded-3xl p-6 md:p-10 flex flex-col items-center justify-center text-center border-t-4 border-teal-600 shadow-md">
+                    <div class="absolute top-4 left-5 text-slate-100 font-extrabold text-4xl md:text-5xl opacity-80">Kasus</div>
+                    <div class="w-full h-full flex flex-col justify-center overflow-y-auto custom-scrollbar pt-8 pb-8 pr-2">
+                        <p id="question-text" class="text-base sm:text-lg md:text-xl text-slate-800 font-bold leading-relaxed m-auto select-text">
+                            Memuat pertanyaan...
+                        </p>
+                    </div>
+                    <div class="absolute bottom-4 text-xs md:text-sm text-slate-400 flex items-center gap-1 animate-pulse">
+                        <span class="hidden sm:inline">Ketuk kartu untuk melihat tatalaksana</span>
+                        <span class="sm:hidden">Ketuk: Jawaban • Usap: Lanjut</span>
+                    </div>
+                </div>
+
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-slate-50 rounded-2xl md:rounded-3xl p-6 md:p-8 flex flex-col items-start justify-start text-left rotate-y-180 border-t-4 border-emerald-600 shadow-inner overflow-hidden ring-1 ring-black/5">
+                    <div class="absolute top-4 right-5 text-emerald-100 font-extrabold text-4xl md:text-5xl opacity-60">Aksi</div>
+                    <div class="w-full h-full overflow-y-auto custom-scrollbar pt-8 pb-8 pr-4">
+                        <div id="answer-text" class="answer-text text-xs sm:text-sm md:text-base text-slate-800 w-full font-medium select-text">
+                            Memuat jawaban...
+                        </div>
+                    </div>
+                    <div class="absolute bottom-4 left-0 w-full text-center text-xs md:text-sm text-slate-400 flex items-center justify-center gap-1 animate-pulse">
+                        <span class="hidden sm:inline">Ketuk kartu untuk kembali ke kasus</span>
+                        <span class="sm:hidden">Ketuk: Kembali • Usap: Lanjut</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="w-full max-w-2xl grid grid-cols-2 sm:flex sm:flex-row justify-center gap-3 md:gap-4 pb-8">
+            <button onclick="prevCard()" class="col-span-1 bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-sm transition-all border border-slate-300 flex justify-center items-center gap-1 active:scale-95">
+                <span>&larr;</span> <span class="hidden sm:inline">Sebelumnya</span><span class="sm:hidden">Prev</span>
+            </button>
+            <button onclick="nextCard()" class="col-span-1 bg-teal-800 hover:bg-teal-900 text-white font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-md transition-all flex justify-center items-center gap-1 active:scale-95">
+                <span class="hidden sm:inline">Selanjutnya</span><span class="sm:hidden">Next</span> <span>&rarr;</span>
+            </button>
+            <button onclick="shuffleCards()" class="col-span-2 sm:col-span-1 order-last sm:order-none bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm md:text-base py-3 md:py-4 px-4 md:px-6 rounded-xl shadow-md transition-all flex justify-center items-center active:scale-95">
+                Acak (Shuffle)
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        const originalCards = [
+            // Kategori 1: Diagnosis & Pendekatan Awal (1-5)
+            { 
+                cat: "Diagnosis & Pendekatan Awal", 
+                q: "Pasien pria 45 tahun, MCU ke Puskesmas tanpa keluhan. TD 150/90 mmHg. Pasien khawatir dan minta obat darah tinggi. Apa tindakan Anda?", 
+                a: `<strong>Jangan langsung beri obat pada kunjungan pertama!</strong><br><br>
+                    <strong>Tatalaksana:</strong>
+                    <ul>
+                        <li>Konfirmasi TD: Istirahatkan pasien 5-10 menit, periksa ulang TD di kedua lengan.</li>
+                        <li>Edukasi modifikasi gaya hidup (kurangi garam, olahraga, stop merokok).</li>
+                        <li><strong>Rule of thumb:</strong> Diagnosis hipertensi ditegakkan jika TD ≥140/90 mmHg pada <strong>minimal 2 kali kunjungan</strong> yang berbeda (berjarak 1-4 minggu), KECUALI TD ≥180/110 mmHg atau ada komorbid kardiovaskular.</li>
+                        <li>Jadwalkan kontrol ulang 1-2 minggu ke depan.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Diagnosis & Pendekatan Awal", 
+                q: "Pasien wanita 65 tahun datang dengan keluhan pusing. TD di poli 160/80 mmHg. Ia mengaku di rumah kalau diukur perawat desa TD-nya selalu 120/70. Apa fenomena ini?", 
+                a: `<strong>Fenomena: White Coat Hypertension.</strong><br><br>
+                    <strong>Tindakan di Puskesmas:</strong>
+                    <ul>
+                        <li>Jangan buru-buru menaikkan/memulai dosis obat antihipertensi, risiko hipotensi saat pasien di rumah.</li>
+                        <li>Minta pasien melakukan <strong>HBPM (Home Blood Pressure Monitoring)</strong>: ukur TD pagi dan malam selama 3-7 hari, catat di kertas.</li>
+                        <li>Diagnosis White Coat HT ditegakkan jika TD klinik ≥140/90 tapi rata-rata HBPM < 135/85 mmHg.</li>
+                        <li>Tangani kecemasan pasien di Poli.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Diagnosis & Pendekatan Awal", 
+                q: "Pasien pria 30 tahun berbadan kekar (atlet binaraga) datang untuk cek kesehatan. TD lengan kanan 155/95 mmHg pakai manset dewasa standar. Apa pitfall yang mungkin terjadi?", 
+                a: `<strong>Pitfall: Manset terlalu kecil (Cuff-size error).</strong><br><br>
+                    <strong>Penjelasan:</strong>
+                    <ul>
+                        <li>Menggunakan manset standar pada lengan yang besar (obesitas atau berotot) akan menghasilkan <strong>overestimasi TD (tinggi palsu)</strong>.</li>
+                        <li><strong>Tindakan:</strong> Ganti dengan manset besar (Large Adult Cuff). Jika puskesmas tidak punya, ukur TD di pergelangan tangan (dengan alat digital wrist diletakkan setinggi jantung) atau rujuk untuk ABPM, jangan langsung diagnosis HT.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Diagnosis & Pendekatan Awal", 
+                q: "Pasien ibu-ibu 50 tahun TD 170/100 mmHg. Saat ditanya, ia baru saja minum kopi hitam pekat dan jalan kaki menanjak ke Puskesmas 15 menit yang lalu. Apa prosedur baku pengukuran TD?", 
+                a: `<strong>Prosedur Persiapan Pengukuran TD (Sering dilanggar):</strong><br><br>
+                    <ul>
+                        <li>Pasien harus istirahat duduk tenang selama <strong>3-5 menit</strong> sebelum diukur.</li>
+                        <li>Tidak boleh minum kopi, merokok, atau olahraga berat dalam <strong>30 menit terakhir</strong>.</li>
+                        <li>Kandung kemih harus kosong (anjurkan kencing dulu). Menahan kencing bisa menaikkan TD sistolik >10 mmHg.</li>
+                        <li>Kaki menapak di lantai, tidak disilangkan. Punggung bersandar.</li>
+                        <li><strong>Aksi:</strong> Suruh pasien istirahat 30 menit, baru ukur ulang.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Diagnosis & Pendekatan Awal", 
+                q: "Pria 40 tahun datang untuk berobat rutin. Ia membawa hasil lab mandiri: Kolesterol Total 280, Asam Urat 9.0. TD 150/95 mmHg. Mengapa penting mencari 'Target Organ Damage' di Puskesmas?", 
+                a: `<strong>Pentingnya Stratifikasi Risiko (HMOD - Hypertension-Mediated Organ Damage):</strong><br><br>
+                    Penentuan obat dan target TD tidak hanya dari angka tensi, tapi dari risiko kardiovaskular total.<br>
+                    <strong>Pemeriksaan Wajib di Puskesmas:</strong>
+                    <ul>
+                        <li><strong>EKG 12 Lead:</strong> Cari tanda Hipertrofi Ventrikel Kiri (LVH) atau riwayat infark lama.</li>
+                        <li><strong>Urinalisis (Carik celup):</strong> Cari Proteinuria / Mikroalbuminuria (tanda awal nefropati).</li>
+                        <li><strong>Fungsi Ginjal:</strong> Cek Ureum Kreatinin (hitung eGFR).</li>
+                        <li><strong>Funduskopi (jika mampu):</strong> Retinopati hipertensi.</li>
+                        <li><em>Aksi: Pasien ini masuk risiko tinggi karena dyslipidemia + HT + hiperurisemia. Mulai modifikasi gaya hidup agresif + pertimbangkan obat.</em></li>
+                    </ul>` 
+            },
+
+            // Kategori 2: Terapi Lini Pertama & Obat BPJS (6-10)
+            { 
+                cat: "Pemilihan Obat (BPJS)", 
+                q: "Obat hipertensi lini pertama apa saja yang paling sering tersedia di Formularium Nasional (Fornas) Puskesmas dan direkomendasikan JNC8/PERHI?", 
+                a: `<strong>4 Golongan Utama Lini Pertama:</strong><br><br>
+                    <ol>
+                        <li><strong>CCB (Calcium Channel Blocker):</strong> Amlodipine, Nifedipine (Oros). Sangat baik untuk lansia, ISH, kulit hitam.</li>
+                        <li><strong>ACE-Inhibitor:</strong> Captopril, Ramipril, Lisinopril. Wajib untuk pasien DM, CKD, post-MCI.</li>
+                        <li><strong>ARB (Angiotensin Receptor Blocker):</strong> Candesartan, Valsartan, Irbesartan. Alternatif ACE-i jika batuk.</li>
+                        <li><strong>Diuretik Thiazide:</strong> Hydrochlorothiazide (HCT). Efektif mencegah stroke, kombinasi ideal dengan ACEi/ARB.</li>
+                    </ol>
+                    <em>*Beta-blocker (Bisoprolol) bukan lini pertama murni KECUALI ada indikasi spesifik (Penyakit Jantung Koroner, Gagal Jantung, Aritmia).</em>` 
+            },
+            { 
+                cat: "Pemilihan Obat (BPJS)", 
+                q: "Pasien pria 55 tahun, terdiagnosis Hipertensi derajat 2 (165/100 mmHg). Guideline terbaru menyarankan 'Single-Pill Combination'. Namun di Puskesmas hanya ada obat lepas. Apa strategi Anda?", 
+                a: `<strong>Strategi Terapi Kombinasi Bebas (Free-Combination):</strong><br><br>
+                    Guideline menyarankan mulai dengan 2 obat dosis rendah jika TD ≥ 20/10 mmHg di atas target.<br>
+                    <strong>Kombinasi rasional di Puskesmas:</strong>
+                    <ul>
+                        <li><strong>Amlodipine 5 mg + Candesartan 8 mg</strong> (Paling sering dipakai, efek samping edema amlodipine dikurangi oleh dilatasi vena dari ARB).</li>
+                        <li><strong>Captopril 2x12.5 mg + HCT 12.5 mg</strong> pagi hari.</li>
+                        <li><em>Jangan gabung ACE-i dan ARB! (Meningkatkan risiko hiperkalemia dan gagal ginjal akut).</em></li>
+                    </ul>` 
+            },
+            { 
+                cat: "Pemilihan Obat (BPJS)", 
+                q: "Kapan Anda memilih meresepkan Captopril (ACE-i) dibandingkan Amlodipine (CCB) sebagai terapi tunggal awal untuk pasien hipertensi baru?", 
+                a: `<strong>Indikasi Prioritas ACE-i/ARB:</strong><br><br>
+                    Pilih Captopril/Candesartan jika pasien memiliki kondisi komorbid berikut (karena punya efek perlindungan organ ekstra di luar penurun TD):
+                    <ul>
+                        <li><strong>Diabetes Mellitus:</strong> Mencegah progresivitas nefropati diabetik.</li>
+                        <li><strong>Penyakit Ginjal Kronik (CKD) dengan Proteinuria:</strong> Menurunkan tekanan intraglomerular.</li>
+                        <li><strong>Gagal Jantung (HFrEF) atau Post-STEMI:</strong> Mencegah remodeling otot jantung.</li>
+                    </ul>
+                    <em>*Catatan: Pastikan Captopril diminum 2-3x sehari saat perut kosong (1 jam sebelum makan) karena penyerapannya terganggu oleh makanan.</em>` 
+            },
+            { 
+                cat: "Pemilihan Obat (BPJS)", 
+                q: "Pasien rutin minum Captopril 2x25 mg namun TD masih 150/90 mmHg. Anda berencana menambahkan HCT (Hydrochlorothiazide). Apa pitfall penggunaan HCT di Puskesmas?", 
+                a: `<strong>Pitfalls Penggunaan Diuretik Thiazide (HCT):</strong><br><br>
+                    <ul>
+                        <li><strong>Waktu Minum:</strong> Wajib pagi hari! Jika diminum malam, pasien akan nokturia (kencing terus) dan tidak bisa tidur.</li>
+                        <li><strong>Asam Urat (Gout):</strong> HCT menghambat ekskresi asam urat. KONTRAINDIKASI pada pasien dengan riwayat Gout akut/berulang.</li>
+                        <li><strong>Gula Darah:</strong> Dapat sedikit memperburuk resistensi insulin.</li>
+                        <li><strong>Elektrolit:</strong> Risiko Hipokalemia dan Hiponatremia, terutama pada lansia. Jangan gabung dengan Furosemide kecuali kasus khusus (gagal jantung).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Pemilihan Obat (BPJS)", 
+                q: "Pasien pria 60 tahun datang dengan keluhan kaki sering bengkak (edema pretibial). Ia rutin minum Amlodipine 10 mg/hari dari Puskesmas. Jantung dan ginjal normal. Apa solusinya?", 
+                a: `<strong>Tatalaksana Edema Akibat CCB (Amlodipine):</strong><br><br>
+                    Edema karena CCB adalah edema <strong>vasodilatasi kapiler</strong>, BUKAN retensi cairan. Memberikan Furosemide tidak akan mempan dan justru membahayakan (dehidrasi).<br>
+                    <strong>Solusi:</strong>
+                    <ol>
+                        <li>Turunkan dosis Amlodipine menjadi 5 mg.</li>
+                        <li><strong>Tambahkan ACE-i atau ARB</strong> (mis. Candesartan/Captopril). ACE-i melebarkan venula (pembuluh balik), sehingga menyeimbangkan dilatasi arteriol dari Amlodipine, cairan kapiler bisa kembali ditarik.</li>
+                        <li>Atau ganti Amlodipine dengan golongan lain jika bengkak sangat mengganggu.</li>
+                    </ol>` 
+            },
+
+            // Kategori 3: Krisis Hipertensi (Emergensi vs Urgensi) (11-15)
+            { 
+                cat: "Krisis Hipertensi", 
+                q: "Pasien datang diantar keluarga dengan TD 210/120 mmHg. Pasien bisa jalan sendiri, mengeluh tengkuk pegal, tidak ada sesak napas, nyeri dada, atau kelemahan anggota gerak. Diagnosis dan tindakan?", 
+                a: `<strong>Diagnosis: Hipertensi Urgensi.</strong><br>
+                    (TD > 180/120 TANPA bukti kerusakan organ target akut).<br><br>
+                    <strong>Tindakan di Puskesmas (Jangan Panik!):</strong>
+                    <ul>
+                        <li>Suruh pasien rebahan di IGD 30 menit. Seringkali tensi turun sendiri.</li>
+                        <li><strong>TIDAK PERLU menurunkan TD secara drastis dalam hitungan menit/jam!</strong> Menurunkan TD terlalu cepat memicu iskemia otak (stroke infark).</li>
+                        <li>Beri obat <strong>ORAL kerja cepat</strong> (mis. Captopril 12.5 - 25 mg per oral). Amlodipine juga bisa ditambahkan.</li>
+                        <li><strong>KONTRAINDIKASI:</strong> Memberikan Nifedipine Sublingual (ditetes/gigit di bawah lidah) karena penurunan tensi tidak bisa diprediksi dan sangat berbahaya.</li>
+                        <li>Observasi 2 jam, pulangkan dengan obat oral jika TD mulai turun bertahap. Target TD tercapai dalam 24-48 jam.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Krisis Hipertensi", 
+                q: "Pasien sesak napas berat, orthopnea (+), ronkhi basah basal (+). TD 220/130 mmHg. EKG: LVH tanpa iskemik akut. Diagnosis dan langkah inisial di IGD Puskesmas?", 
+                a: `<strong>Diagnosis: Hipertensi Emergensi (Acute Hypertensive Heart Failure / Edema Paru Akut).</strong><br>
+                    Ada kerusakan organ target akut (paru-paru/jantung).<br><br>
+                    <strong>Tatalaksana di Puskesmas (Stabilisasi sebelum Rujuk):</strong>
+                    <ul>
+                        <li>Oksigen sungkup/nasal canule, posisikan duduk (Fowler).</li>
+                        <li><strong>Furosemide IV (Injeksi):</strong> Berikan 40 mg (1-2 ampul) bolus perlahan untuk membuang cairan paru.</li>
+                        <li>Jika ada, pasang Nitrogliserin (NTG) IV drip (jarang di faskes 1) ATAU Isosorbide Dinitrate (ISDN) 5 mg sublingual untuk venodilatasi.</li>
+                        <li>Hubungi RS rujukan (SPGDT) dan transport dengan ambulans. Target penurunan TD: 25% dalam 1-2 jam pertama.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Krisis Hipertensi", 
+                q: "Bapak 55 tahun tiba-tiba pelo, bibir mencong, dan kelemahan sisi kanan tubuh (Hemiparese Dextra). Terjadi 1 jam lalu. TD di IGD Puskesmas 200/110 mmHg. Perlukah diberikan Captopril oral segera?", 
+                a: `<strong>JANGAN DITURUNKAN SECARA AGRESIF!</strong><br><br>
+                    <strong>Diagnosis: Suspect Stroke Akut.</strong><br>
+                    <ul>
+                        <li>Pada stroke iskemik akut, tekanan darah tinggi adalah respons kompensasi otak untuk mempertahankan perfusi ke area penumbra (area yang kekurangan darah tapi belum mati).</li>
+                        <li>Menurunkan tensi secara membabi buta akan <strong>memperluas area infark otak</strong>.</li>
+                        <li><strong>Aturan:</strong> Pada suspek stroke iskemik (non-kandidat trombolitik), TD <strong>TIDAK BOLEH</strong> diturunkan KECUALI TD sangat ekstrem <strong>> 220/120 mmHg</strong>. Jika diturunkan pun, maksimal 15% dalam 24 jam.</li>
+                        <li>Aksi: Pasang O2, IV line, amankan jalan napas, rujuk SEGERA untuk CT Scan Kepala.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Krisis Hipertensi", 
+                q: "Wanita hamil 32 minggu datang ke IGD kejang-kejang. TD 170/110 mmHg. Suami bilang di rumah kejang 1 kali, mata melotot. Diagnosis dan tatalaksana life-saving di Puskesmas?", 
+                a: `<strong>Diagnosis: Eklampsia. (Hipertensi Emergensi Obstetrik)</strong><br><br>
+                    <strong>Tatalaksana Life-Saving (Syarat Rujuk):</strong>
+                    <ul>
+                        <li>Jaga Airway (posisi miring kiri agar tidak aspirasi, Oksigen).</li>
+                        <li><strong>MgSO4 (Magnesium Sulfat) IV:</strong> Obat utama anti-kejang. Berikan loading dose 4 gram (MgSO4 20% 20 cc) IV pelan selama 15-20 menit, dilanjutkan dosis pemeliharaan via infus.</li>
+                        <li>Antihipertensi: <strong>Nifedipine oral 10 mg</strong> (bisa diulang 30 menit) ATAU Metildopa. (Target TD turun ke 140-150/90-100 mmHg).</li>
+                        <li>Rujuk segera ke RS PONEK dengan bidan pendamping. Pasang kateter urin untuk pantau output.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Krisis Hipertensi", 
+                q: "Pria 40 tahun datang dengan nyeri dada menjalar ke punggung seperti dirobek (tearing pain). Keringat dingin. TD lengan kanan 210/110, lengan kiri 160/90. Apa dugaan kuat Anda dan tatalaksana awal?", 
+                a: `<strong>Diagnosis Suspek: Diseksi Aorta Akut (Acute Aortic Dissection).</strong><br>
+                    Perbedaan tensi ekstrem antara lengan kanan dan kiri (>20 mmHg) sangat khas untuk kondisi ini.<br><br>
+                    <strong>Tatalaksana:</strong>
+                    <ul>
+                        <li>Ini adalah <strong>SATU-SATUNYA</strong> kondisi hipertensi emergensi di mana tensi harus diturunkan dengan sangat cepat dan drastis. Target: Sistolik <strong>< 120 mmHg</strong> dan HR <strong>< 60x/menit</strong> dalam waktu singkat.</li>
+                        <li><strong>Terapi utama: Injeksi Beta-blocker IV</strong> (sayangnya jarang ada di Puskesmas).</li>
+                        <li>Aksi Puskesmas: Beri analgetik kuat (Opioid/Tramadol), minimalkan stres, hubungi RS rujukan segera. Jangan buang waktu!</li>
+                    </ul>` 
+            },
+
+            // Kategori 4: Komorbiditas & Kondisi Khusus (16-20)
+            { 
+                cat: "Komorbiditas", 
+                q: "Pasien DM Tipe 2 dan Hipertensi. Cek Lab: Ureum 40, Kreatinin 1.2, Urin Lengkap: Protein +2. Obat apa yang menjadi pilar utama untuk pasien ini dan apa alasannya?", 
+                a: `<strong>Obat Utama: ACE-Inhibitor (Captopril/Ramipril) atau ARB (Candesartan/Valsartan).</strong><br><br>
+                    <strong>Alasan Farmakologis:</strong>
+                    <ul>
+                        <li>Proteinuria (+2) menandakan adanya <strong>Nefropati Diabetik</strong>.</li>
+                        <li>ACE-i/ARB tidak hanya menurunkan TD sistemik, tapi secara spesifik menyebabkan <strong>vasodilatasi arteriol eferen di glomerulus ginjal</strong>.</li>
+                        <li>Ini akan menurunkan tekanan intraglomerular, mencegah kebocoran protein lebih lanjut, dan memperlambat pasien menuju gagal ginjal terminal (cuci darah).</li>
+                        <li>Target TD untuk DM: < 130/80 mmHg.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Komorbiditas", 
+                q: "Bapak 60 tahun dengan riwayat Serangan Jantung (STEMI) 1 tahun lalu. Saat ini TD 140/90 mmHg. Golongan obat antihipertensi apa yang WAJIB ia minum seumur hidup?", 
+                a: `<strong>Obat Wajib Post-MCI (Mocardial Infarction): Beta-Blocker dan ACE-Inhibitor/ARB.</strong><br><br>
+                    <strong>Alasan:</strong>
+                    <ul>
+                        <li><strong>Beta-Blocker (mis. Bisoprolol, Carvedilol):</strong> Menurunkan denyut jantung (HR), mengurangi kebutuhan oksigen miokard, dan mencegah aritmia fatal (sudden cardiac death) paska infark. Target HR: 55-60x/menit.</li>
+                        <li><strong>ACE-Inhibitor:</strong> Mencegah <em>Cardiac Remodeling</em> (mencegah jantung melar dan menjadi gagal jantung) pasca kematian otot jantung.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Komorbiditas", 
+                q: "Kakek 75 tahun datang dengan asma eksaserbasi akut (mengi terdengar jelas). TD 160/90 mmHg. Obat hipertensi apa yang <strong>KONTRAINDIKASI MUTLAK</strong> pada pasien ini?", 
+                a: `<strong>Kontraindikasi: Golongan Beta-Blocker Non-Selektif (mis. Propranolol) dan relatif untuk semua Beta-Blocker.</strong><br><br>
+                    <strong>Alasan:</strong>
+                    <ul>
+                        <li>Reseptor Beta-2 berada di bronkus (saluran napas). Menghambat reseptor ini menyebabkan <strong>bronkospasme</strong> parah.</li>
+                        <li>Meskipun Bisoprolol diklaim Beta-1 selektif (kardioselektif), pada dosis tinggi ia kehilangan selektivitasnya dan tetap bisa memicu serangan asma.</li>
+                        <li><strong>Pilihan aman:</strong> CCB (Amlodipine) atau ARB (Candesartan).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Komorbiditas", 
+                q: "Pasien pria 50 tahun dengan Hiperplasia Prostat Jinak (BPH) sering kencing malam. TD 150/90 mmHg. Golongan obat apa yang bisa menangani kedua masalah ini sekaligus?", 
+                a: `<strong>Golongan Alpha-1 Blocker (mis. Doxazosin, Terazosin, Prazosin).</strong><br><br>
+                    <strong>Manfaat Ganda:</strong>
+                    <ul>
+                        <li>Menghambat reseptor alfa-1 di pembuluh darah perifer &rarr; vasodilatasi &rarr; TD turun.</li>
+                        <li>Menghambat reseptor alfa-1 di otot polos leher kandung kemih dan prostat &rarr; relaksasi sfingter &rarr; aliran kencing menjadi lancar.</li>
+                        <li><em>Catatan: Efek samping utama adalah Hipotensi Ortostatik (pusing saat berdiri mendadak, first-dose effect), berikan obat ini di malam hari menjelang tidur.</em></li>
+                    </ul>` 
+            },
+            { 
+                cat: "Komorbiditas", 
+                q: "Pasien Gagal Ginjal Kronik (CKD) stadium 4 rutin HD. TD 170/100 mmHg. Di Puskesmas tersedia Captopril dan Candesartan. Apa risiko terberat meresepkan ini tanpa pantauan lab?", 
+                a: `<strong>Risiko: Hiperkalemia Fatal dan Perburukan GFR Akut.</strong><br><br>
+                    <strong>Penjelasan:</strong>
+                    <ul>
+                        <li>Pada CKD stadium lanjut (eGFR < 30), penggunaan ACE-i/ARB menahan ekskresi Kalium di ginjal (karena aldosteron ditekan). Hal ini memicu Hiperkalemia (Kalium > 5.5) yang bisa menyebabkan aritmia mematikan (henti jantung).</li>
+                        <li>Jika pasien CKD stadium 4-5 di Puskesmas, <strong>lebih aman menggunakan CCB (Amlodipine)</strong> ditambah Diuretik Loop (Furosemide) yang aman untuk ginjal yang sudah jelek.</li>
+                        <li>ACE-i/ARB bisa diteruskan HANYA jika dipantau ketat oleh Sp.PD/Sp.JP.</li>
+                    </ul>` 
+            },
+
+            // Kategori 5: Manajemen Lansia & Kehamilan (21-25)
+            { 
+                cat: "Lansia & Geriatri", 
+                q: "Nenek 80 tahun, kurus. Pengukuran tensi di Puskesmas: Sistolik 180 mmHg, Diastolik hanya 70 mmHg. Diagnosis klinis dan obat paling tepat?", 
+                a: `<strong>Diagnosis: Isolated Systolic Hypertension (ISH) pada Lansia.</strong><br><br>
+                    <strong>Patofisiologi:</strong> Terjadi karena pembuluh darah aorta sudah kaku (rigid/arteriosklerosis), sehingga saat sistol tekanannya sangat tinggi, tapi saat diastol langsung anjlok (Wide pulse pressure).<br><br>
+                    <strong>Tatalaksana:</strong>
+                    <ul>
+                        <li><strong>Obat Pilihan 1: CCB (Amlodipine)</strong> atau <strong>Diuretik Thiazide (HCT)</strong>. Keduanya terbukti sangat baik menurunkan sistolik pada lansia.</li>
+                        <li><strong>Target:</strong> Turunkan pelan-pelan ke < 150 mmHg (awal) lalu < 140 mmHg jika ditoleransi. JANGAN biarkan diastolik turun < 60 mmHg, karena perfusi koroner jantung terjadi saat diastolik!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Lansia & Geriatri", 
+                q: "Kakek 70 tahun berobat membawa Amlodipine 10 mg. Keluhannya: sering *kliyengan* (pusing gelap) setiap kali bangkit dari tempat tidur atau dari jongkok ke berdiri. Apa pemeriksaan fisik yang wajib Anda lakukan?", 
+                a: `<strong>Pemeriksaan Wajib: Evaluasi Hipotensi Ortostatik (Postural Hypotension).</strong><br><br>
+                    <strong>Cara periksa di Puskesmas:</strong>
+                    <ol>
+                        <li>Ukur TD saat pasien berbaring telentang tenang.</li>
+                        <li>Minta pasien berdiri, tunggu 1-3 menit, ukur lagi TD-nya.</li>
+                        <li>Positif Ortostatik jika: <strong>Sistolik turun ≥ 20 mmHg</strong> ATAU <strong>Diastolik turun ≥ 10 mmHg</strong> saat berdiri.</li>
+                    </ol>
+                    <strong>Aksi:</strong> Kurangi dosis obat hipertensinya. Lansia rentan jatuh dan patah tulang panggul (fraktur femur) akibat pusing karena obat hipertensi yang terlalu agresif.` 
+            },
+            { 
+                cat: "Kehamilan", 
+                q: "Ibu hamil 16 minggu, periksa ANC ke bidan. TD 150/95 mmHg. Tidak ada proteinuria. Ia punya riwayat hipertensi sejak sebelum hamil. Obat antihipertensi apa yang AMAN?", 
+                a: `<strong>Diagnosis: Hipertensi Kronik dalam Kehamilan.</strong><br><br>
+                    <strong>Obat yang AMAN (Kategori B/C yang direkomendasikan):</strong>
+                    <ul>
+                        <li><strong>Methyldopa:</strong> (Lini pertama klasik, paling aman teruji bertahun-tahun).</li>
+                        <li><strong>Nifedipine OROS:</strong> (Lini pertama alternatif, sangat efektif).</li>
+                        <li><strong>Labetalol:</strong> (Jarang di Puskesmas).</li>
+                    </ul>
+                    <em>Catatan: Obat ini mencegah ibu stroke, tapi tidak mencegah risiko superimpos preeklampsia. Rujuk Sp.OG untuk pemberian Aspirin dosis rendah.</em>` 
+            },
+            { 
+                cat: "Kehamilan", 
+                q: "Obat hipertensi golongan apa yang sangat <strong>TERATOGENIK</strong> (menyebabkan cacat janin) dan KONTRAINDIKASI mutlak pada wanita hamil atau wanita usia subur yang merencanakan kehamilan?", 
+                a: `<strong>Kontraindikasi Mutlak: Golongan ACE-Inhibitor (Captopril, Lisinopril) dan ARB (Candesartan, Valsartan).</strong><br><br>
+                    <strong>Efek Teratogenik (Fetal Toxity):</strong>
+                    <ul>
+                        <li>Mengkonsumsi ini di trimester 2 dan 3 menyebabkan <strong>Oligohidramnion berat</strong> (ketuban kering).</li>
+                        <li>Menyebabkan gagal ginjal pada janin, hipoplasia paru, malformasi tulang kranial, hingga kematian janin (stillbirth).</li>
+                        <li><strong>Aksi Puskesmas:</strong> Jika pasien wanita usia subur hipertensi datang meminta Captopril, tanyakan selalu apakah ia sedang hamil/telat haid!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Kehamilan", 
+                q: "Ibu menyusui anak usia 2 bulan. Ia hipertensi (160/100 mmHg). Obat apa yang paling aman diresepkan agar tidak diekskresikan berbahaya ke ASI?", 
+                a: `<strong>Obat Antihipertensi Aman untuk Ibu Menyusui:</strong><br><br>
+                    <ul>
+                        <li><strong>Nifedipine / Amlodipine:</strong> Sangat sedikit disekresi di ASI, aman untuk bayi.</li>
+                        <li><strong>Methyldopa:</strong> Aman dan tidak menekan laktasi.</li>
+                        <li><strong>Captopril / Enalapril:</strong> Merupakan ACE-i yang aman untuk laktasi (berbeda dengan saat hamil!). Obat ini sangat sedikit masuk ASI.</li>
+                        <li><em>Hindari: Thiazide (HCT) karena dosis tinggi dapat menekan produksi ASI, dan ARB belum cukup data keamanannya.</em></li>
+                    </ul>` 
+            },
+
+            // Kategori 6: Interaksi Obat & Gaya Hidup (26-30)
+            { 
+                cat: "Interaksi Obat", 
+                q: "Pasien mengeluh tensinya akhir-akhir ini tidak terkontrol padahal rutin minum Amlodipine. Saat ditanya, ia sedang sering minum obat 'pegal linu' (Asam Mefenamat/Ibuprofen) dari warung. Hubungannya?", 
+                a: `<strong>Interaksi: NSAID (Anti-inflamasi Non-Steroid) vs Obat Antihipertensi.</strong><br><br>
+                    <strong>Penjelasan:</strong>
+                    <ul>
+                        <li>NSAID menghambat enzim COX, menurunkan produksi prostaglandin di ginjal.</li>
+                        <li>Prostaglandin berfungsi melebarkan pembuluh darah ginjal. Jika dihambat, terjadi retensi natrium dan air.</li>
+                        <li>Akibatnya, <strong>semua obat antihipertensi (terutama ACE-i, ARB, dan Diuretik) akan dilawan efeknya dan tensi naik (Blunting effect).</strong></li>
+                        <li>Aksi: Ganti analgetik dengan Paracetamol jika pasien nyeri ringan-sedang.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Interaksi Obat", 
+                q: "Seorang pria paruh baya meminum Candesartan dan Amlodipine pagi hari. Malam harinya ia mengkonsumsi pil 'kuat' (Sildenafil/Viagra) karena ingin berhubungan suami istri. Apa risiko interaksinya?", 
+                a: `<strong>Risiko: Hipotensi Sistemik Berat.</strong><br><br>
+                    <strong>Penjelasan:</strong>
+                    <ul>
+                        <li>Sildenafil adalah PDE-5 inhibitor yang menyebabkan vasodilatasi luas (terutama jika digunakan bersama obat penurun tensi, terlebih Golongan Nitrat atau Alpha-blocker).</li>
+                        <li>Amlodipine (CCB) juga vasodilator. Kombinasi ini bisa menyebabkan TD drop mendadak, memicu infark miokard akibat penurunan perfusi koroner.</li>
+                        <li><strong>Edukasi Puskesmas:</strong> Pasien hipertensi pria sering disfungsi ereksi akibat obat (terutama Beta-blocker/Thiazide). Edukasi untuk tidak sembarangan beli obat kuat tanpa konsultasi.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Interaksi Obat", 
+                q: "Pasien flu berat meminum obat pilek/dekongestan sirup yang dijual bebas (Pseudoephedrine). Tiba-tiba di Puskesmas tensinya 170/100, mengeluh dada berdebar. Mengapa bisa terjadi?", 
+                a: `<strong>Efek Pseudoephedrine / Phenylephrine pada Hipertensi:</strong><br><br>
+                    <ul>
+                        <li>Dekongestan hidung adalah obat <strong>simpatomimetik (Agonis Alfa-adrenergik)</strong>.</li>
+                        <li>Obat ini bekerja dengan menciutkan (vasokonstriksi) pembuluh darah di mukosa hidung agar tidak mampet.</li>
+                        <li>Sayangnya, obat ini juga menyempitkan pembuluh darah sistemik di seluruh tubuh, menyebabkan <strong>lonjakan tensi mendadak dan takikardia</strong>.</li>
+                        <li><strong>Aksi:</strong> Larang pasien HT berat meminum obat flu yang mengandung Pseudoephedrine. Gunakan antihistamin murni (CTM/Cetirizine) atau tetes hidung NaCl.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Gaya Hidup", 
+                q: "Berapa target restriksi asupan Garam (Natrium/Sodium) harian menurut pedoman medis untuk pasien hipertensi, dan berikan contoh makanan praktis yang harus dihindari?", 
+                a: `<strong>Target Asupan Natrium: < 2 gram Natrium per hari (setara dengan < 5 gram atau 1 SENDOK TEH garam dapur NaCl).</strong><br><br>
+                    <strong>Penyumbang Garam Tersembunyi (Hidden Sodium) yang sering dimakan pasien:</strong>
+                    <ul>
+                        <li>Mie Instan (1 bungkus bisa mengandung 1.5 - 2 gram Natrium, langsung menghabiskan jatah harian!).</li>
+                        <li>Ikan Asin, Telur Asin, Terasi.</li>
+                        <li>Kecap asin, saus tiram, penyedap rasa (MSG - Monosodium Glutamat).</li>
+                        <li>Makanan kaleng (Sarden) dan pengawet.</li>
+                    </ul>
+                    <em>Edukasi Puskesmas: Sarankan pasien menggunakan rempah-rempah (bawang, lada, kunyit) untuk memperkuat rasa pengganti garam.</em>` 
+            },
+            { 
+                cat: "Gaya Hidup", 
+                q: "Pasien obesitas dengan BMI 30 kg/m2 bertanya: 'Dok, kalau saya turunkan berat badan, kira-kira tensi saya bisa turun berapa?'", 
+                a: `<strong>Fakta Modifikasi Berat Badan (Sangat Signifikan!):</strong><br><br>
+                    <ul>
+                        <li>Penurunan berat badan adalah intervensi non-farmakologis paling efektif.</li>
+                        <li>Aturan kasarnya: <strong>Setiap penurunan 1 kg berat badan, Tekanan Darah Sistolik akan turun sebesar 1 mmHg.</strong></li>
+                        <li>Jika pasien turun 10 kg, tensi bisa turun 10-20 mmHg (setara dengan efek meminum 1-2 macam pil hipertensi!).</li>
+                        <li>Gabungkan dengan Diet DASH (Dietary Approaches to Stop Hypertension): Kaya buah, sayur, rendah lemak jenuh.</li>
+                    </ul>` 
+            },
+
+            { 
+                cat: "Efek Samping", 
+                q: "Bapak 45 tahun periksa dengan keluhan 'impotensi' (Disfungsi Ereksi) sejak 2 bulan berobat hipertensi. Ia curiga obat dari Puskesmas. Obat golongan apa yang paling sering memicu ini?", 
+                a: `<strong>Penyebab Tersering: Diuretik Thiazide (HCT) dan Beta-Blocker lawas.</strong><br><br>
+                    <strong>Tindakan di Puskesmas:</strong>
+                    <ul>
+                        <li>HCT adalah tersangka utama penyebab disfungsi ereksi. Beta-blocker juga menurunkan libido dan aliran darah perifer.</li>
+                        <li><strong>Jangan sepelekan keluhan ini!</strong> Jika tidak ditangani, pasien akan stop minum obat diam-diam (Non-compliance).</li>
+                        <li><strong>Solusi:</strong> Ganti obat ke golongan <strong>ARB (Candesartan/Valsartan)</strong> atau ACE-i. ARB terbukti memiliki efek netral bahkan dapat memperbaiki fungsi ereksi klinis.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Efek Samping", 
+                q: "Pasien wanita 55 tahun kembali ke poli mengeluh batuk kering (ngikil) sejak 2 minggu. Ia baru saja diganti obatnya ke Captopril. Apa mekanisme batuk ini dan apa solusinya?", 
+                a: `<strong>Efek Samping Captopril (ACE-Inhibitor induced cough):</strong><br><br>
+                    <strong>Mekanisme:</strong> 
+                    Enzim ACE (Angiotensin Converting Enzyme) di paru-paru tidak hanya mengubah Angiotensin I jadi II, tapi juga memecah Bradikinin. Karena enzim ini dihambat Captopril, <strong>Bradikinin menumpuk di saluran napas</strong>, memicu iritasi dan batuk kering kronis.<br><br>
+                    <strong>Solusi:</strong>
+                    <ul>
+                        <li>Obat batuk (antitusif/ekspektoran) TIDAK AKAN MEMPAN.</li>
+                        <li><strong>Hentikan ACE-i dan ganti ke ARB (Candesartan).</strong> ARB bekerja di reseptor, tidak menghambat pemecahan bradikinin. Batuk akan mereda dalam 1-4 minggu.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Hipertensi Sekunder", 
+                q: "Pemuda 25 tahun, tidak gemuk. TD 180/110 mmHg, sangat sulit turun meski diberi 3 obat hipertensi penuh. Di poli, nadi teraba lemah di kaki/femoralis dibanding tangan. Curiga apa?", 
+                a: `<strong>Suspek: Koarktasio Aorta (Coarctation of the Aorta).</strong><br><br>
+                    <strong>Penjelasan (Red Flags Hipertensi Usia Muda):</strong>
+                    <ul>
+                        <li>Koarktasio adalah penyempitan (stenosis) bawaan pada aorta desendens.</li>
+                        <li>Aliran darah ke tubuh bagian atas (kepala/lengan) tersumbat dan tekanannya melonjak ekstrem (TD lengan tinggi).</li>
+                        <li>Aliran ke tubuh bagian bawah terhambat, sehingga nadi femoralis melemah/delay (radio-femoral delay), kaki sering kram/dingin, dan TD kaki rendah.</li>
+                        <li><strong>Aksi Puskesmas:</strong> Raba nadi femoralis, cek EKG, langsung rujuk ke Sp.JP untuk Echocardiography.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Hipertensi Sekunder", 
+                q: "Pasien wanita 35 tahun dengan obesitas sentral (perut buncit), wajah bulat kemerahan (moon face), muncul striae ungu di perut, TD 160/100, dan gula darah naik. Riwayat sering minum 'jamu pegal linu'. Diagnosis?", 
+                a: `<strong>Diagnosis: Sindrom Cushing Iatrogenik.</strong><br><br>
+                    <strong>Patofisiologi:</strong>
+                    <ul>
+                        <li>Pasien mengkonsumsi steroid eksogen (Dexamethason/Prednison) jangka panjang yang sering dicampur ilegal di dalam 'jamu' atau obat nyeri pinggang sembarangan.</li>
+                        <li>Steroid menyebabkan retensi natrium, resistensi insulin, redistribusi lemak, dan hipertensi sekunder.</li>
+                        <li><strong>Tatalaksana Puskesmas:</strong> EDUKASI KERAS stop jamu. Tapping off steroid jika dosis sebelumnya masif (rujuk Sp.PD). Obati tensi dengan Diuretik/ACE-i.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Hipertensi Sekunder", 
+                q: "Pria 45 tahun, obesitas leher pendek (BMI 35). Istrinya mengeluh suaminya ngorok sangat keras dan sering seperti 'berhenti napas' saat tidur. TD pasien di poli 160/95. Apa penyebab hipertensinya?", 
+                a: `<strong>Penyebab: Obstructive Sleep Apnea (OSA).</strong><br><br>
+                    <strong>Hubungan OSA dan Hipertensi:</strong>
+                    <ul>
+                        <li>Jalan napas tertutup saat tidur menyebabkan hipoksia berulang dan hiperkapnia.</li>
+                        <li>Ini memicu <strong>aktivasi sistem saraf simpatis ekstrem</strong> di malam hari (surge of adrenaline). Akibatnya, TD pasien tidak turun di malam hari (Non-dipper hypertension) dan menetap tinggi di pagi hari.</li>
+                        <li>Obat tensi sering tidak mempan (Resistant HT). Terapi utamanya adalah CPAP (Continuous Positive Airway Pressure) dan turun berat badan.</li>
+                    </ul>` 
+            },
+            { cat: "Pilihan Obat", q: "Pasien pria 40 tahun dengan Gout Arthritis kronik dan Hipertensi 150/90. Obat hipertensi ARB apa yang secara unik memiliki efek <em>urikosurik</em> (membantu membuang asam urat)?", a: `<strong>Losartan.</strong><br>Berbeda dengan ARB lain (Candesartan/Valsartan), Losartan memiliki efek urikosurik ringan yang membantu ekskresi asam urat di ginjal, menjadikannya pilihan ideal untuk pasien hipertensi dengan komorbid hiperurisemia/gout.` },
+            
+            // Kasus Tambahan (31-50)
+            { cat: "Interaksi Obat", q: "Wanita 28 tahun datang dengan keluhan pusing. TD 160/100 mmHg. Tidak ada riwayat keluarga HT, tidak obesitas. Ia baru menggunakan kontrasepsi Pil KB kombinasi selama 3 bulan. Tindakan Anda?", a: `<strong>Suspek Hipertensi Sekunder akibat Estrogen.</strong><br><br>Komponen estrogen dalam Pil KB menginduksi sintesis angiotensinogen di hati, memicu retensi cairan dan vasokonstriksi. <strong>Aksi:</strong> Hentikan Pil KB kombinasi, sarankan ganti ke kontrasepsi progestin-only (minipill, implan) atau non-hormonal (IUD tembaga). TD biasanya kembali normal dalam 3-6 bulan.` },
+            { cat: "Kehamilan", q: "Ibu hamil 34 minggu dengan Preeklampsia Berat (TD 170/110) akan dirujuk ke RS. Bidan menyarankan pemberian Nifedipine Sublingual (digerus/ditetes di bawah lidah) agar tensi cepat turun sebelum ambulans jalan. Bolehkah?", a: `<strong>KONTRAINDIKASI MUTLAK!</strong><br><br>Pemberian Nifedipine kerja cepat secara sublingual akan mereduksi tekanan darah ibu secara drastis dan tidak terprediksi. Ini menyebabkan <strong>hipoperfusi plasenta akut</strong>, berisiko tinggi memicu gawat janin (fetal distress) hingga kematian janin. Berikan Nifedipine secara <strong>oral (ditelan utuh)</strong> 10 mg.` },
+            { cat: "Efek Samping", q: "Pasien pria 50 tahun dilarikan ke IGD dengan keluhan bibir bengkak parah (dower) dan lidah terasa tebal hingga sulit bernapas. Ia baru meminum pil Captopril pertamanya tadi pagi. Diagnosis?", a: `<strong>Angioedema akibat ACE-Inhibitor.</strong><br><br>Ini adalah kegawatdaruratan jalan napas yang langka namun mematikan. Disebabkan oleh penumpukan bradikinin masif, bukan reaksi alergi histamin biasa (antihistamin sering kurang mempan). <strong>Aksi:</strong> Amankan jalan napas (O2, siapkan intubasi jika stridor), berikan Epinefrin IM, hentikan ACE-i selamanya (Ganti ke CCB, hindari ARB jika memungkinkan).` },
+            { cat: "Efek Samping", q: "Nenek 75 tahun dibawa keluarganya karena mendadak linglung, lemas, dan sering mengantuk (letargi) sejak 1 minggu. Sebulan lalu ia baru diresepkan HCT 25 mg pagi hari. Pemeriksaan lab apa yang mendesak?", a: `<strong>Cek Elektrolit (Natrium) - Suspek Hiponatremia Berat.</strong><br><br>Lansia sangat sensitif terhadap efek diuretik Thiazide. HCT membuang natrium secara agresif. Hiponatremia (Na < 130 mEq/L) pada lansia sering bermanifestasi sebagai gangguan neurologis (delirium, jatuh, kejang). Stop HCT segera dan rujuk koreksi cairan pelan-pelan.` },
+            { cat: "Efek Samping", q: "Pasien pria 60 tahun dengan Sirosis Hepatis dan Hipertensi rutin meminum Spironolakton. Ia komplain payudaranya membesar dan terasa nyeri bila disentuh. Apa nama kondisi ini dan solusinya?", a: `<strong>Ginekomastia imbas Spironolakton.</strong><br><br>Spironolakton tidak hanya memblokir aldosteron, tapi juga mengikat reseptor androgen (anti-androgen) dan meningkatkan konversi testosteron menjadi estradiol. <strong>Solusi:</strong> Turunkan dosis atau rujuk untuk pertimbangan ganti ke Eplerenone (MRA selektif yang minim efek samping ginekomastia, sayangnya jarang ada di BPJS dasar).` },
+            { cat: "Efek Samping", q: "Pasien kehabisan obat Bisoprolol 5 mg dan tidak minum selama 4 hari. Hari ini ia ke IGD dengan TD 180/100, dada berdebar keras (HR 120x/m), dan keringat dingin. Fenomena apa ini?", a: `<strong>Beta-Blocker Withdrawal Syndrome (Rebound Phenomenon).</strong><br><br>Penggunaan Beta-blocker kronis menyebabkan <em>up-regulation</em> (penambahan jumlah) reseptor beta di jantung. Jika dihentikan mendadak, jantung menjadi sangat hipersensitif terhadap sirkulasi adrenalin normal, memicu lonjakan TD, takikardia, hingga iskemik/STEMI. <strong>Aksi:</strong> Segera berikan kembali dosis Beta-blockernya.` },
+            { cat: "Krisis Hipertensi", q: "Kapan Anda mempertimbangkan penggunaan pil Clonidine (Catapres) di IGD Puskesmas, dan apa bahaya utamanya jika pasien tidak kontrol ulang?", a: `Clonidine (Alpha-2 agonist sentral) digunakan untuk <strong>Hipertensi Urgensi yang refrakter</strong> (tidak mempan dengan kombinasi Captopril/Amlodipine inisial).<br><br><strong>Bahaya (Pitfall):</strong> Waktu paruhnya pendek. Jika dijadikan obat rutin di rumah lalu pasien lupa minum / putus obat mendadak, akan terjadi <strong>Rebound Hypertension</strong> yang sangat parah dan berisiko stroke. Jarang dipakai untuk maintenance harian.` },
+            { cat: "Diagnosis", q: "Bapak-bapak memakai jaket tebal dan kemeja lengan panjang. Untuk mempercepat waktu, perawat menggulung lengan kemejanya tinggi-tinggi hingga ketat menjepit ketiak, lalu memasang manset. Apa bahayanya?", a: `<strong>Efek Torniket (Tourniquet Effect).</strong><br><br>Menggulung baju hingga sangat ketat di atas manset akan membendung pembuluh darah vena (seperti diikat). Ini akan menyebabkan hasil pengukuran tensi menjadi <strong>palsu (Inaccurate)</strong>, biasanya diastoliknya terbaca jauh lebih tinggi. <strong>Aturan baku:</strong> Lengan harus telanjang, atau pasang manset di atas baju tipis tanpa digulung paksa.` },
+            { cat: "Krisis Hipertensi", q: "Pasien datang dengan hemiparesis kanan mendadak, bicara pelo, dan muntah menyemprot (Suspek Stroke Hemoragik). TD 220/120. Berapa target penurunan tensinya secara guideline?", a: `Berbeda dengan stroke iskemik yang tensinya dibiarkan tinggi (untuk perfusi otak penumbra), pada <strong>Stroke Perdarahan (Intracerebral Hemorrhage / ICH)</strong> dengan TD sistolik 150-220 mmHg, TD harus diturunkan dengan aman menuju target <strong>Sistolik 140 mmHg</strong>.<br>Ini bertujuan mencegah perluasan volume hematoma/perdarahan di otak. Obat emergensi terbaik: Nicardipine IV (rujuk segera).` },
+            { cat: "Gaya Hidup", q: "Pasien bertanya, 'Dok, saya baca di internet seledri dan bawang putih (garlic) bisa menyembuhkan darah tinggi. Benar tidak?' Bagaimana panduan edukasinya?", a: `<strong>Edukasi Berbasis Bukti (EBM):</strong><br><br>Ekstrak bawang putih (allicin) dan seledri secara klinis memang memiliki sifat vasodilator ringan dan bisa menurunkan tensi <em>sekitar 2-5 mmHg</em>. Namun, ini <strong>TIDAK BISA</strong> menggantikan obat antihipertensi medis pada hipertensi derajat 1 atau 2. Boleh dikonsumsi sebagai <em>suplemen gaya hidup</em> (terapi adjuvan), tapi obat medis utama tidak boleh distop.` },
+            { cat: "Komorbiditas", q: "Pasien hipertensi 150/90 juga menderita Peripheral Arterial Disease (PAD), mengeluh betisnya sakit/kram jika jalan 100 meter (Claudicatio Intermittens). Apakah Beta-blocker kontraindikasi mutlak?", a: `<strong>Secara historis ditakuti, namun kini relatif aman.</strong><br><br>Dulu Beta-blocker dianggap tabu karena memblokir reseptor Beta-2 (vasodilator), menyisakan efek reseptor Alfa (vasokonstriksi) yang ditakutkan memperparah iskemik kaki. Bukti terbaru menunjukkan <strong>Beta-blocker kardioselektif (Bisoprolol) aman</strong> dan tidak memperburuk PAD ringan-sedang. Namun lini pertama di poli tetaplah ACE-i atau CCB.` },
+            { cat: "Diagnosis", q: "Apa definisi dari 'Resistant Hypertension' (Hipertensi Resisten) menurut Guideline JNC/PERHI?", a: `Hipertensi Resisten ditegakkan JIKA:<br><br>Tekanan darah pasien tetap <strong>> 140/90 mmHg</strong> MESKIPUN sudah patuh mengkonsumsi <strong>3 jenis obat antihipertensi dari golongan yang berbeda (termasuk minimal satu jenis Diuretik) dalam dosis maksimal yang dapat ditoleransi.</strong><br>Pastikan bukan karena <em>non-compliance</em> (pasien malas minum obat) atau *white-coat effect*.` },
+            { cat: "Hipertensi Sekunder", q: "Remaja 15 tahun obesitas datang periksa radang tenggorokan. Iseng ditensi, hasilnya 150/95. Diulang tetap tinggi. Apa langkah skrining awal terbaik di Faskes 1 untuk hipertensi pediatrik?", a: `Hipertensi pada anak/remaja selalu wajib dicurigai <strong>Hipertensi Sekunder</strong> (Meski hipertensi esensial akibat obesitas makin meningkat pesat).<br><br><strong>Aksi Puskesmas:</strong><br>1. Urinalisis rutin (Cari darah/protein &rarr; suspek Glomerulonefritis).<br>2. Auskultasi perut / pinggang (Cari bruit &rarr; suspek Stenosis Arteri Renalis).<br>3. Raba nadi femoral kaki (Cari kelemahan &rarr; suspek Koarktasio Aorta).` },
+            { cat: "Interaksi Obat", q: "Kakek 70 tahun dikonsul dari Poli Mata karena baru didiagnosis Glaukoma. Ia membawa obat tetes mata Timolol. Ia juga rutin periksa di Poli Umum untuk HT dan minum Bisoprolol. Pitfall?", a: `<strong>Risiko Bradikardia Ekstrem & Hipotensi.</strong><br><br>Timolol adalah Beta-blocker non-selektif topikal. Meski diteteskan di mata, obat ini bisa diabsorpsi secara sistemik melalui mukosa hidung/nasolakrimal. Jika digabung dengan Beta-blocker oral (Bisoprolol), efek aditifnya bisa memicu blok jantung parah (bradikardia) dan asma. Konsulkan ke Sp.M untuk alternatif (mis. Latanoprost).` },
+            { cat: "Lansia & Geriatri", q: "Pasien 'Very Elderly' (Sangat Renta) usia 85 tahun dengan riwayat sering jatuh dan demensia. Tensi 155/80 mmHg. Berapa target penurunan tensi yang paling bijak untuknya?", a: `<strong>Target lebih longgar: Sistolik < 150 mmHg.</strong><br><br>Pada populasi > 80 tahun yang <em>frail</em> (renta), guideline (seperti HYVET trial) menyarankan terapi antihipertensi jika sistolik > 160, dengan target turun ke rentang 140-150 mmHg. <strong>Hindari menekan sistolik < 130 mmHg</strong>, karena risiko perfusi otak menurun, pusing ortostatik, pingsan, dan fraktur akibat jatuh jauh lebih mematikan.` },
+            { cat: "Diagnosis", q: "Kakek 75 tahun datang tensi 180/90 di lengan dengan manset. Namun saat diraba, nadi radialisnya teraba sangat kaku seperti kawat keras meskipun manset sudah dipompa melebihi tekanan sistoliknya. Fenomena?", a: `<strong>Osler's Sign Positif (Pseudohypertension).</strong><br><br>Terjadi karena arteriosklerosis berat (pembuluh darah sudah mengeras kaku karena kalsifikasi kronis). Manset tensimeter gagal menekan kompresi arteri brachialis secara sempurna, sehingga alat mengukur tekanan yang jauh lebih tinggi (Overestimasi) dari tekanan intra-arterial yang sebenarnya. Rujuk untuk cek <em>Ankle-Brachial Index (ABI)</em>.` },
+            { cat: "Interaksi Obat", q: "Pasien CKD rutin Hemodialisis disuntik obat Eritropoietin (EPO) di RS untuk mengatasi anemianya. Ia periksa ke Puskesmas mengeluh tensinya akhir-akhir ini selalu tembus 170/100. Hubungannya?", a: `<strong>Hipertensi Imbas Eritropoietin.</strong><br><br>Pemberian ESA (Erythropoiesis-Stimulating Agents) menaikkan hematokrit/viskositas darah dan memicu vasokonstriksi arteriol langsung. Sekitar 20-30% pasien CKD mengalami perburukan hipertensi berat setelah terapi EPO. <strong>Aksi:</strong> Tambahkan/naikkan dosis obat antihipertensinya, dan evaluasi target Hb jangan terlalu tinggi (Max 11-12 g/dL).` },
+            { cat: "Gaya Hidup", q: "Pasien hipertensi derajat 1 pria 35 tahun gemar berolahraga angkat beban berat (Powerlifting / 1-Rep Max). Apakah aman bagi pembuluh darahnya?", a: `<strong>Tidak Disarankan (Berisiko Tinggi).</strong><br><br>Latihan isometrik ekstrem (seperti angkat beban maksimal) dibarengi manuver Valsalva akan menyebabkan <strong>lonjakan tekanan darah seketika yang sangat ekstrem</strong> (bisa > 250/150 mmHg selama mengejan), berisiko ruptur aneurisma atau stroke. <strong>Saran:</strong> Beralih ke olahraga aerobik / isotonik (jogging, renang, sepeda) atau angkat beban ringan dengan repetisi banyak.` },
+            { cat: "Diagnosis", q: "Kapan Anda mencurigai 'Hipertensi Jas Putih' (White Coat Hypertension) secara klinis di Puskesmas, dan mengapa tidak boleh dianggap sepele 100%?", a: `<strong>Kecurigaan:</strong> Pasien sangat cemas saat masuk poli, HR cepat (>90x/m), tensi tinggi (>140/90), tapi tidak ada tanda kerusakan organ (LVH/Proteinuria) dan tidak ada keluhan. <br><br><strong>Bahaya:</strong> Jangan dianggap 100% normal (jinak). Studi kohort menunjukkan pasien White Coat Hypertension berisiko tinggi <strong>berkembang menjadi Hipertensi Persisten</strong> dalam beberapa tahun ke depan. Wajib pantau HBPM dan modifikasi gaya hidup!` },
+            { cat: "Komorbiditas", q: "Pasien DM Tipe 2 dengan Autonomic Neuropathy (gastroparesis dan kebas kaki). TD posisi baring 160/90, TD posisi berdiri 110/70. Dilema terapi apa yang Anda hadapi?", a: `<strong>Dilema: Hipertensi Supine dengan Hipotensi Ortostatik.</strong><br><br>Pasien DM lama saraf otonomnya rusak (hilang refleks vasokonstriksi saat berdiri). Jika diberi obat TD kuat, ia akan sering pingsan/jatuh saat berdiri (hipotensi ortostatik memburuk). Jika obat disetop, tensinya meroket saat ia tidur berbaring (supine HT).<br><strong>Trik:</strong> Berikan obat HT yang <em>short-acting</em> (mis. Captopril) HANYA di malam hari sebelum tidur, dan anjurkan tidur dengan kepala ranjang ditinggikan.` }
+        ];
+
+        let cards = [...originalCards];
+        let currentIndex = 0;
+        let isFlipped = false;
+        
+        // Touch Variables for Swipe
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let touchStartY = 0;
+        let isSwiping = false;
+        let isScrolling = false;
+
+        const flashcardEl = document.getElementById('flashcard');
+        const questionEl = document.getElementById('question-text');
+        const answerEl = document.getElementById('answer-text');
+        const counterEl = document.getElementById('card-counter');
+        const categoryEl = document.getElementById('card-category');
+
+        function renderCard() {
+            if (isFlipped) {
+                flashcardEl.classList.remove('is-flipped');
+                isFlipped = false;
+                setTimeout(() => {
+                    updateContent();
+                }, 300);
+            } else {
+                updateContent();
+            }
+        }
+
+        function updateContent() {
+            const currentCard = cards[currentIndex];
+            questionEl.innerHTML = currentCard.q;
+            answerEl.innerHTML = currentCard.a;
+            categoryEl.textContent = currentCard.cat;
+            counterEl.textContent = `${currentIndex + 1} / ${cards.length}`;
+            
+            // Scroll answer to top whenever card changes
+            document.querySelector('#answer-text').parentElement.scrollTop = 0;
+            document.querySelector('#question-text').parentElement.scrollTop = 0;
+        }
+
+        function toggleFlip(e) {
+            if (isSwiping) return;
+            const selection = window.getSelection();
+            if (selection.toString().length > 0) return;
+            
+            isFlipped = !isFlipped;
+            flashcardEl.classList.toggle('is-flipped');
+        }
+
+        function nextCard() {
+            if (currentIndex < cards.length - 1) {
+                currentIndex++;
+                renderCard();
+            } else {
+                currentIndex = 0;
+                renderCard();
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderCard();
+            } else {
+                currentIndex = cards.length - 1; // loop to back
+                renderCard();
+            }
+        }
+
+        function shuffleCards() {
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            currentIndex = 0;
+            renderCard();
+        }
+
+        flashcardEl.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+            isSwiping = false;
+            isScrolling = false;
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchmove', e => {
+            if (isScrolling) return;
+
+            const currentTouchX = e.changedTouches[0].screenX;
+            const currentTouchY = e.changedTouches[0].screenY;
+            
+            const diffX = Math.abs(currentTouchX - touchStartX);
+            const diffY = Math.abs(currentTouchY - touchStartY);
+
+            // Mencegah trigger swipe horizontal jika dominan scroll vertikal
+            if (diffY > diffX && diffY > 10) {
+                isScrolling = true;
+                isSwiping = false;
+                return;
+            }
+
+            if (diffX > 15) {
+                isSwiping = true;
+            }
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+
+        function handleSwipe() {
+            const swipeThreshold = 50; 
+            if (touchEndX < touchStartX - swipeThreshold) {
+                nextCard();
+            } else if (touchEndX > touchStartX + swipeThreshold) {
+                prevCard();
+            }
+            setTimeout(() => {
+                isSwiping = false;
+            }, 100);
+        }
+
+        window.onload = renderCard;
+
+        // Listener khusus elemen flashcard agar Spasi tidak tersita secara global
+        flashcardEl.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                e.preventDefault(); 
+                toggleFlip();
+            }
+        });
+
+        // Listener navigasi panah tetap diletakkan di global (document)
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'ArrowRight') {
+                nextCard();
+            } else if (e.code === 'ArrowLeft') {
+                prevCard();
+            }
+        });
+    </script>
+</body>
+</html>
