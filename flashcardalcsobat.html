@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard Obat-Obatan ACLS (Expert)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        .card-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        .is-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05); 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2); 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.4); 
+        }
+
+        .answer-text {
+            line-height: 1.6;
+            letter-spacing: 0.01em;
+        }
+        .answer-text strong {
+            color: #4c051e; /* rose-950 untuk kontras tinggi pada layar terang */
+        }
+        .answer-text .pitfall {
+            color: #b91c1c; /* red-700 untuk pitfall */
+            font-weight: 800;
+            background-color: #fee2e2;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+        .answer-text ul, .answer-text ol {
+            padding-left: 1.25rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .answer-text ul {
+            list-style-type: disc;
+        }
+        .answer-text ol {
+            list-style-type: decimal;
+        }
+        .answer-text li {
+            margin-bottom: 0.5rem;
+        }
+        .answer-text em {
+            color: #475569;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans flex flex-col overflow-x-hidden selection:bg-rose-500 selection:text-white">
+
+    <header class="bg-black/80 backdrop-blur-md text-white shadow-xl p-3 md:p-4 sticky top-0 z-20 border-b border-rose-900">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0">
+            <div class="text-center sm:text-left">
+                <h1 class="text-lg sm:text-xl md:text-2xl font-black flex items-center justify-center sm:justify-start gap-2 text-rose-500">
+                    <span>⚡</span> ACLS PHARMACOLOGY : EXPERT TIER
+                </h1>
+                <p class="text-[10px] sm:text-xs md:text-sm text-slate-400 font-medium tracking-wide">
+                    50 Hardcore Cases, Lethal Pitfalls & Deep Pathophysiology
+                </p>
+            </div>
+            <div class="text-[10px] sm:text-xs md:text-sm font-bold bg-rose-950 px-3 py-1 rounded-full border border-rose-600 shadow-[0_0_10px_rgba(225,29,72,0.5)] text-center text-rose-200 uppercase tracking-widest">
+                Residency Level
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex flex-col items-center justify-start sm:justify-center p-4 md:p-8 max-w-4xl mx-auto w-full">
+        
+        <div class="w-full flex justify-between items-center mb-3 md:mb-4">
+            <span id="card-category" class="text-xs md:text-sm uppercase tracking-wider text-rose-400 font-bold bg-slate-800 border border-slate-700 px-3 py-1 rounded shadow-sm">Kategori</span>
+            <span id="card-counter" class="text-xs md:text-sm bg-slate-800 px-3 py-1 rounded-full shadow-sm font-bold border border-slate-700 text-slate-300">1 / 50</span>
+        </div>
+
+        <div id="flashcard" tabindex="0" class="relative w-full max-w-2xl h-[70vh] min-h-[500px] md:h-[600px] perspective-1000 cursor-pointer group mb-6 md:mb-8 touch-pan-y focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-500 rounded-2xl md:rounded-3xl" onclick="toggleFlip(event)">
+            <div class="card-inner w-full h-full absolute transform-style-3d shadow-2xl rounded-2xl md:rounded-3xl">
+                
+                <!-- Front (Question) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-slate-800 rounded-2xl md:rounded-3xl p-6 md:p-10 flex flex-col items-center justify-center text-center border-t-4 border-rose-600 shadow-xl">
+                    <div class="absolute top-4 left-5 text-slate-700 font-extrabold text-4xl md:text-5xl opacity-30 tracking-tighter">CASE</div>
+                    <div class="w-full h-full flex flex-col justify-center overflow-y-auto custom-scrollbar pt-10 pb-8 pr-2">
+                        <p id="question-text" class="text-base sm:text-lg md:text-xl text-slate-200 font-semibold leading-relaxed m-auto">
+                            Memuat pertanyaan...
+                        </p>
+                    </div>
+                    <div class="absolute bottom-4 text-xs md:text-sm text-slate-500 flex items-center gap-1 animate-pulse font-medium">
+                        <span class="hidden sm:inline">Ketuk kartu untuk melihat analisis mendalam</span>
+                        <span class="sm:hidden">Ketuk: Jawaban • Usap: Lanjut</span>
+                    </div>
+                </div>
+
+                <!-- Back (Answer) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-slate-100 rounded-2xl md:rounded-3xl p-6 md:p-8 flex flex-col items-start justify-start text-left rotate-y-180 border-t-4 border-sky-600 shadow-inner overflow-hidden ring-1 ring-black/10">
+                    <div class="absolute top-4 right-5 text-slate-200 font-extrabold text-4xl md:text-5xl opacity-80 tracking-tighter">DEEP DIVE</div>
+                    <div class="w-full h-full overflow-y-auto custom-scrollbar pt-10 pb-8 pr-4">
+                        <div id="answer-text" class="answer-text text-xs sm:text-sm md:text-base text-slate-800 w-full font-medium">
+                            Memuat jawaban...
+                        </div>
+                    </div>
+                    <div class="absolute bottom-4 left-0 w-full text-center text-xs md:text-sm text-slate-500 flex items-center justify-center gap-1 font-bold">
+                        <span class="hidden sm:inline">Ketuk kartu untuk kembali</span>
+                        <span class="sm:hidden">Ketuk: Kembali • Usap: Lanjut</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="w-full max-w-2xl grid grid-cols-2 sm:flex sm:flex-row justify-center gap-3 md:gap-4 pb-8">
+            <button onclick="prevCard()" class="col-span-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-sm transition-all border border-slate-600 flex justify-center items-center gap-1 active:scale-95">
+                <span>&larr;</span> <span class="hidden sm:inline">Sebelumnya</span><span class="sm:hidden">Prev</span>
+            </button>
+            <button onclick="nextCard()" class="col-span-1 bg-rose-700 hover:bg-rose-600 text-white font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-lg shadow-rose-900/50 transition-all flex justify-center items-center gap-1 active:scale-95 border border-rose-500">
+                <span class="hidden sm:inline">Selanjutnya</span><span class="sm:hidden">Next</span> <span>&rarr;</span>
+            </button>
+            <button onclick="shuffleCards()" class="col-span-2 sm:col-span-1 order-last sm:order-none bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm md:text-base py-3 md:py-4 px-4 md:px-6 rounded-xl shadow-lg shadow-indigo-900/50 transition-all flex justify-center items-center active:scale-95 border border-indigo-400">
+                Acak (Shuffle)
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        const originalCards = [
+            // ==========================================
+            // KATEGORI 1: CARDIAC ARREST & RESUSCITATION
+            // ==========================================
+            { 
+                cat: "Cardiac Arrest: VF & Epinephrine Paradox", 
+                q: "Pasien VF (Ventricular Fibrillation). CPR dilakukan. Mengapa menurut AHA, pemberian Epinephrine pada ritme Shockable (VF/pVT) justru DITUNDA hingga setelah shock kedua, sedangkan pada Asistol/PEA diberikan SECEPAT MUNGKIN (ASAP)?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Memberikan Epinephrine seketika pada VF sebelum upaya defibrilasi maksimal justru menurunkan tingkat survival (ROSC).<br><br>
+                    <strong>Patofisiologi Mendalam:</strong>
+                    <ul>
+                        <li><strong>VF/pVT:</strong> Masalah utamanya adalah 'konsleting' listrik. Jantung butuh di-reset dengan Shock. Epinephrine memiliki efek Beta-1 yang luar biasa kuat (meningkatkan kebutuhan oksigen miokard). Jika diberikan terlalu awal, Epi akan merangsang otot jantung yang sedang fibrilasi menjadi iskemik (karena suplai koroner masih nol), mengubah VF kasar yang mudah di-shock (coarse VF) menjadi VF halus (fine VF) atau bahkan asystole yang refrakter terhadap listrik.</li>
+                        <li><strong>Asystole/PEA:</strong> Jantung sepenuhnya diam atau tidak ada tekanan. Prioritas absolut adalah membangun <em>Coronary Perfusion Pressure (CPP)</em> melalui efek vasokonstriksi Alpha-1 Epinephrine. Tanpa Alpha-1, darah tidak akan terperas masuk ke koroner saat Anda melakukan kompresi dada.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Cardiac Arrest: Dual Sequential Defibrillation", 
+                q: "Pasien mengalami Refractory VF (sudah di-shock 3x, Amiodarone 300mg masuk, Epi masuk, tapi VF tetap bertahan). Anda menginstruksikan DSED (Dual Sequential External Defibrillation). Bagaimana posisi pad kedua alat defibrilator tersebut?", 
+                a: `<strong>Posisi: Anterolateral (Standar) + Anteroposterior (AP).</strong><br><br>
+                    <strong>Mekanisme DSED (AHA 2020/2023 Updates):</strong>
+                    <ul>
+                        <li>Refractory VF sering terjadi karena vektor energi shock standar tidak berhasil mendepolarisasi seluruh massa ventrikel kiri (terutama jika ada hipertrofi atau obesitas parah).</li>
+                        <li><strong>Cara Kerja:</strong> Dua pasang pad dipasang dari 2 mesin defibrilator berbeda. Sepasang di Antero-lateral, sepasang lagi di Antero-posterior (dada depan & punggung).</li>
+                        <li><strong>Eksekusi:</strong> Tombol SHOCK ditekan berurutan secepat mungkin tanpa jeda. Ini mengubah vektor aliran listrik melintasi jantung secara silang dan menurunkan impedansi transtorasik, secara masif meningkatkan peluang depolarisasi total untuk me-reset VF bandel.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Cardiac Arrest: Sodium Bicarbonate Paradox", 
+                q: "Resusitasi sudah 20 menit (Asistol). Dokter bedah meminta injeksi Sodium Bicarbonate (Meylon) 50 mEq IV bolus karena curiga asidosis metabolik laktat berat. Apa bahaya fisiologis terbesar jika ini diberikan secara rutin/buta?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Asidosis Intraseluler Paradoksikal.<br><br>
+                    <strong>Biokimia Asam Basa:</strong>
+                    <ul>
+                        <li>Sodium Bicarbonate (NaHCO3) akan bereaksi dengan ion H+ di darah membentuk Asam Karbonat (H2CO3), yang seketika pecah menjadi Air (H2O) dan Karbon Dioksida (CO2).</li>
+                        <li><strong>Masalahnya:</strong> Ion Bikarbonat (HCO3-) SANGAT LAMBAT menembus membran sel dan <em>blood-brain-barrier</em>. Sebaliknya, gas CO2 menembus membran sel dengan SANGAT CEPAT.</li>
+                        <li>Akibatnya, CO2 hasil reaksi ini masuk kembali secara masif ke dalam sel otot jantung dan sel otak, memicu <strong>Asidosis Intraseluler Akut</strong> yang fatal, melumpuhkan sisa enzim intrasel, dan menekan kontraktilitas miokard secara permanen. Bikarbonat HANYA indikasi untuk: Hiperkalemia, Overdosis TCA, Asidosis pra-eksisten berat.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Cardiac Arrest: Calcium & NaHCO3", 
+                q: "Pasien henti jantung di ruang Hemodialisis. Suspek Hiperkalemia. Anda menginstruksikan injeksi Calcium Gluconate 10% dan Sodium Bicarbonate 8.4%. Perawat menyuntikkannya secara berurutan cepat melalui jalur IV (abocath) perifer yang sama tanpa di-flush. Apa yang terjadi di dalam pembuluh darah pasien?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Presipitasi Kalsium Karbonat (Terbentuknya Kapur/Batu dalam darah).<br><br>
+                    <strong>Interaksi Kimia Mematikan:</strong>
+                    <ul>
+                        <li>Kalsium (Ca2+) dan Bikarbonat (HCO3-) memiliki inkompatibilitas intravena yang sangat tinggi.</li>
+                        <li>Jika bertemu di selang infus atau vena yang sama, mereka langsung bereaksi secara kimiawi membentuk endapan <em>Calcium Carbonate</em> (CaCO3) yang wujudnya secara harfiah seperti serbuk kapur putih.</li>
+                        <li>Mikrokristal kapur ini akan mengalir dan memicu <strong>Emboli Paru Mikrovaskular masif</strong> seketika, membunuh pasien.</li>
+                        <li><strong>Aturan Emas:</strong> FLUSH dengan 20cc NaCl 0.9% secara agresif di antara pemberian Kalsium dan Bikarbonat, atau gunakan dua jalur IV/IO yang terpisah!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Cardiac Arrest: Magnesium Sulfate", 
+                q: "Magnesium Sulfate (MgSO4) 1-2 gram IV push adalah terapi utama Torsades de Pointes. Bagaimana sebenarnya Magnesium menghentikan Torsades pada level potensial aksi sel otot jantung?", 
+                a: `<strong>Mekanisme: Blokade Early Afterdepolarizations (EADs) pada Fase 2 & 3.</strong><br><br>
+                    <strong>Elektrofisiologi Seluler:</strong>
+                    <ul>
+                        <li>Torsades de Pointes dipicu oleh interval QT yang memanjang (repolarisasi yang tertunda). Penundaan ini memungkinkan kalsium (Ca2+) bocor kembali masuk ke dalam sel melalui <em>L-type Calcium Channels</em> selama fase plateau (Fase 2) atau fase repolarisasi awal (Fase 3).</li>
+                        <li>Kebocoran ini memicu depolarisasi spontan prematur yang disebut <em>Early Afterdepolarizations (EADs)</em>, yang memicu rentetan takikardia ventrikel.</li>
+                        <li><strong>Ajaibnya MgSO4:</strong> MgSO4 <strong>TIDAK</strong> memperpendek interval QT. Ia bertindak sebagai pemblokir saluran kalsium alami, menstabilkan membran sel dan mencegah aliran masuk kalsium yang memicu EADs tersebut. Hal ini secara efektif "mematikan saklar" Torsades.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Cardiac Arrest: Amiodarone Solvent", 
+                q: "Amiodarone pada Cardiac Arrest diberikan 300mg IV PUSH CEPAT. Namun, pada pasien Takikardia Ventrikel (VT) dengan nadi yang stabil, obat ini HARUS di-drip lambat selama 10-15 menit (150mg). Jika VT ber-nadi disuntik bolus cepat, tensi pasien akan hancur (Syok). Mengapa?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Toksisitas Zat Pelarut (Vehicle Toxicity).<br><br>
+                    <strong>Farmakologi Formula:</strong>
+                    <ul>
+                        <li>Amiodarone intravena konvensional (misal: Cordarone) sangat tidak larut dalam air. Untuk membuatnya cair, pabrik menggunakan zat pelarut campuran <strong>Polysorbate 80</strong> dan <strong>Benzyl Alcohol</strong>.</li>
+                        <li>Polysorbate 80 adalah agen pelepas Histamin (histamine releaser) yang sangat poten dan vasodilator vena langsung (venodilator).</li>
+                        <li>Jika disuntikkan cepat ke pasien bersirkulasi, pelarut ini memicu syok vasodilatasi masif. Pada Cardiac Arrest (henti jantung), tekanan darah memang sudah nol, jadi efek ini tidak relevan dan obat boleh disuntik secepat mungkin agar sampai ke miokard. <em>*Catatan: Sediaan baru (Nexterone / Aqueous Amiodarone) bebas polysorbate dan tidak memicu hipotensi ini.</em></li>
+                    </ul>` 
+            },
+            { 
+                cat: "Cardiac Arrest: Endotracheal Epi", 
+                q: "Jalur IV perifer gagal. Jarum intraoseus (IO) patah. Akses tersisa hanya pipa Endotrakeal (ETT). Anda akan menyemprotkan Epinephrine ke dalam ETT. Mengapa Epinephrine via ETT harus dilarutkan dalam 10cc Aquadest Steril, bukan NaCl 0.9%?", 
+                a: `<strong>Aquadest (Air Steril) diserap jauh lebih cepat ke vaskuler paru dibandingkan Saline.</strong><br><br>
+                    <strong>Farmakokinetik Alveolar:</strong>
+                    <ul>
+                        <li>Dosis ETT harus dinaikkan 2 - 2.5x lipat (2 mg - 2.5 mg Epinephrine).</li>
+                        <li><strong>Kenapa Aquadest?</strong> Aquadest sangat hipotonik. Saat disemprotkan ke dalam alveolus, tekanan osmotik seketika menarik air (dan obat yang larut di dalamnya) menembus membran kapiler-alveolar masuk ke dalam sirkulasi darah dengan kecepatan tinggi.</li>
+                        <li>Jika memakai NaCl 0.9% (Isotonik), cairan cenderung menetap lebih lama di lumen alveolus karena sudah seimbang secara osmotik, sehingga penyerapan obat menjadi lambat dan kadar terapeutik darah gagal tercapai selama CPR.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Post-Arrest (ROSC): Vasopressor Choice", 
+                q: "Pasien berhasil ROSC. Nadi teraba. Namun tensi anjlok menjadi 65/40 mmHg (Syok). EKG menunjukkan Sinus Takikardia 130x/menit. Apakah Norepinephrine atau Epinephrine drip yang lebih disukai sebagai inisial vasopresor menurut ACLS?", 
+                a: `<strong>Norepinephrine Drip adalah Pilihan Utama (Lini Pertama).</strong><br><br>
+                    <strong>Hemodinamik Post-ROSC:</strong>
+                    <ul>
+                        <li><strong>Norepinephrine:</strong> Memiliki afinitas Alpha-1 dominan (memeras pembuluh darah menaikkan tensi sentral) dengan sedikit efek Beta-1.</li>
+                        <li><strong>Kenapa Epinephrine dihindari sebagai lini awal?</strong> Epinephrine memiliki afinitas Beta-1 yang kuat. Pada pasien ini yang sudah takikardia (HR 130x/m) pasca iskemik, mencambuk jantung dengan Epinephrine akan memicu takikardia fatal, meningkatkan MVO2 (Myocardial Oxygen Demand), dan memicu rekurensi VF.</li>
+                        <li><strong>Pitfall Tambahan:</strong> Epinephrine IV drip merangsang reseptor Beta-2 di otot rangka yang meningkatkan glikolisis, memicu peningkatan asam laktat palsu (Type B Lactic Acidosis). Ini membuat bingung dokter ICU apakah laktat naik karena syok memburuk atau sekadar efek obat!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Post-Arrest (ROSC): TTM & Drug Metabolism", 
+                q: "Di ICU, pasien ROSC koma didinginkan suhunya menjadi 33°C (Targeted Temperature Management / TTM). Jika Anda memberikan infus sedasi Midazolam atau Fentanyl dengan dosis standar dewasa normal, apa yang akan terjadi pada hari kedua?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Overdosis / Toksisitas Obat Kumulatif.<br><br>
+                    <strong>Farmakokinetik Hipotermia:</strong>
+                    <ul>
+                        <li>Suhu inti 33-34°C memicu pelambatan masif metabolisme seluler tubuh, termasuk kerja ginjal dan hati.</li>
+                        <li>Aktivitas enzim Sitokrom P450 (terutama CYP3A4 dan CYP2C9) di liver turun drastis. Laju filtrasi glomerulus (GFR) juga melambat.</li>
+                        <li>Waktu paruh (half-life) obat-obatan seperti opiat, benzodiazepin, pelumpuh otot, dan amiodarone bisa <strong>meningkat hingga 300%</strong>. Dosis standar akan menumpuk menjadi level toksik. Saat pasien dihangatkan (rewarming), tumpukan obat ini beredar ke otak, menyebabkan pasien bangun tertunda berhari-hari (delayed awakening), membuat dokter salah mendiagnosis pasien mengalami mati batang otak!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Post-Arrest (ROSC): Oxygen Paradox", 
+                q: "Pasien ROSC di IGD. Saturasi O2 saat ini 100% pada Oksigen NRM 15 Lpm. Residen jaga membiarkan oksigen tinggi ini dengan alasan 'Otaknya tadi hipoksia, butuh oksigen sebanyak-banyaknya untuk sembuh'. Apa bahaya Reperfusion Injury dari tindakan ini?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Hiperoksia Membunuh Neuron (Oxidative Stress).<br><br>
+                    <strong>Patofisiologi <em>Reperfusion Injury</em>:</strong>
+                    <ul>
+                        <li>Selama henti jantung (iskemia), sel kekurangan oksigen dan beralih ke metabolisme anaerobik, mengakumulasi metabolit beracun.</li>
+                        <li>Saat sirkulasi kembali (ROSC) dan dipapar oksigen berlebih (Hyperoxia, PaO2 > 300 mmHg), mitokondria sel yang rusak bereaksi dengan oksigen membentuk <strong>Reactive Oxygen Species (ROS) / Radikal Bebas</strong> besar-besaran (Superoxide, Hydrogen Peroxide).</li>
+                        <li>ROS ini mencabik-cabik membran sel otak dan miokardium (Lipid Peroxidation), menyebabkan kerusakan otak sekunder yang jauh lebih parah daripada iskemia awalnya.</li>
+                        <li><strong>AHA Target:</strong> Titrasi turun FiO2 segera untuk mencapai SpO2 92% - 98% saja!</li>
+                    </ul>` 
+            },
+
+            // ==========================================
+            // KATEGORI 2: BRADYCARDIA & AV BLOCKS
+            // ==========================================
+            { 
+                cat: "Bradycardia: Atropine Paradox", 
+                q: "Pasien bradikardia ekstrem 35x/menit. Anda memberikan Atropine secara perlahan-lahan via infus (infusion) selama 10 menit 'agar tidak syok'. Tiba-tiba nadi pasien malah turun jadi 20x/m lalu Asistol. Apa mekanisme <em>Paradoxical Bradycardia</em> Atropine?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Dosis Subterapeutik & Pemberian Lambat.<br><br>
+                    <strong>Neurofarmakologi:</strong>
+                    <ul>
+                        <li>Atropine adalah antagonis reseptor muskarinik (M2) di jantung (memblokir efek rem Vagus).</li>
+                        <li>TETAPI, pada dosis yang sangat rendah (< 0.5 mg) atau jika diberikan sangat lambat, Atropine justru melintasi sawar darah otak dan merangsang <strong>Pusat Vagal (Nukleus Tractus Solitarius)</strong> di Medula Oblongata <em>sebelum</em> ia sempat memblokir reseptor di jantung.</li>
+                        <li>Rangsangan sentral ini memicu output Vagus masif yang melambat jantung secara paradoksikal. <strong>Atropine HARUS didorong cepat (Rapid IV push) dengan dosis 1 mg utuh (Update AHA 2020)</strong>.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Bradycardia: STEMI Lokasi", 
+                q: "Dua pasien mengalami Bradikardia (HR 40x/m). Pasien A: STEMI Inferior (Tersumbat di RCA). Pasien B: STEMI Anterior Ekstensif (Tersumbat di LAD). Mengapa AHA memperingatkan Atropine sangat BERBAHAYA dan kemungkinan GAGAL pada Pasien B?", 
+                a: `<strong>Perbedaan Anatomi Iskemia & Saraf Vagus.</strong><br><br>
+                    <strong>Analisis Level Ahli:</strong>
+                    <ul>
+                        <li><strong>Pasien A (Inferior MI / RCA):</strong> Arteri Koroner Kanan menyuplai Nodus SA dan Nodus AV. Iskemia di sini memicu refleks Bezold-Jarisch (hipertonus Vagus). Bradikardia di sini dimediasi oleh Vagus. Atropine (pemblokir vagus) akan <strong>bekerja sangat baik</strong>.</li>
+                        <li><strong>Pasien B (Anterior MI / LAD):</strong> Arteri LAD menyuplai struktur His-Purkinje (ventrikel bawah). Iskemia luas di sini mematikan sistem konduksi struktural (menyebabkan AV Blok Derajat 3 / Wide QRS idioventricular rhythm). Sistem His-Purkinje <strong>TIDAK</strong> dipersarafi oleh Vagus.</li>
+                        <li><strong>Pitfall:</strong> Memberi Atropine pada Pasien B tak akan merangsang ventrikel, malah merangsang Atrium untuk memompa lebih cepat, menembaki AV Node yang sudah mati, memperburuk blok (Paradoxical slowing). Langsung gunakan TCP (Transcutaneous Pacing) atau Epi Drip!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Bradycardia: AV Block 2nd Degree Type II", 
+                q: "Monitor EKG menunjukkan Mobitz Tipe II (AV Block Derajat 2). Irama ventrikel sangat lambat dan lebar (Wide QRS). Tensi 80/50. Anda memberikan Atropine. Mengapa ini dianggap sebagai kontraindikasi relatif yang bisa memperburuk hemodinamik?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Meningkatkan Blokade His-Purkinje.<br><br>
+                    <strong>Elektrofisiologi:</strong>
+                    <ul>
+                        <li>Mobitz II dan AV Blok Total dengan QRS lebar selalu menunjukkan letak lesi/konslet berada <strong>di bawah Nodus AV</strong> (infranodal / His-Purkinje disease).</li>
+                        <li>Atropine hanya mempercepat kerja Nodus SA (membuat Atrium berdenyut lebih cepat).</li>
+                        <li>Ketika Atrium berdenyut sangat cepat, ia membombardir sistem His-Purkinje yang sedang rusak/sakit dengan impuls listrik bertubi-tubi. His-Purkinje akan 'kelelahan' dan gagal menghantarkan listrik sama sekali (Fatigue-induced block). Konduksi rasio blok 2:1 bisa tiba-tiba berubah memburuk menjadi Asistol ventrikel!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Bradycardia: Infus Dopamin vs Epinefrin", 
+                q: "Atropine gagal. Anda siap memasang infus inotropik. Apa landasan fisiologis untuk memilih Epinephrine Drip dibandingkan Dopamine Drip pada pasien bradikardia dengan Gagal Jantung Kiri berat?", 
+                a: `<strong>Dopamine memicu Peningkatan Afterload Parah (Efek Alpha Dosis Tinggi).</strong><br><br>
+                    <strong>Farmakologi Reseptor:</strong>
+                    <ul>
+                        <li>Dopamine memiliki efek bergantung dosis (Dose-dependent). Untuk menaikkan Heart Rate, Anda sering harus mendorong Dopamine hingga dosis > 10 mcg/kg/menit. Pada dosis ini, efek Alpha-1 (vasokonstriksi perifer) sangat mendominasi.</li>
+                        <li>Pada pasien jantung kiri yang sudah gagal (CHF), vasokonstriksi perifer ekstrem ini meningkatkan Afterload secara masif. Jantung kiri tidak akan sanggup memompa darah keluar, memicu Edema Paru Akut.</li>
+                        <li><strong>Epinephrine Drip:</strong> Pada dosis bradikardia (2-10 mcg/menit), Epi bekerja sangat dominan di Beta-1 (Kronotropik/Inotropik) dan Beta-2 (vasodilatasi ringan), memberikan dorongan nadi dan kekuatan pompa <strong>tanpa</strong> mencekik afterload secara ekstrem seperti Dopamine dosis tinggi.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Bradycardia: Toksisitas Beta-Blocker", 
+                q: "Pasien bunuh diri minum 50 pil Propranolol. Tensi 60/40, Nadi 20x/menit. Atropin, Epi Drip, Dopamin Drip dosis raksasa semuanya GAGAL menaikkan nadi karena seluruh reseptor Beta-1 terkunci rapat. Obat apa yang bekerja mem-bypass reseptor beta?", 
+                a: `<strong>Glukagon IV dosis tinggi (10 mg bolus, lanjut drip).</strong><br><br>
+                    <strong>Mekanisme "Pintu Belakang":</strong>
+                    <ul>
+                        <li>Obat vasopresor standar gagal karena mereka butuh mengikat Reseptor Beta untuk memproduksi cAMP (energi kontraksi). BB menutupi reseptor ini.</li>
+                        <li>Glukagon memiliki <strong>reseptor spesifiknya sendiri</strong> di otot jantung yang tidak terpengaruh oleh Beta-blocker.</li>
+                        <li>Saat Glukagon berikatan, ia mengaktifkan Adenilil Siklase secara independen, memicu produksi cAMP intraseluler masif, menghasilkan efek kronotropik (nadi naik) dan inotropik (kontraktilitas naik).</li>
+                        <li><strong>Catatan Ahli:</strong> Glukagon memicu muntah proyektil hebat. Waspada aspirasi! Terapi terkuat saat ini (Gold Standard Tox) sebenarnya adalah <em>High-Dose Insulin Euglycemia Therapy (HIET)</em>.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Bradycardia: Tox CCB (Calcium Channel Blocker)", 
+                q: "Overdosis Amlodipine (CCB). Nadi lambat dan syok vasodilatasi ekstrem. Kalsium IV dan Glukagon tidak mempan menstabilkan tensi. Terapi pamungkas apa yang terbukti memperbaiki metabolisme miokardial pada syok toksik ini?", 
+                a: `<strong>High-Dose Insulin Euglycemia Therapy (HIET).</strong><br><br>
+                    <strong>Patofisiologi Syok Toksik CCB:</strong>
+                    <ul>
+                        <li>Dalam kondisi normal, otot jantung menggunakan Asam Lemak Bebas (Free Fatty Acids) sebagai bahan bakar.</li>
+                        <li>Dalam kondisi syok kardiogenik toksik, miokardium beralih menggunakan Karbohidrat (Glukosa) untuk bertahan hidup. Namun, CCB memblokir pelepasan insulin dari pankreas dan menciptakan resistensi insulin jaringan! Jantung kelaparan glukosa.</li>
+                        <li><strong>Tatalaksana HIET:</strong> Injeksi Insulin dosis raksasa (1 Unit/kg bolus, lanjut 1-10 Unit/kg/jam infus). Insulin dosis mega ini bertindak sebagai Inotropik super kuat, membuka paksa saluran masuk glukosa ke miokard. Wajib didampingi infus Dextrose 50% kontinyu untuk mencegah hipoglikemia mematikan.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Bradycardia: Pacemaker Syndrome", 
+                q: "Pasien di-pacing dengan Transcutaneous Pacemaker (TCP). Di monitor terlihat paku pacing (spike) diikuti gelombang QRS lebar yang cantik setiap detiknya. TETAPI, saat Anda meraba nadi karotis dan cek tensi, nadinya tidak teraba dan tensi tetap 60 per palpasi. Apa yang terjadi?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Electrical Capture TANPA Mechanical Capture / Pseudoelectromechanical Dissociation.<br><br>
+                    <strong>Fenomena Klinis:</strong>
+                    <ul>
+                        <li>Melihat QRS lebar di layar (Electrical capture) BUKAN berarti otot jantung benar-benar memompa darah (Mechanical capture).</li>
+                        <li>Arus listrik dari mesin mungkin mendepolarisasi miokard di permukaan EKG, namun miokardium terlalu lemah/iskemik atau asidosis untuk menghasilkan kontraksi fisik yang kuat.</li>
+                        <li><strong>Aksi Resusitasi:</strong> Jangan tertipu monitor! Jika nadi tidak ada saat di-pacing, ini sama dengan PEA (Pulseless Electrical Activity). Hentikan pacing (atau biarkan jalan), namun <strong>MULAI KOMPRESI DADA (CPR)</strong> dan berikan Epinephrine. Pacing tanpa curah jantung adalah henti jantung.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Bradycardia: Denervated Heart (Transplant)", 
+                q: "Pasien riwayat cangkok jantung (Heart Transplant) 5 tahun lalu datang dengan bradikardia ekstrem akibat gagal ginjal. Anda menyuntikkan Atropine 1 mg IV, namun heart rate tidak berubah 1 denyut pun. Apa alasan anatomis kegagalan ini?", 
+                a: `<strong>Jantung Cangkok Kehilangan Persarafan Vagus (Denervated Heart).</strong><br><br>
+                    <strong>Anatomi Pembedahan:</strong>
+                    <ul>
+                        <li>Saat operasi transplantasi, saraf Vagus (parasimpatis) dari otak yang menuju jantung bawaan pasien DIPOTONG.</li>
+                        <li>Jantung donor dimasukkan tanpa koneksi saraf Vagus. Atropine bekerja HANYA dengan cara memblokir saraf Vagus. Jika sarafnya tidak ada, Atropine 100% tidak memiliki reseptor target untuk diblokir. Obat tidak akan bekerja.</li>
+                        <li><strong>Tatalaksana Pengganti:</strong> Gunakan agen yang bekerja langsung pada reseptor otot jantung (Direct-acting sympathomimetics) seperti <strong>Isoproterenol Drip</strong>, Epinephrine Drip, atau langsung pasang Transcutaneous Pacing (TCP).</li>
+                    </ul>` 
+            },
+
+            // ==========================================
+            // KATEGORI 3: TACHYCARDIA & ABERRANCY
+            // ==========================================
+            { 
+                cat: "Tachycardia: Adenosine Mechanism", 
+                q: "Mengapa pemberian Adenosine 6 mg untuk SVT justru dapat menyebabkan <em>Bronkospasme Refrakter</em> pada pasien dengan riwayat Asma Berat, dan harus diganti dengan Verapamil?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Reseptor Adenosinergik A2B dan A3 di Paru.<br><br>
+                    <strong>Neurofarmakologi:</strong>
+                    <ul>
+                        <li>Adenosine menghentikan SVT dengan mengikat reseptor <strong>A1</strong> di AV Node (membuka kanal Kalium, hiperpolarisasi sel, asystole sementara).</li>
+                        <li>Namun, Adenosine tidak selektif. Ia juga berikatan dengan reseptor <strong>A2B dan A3</strong> di sel mast pada otot polos bronkus.</li>
+                        <li>Pada pasien asma hiper-reaktif, stimulasi reseptor ini memicu degranulasi sel mast dan pelepasan histamin masif, menyebabkan bronkospasme akut (bronkus terkunci rapat) yang sangat sulit dibalikkan dengan Salbutamol biasa. Gunakan Diltiazem atau Verapamil sebagai alternatif aman di pasien asma.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Tachycardia: Adenosine & Theophylline", 
+                q: "Pasien PPOK eksaserbasi rutin minum Aminofilin/Teofilin. Ia masuk dengan SVT 180x/m. Anda menyuntikkan Adenosine 6mg, gagal. 12mg, gagal. 12mg lagi, gagal total. Mengapa Adenosine sama sekali tidak bekerja pada pasien ini?", 
+                a: `<strong>Kompetisi Reseptor (Antagonis Kompetitif oleh Metilxantin).</strong><br><br>
+                    <strong>Interaksi Obat Farmakodinamik:</strong>
+                    <ul>
+                        <li>Teofilin dan Aminofilin (dan kafein dosis tinggi) adalah molekul yang bentuknya mirip dengan Adenosine.</li>
+                        <li>Mereka menduduki dan memblokir reseptor A1 di AV Node, bertindak sebagai <strong>Antagonis Kompetitif</strong>.</li>
+                        <li>Saat Adenosine disuntikkan, pintu (reseptor) sudah ditutup dari dalam oleh Teofilin. Obat akan numpang lewat dan dihancurkan oleh sel darah merah tanpa efek.</li>
+                        <li><strong>Aksi:</strong> Gunakan AV nodal blocker golongan lain (Diltiazem/Metoprolol) atau pertimbangkan dosis Adenosine yang jauh lebih besar (namun berisiko).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Tachycardia: AFib with WPW (Lethal 6)", 
+                q: "Pasien berdebar hebat. EKG: Takikardia Irreguler dengan QRS SANGAT LEBAR dan berubah-ubah bentuk. Laju nadi bisa menyentuh 250x/m. Ini adalah Atrial Fibrilasi dengan sindrom WPW. Sebutkan obat-obatan 'ABCD' yang HARAM diberikan dan mengapa?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Presipitasi Ventricular Fibrillation (VF).<br><br>
+                    <strong>Patofisiologi Jalur Setan:</strong>
+                    <ul>
+                        <li>ABCD: <strong>A</strong>denosine/<strong>A</strong>miodarone IV, <strong>B</strong>eta-blocker, <strong>C</strong>alcium Channel Blocker, <strong>D</strong>igoxin. (Amiodarone oral aman, IV berbahaya).</li>
+                        <li>Semua obat ini bekerja dengan memblokir Nodus AV (pintu tol resmi jantung).</li>
+                        <li>Pada AFib, Atrium bergetar 400x/m. Nodus AV secara natural menahan sebagian besar impuls ini. Jika Anda menutup mati Nodus AV dengan ABCD, seluruh impuls 400x/m akan membobol masuk melalui Jalur Aksesori (Bundle of Kent / Pintu tikus) yang tidak punya rem penghalang.</li>
+                        <li>Ventrikel akan dipaksa memompa 400x/menit, berubah seketika menjadi VF, dan pasien mati mendadak. <strong>Gunakan Kardioversi (DC Shock) atau Procainamide IV!</strong></li>
+                    </ul>` 
+            },
+            { 
+                cat: "Tachycardia: Procainamide Endpoints", 
+                q: "Anda memberikan drip Procainamide 20-50 mg/menit untuk Stable VT (QRS Lebar). Berdasarkan ACLS, Anda harus segera MENGHENTIKAN drip ini jika terjadi 1 dari 4 'Endpoints'. Apa 4 tanda wajib penghentian tersebut?", 
+                a: `<strong>Tanda Berhentinya Procainamide:</strong><br><br>
+                    <ol>
+                        <li><strong>Aritmia teratasi</strong> (VT berubah menjadi irama sinus/normal).</li>
+                        <li><strong>Hipotensi:</strong> Procainamide memiliki efek penyekat ganglion (ganglionic blocking) yang memicu vasodilatasi dan drop tensi akut.</li>
+                        <li><strong>QRS Melebar > 50%:</strong> Procainamide adalah penyekat kanal Natrium (Class 1A). Jika dosis toksik tercapai, ia menunda depolarisasi ventrikel terlalu parah, melebarkan QRS, dan justru memicu pro-aritmia mematikan (VT/Torsades baru).</li>
+                        <li><strong>Dosis maksimal tercapai:</strong> 17 mg/kgBB kumulatif.</li>
+                    </ol>` 
+            },
+            { 
+                cat: "Tachycardia: SVT with Aberrancy vs VT", 
+                q: "Pasien pria 60 tahun riwayat PJK, EKG Takikardia Reguler dengan QRS LEBAR. Anda ragu apakah ini VT atau SVT dengan konduksi aberan (Bundle Branch Block). Tensi 110/70. Bolehkah mencoba <em>Adenosine Challenge</em> untuk memastikan diagnostik?", 
+                a: `<strong>BOLEH, tetapi dengan SYARAT KETAT (Berdasarkan AHA 2020).</strong><br><br>
+                    <strong>Aturan Penggunaan:</strong>
+                    <ul>
+                        <li>Hanya boleh dilakukan jika pasien <strong>benar-benar stabil secara hemodinamik</strong> dan tim siap melakukan defibrilasi/kardioversi jika terjadi degenerasi ritme.</li>
+                        <li>Menurut AHA, Adenosine IV (6 mg) BISA dipertimbangkan pada Takikardia QRS Lebar asalkan iramanya <strong>REGULER dan MONOMORFIK</strong> (bentuk gelombangnya sama semua).</li>
+                        <li><strong>Fungsi Diagnostik:</strong> Jika itu SVT aberan, Adenosine akan memutus sirkuit dan mengembalikan ke Sinus. Jika itu VT murni, Adenosine tidak akan memiliki efek apa-apa (VT jalan terus), yang memastikan diagnosisnya adalah VT.</li>
+                        <li><strong>PITFALL FATAL:</strong> JANGAN PERNAH berikan Adenosine jika QRS lebar tersebut IRREGULER (berubah-ubah/polimorfik), karena kemungkinan besar itu AFib dengan WPW, dan Adenosine akan memicu VF mematikan! Jika ragu, selalu terapi sebagai VT (Amiodarone atau Shock).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Tachycardia: Amiodarone Half-life", 
+                q: "Anda berhasil mengatasi VT dengan Amiodarone drip. Pasien kemudian pulang dengan resep Amiodarone oral tiap hari. Berapa lama kira-kira waktu paruh (half-life) eliminasi Amiodarone di tubuh pasien jika ia menghentikan obatnya?", 
+                a: `<strong>Sangat Ekstrem: 40 hingga 60 HARI (Bisa sampai berbulan-bulan).</strong><br><br>
+                    <strong>Farmakokinetik Volume Distribusi (Vd):</strong>
+                    <ul>
+                        <li>Amiodarone adalah molekul yang sangat lipofilik (suka lemak). Ia memiliki volume distribusi raksasa.</li>
+                        <li>Setelah diserap, ia tidak diam di darah, melainkan mengendap dan terakumulasi di jaringan adiposa (lemak), paru-paru, hati, dan kornea mata.</li>
+                        <li>Karena tersimpan di lemak, ginjal/hati sangat sulit membuangnya. Jika terjadi toksisitas (misal: fibrosis paru atau hipertiroidisme), menghentikan obat HARI INI tidak akan menghilangkan efek sampingnya besok, obat akan terus dilepaskan pelan-pelan dari lemak ke darah berbulan-bulan ke depan!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Tachycardia: Verapamil in Infants", 
+                q: "Bayi 6 bulan (neonatus/infant) masuk dengan SVT 220x/menit. Adenosine gagal. Tensi masih dapat diukur normal. Anda dianjurkan dokter sejawat memberikan Verapamil IV untuk rate control. Apa yang akan terjadi?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Kolaps Kardiovaskular Seketika (Kematian).<br><br>
+                    <strong>Fisiologi Otot Jantung Bayi:</strong>
+                    <ul>
+                        <li>Verapamil (Calcium Channel Blocker) sangat dikontraindikasikan pada anak di bawah 1 tahun.</li>
+                        <li>Otot miokardium bayi masih sangat <em>immature</em> (belum matang). Retikulum sarkoplasma mereka belum berkembang sempurna, sehingga kontraksi otot jantung bayi murni dan sepenuhnya bergantung pada <strong>Kalsium Ekstraseluler</strong> yang masuk melalui kanal kalsium lambat (L-type).</li>
+                        <li>Jika Anda memblokir kanal ini dengan Verapamil, jantung bayi seketika kehilangan sumber kalsium absolutnya, tidak bisa berkontraksi, lalu henti jantung (Asistol) yang nyaris tidak bisa diresusitasi. Gunakan Amiodarone atau Kardioversi.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Tachycardia: DC Shock Sedation", 
+                q: "Pasien takikardia 160x/m dengan tekanan darah drop 70/40 (Unstable Tachycardia). Pasien masih sadar dan kesakitan. Anda harus melakukan DC Shock Tersinkronisasi. Obat sedatif (bius) apa yang paling IDEAL untuk tidak menjatuhkan lagi tensinya?", 
+                a: `<strong>Etomidate atau Ketamine.</strong><br><br>
+                    <strong>Analisis Sedatif pada Hemodinamik Kolaps:</strong>
+                    <ul>
+                        <li><strong>Propofol / Midazolam:</strong> <span class="pitfall">PITFALL</span> Sangat dihindari. Obat ini adalah vasodilator kuat dan inotropik negatif. Diberikan pada tensi 70/40 akan menyebabkan syok sirkulasi hingga asistol.</li>
+                        <li><strong>Etomidate:</strong> Profil hemodinamik paling netral/stabil. Jarang menurunkan tensi, cepat bekerja. Namun, menekan kelenjar adrenal sesaat.</li>
+                        <li><strong>Ketamine:</strong> Sangat baik untuk syok karena efek pelepasan <em>katekolamin endogen</em> yang menaikkan detak jantung dan tensi. Namun <span class="pitfall">PITFALL</span>: jangan gunakan Ketamine jika penyebab takikardianya dicurigai Iskemik (STEMI), karena takikardia tambahan dari ketamine akan membuat infark koroner makin meluas!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Tachycardia: Synced vs Unsynced Shock", 
+                q: "Saat melakukan Kardioversi Tersinkronisasi (SYNC), alat menunda shock sepersekian detik untuk mencari gelombang R. Apa bencana fisiologis (R-on-T phenomenon) yang terjadi jika Anda TIDAK sengaja menekan mode Unsync pada pasien SVT yang masih punya denyut nadi?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Mengubah SVT menjadi Ventricular Fibrillation (VF) Mematikan.<br><br>
+                    <strong>Elektrofisiologi "Relative Refractory Period":</strong>
+                    <ul>
+                        <li>Fase repolarisasi ventrikel (Gelombang T) sangat rentan. Ini disebut periode refrakter relatif.</li>
+                        <li>Jika Anda memberikan energi listrik acak (Unsynced) dan jatuhnya tepat mendarat di puncak <strong>Gelombang T</strong> (saat sel-sel jantung dalam kondisi repolarisasi yang bervariasi—ada yang sudah siap, ada yang belum), listrik ini akan mengacaukan aliran depolarisasi masif.</li>
+                        <li>Jantung akan konslet seketika (Fenomena R-on-T) dan memicu VF. Mode SYNC memastikan mesin hanya menembak di puncak gelombang R (saat seluruh ventrikel depolarisasi kompak), sehingga aman.</li>
+                    </ul>` 
+            },
+
+            // ==========================================
+            // KATEGORI 4: ACUTE CORONARY SYNDROME (ACS)
+            // ==========================================
+            { 
+                cat: "ACS: Right Ventricular Infarct", 
+                q: "Pasien nyeri dada inferior (STEMI Inferior di II, III, aVF). Anda memberikan Nitroglycerin (ISDN) sublingual. Tiba-tiba tensi pasien anjlok parah ke 70/40 dan ia pingsan pucat. Mengapa ini terjadi dan apa terapi resusitasinya?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Menghancurkan Preload pada Infark Ventrikel Kanan (RVI).<br><br>
+                    <strong>Patofisiologi:</strong>
+                    <ul>
+                        <li>40% STEMI Inferior meluas mengenai Ventrikel Kanan. Ventrikel kanan yang infark mati mendadak menjadi kantong pasif (tidak memompa). Darah hanya bisa menyeberang ke paru-paru karena dorongan tekanan volume darah dari pembuluh vena (Preload-dependent).</li>
+                        <li>Nitrat adalah vasodilator vena (Venodilator) masif. Memberi nitrat membuat pembuluh darah vena membesar, darah menggenang di kaki/perut, tidak ada yang kembali ke jantung kanan (Preload hilang). Jantung kosong, syok berat terjadi.</li>
+                        <li><strong>Terapi CITO:</strong> JANGAN beri vasopresor dulu. Guyur agresif cairan infus NaCl 0.9% (Fluid Challenge) 250-500 cc untuk mengisi penuh vena dan mendorong paksa darah melewati ventrikel kanan yang lumpuh menuju paru.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "ACS: Morphine Controversy", 
+                q: "Pada akronim MONA (Morphine, O2, Nitrat, Aspirin), mengapa Morfin kini sangat diturunkan kelasnya oleh AHA (Class IIb) dan dilarang diberikan rutin, melainkan hanya sebagai jalan terakhir jika nyeri tak tertahankan?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Malabsorpsi Obat P2Y12 Inhibitor Penyelamat Nyawa.<br><br>
+                    <strong>Gastro-farmakologi:</strong>
+                    <ul>
+                        <li>Morfin menyebabkan penundaan pengosongan lambung yang sangat signifikan (Gastric paresis) dan menurunkan motilitas usus.</li>
+                        <li>Jika Anda memberikan pil Clopidogrel atau Ticagrelor (obat inti pencegah perluasan bekuan darah koroner), pil tersebut akan tertahan di lambung, tidak terserap ke duodenum.</li>
+                        <li>Kadar terapeutik P2Y12 di darah yang seharusnya tercapai dalam 30 menit, bisa tertunda hingga 4-6 jam. Akibatnya, pasien berisiko tinggi mengalami oklusi total koroner saat menunggu PCI (kateterisasi), karena darah tetap kental membeku!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "ACS: Oxygen Toxicity", 
+                q: "Pasien STEMI mengerang kesakitan. Saturasi oksigen di jari (SpO2) normal 97%. Anda tetap memasang nasal kanul Oksigen 4 Lpm dengan niat 'melindungi otot jantung dari iskemia'. Apa bahaya tersembunyi dari oksigen berlebih pada pembuluh darah koroner?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Hiperoksia menyebabkan Vasokonstriksi Koroner Paradoksikal.<br><br>
+                    <strong>Patofisiologi Radikal Oksigen:</strong>
+                    <ul>
+                        <li>Darah manusia berevolusi untuk menjaga PaO2 normal. Jika Anda memberikan suplementasi O2 saat SpO2 sudah > 90%, oksigen terlarut berlebih (hyperoxia) akan memicu pembentukan Radikal Bebas (ROS).</li>
+                        <li>ROS ini menurunkan bioavailabilitas Nitric Oxide (NO) di dinding endotel koroner. Tanpa NO, pembuluh koroner justru mengalami <strong>VASOKONSTRIKSI (menyempit secara aktif)</strong>.</li>
+                        <li>Ibarat selang air yang sudah tersumbat plak kolesterol, Anda malah menyempitkannya lebih parah, menurunkan aliran darah koroner hingga 30%, dan melebarkan ukuran infark (otot jantung yang mati)! Beri O2 hanya jika SpO2 < 90%.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "ACS: P2Y12 Loading Doses", 
+                q: "Pasien STEMI akan dirujuk ke RS untuk Primary PCI (Pasang ring cito). Anda harus memberikan obat antiplatelet di IGD awal. Berapa loading dose (dosis muatan) spesifik untuk Clopidogrel (Plavix) jika pasien akan di-PCI, dibandingkan jika ia akan di-Trombolitik?", 
+                a: `<strong>Dosis bergantung pada Strategi Reperfusi:</strong><br><br>
+                    <ul>
+                        <li><strong>Jika akan di-PCI (Primary Percutaneous Coronary Intervention):</strong> Loading dose Clopidogrel adalah <strong>600 mg</strong> (8 tablet @75mg). Dosis besar dibutuhkan untuk mengatasi hambatan reseptor secara cepat. (Atau gunakan Ticagrelor 180 mg).</li>
+                        <li><strong>Jika akan di-Fibrinolitik/Trombolitik (misal Alteplase/Streptokinase):</strong> Loading dose Clopidogrel HANYA <strong>300 mg</strong> (4 tablet) pada pasien ≤ 75 tahun. (Jika pasien lansia > 75 tahun, JANGAN berikan loading dose, cukup dosis harian 75 mg untuk mencegah perdarahan otak fatal).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "ACS: Beta Blocker in Acute Phase", 
+                q: "Memberikan Metoprolol IV di fase awal STEMI dulu direkomendasikan. Namun AHA saat ini melarang keras (Kontraindikasi) pemberian Beta-blocker inisial jika pasien memiliki tanda-tanda tertentu. Apa Red Flags tersebut?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Memicu Syok Kardiogenik (Cardiogenic Shock).<br><br>
+                    <strong>Analisis Risiko:</strong>
+                    Beta-blocker menekan kontraktilitas (inotropik negatif). Jika jantung sudah hancur area mompanya akibat infark luas, Beta-blocker akan langsung menghentikan paksa jantung yang sekarat. DILARANG diberikan jika ada:
+                    <ol>
+                        <li><strong>Tanda Gagal Jantung Akut:</strong> Ronki basah basal (Edema Paru / Killip > I), atau suara jantung S3 Gallop.</li>
+                        <li><strong>Bukti Low-Output State:</strong> Tensi sistolik rendah, akral dingin, oliguria.</li>
+                        <li><strong>Risiko Syok Kardiogenik Tinggi:</strong> Umur > 70 tahun, Tensi < 120, Nadi > 110, dan waktu onset lama.</li>
+                        <li><strong>Blokade Jantung:</strong> Blok AV derajat berapapun (PR interval > 0.24 dtk).</li>
+                    </ol>` 
+            },
+            { 
+                cat: "ACS: Fibrinolytic Contraindications", 
+                q: "Pasien STEMI tinggal 3 jam dari RS Kateterisasi, Anda memutuskan menggunakan Trombolitik (Alteplase) di daerah. Apa yang termasuk dalam KONTRAINDIKASI ABSOLUT Fibrinolitik yang harus digali dari anamnesis?", 
+                a: `<strong>Kontraindikasi Absolut (Hafalan Emas ACLS):</strong><br><br>
+                    Obat ini menghancurkan semua bekuan fibrin (baik yang patologis di koroner maupun yang fisiologis penutup luka). Dilarang keras jika ada:
+                    <ul>
+                        <li>Riwayat Perdarahan Intrakranial (Stroke Hemoragik) KAPAN PUN seumur hidup.</li>
+                        <li>Lesi vaskular serebral struktural (AVM, Aneurisma).</li>
+                        <li>Neoplasma/Kanker otak ganas.</li>
+                        <li>Stroke Iskemik berdarah/infark dalam <strong>3 bulan terakhir</strong> (KECUALI stroke iskemik akut < 4.5 jam lalu).</li>
+                        <li>Kecurigaan Diseksi Aorta (mati kehabisan darah seketika di rongga dada).</li>
+                        <li>Perdarahan internal aktif (misal melena parah).</li>
+                        <li>Trauma wajah/kepala berat dalam 3 bulan terakhir.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "ACS: PDE5 Inhibitors Pitfall", 
+                q: "Anda bertanya pada pasien STEMI: 'Apakah bapak meminum pil biru (Sildenafil/Tadalafil) dalam 24-48 jam terakhir?'. Mengapa AHA mewajibkan pertanyaan ini sebelum memberikan Nitroglycerin?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Sinergi Vasodilatasi Refrakter (Hipotensi Tak Tersembuhkan).<br><br>
+                    <strong>Farmakologi Molekuler:</strong>
+                    <ul>
+                        <li>Obat disfungsi ereksi (Viagra/Sildenafil) memblokir enzim Phosphodiesterase-5 (PDE-5), yang bertugas memecah cGMP (molekul relaksasi otot polos pembuluh darah).</li>
+                        <li>Nitroglycerin menyumbang Nitric Oxide (NO) yang memproduksi cGMP dalam jumlah raksasa.</li>
+                        <li>Jika keduanya digabung, produksi cGMP meroket tanpa ada enzim yang memecahnya. Pembuluh darah mengalami vasodilatasi absolut yang gagal merespons vasopresor standar (Epinephrine/Norepinephrine). Pasien mengalami kolaps sirkulasi mematikan.</li>
+                        <li>Waktu aman: Jeda 24 jam untuk Sildenafil/Vardenafil, dan 48 jam untuk Tadalafil.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "ACS: Cocaine-Induced Ischemia", 
+                q: "Pemuda 25 tahun masuk IGD dengan STEMI Anterolateral ekstensif setelah pesta Kokain. Tensi sangat tinggi, gelisah, takikardia 140x/m. Obat penurun detak jantung (Beta-Blocker/Metoprolol) adalah pilihan standar ACS. Boleh digunakan di kasus kokain?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Fenomena "Unopposed Alpha Stimulation".<br><br>
+                    <strong>Patofisiologi Adrenergik:</strong>
+                    <ul>
+                        <li>Kokain mencegah penarikan kembali katekolamin (Norepinefrin/Epinefrin) di sinaps, membanjiri reseptor Alpha dan Beta secara ekstrem.</li>
+                        <li>Jika Anda memblokir reseptor Beta saja dengan Beta-blocker (Metoprolol/Propranolol), seluruh hormon katekolamin yang mengamuk itu akan "memantul" dan 100% menduduki reseptor Alpha (yang menyebabkan vasokonstriksi koroner dan perifer).</li>
+                        <li>Akibatnya, arteri koroner akan <strong>menyempit/spasme hebat secara mematikan (Unopposed Alpha effect)</strong>, memperparah infark dan memicu krisis hipertensi fatal.</li>
+                        <li><strong>Terapi Utama:</strong> Benzodiazepine (Diazepam/Lorazepam) dosis tinggi untuk menekan saraf pusat, dan Nitroglycerin atau Phentolamine.</li>
+                    </ul>` 
+            },
+
+            // ==========================================
+            // KATEGORI 5: TOXICOLOGY & SPECIAL SITUATIONS
+            // ==========================================
+            { 
+                cat: "Toxicology: TCA Overdose Arrest", 
+                q: "Pasien henti jantung (PEA dengan QRS sangat lebar) pasca menelan sekotak obat Amitriptyline (Tricyclic Antidepressant / TCA). Epinephrine dan CPR standar berjalan. Apa antidotum spesifik (Obat Penyelamat) wajib untuk keracunan ini?", 
+                a: `<strong>Sodium Bicarbonate 8.4% (NaHCO3) IV Bolus Agresif.</strong><br><br>
+                    <strong>Mekanisme Penyelamat:</strong>
+                    <ul>
+                        <li>Kematian pada overdosis TCA disebabkan oleh blokade parah saluran Natrium (Na+ channel blocker) di otot jantung, yang melebarkan QRS dan menunda konduksi hingga jantung berhenti.</li>
+                        <li>Bikarbonat menyelamatkan dengan 2 cara sinergis:
+                            <ol>
+                                <li><strong>Beban Natrium (Sodium Load):</strong> NaHCO3 hypertonik membanjiri darah dengan Natrium murni, mendesak molekul TCA lepas dari reseptor kanal Na+ (hukum aksi massa).</li>
+                                <li><strong>Alkalinisasi Darah (Basa):</strong> Peningkatan pH darah (> 7.45) mengubah struktur molekul TCA menjadi bentuk <em>non-ionized</em>, membuatnya sulit mengikat kanal Natrium jantung.</li>
+                            </ol>
+                        </li>
+                    </ul>` 
+            },
+            { 
+                cat: "Toxicology: Local Anesthetic Systemic Tox (LAST)", 
+                q: "Pasien kejang hebat lalu Henti Jantung (Asystole) setelah dokter bedah menyuntikkan anestesi lokal Bupivacaine (Pehacain) secara berlebihan pada operasi bedah minor kista. Pasien gagal berespons terhadap Epinephrine standar. Antidotum?", 
+                a: `<strong>Intravenous Lipid Emulsion (ILE) / Intralipid 20%.</strong><br><br>
+                    <strong>Patofisiologi Lipid Sink:</strong>
+                    <ul>
+                        <li>Bupivacaine adalah racun kardiak yang sangat kuat, memblokir kanal natrium jantung secara ireversibel dan sangat lipofilik (suka lemak).</li>
+                        <li><strong>Intralipid (Cairan infus lemak pekat)</strong> bertindak seperti spons/magnet (<em>Lipid Sink Theory</em>). Lemak disuntikkan bolus 1.5 mL/kgBB ke dalam darah. Racun bupivacaine akan tertarik keluar dari jaringan otak dan otot jantung, lalu berikatan larut di dalam droplet lemak yang mengalir di sirkulasi, membebaskan jantung untuk berdetak kembali.</li>
+                        <li>Lipid juga memberikan energi darurat asam lemak bebas bagi miokardium untuk kembali berkontraksi.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Toxicology: Digoxin Toxicity", 
+                q: "Kakek minum Furosemide dan Digoxin rutin. Datang dengan pandangan melihat 'Halo Kuning', mual hebat, dan EKG menunjukkan <em>Bidirectional Ventricular Tachycardia</em>. Kapan Kardioversi Elektrik (DC Shock) dikontraindikasikan pada VT ini?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Syok Elektrik memicu VF Refrakter yang Mematikan.<br><br>
+                    <strong>Toksikologi Elektrik:</strong>
+                    <ul>
+                        <li>Digoxin meracuni Pompa Na/K-ATPase di membran sel jantung, memicu penumpukan kalsium intraseluler yang masif (menyebabkan EAD/DADs dan aritmia spontan).</li>
+                        <li>Memberikan sengatan listrik (DC Shock) pada sel yang sudah <em>overload</em> kalsium akibat digoxin akan memicu pelepasan kalsium ekstra dari sarkoplasma retikulum secara ledakan. Hal ini menjerumuskan miokardium langsung ke dalam Fibrilasi Ventrikel (VF) ireversibel.</li>
+                        <li><strong>Terapi Khusus:</strong> Koreksi hipokalemia dengan KCl, obati aritmia dengan Phenytoin atau Lidocaine, dan berikan antidotum spesifik <strong>Digoxin-specific Fab fragments (Digibind)</strong>.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Special: Hyperkalemia EKG progression", 
+                q: "Pasien Gagal Ginjal (HD mangkir). Monitor EKG perlahan berubah: Gelombang T menjadi sangat tinggi melancip (Peaked T), lalu Gelombang P menghilang perlahan, dan akhirnya QRS melebar bergabung dengan T membentuk gelombang seperti ombak laut berkelok (Sine Wave). Apa arti perubahan ini?", 
+                a: `<strong>Kematian Seluler Mendekat (Impending Cardiac Arrest akibat Hiperkalemia Ekstrem).</strong><br><br>
+                    <strong>Patofisiologi EKG:</strong>
+                    <ul>
+                        <li>Kalium ekstra di darah menurunkan gradien potensial membran istirahat (sel jadi kurang negatif).</li>
+                        <li><strong>Peaked T (K > 6.0):</strong> Repolarisasi terlalu cepat.</li>
+                        <li><strong>Loss of P Wave (K > 7.0):</strong> Otot atrium lumpuh (paralysis of the atria), Nodus SA mungkin masih jalan tapi tidak terlihat memompa atrium (Sinoventricular rhythm).</li>
+                        <li><strong>Sine Wave (K > 8.0):</strong> Perlambatan masif konduksi intra-ventrikular (QRS melebar menyatu dengan T). Sebentar lagi akan jadi Asistol/VF.</li>
+                        <li><strong>AKSI CITO (Hitungan Detik):</strong> Injeksi Calcium Gluconate 10% IV PUSH SEGERA untuk menstabilkan membran sel dan mencegah henti jantung (meski ini tidak menurunkan kalium darah sama sekali!).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Special: Hyperkalemia Shifting Agents", 
+                q: "Kalsium Gluconas sudah diberikan untuk menstabilkan dinding jantung pasien Hiperkalemia. Kini Anda harus memasukkan (shifting) Kalium kembali ke dalam sel. Obat apa yang memiliki <em>onset of action</em> paling cepat dan paling andal untuk ini di ruang resusitasi?", 
+                a: `<strong>Regimen Injeksi Insulin Reguler + Dextrose (D40% / D50%).</strong><br><br>
+                    <strong>Mekanisme Shifting Kalium:</strong>
+                    <ul>
+                        <li>Insulin IV (biasanya 10 Unit Insulin Reguler/Short-acting) secara langsung menstimulasi aktivitas enzim Pompa Na+/K+-ATPase di permukaan sel otot skelet dan hati.</li>
+                        <li>Pompa ini menarik 2 ion Kalium (K+) dari darah masuk ke DALAM sel, dengan cepat menurunkan kadar kalium mematikan di sirkulasi darah (onset 15-20 menit).</li>
+                        <li>Glukosa (Dextrose 50% sebanyak 50cc) diberikan BUKAN untuk memindahkan kalium, melainkan murni untuk mencegah pasien mengalami hipoglikemia fatal dan kejang akibat suntikan Insulin dosis tinggi tersebut.</li>
+                        <li>(Albuterol/Salbutamol Nebulizer juga memindahkan kalium, tapi kurang andal jika berdiri sendiri).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Toxicology: Opioid Overdose Pitfall", 
+                q: "Pemuda henti napas (apnea) di bar, pupil <em>pinpoint</em>. Anda menyuntikkan Naloxone (Narcan) 0.4 mg IV. Pasien terbangun kaget dan marah-marah (tertarik napas normal). Ambulans belum datang, tapi 45 menit kemudian pasien kembali koma dan henti napas parah. Mengapa?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Ketidakcocokan Waktu Paruh (Half-life Mismatch).<br><br>
+                    <strong>Farmakokinetik Naloxone vs Opioid Sintetis:</strong>
+                    <ul>
+                        <li>Naloxone adalah antagonis kompetitif murni di reseptor Opioid (Mu-receptor).</li>
+                        <li>Masalah utamanya: Naloxone berdurasi sangat singkat (waktu paruh hanya <strong>30 hingga 90 menit</strong>).</li>
+                        <li>Sementara opioid modern (seperti Fentanyl patch, Methadone, atau Heroin oplosan dosis raksasa) memiliki waktu paruh di darah hingga berjam-jam bahkan berhari-hari.</li>
+                        <li>Saat efek Naloxone habis di menit ke-60, opioid mematikan yang masih beredar di darah akan <strong>segera menduduki kembali reseptor otak</strong>, menyebabkan pasien kembali henti napas (Re-narcotization). Wajib di-observasi minimal 4-6 jam atau siapkan Naloxone Drip kontinyu!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Special: Amiodarone Pulmonary Toxicity", 
+                q: "Pasien pria 70 tahun dengan AFib meminum Amiodarone dosis rendah tiap hari selama 2 tahun terakhir. Ia masuk IGD sesak napas berat perlahan-lahan. Rontgen paru putih (bilateral infiltrates) dan terdiagnosis ARDS (Gagal Paru Akut) padahal tak ada infeksi. Mekanismenya?", 
+                a: `<strong>Amiodarone-Induced Pulmonary Toxicity (APT) / Fibrosis Paru.</strong><br><br>
+                    <strong>Patofisiologi Endapan Jaringan:</strong>
+                    <ul>
+                        <li>Amiodarone (dan metabolitnya desethylamiodarone) sangat toksik bagi epitel paru-paru alveolar tipe II.</li>
+                        <li>Molekul obat mengendap dalam bentuk fosfolipidosis makrofag (seperti busa) di paru-paru, memicu reaksi imun, radang hebat, dan akhirnya merangsang pembentukan jaringan parut fibrotik kaku (interstitial pneumonitis / fibrosis).</li>
+                        <li>Paru-paru berubah kaku seperti karet keras, menghambat pertukaran oksigen. Kematian akibat gagal napas refrakter sangat tinggi.</li>
+                        <li>Terapi: Hentikan Amiodarone segera, berikan Kortikosteroid Sistemik dosis sangat tinggi berbulan-bulan (Steroid menekan respons imun pembuat jaringan parut).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Pharmacology: Dobutamine in Decompensated HF", 
+                q: "Pasien Gagal Jantung Kiri kronis datang sesak parah, ronkhi basah (Decompensated). Tensi 80/50, ekstremitas sangat dingin pucat (Low Output). Anda berniat memberikan Inotropik Dobutamine Drip. Apakah ini aman berdiri sendiri?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Syok Vasodilatasi oleh Inodilator.<br><br>
+                    <strong>Profil Reseptor Dobutamin:</strong>
+                    <ul>
+                        <li>Dobutamine BUKAN murni vasopresor (ia tidak punya efek Alpha-1 sama sekali).</li>
+                        <li>Ia adalah <strong>Inodilator</strong>. Ia menstimulasi reseptor <strong>Beta-1</strong> (memperkuat pompa jantung) DAN menstimulasi <strong>Beta-2</strong> (menyebabkan vasodilatasi pembuluh darah sistemik).</li>
+                        <li>Pada pasien dengan tensi sudah 80/50, efek vasodilatasi Beta-2 ini bisa langsung menjatuhkan tensinya ke angka 60 atau kurang (Hipotensi eksaserbasi akut).</li>
+                        <li><strong>Aksi Benar:</strong> Pada Syok Kardiogenik hipotensif berat, Anda HARUS mendampingi Dobutamine dengan vasopresor sejati (seperti Norepinephrine drip) untuk menjaga pembuluh darah tetap sempit, sementara dobutamin membantu jantung memompa.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Pharmacology: Milrinone vs Dobutamine", 
+                q: "Sebagai alternatif Dobutamin, Milrinone sering digunakan di ICU untuk Gagal Jantung Kongestif refrakter. Bagaimana cara kerja Milrinone menaikkan pompa jantung tanpa menyentuh reseptor Beta-1, sehingga sangat cocok untuk pasien yang rutin minum Beta-Blocker oral?", 
+                a: `<strong>Inhibitor Enzim Phosphodiesterase Tipe 3 (PDE3).</strong><br><br>
+                    <strong>Mekanisme "Bypass" Jalur Reseptor:</strong>
+                    <ul>
+                        <li>Beta-blocker mengunci pintu reseptor dari luar. Dobutamine mencoba mendobrak pintu itu dan sering gagal.</li>
+                        <li><strong>Milrinone</strong> melewati pintu reseptor sama sekali. Ia masuk ke dalam sel dan bekerja di hilir. Ia menghambat enzim PDE3, enzim yang tugasnya menghancurkan energi sel (cAMP).</li>
+                        <li>Karena enzim penghancur dihentikan, kadar cAMP intraseluler menumpuk drastis, memicu peningkatan ion kalsium ke otot. Hasilnya: Jantung berdenyut jauh lebih kuat (Inotropik kuat) secara ajaib meski reseptor luarnya ditutup beta-blocker.</li>
+                        <li><em>Catatan:</em> Waktu paruhnya sangat panjang dan dibuang lewat ginjal (Sangat bahaya di pasien Gagal Ginjal/CKD, bisa memicu syok hipotensi persisten berhari-hari).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Cardiac Arrest: Asystole Protocol Trap", 
+                q: "Monitor menunjukkan garis lurus mendatar (Asystole). Anda menghentikan kompresi dan segera menyerahkan waktu kematian (Time of Death). Protokol mendasar ACLS mana yang Anda langgar dan bisa menyebabkan tuntutan malapraktik (Fine VF hidden)?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Kegagalan Memeriksa "Asistol Palsu" di Lead Kedua.<br><br>
+                    <strong>Aturan Wajib Asystole:</strong>
+                    <ul>
+                        <li>Garis lurus di monitor belum tentu Asistol sesungguhnya. Itu bisa jadi <strong>Fine Ventricular Fibrillation</strong> (VF halus yang sangat kecil amplitudonya sehingga alat mengira itu garis lurus), atau sekadar kabel EKG pasien copot!</li>
+                        <li><strong>Protokol ACLS Wajib:</strong> Anda HARUS memeriksa irama (check rhythm) pada <strong>dua buah sandapan (Lead) yang berbeda</strong>, dan memastikan gain/ukuran gelombang EKG di monitor sudah dinaikkan (amplifikasi maksimal).</li>
+                        <li>Jika itu ternyata <em>Fine VF</em> terselubung, terapinya adalah SHOCK Defibrilasi! (Yang bisa menyelamatkan nyawa), BUKAN Epinephrine.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Cardiac Arrest: The Hidden 5H's and 5T's", 
+                q: "Pasien PEA (Pulseless Electrical Activity). Irama sinus tampak bagus di monitor (Rate 110x/m) dan QRS sangat sempit. Tetapi tidak ada denyut nadi. Apa kemungkinan besar penyebab PEA ini berdasarkan morfologi EKG (QRS Sempit vs QRS Lebar)?", 
+                a: `<strong>Morfologi EKG memberi 'Clue' Penyebab Kematian (Reversible Causes):</strong><br><br>
+                    <ul>
+                        <li><strong>PEA QRS Sempit + Takikardia:</strong> Biasanya disebabkan oleh masalah "Jantung Kosong" (Masalah mekanik / Volume sirkulasi). Penyebab paling mungkin:
+                            <ul>
+                                <li><strong>H</strong>ypovolemia (Perdarahan masif tersembunyi).</li>
+                                <li><strong>T</strong>amponade Jantung (Darah meremas jantung).</li>
+                                <li><strong>T</strong>ension Pneumothorax (Paru pecah mendesak vena).</li>
+                                <li>Massive Pulmonary <strong>T</strong>hrombosis (Emboli paru besar mencegah aliran ke kiri).</li>
+                            </ul>
+                        </li>
+                        <li><strong>PEA QRS Sangat Lebar + Bradikardia:</strong> Biasanya masalah metabolik/racun yang merusak kelistrikan murni.
+                            <ul>
+                                <li><strong>H</strong>yperkalemia berat.</li>
+                                <li><strong>T</strong>oxins (Racun TCA / Calcium Channel Blocker).</li>
+                                <li>Profound <strong>H</strong>ypoxia atau Asidosis ekstrem.</li>
+                            </ul>
+                        </li>
+                    </ul>` 
+            },
+            { 
+                cat: "Cardiac Arrest: Epinephrine Dose in Anaphylaxis vs Arrest", 
+                q: "Dokter muda bingung. Ia diminta memberikan Epinephrine untuk Cardiac Arrest (Henti Jantung) dan juga Epinephrine untuk Syok Anafilaktik. Apa perbedaan konsentrasi sediaan ampul dan rute penyuntikan absolut di antara dua kegawatan ini?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Kesalahan Dosis 1:10.000 vs 1:1.000 (Medication Error Mematikan).<br><br>
+                    <strong>Aturan Mutlak Epinephrine:</strong>
+                    <ul>
+                        <li><strong>CARDIAC ARREST (Henti Jantung / Asistol / VF):</strong> Jantung sudah diam. Anda butuh volume besar langsung ke darah. Gunakan sediaan encer <strong>1:10.000 (1 mg dalam 10 mL)</strong>, disuntikkan secara <strong>Intravena (IV) PUSH CEPAT (Bolus)</strong>.</li>
+                        <li><strong>SYOK ANAFILAKSIS (Pasien Masih Hidup/Ada Nadi):</strong> Jantung sedang berdetak takikardia, memompa alergen. Jika Anda menyuntik IV PUSH, akan memicu VF/Perdarahan otak. Gunakan sediaan pekat <strong>1:1.000 (1 mg dalam 1 mL)</strong>. Dosisnya hanya 0.3 - 0.5 mg, disuntikkan secara <strong>Intramuskular (IM)</strong> ke paha anterolateral. (Jangan bolus IV!).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Toxicology: Dopamine Extravasation", 
+                q: "Pasien dengan infus Dopamine drip terpasang di punggung tangan. Saat di evaluasi 2 jam kemudian, tangannya bengkak keras, sangat pucat (iskemik), hitam kebiruan dan teraba dingin sekali. Jarum infus bocor ke bawah kulit! Apa terapi antidotum lokalnya?", 
+                a: `<strong>Injeksi Subkutan Phentolamine (Regitine).</strong><br><br>
+                    <strong>Patofisiologi Nekrosis Jaringan (Extravasation):</strong>
+                    <ul>
+                        <li>Dopamine, Norepinephrine, dan Epinephrine adalah vasopresor kuat (Alpha-1 agonis).</li>
+                        <li>Jika bocor merembes keluar vena (ekstravasasi) ke jaringan ikat bawah kulit, ia memicu vasokonstriksi kapiler yang amat dahsyat. Darah berhenti mengalir ke kulit tersebut. Jika dibiarkan, daging tangan pasien akan mati, membusuk (Nekrosis), dan terancam amputasi.</li>
+                        <li><strong>Aksi Penyelamat:</strong> Segera cabut infus (tapi tarik darah sisa di jarum dulu). Suntikkan <strong>Phentolamine</strong> (sebuah Alpha-1 Blocker kerja pendek) sebanyak 5-10 mg yang diencerkan dalam 10-15 cc NaCl 0.9%, disuntikkan berputar melingkar (infiltrasi subkutan) mengelilingi area yang memutih. Ini mendilatasi/membuka kembali kapiler sebelum daging mati.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Tachycardia: The Defibrillation Pad Positioning", 
+                q: "Anda melakukan Kardioversi untuk Atrial Fibrilasi. Tembakan energi 200 Joule (Anterolateral) dua kali berturut-turut GAGAL mengembalikan irama. Mesin berfungsi baik. Trik ACLS apa terkait posisi pad / fisik dinding dada yang terbukti menurunkan impedansi transtorasik?", 
+                a: `<strong>Gunakan Posisi Anteroposterior (AP) + Tekanan saat Fase Ekspirasi.</strong><br><br>
+                    <strong>Optimalisasi Vektor Energi (Resistensi Listrik):</strong>
+                    <ul>
+                        <li><strong>Anteroposterior (AP):</strong> Satu pad ditempel persis di atas tulang dada (sternum), satu lagi di punggung persis di belakang jantung. Atrium (sumber AFib) letaknya di bagian <strong>posterior/belakang</strong> jantung. Arus tembakan AP 'membelah' jantung dari depan ke belakang, lebih akurat mengenai atrium dibanding tembakan menyamping (Anterolateral).</li>
+                        <li><strong>Fase Ekspirasi:</strong> Paru-paru yang penuh udara (Inspirasi) adalah insulator/penahan listrik terburuk. Suruh/tunggu pasien (atau kompres Ambu-bag) membuang napas habis (Ekspirasi), lalu tembak listriknya saat dada kempis. Udara hilang = resistensi turun drastis = energi utuh masuk ke jantung!</li>
+                        <li><em>Jangan lupa cukur bulu dada yang lebat jika pakai pad lengket, atau tekan kuat (25 lbs) bila pakai Paddle keras.</em></li>
+                    </ul>` 
+            },
+            { 
+                cat: "Special: Physiological Bradycardia (Hypothermia)", 
+                q: "Korban tenggelam di danau beku. Suhu tubuh sentral 28°C (Hipotermia Berat). EKG menunjukkan Bradikardia parah 30x/menit, dan terdapat 'punuk' aneh setelah kompleks QRS (Gelombang Osborn / J-Wave). Anda berniat menyuntikkan Atropine atau Pacemaker. Aman?", 
+                a: `<span class="pitfall">PITFALL FATAL:</span> Manipulasi Jantung Hipotermia Memicu VF Refrakter.<br><br>
+                    <strong>Fisiologi Hipotermia:</strong>
+                    <ul>
+                        <li>Pada suhu inti < 30°C, otot ventrikel (miokardium) berada pada kondisi iritabilitas (sangat mudah tersengat) yang memuncak dan luar biasa rapuh.</li>
+                        <li>Bradikardia (30x/m) pada suhu ini adalah <strong>kondisi fisiologis normal yang tepat</strong> untuk tubuh beku (otak sedang nol metabolisme). Obat-obatan seperti Atropine tidak akan bekerja karena reseptor beku. Pacing (mengejutkan jantung) sering langsung menginduksi <em>Ventricular Fibrillation (VF) yang tak mempan di-shock mesin!</em></li>
+                        <li><strong>Satu-satunya terapi definitif:</strong> REWARMING (Penghangatan aktif terpusat / cairan infus hangat, bypass kardiopulmonal). Bradikardianya akan sembuh sendiri seiring suhu naik. J-Wave (Osborn) khas hipotermia akan menghilang.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Special: Hypomagnesemia Toxicity", 
+                q: "Pasien di bangsal onkologi menerima Cisplatin dan sering diare parah. Ia tiba-tiba kejang, DTR (Deep Tendon Reflex) meningkat hiperaktif. EKG mulai menunjukkan pelebaran QTc dan PVC beruntun. Defisiensi elektrolit (Hipomagnesemia) apa yang menjadi bom waktu bagi Torsades de Pointes ini, dan apa terapi spesifiknya?", 
+                a: `<strong>Krisis Hipomagnesemia Berat.</strong><br><br>
+                    <strong>Patofisiologi:</strong>
+                    <ul>
+                        <li>Magnesium adalah penstabil gerbang kanal natrium-kalium (seperti pelumas sel otot). Kekurangan Magnesium (Hipomagnesemia) membuat sel otot jantung 'bocor' dan terlalu cepat memicu listrik (Iritabilitas tinggi).</li>
+                        <li>Jika kadar Magnesium terlalu rendah, bahkan jika Anda mencoba memperbaiki Kalium (K+) atau Kalsium yang rendah lewat infus, tubuh <strong>menolak</strong> menyimpannya (K+ akan bocor terus lewat urin). Anda HARUS memperbaiki Magnesium dulu agar sel menutup rapat.</li>
+                        <li><strong>Terapi Preventif Torsades:</strong> Magnesium Sulfat (MgSO4) 1-2 gram IV drip lambat (lebih dari 15-30 menit) KECUALI pasien sudah jatuh dalam ritme Torsades tak stabil / henti jantung (di mana Anda harus PUSH bolus cepat).</li>
+                    </ul>` 
+            }
+        ];
+
+        let cards = [...originalCards];
+        let currentIndex = 0;
+        let isFlipped = false;
+        
+        // Touch Variables for Swipe
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let touchStartY = 0;
+        let isSwiping = false;
+        let isScrolling = false;
+
+        const flashcardEl = document.getElementById('flashcard');
+        const questionEl = document.getElementById('question-text');
+        const answerEl = document.getElementById('answer-text');
+        const counterEl = document.getElementById('card-counter');
+        const categoryEl = document.getElementById('card-category');
+
+        function renderCard() {
+            if (isFlipped) {
+                flashcardEl.classList.remove('is-flipped');
+                isFlipped = false;
+                // Timeout ensures content changes *after* the card flips back over completely (sync with 0.6s CSS transition)
+                setTimeout(() => {
+                    updateContent();
+                }, 600);
+            } else {
+                updateContent();
+            }
+        }
+
+        function updateContent() {
+            const currentCard = cards[currentIndex];
+            questionEl.innerHTML = currentCard.q;
+            answerEl.innerHTML = currentCard.a;
+            categoryEl.textContent = currentCard.cat;
+            counterEl.textContent = `${currentIndex + 1} / ${cards.length}`;
+            
+            // Prevent visual flickering during scroll reset
+            requestAnimationFrame(() => {
+                document.querySelector('#answer-text').parentElement.scrollTop = 0;
+                document.querySelector('#question-text').parentElement.scrollTop = 0;
+            });
+        }
+
+        function toggleFlip(e) {
+            if (isSwiping) return;
+            
+            // Protect against undefined 'e' when called manually
+            if (e && e.type !== 'keydown') {
+                const selection = window.getSelection();
+                if (selection && selection.toString().length > 0) return; // allow text copying
+            }
+            
+            isFlipped = !isFlipped;
+            flashcardEl.classList.toggle('is-flipped');
+        }
+
+        function nextCard() {
+            if (currentIndex < cards.length - 1) {
+                currentIndex++;
+                renderCard();
+            } else {
+                currentIndex = 0;
+                renderCard();
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderCard();
+            } else {
+                currentIndex = cards.length - 1; // loop to back
+                renderCard();
+            }
+        }
+
+        function shuffleCards() {
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            currentIndex = 0;
+            renderCard();
+        }
+
+        flashcardEl.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+            isSwiping = false;
+            isScrolling = false;
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchmove', e => {
+            if (isScrolling) return;
+
+            const currentTouchX = e.changedTouches[0].screenX;
+            const currentTouchY = e.changedTouches[0].screenY;
+            
+            const diffX = Math.abs(currentTouchX - touchStartX);
+            const diffY = Math.abs(currentTouchY - touchStartY);
+
+            // Prevent horizontal swipe if vertical scroll is dominant (for reading long texts)
+            if (diffY > diffX && diffY > 10) {
+                isScrolling = true;
+                isSwiping = false;
+                return;
+            }
+
+            if (diffX > 15) {
+                isSwiping = true;
+            }
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+
+        function handleSwipe() {
+            const swipeThreshold = 50; 
+            if (touchEndX < touchStartX - swipeThreshold) {
+                nextCard();
+            } else if (touchEndX > touchStartX + swipeThreshold) {
+                prevCard();
+            }
+            setTimeout(() => {
+                isSwiping = false;
+            }, 100);
+        }
+
+        window.onload = renderCard;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                e.preventDefault(); 
+                toggleFlip(e); 
+            } else if (e.code === 'ArrowRight') {
+                nextCard();
+            } else if (e.code === 'ArrowLeft') {
+                prevCard();
+            }
+        });
+    </script>
+</body>
+</html>
