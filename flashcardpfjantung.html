@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard PF Jantung Puskesmas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        .card-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        .is-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05); 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2); 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.4); 
+        }
+
+        .answer-text {
+            line-height: 1.5;
+            letter-spacing: 0.01em;
+        }
+        .answer-text strong {
+            color: #4338ca; /* indigo-700 untuk penekanan */
+        }
+        .answer-text ul {
+            list-style-type: disc;
+            padding-left: 1.25rem;
+            margin-top: 0.25rem;
+            margin-bottom: 0.5rem;
+        }
+        .answer-text li {
+            margin-bottom: 0.25rem;
+        }
+        .answer-text em {
+            color: #64748b;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen font-sans flex flex-col overflow-x-hidden selection:bg-teal-500 selection:text-white">
+
+    <header class="bg-indigo-800 text-white shadow-lg p-3 md:p-4 sticky top-0 z-20 border-b border-indigo-900">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0">
+            <div class="text-center sm:text-left">
+                <h1 class="text-lg sm:text-xl md:text-2xl font-bold flex items-center justify-center sm:justify-start gap-2 text-white">
+                    <span>🫀</span> Flashcard PF Jantung (Puskesmas)
+                </h1>
+                <p class="text-[10px] sm:text-xs md:text-sm text-indigo-200 font-medium tracking-wide">
+                    50 Pitfalls & Trik Pemeriksaan Fisik Kardiologi FKTP
+                </p>
+            </div>
+            <div class="text-[10px] sm:text-xs md:text-sm font-medium bg-indigo-900 px-3 py-1 rounded-full border border-indigo-500 shadow-sm text-center text-white">
+                dr. Bayushi E.P - Clinical Pearls
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex flex-col items-center justify-start sm:justify-center p-4 md:p-8 max-w-4xl mx-auto w-full">
+        
+        <!-- Progress Info -->
+        <div class="w-full flex justify-between items-center mb-3 md:mb-4">
+            <span id="card-category" class="text-xs md:text-sm uppercase tracking-wider text-indigo-700 font-bold bg-indigo-100 border border-indigo-200 px-3 py-1 rounded shadow-sm">Kategori</span>
+            <span id="card-counter" class="text-xs md:text-sm bg-white px-3 py-1 rounded-full shadow-sm font-bold border border-slate-300 text-slate-700">1 / 50</span>
+        </div>
+
+        <div id="flashcard" tabindex="0" class="relative w-full max-w-2xl h-[68vh] min-h-[480px] md:h-[550px] perspective-1000 cursor-pointer group mb-6 md:mb-8 touch-pan-y focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 rounded-2xl md:rounded-3xl" onclick="toggleFlip(event)">
+            <div class="card-inner w-full h-full absolute transform-style-3d shadow-xl rounded-2xl md:rounded-3xl">
+                
+                <!-- Front (Question) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-white rounded-2xl md:rounded-3xl p-6 md:p-10 flex flex-col items-center justify-center text-center border-t-4 border-indigo-600 shadow-md">
+                    <div class="absolute top-4 left-5 text-slate-100 font-extrabold text-4xl md:text-5xl opacity-80">Kasus</div>
+                    <div class="w-full h-full flex flex-col justify-center overflow-y-auto custom-scrollbar pt-8 pb-8 pr-2">
+                        <p id="question-text" class="text-base sm:text-lg md:text-xl text-slate-800 font-bold leading-relaxed m-auto">
+                            Memuat pertanyaan...
+                        </p>
+                    </div>
+                    <div class="absolute bottom-4 text-xs md:text-sm text-slate-400 flex items-center gap-1 animate-pulse">
+                        <span class="hidden sm:inline">Ketuk kartu untuk melihat analisis</span>
+                        <span class="sm:hidden">Ketuk: Jawaban • Usap: Lanjut</span>
+                    </div>
+                </div>
+
+                <!-- Back (Answer) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-slate-50 rounded-2xl md:rounded-3xl p-6 md:p-8 flex flex-col items-start justify-start text-left rotate-y-180 border-t-4 border-teal-500 shadow-inner overflow-hidden ring-1 ring-black/5">
+                    <div class="absolute top-4 right-5 text-teal-100 font-extrabold text-4xl md:text-5xl opacity-40">Kunci</div>
+                    <div class="w-full h-full overflow-y-auto custom-scrollbar pt-8 pb-8 pr-4">
+                        <div id="answer-text" class="answer-text text-xs sm:text-sm md:text-base text-slate-800 w-full font-medium">
+                            Memuat jawaban...
+                        </div>
+                    </div>
+                    <div class="absolute bottom-4 left-0 w-full text-center text-xs md:text-sm text-slate-400 flex items-center justify-center gap-1 animate-pulse">
+                        <span class="hidden sm:inline">Ketuk kartu untuk kembali ke kasus</span>
+                        <span class="sm:hidden">Ketuk: Kembali • Usap: Lanjut</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="w-full max-w-2xl grid grid-cols-2 sm:flex sm:flex-row justify-center gap-3 md:gap-4 pb-8">
+            <button onclick="prevCard()" class="col-span-1 bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-sm transition-all border border-slate-300 flex justify-center items-center gap-1 active:scale-95">
+                <span>&larr;</span> <span class="hidden sm:inline">Sebelumnya</span><span class="sm:hidden">Prev</span>
+            </button>
+            <button onclick="nextCard()" class="col-span-1 bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-md transition-all flex justify-center items-center gap-1 active:scale-95">
+                <span class="hidden sm:inline">Selanjutnya</span><span class="sm:hidden">Next</span> <span>&rarr;</span>
+            </button>
+            <button onclick="shuffleCards()" class="col-span-2 sm:col-span-1 order-last sm:order-none bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm md:text-base py-3 md:py-4 px-4 md:px-6 rounded-xl shadow-md transition-all flex justify-center items-center active:scale-95">
+                Acak (Shuffle)
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        const originalCards = [
+            // Kategori 1: Inspeksi & Vena Jugularis (1-8)
+            { 
+                cat: "Inspeksi: Vena Jugularis", 
+                q: "Anda mengukur JVP pasien dalam posisi berbaring 45 derajat. Titik teratas pulsasi vena jugularis (meniskus) sejajar persis dengan Angulus Ludovici (Sternal Angle).<br><br>Bagaimana cara pelaporan JVP yang benar?", 
+                a: `<strong>Dilaporkan sebagai JVP 5 + 0 cmH2O (Normal).</strong><br><br>
+                    <strong>Konsep Dasar:</strong>
+                    <ul>
+                        <li>Angulus Ludovici secara anatomis berada kira-kira <strong>5 cm</strong> tegak lurus di atas titik pusat Atrium Kanan, berapapun sudut baring pasien (30, 45, atau 60 derajat).</li>
+                        <li>Angka pertama "5" adalah konstanta jarak tersebut.</li>
+                        <li>Angka kedua adalah jarak vertikal dari Sternal Angle ke meniskus vena. Karena meniskus sejajar persis, maka "+ 0".</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Inspeksi: Hepatojugular Reflux", 
+                q: "Pasien suspek Gagal Jantung Kanan namun JVP saat istirahat tampak normal (5+1 cmH2O). Manuver provokasi apa yang paling tepat dilakukan di ranjang periksa untuk memunculkan tanda kongesti vena laten?", 
+                a: `<strong>Hepatojugular Reflux (Abdominojugular Test).</strong><br><br>
+                    <strong>Cara Melakukan:</strong>
+                    <ul>
+                        <li>Tekan pertengahan perut / kuadran kanan atas pasien secara konstan selama 10-15 detik.</li>
+                        <li>Mata Anda menatap vena jugularis di leher.</li>
+                        <li><strong>Positif jika:</strong> JVP meningkat >3 cm selama penekanan dan tetap tinggi, menunjukkan ventrikel kanan "gagal" mengakomodasi tambahan aliran balik vena (venous return) yang diperas dari perut.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Inspeksi: Sianosis", 
+                q: "Seorang anak tampak kebiruan di ujung jari tangan dan kakinya saat di ruang ber-AC puskesmas (Acrocyanosis). Anda ingin memastikan apakah ini sianosis sentral (masalah jantung/paru) atau perifer (kedinginan).<br><br>Di mana lokasi inspeksi paling akurat?", 
+                a: `<strong>Inspeksi pada Mukosa Mulut, Bibir Bagian Dalam, atau Lidah.</strong><br><br>
+                    <strong>Analisis:</strong>
+                    <ul>
+                        <li><strong>Sianosis Sentral:</strong> Darah dari jantung memang kekurangan Oksigen (misal: TOF / kelainan bawaan sianotik). Lidah dan mukosa mulut akan tampak biru.</li>
+                        <li><strong>Sianosis Perifer:</strong> Darah sentral kaya O2, namun ujung jari biru karena vasokonstriksi akibat dingin. Mukosa mulut dan lidah akan tetap <strong>MERAH MUDA/PINK</strong>.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Inspeksi: Dada", 
+                q: "Saat inspeksi dada kiri (area apeks) pasien kurus, Anda melihat denyutan Iktus Kordis (Point of Maximal Impulse). Pada kondisi normal, di manakah letak persisnya denyutan ini harus terlihat/teraba?", 
+                a: `<strong>ICS V (Intercostal Space 5) Garis Mid-Klavikula Kiri.</strong><br><br>
+                    <strong>Pitfall Pergeseran:</strong>
+                    <ul>
+                        <li>Jika Iktus Kordis bergeser ke arah <strong>Lateral (ke ketiak) dan Bawah (ICS VI)</strong>: Menandakan Pembesaran Ventrikel Kiri (Left Ventricular Hypertrophy/Dilatation), sangat khas pada hipertensi kronis atau CHF.</li>
+                        <li>Lebar denyutan normal hanya sebesar ujung jari (sekitar 1-2 cm). Jika meluas, curigai dilatasi jantung.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Inspeksi: Ekstremitas", 
+                q: "Pasien demam berkepanjangan 2 minggu. Pada auskultasi ada bising (murmur) jantung baru. Anda curiga Endokarditis Infektif. <br><br>Tanda spesifik apa yang harus Anda cari di telapak tangan dan ujung jari pasien?", 
+                a: `<strong>Osler Nodes & Janeway Lesions.</strong><br><br>
+                    <strong>Perbedaan Khas:</strong>
+                    <ul>
+                        <li><strong>Osler Nodes:</strong> Benjolan merah keunguan di ujung bantal jari yang <strong>SANGAT NYERI</strong> (akibat kompleks imun). <em>Tip: O = Ouch! (Sakit)</em>.</li>
+                        <li><strong>Janeway Lesions:</strong> Bercak merah datar di telapak tangan/kaki yang <strong>TIDAK NYERI</strong> (akibat mikroemboli septik).</li>
+                        <li>Cari juga <em>Splinter Hemorrhage</em> (garis-garis perdarahan hitam di bawah kuku).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Inspeksi: Tanda Hiperlipidemia", 
+                q: "Bapak 45 tahun tanpa keluhan datang untuk MCU. Di sekitar kelopak matanya (terutama sudut dalam/kantung mata) terdapat plak kekuningan yang sedikit menonjol. <br><br>Apa nama tanda ini dan apa maknanya untuk risiko jantung?", 
+                a: `<strong>Xanthelasma (Xanthoma Palpebrarum).</strong><br><br>
+                    <strong>Makna Klinis:</strong>
+                    <ul>
+                        <li>Ini adalah deposit kolesterol di bawah kulit.</li>
+                        <li>Kehadiran Xanthelasma pada usia < 50 tahun sangat berkorelasi dengan <strong>Dislipidemia berat (Hiperkolesterolemia Familial)</strong> dan peningkatan risiko Penyakit Jantung Koroner (PJK) prematur.</li>
+                        <li><strong>Aksi:</strong> Cek profil lipid lengkap (Kolesterol Total, LDL, HDL, Trigliserida) dan rekam EKG walau pasien tanpa gejala.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Pitfall: Irama Napas", 
+                q: "Pasien CHF berat tidur di bed IGD. Anda mengamati pola napasnya aneh: napas perlahan menjadi sangat dalam dan cepat, lalu perlahan melambat kembali hingga berhenti bernapas sama sekali selama 15 detik (Apnea), dan siklus berulang.<br><br>Pola napas apa ini?", 
+                a: `<strong>Pernapasan Cheyne-Stokes (Periodic Breathing).</strong><br><br>
+                    <strong>Patofisiologi:</strong>
+                    <ul>
+                        <li>Sering terjadi pada Gagal Jantung stadium akhir (Severe LHF) atau lesi SSP.</li>
+                        <li>Akibat sirkulasi darah jantung ke otak sangat lambat, sensor pengatur napas di batang otak <strong>terlambat merespon</strong> kadar CO2 darah.</li>
+                        <li>Ini adalah tanda prognosis yang buruk dan indikasi gagal jantung tidak terkompensasi dengan baik.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Pitfall: JVP Palsu", 
+                q: "Seorang pasien gemuk dengan leher pendek datang. Vena lehernya tampak sangat menonjol. Namun saat Anda tekan pangkal vena di atas klavikula, vena tidak mengempis di bagian atasnya, dan tidak tampak adanya pulsasi bergelombang.<br><br>Apakah JVP pasien ini meningkat?", 
+                a: `<strong>Belum Tentu (Suspek Distensi Vena Jugularis Eksterna palsu).</strong><br><br>
+                    <strong>Pitfall FKTP:</strong>
+                    <ul>
+                        <li>Seringkali yang menonjol adalah <strong>Vena Jugularis Eksterna (VJE)</strong> yang terbendung akibat posisi leher tertekuk, pakaian ketat, atau manuver valsava (menahan napas/mengejan).</li>
+                        <li>JVP yang akurat dinilai dari <strong>Vena Jugularis Interna (VJI)</strong> yang tidak terlihat venanya, melainkan <strong>PULSASINYA (gelombang a dan v)</strong> di bawah otot Sternokleidomastoid. Pulsasi ini tidak bisa diraba, hanya bisa dilihat.</li>
+                    </ul>` 
+            },
+
+            // Kategori 2: Palpasi Jantung & Nadi (9-17)
+            { 
+                cat: "Palpasi: Thrill", 
+                q: "Saat meraba dada pasien di area ICS 2 Kanan (Area Aorta), telapak tangan Anda merasakan getaran yang berdengung keras seperti memegang punggung kucing yang sedang mendengkur (purring).<br><br>Apa istilah klinis temuan ini dan maknanya?", 
+                a: `<strong>Thrill (Getaran Bising Jantung).</strong><br><br>
+                    <strong>Makna Klinis:</strong>
+                    <ul>
+                        <li>Thrill adalah manifestasi <em>palpable</em> (bisa diraba) dari sebuah murmur jantung yang sangat keras dan turbulen.</li>
+                        <li>Adanya thrill otomatis mengklasifikasikan murmur (bising jantung) tersebut minimal sebagai <strong>Grade 4</strong> (dari skala 6).</li>
+                        <li>Di area Aorta, ini sangat khas untuk Stenosis Aorta berat.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Palpasi: Right Ventricular Heave", 
+                q: "Anda meletakkan tumit telapak tangan (pangkal tangan) di tepi kiri bawah tulang dada (Left Lower Sternal Border). Anda merasakan ada dorongan kuat ke atas yang mengangkat pangkal tangan Anda setiap kali jantung berdenyut.<br><br>Ini indikasi pembesaran ruang jantung mana?", 
+                a: `<strong>Hipertrofi Ventrikel Kanan (Right Ventricular Heave / Lift).</strong><br><br>
+                    <strong>Anatomi Klinis:</strong>
+                    <ul>
+                        <li>Ventrikel Kanan posisinya menempel langsung di belakang tulang dada (Sternum).</li>
+                        <li>Jika Ventrikel Kanan membesar dan menebal (Cor Pulmonale, Hipertensi Pulmonal, ASD), kontraksinya akan menonjok tulang dada ke depan, terasa sebagai angkatan (heave/lift) pada telapak tangan pemeriksa.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Pitfall Palpasi: Nadi Ireguler", 
+                q: "Pasien berdebar-debar. Nadi di pergelangan tangan teraba tidak beraturan, cepat-lambat acak. Anda menghitung nadi selama 15 detik dapat angka 20, lalu dikali 4 menjadi 80x/menit.<br><br>Apa kesalahan fatal metode hitung ini?", 
+                a: `<strong>Dilarang mengalikan nadi pada irama ireguler (Suspek AFib).</strong><br><br>
+                    <strong>Trik FKTP:</strong>
+                    <ul>
+                        <li>Pada Atrial Fibrilasi (AFib), jarak antar denyut sangat bervariasi. Menghitung 15 detik lalu dikali 4 akan menghasilkan <strong>bias/kesalahan estimasi yang besar</strong>.</li>
+                        <li><strong>Cara Benar:</strong> Wajib dihitung <em>full</em> selama <strong>60 detik penuh</strong> untuk mendapatkan Heart Rate (Laju Nadi) yang akurat.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Palpasi: Pulse Deficit", 
+                q: "Masih pada pasien AFib tadi. Perawat A menghitung Nadi Radialis (di tangan) dapat 80x/menit. Anda mendengarkan detak jantung langsung di dada (Apeks) dengan stetoskop selama 1 menit dapat 110x/menit. Mengapa angkanya berbeda?", 
+                a: `<strong>Terjadi Pulse Deficit (Defisit Nadi).</strong><br><br>
+                    <strong>Patofisiologi:</strong>
+                    <ul>
+                        <li>Khas pada Atrial Fibrilasi. Beberapa kontraksi ventrikel terjadi terlalu cepat sebelum ruang jantung sempat terisi darah.</li>
+                        <li>Akibatnya, jantung berdetak (terdengar di dada: 110x), namun kontraksi itu 'kosong' (tidak ada darah yang terpompa cukup kuat untuk menghasilkan gelombang nadi di pergelangan tangan).</li>
+                        <li>Selisihnya (110 - 80 = 30) disebut defisit nadi. Semakin besar angkanya, semakin inefisien pompa jantung pasien.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Palpasi: Pulsus Paradoxus", 
+                q: "Pasien sesak post-trauma dada (Suspek Tamponade). Anda memeriksa nadi radialisnya. Saat pasien menarik napas dalam (inspirasi), nadinya tiba-tiba melemah parah atau nyaris hilang. Saat buang napas, nadi kuat lagi.<br><br>Apa nama tanda ini?", 
+                a: `<strong>Pulsus Paradoxus.</strong><br><br>
+                    <strong>Penjelasan Klinis:</strong>
+                    <ul>
+                        <li>Normalnya, tekanan darah sistolik sedikit turun saat inspirasi (< 10 mmHg).</li>
+                        <li>Pada Tamponade Jantung / Asma Berat / PPOK, penurunan tekanan darah saat inspirasi sangat ekstrem (<strong>> 10 mmHg</strong>).</li>
+                        <li>Hal ini membuat amplitudo nadi teraba sangat melemah/hilang sesaat saat pasien menarik napas.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Palpasi: Pulsus Alternans", 
+                q: "Saat meraba nadi pasien Gagal Jantung Kronis (HFrEF berat), Anda merasakan denyutnya berselang-seling: satu denyut terasa KUAT, denyut berikutnya LEMAH, berikutnya KUAT lagi, padahal iramanya teratur.<br><br>Apa nama kelainan nadi ini?", 
+                a: `<strong>Pulsus Alternans.</strong><br><br>
+                    <strong>Makna Klinis:</strong>
+                    <ul>
+                        <li>Merupakan tanda klasik disfungsi sistolik otot ventrikel kiri (Left Ventricular Failure) yang sangat parah.</li>
+                        <li>Terjadi karena perubahan isi sekuncup (stroke volume) jantung yang berselang-seling akibat otot jantung sudah sangat kelelahan dan gagal memompa secara konsisten.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Palpasi Nadi: Kelainan Katup", 
+                q: "Dua kakek datang berobat. Kakek A nadinya teraba <em>kecil, lemah, dan naiknya lambat</em> (Pulsus Parvus et Tardus). Kakek B nadinya teraba <em>menghentak keras sangat cepat lalu anjlok seketika</em> (Water-hammer pulse / Pulsus Celer).<br><br>Tebak kelainan katup masing-masing?", 
+                a: `<strong>Kakek A = Stenosis Aorta, Kakek B = Regurgitasi Aorta.</strong><br><br>
+                    <ul>
+                        <li><strong>Stenosis Aorta (Parvus et Tardus):</strong> Darah susah keluar melewati katup kaku yang menyempit, sehingga gelombang nadi kecil (parvus) dan mencapai puncaknya lambat (tardus).</li>
+                        <li><strong>Regurgitasi Aorta (Water-hammer):</strong> Katup aorta bocor/ngoplos. Darah menyembur kuat (sistol tinggi) tapi seketika jatuh kembali ke ventrikel (diastol anjlok), menciptakan nadi menghentak (Bounding pulse) / Collapsing pulse.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Pitfall: Tekanan Darah (Cuff)", 
+                q: "Pasien binaragawan dengan lengan atas (bicep) sangat besar diukur tensinya dengan manset tensimeter ukuran dewasa standar. Hasilnya 170/100 mmHg. Apakah dia pasti Hipertensi?", 
+                a: `<strong>Belum Tentu! Waspada Manset Terlalu Kecil (Cuff-size artifact).</strong><br><br>
+                    <strong>Aturan Pengukuran TD:</strong>
+                    <ul>
+                        <li>Menggunakan manset yang <strong>terlalu kecil/pendek</strong> untuk lingkar lengan pasien akan menghasilkan pembacaan Tensi Palsu Tinggi (<em>Falsely Elevated</em>).</li>
+                        <li>Sebaliknya, manset terlalu longgar/besar memberi hasil Tensi Palsu Rendah.</li>
+                        <li>Lebar manset (bladder) harus melingkupi minimal 80% lingkar lengan atas pasien. Gunakan manset 'Large Adult' untuk pasien obesitas/berotot besar.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Palpasi: Perabaan Edema", 
+                q: "Pasien datang dengan bengkak di kedua tulang kering (pretibial). Anda menekan area tulang keringnya selama 5 detik dengan ibu jari. Saat diangkat, cekungan bekas jari tetap ada dan lambat kembali normal (Pitting Edema).<br><br>Apa bedanya dengan Non-Pitting Edema?", 
+                a: `<strong>Pitting (Cairan/Air) vs Non-Pitting (Protein/Limfatik).</strong><br><br>
+                    <ul>
+                        <li><strong>Pitting Edema:</strong> Khas untuk kongesti cairan murni (Gagal Jantung Kanan, CKD/Gagal Ginjal, Hipoalbuminemia/Sirosis). Tekanan memindahkan air di jaringan interstitial.</li>
+                        <li><strong>Non-Pitting Edema (Brawny Edema):</strong> Kulit bengkak, keras, dan tegang. Tidak mencekung bila ditekan. Khas untuk Lymphedema (sumbatan getah bening pasca kanker/filaria) atau Miksedema (Hipotiroid berat).</li>
+                    </ul>` 
+            },
+
+            // Kategori 3: Auskultasi Jantung Normal & Ekstra (18-29)
+            { 
+                cat: "Auskultasi: Lokasi Katup", 
+                q: "Untuk mendengarkan Bising Katup Aorta, Anda menempelkan stetoskop di ruang sela iga (ICS) 2 garis sternal kiri.<br><br>Apakah ini lokasi yang benar?", 
+                a: `<strong>SALAH LOKASI!</strong><br><br>
+                    <strong>Lokasi Auskultasi Standar (All PTs M):</strong>
+                    <ul>
+                        <li><strong>A</strong>orta: ICS 2 Garis Sternal <strong>KANAN</strong>. (Satu-satunya di sisi kanan dada).</li>
+                        <li><strong>P</strong>ulmonal: ICS 2 Garis Sternal <strong>KIRI</strong>.</li>
+                        <li><strong>T</strong>rikuspid: ICS 4 atau 5 Kiri Sternal bawah.</li>
+                        <li><strong>M</strong>itral (Apeks): ICS 5 Mid-Klavikula Kiri.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Pitfall Auskultasi: Lingkungan", 
+                q: "Puskesmas sedang bising dan suara napas pasien (vesikuler) sangat keras menutupi bunyi jantungnya. Anda kesulitan membedakan antara murmur sistolik lemah dan suara tarikan napas.<br><br>Trik fisik apa yang paling mudah diinstruksikan pada pasien?", 
+                a: `<strong>Minta pasien "Tahan Napas Saat Buang Napas" (Hold breath in expiration).</strong><br><br>
+                    <strong>Keuntungan:</strong>
+                    <ul>
+                        <li>Mengeliminasi suara <em>breath sounds</em> dari paru-paru.</li>
+                        <li>Fase ekspirasi mengurangi volume paru-paru sehingga jantung bergeser lebih dekat ke dinding dada anterior, membuat bunyi jantung (terutama area kiri seperti bising Aorta dan Mitral) terdengar <strong>LEBIH KERAS</strong>.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Auskultasi: Bunyi S1 dan S2", 
+                q: "Di Puskesmas, denyut jantung pasien lumayan cepat (100x/m). Anda bingung menentukan mana bunyi S1 (Lup) dan mana S2 (Dup) untuk menentukan fase sistolik/diastolik.<br><br>Bagaimana cara termudah memastikan yang mana S1?", 
+                a: `<strong>Raba Nadi Karotis sambil Mendengar Jantung!</strong><br><br>
+                    <strong>Trik Klinis (Sinkronisasi):</strong>
+                    <ul>
+                        <li>Bunyi jantung yang terdengar <strong>bersamaan persis</strong> dengan denyutan (hentakan) yang terasa di Nadi Karotis leher adalah <strong>S1</strong>.</li>
+                        <li>S1 menandai mulainya fase Sistolik (pompa ventrikel ke aorta), sehingga pulsasi nadi tercipta saat itu juga.</li>
+                        <li>Ruang antara S1 ke S2 adalah Bising Sistolik. Ruang antara S2 ke S1 berikutnya adalah Bising Diastolik.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Auskultasi: Bell vs Diaphragm", 
+                q: "Stetoskop Anda memiliki 2 sisi: membran pipih (Diaphragm) dan corong cekung kecil (Bell). Untuk mendengarkan bunyi jantung tambahan S3 Gallop dan bising Stenosis Mitral, sisi mana yang WAJIB digunakan?", 
+                a: `<strong>Gunakan Sisi BELL (Corong Kecil).</strong><br><br>
+                    <strong>Prinsip Stetoskop:</strong>
+                    <ul>
+                        <li><strong>Diaphragm (Pipih ditekan kuat):</strong> Untuk mendengar suara bernada TINGGI (High-pitched) seperti bunyi napas paru normal, bunyi S1/S2, murmur Regurgitasi Aorta/Mitral.</li>
+                        <li><strong>Bell (Corong ditempel sangat RINGAN):</strong> Untuk mendengar suara bernada RENDAH (Low-pitched) seperti <strong>S3, S4, dan bising <em>rumbling</em> Stenosis Mitral</strong>. (Ingat: Ditekan terlalu kuat, kulit akan meregang menjadi diafragma, dan suara rendah S3 akan hilang!).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Auskultasi: Splitting S2 Fisiologis", 
+                q: "Pada anak muda yang sehat, saat menarik napas dalam (Inspirasi), Anda mendengar bunyi S2 terbelah menjadi dua ('Lup.... Dup-drup'). Saat ia membuang napas (Ekspirasi), S2 kembali menyatu ('Lup.... Dup').<br><br>Apakah ini penyakit?", 
+                a: `<strong>TIDAK. Ini adalah Splitting S2 Fisiologis (Normal).</strong><br><br>
+                    <strong>Patofisiologi:</strong>
+                    <ul>
+                        <li>Saat menarik napas, rongga dada menjadi negatif (menyedot). Aliran darah vena ke jantung kanan (RV) bertambah banyak.</li>
+                        <li>Karena RV memompa lebih banyak darah, <strong>Katup Pulmonal butuh waktu LEBIH LAMA untuk menutup</strong> dibanding Katup Aorta.</li>
+                        <li>Hasilnya bunyi penutupan katup pecah: Aorta nutup duluan (A2), disusul Pulmonal (P2). Saat buang napas, kembali normal/menyatu.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Auskultasi: Splitting S2 Patologis (ASD)", 
+                q: "Pasien anak sering batuk pilek dan kurang gizi. Saat didengar jantungnya, bunyi S2 SELALU terbelah ganda ('Dup-drup'), baik saat ia tarik napas maupun buang napas (jarak belahannya tetap/Fixed).<br><br>Penyakit bawaan apa yang khas dengan tanda ini?", 
+                a: `<strong>Atrial Septal Defect (ASD).</strong><br><br>
+                    <strong>Tanda Klasik: <em>Fixed, Wide Splitting of S2</em>.</strong>
+                    <ul>
+                        <li>Adanya lubang bocor antara Atrium Kiri ke Atrium Kanan membuat jantung kanan selalu mengalami "kelebihan beban cairan" (Volume Overload) secara konstan tiap detiknya.</li>
+                        <li>Akibatnya, katup Pulmonal SELALU telat menutup (A2-P2 terbelah lebar), dan tidak lagi dipengaruhi oleh siklus pernapasan (Fixed). Rujuk ke SPJP Anak.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Auskultasi: Bising Inosens (Innocent Murmur)", 
+                q: "Anak usia 5 tahun sehat, lincah, tumbuh kembang baik. Saat periksa batuk-pilek, tak sengaja Anda mendengar bising sistolik lemah (Grade 2/6) di batas kiri sternum yang sifatnya musikal. Diagnosis?", 
+                a: `<strong>Kemungkinan Besar Bising Jantung Lugu (Innocent / Functional Murmur) - Tidak Berbahaya.</strong><br><br>
+                    <strong>Karakteristik Innocent Murmur:</strong>
+                    <ul>
+                        <li>Sering pada anak sehat (mencapai 50% anak). Suara aliran darah melintasi katup normal yang elastis.</li>
+                        <li><strong>Syarat Lugu:</strong> Selalu bising Sistolik pendek, nada rendah/musikal, derajat lemah (Grade 1-2), <strong>HILANG saat posisi pasien diubah (misal dari berbaring ke duduk/berdiri)</strong>, tidak ada sianosis, anak asimptomatik. Jika ragu atau bising Diastolik -> Rujuk Echocardiography!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Pitfall Auskultasi: Gesekan Perikard (Friction Rub)", 
+                q: "Pasien mengeluh dada sakit tajam menusuk saat berbaring, lega saat duduk membungkuk. Di auskultasi terdengar suara berisik, kasar seperti gesekan amplas atau sepatu kulit baru berjalan, tidak beraturan. <br><br>Ini bising katup atau apa?", 
+                a: `<strong>Pericardial Friction Rub (Khas untuk Perikarditis Akut).</strong><br><br>
+                    <strong>Analisis:</strong>
+                    <ul>
+                        <li>Suara ini bukan dari dalam aliran katup (murmur), melainkan dari luar jantung: gesekan antara lapisan perikardium parietal dan viseral yang sedang meradang/kering.</li>
+                        <li><strong>Trik membedakan dengan Pleural Rub (paru):</strong> Minta pasien <strong>TAHAN NAPAS</strong>. Jika suara gesekan tetap ada seiring detak jantung, berarti asalnya dari jantung (Pericardial Rub). Jika suara hilang, berarti gesekan dari selaput paru (Pleural Rub).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Auskultasi: S3 vs S4 Gallop", 
+                q: "S3 Gallop terdengar sehabis S2 (Lup-Dup-Dug / 'Kentucky'). S4 Gallop terdengar SEBELUM S1 (Dug-Lup-Dup / 'Tennessee').<br><br>Secara patofisiologi, apa beda makna S3 dan S4?", 
+                a: `<strong>Volume (Cairan) vs Pressure (Kaku).</strong><br><br>
+                    <ul>
+                        <li><strong>S3 Gallop (Volume Overload):</strong> Tanda jantung kelebihan MUATAN AIR (Gagal Jantung / CHF). Darah menabrak dinding ventrikel yang kendor, lebar, dan terisi penuh cairan.</li>
+                        <li><strong>S4 Gallop (Pressure Overload):</strong> Tanda otot jantung KAKU/MENEBAL (Hipertrofi / Hipertensi Kronis menahun). Atrium harus memompa ekstra keras menabrak dinding ventrikel yang keras kaku sesaat sebelum sistol. S4 = Sering pada Hipertensi tanpa edema.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Manuver Provokasi: Posisi Jongkok", 
+                q: "Pasien memiliki suspek Mitral Valve Prolapse (MVP) atau HOCM. Untuk memperjelas auskultasi, Anda menyuruh pasien berdiri lalu berjongkok (Squatting) sambil Anda mendengar jantungnya.<br><br>Apa efek fisiologis Jongkok pada hemodinamik?", 
+                a: `<strong>Meningkatkan Venous Return (Preload) & Afterload.</strong><br><br>
+                    <strong>Efek Klinis:</strong>
+                    <ul>
+                        <li>Berjongkok meremas pembuluh darah kaki, memeras darah kembali ke jantung dengan cepat (Preload naik drastis), jantung seketika menjadi 'penuh' dan meregang.</li>
+                        <li>Bising sebagian besar kelainan (seperti MR, AR, VSD) akan terdengar <strong>MAKIN KERAS</strong> saat jongkok.</li>
+                        <li><strong>Pengecualian:</strong> Bising MVP dan HOCM (kardiomiopati hipertrofik) justru akan <strong>MELEMAH/MENGHILANG</strong> saat jongkok karena volume cairan yang penuh melebarkan ruang jantung, mengurangi efek jepitan pada katup.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Auskultasi Bising: Posisi Spesifik", 
+                q: "Bising Regurgitasi Aorta (AR) seringkali sangat halus dan bernada tinggi di diastolik awal. Apa posisi auskultasi terbaik yang wajib Anda perintahkan ke pasien agar bising ini terdengar jelas?", 
+                a: `<strong>Pasien Duduk, Condong ke Depan (Leaning Forward), dan Tahan Napas pasca Ekspirasi Maksimal.</strong><br><br>
+                    <strong>Logika Fisik:</strong>
+                    <ul>
+                        <li>Katup Aorta posisinya ada di dasar pangkal jantung.</li>
+                        <li>Dengan mencondongkan badan ke depan, gaya gravitasi menarik akar aorta dan pangkal jantung menempel rapat ke dinding dada anterior (tulang sternum).</li>
+                        <li>Ekspirasi maksimal menyingkirkan bantalan udara paru-paru yang menghalangi suara, membuat murmur AR terdengar paling nyaring pakai sisi diafragma di tepi kiri sternum.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Auskultasi Bising: Mitral Stenosis", 
+                q: "Bising Stenosis Mitral (Rumbling Diastolik di Apeks) sangat pelan/bernada rendah. Selain memakai sisi Bell, pasien harus dibaringkan pada posisi apa agar ujung (apeks) jantungnya menempel ke dinding dada?", 
+                a: `<strong>Posisi Berbaring Miring ke Kiri (Left Lateral Decubitus / LLD).</strong><br><br>
+                    <strong>Aplikasi Klinis FKTP:</strong>
+                    <ul>
+                        <li>Tempelkan sisi <em>bell</em> stetoskop tepat di Iktus Kordis (Apeks).</li>
+                        <li>Minta pasien miringkan badan tegak lurus ke sisi kiri tubuhnya.</li>
+                        <li>Gaya berat bumi akan menjatuhkan ventrikel kiri menabrak langsung dinding iga dada kiri, sehingga suara gesekan darah pelan (rumbling) dari katup mitral dapat tertangkap stetoskop.</li>
+                    </ul>` 
+            },
+
+            // Kategori 4: Keluhan Angina & Kegawatan Iskemia (30-36)
+            { 
+                cat: "Anamnesis PF: Nyeri Dada Reproduktif", 
+                q: "Pemuda 25 tahun mengeluh nyeri dada kiri setelah main futsal. Saat Anda <strong>MENEKAN</strong> tulang iga di kiri sternum dengan jari, pasien meringis kesakitan hebat (Nyeri terlokalisir persis di titik yang Anda tekan).<br><br>Apakah ini serangan jantung koroner?", 
+                a: `<strong>Hampir Pasti BUKAN (Kemungkinan Muskuloskeletal / Kostokondritis).</strong><br><br>
+                    <strong>Golden Rule Nyeri ACS:</strong>
+                    <ul>
+                        <li>Nyeri jantung iskemik adalah <em>Visceral Pain</em> (saraf organ dalam). Sifatnya <strong>DIFUS (menyebar luas)</strong>, tidak bisa ditunjuk dengan 1 jari, dan <strong>TIDAK BERUBAH/TIDAK BERTAMBAH NYERI saat dinding dada ditekan/dipalpasi pemeriksa.</strong></li>
+                        <li>Jika ditekan/dipijat lalu nyerinya timbul (Reproducible pain), etiologinya 99% dari otot, tulang rawan (Tietze syndrome), atau saraf interkostal.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Pitfall: Angina Ekuivalen Lansia", 
+                q: "Nenek 75 tahun diabetes kronis datang. Tidak ada keluhan dada ditindih gajah, tidak ada keringat dingin. Ia HANYA mengeluh sesak napas akut / tiba-tiba ngos-ngosan saat mencuci piring dan ulu hatinya mual.<br><br>Kenapa harus segera rekam EKG?", 
+                a: `<strong>Waspada Angina Ekuivalen (Iskemia Terselubung).</strong><br><br>
+                    <strong>Patofisiologi:</strong>
+                    <ul>
+                        <li>Pasien lansia, wanita pasca-menopause, dan <strong>Diabetisi</strong> sering mengalami <em>Diabetic Autonomic Neuropathy</em>.</li>
+                        <li>Saraf perasa nyeri (sensorik) di jantung mereka sudah tumpul/rusak.</li>
+                        <li>Saat ada Serangan Jantung (STEMI), mereka sering <strong>TIDAK MERASAKAN nyeri dada sama sekali</strong>. Otak hanya membaca alarm lain berupa sesak (Dispnea) mendadak, pingsan, atau gejala mirip maag (GERD-like). Di Puskesmas, <em>always rule out ACS with EKG!</em></li>
+                    </ul>` 
+            },
+            { 
+                cat: "Inspeksi Dada: Levine's Sign", 
+                q: "Bapak-bapak jalan terhuyung masuk ruang periksa Puskesmas. Saat Anda tanya di mana sakitnya, ia <strong>tidak menunjuk dengan 1 jari telunjuk</strong>, melainkan ia <strong>mengepalkan seluruh tinjunya (clenched fist)</strong> dan meletakkannya menutupi seluruh area tengah dada (sternum).<br><br>Apa nama tanda ini?", 
+                a: `<strong>Levine's Sign (Tanda Levine).</strong><br><br>
+                    <strong>Makna Klinis:</strong>
+                    <ul>
+                        <li>Ini adalah bahasa tubuh universal (gestur bawah sadar) yang sangat spesifik dan kuat untuk menggambarkan <strong>Iskemia Miokardium akut (Angina Pectoris / Serangan Jantung).</strong></li>
+                        <li>Pasien sedang mengomunikasikan nyeri dada viseral tipe <em>crushing/squeezing/heavy pressure</em> yang luas dan menyesakkan. Pasang Oksigen, beri Aspirin kunyah (jika indikasi), EKG segera!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "PF Nyeri Dada: Diseksi Aorta", 
+                q: "Pasien pria perokok berat berteriak kesakitan dada kiri tembus ke punggung seperti disobek pisau daging dari dalam (Tearing pain). Di puskesmas, pemeriksaan fisik DASAR apa (tanpa alat khusus selain tensimeter) yang WAJIB dilakukan pada kedua tangannya untuk membedakan ini dari STEMI biasa?", 
+                a: `<strong>Cek Tensi dan Raba Nadi pada KEDUA LENGAN (Kanan dan Kiri).</strong><br><br>
+                    <strong>Suspek Diseksi Aorta Akut:</strong>
+                    <ul>
+                        <li>Robekan tunika intima aorta sering merambat (propagate) menutupi lubang arteri subklavia/brakiocephalic.</li>
+                        <li>Hasilnya: Terjadi <strong>Perbedaan Tekanan Darah > 20 mmHg</strong> antara lengan kanan dan kiri.</li>
+                        <li>Atau rabaan Nadi Radialis Kanan sangat kuat, namun Radialis Kiri sangat lemah/hilang. Rujuk CITO (Kematian tinggi dalam hitungan jam).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Inspeksi: Bruit vs Murmur", 
+                q: "Saat menempelkan stetoskop di area leher kanan (Arteri Karotis), Anda mendengar suara 'Sshh... Sshhh'. Apakah ini pasti berasal dari plak / sumbatan lemak di leher pasien (Carotid Bruit)?", 
+                a: `<strong>Belum Tentu. Waspada Radiasi Murmur Stenosis Aorta!</strong><br><br>
+                    <strong>Cara Membedakan (Pitfall):</strong>
+                    <ul>
+                        <li>Bising Stenosis Aorta yang kuat (di ICS 2 Kanan) punya ciri khas <strong>menjalar naik mengikuti aliran darah ke Leher (Karotis).</strong></li>
+                        <li>Sebelum mendiagnosis Carotid Bruit (lokal), dengarkan dulu dada pasien. Jika sumber suara lebih keras di dada (aorta) dan menjalar ke leher, itu adalah murmur AS jantung. Jika di dada bersih tapi di leher sangat berisik, itu murni Carotid Bruit (Plak).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "PF Abdomen: Pulsasi Epigastrik", 
+                q: "Pasien PPOK kurus mengeluh sesak. Anda melihat tepat di bawah prosesus xifoideus sternumnya (ulu hati) ada denyutan yang sangat kuat. Saat Anda meletakkan jari, denyutannya menonjok ke BAWAH menuju perut.<br><br>Apakah ini Aneurisma Aorta Abdominalis (AAA) atau kelainan jantung?", 
+                a: `<strong>Kemungkinan Besar Hipertrofi Ventrikel Kanan (Cor Pulmonale).</strong><br><br>
+                    <strong>Cara Membedakan (Trik Jari):</strong>
+                    <ul>
+                        <li>Letakkan ujung jari telunjuk menekan ke atas (ke arah kepala) di bawah ulu hati.</li>
+                        <li>Jika jari Anda ditabrak keras dari arah <strong>ATAS KE BAWAH</strong>, itu adalah Ventrikel Kanan yang membesar dan membentur diagfragma (Pulsasi RV Epigastrik).</li>
+                        <li>Jika pulsasi melebar dari <strong>SAMPING ke SAMPING</strong> atau dari arah belakang/bawah, itu dari pembuluh darah Aorta (Curigai Aneurisma).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "PF Abdomen: Hepatomegali Jantung", 
+                q: "Pasien bengkak kaki. Anda meraba perut dan menemukan Hati (Hepar) membesar 4 jari di bawah arcus costae. Apa tanda khusus saat meraba hati yang membedakan ini akibat Sirosis vs akibat Gagal Jantung Kanan (Kongestif)?", 
+                a: `<strong>Cari "Pulsatile Liver" (Hati Berdenyut) & Nyeri Tekan.</strong><br><br>
+                    <strong>Analisis Klinis:</strong>
+                    <ul>
+                        <li><strong>Gagal Jantung Kanan:</strong> Darah tertumpuk di vena kava bawah membanjiri vena hepatika. Hati teraba lunak/kenyal, <strong>Nyeri bila ditekan tajam (kapsul glisson teregang akut)</strong>, dan jika diraba dengan dua tangan, hatinya terasa <strong>mengembang/berdenyut selaras detak jantung (Pulsatile)</strong> (terutama jika ada Tricuspid Regurgitation).</li>
+                        <li><strong>Sirosis:</strong> Hati teraba keras/berbenjol, tepi tajam, biasanya TIDAK nyeri tekan, dan tidak berdenyut.</li>
+                    </ul>` 
+            },
+
+            // Kategori 5: Pitfall TTV & Tanda Sistemik (37-43)
+            { 
+                cat: "Vital Sign: Respiration Rate", 
+                q: "Pasien lansia rutin kontrol CHF datang. Ia tidak mengeluh sesak atau ortopnea, tapi saat Anda hitung diam-diam, frekuensi napasnya 26x/menit (Takipnea), meningkat dari 18x/m bulan lalu. Paru masih bersih tanpa ronki. Boleh diabaikan?", 
+                a: `<strong>JANGAN DIABAIKAN! Takipnea seringkali Tanda Peringatan Dini (Early Warning).</strong><br><br>
+                    <strong>Clinical Pearl:</strong>
+                    <ul>
+                        <li>Peningkatan laju napas (Respiratory Rate > 20-24x/m) sering mendahului munculnya gejala sesak subjektif atau ronki basah hingga <strong>beberapa hari sebelumnya</strong>.</li>
+                        <li>Ini tanda kongesti awal / edema interstitial ringan yang mengurangi compliance (kelenturan) paru. Hati-hati ancaman dekompensasi akut! Wajib kaji ulang dosis diuretik.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Uji PF: Ortostatik Hipotensi", 
+                q: "Pasien hipertensi tua yang meminum amlodipin, valsartan, dan furosemide mengeluh sering pandangan gelap dan mau pingsan (sinkop) sesaat setelah bangun dari kasur. Uji fisik apa yang mudah dilakukan di bangsal/puskesmas untuk membuktikannya?", 
+                a: `<strong>Pengukuran Tekanan Darah Ortostatik (Positional BP Test).</strong><br><br>
+                    <strong>Prosedur:</strong>
+                    <ol>
+                        <li>Pasien berbaring telentang tenang selama 5 menit. Ukur Tensi dan Nadi.</li>
+                        <li>Minta pasien segera berdiri (atau duduk jika tak kuat).</li>
+                        <li>Ukur Tensi dan Nadi lagi pada menit ke-1 dan menit ke-3 setelah berdiri.</li>
+                    </ol>
+                    <strong>Positif jika:</strong> Terjadi penurunan TD Sistolik $\\ge$ 20 mmHg ATAU penurunan TD Diastolik $\\ge$ 10 mmHg pasca berdiri. Penyebab tersering: Overtreatment obat (Dehidrasi/Furosemide) atau neuropati otonom. (Dosis obat perlu dikurangi).` 
+            },
+            { 
+                cat: "Pitfall: Demam dan Nadi", 
+                q: "Pemuda 20 tahun post infeksi tipes/DBD mengeluh dada ambyar dan lemas ekstrim. Suhu badan naik sedikit (37.8 C), Tensi normal. Namun Nadi istirahat meroket jadi 135x/menit. Apakah takikardia ini cuma wajar karena demamnya?", 
+                a: `<strong>Tidak Wajar! Suspek Miokarditis Akut. (Tachycardia Out of Proportion to Fever).</strong><br><br>
+                    <strong>Hukum Klinis (Liebermeister's Rule):</strong>
+                    <ul>
+                        <li>Normalnya, Nadi akan naik <strong>10 kali lipat</strong> untuk setiap kenaikan suhu tubuh <strong>1 derajat Celcius</strong> (di atas 37 C).</li>
+                        <li>Suhu 37.8 (naik ~1 derajat) seharusnya Nadi hanya sekitar 90-100x/m.</li>
+                        <li>Jika Nadi sangat melesat (135x/m) tidak proporsional dengan panasnya, curigai radang otot jantung (Miokarditis virus) yang memicu iritasi pacemaker. Rujuk EKG & Enzim jantung!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Inspeksi Kulit: Syok Kardiogenik", 
+                q: "Pasien serangan jantung di bed IGD merintih. Anda ukur Tensinya masih masuk 'normal' 110/70 mmHg. Namun saat tangan Anda meraba dahi dan akral (ujung kaki tangan) pasien, terasa sangat DINGIN, BASAH / Berkeringat jagung (Cold & Clammy), dan pucat puci.<br><br>Aman kah pasien ini?", 
+                a: `<strong>KONDISI KRITIS (Impending Cardiogenic Shock)!</strong><br><br>
+                    <strong>Pitfall Tensi 'Normal':</strong>
+                    <ul>
+                        <li>Tensi yang normal BUKAN jaminan jaringan/organ teraliri darah baik. Tubuh melepas Epinefrin raksasa untuk memeras pembuluh darah kulit agar tensi otak/jantung tetap terjaga sementara.</li>
+                        <li>Kulit yang dingin basah (vasokonstriksi perifer hebat) menandakan bahwa Cardiac Output (Pompa Jantung) sudah <strong>GAGAL / Anjlok parah</strong>.</li>
+                        <li>Dalam hitungan menit-jam, kompensasi tubuh akan jebol dan tensi akan anjlok ke 60/40. Segera IV line masif, O2, rujuk Cito dengan tim!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Capillary Refill Time (CRT)", 
+                q: "Anda mengecek perfusi bayi suspek syok septik dengan memencet ujung jari tangannya. Warnanya merah kembali dalam lambat 4 detik (Normal < 2 detik).<br><br>Apa satu faktor lingkungan puskesmas yang bisa menyebabkan CRT memanjang palsu (False abnormal)?", 
+                a: `<strong>Suhu Ruangan yang Terlalu Dingin (Cold Ambient Temperature).</strong><br><br>
+                    <strong>Analisis Pitfall:</strong>
+                    <ul>
+                        <li>Ruang AC yang disetel terlalu dingin (misal 18 Celcius) akan memicu vasokonstriksi perifer fisiologis (tubuh menjaga panas).</li>
+                        <li>Akibatnya darah menjauhi jari dan CRT memanjang lebih dari 2-3 detik pada orang normal sekalipun.</li>
+                        <li><strong>Trik:</strong> Pada suhu dingin, nilai perfusi sentral (misalnya warna mukosa bibir, tingkat kesadaran/rewel, produksi urin bayi) sebagai indikator yang lebih dapat diandalkan dari sekadar CRT jari.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Auskultasi Tambahan: Bruit Ginjal", 
+                q: "Pasien pemuda 25 tahun tanpa riwayat keluarga, mendadak Hipertensi resisten 180/110 mmHg. Minum obat 3 macam tidak mempan (Suspek Hipertensi Sekunder).<br><br>Di perut, Anda meletakkan stetoskop tepat di atas pusar dan bergeser 2 cm ke samping kiri/kanan. Apa yang Anda cari?", 
+                a: `<strong>Renal Artery Bruit (Bising Arteri Renalis).</strong><br><br>
+                    <strong>Patofisiologi:</strong>
+                    <ul>
+                        <li>Mencari suara turbulensi 'Whoosh' di perut membuktikan ada sumbatan aliran darah ke ginjal (Stenosis Arteri Renalis, sering karena <em>Fibromuscular Dysplasia</em> pada pasien muda).</li>
+                        <li>Ginjal yang 'lapar' darah (iskemik) akan mengira tubuh dehidrasi berat, lalu memompa hormon <strong>Renin</strong> dalam jumlah gila-gilaan, memicu vasokonstriksi sistemik dan Hipertensi membandel.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "PF Khusus: Manuver Valsava", 
+                q: "Pasien mengeluh berdebar-debar tiba-tiba. Di rekam EKG tampak Supraventrikuler Takikardia (SVT) reguler 180x/m, tensi masih stabil 120/80. Sebelum obat injeksi, Anda menginstruksikan manuver Valsava untuk merangsang refleks Vagus.<br><br>Bagaimana cara instruksi Valsava yang efektif di FKTP?", 
+                a: `<strong>Modified Valsava Maneuver (Meniup Spuit).</strong><br><br>
+                    <strong>Trik Praktis Puskesmas:</strong>
+                    <ol>
+                        <li>Minta pasien duduk setengah bersandar (45 derajat).</li>
+                        <li>Berikan suntikan/spuit 10cc (tanpa jarum). Minta pasien <strong>meniup keras ke ujung spuit tertutup selama 15 detik</strong> hingga mukanya memerah (mengejan).</li>
+                        <li><strong>Modifikasi (REVERT Trial):</strong> Tepat setelah 15 detik ditiup, baringkan pasien rata (supine) dengan cepat dan <strong>ANGKAT KEDUA KAKINYA lurus ke atas setinggi 45 derajat</strong> oleh asisten selama 15 detik.</li>
+                        <li>Tingkat konversi SVT kembali normal menjadi 40% (jauh lebih ampuh dari valsava tiup biasa).</li>
+                    </ol>` 
+            },
+
+            // Kategori 6: EKG Klinis & Integrasi Fisik (44-50)
+            { 
+                cat: "Pitfall EKG Klinis: Nyeri Dada & EKG Normal", 
+                q: "Pria 55 tahun perokok diabetes nyeri dada berat seperti ditindih. Menjalar ke rahang. Keringat dingin. Anda rekam EKG di IGD Puskesmas, hasilnya NORMAL, tidak ada ST Elevasi / T Inversi.<br><br>Bolehkah pasien dipulangkan dengan obat maag?", 
+                a: `<strong>KONTRAINDIKASI MUTLAK! EKG Normal TIDAK menyingkirkan Iskemik Jantung (UAP/NSTEMI).</strong><br><br>
+                    <strong>Analisis:</strong>
+                    <ul>
+                        <li>Sekitar 10-20% pasien dengan sumbatan koroner berat/infark dini bisa memiliki EKG istirahat (<em>resting EKG</em>) yang tampak benar-benar normal atau non-diagnostik.</li>
+                        <li>Diagnosis ACS ditegakkan melalui <strong>ANAMNESIS KLINIS khas</strong>.</li>
+                        <li>Aksi: Beri obat standar (Aspirin, dsb) jika tak ada kontraindikasi, observasi EKG ulang tiap 15-30 menit (<em>Serial EKG</em>) sambil Rujuk IGD RS terdekat untuk cek enzim Troponin.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Pitfall EKG: Sadapan V4R", 
+                q: "Pasien datang nyeri dada ACS. EKG 12 Lead standar menunjukkan STEMI (ST Elevasi) di lead II, III, aVF (Infark Miokard Inferior).<br><br>Apa tambahan Sadapan (Lead) khusus yang WAJIB Anda lakukan pada EKG sebelum memberikan ISDN/Nitrat?", 
+                a: `<strong>Rekam Sadapan Ventrikel Kanan (V3R dan V4R).</strong><br><br>
+                    <strong>Alasan Keselamatan Nyawa:</strong>
+                    <ul>
+                        <li>Sekitar 30-40% infark Inferior disertai oleh <strong>Infark Ventrikel Kanan (RV Infarction)</strong>.</li>
+                        <li>Cara rekam: Pindahkan prekordial V3 dan V4 ke dada sebelah KANAN dengan letak cermin.</li>
+                        <li>Jika V4R tampak ST Elevasi >1 mm, diagnosis Infark RV tegak. <strong>NITRAT DAN MORFIN KONTRAINDIKASI MUTLAK</strong> karena akan menyebabkan Syok Hipotensi fatal! (Pasien butuh guyur cairan NaCl/Fluid Challenge).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Integrasi Klinis: Respiratory Sinus Arrhythmia", 
+                q: "Anak remaja sehat kontrol surat sehat. Di EKG Anda lihat iramanya kadang melambat sedikit, lalu agak cepat, lalu melambat lagi secara ritmis (Aritmia). Anda raba nadinya memang begitu.<br><br>Namun saat ia menahan napas, iramanya menjadi Reguler 100%. Apakah ini penyakit?", 
+                a: `<strong>Respiratory Sinus Arrhythmia (Fisiologis Normal).</strong><br><br>
+                    <strong>Penjelasan Tonus Vagus:</strong>
+                    <ul>
+                        <li>Sangat sering pada anak-anak, remaja, dan atlet (orang dengan tonus parasimpatik/vagal kuat).</li>
+                        <li><strong>Inspirasi (Tarik napas):</strong> Refleks vagus dihambat sementara $\\rightarrow$ Detak jantung sedikit MEMPERCEPAT.</li>
+                        <li><strong>Ekspirasi (Buang napas):</strong> Vagus bekerja lagi $\\rightarrow$ Detak jantung sedikit MELAMBAT.</li>
+                        <li>Ini adalah tanda jantung sehat yang sangat responsif, bukan aritmia patologis. Jangan dirujuk tanpa keluhan.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "PF & EKG Kombinasi: Hiperkalemia", 
+                q: "Pasien Gagal Ginjal kronis mengeluh lemas ekstrim seluruh otot. Nadi bradikardia 40x/m dan melemah. Di mesin EKG Puskesmas tampak gelombang T yang sangat tinggi, kurus, runcing menjulang seperti tenda (Tall T-wave), dan gelombang P menghilang.<br><br>Apa curiga utama dan risiko jika telat dirujuk?", 
+                a: `<strong>Hiperkalemia Berat (Darurat Elektrolit).</strong><br><br>
+                    <strong>Patofisiologi:</strong>
+                    <ul>
+                        <li>Kalium tak terbuang ginjal menumpuk toksik di darah, merusak repolarisasi elektrik jantung.</li>
+                        <li>Bila didiamkan, EKG akan berlanjut menjadi pelebaran kompleks QRS ekstrim (Sinewave pattern), yang berujung instan pada <strong>Ventricular Fibrillation (VF) atau Asistol (Henti Jantung)</strong> dalam hitungan jam.</li>
+                        <li>Tatalaksana empiris sementara (jika ada indikasi dan yakin): Injeksi Kalsium Glukonas IV pelan untuk menstabilkan otot jantung, lalu nebulisasi Salbutamol dosis tinggi. Rujuk HD cito.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Pitfall EKG: Artifact vs VT", 
+                q: "Kakek Parkinson (gemeter tangan/tremor terus menerus) dipasang EKG. Hasil <em>print-out</em> menunjukkan gelombang bergelombang rapat seperti gigi gergaji kasar (mirip Ventrikuler Takikardia/VT atau AFib). Tapi lucunya, pasien santai saja ngobrol dan nadinya 75x/m teratur teraba kuat.<br><br>Apa ini?", 
+                a: `<strong>Artifact Tremor (Somatic Muscle Artifact).</strong><br><br>
+                    <strong>Solusi Praktis:</strong>
+                    <ul>
+                        <li>Ini BUKAN aritmia mematikan, melainkan getaran listrik dari otot lurik tangan pasien yang ikut terekam mesin (Tremor Parkinson). Mesin bodoh sering membaca ini sebagai 'VT' di interpretasi atas.</li>
+                        <li><em>Always treat the patient, not the monitor!</em> Nadi bagus, sadar baik = Bukan VT.</li>
+                        <li><strong>Trik mengulang EKG:</strong> Minta pasien menyelipkan/menduduki kedua tangannya di bawah pantat/paha untuk mengunci/mengurangi tremor, atau letakkan elektroda lengan di pangkal bahu (dekat sumbu bahu) daripada di ujung lengan bawah.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Pitfall Inspeksi: Clubbing Jantung", 
+                q: "Anak usia balita sering nongkrong/jongkok setelah main lari-larian (Squatting). Ujung jarinya membulat tabuh genderang (Clubbing fingers). Parunya tidak asma/PPOK. <br><br>Apa hubungannya antara Jari Clubbing dan Jantung pada anak?", 
+                a: `<strong>Tanda Khas Penyakit Jantung Bawaan (PJB) Sianotik (Mis: Tetralogy of Fallot/TOF).</strong><br><br>
+                    <strong>Analisis:</strong>
+                    <ul>
+                        <li>Darah kotor (kurang O2) menyeberang (shunting) dari kanan ke kiri dan masuk langsung ke peredaran tubuh tanpa melewati paru.</li>
+                        <li>Hipoksia kronis dari lahir membuat tubuh merangsang proliferasi jaringan ikat ekstremitas, menghasilkan jari tabuh (Clubbing).</li>
+                        <li>Kebiasaan <em>squatting</em> (jongkok) adalah insting anak untuk menaikkan tahanan pembuluh kaki (afterload), membalikkan aliran darah agar dipaksa masuk lebih banyak ke paru-paru, sehingga birunya membaik sementara.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Kesimpulan Emas PF Jantung di Puskesmas", 
+                q: "Sebutkan 3 komponen trias perburukan (Trias Dekompensasi) terpenting pada pasien Gagal Jantung Kongestif di Puskesmas yang dapat dinilai MURNI HANYA DENGAN MATA, TANGAN, dan STETOSKOP (Tanpa EKG / Rontgen / Lab)?", 
+                a: `<strong>Tiga Tanda Klasik CHF Dekompensasi (Overload Akut):</strong><br><br>
+                    <ol>
+                        <li><strong>Peningkatan JVP (Jugular Venous Pressure):</strong> Terlihat bendungan vena di leher tegak. Indikasi kongesti sentral/kanan.</li>
+                        <li><strong>Bunyi Jantung S3 Gallop:</strong> Terdengar di Apeks jantung (pakai Bell miring kiri). Indikasi mutlak volume ventrikel overload (basah).</li>
+                        <li><strong>Ronki Basah Halus di Basal Paru (Crackles/Crepitation):</strong> Terdengar di punggung bawah inspirasi. Indikasi cairan bocor ke paru (Edema interstitial).</li>
+                    </ol>
+                    <strong>Aksi:</strong> Muncul 2 dari 3 = Tembak Furosemide IV, dan Oksigen. Berhasil menyelamatkan nyawa pasien di puskesmas pelosok!` 
+            }
+        ];
+
+        let cards = [...originalCards];
+        let currentIndex = 0;
+        let isFlipped = false;
+        
+        // Touch Variables for Swipe
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let touchStartY = 0;
+        let isSwiping = false;
+        let isScrolling = false;
+
+        const flashcardEl = document.getElementById('flashcard');
+        const questionEl = document.getElementById('question-text');
+        const answerEl = document.getElementById('answer-text');
+        const counterEl = document.getElementById('card-counter');
+        const categoryEl = document.getElementById('card-category');
+
+        function renderCard() {
+            if (isFlipped) {
+                flashcardEl.classList.remove('is-flipped');
+                isFlipped = false;
+                setTimeout(() => {
+                    updateContent();
+                }, 300);
+            } else {
+                updateContent();
+            }
+        }
+
+        function updateContent() {
+            const currentCard = cards[currentIndex];
+            questionEl.innerHTML = currentCard.q;
+            answerEl.innerHTML = currentCard.a;
+            categoryEl.textContent = currentCard.cat;
+            counterEl.textContent = `${currentIndex + 1} / ${cards.length}`;
+            
+            // Scroll answer to top whenever card changes
+            document.querySelector('#answer-text').parentElement.scrollTop = 0;
+            document.querySelector('#question-text').parentElement.scrollTop = 0;
+        }
+
+        function toggleFlip(e) {
+            if (isSwiping) return;
+            const selection = window.getSelection();
+            if (selection.toString().length > 0) return;
+            
+            isFlipped = !isFlipped;
+            flashcardEl.classList.toggle('is-flipped');
+        }
+
+        function nextCard() {
+            if (currentIndex < cards.length - 1) {
+                currentIndex++;
+                renderCard();
+            } else {
+                currentIndex = 0;
+                renderCard();
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderCard();
+            } else {
+                currentIndex = cards.length - 1; // loop to back
+                renderCard();
+            }
+        }
+
+        function shuffleCards() {
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            currentIndex = 0;
+            renderCard();
+        }
+
+        flashcardEl.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+            isSwiping = false;
+            isScrolling = false;
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchmove', e => {
+            if (isScrolling) return;
+
+            const currentTouchX = e.changedTouches[0].screenX;
+            const currentTouchY = e.changedTouches[0].screenY;
+            
+            const diffX = Math.abs(currentTouchX - touchStartX);
+            const diffY = Math.abs(currentTouchY - touchStartY);
+
+            // Mencegah trigger swipe horizontal jika dominan scroll vertikal
+            if (diffY > diffX && diffY > 10) {
+                isScrolling = true;
+                isSwiping = false;
+                return;
+            }
+
+            if (diffX > 15) {
+                isSwiping = true;
+            }
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+
+        function handleSwipe() {
+            const swipeThreshold = 50; 
+            if (touchEndX < touchStartX - swipeThreshold) {
+                nextCard();
+            } else if (touchEndX > touchStartX + swipeThreshold) {
+                prevCard();
+            }
+            setTimeout(() => {
+                isSwiping = false;
+            }, 100);
+        }
+
+        window.onload = renderCard;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                e.preventDefault(); 
+                toggleFlip();
+            } else if (e.code === 'ArrowRight') {
+                nextCard();
+            } else if (e.code === 'ArrowLeft') {
+                prevCard();
+            }
+        });
+    </script>
+</body>
+</html>
