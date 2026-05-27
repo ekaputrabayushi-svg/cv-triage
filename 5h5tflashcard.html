@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard 5H 5T ACLS Pitfalls</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        .card-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        .is-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05); 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2); 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.4); 
+        }
+
+        .answer-text {
+            line-height: 1.5;
+            letter-spacing: 0.01em;
+        }
+        .answer-text strong {
+            color: #b91c1c; /<em> red-700 untuk penekanan fatal/kritis </em>/
+        }
+        .answer-text ul {
+            list-style-type: disc;
+            padding-left: 1.25rem;
+            margin-top: 0.25rem;
+            margin-bottom: 0.5rem;
+        }
+        .answer-text li {
+            margin-bottom: 0.25rem;
+        }
+        .answer-text em {
+            color: #64748b;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen font-sans flex flex-col overflow-x-hidden selection:bg-red-500 selection:text-white">
+
+    <header class="bg-red-800 text-white shadow-lg p-3 md:p-4 sticky top-0 z-20 border-b border-red-900">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0">
+            <div class="text-center sm:text-left">
+                <h1 class="text-lg sm:text-xl md:text-2xl font-bold flex items-center justify-center sm:justify-start gap-2 text-white">
+                    <span>❤️‍🔥</span> Flashcard ACLS: Jebakan 5H & 5T
+                </h1>
+                <p class="text-[10px] sm:text-xs md:text-sm text-red-200 font-medium tracking-wide">
+                    50 Jebakan Klinis dalam Tatalaksana Henti Jantung & Kegagalan ROSC
+                </p>
+            </div>
+            <div class="text-[10px] sm:text-xs md:text-sm font-medium bg-red-900 px-3 py-1 rounded-full border border-red-500 shadow-sm text-center text-white">
+                dr. Bayushi E.P - Resuscitation Pearls
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex flex-col items-center justify-start sm:justify-center p-4 md:p-8 max-w-4xl mx-auto w-full">
+        
+        <!-- Progress Info -->
+        <div class="w-full flex justify-between items-center mb-3 md:mb-4">
+            <span id="card-category" class="text-xs md:text-sm uppercase tracking-wider text-red-700 font-bold bg-red-100 border border-red-200 px-3 py-1 rounded shadow-sm">Kategori</span>
+            <span id="card-counter" class="text-xs md:text-sm bg-white px-3 py-1 rounded-full shadow-sm font-bold border border-slate-300 text-slate-700">1 / 50</span>
+        </div>
+
+        <div id="flashcard" tabindex="0" class="relative w-full max-w-2xl h-[68vh] min-h-[480px] md:h-[550px] perspective-1000 cursor-pointer group mb-6 md:mb-8 touch-pan-y focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-500 rounded-2xl md:rounded-3xl" onclick="toggleFlip(event)">
+            <div class="card-inner w-full h-full absolute transform-style-3d shadow-xl rounded-2xl md:rounded-3xl">
+                
+                <!-- Front (Question) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-white rounded-2xl md:rounded-3xl p-6 md:p-10 flex flex-col items-center justify-center text-center border-t-4 border-red-600 shadow-md">
+                    <div class="absolute top-4 left-5 text-slate-100 font-extrabold text-4xl md:text-5xl opacity-80">Kasus</div>
+                    <div class="w-full h-full flex flex-col justify-center overflow-y-auto custom-scrollbar pt-8 pb-8 pr-2">
+                        <p id="question-text" class="text-base sm:text-lg md:text-xl text-slate-800 font-bold leading-relaxed m-auto">
+                            Memuat kasus klinis...
+                        </p>
+                    </div>
+                    <div class="absolute bottom-4 text-xs md:text-sm text-slate-400 flex items-center gap-1 animate-pulse">
+                        <span class="hidden sm:inline">Ketuk untuk melihat analisis klinis</span>
+                        <span class="sm:hidden">Ketuk: Jawaban  •  Geser: Lanjut</span>
+                    </div>
+                </div>
+
+                <!-- Back (Answer) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-slate-50 rounded-2xl md:rounded-3xl p-6 md:p-8 flex flex-col items-start justify-start text-left rotate-y-180 border-t-4 border-slate-800 shadow-inner overflow-hidden ring-1 ring-black/5">
+                    <div class="absolute top-4 right-5 text-slate-200 font-extrabold text-4xl md:text-5xl opacity-40">Kunci</div>
+                    <div class="w-full h-full overflow-y-auto custom-scrollbar pt-8 pb-8 pr-4">
+                        <div id="answer-text" class="answer-text text-xs sm:text-sm md:text-base text-slate-800 w-full font-medium">
+                            Memuat analisis klinis...
+                        </div>
+                    </div>
+                    <div class="absolute bottom-4 left-0 w-full text-center text-xs md:text-sm text-slate-400 flex items-center justify-center gap-1 animate-pulse">
+                        <span class="hidden sm:inline">Ketuk untuk kembali ke kasus</span>
+                        <span class="sm:hidden">Ketuk: Kembali  •  Geser: Lanjut</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="w-full max-w-2xl grid grid-cols-2 sm:flex sm:flex-row justify-center gap-3 md:gap-4 pb-8">
+            <button onclick="prevCard()" class="col-span-1 bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-sm transition-all border border-slate-300 flex justify-center items-center gap-1 active:scale-95">
+                <span>&larr;</span> <span class="hidden sm:inline">Sebelumnya</span><span class="sm:hidden">Prev</span>
+            </button>
+            <button onclick="nextCard()" class="col-span-1 bg-red-700 hover:bg-red-800 text-white font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-md transition-all flex justify-center items-center gap-1 active:scale-95">
+                <span class="hidden sm:inline">Selanjutnya</span><span class="sm:hidden">Next</span> <span>&rarr;</span>
+            </button>
+            <button onclick="shuffleCards()" class="col-span-2 sm:col-span-1 order-last sm:order-none bg-slate-800 hover:bg-slate-900 text-white font-bold text-sm md:text-base py-3 md:py-4 px-4 md:px-6 rounded-xl shadow-md transition-all flex justify-center items-center active:scale-95">
+                Acak Kartu
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        const originalCards = [
+            // HYPOVOLEMIA (1-5)
+            { 
+                cat: "Hypovolemia: Narrow PEA", 
+                q: "Pasien henti jantung. Di monitor terlihat irama PEA (Pulseless Electrical Activity) dengan laju 110x/menit dan kompleks QRS yang sangat sempit (Narrow QRS).<br><br>Mengapa irama ini sangat khas untuk syok hipovolemik?", 
+                a: `<strong>Patofisiologi: Konduksi Normal, Namun Volume Kosong.</strong><br><br>
+                    <ul>
+                        <li><strong>Narrow QRS (< 120ms):</strong> Menandakan jalur konduksi listrik jantung (Nodus SA hingga serabut Purkinje) bekerja dengan sangat sempurna. Masalahnya BUKAN pada kelainan jantung primer.</li>
+                        <li><strong>Takikardia (> 100x/m):</strong> Ini adalah sisa-sisa kompensasi sistem Saraf Simpatis untuk mempertahankan <em>Cardiac Output</em> sesaat sebelum kolaps total akibat hilangnya volume darah/cairan.</li>
+                        <li><strong>Tatalaksana Kritis:</strong> Jantung bekerja memompa 'ruang hampa'. Epinefrin hanya akan membuang waktu. <strong>Prioritas Mutlak:</strong> Pasang 2 jalur IV ukuran besar (16G/18G) atau akses Intraoseus (IO), lalu lakukan <strong>Fluid Challenge (Fluid Challenge) 1 hingga 2 Liter Ringer Laktat/NaCl 0.9% pakai <em>Pressure Bag</em>!</strong></li>
+                    </ul>` 
+            },
+            { 
+                cat: "Hypovolemia: Epinephrine Paradox", 
+                q: "Pasien trauma multipel mengalami PEA arrest akibat perdarahan masif. Anda fokus melakukan kompresi dan menyuntikkan Epinefrin 1 mg tiap 3 menit, tapi nadi tak kunjung kembali.<br><br>Mengapa Epinefrin justru bisa memperburuk gagal ROSC pada kasus ini?", 
+                a: `<strong>Paradoks Epinefrin pada Hipovolemia (Empty Squeeze).</strong><br><br>
+                    <ul>
+                        <li><strong>Mekanisme Farmakologis:</strong> Epinefrin dominan menstimulasi reseptor <em>Alpha-1</em> yang menyebabkan vasokonstriksi (penyempitan) perifer ekstrem untuk mengalihkan darah ke otak dan jantung.</li>
+                        <li><strong>Paradoks Hipovolemia:</strong> Jika volume darah memang sudah habis (eksanguinasi), Epinefrin tidak punya darah untuk "diperas".</li>
+                        <li><strong>Dampak Fatal:</strong> Jepitan pembuluh darah mikrovaskuler yang parah akibat Epinefrin tanpa dibarengi volume cairan justru mempercepat iskemia/nekrosis organ intra-abdomen dan gagal ginjal akut, mempersulit ROSC.</li>
+                        <li><strong>Aksi Tepat:</strong> Aktifkan <em>Massive Transfusion Protocol (MTP)</em>, berikan darah O-Negatif segera, dan hentikan sumber perdarahan (Tourniquet, Pelvic binder).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Hypovolemia: POCUS Target", 
+                q: "Saat jeda cek irama 10 detik, Anda meletakkan probe USG di subxiphoid dan melihat jantung. Ventrikel Kiri (LV) dan Ventrikel Kanan (RV) tampak saling berbenturan kuat dindingnya saat sistol (Kissing Ventricles), namun tidak ada darah di dalamnya.<br><br>Apa diagnosis Anda?", 
+                a: `<strong>Profound Hypovolemia / Pseudo-PEA.</strong><br><br>
+                    <ul>
+                        <li><strong>Hyperdynamic Empty Heart:</strong> Gambaran <em>Kissing Ventricles</em> di mana dinding otot jantung saling menempel penuh saat sistol menandakan kontraktilitas otot sangat kuat (bahkan hiperaktif), tapi <em>Preload</em> (volume darah yang masuk) adalah NOL.</li>
+                        <li><strong>Vena Cava Inferior (IVC):</strong> Jika Anda menggeser probe ke IVC, Anda akan melihat IVC yang peyot/kolaps 100%.</li>
+                        <li><strong>Manajemen Emas:</strong> Pasien ini belum benar-benar "mati" jaringan jantungnya. Tunda sementara pemberian Epinefrin agar tidak memperparah vasokonstriksi. Fokus 200% pada resusitasi cairan/darah super cepat. Nadi seringkali langsung teraba (ROSC) begitu volume terisi.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Hypovolemia: The Forgotten GI Bleed", 
+                q: "Kakek 70 tahun, riwayat osteoarthritis (rutin minum meloxicam), ditemukan tak sadarkan diri di kamar mandi. Irama asystole. Tidak tampak darah di luar. <br><br>Apa clue H1 (Hypovolemia) tersembunyi yang sering terlupakan di IGD?", 
+                a: `<strong>Perdarahan Saluran Cerna Atas (Massive GI Bleed).</strong><br><br>
+                    <ul>
+                        <li><strong>Korelasi Klinis:</strong> Penggunaan NSAID kronis pada lansia adalah pemicu utama Ulkus Peptikum perforasi/berdarah. Pasien bisa kehilangan 2-3 liter darah ke dalam lambung dan usus tanpa setetes pun darah terlihat di lantai.</li>
+                        <li><strong>Pemeriksaan Kunci saat RJP:</strong> Tim sering lupa melihat "ke bawah". <em>Code Leader</em> wajib menugaskan seseorang untuk melongok ke mulut (mencari darah hematemesis saat intubasi) dan melakukan <strong>Colok Dubur (Digital Rectal Examination) kilat</strong> untuk melihat adanya melena (feses hitam lengket) di sarung tangan.</li>
+                        <li><strong>Aksi:</strong> Jika positif, ini jelas <em>Hemorrhagic Shock Arrest</em>. Berikan cairan/darah secara empiris segera.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Hypovolemia: DKA Arrest", 
+                q: "Remaja DM Tipe 1 datang dengan napas kussmaul, lalu kolaps jadi PEA. GDS > 600. Banyak dokter langsung fokus mau kasih Bikarbonat dan Insulin. <br><br>Apa terapi paling pertama yang sebenarnya mengembalikan ROSC pada KAD?", 
+                a: `<strong>Terapi Volume Cairan Masif (Hypovolemia > Acidosis).</strong><br><br>
+                    <ul>
+                        <li><strong>Defisit Cairan Ekstrem:</strong> Pasien Ketoasidosis Diabetikum (KAD) mengalami diuresis osmotik kronis akibat hiperglikemia. Rata-rata defisit cairan tubuh total mereka mencapai <strong>10% dari berat badan (sekitar 5 hingga 9 Liter!)</strong>.</li>
+                        <li><strong>Penyebab Arrest:</strong> Mereka henti jantung pertama kali karena <em>Hypovolemic Shock</em> berat, disusul kelelahan napas, baru efek asidosis dan kalium.</li>
+                        <li><strong>Prioritas Resusitasi:</strong> Berikan bolus NaCl 0.9% 1-2 Liter dengan tekanan. <strong>Hindari Insulin Injeksi saat RJP</strong> karena sirkulasi buruk membuat kerjanya tak terprediksi dan memicu hipoglikemia fatal pasca-ROSC. Perbaiki pompanya dulu!</li>
+                    </ul>` 
+            },
+
+            // HYPOXIA (6-10)
+            { 
+                cat: "Hypoxia: BVM Resistance", 
+                q: "Saat memimpin RJP, petugas airway (ventilator) melapor: <em>'Dok, ini ambu bag-nya (BVM) keras banget, dada nggak mau ngembang!'</em> <br><br>Apa 3 penyebab utama T/H yang langsung terlintas di otak Anda?", 
+                a: `<strong>Sumbatan Jalan Napas (Hypoxia), Tension PTX, atau Severe Bronchospasm.</strong><br><br>
+                    <ul>
+                        <li>Laporan ini adalah Red Flag. RJP akan 100% gagal jika oksigen tidak masuk (Otot miokard butuh O2 untuk merespon Epinefrin dan Kejutan Listrik).</li>
+                        <li><strong>Taktik Troubleshooting (DOPE):</strong>
+                            <ul>
+                                <li><strong>Displaced/Sumbatan:</strong> Reposisi <em>head-tilt chin-lift</em>, periksa mulut (gigi palsu, darah, muntahan), <em>suction</em> agresif.</li>
+                                <li><strong>Pneumothorax:</strong> Raba trakea, cek asimetri dada, siapkan jarum dekompresi jika curiga Tension PTX.</li>
+                                <li><strong>Bronkospasme berat / Anafilaksis:</strong> Pertimbangkan Epinefrin IM tambahan atau Intubasi ETT segera karena BVM tak mampu menembus resistensi bronkus.</li>
+                            </ul>
+                        </li>
+                    </ul>` 
+            },
+            { 
+                cat: "Hypoxia: Oximetry Trap", 
+                q: "Pasien asma berat henti jantung (PEA). Perawat sibuk memasang pulse oximeter di jari pasien, tapi angkanya tidak muncul-muncul, sehingga perawat panik membetulkan sensornya.<br><br>Apa pesan Anda sebagai Code Leader?", 
+                a: `<strong>Cabut Oximeter Jari! Tidak ada fungsinya saat Cardiac Arrest.</strong><br><br>
+                    <ul>
+                        <li><strong>Prinsip Alat:</strong> <em>Pulse oximetry</em> (Plethysmograph) membutuhkan <strong>pulsasi arteri yang berdenyut (pulsatile flow)</strong> untuk bisa membaca perbedaan spektrum gelombang cahaya oksihemoglobin.</li>
+                        <li><strong>Fisiologi CPR:</strong> Saat henti jantung, perfusi perifer jatuh ke angka nyaris nol dan pembuluh darah jari vasokonstriksi total. Tidak ada pulsasi yang bisa dibaca. Alat akan menampilkan "Error" atau angka acak palsu yang menyesatkan tim.</li>
+                        <li><strong>Solusi Standar Emas:</strong> Tinggalkan Oximeter. Gunakan <strong>Capnography (ETCO2)</strong> yang disambungkan ke ETT/BVM untuk mengukur kecukupan ventilasi (oksigen masuk, CO2 keluar).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Hypoxia: Capnography (ETCO2) Zero", 
+                q: "Pasien baru saja di-intubasi (ETT) di tengah CPR. Saat dipasang alat Capnography (ETCO2), angkanya nol (0 mmHg) dan grafiknya rata (flatline). <br><br>Apa makna paling mematikan dari tanda ini?", 
+                a: `<strong>Konfirmasi Intubasi Masuk ke Esofagus (Lambung)!</strong><br><br>
+                    <ul>
+                        <li><strong>Patofisiologi:</strong> Lambung tidak memproduksi gas CO2. Paru-paru memproduksi CO2. Jika ETT terpasang dan ETCO2 menunjukkan angka NOL konsisten, itu bukti tak terbantahkan bahwa pipa tidak berada di trakea.</li>
+                        <li><strong>Pitfall Mematikan:</strong> Tim mengira pasien memburuk atau gagal resusitasi, padahal pasien sedang mati lemas karena O2 ditiup ke dalam perut.</li>
+                        <li><strong>Aksi Tegas:</strong> Jangan buang waktu auskultasi dada jika ETCO2 nol. <strong>LANGSUNG CABUT ETT!</strong> Kembali ke ventilasi Bag-Valve-Mask (BVM) + OPA, oksigenasi pasien, dan siapkan intubasi ulang oleh orang yang lebih senior.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Hypoxia: The Cyanosis Myth", 
+                q: "Pasien perdarahan masif post-partum henti jantung. Hb pasien dicurigai sangat rendah (misal Hb 4 g/dL). Parunya penuh cairan, tapi pasien <strong>TIDAK tampak kebiruan (Sianosis)</strong>. <br><br>Apakah hipoksia bisa disingkirkan?", 
+                a: `<strong>Sangat TIDAK BISA. Anemia berat MENUTUPI Sianosis!</strong><br><br>
+                    <ul>
+                        <li><strong>Hukum Fisiologi Sianosis:</strong> Warna biru pada mukosa/kulit HANYA akan terbentuk jika terdapat minimal <strong>5 g/dL Hemoglobin deoksigenasi (Hb yang tidak mengikat O2)</strong> dalam darah.</li>
+                        <li><strong>Paradoks Anemia:</strong> Jika total Hb pasien hanya 4 g/dL, maka walaupun 100% Hb tersebut kosong tak bawa oksigen (hipoksia maut), angkanya tetap di bawah 5 g/dL. Pasien ini <strong>TIDAK AKAN PERNAH membiru</strong>; ia hanya akan tampak sangat pucat bak porselen.</li>
+                        <li><strong>Pesan Klinis:</strong> Jangan tertipu warna kulit. Pasien perdarahan bisa mati karena hipoksia jaringan tanpa menunjukkan tanda sianosis sama sekali.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Hypoxia: ETCO2 as ROSC Predictor", 
+                q: "Anda melakukan CPR menit ke-15. Angka ETCO2 yang tadinya konstan di 15 mmHg, tiba-tiba melompat drastis menjadi 45 mmHg di tengah kompresi dada. <br><br>Apa yang harus Anda lakukan?", 
+                a: `<strong>Hentikan Kompresi Sesaat & Raba Nadi (Tanda Emas ROSC)!</strong><br><br>
+                    <ul>
+                        <li><strong>Hemodinamik Capnography:</strong> ETCO2 bukan sekadar menilai napas, tapi menilai <strong>Aliran Darah Paru (Pulmonary Blood Flow)</strong>. Saat CPR, CO2 menumpuk di jaringan karena pompa lambat (ETCO2 10-20 mmHg).</li>
+                        <li><strong>Momen ROSC:</strong> Ketika jantung mendadak berdetak sendiri dengan kuat, darah membanjiri paru-paru dan menyapu semua timbunan CO2 tersebut untuk dihembuskan keluar. Ini menciptakan lonjakan grafik tajam <strong>> 35 - 40 mmHg</strong>.</li>
+                        <li><strong>AHA Guideline:</strong> Lompatan ETCO2 mendadak adalah indikator ROSC paling cepat, terjadi mendahului terabanya nadi. Raba nadi karotis sekarang, jangan tunggu siklus 2 menit habis!</li>
+                    </ul>` 
+            },
+
+            // HYDROGEN ION (ACIDOSIS) (11-15)
+            { 
+                cat: "Acidosis: Routine Bicarbonate", 
+                q: "RJP sudah berjalan 10 menit (Irama Asistol). Perawat menyarankan: <em>'Dok, ini sudah lama, pasien pasti asidosis. Kita tembak Natrium Bikarbonat (Meylon) ya rutin 1 ampul?'</em> <br><br>Setujukah Anda?", 
+                a: `<strong>TIDAK SETUJU! (Routine Bicarbonate is Harmful / Kelas III AHA).</strong><br><br>
+                    <ul>
+                        <li><strong>Reaksi Kimia Maut:</strong> Bikarbonat (NaHCO<sub>3</sub>) bereaksi dengan asam laktat (H<sup>+</sup>) menghasilkan Karbon Dioksida (CO<sub>2</sub>) dan Air. <br>(HCO<sub>3</sub><sup>-</sup> + H<sup>+</sup> → H<sub>2</sub>O + CO<sub>2</sub>).</li>
+                        <li><strong>Paradoks Intraseluler:</strong> Molekul CO<sub>2</sub> ini menembus membran sel otot jantung dan sawar darah otak dengan sangat cepat, sementara bikarbonat tertinggal di darah. Hasilnya? Lingkungan LUAR sel pH-nya naik, tapi DALAM sel miokard dan otak justru mengalami <strong>Asidosis Intraseluler Ekstrem</strong> yang mematikan sel.</li>
+                        <li><strong>Indikasi Bikarbonat HANYA untuk:</strong> Hiperkalemia terbukti, asidosis metabolik spesifik (KAD pra-arrest), dan Overdosis obat trisiklik antidepresan (TCA).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Acidosis: Hyperventilation Danger", 
+                q: "Pasien suspek asidosis metabolik berat henti jantung. Untuk membuang CO2 (kompensasi asidosis), perawat yang memegang BVM memompa dengan sangat cepat dan kuat (30x per menit). <br><br>Mengapa ini sangat berbahaya bagi kelangsungan RJP?", 
+                a: `<strong>Mencekik Venous Return (Thoracic Pump Effect).</strong><br><br>
+                    <ul>
+                        <li><strong>Fisiologi Tekanan Dada:</strong> Jantung membutuhkan fase istirahat (tekanan negatif dalam rongga dada) agar darah dari pembuluh vena besar bisa terhisap masuk kembali ke Atrium (Preload).</li>
+                        <li><strong>Efek Hiperventilasi:</strong> Memompa udara berlebihan menaikkan Tekanan Intratoraks secara konstan. Darah dihalangi masuk ke jantung. Jantung kosong = Kompresi sia-sia = <em>Cardiac Output</em> anjlok.</li>
+                        <li><strong>Guideline Mutlak:</strong> Berapapun derajat asidosisnya, saat CPR dengan <em>Advance Airway</em>, ventilasi HANYA <strong>10x per menit (1 napas tiap 6 detik)</strong>. Kurangi tekanan, biarkan dada <em>recoil</em> (mengembang).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Acidosis: Waiting for ABG", 
+                q: "Untuk memastikan Asidosis dan Kalium pasien, asisten bersikeras mencari arteri radialis untuk Analisis Gas Darah (AGD/ABG) saat CPR sedang berlangsung. Prosedur jadi sulit dan lama.<br><br>Apa alternatif yang jauh lebih cerdas?", 
+                a: `<strong>Gunakan Darah Vena (Venous Blood Gas / VBG).</strong><br><br>
+                    <ul>
+                        <li><strong>Pitfall Arteri:</strong> Saat CPR, meraba nadi arteri radialis itu nyaris mustahil dan berbahaya karena yang teraba seringkali hanyalah gelombang kompresi pasif atau aliran darah vena balik. Mencari arteri menghabiskan waktu resusitasi kritis.</li>
+                        <li><strong>Akurasi VBG:</strong> Darah yang disedot dari selang infus IV perifer atau CVC sudah SANGAT CUKUP. Perbedaan pH antara arteri dan vena saat resusitasi hanya sekitar <strong>0.03 hingga 0.05</strong>.</li>
+                        <li>VBG memberikan data K+, Laktat, dan pH yang cukup valid untuk mengambil keputusan injeksi obat secara instan.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Acidosis: Wide QRS Brady-PEA", 
+                q: "Pasien riwayat syok sepsis memanjang, akhirnya henti jantung. Di monitor terlihat PEA lambat (Bradikardia 30x/m) dengan kompleks QRS yang sangat lebar dan aneh. <br><br>Jika ini asidosis laktat stadium akhir, mampukah Epinefrin bekerja?", 
+                a: `<strong>Epinefrin Hampir Tidak Berguna pada pH < 7.1.</strong><br><br>
+                    <ul>
+                        <li><strong>Lumpuhnya Reseptor:</strong> Pada asidosis metabolik yang sangat berat (pH darah < 7.1 atau < 7.0), konformasi molekul reseptor <em>Adrenergik</em> (tempat menempelnya Epinefrin) di otot jantung dan pembuluh darah mengalami perubahan bentuk.</li>
+                        <li><strong>Catecholamine Refractory:</strong> Berapa puluh ampul pun Epinefrin/Norepinefrin yang Anda suntikkan, obat tidak bisa menempel dan bekerja.</li>
+                        <li><strong>Salvage Therapy:</strong> Pada titik ekstrem ini, pemberian empiris Sodium Bikarbonat bolus pelan dapat dipertimbangkan sebagai <em>Last Resort</em> murni untuk menaikkan pH sesaat agar obat vasopresor bisa bekerja kembali.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Acidosis: Dialysis Patient Arrest", 
+                q: "Pasien HD (Cuci Darah) tiba-tiba henti jantung di ruang tunggu. Irama PEA QRS lebar. Apa 2 cairan Injeksi yang WAJIB Anda perintahkan untuk disiapkan langsung di Siklus 1?", 
+                a: `<strong>Trias Mematikan CKD: Kalsium (IV) & Natrium Bikarbonat (IV).</strong><br><br>
+                    <ul>
+                        <li>Pasien Gagal Ginjal Tahap Akhir (ESRD) yang kolaps selalu dianggap mengalami kombinasi <strong>Hiperkalemia Ekstrem + Asidosis Uremik</strong> sampai terbukti sebaliknya.</li>
+                        <li><strong>1. Kalsium Klorida/Glukonat (Target: Membran):</strong> Masuk lebih dulu untuk melapisi dan menstabilkan ambang batas listrik otot jantung dari badai racun kalium. Mencegah V-Fib sekunder.</li>
+                        <li><strong>2. Natrium Bikarbonat 8.4% (Target: Shift):</strong> Dosis 50 mEq bolus lambat. Mengatasi asidosis secara instan sekaligus mendorong paksa ion Kalium kembali bersembunyi ke dalam sel darah. Ini adalah kombinasi penyelamat nyawa (Magic Bullet).</li>
+                    </ul>` 
+            },
+
+            // HYPO/HYPERKALEMIA (16-20)
+            { 
+                cat: "Hyperkalemia: The Sine Wave", 
+                q: "Menit ke-2 RJP, irama menunjukkan gelombang yang meliuk-liuk lebar, menyambung antara QRS dan gelombang T tanpa garis isoelektrik yang jelas (seperti gelombang ular/Sine Wave). <br><br>Jika Anda keliru membaca ini sebagai Ventricular Fibrillation (VF), apa bahayanya?", 
+                a: `<strong>Membuang Waktu Emas (Shock Tidak Mengobati Gangguan Kimia).</strong><br><br>
+                    <ul>
+                        <li><strong>Bentuk EKG:</strong> <em>Sine Wave</em> adalah manifestasi listrik stadium terminal dari Hiperkalemia (Kalium > 8 mEq/L). Lebarnya gabungan QRS dan T membuatnya sekilas persis seperti VF kasar (Coarse VF) atau V-Tachy lambat.</li>
+                        <li><strong>Pitfall Defibrilasi:</strong> Jika Anda melakukan Shock (Defibrilasi), irama mungkin me-reset sepersekian detik, tapi akan KEMBALI <em>sine wave</em> seketika karena cairan darah di sekitar jantung tetap merendam otot dengan racun kalium.</li>
+                        <li><strong>Aksi Penyelamatan:</strong> Teriakkan perintah: <strong>"Siapkan Kalsium Klorida 10% 1 ampul atau Kalsium Glukonat 10% 2 ampul IV bolus cepat sekarang!"</strong>. Ini akan menyempitkan QRS dalam 1-3 menit.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Hyperkalemia: Calcium Chloride vs Gluconate", 
+                q: "Pasien PEA hiperkalemia. Di troli emergensi ada Kalsium Glukonat (10%) dan Kalsium Klorida (10%). <br><br>Manakah yang lebih poten dan apa syarat mutlak pemberiannya?", 
+                a: `<strong>Kalsium Klorida (Lebih Poten) tapi Bahaya Nekrosis Jaringan.</strong><br><br>
+                    <ul>
+                        <li><strong>Potensi:</strong> 1 Ampul (10 mL) Kalsium Klorida mengandung <strong>~27 mg/mL</strong> kalsium elemental, sedangkan Glukonat hanya <strong>~9 mg/mL</strong> (Klorida 3x lebih kuat dan tidak butuh metabolisme hati untuk aktif).</li>
+                        <li><strong>Syarat Mutlak Klorida:</strong> Sangat korosif (<em>Vesicant</em>). Idealnya HANYA diberikan melalui jalur vena sentral (CVC) atau vena perifer ukuran raksasa. Jika bocor di punggung tangan, kulit dan otot akan membusuk (nekrosis parah).</li>
+                        <li><strong>Saran Puskesmas/IGD Awal:</strong> Jika hanya punya IV line kecil di tangan, lebih aman memakai <strong>Kalsium Glukonat 10%</strong>, namun dosisnya dikalikan (berikan 2 hingga 3 ampul bolus bertahap).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Hyperkalemia: Insulin Trap in CPR", 
+                q: "Untuk mengobati hiperkalemia, Anda memberi kombinasi Dextrose 40% dan Insulin 10 IU bolus IV. Namun, setelah RJP 10 menit, ROSC tidak tercapai. <br><br>Mengapa Insulin kurang efektif saat pasien belum ROSC?", 
+                a: `<strong>Perangkap Sirkulasi: Tidak Ada Aliran = Sel Tidak Menyerap.</strong><br><br>
+                    <ul>
+                        <li><strong>Mekanisme Insulin:</strong> Obat ini harus beredar luas ke seluruh otot rangka dan liver tubuh untuk membuka pintu sel agar menyerap Kalium.</li>
+                        <li><strong>Realita RJP:</strong> Saat henti jantung, perfusi kompresi dada (Cardiac Output) hanya maksimal 20-30% dari normal. Insulin terjebak di sekitar vena proksimal dan lambat mencapai target otot di seluruh tubuh.</li>
+                        <li><strong>Strategi Timing:</strong> Saat <em>Intra-arrest</em>, andalkan <strong>Kalsium (efek lokal menstabilkan otot jantung)</strong> dan <strong>Bikarbonat (efek <em>shift</em> dan <em>buffer</em> yang lebih cepat beredar)</strong>. Insulin tetap disuntikkan, tapi efek maksimal pengurang kaliumnya baru akan terlihat setelah nadi pasien kembali (ROSC).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Hypokalemia: Torsades de Pointes", 
+                q: "Pasien lansia sering minum Furosemide muntah-muntah 3 hari. Henti jantung dengan monitor menunjukkan VT Polimorfik (QRS meliuk membesar lalu mengecil seperti pita melintir). <br><br>Selain Defibrilasi (Shock), obat apa yang HUKUMNYA HARUS disiapkan?", 
+                a: `<strong>Magnesium Sulfat (The Torsades Antidote).</strong><br><br>
+                    <ul>
+                        <li><strong>Diagnosis Irama:</strong> VT Polimorfik tipe <em>Torsades de Pointes</em> (TdP). Penyebab utamanya adalah pemanjangan interval QT, yang dipicu kuat oleh deplesi kronis Kalium dan Magnesium.</li>
+                        <li><strong>Dosis Penyelamat:</strong> Berikan <strong>Magnesium Sulfat 1 hingga 2 gram IV (diencerkan dalam 10 mL D5W) bolus perlahan dalam 5-10 menit.</strong></li>
+                        <li><strong>Pitfall Mematikan:</strong> Memberikan injeksi Amiodarone! Amiodarone bekerja dengan memblokir kanal kalium (Kelas III), yang justru <strong>MAKIN MEMPERPANJANG interval QT</strong> dan membuat Torsades semakin ganas dan menetap.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Kalemia: The Digoxin Toxicity", 
+                q: "Pasien CHF rutin minum obat Digoxin. Masuk IGD karena mual, halo kuning di mata, lalu PEA arrest. Lab menunjukkan hiperkalemia (K 6.5). <br><br>Apakah Kalsium IV aman diberikan pada kasus hiperkalemia akibat toksisitas Digoxin ini?", 
+                a: `<strong>Mitos "Stone Heart" Telah Terbantahkan (Aman Diberikan Jika Kritis).</strong><br><br>
+                    <ul>
+                        <li><strong>Teori Usang (Stone Heart):</strong> Dahulu diajarkan bahwa Kalsium IV pada intoksikasi Digoxin akan memicu pengikatan kalsium intramiosit tak terkendali, membuat jantung kontraksi tetanus dan membatu/kaku permanen.</li>
+                        <li><strong>Evidens Berbasis Bukti Terbaru:</strong> Studi retrospektif besar membuktikan teori itu salah. Pada pasien toksisitas digoxin dengan Hiperkalemia yang mengancam nyawa/henti jantung, <strong>Kalsium IV tetap AMAN dan diindikasikan</strong> untuk menyelamatkan nyawa.</li>
+                        <li><strong>Antidotum Definitif:</strong> Tentu saja, terapi utama yang menyembuhkan akar masalahnya adalah injeksi antibodi spesifik <strong>Digoxin-specific Fab (Digibind/DigiFab)</strong>. Namun selagi menunggu, jangan takut memberikan kalsium jika irama jantung melebar.</li>
+                    </ul>` 
+            },
+
+            // HYPOTHERMIA (21-23)
+            { 
+                cat: "Hypothermia: Defibrillation Limit", 
+                q: "Pasien tenggelam ditarik dari air bersuhu 15°C (Hipotermia Berat). Irama menunjukkan Ventricular Fibrillation (VF). Anda melakukan shock 1x, 2x, 3x, tapi VF tidak berubah.<br><br>Bolehkah lanjut shock ke-4?", 
+                a: `<strong>HENTIKAN SHOCK! (Aturan Maksimal 3 Shocks).</strong><br><br>
+                    <ul>
+                        <li><strong>Patofisiologi:</strong> Miokardium (otot jantung) yang membeku pada suhu inti < 30°C berada pada status iritabilitas ekstrem dan <strong>resisten mutlak</strong> terhadap arus listrik eksternal.</li>
+                        <li>Jika Anda terus men-shock, itu hanya merusak otot miokard (burn) tanpa bisa mereset irama.</li>
+                        <li><strong>Protokol Hipotermia:</strong> Tunda shock ke-4. Fokus 100% pada RJP berkualitas sambil melakukan penghangatan aktif internal (<em>Active Core Rewarming</em>: infus cairan NaCl hangat 40°C, bilas perikardial/pleura, atau rujuk untuk ECMO). Shock lanjutan HANYA efektif jika suhu inti sudah <strong>> 30°C</strong>.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Hypothermia: Epinephrine Danger", 
+                q: "Masih pada pasien hipotermia berat (< 30°C) dengan VF/PEA. Sesuai protokol, asisten mengambil ampul Epinefrin. <br><br>Apa aturan pemberian obat pada suhu ekstrem ini?", 
+                a: `<strong>TAHAN SEMUA OBAT! (Withhold Meds Until > 30°C).</strong><br><br>
+                    <ul>
+                        <li><strong>Pitfall Metabolik:</strong> Pada suhu < 30°C, hati dan ginjal mati suri. Laju metabolisme obat hampir nol.</li>
+                        <li>Jika Anda menyuntikkan Epinefrin tiap 3 menit sesuai ACLS standar, obat itu HANYA menggenang (<em>pooling</em>) dan menumpuk di pembuluh vena perifer tanpa dihancurkan.</li>
+                        <li><strong>Bahaya Laten:</strong> Saat pasien nanti mulai hangat dan sirkulasi terbuka, terjadi "Massive Epinephrine Surge" (Epinefrin berdosis raksasa masuk ke jantung sekaligus) memicu Hipertensi krisis, V-Fib refrakter ulang, dan kolaps sirkulasi yang mematikan.</li>
+                        <li><strong>Aturan:</strong> < 30°C = Jangan beri obat. Suhu 30°C - 34°C = Gandakan interval pemberian obat (misal Epinefrin tiap 6-10 menit).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Hypothermia: Nobody is dead until...", 
+                q: "Anda sudah melakukan RJP 45 menit pada pasien pendaki gunung yang hipotermia berat. Biasanya RJP 30 menit tanpa hasil boleh dihentikan. <br><br>Bolehkah menyatakan pasien ini meninggal?", 
+                a: `<strong>Mantra ACLS: "Nobody is dead until they are WARM and dead."</strong><br><br>
+                    <ul>
+                        <li><strong>Efek Neuroprotektif:</strong> Suhu dingin es mengurangi kebutuhan oksigen otak secara drastis. Sel-sel otak dalam mode hibernasi sehingga mampu bertahan dari iskemia jauh lebih lama dari suhu normal.</li>
+                        <li><strong>Keajaiban Medis:</strong> Banyak laporan kasus literatur pasien hipotermia berat berhasil mencapai ROSC dengan neurologis utuh (sadar penuh) setelah dilakukan <strong>RJP tanpa henti selama 3 hingga 6 jam!</strong></li>
+                        <li><strong>Aksi Klinis:</strong> Jangan pernah menyatakan waktu kematian (Time of Death) di lapangan pada korban hipotermia berat. RJP harus terus dilanjutkan hingga tiba di RS besar untuk dihangatkan, dengan target minimal suhu inti mencapai <strong>32°C - 35°C</strong> sebelum keputusan terminasi CPR boleh dipertimbangkan.</li>
+                    </ul>` 
+            },
+
+            // TENSION PNEUMOTHORAX (24-28)
+            { 
+                cat: "Tension PTX: The Missing Tracheal Deviation", 
+                q: "Pasien asma PEA arrest. Dada kiri asimetris menonjol. Suara napas kiri hilang. Tapi Anda meraba trakea di leher, letaknya masih di TENGAH (tidak deviasi). <br><br>Anda ragu ini Tension PTX karena tidak ada deviasi trakea. Benarkah?", 
+                a: `<strong>SALAH FATAL! Deviasi Trakea adalah TANDA SANGAT LAMBAT.</strong><br><br>
+                    <ul>
+                        <li><strong>Mitos Buku Teks vs Realita:</strong> Menunggu deviasi trakea sama dengan menunggu pasien masuk ruang jenazah. Tanda ini sangat sulit diraba pada pasien obesitas, leher pendek, atau terpasang <em>collar neck</em>.</li>
+                        <li><strong>Clue Utama (Trias Terselubung saat CPR):</strong> 
+                            1. Kesulitan ventilasi BVM (kantung terasa sekeras batu). <br>
+                            2. Hilangnya suara napas di satu sisi dada.<br>
+                            3. Distensi Vena Jugularis (leher mengembang) + Irama PEA mendadak.</li>
+                        <li><strong>Aksi Penyelamat:</strong> Jangan ragu! Tusukkan jarum dekompresi <em>sekarang</em>. Udara bertekanan yang mendesis keluar akan membuktikan diagnosis Anda.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Tension PTX: Needle Location Shift", 
+                q: "Standar lama dekompresi jarum (Needle Thoracostomy) adalah ICS 2 Garis Mid-Klavikula (MCL). Namun, guideline trauma terbaru (ATLS/TCCC) merekomendasikan lokasi alternatif yang lebih aman. <br><br>Dimanakah lokasi tersebut?", 
+                a: `<strong>ICS 5 Anterior Axillary Line (Garis Aksila Anterior sisi ketiak).</strong><br><br>
+                    <ul>
+                        <li><strong>Alasan Perubahan Guideline (ATLS 10th Ed):</strong> Pada pria dewasa muda yang berotot pektoralis tebal atau pasien obesitas, kedalaman jaringan otot di ICS 2 MCL seringkali > 5 cm. Jarum IV standar sering <strong>Gagal (Terlalu pendek)</strong> menembus pleura parietal.</li>
+                        <li><strong>Keunggulan ICS 5 AAL:</strong> Ketebalan dinding dada lateral (area ketiak depan sejajar puting susu) secara anatomis lebih tipis (rata-rata selisih 1-2 cm lebih tipis). Tingkat keberhasilan dekompresi jarum melesat hingga 80-90% dan menurunkan risiko mencederai pembuluh darah subklavia.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Tension PTX: False Breath Sounds", 
+                q: "Pasien PEA trauma dada. Saat kompresi RJP sedang dilakukan, Anda mendengar suara napas dengan stetoskop di kedua dada (kanan & kiri) terdengar simetris. <br><br>Apakah ini menyingkirkan Pneumothorax?", 
+                a: `<strong>Sama Sekali Tidak! Awas "Referred Breath Sounds".</strong><br><br>
+                    <ul>
+                        <li><strong>Pitfall Auskultasi CPR:</strong> Hentakan mekanis yang sangat kuat dari kompresi dinding dada (5-6 cm, 100x/menit) menekan paksa kantung paru yang sehat. Udara turbulen ini menghasilkan suara keras yang <strong>merambat melintasi tulang keras sternum ke sisi paru yang sudah kolaps/rusak.</strong></li>
+                        <li>Pemeriksa akan tertipu mendengar "suara napas palsu" di sisi sakit dan menyimpulkan parunya baik-baik saja.</li>
+                        <li><strong>Cara Auskultasi Akurat:</strong> HANYA dengarkan paru-paru selama <strong>jeda 5-10 detik (saat cek irama atau pergantian kompresor)</strong> sambil asisten memompa BVM (ventilasi buatan). Jika satu sisi sunyi, curigai PTX!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Tension PTX: POCUS Sign", 
+                q: "Saat jeda RJP, Anda menempelkan probe USG Linear di ICS 2 dada kanan. Anda melihat gambaran garis putih terang ganda yang hanya diam tak bergerak saat pasien di-bagging (di ventilasi). <br><br>Apa nama tanda ini?", 
+                a: `<strong>Absence of Lung Sliding (Hilangnya Sliding Paru).</strong><br><br>
+                    <ul>
+                        <li><strong>Normal (Ant-Sign):</strong> Pleura visceral (nempel paru) dan parietal (nempel iga) saling bergesekan saat napas, di USG terlihat seperti barisan semut berjalan di atas garis putih.</li>
+                        <li><strong>Pneumothorax:</strong> Udara menyelip di antara kedua pleura, memisahkannya. Gelombang USG terhalang udara, sehingga garis pleura tampak diam membeku, sekeras apapun paru-paru berekspansi di bawahnya.</li>
+                        <li><strong>M-Mode (Konfirmasi Final):</strong> Tekan mode <em>Motion</em> di USG. Normal = <em>Seashore Sign</em> (Garis lurus di atas, pasir bergradasi di bawah). Pneumothorax = <strong><em>Barcode / Stratosphere Sign</em></strong> (Semua gambar hanya berupa garis lurus horisontal sejajar dari atas ke bawah). Dekompresi segera!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Tension PTX: Bilateral Arrest", 
+                q: "Pasien henti jantung post trauma ledakan. Anda tidak punya USG. Dada terasa tegang tapi sulit dievaluasi bising napasnya. <br><br>Apa tindakan heroik empiris pada kasus trauma arrest?", 
+                a: `<strong>Dekompresi Bilateral (Bilateral Needle / Finger Thoracostomy).</strong><br><br>
+                    <ul>
+                        <li><strong>Golden Rule Traumatic Arrest:</strong> Pada pasien henti jantung murni akibat trauma (tumpul parah/ledakan), Tension Pneumothorax adalah pembunuh nomor satu yang reversibel secara instan.</li>
+                        <li>Melakukan tusukan jarum 14G, atau membedah sela iga dengan pisau scalpel dan memasukkan jari tembus ke pleura (<em>Finger Thoracostomy</em>) di <strong>KEDUA SISI DADA (Kanan & Kiri)</strong> adalah intervensi empiris life-saving yang dibenarkan walau diagnosis belum pasti.</li>
+                        <li><strong>Pitfall:</strong> Takut melukai pasien yang sudah mati. Saat pasien tak bernadi karena trauma, manfaat mengempiskan PTX (walau tebakan) jauh melampaui risiko Anda "membuat" PTX baru akibat jarum. Lakukan!</li>
+                    </ul>` 
+            },
+
+            // TAMPONADE (29-32)
+            { 
+                cat: "Tamponade: Electrical Alternans", 
+                q: "Pasien kanker paru masuk dengan PEA arrest. Di monitor, Anda perhatikan tinggi kompleks QRS (R wave amplitude) naik-turun selang-seling setiap 1 denyut (Satu tinggi, satu pendek). <br><br>Apa nama tanda ini dan patofisiologinya?", 
+                a: `<strong>Electrical Alternans (Goyangan Kematian).</strong><br><br>
+                    <ul>
+                        <li><strong>Patofisiologi:</strong> Jantung normalnya tertambat erat. Pada efusi perikardial/tamponade, kantungnya terisi lautan cairan masif. Jantung menjadi seperti pendulum yang mengapung bebas dan <strong>berayun maju-mundur (Swinging Heart Syndrome)</strong> setiap kali berdetak.</li>
+                        <li><strong>Manifestasi EKG:</strong> Saat berdetak maju mendekati elektroda dada, QRS tercetak tinggi. Detak berikutnya jantung berayun mundur menjauh, QRS tercetak pendek/low-voltage.</li>
+                        <li>Pola ini sangat spesifik (indikator kuat) untuk Tamponade. <strong>Siapkan jarum spinal panjang dan spuit 50cc untuk Pericardiocentesis subxiphoid darurat!</strong></li>
+                    </ul>` 
+            },
+            { 
+                cat: "Tamponade: The Mechanism of Death", 
+                q: "Mengapa kompresi dada yang sangat kuat (high-quality CPR) sekalipun sering GAGAL menghasilkan nadi pada kasus Tamponade Jantung berat?", 
+                a: `<strong>Kegagalan Diastolik Mekanis Mutlak.</strong><br><br>
+                    <ul>
+                        <li><strong>Mekanika CPR:</strong> RJP bergantung pada tekanan negatif saat fase relaksasi/lepas dada (Recoil) untuk menyedot darah vena kembali mengisi ventrikel jantung.</li>
+                        <li><strong>Penjara Perikardial:</strong> Pada tamponade, cairan bertekanan super tinggi di dalam perikardium "mencekik" dinding luar ventrikel. Ventrikel kolaps dan memipih secara permanen. Darah dari seluruh tubuh tertahan di luar jantung tak bisa masuk.</li>
+                        <li><strong>Efek Fatal:</strong> Anda bisa memompa dada pasien hingga tulang iganya patah semua, tapi jika ventrikelnya kosong tertutup rapat, kompresi Anda = Nol Cardiac Output. Jalan keluarnya HANYA mengeluarkan cairan pencekiknya lewat tusukan/bedah dada!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Tamponade: Trauma vs Medical", 
+                q: "Pasien ditikam pisau di dada kiri, tiba di IGD dalam keadaan PEA arrest. Apakah Pericardiocentesis (disedot jarum subxiphoid) cukup untuk menolongnya?", 
+                a: `<strong>TIDAK CUKUP dan Sering Gagal! (Indikasi Resuscitative Thoracotomy).</strong><br><br>
+                    <ul>
+                        <li><strong>Sifat Darah Trauma:</strong> Tamponade akibat robekan ventrikel jantung menyemburkan darah segar yang dengan sangat cepat menggumpal menjadi bongkahan bekuan darah keras (Clot) di dalam perikardium.</li>
+                        <li><strong>Pitfall Jarum:</strong> Jarum pungsi (Pericardiocentesis) hanya mampu menyedot cairan serosa cair. Saat disuntikkan ke tamponade trauma, jarum akan buntu tersumbat clot darah seketika, memberi hasil negatif palsu ("Oh, gak ada darah, aman!").</li>
+                        <li><strong>Prosedur IGD:</strong> Jika luka tusuk jantung henti jantung tiba < 15 menit, dokter bedah/IGD harus langsung <strong>membedah buka rongga dada (ED Thoracotomy/Clamshell incision)</strong>, robek perikardium dengan gunting, meraup bekuan darah dengan tangan, dan menjahit lubang ventrikel secara manual.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Tamponade: POCUS Subxiphoid Target", 
+                q: "Di mana Anda meletakkan probe USG untuk paling cepat melihat Cardiac Tamponade selama jeda RJP 10 detik?", 
+                a: `<strong>View Subxiphoid (Subcostal Four-Chamber View).</strong><br><br>
+                    <ul>
+                        <li><strong>Teknik Cepat:</strong> Letakkan probe USG di bawah processus xiphoideus (ulu hati), tekan dalam, angkat buntut probe hingga menyorot ke arah bahu kiri pasien, menembus hati sebagai jendela akustik. Ini pandangan emas karena operator USG tidak akan bertabrakan dengan kompresor dada.</li>
+                        <li><strong>Tanda Klinis Mutlak:</strong> 
+                            1. Ruang hitam (Anechoic) besar mengelilingi otot jantung putih.<br>
+                            2. <strong>Right Ventricular Diastolic Collapse:</strong> Perhatikan dinding Ventrikel Kanan. Jika dindingnya tampak terinjak/peyot ke dalam secara paradoksikal saat fase istirahat (diastol), tamponade sedang terjadi dan mematikan fungsi pompanya! Sedot segera.</li>
+                    </ul>` 
+            },
+
+            // TOXINS (33-38)
+            { 
+                cat: "Toxins: Opioid Trap", 
+                q: "Pasien ditemukan di kosan dengan jarum suntik, henti jantung (Asistol), pupil pinpoint (sangat kecil). Anda mendiagnosis Overdosis Heroin. Asisten menyarankan <em>'Dok, suntik Naloxone IV sekarang ya?'</em>", 
+                a: `<strong>TUNDA NALOXONE. Mulai CPR dan Ventilasi Lebih Dulu!</strong><br><br>
+                    <ul>
+                        <li><strong>Kesalahan Paradigma:</strong> Heroin/Opioid tidak meracuni otot jantung secara langsung. Ia melumpuhkan pusat napas di batang otak → Pasien berhenti napas (apnea) → Hipoksia sistemik → <strong>Jantung mati lemas karena kekurangan oksigen (Asistol).</strong></li>
+                        <li><strong>Fokus Arrest:</strong> Naloxone adalah <em>reverse agent</em> untuk saraf pernapasan, ia TIDAK merangsang pacu jantung. Menyuntik Naloxone pada jantung yang sudah berhenti adalah sia-sia tanpa Oksigen.</li>
+                        <li><strong>Aksi Benar:</strong> Oksigenasi (BVM) agresif + Kompresi Dada + Epinefrin. Jika Nadi pasien hidup lagi (ROSC), TAPI napas spontannya belum kembali, BARU Anda tembak Naloxone (0.4 mg hingga 2 mg) agar ia bangun.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Toxins: Tricyclic Antidepressants (TCA)", 
+                q: "Remaja depresi minum obat Amitriptyline segenggam. Masuk IGD kejang lalu arrest. Di monitor PEA / takikardia aneh dengan kompleks QRS yang SANGAT LEBAR (> 120ms) dan gelombang R dominan di aVR. <br><br>Apa Antidotum spesifik yang harus disiram secara masif?", 
+                a: `<strong>Natrium Bikarbonat 8.4% (The Specific Antidote).</strong><br><br>
+                    <ul>
+                        <li><strong>Farmakotoksikologi:</strong> TCA overdosis bertindak secara fatal sebagai <strong>Sodium Channel Blocker</strong> pada sel otot jantung miokardium. Hal ini memperlambat konduksi listrik (QRS melebar >100ms tanda bahaya kejang, QRS >120ms tanda bahaya VT/Arrest).</li>
+                        <li><strong>Mekanisme Penyelamatan (Bikarbonat):</strong> Bekerja lewat 2 cara: 
+                            1. Ion Natrium (Sodium) membanjiri sel dalam jumlah raksasa untuk mendobrak secara kompetitif kanal natrium yang diblokir obat TCA.<br>
+                            2. Peningkatan pH darah (Alkalinisasi) memaksa molekul TCA terlepas ikatannya dari reseptor otot jantung.</li>
+                        <li><strong>Dosis:</strong> Guyur bolus 1 hingga 2 mEq/kgBB IV, ulang berkali-kali sampai QRS menyempit dan tekanan darah naik. Targetkan pH darah 7.45 - 7.55.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Toxins: Beta-Blocker & CCB", 
+                q: "Kakek salah minum obat darah tinggi (Nifedipine & Bisoprolol dosis fatal). Henti jantung Bradikardia-PEA yang <strong>SANGAT RESISTEN terhadap Epinefrin</strong>. <br><br>Apa dua antidotum penyelemat nyawa yang bekerja by-pass reseptor adrenergik?", 
+                a: `<strong>Kalsium Dosis Tinggi & Glukagon (atau High-Dose Insulin).</strong><br><br>
+                    <ul>
+                        <li><strong>Mengapa Epinefrin Gagal?</strong> Semua pintu reseptor Beta-1 dan kanal kalsium di jantung terkunci rapat oleh racun obat. Menambah Epinefrin tidak bisa menempel.</li>
+                        <li><strong>1. Glukagon (Antidotum Lapis 1):</strong> Memiliki reseptor tersendiri di jantung (Glucagon Receptor). Ia menstimulasi <em>adenylate cyclase</em> dan memproduksi cAMP secara independen, "memaksa" jantung berdetak tanpa lewat pintu adrenergik. Dosis 3-5 mg bolus, lanjut drip.</li>
+                        <li><strong>2. High-Dose Insulin Euglycemic Therapy (HIET):</strong> Terapi pamungkas! Insulin 1 Unit/kg bolus IV (dibarengi Dextrose agar tidak hipoglikemi). Insulin memberi asupan energi karbohidrat instan ekstra masif untuk membangkitkan sel otot jantung yang mati suri teracuni.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Toxins: Local Anesthetic Systemic Toxicity (LAST)", 
+                q: "Di Puskesmas, dokter bedah minor membius ekstirpasi lipoma punggung dengan Lidokain pekat dosis besar. 10 menit kemudian pasien kejang grand mal dan lanjut asystole arrest. <br><br>Apa antidotum spesifik (silver bullet) untuk kasus ini?", 
+                a: `<strong>Intravenous Lipid Emulsion 20% (Intralipid / Lemak Cair).</strong><br><br>
+                    <ul>
+                        <li><strong>Patofisiologi LAST:</strong> Obat anestesi lokal (Bupivacaine, Lidocaine, Ropivacaine) sangat larut lemak (<em>Lipofilik</em>). Jika tak sengaja terinjeksi ke pembuluh darah langsung, ia lari ke otak (kejang) dan memblokir konduksi jantung (bradikardi bizar → Asystole). Resisten terhadap syok DC!</li>
+                        <li><strong>Lipid Sink Theory:</strong> Injeksi Intralipid 20% (lemak nutrisi parenteral) bertindak sebagai "Spons Lemak / Lubang Hitam" di dalam darah. Molekul anestesi akan tersedot lepas dari jaringan otak/jantung dan diikat oleh lemak cair ini dalam darah, mengembalikan fungsi sel sedia kala.</li>
+                        <li><strong>Dosis Penyelamat:</strong> Bolus 1.5 mL/kgBB IV dalam 1 menit, dilanjutkan drip 0.25 mL/kg/menit. (Wajib masuk kotak emergensi Poli Gigi dan Bedah Minor!).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Toxins: Organophosphate (Pestisida)", 
+                q: "Petani percobaan bunuh diri minum racun hama cair. Bau bawang putih kuat. Mulut berbusa ekstrim (Salivasi), keringat deras, pupil miosis, bradikardia parah lalu henti jantung. <br><br>Obat apa yang harus masuk dalam dosis MASIF?", 
+                a: `<strong>Atropin Sulfat (Tanpa Batas Maksimal!).</strong><br><br>
+                    <ul>
+                        <li><strong>Krisis Muskarinik (DUMBELS):</strong> Enzim asetilkolinesterase hancur. Tubuh keracunan asetilkolin raksasa. Saraf Parasimpatis membajak sistem: Bradikardia fatal dan <strong>Bronkorea hebat (Paru-paru memproduksi lendir cairan berton-ton, pasien tenggelam di cairannya sendiri).</strong></li>
+                        <li><strong>Tatalaksana Agresif:</strong> Epinefrin RJP saja takkan menang melawan badai parasimpatis ini. Anda butuh Atropin (Anti-kolinergik).</li>
+                        <li><strong>Pitfall Dosis:</strong> Jangan berikan dosis ACLS standar (1 mg) dan berhenti! Atropin diberikan <strong>2 mg hingga 5 mg IV tiap 3-5 menit berulang kali</strong> SAMPAI tercapai target: Lendir paru MENGERING dan Heart Rate naik > 80x/m. Pada kasus berat, butuh puluhan hingga ratusan ampul!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Toxins: The Rule of Prolonged CPR", 
+                q: "Berapa lama standar Anda melakukan CPR pada pemuda 25 tahun yang henti jantung murni karena toksisitas kokain / overdosis obat (tanpa penyakit penyerta)?", 
+                a: `<strong>Prolonged CPR (Bisa Dilakukan > 60 - 120 Menit)!</strong><br><br>
+                    <ul>
+                        <li><strong>Konsep Jantung Toksik:</strong> Jantung pemuda ini sangat sehat walafiat. Pembuluhnya bersih. Ia berhenti <strong>HANYA</strong> karena reseptornya dilumpuhkan oleh racun kimia sementara waktu.</li>
+                        <li><strong>Bridge to Recovery:</strong> Kompresi RJP mesin (LUCAS) atau manual Anda bertindak sebagai jantung mekanis sementara. Jika sirkulasi darah dipertahankan terus, ginjal dan hati perlahan akan mencuci metabolit racun tersebut, atau Antidotum akan mendapat waktu untuk bereaksi penuh.</li>
+                        <li><strong>Jangan Terburu Menyerah:</strong> Pasien intoksikasi murni punya angka kelangsungan hidup neurologis sangat tinggi meski resusitasi panjang. ECMO-CPR adalah pilihan terhebat jika tersedia. Jangan hentikan di menit 20!</li>
+                    </ul>` 
+            },
+
+            // THROMBOSIS PULMONARY (39-43)
+            { 
+                cat: "PE: The Classic Clue", 
+                q: "Pasien pasca operasi bedah tulang panggul (imobilisasi 2 minggu). Saat disuruh fisioterapi jalan pertama kali, ia mendadak sesak parah, nyeri dada hebat, lalu kolaps jadi PEA. <br><br>Clue anamnesis ini sangat spesifik untuk...?", 
+                a: `<strong>Massive Pulmonary Embolism (Emboli Paru Masif Akut).</strong><br><br>
+                    <ul>
+                        <li><strong>Virchow's Triad in Action:</strong> Tidur lama = stasis aliran darah → terbentuk gumpalan (DVT) di pembuluh vena kaki.</li>
+                        <li><strong>Efek Pergerakan:</strong> Berjalan membuat otot betis memeras vena, mencopot gumpalan darah mematikan tersebut. Gumpalan melesat ke atas melewati Atrium dan Ventrikel Kanan, lalu <strong>menyumbat total arteri pulmonalis paru.</strong></li>
+                        <li><strong>PEA Hemodinamik:</strong> Ventrikel Kanan macet mendadak tak bisa mompa. Darah tak sampai ke Paru → Tak ada darah mengalir ke Ventrikel Kiri → Ventrikel Kiri memompa kekosongan (PEA Arrest).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "PE: Fibrinolytic in CPR", 
+                q: "Anda sangat curiga Emboli Paru Masif sebagai penyebab PEA arrest. Anda memutuskan menyuntikkan Alteplase (rtPA / Trombolitik) saat RJP sedang berjalan. <br><br>Berapa lama Anda HARUS melanjutkan CPR setelah suntikan masuk?", 
+                a: `<strong>Lanjutkan CPR Minimal 60 - 90 Menit Tanpa Henti!</strong><br><br>
+                    <ul>
+                        <li><strong>Pitfall Penyerahan Dini:</strong> Setelah injeksi obat peluruh bekuan (Fibrinolitik/Alteplase) 50 mg IV push, sangat haram untuk menghentikan RJP di menit ke 15 atau 20 hanya karena capek atau belum ada nadi.</li>
+                        <li><strong>Farmakokinetik:</strong> Obat Fibrinolitik membutuhkan kompresi mekanis CPR Anda untuk <em>mensirkulasikan</em> molekul obat tersebut mencapai lokasi sumbatan (clot) di paru, dan butuh rentang waktu minimal 60-90 menit bagi reaksi kimia enzimatiknya untuk melarutkan dan menghancurkan gumpalan raksasa itu.</li>
+                        <li>Kesabaran resusitasi adalah kunci keselamatan nyawa pasien PE arrest.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "PE: D-Dimer Pitfall", 
+                q: "Pasien PEA curiga Emboli Paru. Asisten menyarankan: <em>'Dok, ambil darah untuk cek D-Dimer dulu buat memastikan, sebelum kita berani kasih pengencer darah/trombolitik?'</em>", 
+                a: `<strong>Konyol! D-Dimer Sangat Tidak Relevan Saat Cardiac Arrest.</strong><br><br>
+                    <ul>
+                        <li><strong>Apa itu D-Dimer:</strong> Penanda adanya pecahan fibrin/bekuan darah tubuh. Alat eksklusi diagnostik pada pasien <em>stabil</em> di poli.</li>
+                        <li><strong>Efek RJP:</strong> Saat Anda melakukan CPR (menghantam tulang iga, jaringan otot remuk, suntik jarum, plus vasokonstriksi epinefrin), tubuh mengalami trauma masif dan mengaktifkan kaskade koagulasi besar-besaran. <strong>Nilai D-Dimer 100% PASTI meroket tinggi palsu (False Positive) pada semua pasien yang di-RJP!</strong></li>
+                        <li><strong>Dasar Keputusan Lisis:</strong> Diagnosis PE saat arrest murni didasarkan dari <em>Anamnesis Khas</em> (tirah baring, kanker), <em>POCUS (RV membesar)</em>, dan bukti <em>EKG awal</em>. Jika dicurigai kuat, langsung lisis empiris!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "PE: POCUS The 'D-Sign'", 
+                q: "Saat POCUS parasternal short axis (PSAX) memotong jantung, Anda melihat Ventrikel Kanan (RV) membesar raksasa menekan sekat (septum) sehingga Ventrikel Kiri (LV) tergencet dan bentuknya berubah dari huruf 'O' bulat menjadi pipih menyerupai huruf 'D'. <br><br>Tanda apa ini?", 
+                a: `<strong>D-Sign (Tanda Telak Massive RV Strain / Trombosis Paru).</strong><br><br>
+                    <ul>
+                        <li><strong>Normalnya:</strong> Otot ventrikel kiri (LV) 3x lebih tebal, tekanannya lebih tinggi, jadi LV berbentuk bulat sempurna (huruf O) menekan ventrikel kanan (RV) yang mengitari tepinya menipis (bentuk bulan sabit).</li>
+                        <li><strong>Patofisiologi PE Masif:</strong> Arteri paru mampet total. Darah tertahan dan tekanan di dalam Ventrikel Kanan melonjak sangat ekstrem melampaui tekanan kiri.</li>
+                        <li><strong>Septal Bowing:</strong> Tekanan tinggi ini mendorong kuat sekat pemisah (Septum Interventrikular) memipih ke arah ruang kiri selama fase diastol. LV berubah jadi huruf "D". Jika ditemukan saat CPR + PEA → Indikasi absolut terapi Trombolisis segera.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "PE: S1Q3T3 Pitfall", 
+                q: "Pasien pre-arrest sempat terekam EKG. Terdapat gambaran gelombang S di Lead I, Q wave di Lead III, dan T Inversi di Lead III (S1Q3T3). <br><br>Apakah tanda EKG ini paling sensitif/sering muncul pada Emboli Paru?", 
+                a: `<strong>TIDAK! S1Q3T3 Sangat Spesifik, Tapi Kurang Sensitif.</strong><br><br>
+                    <ul>
+                        <li><strong>Pitfall Teori vs Praktik:</strong> Gambar S1Q3T3 sangat sering diujikan di soal medis, namun di dunia nyata, gambaran ini <strong>hanya muncul pada < 20% pasien dengan Emboli Paru murni.</strong> Jangan jadikan ketidakhadirannya alasan menyingkirkan diagnosis PE!</li>
+                        <li><strong>Temuan Paling Sering (Mencapai 70%):</strong> <strong>Sinus Takikardia non-spesifik</strong> (akibat kompensasi hebat tubuh melawan hipoksia dan gagal jantung kanan).</li>
+                        <li><strong>Temuan Tanda Bahaya (RV Strain):</strong> Inversi Gelombang T pada sadapan dada V1 hingga V4 anterior. Ini adalah teriakan otot ventrikel kanan yang sedang meregang iskemik.</li>
+                    </ul>` 
+            },
+
+            // THROMBOSIS CORONARY (44-48)
+            { 
+                cat: "Coronary: Refractory VF", 
+                q: "Pasien kolaps akibat serangan jantung. Irama awal Ventricular Fibrillation (VF). Anda sudah melakukan shock defibrilasi 3 kali, menyuntikkan Epinefrin 2x, dan Amiodarone 300mg. Tapi monitor TETAP VF bergelombang. <br><br>Penyebab T (Thrombosis) apa yang mendasarinya?", 
+                a: `<strong>Sumbatan Total Akut Arteri Koroner (Massive STEMI / LMCA Lesion).</strong><br><br>
+                    <ul>
+                        <li><strong>Patofisiologi Kelistrikan:</strong> VF yang membandel (<em>Refractory/Electrical Storm</em>) meski dihantam syok listrik dan obat maksimum menandakan area otot jantung sedang mengalami "badai iskemik berkesinambungan" (infark yang masih berlangsung). Plak kolesterol pecah menyumbat total 100% suplai oksigen.</li>
+                        <li><strong>Logika Terapi:</strong> Alat kejut/defibrilator HANYA mampu me-<em>reset</em> listrik sementara. Tapi detik berikutnya listrik akan kacau lagi (VF kembali) karena "bensin" oksigennya tetap buntet.</li>
+                        <li><strong>Intervensi Definitif:</strong> Pasien butuh pipa koronernya dikorek/dibuka ring. Pertimbangkan <em>Double Sequential Defibrillation (DSED)</em> dan aktifkan kode ECMO-CPR / transport segera untuk <em>Intra-arrest PCI</em> di lab Kateterisasi.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Coronary: Mechanical CPR", 
+                q: "Pasien VF refrakter di IGD Puskesmas. Jarak ke RS Cath Lab 30 menit di ambulans. Memompa manual di ambulans bergerak sangat tidak efektif. <br><br>Alat apa yang direkomendasikan untuk <em>bridge to Cath Lab</em>?", 
+                a: `<strong>Perangkat CPR Mekanis (Mechanical CPR Device: LUCAS / AutoPulse).</strong><br><br>
+                    <ul>
+                        <li><strong>Limitasi Manusia:</strong> Melakukan CPR manual di belakang ambulans yang berguncang kencang sangat berbahaya bagi penolong, melelahkan, dan kedalaman kompresi (chest fraction) pasti jatuh drastis.</li>
+                        <li><strong>Keunggulan Mekanis:</strong> Alat pita melingkar piston mekanis memompa dada dengan kekuatan absolut 5-6 cm, recoil sempurna, dan metronom 100x/m tiada henti tanpa jeda kelelahan.</li>
+                        <li><strong>Golden Bridge:</strong> Ini sangat revolusioner. Dokter Jantung Intervensi bahkan dapat menembakkan kontras, memasukkan kawat dan memasang <em>stent (Ring)</em> di atas meja operasi Cath Lab sementara dada pasien TERUS DIPOMPA oleh robot mekanis ini.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Coronary: Amiodarone Timing", 
+                q: "Pada kasus VF/Pulseless VT, setelah shock pertama gagal, perawat buru-buru menyedot Amiodarone 300mg dan ingin menyuntikkannya. <br><br>Kapan EXACTLY waktu (timing) yang benar menyuntikkan Amiodarone?", 
+                a: `<strong>SETELAH SHOCK KETIGA GAGAL (Tidak Boleh Terlalu Awal).</strong><br><br>
+                    <ul>
+                        <li><strong>Algoritma Saklek AHA (V-Fib Pathway):</strong>
+                            <ul>
+                                <li><strong>Shock 1:</strong> Lanjut CPR 2 mnt, kaji kualitas, siapkan IV line.</li>
+                                <li><strong>Shock 2:</strong> Lanjut CPR 2 mnt. Di sinilah Epinefrin 1 mg masuk.</li>
+                                <li><strong>Shock 3:</strong> Lanjut CPR 2 mnt. Jika VF masih bertahan, BARU suntikkan <strong>Amiodarone 300 mg bolus dorong cepat (IV/IO)</strong>.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Alasan Fisiologis:</strong> Jangan obral anti-aritmia. Mayoritas VF sembuh dengan 1-2 kali listrik saja. Amiodarone butuh waktu, efeknya baru nyata mengurangi iritabilitas (ambang batas VF) setelah beredar cukup dan syok selanjutnya.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Coronary: The Second Amiodarone", 
+                q: "Siklus berlalu, pasien masih VF membandel. Anda butuh dosis Amiodarone tambahan. <br><br>Berapa dosis Amiodarone kedua, dan bolehkah dikasih dosis ketiga?", 
+                a: `<strong>Dosis Kedua HANYA 150 mg. Dosis Ketiga KONTRAINDIKASI.</strong><br><br>
+                    <ul>
+                        <li><strong>Aturan Dosase:</strong> Jika setelah Shock ke-5 pasien MASIH membandel VF, berikan dosis pamungkas Amiodarone sebesar <strong>150 mg</strong> IV bolus.</li>
+                        <li><strong>Batas Maksimal (450 mg total):</strong> Dilarang keras melebihi dosis ini selama resusitasi (<em>intra-arrest</em>).</li>
+                        <li><strong>Pitfall Overdosis:</strong> Kelebihan Amiodarone (sifat pemblokir kanal K+ dan Ca+) akan memblokir total sistem listrik, mengubah VF yang masih bisa dishock menjadi Asistol <em>Flatline</em> mematikan. Selain itu, pelarutnya sangat vasodilatif (menurunkan tensi), membuat pasien hipotensi anjlok parah jika ROSC tiba-tiba tercapai. Pertimbangkan Lidokain sebagai alternatif.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Coronary: Post-ROSC STEMI EKG", 
+                q: "YES! Pasien henti jantung tadi akhirnya kembalinya Nadi (ROSC). Tekanan darah 100/60. Pasien masih belum sadar penuh (GCS 5). <br><br>Apa satu tes diagnostik yang WAJIB dilakukan dalam 10 menit pertama?", 
+                a: `<strong>Rekam EKG 12-Lead Secepatnya (The Missing STEMI Link).</strong><br><br>
+                    <ul>
+                        <li>Anda HARUS mencari tahu apakah ada pola <strong>ST-Elevasi (STEMI)</strong> tersembunyi yang menjadi asal muasal serangan henti jantung tadi.</li>
+                        <li><strong>Pitfall Coma:</strong> Banyak dokter IGD enggan menelpon SPJP (Dokter Jantung) / tidak merujuk karena pasien belum sadar penuh (Koma). Ini SALAH.</li>
+                        <li><strong>Guideline AHA/ESC:</strong> Jika EKG post-ROSC menunjukkan STEMI, pasien harus *<em>LANGSUNG DIBYPASS MASUK CATH LAB (Primary PCI)</em>* hari itu juga. Kesadaran Koma (akibat anoksia sementara) <strong>BUKAN kontraindikasi</strong> membuka pembuluh darah koroner yang tersumbat!</li>
+                    </ul>` 
+            },
+
+            // GENERAL INTEGRATION / TEAM DYNAMICS (49-50)
+            { 
+                cat: "Integration: Cognitive Unloading", 
+                q: "Saat memimpin resusitasi (Code Leader), Anda harus memikirkan daftar 5H 5T ini. Tapi otak Anda terlalu sibuk melihat waktu, melihat monitor, dan mengatur intubasi, sehingga sering <em>blank</em> (lupa daftar H & T). <br><br>Apa trik CRM (Crew Resource Management) terbaik?", 
+                a: `<strong>Delegasi Beban Pikiran (Cognitive Aid + Peran 'The Thinker').</strong><br><br>
+                    <ul>
+                        <li><strong>Tunnel Vision Effect:</strong> Di bawah tekanan adrenalin ekstrem dan <em>multitasking</em> prosedur fisik, memori korteks frontal menurun > 60%. Anda PASTI akan lupa rincian.</li>
+                        <li><strong>Solusi Cerdas:</strong>
+                            1. <strong>Visual Aid:</strong> Tempel poster besar berisi Tabel Dosis Obat & Daftar 5H 5T di ruang resusitasi/di atas ranjang. Lirik itu, tak perlu dihafal semua.<br>
+                            2. <strong>Asisten Thinker:</strong> Tunjuk 1 perawat/dokter yang tugasnya MURNI memegang kertas <em>checklist</em> algoritma AHA tanpa menyentuh pasien. Minta ia menjadi 'rem' dengan berteriak tiap 2 menit: <em>"Dokter, waktu cek irama! Hypovolemia dan Hypoxia sudah teratasi, apa selanjutnya yang kita cari?"</em></li>
+                    </ul>` 
+            },
+            { 
+                cat: "Integration: The Ultimate 10-Second Rule", 
+                q: "Algoritma 5H 5T sering mengandalkan POCUS (Ekokardiografi) dan meraba nadi. <br><br>Namun, berapa batas waktu absolut yang TIDAK BOLEH DILANGGAR (Haram hukumnya) saat Anda menghentikan kompresi RJP untuk cek Nadi/USG?", 
+                a: `<strong>BATAS SUCI MAKSIMAL 10 DETIK!</strong><br><br>
+                    <ul>
+                        <li><strong>Fisiologi Tekanan Perfusi Koroner (CPP):</strong> Saat CPR berjalan baik, butuh 15-20 kompresi beruntun pertama hanya untuk "mengepam" tekanan darah mencapai ambang batas minimal yang bisa mengalir masuk ke koroner (Aorta ke Jantung).</li>
+                        <li><strong>Detik Kematian:</strong> Setiap kali Anda menghentikan kompresi sedetik saja, tekanan CPP langsung jatuh membentur dasar (NOL). Anda harus memompa keras 20 kali lagi hanya untuk mengejarnya.</li>
+                        <li><strong>Aturan Besi:</strong> Jeda RJP mutlak maksimal 10 detik. Jika dalam detik ke-8 meraba nadi/melihat USG gambarnya masih goyang belum jelas, teriakkan: <strong>"BELUM JELAS! RESUME CPR!!"</strong>. Lakukan analisis gambar rekam medis Anda <em>selama</em> kompresi asisten sedang berjalan.</li>
+                    </ul>` 
+            }
+        ];
+
+        let cards = [...originalCards];
+        let currentIndex = 0;
+        let isFlipped = false;
+        
+        // Touch Variables for Swipe
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let touchStartY = 0;
+        let isSwiping = false;
+        let isScrolling = false;
+
+        const flashcardEl = document.getElementById('flashcard');
+        const questionEl = document.getElementById('question-text');
+        const answerEl = document.getElementById('answer-text');
+        const counterEl = document.getElementById('card-counter');
+        const categoryEl = document.getElementById('card-category');
+
+        function renderCard() {
+            if (isFlipped) {
+                flashcardEl.classList.remove('is-flipped');
+                isFlipped = false;
+                setTimeout(() => {
+                    updateContent();
+                }, 300);
+            } else {
+                updateContent();
+            }
+        }
+
+        function updateContent() {
+            const currentCard = cards[currentIndex];
+            questionEl.innerHTML = currentCard.q;
+            answerEl.innerHTML = currentCard.a;
+            categoryEl.textContent = currentCard.cat;
+            counterEl.textContent = `${currentIndex + 1} / ${cards.length}`;
+            
+            // Scroll answer to top whenever card changes
+            document.querySelector('#answer-text').parentElement.scrollTop = 0;
+            document.querySelector('#question-text').parentElement.scrollTop = 0;
+        }
+
+        function toggleFlip(e) {
+            if (isSwiping) return;
+            const selection = window.getSelection();
+            if (selection.toString().length > 0) return;
+            
+            isFlipped = !isFlipped;
+            flashcardEl.classList.toggle('is-flipped');
+        }
+
+        function nextCard() {
+            if (currentIndex < cards.length - 1) {
+                currentIndex++;
+                renderCard();
+            } else {
+                currentIndex = 0;
+                renderCard();
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderCard();
+            } else {
+                currentIndex = cards.length - 1; // loop to back
+                renderCard();
+            }
+        }
+
+        function shuffleCards() {
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            currentIndex = 0;
+            renderCard();
+        }
+
+        flashcardEl.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+            isSwiping = false;
+            isScrolling = false;
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchmove', e => {
+            if (isScrolling) return;
+
+            const currentTouchX = e.changedTouches[0].screenX;
+            const currentTouchY = e.changedTouches[0].screenY;
+            
+            const diffX = Math.abs(currentTouchX - touchStartX);
+            const diffY = Math.abs(currentTouchY - touchStartY);
+
+            // Mencegah trigger swipe horizontal jika dominan scroll vertikal
+            if (diffY > diffX && diffY > 10) {
+                isScrolling = true;
+                isSwiping = false;
+                return;
+            }
+
+            if (diffX > 15) {
+                isSwiping = true;
+            }
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+
+        function handleSwipe() {
+            const swipeThreshold = 50; 
+            if (touchEndX < touchStartX - swipeThreshold) {
+                nextCard();
+            } else if (touchEndX > touchStartX + swipeThreshold) {
+                prevCard();
+            }
+            setTimeout(() => {
+                isSwiping = false;
+            }, 100);
+        }
+
+        window.onload = renderCard;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                e.preventDefault(); 
+                toggleFlip();
+            } else if (e.code === 'ArrowRight') {
+                nextCard();
+            } else if (e.code === 'ArrowLeft') {
+                prevCard();
+            }
+        });
+    </script>
+</body>
+</html>
