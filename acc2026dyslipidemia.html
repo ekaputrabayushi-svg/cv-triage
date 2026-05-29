@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Guideline Learner ACC/AHA 2026 Dyslipidemia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Base optimizations for mobile */
+        body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; font-variant-numeric: tabular-nums; }
+        
+        /* Flashcard 3D Flip & Slide Animations */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-preserve-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        .card-transition { transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1); }
+        
+        .slide-next { animation: slideNext 0.3s ease-out forwards; }
+        .slide-prev { animation: slidePrev 0.3s ease-out forwards; }
+        
+        @keyframes slideNext {
+            0% { transform: translateX(30px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slidePrev {
+            0% { transform: translateX(-30px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Swipe Affordance Animation */
+        .animate-swipe-hint { animation: swipeHint 2s infinite; }
+        @keyframes swipeHint {
+            0%, 100% { transform: translateX(0); opacity: 0.5; }
+            50% { transform: translateX(5px); opacity: 1; }
+        }
+
+        /* Custom Scrollbar for inner content */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        .fade-in { animation: fadeIn 0.3s ease-in-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Semantic colors for clinical badges */
+        .badge-red { background-color: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+        .badge-amber { background-color: #fef3c7; color: #92400e; border: 1px solid #fbbf24; }
+        .badge-green { background-color: #dcfce3; color: #166534; border: 1px solid #4ade80; }
+        .badge-blue { background-color: #dbeafe; color: #1e40af; border: 1px solid #60a5fa; }
+        .badge-purple { background-color: #f3e8ff; color: #6b21a8; border: 1px solid #c084fc; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col overflow-x-hidden">
+
+    <!-- Header & Mode Switcher -->
+    <header class="bg-slate-900 text-white shadow-sm sticky top-0 z-50 border-b border-white/10">
+        <div class="max-w-6xl mx-auto px-4 py-4 sm:py-5">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex items-start gap-3">
+                    <div class="bg-white/10 p-2.5 rounded-xl border border-white/10 hidden sm:block">
+                        <i class="fa-solid fa-vial-circle-check text-lg text-amber-300"></i>
+                    </div>
+                    <div>
+                        <p class="text-[0.7rem] sm:text-xs uppercase tracking-[0.18em] text-slate-300 font-semibold">
+                            CardiologyVault Learning Series
+                        </p>
+                        <h1 class="mt-1 text-lg sm:text-2xl font-bold tracking-tight leading-tight">
+                            ACC/AHA 2026 Dyslipidemia
+                        </h1>
+                        <p class="mt-1 text-sm text-slate-300 font-medium">
+                            Flashcards dan guideline matrix yang ringkas, cepat, dan enak dibaca.
+                        </p>
+                        <p class="mt-2 text-[0.72rem] text-slate-400">
+                            Bayushi Eka Putra, MD, FIHA • <span class="text-blue-300 font-semibold"><i class="fa-solid fa-book-open-reader"></i> Based on 2026 Guidelines</span>
+                            <button onclick="toggleDisclaimer()" class="ml-2 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 transition-colors shadow-sm active:scale-95"><i class="fa-solid fa-circle-info"></i> Disclaimer</button>
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Main Mode Toggle -->
+                <div class="flex flex-col sm:flex-row bg-white/5 p-1 rounded-xl border border-white/10 shadow-inner shrink-0 gap-1">
+                    <button onclick="setMode('learner')" id="btnModeLearner" class="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-300 bg-blue-600 text-white shadow-md">
+                        <i class="fa-solid fa-book-medical"></i> <span class="hidden sm:inline">Learner</span> (<span id="totalCardsCount">0</span>)
+                    </button>
+                    <button onclick="setMode('comparator')" id="btnModeComparator" class="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-300 text-slate-400 hover:text-white hover:bg-white/10">
+                        <i class="fa-solid fa-code-compare"></i> <span class="whitespace-nowrap">2018 vs 2026</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mini Learning Dashboard KPI -->
+        <div class="bg-slate-950/50 border-t border-slate-800 py-2 px-4">
+            <div class="max-w-6xl mx-auto flex justify-between items-center text-[0.65rem] sm:text-xs font-semibold text-slate-300 overflow-x-auto hide-scrollbar gap-4">
+                <div class="flex items-center gap-1.5 whitespace-nowrap" id="kpi-mastered">
+                    <i class="fa-solid fa-check-circle text-green-400"></i> 0 Mastered
+                </div>
+                <div class="flex items-center gap-1.5 whitespace-nowrap" id="kpi-bookmarked">
+                    <i class="fa-solid fa-bookmark text-amber-400"></i> 0 Saved
+                </div>
+                <div class="flex items-center gap-1.5 whitespace-nowrap">
+                    <button onclick="resetProgress()" class="text-slate-400 hover:text-white underline decoration-slate-600 underline-offset-2">Reset Progress</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sub Navigation (Tabs) - Only visible in Learner Mode -->
+    <div id="tabContainerWrapper" class="bg-white border-b border-slate-200 shadow-sm sticky top-[138px] sm:top-[122px] z-40">
+        <div class="max-w-6xl mx-auto px-2 sm:px-4">
+            <nav class="flex overflow-x-auto hide-scrollbar gap-1 py-1" id="tabContainer">
+                <button onclick="setTab('flashcard')" id="btnTabFlashcard" class="whitespace-nowrap flex items-center justify-center flex-1 gap-2 px-4 py-3 min-w-[100px] min-h-[44px] text-sm font-bold border-b-2 border-blue-600 text-blue-600 transition-colors">
+                    <i class="fa-solid fa-clone"></i> Flashcards
+                </button>
+                <button onclick="setTab('cheatsheet')" id="btnTabCheatsheet" class="whitespace-nowrap flex items-center justify-center flex-1 gap-2 px-4 py-3 min-w-[100px] min-h-[44px] text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors">
+                    <i class="fa-solid fa-table-list"></i> Guideline Matrix
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Filter Chips Area (Dynamic) -->
+    <div id="filterContainer" class="bg-slate-50 border-b border-slate-200 py-2 hidden">
+        <div class="max-w-6xl mx-auto px-4 flex overflow-x-auto hide-scrollbar gap-2 pb-1" id="filterChips">
+            <!-- Chips injected by JS -->
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-6xl mx-auto px-4 py-6 w-full pb-28 md:pb-6" id="mainContent">
+        <!-- Content will be injected here by JS -->
+    </main>
+
+    <!-- Mobile Sticky Action Bar (Only for Flashcards) -->
+    <div id="mobileActionBar" class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-50 p-2 pb-safe hidden">
+        <div class="flex justify-between items-center gap-2 max-w-md mx-auto">
+            <button onclick="navigateCard('prev')" class="flex flex-col items-center justify-center min-h-[48px] px-4 rounded-xl text-slate-500 active:bg-slate-100">
+                <i class="fa-solid fa-chevron-left text-lg mb-0.5"></i>
+                <span class="text-[0.6rem] font-bold uppercase">Prev</span>
+            </button>
+            
+            <button onclick="toggleMastery()" id="btnActionMastery" class="flex-1 flex flex-col items-center justify-center min-h-[48px] px-2 rounded-xl text-slate-400 border border-slate-200 active:bg-slate-50 transition-colors">
+                <i class="fa-solid fa-check-circle text-lg mb-0.5"></i>
+                <span class="text-[0.6rem] font-bold uppercase">Got it</span>
+            </button>
+            
+            <button onclick="flipCard()" class="flex-1 flex flex-col items-center justify-center min-h-[48px] px-2 rounded-xl bg-blue-600 text-white shadow-sm active:bg-blue-700 transition-colors">
+                <i class="fa-solid fa-rotate text-lg mb-0.5"></i>
+                <span class="text-[0.6rem] font-bold uppercase">Flip</span>
+            </button>
+
+            <button onclick="toggleBookmark()" id="btnActionBookmark" class="flex flex-col items-center justify-center min-h-[48px] px-4 rounded-xl text-slate-400 active:bg-slate-100 transition-colors">
+                <i class="fa-regular fa-bookmark text-lg mb-0.5" id="iconActionBookmark"></i>
+                <span class="text-[0.6rem] font-bold uppercase">Save</span>
+            </button>
+            
+            <button onclick="navigateCard('next')" class="flex flex-col items-center justify-center min-h-[48px] px-4 rounded-xl text-slate-500 active:bg-slate-100">
+                <i class="fa-solid fa-chevron-right text-lg mb-0.5"></i>
+                <span class="text-[0.6rem] font-bold uppercase">Next</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Disclaimer & About Modal -->
+    <div id="disclaimerModal" class="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden transform scale-95 transition-transform duration-300" id="disclaimerContent">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-scale-balanced text-blue-600"></i> Informasi & Disclaimer Klinis</h3>
+                <button onclick="toggleDisclaimer()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-500 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-5 overflow-y-auto text-sm text-slate-600 space-y-4">
+                <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900">
+                    <p class="font-semibold mb-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Alat Edukasi, Bukan Pengganti Panduan Klinis</p>
+                    <p class="text-[0.75rem] leading-relaxed">Aplikasi flashcard dan matriks ini dirancang <strong>secara eksklusif sebagai alat bantu edukasi</strong> bagi tenaga kesehatan profesional. Ini BUKANLAH pengganti dari penilaian klinis independen (clinical judgment), evaluasi pasien individual, atau konsultasi dengan spesialis.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-800 mb-1">Sumber & Hak Cipta</h4>
+                    <p class="text-[0.75rem] leading-relaxed">Konten ini disarikan dan diinterpretasi berdasarkan rilis pedoman <strong>ACC/AHA 2026 on the Management of Blood Cholesterol</strong>. Aplikasi ini merupakan interpretasi edukatif independen oleh penulis dan <strong>tidak terafiliasi, disponsori, atau berafiliasi secara resmi</strong> dengan American College of Cardiology (ACC), American Heart Association (AHA), maupun National Lipid Association (NLA).</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-800 mb-1">Rekomendasi Lokal & Formularium</h4>
+                    <p class="text-[0.75rem] leading-relaxed">Untuk implementasi dunia nyata di Indonesia, klinisi wajib menyesuaikan keputusan medis dengan <strong>pedoman nasional (misalnya PERKI/PERKENI)</strong>, regulasi FORNAS BPJS Kesehatan, serta ketersediaan farmakologis di institusi rumah sakit setempat.</p>
+                </div>
+                <div class="pt-2">
+                    <a href="https://www.jacc.org" target="_blank" class="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-800 text-xs font-semibold underline underline-offset-2"><i class="fa-solid fa-arrow-up-right-from-square"></i> Rujuk ke Jurnal JACC / Circulation Resmi</a>
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+                <button onclick="toggleDisclaimer()" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold rounded-xl transition-colors shadow-sm active:scale-95">Saya Mengerti</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DATA & LOGIC SCRIPT -->
+    <script>
+        // ==========================================
+        // 1. DATA ENRICHMENT: TOPICS & URGENCY (EXACTLY 50 SOAL LEARNER)
+        // ==========================================
+        const learnerRaw = [
+            // RISK ASSESSMENT & TARGETS
+            { id: 1, topic: "Risk Assessment", urgency: "Class I", badgeClass: "badge-green", q: "Apa rekomendasi terbaru ACC/AHA 2026 mengenai pemeriksaan Lipoprotein(a)?", a: "Pemeriksaan Lp(a) direkomendasikan HINGGA 1 KALI seumur hidup pada semua orang dewasa.", pearl: "Lp(a) >50 mg/dL (atau >125 nmol/L) adalah risk enhancer kuat yang diturunkan secara genetik.", rationale: "Kadar Lp(a) ditentukan secara genetik sejak lahir dan jarang berfluktuasi signifikan seumur hidup. Mengetahui kadarnya secara dini sangat krusial untuk stratifikasi ASCVD primer, karena gaya hidup sehat tidak bisa menurunkan Lp(a)." },
+            { id: 2, topic: "LDL Targets", urgency: "Must Know", badgeClass: "badge-blue", q: "Berapa target LDL-C untuk pasien Very High-Risk ASCVD menurut panduan terbaru?", a: "Tujuan terapeutik kini ditegaskan < 55 mg/dL (1.4 mmol/L) ATAU penurunan ≥50% dari baseline.", pearl: "Turun dari target <70 mg/dL di panduan 2018.", rationale: "Evolusi data dari trial obat non-statin (PCSK9i, Bempedoic Acid) membuktikan bahwa 'Lower is Better' tanpa batas bahaya yang jelas. Menurunkan LDL <55 mg/dL signifikan mencegah infark dan stroke berulang." },
+            { id: 3, topic: "LDL Targets", urgency: "Exam Favorite", badgeClass: "badge-purple", q: "Bagaimana posisi konsep 'Extreme Risk' dan target LDL < 40 mg/dL pada pedoman klinis?", a: "Ditujukan bagi pasien dengan kejadian ASCVD berulang dalam 2 tahun terakhir. Target praktis LDL-C < 40 mg/dL.", pearl: "Catatan: Istilah 'Extreme Risk' adalah adaptasi praktis dari literatur/trial PCSK9i, BUKAN kategori formal utama di teks guideline 2026.", rationale: "Pasien dengan plak ireguler butuh regresi agresif. Kadar LDL <40 mg/dL terbukti membalikkan volume plak, namun panduan formal menyatakannya sebagai intensifikasi lanjutan untuk very-high risk, bukan label risiko tersendiri." },
+            { id: 4, topic: "Risk Assessment", urgency: "Class IIa", badgeClass: "badge-amber", q: "Pada pasien primary prevention yang masih ragu minum statin, apa tes penentu terbaik?", a: "CT Coronary Artery Calcium (CAC) Score.", pearl: "CAC 0 = Tunda (biasanya). CAC 1-99 = Statin (Target <100). CAC 100-299 = Statin intensif (Target <70).", rationale: "Skor CAC adalah 'tie-breaker' terbaik. CAC=0 menyingkirkan aterosklerosis subklinis, menunda statin. Namun, jangan tunda statin jika pasien perokok berat, diabetes, atau ada riwayat keluarga prematur mutlak." },
+            
+            // THERAPEUTICS - STATINS & EZETIMIBE
+            { id: 5, topic: "Therapeutics", urgency: "Class I", badgeClass: "badge-green", q: "Apa pilar pertama (First-line) manajemen dislipidemia pada semua grup risiko?", a: "High-Intensity Statin (Rosuvastatin 20-40 mg atau Atorvastatin 40-80 mg).", pearl: "Modifikasi gaya hidup adalah fondasi, namun statin tetap raja farmakologi.", rationale: "Statin memiliki manfaat pleiotropik (anti-inflamasi, stabilisasi plak) selain hanya menurunkan angka LDL. Obat lain menempel di atas statin, bukan menggantikannya (kecuali ada intoleransi mutlak)." },
+            { id: 6, topic: "Therapeutics", urgency: "Must Know", badgeClass: "badge-blue", q: "Kapan Ezetimibe harus segera ditambahkan?", a: "Segera ditambahkan jika target LDL-C tidak tercapai setelah 4-12 minggu penggunaan Statin dosis maksimal yang dapat ditoleransi.", pearl: "Kombinasi Statin + Ezetimibe menurunkan LDL ekstra 15-20% dibanding statin tunggal.", rationale: "Ezetimibe bekerja memblokir protein NPC1L1 di usus, mencegah re-absorpsi kolesterol. Mekanisme ini sinergis dengan statin yang memblokir produksi kolesterol di hati." },
+            { id: 7, topic: "Statin Intolerance", urgency: "Red Flag", badgeClass: "badge-red", q: "Bagaimana cara mendiagnosis 'True Statin Intolerance'?", a: "Harus terbukti tidak dapat menoleransi setidaknya 2 JENIS statin yang berbeda (salah satunya dalam dosis terendah/alternate-day).", pearl: "Efek nocebo (nyeri otot karena sugesti) sangat lazim; pastikan CPK dicek.", rationale: "Banyak pasien berhenti statin karena nyeri otot biasa. Panduan mengharuskan re-challenge (mencoba statin lipofilik vs hidrofilik) sebelum sah mencap pasien intoleran dan beralih ke obat mahal." },
+            
+            // NON-STATINS (NEW ERA)
+            { id: 8, topic: "Non-Statins", urgency: "Class I", badgeClass: "badge-green", q: "Kapan PCSK9 Inhibitor (Alirocumab, Evolocumab) diindikasikan?", a: "Pada pasien Very High-Risk ASCVD atau Familial Hypercholesterolemia (FH) yang LDL-nya tetap di atas target meskipun sudah Statin Maksimal + Ezetimibe.", pearl: "PCSK9i menurunkan LDL secara masif (hingga >50-60%).", rationale: "Antibodi monoklonal ini mencegah penghancuran reseptor LDL di hati, sehingga hati bisa terus menyapu kolesterol jahat dari sirkulasi darah." },
+            { id: 9, topic: "Non-Statins", urgency: "Exam Favorite", badgeClass: "badge-purple", q: "Apa itu Inclisiran dan apa keunggulan utamanya?", a: "Inclisiran adalah siRNA (small interfering RNA) yang menghambat sintesis protein PCSK9. Diberikan via suntikan subkutan hanya 2 KALI setahun.", pearl: "Ideal untuk pasien yang tidak patuh (non-adherence) minum obat harian.", rationale: "Dengan mekanisme pembungkaman genetik (gene silencing) di hati, efek penurunan LDL bertahan hingga 6 bulan per dosis, merevolusi tingkat kepatuhan terapi jangka panjang." },
+            { id: 10, topic: "Non-Statins", urgency: "Must Know", badgeClass: "badge-blue", q: "Kapan Bempedoic Acid (Asam Bempedoat) diindikasikan?", a: "Sebagai alternatif poten bagi pasien dengan Statin Intolerance sejati, atau terapi tambahan oral jika LDL belum capai target.", pearl: "Bempedoic Acid adalah prodrug yang hanya aktif di hati, BUKAN di otot.", rationale: "Karena enzim pengaktifnya (ACSVL1) tidak ada di otot rangka, obat ini sama sekali tidak memicu myalgia (nyeri otot) yang sering dikeluhkan pada penggunaan statin." },
+            { id: 11, topic: "Non-Statins", urgency: "Red Flag", badgeClass: "badge-red", q: "Apa efek samping utama Bempedoic Acid yang perlu diwaspadai?", a: "Peningkatan kadar Asam Urat (Hyperuricemia) dan risiko serangan Gout/Asam urat.", pearl: "Hati-hati peresepan pada pasien dengan riwayat Gout kronis.", rationale: "Bempedoic acid dapat menghambat transporter OAT2 di ginjal, mengurangi ekskresi asam urat. Pemantauan kadar uric acid darah rutin diperlukan." },
+            { id: 12, topic: "Hypertriglyceridemia", urgency: "Class I", badgeClass: "badge-green", q: "Obat apa yang direkomendasikan untuk pasien ASCVD dengan Trigliserida (TG) persisten 135-499 mg/dL yang sudah minum statin?", a: "Icosapent Ethyl 4g/hari (Turunan murni EPA).", pearl: "Suplemen minyak ikan campuran (EPA+DHA) yang dijual bebas TIDAK direkomendasikan dan dilarang menggantikannya.", rationale: "Berdasarkan REDUCE-IT, Icosapent ethyl spesifik menurunkan risiko iskemik. Sebaliknya, suplemen omega-3 campuran (DHA+EPA) gagal menunjukkan manfaat kardiovaskular dalam trial klinis dan berpotensi menaikkan LDL." },
+            
+            // SPECIAL POPULATIONS
+            { id: 13, topic: "Special Populations", urgency: "Class I", badgeClass: "badge-green", q: "Kapan terapi statin direkomendasikan pada pasien Diabetes Melitus Tipe 2?", a: "Semua pasien DM dewasa (usia 40-75 tahun) WAJIB mendapat moderate/high-intensity statin, TANPA memandang kalkulasi PREVENT-ASCVD 10-tahun.", pearl: "Diabetes adalah 'ASCVD Risk Equivalent'.", rationale: "Milieu metabolik pada diabetes memicu aterosklerosis senyap yang agresif. Menunggu skor risiko naik atau menunggu LDL tinggi sangat berbahaya; pencegahan primer wajib dilakukan." },
+            { id: 14, topic: "Special Populations", urgency: "Must Know", badgeClass: "badge-blue", q: "Bagaimana rekomendasi statin pada populasi Lansia (>75 tahun) untuk pencegahan primer?", a: "Dipertimbangkan (Class IIb) berdasarkan diskusi bersama. BUKAN larangan mutlak.", pearl: "Pertimbangkan usia biologis (frailty) vs usia kronologis.", rationale: "Jika lansia >75 tahun sangat aktif dan sehat tanpa komorbid berat (life expectancy >5-10 tahun), statin bisa ditawarkan. Hentikan (deprescribing) jika ada demensia berat atau frailty ekstrem." },
+            { id: 15, topic: "Familial Hypercholesterolemia", urgency: "Red Flag", badgeClass: "badge-red", q: "Berapa kadar LDL yang otomatis dicurigai sebagai Severe Primary Hypercholesterolemia (FH)?", a: "LDL-C ≥ 190 mg/dL (≥4.9 mmol/L).", pearl: "Mulai terapi High-Intensity Statin seketika; tidak perlu menghitung skor PREVENT-ASCVD.", rationale: "LDL setinggi ini hampir selalu menandakan defek genetik resptor LDL. Pasien memiliki beban akumulasi kolesterol sejak lahir, membuat mereka berisiko infark prematur di usia 30-40an." },
+            { id: 16, topic: "Women & Pregnancy", urgency: "Absolute Contraindication", badgeClass: "badge-red", q: "Kapan statin HARUS dihentikan pada wanita?", a: "Segera hentikan 1-2 bulan SEBELUM merencanakan kehamilan dan selama kehamilan/menyusui.", pearl: "Semua jenis statin dikontraindikasikan pada wanita hamil (mengikuti prinsip kehati-hatian trimester 1).", rationale: "Kolesterol mutlak diperlukan untuk perkembangan embrionik (pembentukan sel, organ, sistem saraf janin). Statin memblokir jalur ini dan dapat memicu komplikasi perkembangan." },
+            { id: 17, topic: "Women & Pregnancy", urgency: "Class IIa", badgeClass: "badge-amber", q: "Jika pasien FH hamil dan risiko infark ibunya sangat tinggi, apa prosedur penurun lipid yang aman?", a: "LDL Apheresis.", pearl: "Obat oral dilarang, jadi lemak harus 'dicuci' secara mekanis dari darah ibu.", rationale: "Apheresis secara fisik menyaring dan membuang partikel LDL dari plasma darah ekstrakorporeal tanpa menggunakan bahan kimia sistemik yang bisa menembus plasenta dan meracuni janin." },
+            
+            // TRIGLYCERIDES
+            { id: 18, topic: "Hypertriglyceridemia", urgency: "Red Flag", badgeClass: "badge-red", q: "Kapan hipertrigliseridemia menjadi indikasi langsung terapi Fibrate (bukan statin)?", a: "Ketika Trigliserida Puasa sangat tinggi ≥ 500 mg/dL (terutama >1000 mg/dL).", pearl: "Tujuan utamanya BUKAN mencegah penyakit jantung, melainkan MENCEGAH PANKREATITIS AKUT.", rationale: "Kilomikron raksasa akibat TG >500 mg/dL akan menyumbat kapiler pankreas, memicu inflamasi nekrotik mematikan. Fibrate (Fenofibrate) menurunkan TG secara masif dan cepat." },
+            { id: 19, topic: "Therapeutics", urgency: "Must Know", badgeClass: "badge-blue", q: "Mengapa Gemfibrozil sebaiknya tidak dikombinasikan dengan Statin?", a: "Meningkatkan risiko Rhabdomyolysis (kerusakan otot masif) secara drastis.", pearl: "Jika harus mengkombinasikan Fibrate dengan Statin, gunakan FENOFIBRATE.", rationale: "Gemfibrozil menghambat jalur glukuronidasi statin di hati, menyebabkan kadar racun statin di darah melonjak tinggi. Fenofibrate menggunakan jalur ekskresi yang berbeda sehingga lebih aman." },
+            
+            // MONITORING & DIAGNOSIS
+            { id: 20, topic: "Monitoring", urgency: "Class I", badgeClass: "badge-green", q: "Kapan waktu yang tepat untuk mengecek profil lipid setelah memulai atau mengubah dosis statin?", a: "Ulangi tes profil lipid puasa dalam 4 hingga 12 minggu.", pearl: "Jika sudah stabil sesuai target, cek ulang setiap 3 hingga 12 bulan.", rationale: "Waktu paruh adaptasi reseptor LDL di hati membutuhkan waktu minimal 4 minggu. Mengecek sebelum 4 minggu tidak mencerminkan efek maksimal obat." },
+            { id: 21, topic: "Diagnosis", urgency: "Must Know", badgeClass: "badge-blue", q: "Apa persamaan matematis klasik untuk menghitung LDL, dan kapan itu tidak akurat?", a: "Rumus Friedewald. Tidak akurat jika TG > 400 mg/dL atau LDL ditarik < 70 mg/dL.", pearl: "Gunakan rumus Martin-Hopkins atau ukur Direct LDL-C pada kondisi tersebut.", rationale: "Rumus Friedewald mengasumsikan rasio tetap TG terhadap VLDL. Pada hipertrigliseridemia berat atau saat target LDL didorong sangat rendah, kalkulasi lab lawas ini meremehkan (underestimate) angka LDL asli." },
+            { id: 22, topic: "Diagnosis", urgency: "Class IIa", badgeClass: "badge-amber", q: "Apa nilai dari pengukuran Apolipoprotein B (ApoB)?", a: "ApoB mengukur JUMLAH TOTAL partikel aterogenik (LDL, VLDL, IDL). Lebih akurat memprediksi risiko dibanding LDL-C saja.", pearl: "Target ApoB < 80 mg/dL (untuk target LDL <70) atau < 65 mg/dL (untuk target LDL <55).", rationale: "Satu partikel aterogenik memiliki tepat satu molekul ApoB. Terkadang kolesterol per partikel normal, tetapi jumlah partikelnya (sdLDL) terlalu banyak; umum pada Sindrom Metabolik." },
+            
+            // ADDITIONAL PEARLS
+            { id: 23, topic: "Non-Statins", urgency: "Must Know", badgeClass: "badge-blue", q: "Bagaimana peran Niacin (Vitamin B3) saat ini?", a: "TIDAK LAGI direkomendasikan secara rutin (Class III: No Benefit).", pearl: "Meski Niacin menaikkan HDL, trial AIM-HIGH dan HPS2-THRIVE membuktikan ini tidak mencegah serangan jantung.", rationale: "Paradigma 'menaikkan kolesterol baik (HDL) secara artifisial via obat' telah gagal dalam uji klinis. Fokus mutlak saat ini adalah menurunkan ApoB/LDL serendah mungkin." },
+            { id: 24, topic: "Special Populations", urgency: "Must Know", badgeClass: "badge-blue", q: "Apa dampak Hypothyroidism (Hipotiroid) terhadap profil lipid?", a: "Menyebabkan secondary hypercholesterolemia (LDL melonjak drastis).", pearl: "Jangan buru-buru resep statin; obati dulu tiroidnya (Levothyroxine), kolesterol akan turun sendiri.", rationale: "Hormon tiroid diperlukan untuk ekspresi reseptor LDL di hati. Saat tiroid rendah, hati berhenti menarik LDL dari sirkulasi. Memaksa statin pada pasien hipotiroid berisiko memicu myopathy." },
+            { id: 25, topic: "Risk Assessment", urgency: "Must Know", badgeClass: "badge-blue", q: "Apa itu kalkulator PREVENT-ASCVD dan mengapa menggantikan Pooled Cohort Equations (PCE)?", a: "PREVENT-ASCVD memprediksi risiko 10-tahun & 30-tahun dengan memasukkan fungsi ginjal (eGFR), HbA1c, dan MENGHAPUS variabel ras.", pearl: "Mencegah overestimasi dan diskriminasi rasial dari kalkulator lama.", rationale: "PCE sering overestimate risiko. PREVENT mengkalibrasi ulang secara presisi dengan mempertimbangkan beban metabolik aktual pasien (ginjal & gula darah)." },
+            { id: 26, topic: "Therapeutics", urgency: "Must Know", badgeClass: "badge-blue", q: "Apa obat golongan CETP Inhibitor (seperti Obicetrapib) dan statusnya?", a: "Obat eksperimental/baru. BELUM direkomendasikan rutin dalam pedoman (Class III / Investigational).", pearl: "Sempat gagal di masa lalu, molekul generasi baru sedang dievaluasi ulang dalam trial fase akhir.", rationale: "Inhibisi CETP menghentikan transfer kolesterol dari HDL ke VLDL. Meskipun obat generasi lama terbukti toksik, jalur ini diteliti ulang namun belum masuk algoritma klinis resmi 2026." },
+            { id: 27, topic: "Non-Statins", urgency: "Must Know", badgeClass: "badge-blue", q: "Selain Inclisiran, terapi genetik apa yang sedang berkembang untuk Familial Hypercholesterolemia?", a: "CRISPR-Cas9 (Gene Editing) in vivo.", pearl: "Fase investigasi klinis, menyasar mutasi reseptor langsung di DNA.", rationale: "Terapi mutakhir mengeksplorasi perbaikan seumur hidup (one-and-done) dengan mengedit gen PCSK9 atau gen ANGPTL3 langsung di dalam hati pasien." },
+            { id: 28, topic: "Therapeutics", urgency: "Must Know", badgeClass: "badge-blue", q: "Pada pasien dengan CKD stadium lanjut (eGFR <30) yang belum cuci darah, apa regimen lipid utamanya?", a: "Kombinasi Statin dosis rendah-sedang + Ezetimibe (misal Simvastatin 20 + Ezetimibe 10).", pearl: "Jangan inisiasi statin dosis tinggi (High-Intensity) pada CKD berat karena ekskresi menurun.", rationale: "Pasien ginjal sangat rentan efek samping otot. Kombinasi statin dosis kecil dengan ezetimibe (Vytorin) divalidasi sangat aman dan efektif dalam trial SHARP untuk populasi ginjal." },
+            { id: 29, topic: "Risk Assessment", urgency: "Must Know", badgeClass: "badge-blue", q: "Bagaimana target LDL yang direkomendasikan berdasarkan klasifikasi Coronary Calcium Score (CAC)?", a: "CAC 1-99: Target < 100 mg/dL. \nCAC 100-299: Target < 70 mg/dL. \nCAC ≥ 1000: Target < 55 mg/dL.", pearl: "CAC ≥ 1000 menandakan beban plak kalsifikasi sangat masif, dikelola agresif setara ASCVD very high risk.", rationale: "Guideline 2026 menggunakan CAC sebagai alat reklasifikasi utama. Semakin tinggi skor Agatston, semakin agresif target penurunan LDL yang diwajibkan oleh panduan." },
+            { id: 30, topic: "Therapeutics", urgency: "Red Flag", badgeClass: "badge-red", q: "Bolehkah mengobati lansia yang SEDANG menjalani Hemodialisa rutin dengan inisiasi statin baru?", a: "TIDAK DIREKOMENDASIKAN (Class III).", pearl: "Jika sudah minum statin sebelum cuci darah, BOLEH dilanjutkan. Tapi jangan baru mulai saat sudah rutin HD.", rationale: "Trial 4D dan AURORA gagal menunjukkan manfaat kelangsungan hidup pada inisiasi statin di fase End-Stage Renal Disease (ESRD) HD. Kematian di fase ini didominasi aritmia struktural." },
+            { id: 31, topic: "Risk Assessment", urgency: "Must Know", badgeClass: "badge-blue", q: "Berapa target LDL-C untuk Primary Prevention berdasarkan strata risiko PREVENT-ASCVD?", a: "Intermediate Risk (7.5-19.9%): Target utama < 100 mg/dL. \nHigh Risk (PREVENT ≥ 20%): Target lebih agresif < 70 mg/dL.", pearl: "Tidak semua pasien prevensi primer harus ditarik paksa ke < 70 mg/dL kecuali ada high risk atau CAC yang mendukung.", rationale: "Sesuai tabel panduan 2026, pencegahan primer menengah menargetkan ambang < 100 mg/dL. Target <70 mg/dL dikhususkan bagi pasien dengan risiko ASCVD tinggi (≥20%)." },
+            { id: 32, topic: "Special Populations", urgency: "Must Know", badgeClass: "badge-blue", q: "Wanita 32 tahun, LDL-C 170 mg/dL, tanpa ASCVD, tetapi ayahnya infark usia 48 tahun. Apa rekomendasi ACC/AHA?", a: "Pertimbangkan inisiasi statin dosis sedang setelah konseling. Ini adalah kelompok usia muda dengan 'Lifetime Risk' tinggi.", pearl: "Pada usia 20-39 tahun, LDL ≥160 mg/dL plus risk enhancer (riwayat keluarga) mendukung diskusi statin.", rationale: "Fokus pada 'lifetime risk' di usia muda; paparan LDL tinggi kronis mempercepat beban aterosklerosis. Pengendalian lebih dini sangat berdampak mencegah kejadian di usia paruh baya." },
+            { id: 33, topic: "Diagnosis", urgency: "Must Know", badgeClass: "badge-blue", q: "Kapan Non-HDL-C dianjurkan sebagai target tambahan pada panduan 2026?", a: "Pada pasien dengan hipertrigliseridemia dan Sindrom Metabolik. Non-HDL digunakan sebagai target sekunder.", pearl: "Target Non-HDL-C umumnya 30 mg/dL DI ATAS target LDL-C untuk kategori risiko yang sama.", rationale: "Saat trigliserida meningkat, pengukuran LDL-C sering tidak menangkap beban partikel VLDL/IDL. Non-HDL-C (Total dikurangi HDL) merefleksikan seluruh kolesterol di dalam partikel jahat." },
+            { id: 34, topic: "Risk Assessment", urgency: "Class IIa", badgeClass: "badge-amber", q: "Pasien borderline-intermediate risk dengan hs-CRP 3,5 mg/L, tanpa infeksi. Bagaimana peran hs-CRP?", a: "hs-CRP ≥ 2.0 mg/L merupakan risk-enhancing factor yang kuat untuk mendukung inisiasi statin.", pearl: "Mewakili beban inflamasi vaskular (residual inflammatory risk).", rationale: "Data JUPITER menunjukkan inflamasi sistemik berhubungan dengan event ASCVD lebih tinggi. Pasien ini akan mendapat manfaat bermakna dari statin meski skor PREVENT-nya tampak biasa." },
+            { id: 35, topic: "Therapeutics", urgency: "Class I", badgeClass: "badge-green", q: "Pasien post-ACS (mis: STEMI). Kapan high-intensity statin sebaiknya diberikan?", a: "High-intensity statin harus dimulai secepat mungkin, idealnya dalam 24-96 jam pertama selama rawat inap, sebelum KRS.", pearl: "Prinsipnya 'Statin Now, Adjust Later'. Jangan menunggu tes profil lipid kembali normal.", rationale: "Pemberian statin dini pasca ACS memberikan efek stabilitasi plak akut (pleiotropik). Menunda terapi hanya mengorbankan periode jendela paling rawan untuk kejadian iskemik berulang." },
+            { id: 36, topic: "LDL Targets", urgency: "Exam Favorite", badgeClass: "badge-purple", q: "Pasien dengan riwayat NSTEMI (sudah terapi maksimal) kini mengalami stroke iskemik. Apa strategi berikutnya?", a: "Ini adalah profil risiko ekstrem (recurrent ASCVD on therapy). Tambahkan PCSK9i/Inclisiran. Target praktis LDL < 40 mg/dL.", pearl: "Kejadian berulang memindahkan sasaran ke target terendah yang divalidasi oleh trial antibodi.", rationale: "Meskipun 'extreme risk' tidak dibunyikan sebagai kelas terpisah di panduan, pedoman setuju intensifikasi terapi harus dilakukan untuk mendorong LDL serendah mungkin menghentikan progresi." },
+            { id: 37, topic: "Special Populations", urgency: "Must Know", badgeClass: "badge-blue", q: "Pasien stroke iskemik aterotrombotik (bukan kardioemboli). Apa rekomendasi target LDL?", a: "Perlakukan setara ASCVD koroner. Targetkan LDL-C < 55 mg/dL jika masuk kategori Very-High Risk (misal disertai DM).", pearl: "Jangan lupakan terapi antiplatelet mendampingi terapi lipid pada stroke non-kardioemboli.", rationale: "Data trial (misal SPARCL) mendukung statin intensif. Plak karotis dan serebral berespons terhadap target LDL yang agresif sama baiknya dengan plak di arteri koroner." },
+            { id: 38, topic: "Special Populations", urgency: "Must Know", badgeClass: "badge-blue", q: "Pria dengan Peripheral Artery Disease (PAD) dan klaudikasio intermiten. Berapa target LDL?", a: "PAD simtomatik dihitung sebagai ASCVD. Target LDL-C < 55 mg/dL (bila Very High Risk) atau < 70 mg/dL (bila Not Very High).", pearl: "PAD = ASCVD koroner. Jangan perlakukan plak kaki lebih lunak dari plak jantung.", rationale: "Pasien PAD membawa risiko mematikan infark miokard. Pengendalian LDL agresif terbukti memangkas MACE dan juga menurunkan laju kejadian amputasi (MALE)." },
+            { id: 39, topic: "Special Populations", urgency: "Class IIb", badgeClass: "badge-amber", q: "Pasien Gagal Jantung (Heart Failure) HFrEF non-iskemik tanpa bukti CAD. Perlukah inisiasi statin?", a: "Inisiasi statin baru hanya karena indikasi HF non-iskemik TIDAK direkomendasikan rutin.", pearl: "Fokus pada terapi pilar HF (ARNI, SGLT2i, Beta Blocker, MRA).", rationale: "Studi besar (CORONA, GISSI-HF) gagal membuktikan statin memperpanjang usia pasien HFrEF lanjut non-iskemik. Kematian mereka didominasi pump-failure dan aritmia, bukan plak." },
+            { id: 40, topic: "Special Populations", urgency: "Must Know", badgeClass: "badge-blue", q: "Pasien NAFLD dengan SGOT/SGPT naik ringan (<3x batas normal). Bolehkah diberi statin?", a: "BOLEH dan dianjurkan bila ada indikasi ASCVD. NAFLD/Steatosis ringan BUKAN kontraindikasi statin.", pearl: "Tidak perlu stop statin hanya karena enzim hati naik sedikit asalkan stabil.", rationale: "Faktanya, statin menurunkan risiko kardiovaskular secara masif pada populasi metabolik/NAFLD. Risiko hepatotoksisitas berat sangat langka. Pemantauan klinis cukup." },
+            { id: 41, topic: "Risk Assessment", urgency: "Must Know", badgeClass: "badge-blue", q: "Pasien dengan Sindrom Nefrotik aktif memiliki LDL 230 mg/dL. Apa langkah terpenting?", a: "Atasi penyebab sekunder (proteinuria & kebocoran albumin) sebelum atau bersamaan dengan terapi lipid.", pearl: "Guideline mewajibkan skrining 'Secondary Dyslipidemia' sebelum memberi cap primary FH.", rationale: "Hipoalbuminemia memicu hati memproduksi lipoprotein (VLDL/LDL) secara berlebihan kompensatorik. Jika sindrom nefrotiknya remisi, kadar kolesterol seringkali kembali normal." },
+            { id: 42, topic: "Non-Statins", urgency: "Must Know", badgeClass: "badge-blue", q: "Berapa dosis lazim Evolocumab dan Alirocumab (PCSK9i) untuk pasien ASCVD?", a: "Evolocumab 140 mg SC tiap 2 minggu (atau 420 mg SC tiap bulan). Alirocumab 75-150 mg SC tiap 2 minggu.", pearl: "Injeksi dilakukan subkutan (SC) dan dapat dilakukan sendiri oleh pasien di rumah.", rationale: "Regimen ini berbasis data ODYSSEY OUTCOMES dan FOURIER, memberikan jaminan penurunan LDL >50% dari baseline pada mereka yang gagal dengan statin oral." },
+            { id: 43, topic: "Non-Statins", urgency: "Must Know", badgeClass: "badge-blue", q: "Bagaimana jadwal pemberian Inclisiran yang dianjurkan?", a: "Dosis Inisiasi (Hari 0) -> Bulan ke-3 -> lalu dilanjutkan setiap 6 BULAN (2x setahun).", pearl: "Jadwal yang jarang (infrequent dosing) ini mengeliminasi masalah lupa minum obat (adherence).", rationale: "Sebagai siRNA yang membungkam gen secara intraseluler di hati, Inclisiran memberikan efek sustained knockdown protein PCSK9. Sangat revolusioner untuk pasien tidak patuh." },
+            { id: 44, topic: "Non-Statins", urgency: "Exam Favorite", badgeClass: "badge-purple", q: "Pada pasien intoleransi statin sejati, obat oral non-statin baru apa yang terbukti menurunkan kejadian MACE?", a: "Bempedoic Acid (Asam Bempedoat).", pearl: "Sesuai trial CLEAR Outcomes, obat ini menurunkan kejadian kardiovaskular pada statin-intolerant.", rationale: "Berbeda dengan Ezetimibe yang menghambat serapan usus, Bempedoic acid menghambat sintesis kolesterol di hati (ATP Citrate Lyase) secara oral tanpa menembus otot." },
+            { id: 45, topic: "Hypertriglyceridemia", urgency: "Exam Favorite", badgeClass: "badge-purple", q: "Apa kriteria pasien yang menjadi kandidat Icosapent Ethyl menurut guideline (adaptasi REDUCE-IT)?", a: "Pasien ASCVD (atau DM + faktor risiko), sudah on statin, LDL terkontrol (40-100 mg/dL), tetapi Trigliserida persisten 135-499 mg/dL.", pearl: "Menyasar fenotipe 'residual atherosclerotic risk'.", rationale: "Icosapent Ethyl bukan untuk hipertrigliseridemia ekstrem yang memicu pankreatitis, melainkan untuk pasien plak stabil yang TG-nya 'menggantung' di atas normal memicu inflamasi kronik." },
+            { id: 46, topic: "Statin Intolerance", urgency: "Class IIa", badgeClass: "badge-amber", q: "Apa saran pemberian (dosing) untuk mencoba mempertahankan statin pada pasien dengan myalgia?", a: "Gunakan strategi 'Intermittent / Alternate-Day Dosing' dengan statin lipofilik/hidrofilik yang poten (misal Rosuvastatin 5 mg selang-seling 2-3x seminggu).", pearl: "Lebih baik statin jarang-jarang daripada tidak statin sama sekali.", rationale: "Meskipun diminum selang hari, LDL tetap dapat turun secara klinis bermakna. Sebagian besar pasien intoleran masih sanggup menerima dosis mikro ini tanpa keluhan otot." },
+            { id: 47, topic: "Monitoring", urgency: "Must Know", badgeClass: "badge-blue", q: "Apakah dianjurkan memeriksa SGOT/SGPT dan CPK secara rutin tahunan pada pasien on statin?", a: "TIDAK. Evaluasi lab enzim hanya dilakukan jika muncul GEJALA klinis (nyeri otot berat, kelemahan, atau tanda ikterus/kerusakan hati).", pearl: "Hindari over-testing yang memicu penghentian obat tanpa alasan kuat.", rationale: "Studi post-marketing jutaan pasien mengonfirmasi hepatotoksisitas asimtomatik sangat langka. Tes rutin hanya menghamburkan biaya dan membuat cemas berlebihan (nocebo)." },
+            { id: 48, topic: "Special Populations", urgency: "Class I", badgeClass: "badge-green", q: "Pasien CKD stadium 3b (eGFR 35) tanpa CAD. Apa panduan statinnya?", a: "Inisiasi Statin sangat dianjurkan. CKD stadium 3-4 adalah risk enhancer independen yang setara risiko tinggi (CAD Equivalent).", pearl: "Gunakan kombinasi Statin dosis moderat + Ezetimibe jika fungsi ginjal memburuk.", rationale: "Proses aterosklerosis berjalan eksponensial bersamaan dengan turunnya eGFR. Guideline sangat mendukung perlindungan vaskular dini pada populasi pre-dialisis." },
+            { id: 49, topic: "Familial Hypercholesterolemia", urgency: "Class I", badgeClass: "badge-green", q: "Kapan skrining lipid PERTAMA KALI direkomendasikan pada anak, dan kapan inisiasi statin pada anak FH?", a: "Skrining universal di usia 9-11 tahun. Terapi statin pada anak FH bisa dimulai sejak usia dini (umumnya 8-10 tahun) setelah konseling.", pearl: "Semakin lama 'kolesterol-tahun' berakumulasi, semakin dini infark terjadi.", rationale: "Menunda terapi hingga dewasa pada pasien FH akan menghabiskan 'jatah waktu' vaskular mereka. Terapi dini terbukti meregresi ketebalan intima-media (CIMT) karotis anak." },
+            { id: 50, topic: "Risk Assessment", urgency: "Must Know", badgeClass: "badge-blue", q: "Pasien dengan Lp(a) terdeteksi sangat tinggi (≥100 mg/dL atau ±250 nmol/L). Apa implikasi klinisnya?", a: "Risiko ASCVD primer meningkat masif. Pertimbangkan statin segera dan intensifikasi target LDL (mendekati <55) meski skor PREVENT tampak sedang.", pearl: "Tidak ada obat penurun Lp(a) komersil. Arahkan peluru intensitas terapi pada target LDL-C/ApoB.", rationale: "Lp(a) ekstrem membawa beban plak yang berprogresi pesat. Menurunkan komponen kolesterol (LDL) seagresif mungkin adalah mekanisme kompensatorik terbaik saat ini." }
+        ];
+
+        // ==========================================
+        // 2. COMPARATOR MATRIX (2018 vs 2026)
+        // ==========================================
+        const comparatorRaw = [
+            { id: 1, topic: "Risk Assessment Calculator", old: "Menggunakan Pooled Cohort Equations (PCE) dari 2013.", new: "Transisi ke PREVENT-ASCVD Calculator.", rationale: "PREVENT menggabungkan eGFR dan HbA1c, menghapus variabel ras untuk menghindari diskriminasi, dan memberikan kalibrasi risiko 10 & 30-tahun yang lebih presisi." },
+            { id: 2, topic: "Very High-Risk LDL Target", old: "Ambang batas operasional LDL-C < 70 mg/dL.", new: "Tujuan spesifik yang ditargetkan (Goal) adalah LDL-C < 55 mg/dL (1.4 mmol/L) ATAU penurunan ≥50%.", rationale: "Bukti dari uji coba PCSK9i (FOURIER, ODYSSEY) menegaskan keamanan neurologis dan keunggulan vaskular ekstrem dari LDL <55." },
+            { id: 3, topic: "Coronary Calcium Score (CAC)", old: "Dipertimbangkan opsional jika keputusan klinis ragu.", new: "Alat reklasifikasi utama. CAC=0 kuat untuk 'De-risk'. CAC 100-299 = High Risk (Target < 70). CAC ≥ 1000 = Extreme Risk equivalent (Target < 55).", rationale: "Validasi data epidemiologis 10 tahun membuktikan beban plak kalsifikasi absolut mengalahkan tebakan dari skor risiko kertas." },
+            { id: 4, topic: "Lipoprotein(a) Screening", old: "Hanya sebagai 'Risk Enhancer' opsional jika ada riwayat keluarga.", new: "Pemeriksaan UNIVERSAL (minimal 1 kali seumur hidup) pada setiap orang dewasa.", rationale: "Epidemiologi baru menunjukkan 1 dari 5 orang memiliki Lp(a) tinggi genetik yang mematikan. Screening universal mencegah misklasifikasi risiko." },
+            { id: 5, topic: "Non-Statin Hierarchy", old: "Algoritma linear kaku: Statin -> Ezetimibe -> PCSK9i.", new: "Pendekatan Fleksibel: Statin -> Ezetimibe -> Pilihan PCSK9i, Bempedoic Acid, atau Inclisiran.", rationale: "Kehadiran Bempedoic Acid (oral) dan Inclisiran (2x setahun) memberi opsi bagi intoleransi statin atau masalah kepatuhan." },
+            { id: 6, topic: "Hypertriglyceridemia Treatment", old: "Fokus fibrate. Penggunaan Omega-3 generik belum dikualifikasi secara ketat.", new: "Rekomendasi Class I untuk Icosapent Ethyl murni (REDUCE-IT trial) pada TG 135-499. Suplemen minyak ikan campuran dilarang menggantikannya.", rationale: "Pembedaan tegas antara minyak ikan OTC (EPA+DHA) yang terbukti gagal total di trial, versus molekul farmasi EPA murni yang sukses." },
+            { id: 7, topic: "Pediatric Screening", old: "Tidak terlalu ditekankan pada dokumen pedoman dislipidemia dewasa.", new: "Inkorporasi kuat: Skrining universal di usia 9-11 tahun dan diulang 17-21 tahun untuk deteksi Familial Hypercholesterolemia.", rationale: "Intervensi dini sejak dekade pertama mampu menormalisasi kurva harapan hidup pasien dengan mutasi genetik reseptor LDL." },
+            { id: 8, topic: "Apolipoprotein B (ApoB)", old: "Pemeriksaan tambahan opsional dengan utilisasi rendah.", new: "Ditingkatkan statusnya sebagai metrik sasaran sekunder (Target < 80 atau < 65 mg/dL) terutama pada Sindrom Metabolik / DM.", rationale: "Pada resistensi insulin, partikel LDL menjadi kecil. Kolesterolnya terlihat rendah, tapi jumlah partikelnya (ApoB) masif." }
+        ];
+
+        // Unique Topics Extraction (Learner Only)
+        const allTopics = ['All', ...new Set(learnerRaw.map(item => item.topic))];
+
+        // ==========================================
+        // 3. STATE MANAGEMENT (DASHBOARD & DATA)
+        // ==========================================
+        let state = {
+            mode: 'learner', 
+            tab: 'flashcard', 
+            flashcardIdx: 0,
+            isFlipped: false,
+            isShuffled: false,
+            currentTopic: 'All',
+            activeData: [...learnerRaw],      // Currently filtered/displayed array
+            
+            db: {
+                masteredCards: new Set(),
+                bookmarkedCards: new Set()
+            },
+            searchQuery: ''
+        };
+
+        // Initialize state arrays based on mode and filter
+        function applyFilters() {
+            let baseData = state.mode === 'learner' ? learnerRaw : comparatorRaw;
+            
+            if (state.mode === 'learner' && state.currentTopic !== 'All') {
+                baseData = baseData.filter(item => item.topic === state.currentTopic);
+            }
+            
+            if (state.isShuffled) {
+                state.activeData = shuffleArray(baseData);
+            } else {
+                state.activeData = [...baseData];
+            }
+            
+            state.flashcardIdx = 0;
+            state.isFlipped = false;
+        }
+
+        // Fisher-Yates Shuffle
+        function shuffleArray(array) {
+            let shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function toggleShuffle() {
+            state.isShuffled = !state.isShuffled;
+            applyFilters();
+            updateFlashcardContent('none');
+        }
+
+        function setTopic(topicName) {
+            state.currentTopic = topicName;
+            applyFilters();
+            updateUI(); // Re-render chips and layout
+        }
+
+        // Mastery Controls
+        function toggleMastery() {
+            const cardId = state.activeData[state.flashcardIdx].id;
+            const prefix = state.mode === 'learner' ? 'L_' : 'C_';
+            const uniqueId = prefix + cardId;
+            
+            if (state.db.masteredCards.has(uniqueId)) {
+                state.db.masteredCards.delete(uniqueId);
+            } else {
+                state.db.masteredCards.add(uniqueId);
+            }
+            updateDashboard();
+            updateFlashcardContent('none'); // Update icon states immediately
+        }
+
+        function toggleBookmark() {
+            const cardId = state.activeData[state.flashcardIdx].id;
+            const prefix = state.mode === 'learner' ? 'L_' : 'C_';
+            const uniqueId = prefix + cardId;
+            
+            if (state.db.bookmarkedCards.has(uniqueId)) {
+                state.db.bookmarkedCards.delete(uniqueId);
+            } else {
+                state.db.bookmarkedCards.add(uniqueId);
+            }
+            updateDashboard();
+            updateFlashcardContent('none');
+        }
+
+        function resetProgress() {
+            state.db.masteredCards.clear();
+            state.db.bookmarkedCards.clear();
+            updateDashboard();
+            updateUI();
+        }
+
+        function updateDashboard() {
+            document.getElementById('kpi-mastered').innerHTML = `<i class="fa-solid fa-check-circle text-green-400"></i> ${state.db.masteredCards.size} Mastered`;
+            document.getElementById('kpi-bookmarked').innerHTML = `<i class="fa-solid fa-bookmark text-amber-400"></i> ${state.db.bookmarkedCards.size} Saved`;
+            document.getElementById('totalCardsCount').innerText = learnerRaw.length;
+        }
+
+        window.toggleDisclaimer = () => {
+            const modal = document.getElementById('disclaimerModal');
+            const content = document.getElementById('disclaimerContent');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    content.classList.remove('scale-95');
+                }, 10);
+            } else {
+                modal.classList.add('opacity-0');
+                content.classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+            }
+        };
+
+        // ==========================================
+        // 4. UI/UX CONTROLLERS
+        // ==========================================
+        function getActiveTheme() {
+            return state.mode === 'learner' 
+                ? { bg: 'bg-blue-600', text: 'text-blue-600', border: 'border-blue-600', hover: 'hover:bg-blue-700', light: 'bg-blue-50' }
+                : { bg: 'bg-violet-600', text: 'text-violet-600', border: 'border-violet-600', hover: 'hover:bg-violet-700', light: 'bg-violet-50' };
+        }
+
+        function setMode(mode) {
+            state.mode = mode;
+            // Force Tab logic based on mode: Comparator = CheatSheet Matrix ONLY. Learner = Default Flashcard.
+            state.tab = mode === 'comparator' ? 'cheatsheet' : 'flashcard'; 
+            state.currentTopic = 'All'; // Reset filter on mode change
+            applyFilters();
+            updateUI();
+        }
+
+        function setTab(tab) {
+            state.tab = tab;
+            updateUI();
+        }
+
+        function updateUI() {
+            updateDashboard();
+
+            // Toggle Mode Buttons (Learner vs Comparator)
+            const btnL = document.getElementById('btnModeLearner');
+            const btnC = document.getElementById('btnModeComparator');
+            if (state.mode === 'learner') {
+                btnL.className = "flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-300 bg-blue-600 text-white shadow-md";
+                btnC.className = "flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-300 text-slate-400 hover:text-white hover:bg-white/10";
+            } else {
+                btnL.className = "flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-300 text-slate-400 hover:text-white hover:bg-white/10";
+                btnC.className = "flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-300 bg-violet-600 text-white shadow-md";
+            }
+
+            // Tab Container Visibility (Hidden completely if Comparator mode)
+            const tabContainerWrapper = document.getElementById('tabContainerWrapper');
+            if (state.mode === 'comparator') {
+                tabContainerWrapper.classList.add('hidden');
+            } else {
+                tabContainerWrapper.classList.remove('hidden');
+            }
+
+            // Tab Buttons Styling (Flashcard vs Cheatsheet - Learner Mode Only)
+            const theme = getActiveTheme();
+            ['flashcard', 'cheatsheet'].forEach(t => {
+                const btn = document.getElementById(`btnTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                if(btn) {
+                    if (state.tab === t) {
+                        btn.className = `whitespace-nowrap flex items-center justify-center flex-1 gap-2 px-4 py-3 min-w-[100px] min-h-[44px] text-sm font-bold border-b-2 ${theme.border} ${theme.text} transition-colors`;
+                    } else {
+                        btn.className = `whitespace-nowrap flex items-center justify-center flex-1 gap-2 px-4 py-3 min-w-[100px] min-h-[44px] text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors`;
+                    }
+                }
+            });
+
+            // Filter Chips Visibility & Render (Only in Learner mode for Matrix/Flashcard)
+            const filterContainer = document.getElementById('filterContainer');
+            if (state.mode === 'learner') {
+                filterContainer.classList.remove('hidden');
+                renderFilterChips();
+            } else {
+                filterContainer.classList.add('hidden');
+            }
+
+            // Mobile Action Bar Visibility (Only in Flashcard Tab)
+            const mobileActionBar = document.getElementById('mobileActionBar');
+            if (state.tab === 'flashcard') mobileActionBar.classList.remove('hidden');
+            else mobileActionBar.classList.add('hidden');
+
+            // Render Main Content
+            const container = document.getElementById('mainContent');
+            if (state.tab === 'flashcard') buildFlashcardLayout(container);
+            else if (state.tab === 'cheatsheet') renderCheatSheet(container);
+        }
+
+        function renderFilterChips() {
+            const chipsDiv = document.getElementById('filterChips');
+            chipsDiv.innerHTML = allTopics.map(topic => {
+                const isActive = state.currentTopic === topic;
+                const activeClass = isActive ? "bg-blue-600 text-white border-blue-600 font-bold shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100 font-medium";
+                return `<button onclick="setTopic('${topic}')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-xs sm:text-sm border transition-colors ${activeClass}">${topic}</button>`;
+            }).join('');
+        }
+
+        // ==========================================
+        // 5. FLASHCARD COMPONENT (Progressive & Mobile-first)
+        // ==========================================
+        let touchstartX = 0; let touchstartY = 0;
+        let isSwiping = false; let isNavigating = false;
+
+        function buildFlashcardLayout(container) {
+            const theme = getActiveTheme();
+            const data = state.activeData;
+
+            if(data.length === 0) {
+                container.innerHTML = `
+                    <div class="fade-in w-full max-w-lg mx-auto flex flex-col items-center justify-center h-[50vh] text-center px-4">
+                        <i class="fa-solid fa-box-open text-6xl text-slate-300 mb-4"></i>
+                        <h2 class="text-xl font-bold text-slate-700">Tidak ada kartu.</h2>
+                        <p class="text-slate-500 text-sm mt-2">Coba ubah filter topik Anda.</p>
+                        <button onclick="setTopic('All')" class="mt-6 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold">Tampilkan Semua</button>
+                    </div>`;
+                return;
+            }
+
+            const html = `
+                <div class="fade-in w-full max-w-lg mx-auto flex flex-col items-center">
+                    <div class="w-full flex justify-between items-center mb-4 px-1">
+                        <div class="flex flex-col">
+                            <span class="text-xs sm:text-sm font-bold text-slate-400 tracking-wide uppercase" id="cardCounter">Card ${state.flashcardIdx + 1} of ${data.length}</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="toggleBookmark()" id="btnTopBookmark" class="w-10 h-10 flex items-center justify-center rounded-full transition-all border-2 bg-white text-slate-400 border-slate-200 hover:bg-amber-50 hover:text-amber-500 shadow-sm active:scale-90 hidden md:flex">
+                                <i class="fa-regular fa-bookmark"></i>
+                            </button>
+                            <button onclick="toggleMastery()" id="btnTopMastery" class="w-10 h-10 flex items-center justify-center rounded-full transition-all border-2 bg-white text-slate-400 border-slate-200 hover:bg-green-50 hover:text-green-500 shadow-sm active:scale-90 hidden md:flex">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                            <button onclick="toggleShuffle()" class="w-10 h-10 flex items-center justify-center rounded-full transition-all border-2 ${state.isShuffled ? theme.bg + ' text-white border-transparent' : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-100'} shadow-sm active:scale-90">
+                                <i class="fa-solid fa-shuffle"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Flashcard Area -->
+                    <div id="touchWrapper" class="relative w-full h-[58vh] min-h-[420px] max-h-[550px] perspective-1000">
+                        <div id="slideBox" class="w-full h-full">
+                            <div id="flipBox" class="w-full h-full card-transition transform-style-preserve-3d shadow-xl rounded-2xl cursor-pointer">
+                                <!-- Front -->
+                                <div id="cardFront" class="absolute inset-0 backface-hidden bg-white border-2 border-slate-100 rounded-2xl flex flex-col p-6 sm:p-8">
+                                    <!-- Injected by JS -->
+                                </div>
+                                <!-- Back -->
+                                <div id="cardBack" class="absolute inset-0 backface-hidden rotate-y-180 bg-white border-2 ${state.mode === 'learner' ? 'border-blue-300' : 'border-violet-300'} rounded-2xl p-5 sm:p-8 overflow-hidden flex flex-col">
+                                    <!-- Injected by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Desktop Navigation (Hidden on Mobile) -->
+                    <div class="hidden md:flex justify-between w-full mt-6 gap-3">
+                        <button onclick="navigateCard('prev')" class="flex-1 flex justify-center items-center gap-2 py-3.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 font-bold text-slate-600 shadow-sm active:scale-95 transition-transform">
+                            <i class="fa-solid fa-arrow-left"></i> Prev
+                        </button>
+                        <button onclick="flipCard()" class="flex-[2] flex justify-center items-center gap-2 py-3.5 bg-slate-800 text-white rounded-xl hover:bg-slate-900 font-bold shadow-md active:scale-95 transition-transform">
+                            <i class="fa-solid fa-rotate"></i> Flip to Reveal
+                        </button>
+                        <button onclick="navigateCard('next')" class="flex-1 flex justify-center items-center gap-2 py-3.5 ${theme.bg} rounded-xl ${theme.hover} font-bold text-white shadow-md active:scale-95 transition-transform">
+                            Next <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+
+            // Touch Listeners
+            const touchWrapper = document.getElementById('touchWrapper');
+            touchWrapper.addEventListener('touchstart', e => {
+                touchstartX = e.changedTouches[0].screenX;
+                touchstartY = e.changedTouches[0].screenY;
+                isSwiping = false;
+            }, {passive: true});
+
+            touchWrapper.addEventListener('touchmove', e => {
+                let touchEndX = e.changedTouches[0].screenX;
+                let touchEndY = e.changedTouches[0].screenY;
+                if (Math.abs(touchEndX - touchstartX) > 15 || Math.abs(touchEndY - touchstartY) > 15) isSwiping = true;
+            }, {passive: true});
+
+            touchWrapper.addEventListener('touchend', e => {
+                let touchendX = e.changedTouches[0].screenX;
+                let diffX = touchstartX - touchendX;
+                
+                if (isSwiping && Math.abs(diffX) > 40) {
+                    if (diffX > 0) navigateCard('next'); else navigateCard('prev');
+                } else if (!isSwiping) {
+                    flipCard(); // Tap to flip
+                }
+            });
+
+            // Desktop Click
+            touchWrapper.addEventListener('click', e => {
+                if(!isSwiping && e.pointerType === 'mouse') flipCard();
+            });
+
+            updateFlashcardContent('none');
+        }
+
+        window.flipCard = () => {
+            const flipBox = document.getElementById('flipBox');
+            state.isFlipped = !state.isFlipped;
+            if(state.isFlipped) flipBox.classList.add('rotate-y-180');
+            else flipBox.classList.remove('rotate-y-180');
+        };
+
+        window.navigateCard = (direction) => {
+            if (isNavigating || state.activeData.length === 0) return;
+            isNavigating = true;
+
+            const flipBox = document.getElementById('flipBox');
+            state.isFlipped = false;
+            flipBox.style.transition = 'none'; 
+            flipBox.classList.remove('rotate-y-180');
+            
+            if (direction === 'next') state.flashcardIdx = (state.flashcardIdx + 1) % state.activeData.length;
+            else state.flashcardIdx = state.flashcardIdx === 0 ? state.activeData.length - 1 : state.flashcardIdx - 1;
+
+            requestAnimationFrame(() => { requestAnimationFrame(() => {
+                flipBox.style.transition = 'transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1)';
+            });});
+
+            updateFlashcardContent(direction);
+            setTimeout(() => { isNavigating = false; }, 300);
+        };
+
+        function updateFlashcardContent(animationDir) {
+            if(state.activeData.length === 0) return;
+            
+            const card = state.activeData[state.flashcardIdx];
+            const prefix = state.mode === 'learner' ? 'L_' : 'C_';
+            const uniqueId = prefix + card.id;
+            const isMastered = state.db.masteredCards.has(uniqueId);
+            const isBookmarked = state.db.bookmarkedCards.has(uniqueId);
+            
+            // 1. Update Counters & Buttons
+            const counter = document.getElementById('cardCounter');
+            if (counter) counter.innerText = `Card ${state.flashcardIdx + 1} / ${state.activeData.length}`;
+
+            // Sync Mobile Action Bar states
+            const btnMobMastery = document.getElementById('btnActionMastery');
+            const btnMobBookmark = document.getElementById('btnActionBookmark');
+            const iconMobBookmark = document.getElementById('iconActionBookmark');
+            
+            if (btnMobMastery) {
+                if(isMastered) { btnMobMastery.className = "flex-1 flex flex-col items-center justify-center min-h-[48px] px-2 rounded-xl bg-green-50 text-green-600 border border-green-200 active:bg-green-100 transition-colors"; }
+                else { btnMobMastery.className = "flex-1 flex flex-col items-center justify-center min-h-[48px] px-2 rounded-xl text-slate-400 border border-slate-200 active:bg-slate-50 transition-colors"; }
+            }
+            if (btnMobBookmark) {
+                if(isBookmarked) { btnMobBookmark.classList.add('text-amber-500'); btnMobBookmark.classList.remove('text-slate-400'); iconMobBookmark.className = "fa-solid fa-bookmark text-lg mb-0.5"; }
+                else { btnMobBookmark.classList.add('text-slate-400'); btnMobBookmark.classList.remove('text-amber-500'); iconMobBookmark.className = "fa-regular fa-bookmark text-lg mb-0.5"; }
+            }
+
+            // Sync Desktop Top buttons
+            const btnTopM = document.getElementById('btnTopMastery');
+            if(btnTopM) {
+                if(isMastered) btnTopM.innerHTML = `<i class="fa-solid fa-check text-green-500"></i>`;
+                else btnTopM.innerHTML = `<i class="fa-solid fa-check"></i>`;
+            }
+            const btnTopB = document.getElementById('btnTopBookmark');
+            if(btnTopB) {
+                if(isBookmarked) btnTopB.innerHTML = `<i class="fa-solid fa-bookmark text-amber-500"></i>`;
+                else btnTopB.innerHTML = `<i class="fa-regular fa-bookmark"></i>`;
+            }
+
+            // 2. Generate Inner Content
+            let frontHTML, backHTML;
+            
+            frontHTML = `
+                <div class="w-full flex justify-between items-start mb-auto">
+                    <span class="text-[0.65rem] sm:text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-md uppercase tracking-wider">${card.topic}</span>
+                    ${isMastered ? '<i class="fa-solid fa-check-circle text-green-500 text-xl"></i>' : ''}
+                </div>
+                <div class="flex flex-col items-center justify-center my-auto w-full px-2">
+                    <div class="mb-5"><span class="px-3 py-1.5 rounded-full text-[0.7rem] sm:text-xs font-bold uppercase tracking-wider ${card.badgeClass} shadow-sm">${card.urgency}</span></div>
+                    <h2 class="text-[1.15rem] sm:text-2xl font-bold text-slate-800 text-center leading-snug">${card.q}</h2>
+                </div>
+                <div class="w-full flex justify-between items-end mt-auto text-slate-300">
+                    <div class="flex items-center gap-2 text-xs font-semibold animate-swipe-hint text-blue-400"><i class="fa-solid fa-angles-left"></i></div>
+                    <div class="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest"><i class="fa-solid fa-hand-pointer mr-1"></i> Tap to flip</div>
+                    <div class="flex items-center gap-2 text-xs font-semibold animate-swipe-hint text-blue-400"><i class="fa-solid fa-angles-right"></i></div>
+                </div>
+            `;
+            backHTML = `
+                <div class="h-full overflow-y-auto hide-scrollbar flex flex-col pt-1">
+                    <div class="bg-blue-50 text-blue-800 font-bold px-3 py-1.5 rounded w-max mb-4 text-[0.7rem] sm:text-xs border border-blue-200 uppercase tracking-wide">Core Answer</div>
+                    <p class="text-[1.05rem] sm:text-xl font-bold text-slate-800 mb-5 leading-tight">${card.a}</p>
+                    
+                    <div class="bg-amber-50/50 p-3 sm:p-4 rounded-xl border border-amber-200/60 mb-3 flex gap-3">
+                        <i class="fa-solid fa-gem text-amber-500 mt-1"></i>
+                        <div><p class="text-[0.8rem] sm:text-[0.9rem] text-amber-900 font-semibold leading-snug">${card.pearl}</p></div>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mt-auto">
+                        <span class="font-bold text-slate-800 block mb-1 text-xs uppercase"><i class="fa-solid fa-microscope text-slate-400 mr-1"></i> Rationale / Details:</span> 
+                        <p class="text-[0.85rem] sm:text-[0.95rem] text-slate-600 leading-relaxed">${card.rationale}</p>
+                    </div>
+                </div>
+            `;
+            
+            const cFront = document.getElementById('cardFront');
+            const cBack = document.getElementById('cardBack');
+            if(cFront) cFront.innerHTML = frontHTML;
+            if(cBack) cBack.innerHTML = backHTML;
+
+            const slideBox = document.getElementById('slideBox');
+            if (slideBox && animationDir !== 'none') {
+                slideBox.className = 'w-full h-full'; 
+                void slideBox.offsetWidth; 
+                slideBox.className = `w-full h-full ${animationDir === 'next' ? 'slide-next' : 'slide-prev'}`;
+            }
+        }
+
+        // ==========================================
+        // 6. MATRIX (Responsive Cards/Table)
+        // ==========================================
+        function renderCheatSheet(container) {
+            const isLearner = state.mode === 'learner';
+            const tableTitleClass = isLearner ? 'text-blue-700' : 'text-violet-700';
+            
+            // Build the target summary table HTML
+            const targetSummaryHtml = `
+                <div class="bg-blue-900 text-white p-4 md:rounded-xl mb-4 md:mx-0 -mx-4 shadow-md">
+                    <h3 class="font-bold text-sm sm:text-base mb-3"><i class="fa-solid fa-bullseye text-red-400"></i> Ringkasan Target LDL-C & Non-HDL-C 2026</h3>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 text-sm">
+                        <div class="bg-white/10 p-2 sm:p-3 rounded-lg border border-white/20">
+                            <span class="block text-blue-200 text-[0.6rem] sm:text-xs uppercase tracking-wider font-semibold mb-1">Very High-Risk ASCVD</span>
+                            <span class="block font-bold text-base sm:text-lg text-white">LDL < 55 <span class="text-[0.65rem] sm:text-xs font-normal text-white/70">mg/dL</span></span>
+                            <span class="block text-slate-300 text-[0.65rem] sm:text-xs mt-1">Non-HDL < 85</span>
+                        </div>
+                        <div class="bg-white/10 p-2 sm:p-3 rounded-lg border border-white/20">
+                            <span class="block text-blue-200 text-[0.6rem] sm:text-xs uppercase tracking-wider font-semibold mb-1">Not Very High ASCVD</span>
+                            <span class="block font-bold text-base sm:text-lg text-white">LDL < 70 <span class="text-[0.65rem] sm:text-xs font-normal text-white/70">mg/dL</span></span>
+                            <span class="block text-slate-300 text-[0.65rem] sm:text-xs mt-1">Non-HDL < 100</span>
+                        </div>
+                        <div class="bg-white/10 p-2 sm:p-3 rounded-lg border border-white/20">
+                            <span class="block text-blue-200 text-[0.6rem] sm:text-xs uppercase tracking-wider font-semibold mb-1 leading-tight">1° Prev: High Risk / CAC 100-299</span>
+                            <span class="block font-bold text-base sm:text-lg text-white mt-1 sm:mt-0">LDL < 70 <span class="text-[0.65rem] sm:text-xs font-normal text-white/70">mg/dL</span></span>
+                            <span class="block text-slate-300 text-[0.65rem] sm:text-xs mt-1">Non-HDL < 100</span>
+                        </div>
+                        <div class="bg-white/10 p-2 sm:p-3 rounded-lg border border-white/20">
+                            <span class="block text-blue-200 text-[0.6rem] sm:text-xs uppercase tracking-wider font-semibold mb-1 leading-tight">1° Prev: Low/Int / CAC 1-99</span>
+                            <span class="block font-bold text-base sm:text-lg text-white mt-1 sm:mt-0">LDL < 100 <span class="text-[0.65rem] sm:text-xs font-normal text-white/70">mg/dL</span></span>
+                            <span class="block text-slate-300 text-[0.65rem] sm:text-xs mt-1">Non-HDL < 130</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Build the shell
+            const html = `
+                <div class="fade-in bg-white md:rounded-2xl md:shadow-sm md:border border-slate-200 overflow-hidden flex flex-col h-[70vh] md:h-[75vh] -mx-4 md:mx-0">
+                    <div class="p-3 sm:p-4 bg-slate-800 flex flex-col sm:flex-row gap-3 items-center sticky top-0 z-10">
+                        <h2 class="text-white text-sm sm:text-base font-bold flex items-center gap-2 w-full sm:w-auto"><i class="fa-solid fa-table-cells-large"></i> ${isLearner ? 'Guideline Matrix' : 'Comparison Matrix'}</h2>
+                        <div class="relative w-full sm:flex-1">
+                            <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="text" id="searchInput" placeholder="Cari topik atau kata kunci..." value="${state.searchQuery}"
+                                class="w-full pl-9 pr-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-white placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all"
+                                oninput="handleSearch(event)">
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-y-auto flex-grow hide-scrollbar p-4 md:p-4 bg-slate-50 md:bg-white">
+                        
+                        ${isLearner ? targetSummaryHtml : ''}
+
+                        <!-- Desktop Table -->
+                        <table class="w-full text-left border-collapse hidden md:table">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-[0.65rem] uppercase tracking-widest sticky top-0 z-10 shadow-sm">
+                                ${isLearner ? `<tr><th class="p-4 w-1/4 font-bold">Kategori</th><th class="p-4 w-1/3 font-bold">Situasi Klinis</th><th class="p-4 w-2/3 font-bold ${tableTitleClass}">Rekomendasi ACC/AHA 2026</th></tr>` 
+                                            : `<tr><th class="p-4 w-1/4 font-bold">Topik Kunci</th><th class="p-4 w-1/3 font-bold text-slate-500">Pedoman 2018 (Lama)</th><th class="p-4 w-auto font-bold ${tableTitleClass}">Pedoman 2026 (Baru)</th></tr>`}
+                            </thead>
+                            <tbody id="matrixTableBody">
+                                <!-- Data akan di-inject ke sini oleh updateCheatSheetResults -->
+                            </tbody>
+                        </table>
+                        
+                        <!-- Mobile Cards -->
+                        <div id="matrixMobileCards" class="md:hidden flex flex-col gap-3 pb-8">
+                             <!-- Data mobile akan di-inject ke sini -->
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+            
+            // Panggil injeksi data pertama kali
+            updateCheatSheetResults();
+        }
+
+        function updateCheatSheetResults() {
+            const isLearner = state.mode === 'learner';
+            const data = isLearner ? state.activeData : comparatorRaw;
+
+            const searchStr = state.searchQuery.toLowerCase();
+            const filteredData = data.filter(item => {
+                if (isLearner) return item.q.toLowerCase().includes(searchStr) || item.a.toLowerCase().includes(searchStr) || item.topic.toLowerCase().includes(searchStr);
+                return item.topic.toLowerCase().includes(searchStr) || item.new.toLowerCase().includes(searchStr);
+            });
+
+            // DESKTOP TABLE
+            let desktopRows = filteredData.map(item => {
+                if(isLearner) {
+                    return `
+                    <tr class="hover:bg-blue-50/50 border-b border-slate-100 group transition-colors">
+                        <td class="p-4 align-top w-1/4">
+                            <span class="px-2 py-1 rounded text-[0.65rem] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 mb-2 inline-block">${item.topic}</span><br>
+                            <span class="text-[0.7rem] font-bold px-2 py-0.5 rounded ${item.badgeClass} mb-2 inline-block">${item.urgency}</span>
+                        </td>
+                        <td class="p-4 text-sm font-semibold text-slate-800 align-top w-1/3 leading-snug">${item.q}</td>
+                        <td class="p-4 align-top w-2/3">
+                            <span class="font-bold text-sm text-blue-700 block mb-2 leading-snug">${item.a}</span>
+                            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-[0.8rem] text-slate-600"><span class="font-semibold text-slate-800">Rasional:</span> ${item.rationale}</div>
+                        </td>
+                    </tr>`;
+                } else {
+                    return `
+                    <tr class="hover:bg-violet-50/50 border-b border-slate-100">
+                        <td class="p-4 text-sm font-bold text-slate-800 align-top w-1/4">${item.topic}</td>
+                        <td class="p-4 align-top w-1/3 text-[0.85rem] text-slate-500 line-through decoration-slate-300">${item.old}</td>
+                        <td class="p-4 align-top w-auto bg-violet-50/20">
+                            <div class="text-[0.95rem] font-bold text-violet-800 mb-2">${item.new}</div>
+                            <div class="text-[0.8rem] text-slate-600 mt-2 p-2 bg-violet-100/50 rounded border border-violet-200/50"><span class="font-bold text-violet-900">Rasional: </span>${item.rationale}</div>
+                        </td>
+                    </tr>`;
+                }
+            }).join('');
+
+            // MOBILE CARDS
+            let mobileCards = filteredData.map(item => {
+                if(isLearner) {
+                    return `
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-2">
+                        <div class="flex justify-between items-start">
+                            <span class="text-[0.65rem] font-bold uppercase tracking-wider text-slate-500">${item.topic}</span>
+                            <span class="text-[0.6rem] font-bold px-2 py-0.5 rounded ${item.badgeClass}">${item.urgency}</span>
+                        </div>
+                        <h4 class="font-bold text-[0.95rem] text-slate-800 leading-snug mt-1">${item.q}</h4>
+                        <div class="bg-blue-50/50 mt-2 p-3 rounded-xl border border-blue-100">
+                            <p class="font-bold text-[0.9rem] text-blue-800 leading-snug mb-2">${item.a}</p>
+                            <p class="text-[0.75rem] text-slate-600"><strong class="text-slate-800">Why:</strong> ${item.rationale}</p>
+                        </div>
+                    </div>`;
+                } else {
+                    return `
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-2">
+                        <h4 class="font-bold text-sm text-slate-800 border-b pb-2 mb-1">${item.topic}</h4>
+                        <div class="flex gap-2 items-start mt-1">
+                            <span class="mt-1 text-[0.6rem] font-bold bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded">2018</span>
+                            <p class="text-[0.8rem] text-slate-500 line-through leading-tight">${item.old}</p>
+                        </div>
+                        <div class="flex gap-2 items-start bg-violet-50 p-3 rounded-lg border border-violet-200 mt-1 flex-col">
+                            <div class="flex items-start gap-2">
+                                <span class="mt-0.5 text-[0.6rem] font-bold bg-violet-200 text-violet-800 px-1.5 py-0.5 rounded shadow-sm">2026</span>
+                                <p class="text-[0.85rem] font-bold text-violet-900 leading-tight">${item.new}</p>
+                            </div>
+                            <p class="text-[0.75rem] text-slate-600 mt-2 pt-2 border-t border-violet-200/60"><strong class="text-slate-800">Rasional:</strong> ${item.rationale}</p>
+                        </div>
+                    </div>`;
+                }
+            }).join('');
+
+            const emptyState = `<div class="p-10 text-center w-full"><i class="fa-solid fa-magnifying-glass text-4xl text-slate-300 mb-3"></i><p class="text-slate-500 font-medium">Data tidak ditemukan.</p></div>`;
+
+            // Hanya mengganti isi tbody dan div mobile tanpa menghancurkan kerangka input search
+            const tbody = document.getElementById('matrixTableBody');
+            const mCards = document.getElementById('matrixMobileCards');
+
+            if (tbody) tbody.innerHTML = filteredData.length > 0 ? desktopRows : `<tr><td colspan="3">${emptyState}</td></tr>`;
+            if (mCards) mCards.innerHTML = filteredData.length > 0 ? mobileCards : emptyState;
+        }
+
+        window.handleSearch = (e) => {
+            state.searchQuery = e.target.value;
+            updateCheatSheetResults();
+        };
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        applyFilters();
+        updateUI();
+
+    </script>
+</body>
+</html>
