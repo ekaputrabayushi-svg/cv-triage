@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Flashcard: Jebakan Resusitasi Syok</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        .card-inner {
+            transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        .is-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        /* Custom Scrollbar with Emerald/Amber Theme */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(16, 185, 129, 0.05); 
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(16, 185, 129, 0.3); 
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(16, 185, 129, 0.6); 
+        }
+
+        .back-scrollbar::-webkit-scrollbar-track {
+            background: rgba(245, 158, 11, 0.05); 
+        }
+        .back-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(245, 158, 11, 0.3); 
+        }
+        .back-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(245, 158, 11, 0.6); 
+        }
+
+        .answer-text {
+            line-height: 1.6;
+            letter-spacing: 0.01em;
+        }
+        .answer-text strong {
+            color: #b45309; /* amber-700 for emphasis on back card */
+            font-weight: 700;
+        }
+        .answer-text .danger {
+            color: #dc2626; /* red-600 for extreme warnings */
+            font-weight: 800;
+        }
+        .answer-text ul, .answer-text ol {
+            padding-left: 1.5rem;
+            margin-top: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .answer-text ul { list-style-type: disc; }
+        .answer-text ol { list-style-type: decimal; }
+        .answer-text li {
+            margin-bottom: 0.5rem;
+        }
+        .answer-text em {
+            color: #047857; /* emerald-700 */
+            font-style: italic;
+            font-weight: 600;
+        }
+        .answer-text .trick-box {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid #f59e0b;
+            padding: 10px;
+            margin-top: 15px;
+            border-radius: 4px;
+        }
+
+        /* Ambient Glow Effects */
+        .glow-emerald {
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.2);
+        }
+        .glow-amber {
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.25);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-teal-950 to-emerald-900 text-slate-100 min-h-screen font-sans flex flex-col overflow-x-hidden selection:bg-amber-500 selection:text-white">
+
+    <header class="bg-slate-900/80 backdrop-blur-md shadow-lg p-3 md:p-4 sticky top-0 z-20 border-b border-emerald-800/50">
+        <div class="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
+            <div class="text-center sm:text-left">
+                <h1 class="text-lg sm:text-xl md:text-2xl font-black flex items-center justify-center sm:justify-start gap-2 text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-200">
+                    <span class="text-emerald-400">⚡</span> TRICKY SHOCK RESUSCITATION
+                </h1>
+                <p class="text-[10px] sm:text-xs md:text-sm text-emerald-300/70 font-medium tracking-wide">
+                    50 Jebakan Klinis & Workaround di FKTP
+                </p>
+            </div>
+            <div class="text-[10px] sm:text-xs md:text-sm font-bold bg-amber-500/10 px-4 py-1.5 rounded-full border border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.2)] text-center text-amber-400 tracking-wider">
+                ADVANCED LEVEL
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex flex-col items-center justify-start sm:justify-center p-4 md:p-8 max-w-5xl mx-auto w-full">
+        
+        <div class="w-full max-w-3xl flex justify-between items-center mb-4 md:mb-6">
+            <span id="card-category" class="text-xs md:text-sm uppercase tracking-widest text-teal-300 font-bold bg-teal-900/50 border border-teal-500/30 px-3 py-1.5 rounded-md shadow-sm backdrop-blur-sm">Kategori</span>
+            <span id="card-counter" class="text-xs md:text-sm bg-emerald-950/50 px-4 py-1.5 rounded-full shadow-sm font-bold border border-emerald-500/30 text-emerald-300 tracking-widest">1 / 50</span>
+        </div>
+
+        <div id="flashcard" tabindex="0" class="relative w-full max-w-3xl h-[72vh] min-h-[500px] md:h-[600px] perspective-1000 cursor-pointer group mb-8 touch-pan-y focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-500 rounded-3xl" onclick="toggleFlip(event)">
+            <div class="card-inner w-full h-full absolute transform-style-3d shadow-2xl rounded-3xl">
+                
+                <!-- Front (Question - Emerald Theme) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-slate-800 rounded-3xl p-6 md:p-10 flex flex-col items-center justify-center text-center border-2 border-emerald-500/30 glow-emerald overflow-hidden">
+                    <!-- Background Accent -->
+                    <div class="absolute -top-24 -right-24 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                    
+                    <div class="absolute top-5 left-6 text-emerald-900/40 font-black text-6xl md:text-7xl tracking-tighter pointer-events-none select-none">Q.</div>
+                    
+                    <div class="w-full h-full flex flex-col justify-center overflow-y-auto custom-scrollbar pt-12 pb-8 pr-2 relative z-10">
+                        <p id="question-text" class="text-base sm:text-lg md:text-2xl text-emerald-50 font-medium leading-relaxed m-auto tracking-wide">
+                            Memuat jebakan klinis...
+                        </p>
+                    </div>
+                    
+                    <div class="absolute bottom-5 text-xs md:text-sm text-emerald-400/60 flex items-center gap-2 font-medium tracking-widest uppercase">
+                        <span class="animate-pulse">Ketuk untuk analisis mendalam</span>
+                    </div>
+                </div>
+
+                <!-- Back (Answer - Amber Theme) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-amber-50 rounded-3xl p-6 md:p-10 flex flex-col items-start justify-start text-left rotate-y-180 border-4 border-amber-400 glow-amber overflow-hidden">
+                    <!-- Background Accent -->
+                    <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-amber-400/20 rounded-full blur-3xl pointer-events-none"></div>
+                    
+                    <div class="absolute top-5 right-6 text-amber-200/50 font-black text-5xl md:text-6xl tracking-tighter pointer-events-none select-none">SOLUSI</div>
+                    
+                    <div class="w-full h-full overflow-y-auto custom-scrollbar back-scrollbar pt-12 pb-8 pr-4 relative z-10">
+                        <div id="answer-text" class="answer-text text-sm md:text-lg text-slate-800 w-full font-normal">
+                            Memuat resolusi...
+                        </div>
+                    </div>
+                    
+                    <div class="absolute bottom-4 left-0 w-full text-center text-xs md:text-sm text-amber-600/60 font-bold tracking-widest uppercase flex items-center justify-center gap-1">
+                        <span class="animate-pulse">Ketuk untuk kembali</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="w-full max-w-3xl grid grid-cols-2 sm:flex sm:flex-row justify-center gap-3 md:gap-5 pb-12">
+            <button onclick="prevCard()" class="col-span-1 bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold text-sm md:text-base py-3 md:py-4 px-4 md:px-8 rounded-xl shadow-lg transition-all border border-emerald-500/30 flex justify-center items-center gap-2 active:scale-95">
+                <span>&larr;</span> <span class="hidden sm:inline">Prev Pitfall</span><span class="sm:hidden">Prev</span>
+            </button>
+            <button onclick="nextCard()" class="col-span-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm md:text-base py-3 md:py-4 px-4 md:px-8 rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all border border-emerald-400/50 flex justify-center items-center gap-2 active:scale-95">
+                <span class="hidden sm:inline">Next Pitfall</span><span class="sm:hidden">Next</span> <span>&rarr;</span>
+            </button>
+            <button onclick="shuffleCards()" class="col-span-2 sm:col-span-1 order-last sm:order-none bg-amber-500 hover:bg-amber-400 text-slate-900 font-black text-sm md:text-base py-3 md:py-4 px-4 md:px-6 rounded-xl shadow-[0_0_15px_rgba(245,158,11,0.4)] transition-all flex justify-center items-center active:scale-95 uppercase tracking-wider">
+                Acak Soal
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        const originalCards = [
+            {
+                cat: "Vital Sign Trap",
+                q: "Pasien pemuda 25 tahun pasca kecelakaan lalu lintas. Ia tampak sadar penuh, bisa diajak bercanda. Nadi 115 kali/menit, tekanan darah 120/80 mmHg, CRT 2 detik. Keluarga mendesak pulang karena 'tensinya normal'. Parameter tersembunyi apa yang harus Anda cek agar tidak tertipu?",
+                a: `<strong>Perhatikan pulse pressure.</strong><br><br>Syok hemoragik awal dapat tetap mempertahankan tekanan sistolik melalui aktivasi simpatis, tetapi diastolik sering naik akibat vasokonstriksi sehingga selisih sistolik-diastolik menyempit. Jadi angka 120 mmHg pada sistolik belum otomatis berarti perfusi aman, apalagi bila ada takikardia dan mekanisme trauma bermakna.<ul><li>Hitung selisih sistolik-diastolik, jangan hanya lihat satu angka tensi.</li><li>Bandingkan dengan nadi, warna kulit, suhu akral, dan keluhan haus atau gelisah.</li><li>Pikirkan perdarahan tersembunyi bila mekanisme trauma mendukung.</li></ul><div class="trick-box"><strong>Workaround:</strong> jangan puas dengan label “tensi normal”; integrasikan pulse pressure, shock index, dan tren pemeriksaan ulang.</div>`
+            },
+            {
+                cat: "Relative Bradycardia",
+                q: "Pasien trauma abdomen dengan hipotensi berat justru memiliki nadi 62 kali/menit. Apakah tidak adanya takikardia menyingkirkan syok perdarahan?",
+                a: `<strong>Tidak.</strong><br><br>Pada perdarahan tertentu dapat muncul bradikardia relatif karena refleks vagal, terutama pada perdarahan intraabdomen, stimulasi peritoneal, atau fase terminal kompensasi. Karena itu, tidak semua syok hemoragik tampil dengan nadi sangat cepat.<ul><li>Nadi “normal” atau lambat tidak boleh menenangkan bila perfusi buruk.</li><li>Hipotensi + trauma signifikan tetap harus dianggap perdarahan sampai terbukti sebaliknya.</li><li>Periksa sumber perdarahan tersembunyi secara sistematis.</li></ul><div class="trick-box"><strong>Workaround:</strong> bila cerita klinis sangat mendukung, perlakukan sebagai syok perdarahan sambil mencari penjelasan lain, bukan sebaliknya.</div>`
+            },
+            {
+                cat: "Lactate Proxy",
+                q: "Di fasilitas tingkat 1 tidak ada laktat darah. Tanda klinis sederhana apa yang dapat membantu menilai hipoperfusi perifer berat?",
+                a: `<strong>Mottling, akral dingin, dan pemanjangan CRT.</strong><br><br>Ketiga tanda ini tidak menggantikan laktat, tetapi sangat membantu sebagai proksi bedside untuk perfusi mikrosirkulasi yang buruk. Nilainya paling besar bila dinilai sebagai pola dan tren, bukan pemeriksaan tunggal.<ul><li>Lihat bercak marbling atau mottling di lutut dan tungkai.</li><li>Raba suhu akral, bandingkan dengan batang tubuh.</li><li>Ulangi CRT dengan teknik yang sama agar tren dapat dipercaya.</li></ul><div class="trick-box"><strong>Workaround:</strong> dokumentasikan waktu, lokasi, dan perubahan serial agar klinisi penerima rujukan mendapat gambaran evolusi perfusi.</div>`
+            },
+            {
+                cat: "Fluid Challenge",
+                q: "Anda melakukan fluid challenge 500 mL tetapi dihabiskan selama 2 jam. Setelah itu tensi tetap rendah. Apakah pasien otomatis non-responder?",
+                a: `<strong>Belum tentu.</strong><br><br>Fluid challenge bertujuan menguji apakah tambahan preload cepat memperbaiki hemodinamik. Bila diberikan terlalu lambat, efek bolus tercampur dengan redistribusi cairan dan proses penyakit sehingga uji tersebut menjadi tidak valid.<ul><li>Bolus harus terukur dan diberikan dalam waktu singkat.</li><li>Nilai ulang nadi, tekanan darah, status mental, CRT, dan napas segera sesudahnya.</li><li>Waspadai overload bila pasien punya gagal jantung atau paru basah.</li></ul><div class="trick-box"><strong>Workaround:</strong> gunakan bolus kecil-cepat dengan target evaluasi yang jelas, bukan infus lambat tanpa titik penilaian.</div>`
+            },
+            {
+                cat: "PLR Trap",
+                q: "Mengapa passive leg raising yang dilakukan pada pasien setengah duduk tanpa reposisi batang tubuh sering menyesatkan?",
+                a: `<strong>Karena manuvernya tidak standar.</strong><br><br>PLR bekerja sebagai autotransfusi sementara dari tungkai dan splanchnic bed. Bila posisi awal dan perubahan posisi tidak benar, volume darah yang kembali ke jantung tidak optimal sehingga hasilnya bias.<ul><li>PLR harus dilakukan konsisten agar interpretasi bisa dipercaya.</li><li>Respons yang dinilai idealnya adalah perubahan perfusi atau hemodinamik yang cepat.</li><li>Manuver ini hanya bermakna bila dievaluasi segera sesudah dilakukan.</li></ul><div class="trick-box"><strong>Workaround:</strong> standarkan teknik di tim: mulai dari semi-recumbent lalu angkat tungkai sambil rebahkan batang tubuh.</div>`
+            },
+            {
+                cat: "Permissive Hypotension",
+                q: "Pasien trauma penetrasi abdomen syok mulai membaik setelah cairan pertama, sistolik 85 mmHg. Haruskah dikejar sampai normotensi penuh sebelum rujuk?",
+                a: `<strong>Tidak selalu.</strong><br><br>Pada trauma perdarahan tanpa cedera kepala berat, over-resuscitation dapat merusak bekuan yang sedang terbentuk, meningkatkan perdarahan, dan menyebabkan dilusi faktor koagulasi. Tujuan awal sering cukup pada perfusi minimal yang dapat mempertahankan kesadaran dan nadi sentral sambil menuju kontrol perdarahan definitif.<ul><li>Normotensi penuh bukan target universal pada semua trauma perdarahan.</li><li>Konteks cedera kepala, usia, dan komorbid tetap harus dipertimbangkan.</li><li>Prioritas utama tetap kontrol sumber perdarahan dan rujukan cepat.</li></ul><div class="trick-box"><strong>Workaround:</strong> pahami hipotensi permisif sebagai strategi jembatan, bukan alasan menunda tindakan definitif.</div>`
+            },
+            {
+                cat: "Crystalloid Choice",
+                q: "Mengapa penggunaan NaCl 0,9% dalam jumlah besar bisa memperburuk keadaan pada pasien syok tertentu?",
+                a: `<strong>Karena dapat memicu asidosis metabolik hiperkloremik.</strong><br><br>Beban klorida tinggi dapat mengganggu keseimbangan asam-basa dan berpotensi berdampak buruk pada perfusi ginjal. Pada resusitasi besar, cairan balanced lebih fisiologis bila tersedia, walau pilihan akhir tetap dipengaruhi ketersediaan fasilitas.<ul><li>Masalahnya bukan NaCl 0,9% selalu salah, tetapi volume besar tanpa evaluasi.</li><li>Asidosis tambahan dapat memperumit syok yang sudah berat.</li><li>Pantau klinis dan segera rujuk bila kebutuhan cairan terus meningkat.</li></ul><div class="trick-box"><strong>Workaround:</strong> gunakan cairan yang ada secara bijak, tetapi kenali kapan jumlah besar mulai lebih berisiko daripada bermanfaat.</div>`
+            },
+            {
+                cat: "TXA Window",
+                q: "Kapan pemberian traneksamat pada trauma perdarahan paling bermanfaat?",
+                a: `<strong>Paling baik dalam 3 jam pertama pascatrauma.</strong><br><br>Manfaat terbesar muncul bila diberikan dini, karena fase hiperfibrinolisis paling relevan terjadi pada awal perjalanan trauma. Setelah lewat jendela waktu tersebut, keuntungan menurun dan pada beberapa konteks justru dapat merugikan.<ul><li>Jam kejadian harus ditanyakan secara spesifik, bukan kira-kira.</li><li>Jangan menunggu pasien tampak sangat buruk bila indikasi sudah kuat.</li><li>Dokumentasikan waktu pemberian untuk tim rujukan.</li></ul><div class="trick-box"><strong>Workaround:</strong> masukkan pertanyaan “jam kejadian berapa?” ke dalam checklist primer trauma.</div>`
+            },
+            {
+                cat: "Pelvic Binder",
+                q: "Pada fraktur pelvis open-book, posisi pemasangan binder improvisasi yang paling tepat ada di mana?",
+                a: `<strong>Di level trokanter mayor.</strong><br><br>Binder yang dipasang terlalu tinggi di krista iliaka atau pinggang gagal menutup cincin pelvis secara efektif. Tujuannya adalah mengurangi volume pelvis dan membantu tamponade perdarahan.<ul><li>Trokanter mayor adalah landmark kunci.</li><li>Sprei tebal dapat dipakai bila binder komersial tidak tersedia.</li><li>Pastikan cukup ketat, tetapi tidak longgar atau terlalu kranial.</li></ul><div class="trick-box"><strong>Workaround:</strong> sebelum mengikat, sentuh dua trokanter terlebih dulu agar pemasangan improvisasi tetap anatomi.</div>`
+            },
+            {
+                cat: "Chest Bleeding",
+                q: "Trauma dada dengan bunyi napas menurun dan perkusi redup pada satu sisi lebih mengarah ke kondisi apa?",
+                a: `<strong>Hemotoraks.</strong><br><br>Perkusi redup lebih konsisten dengan cairan atau darah dibanding udara. Ini penting agar tidak semua gangguan napas traumatik dengan syok otomatis dianggap tension pneumothorax.<ul><li>Bunyi napas menurun saja tidak cukup; perkusi memberi arah penting.</li><li>Hemotoraks dapat berkontribusi pada hipovolemia dan gangguan ventilasi sekaligus.</li><li>Korelasikan dengan mekanisme trauma dan deviasi trakea bila ada.</li></ul><div class="trick-box"><strong>Workaround:</strong> jangan lompat ke satu diagnosis hanya dari auskultasi; gabungkan inspeksi, perkusi, dan palpasi.</div>`
+            },
+            {
+                cat: "Tension Pneumothorax",
+                q: "Kapan Anda harus sangat curiga tension pneumothorax pada pasien syok?",
+                a: `<strong>Saat ada distres napas, hipotensi, bunyi napas unilateral menurun, dan perkusi hipersonor dengan tanda obstruktif.</strong><br><br>Masalah utamanya adalah peningkatan tekanan intratoraks yang menurunkan venous return, bukan kehilangan darah primer. Kondisi ini bisa membunuh sangat cepat bila pengenalan tertunda.<ul><li>Hipersonor mengarah ke udara, bukan cairan.</li><li>Pasien dapat memburuk mendadak setelah ventilasi tekanan positif.</li><li>Pada gambaran klasik, tindakan dekompresi bersifat emergensi.</li></ul><div class="trick-box"><strong>Workaround:</strong> jika klinis sangat khas, jangan menunggu foto toraks sebelum melakukan tindakan penyelamatan nyawa.</div>`
+            },
+            {
+                cat: "Obstructive Shock",
+                q: "Apa ciri berpikir utama untuk membedakan syok obstruktif dari syok hipovolemik?",
+                a: `<strong>Pada syok obstruktif, darah ada tetapi alirannya terhambat.</strong><br><br>Tamponade, tension pneumothorax, dan emboli paru masif merupakan contoh klasik. Pasien dapat tampak sangat kolaps walau perdarahan eksternal tidak terlihat banyak.<ul><li>Pikirkan hambatan mekanis pada pengisian atau pengosongan jantung.</li><li>Cairan saja sering tidak menyelesaikan akar masalah.</li><li>Pemeriksaan fisik terarah bisa memberi petunjuk cepat.</li></ul><div class="trick-box"><strong>Workaround:</strong> saat cairan tidak masuk akal menjelaskan semuanya, cari sumbatan mekanis yang dapat dibalik.</div>`
+            },
+            {
+                cat: "Sepsis Hidden",
+                q: "Mengapa lansia dengan infeksi berat bisa tampak tanpa demam tetapi tetap mengalami syok sepsis?",
+                a: `<strong>Karena respons inflamasi lansia dapat tumpul.</strong><br><br>Tidak adanya demam sama sekali tidak menyingkirkan infeksi berat pada usia lanjut. Delirium, takipnea, penurunan intake, oliguria, dan kemunduran fungsional sering lebih bermakna daripada suhu tubuh semata.<ul><li>Lansia dapat datang hanya dengan bingung atau lemah mendadak.</li><li>Takipnea sering merupakan petunjuk paling awal.</li><li>Sepsis harus dipikirkan meski suhu normal atau rendah.</li></ul><div class="trick-box"><strong>Workaround:</strong> ubah mindset dari “ada demam atau tidak” menjadi “ada perubahan fisiologi yang tidak wajar atau tidak”.</div>`
+            },
+            {
+                cat: "Sepsis Bundle",
+                q: "Apa prioritas awal paling penting pada syok sepsis di layanan awal?",
+                a: `<strong>Resusitasi cairan terukur, kultur bila memungkinkan tanpa menunda, dan antibiotik dini.</strong><br><br>Pada sepsis, waktu benar-benar menentukan. Keterlambatan antibiotik adekuat memperbesar risiko kegagalan organ dan mortalitas, sementara resusitasi tanpa antibiotik tidak menyelesaikan sumber inflamasi infeksius.<ul><li>Mulai dari ABC, akses IV, dan perfusi.</li><li>Kultur boleh diupayakan bila tidak menunda terapi bermakna.</li><li>Identifikasi sumber infeksi sejak awal untuk memperbaiki pilihan terapi.</li></ul><div class="trick-box"><strong>Workaround:</strong> bila kecurigaan klinis sangat kuat, jangan menunggu panel lengkap sebelum memulai antibiotik.</div>`
+            },
+            {
+                cat: "CHF + Sepsis",
+                q: "Bagaimana prinsip pemberian cairan pada pasien sepsis yang juga punya gagal jantung berat?",
+                a: `<strong>Berikan bolus kecil bertahap dengan re-evaluasi ketat.</strong><br><br>Pasien seperti ini tetap dapat mengalami hipovolemia relatif dan tetap memerlukan cairan, tetapi toleransi terhadap kelebihan cairan jauh lebih sempit. Strategi yang aman adalah micro-fluid challenge dengan pemantauan paru dan perfusi yang sering.<ul><li>Nilai ulang sesak, ronki, saturasi, dan kerja napas.</li><li>Perhatikan apakah tekanan dan kesadaran membaik tanpa kongesti bertambah.</li><li>Hindari “guyur standar” tanpa pemikiran individual.</li></ul><div class="trick-box"><strong>Workaround:</strong> berikan sedikit, nilai cepat, lalu putuskan lagi; jangan menganggap semua sepsis butuh skema cairan yang sama.</div>`
+            },
+            {
+                cat: "Anaphylaxis",
+                q: "Pada syok anafilaksis, rute epinefrin awal yang paling aman di fasilitas awal adalah apa?",
+                a: `<strong>Intramuskular di paha anterolateral.</strong><br><br>Rute IM memberi onset cepat dengan margin keamanan yang lebih baik dibanding bolus IV ampul pekat tanpa pengenceran dan monitor memadai. Kesalahan paling berbahaya adalah panik lalu menyuntikkan epinefrin pekat langsung ke vena tanpa perhitungan benar.<ul><li>Epinefrin adalah terapi utama, bukan antihistamin.</li><li>Tanda kulit dapat tidak dominan pada anafilaksis berat.</li><li>Airway dan bronkospasme harus dipantau paralel.</li></ul><div class="trick-box"><strong>Workaround:</strong> buat protokol dosis IM yang tertempel di area emergensi agar tim tidak ragu saat kondisi genting.</div>`
+            },
+            {
+                cat: "Beta-blocker Effect",
+                q: "Mengapa anafilaksis pada pasien pengguna beta-blocker bisa tampak lebih refrakter?",
+                a: `<strong>Karena respons terhadap epinefrin dapat berkurang.</strong><br><br>Blokade reseptor beta dapat menghambat sebagian efek bronkodilatasi dan dukungan inotropik dari adrenalin. Akibatnya, pasien dapat tampak lebih sulit membaik dan membutuhkan kewaspadaan lebih tinggi.<ul><li>Riwayat obat wajib ditanyakan pada reaksi alergi berat.</li><li>Hipotensi dan bronkospasme bisa lebih persisten.</li><li>Glukagon dapat dipikirkan bila tersedia dan konteks mendukung.</li></ul><div class="trick-box"><strong>Workaround:</strong> saat epinefrin tampak kurang efektif, cek apakah ada beta-blocker yang ikut mengubah respons klinis.</div>`
+            },
+            {
+                cat: "Neurogenic vs Hemorrhagic",
+                q: "Pada trauma servikal dengan hipotensi, bagaimana petunjuk klinis sederhana yang membantu membedakan syok neurogenik dari hemoragik?",
+                a: `<strong>Lihat suhu kulit, nadi, dan distribusi perfusi.</strong><br><br>Syok neurogenik cenderung memberi vasodilatasi dengan kulit relatif hangat serta bradikardia relatif, sedangkan hemoragik lebih sering menghadirkan akral dingin dan takikardia. Namun, keduanya dapat koeksis pada trauma multipel sehingga perdarahan tidak boleh cepat disingkirkan.<ul><li>Jangan memakai satu tanda tunggal sebagai pemutus akhir.</li><li>Trauma besar tetap harus dianggap perdarahan dulu sampai dibuktikan aman.</li><li>Evaluasi sumber perdarahan harus berjalan paralel.</li></ul><div class="trick-box"><strong>Workaround:</strong> pada pasien cedera servikal yang hipotensi, pikirkan dua jalur sekaligus: kontrol perdarahan dan identifikasi kehilangan tonus simpatis.</div>`
+            },
+            {
+                cat: "Cardiogenic Shock",
+                q: "Apa inti masalah pada syok kardiogenik?",
+                a: `<strong>Pompa jantung gagal menghasilkan curah jantung yang cukup.</strong><br><br>Akibatnya organ tidak terperfusi walau volume intravaskular belum tentu berkurang. Pasien sering tampak dingin, lembap, oliguria, dan dapat disertai kongesti paru atau tekanan vena tinggi.<ul><li>Hipotensi bukan satu-satunya tanda; hipoperfusi adalah inti masalah.</li><li>Cairan berlebihan dapat memperburuk edema paru.</li><li>Cari pencetus seperti infark, aritmia, atau gangguan mekanik.</li></ul><div class="trick-box"><strong>Workaround:</strong> sebelum memberi bolus besar, tanyakan: apakah masalah utamanya kekurangan volume atau kegagalan pompa?</div>`
+            },
+            {
+                cat: "RV Infarct",
+                q: "Mengapa pasien infark ventrikel kanan bisa memburuk bila diberi furosemid atau nitrat?",
+                a: `<strong>Karena keduanya menurunkan preload yang justru sangat dibutuhkan.</strong><br><br>Ventrikel kanan yang cedera sangat bergantung pada venous return untuk mempertahankan aliran ke ventrikel kiri. Menurunkan preload dapat menyebabkan kolaps hemodinamik secara cepat.<ul><li>Pikirkan RV infarct pada hipotensi, JVP tinggi, dan paru yang relatif bersih.</li><li>Jangan refleks memberikan nitrat pada semua nyeri dada dengan ST elevasi.</li><li>Interpretasi EKG dan konteks klinis sangat menentukan.</li></ul><div class="trick-box"><strong>Workaround:</strong> bila ada kecurigaan infark ventrikel kanan, tahan dorongan memberi obat penurun preload sebelum menilai ulang gambaran lengkap.</div>`
+            },
+            {
+                cat: "AF with Shock",
+                q: "AF rapid ventricular response pada pasien hipotensi berat termasuk kategori apa secara tatalaksana?",
+                a: `<strong>Aritmia tidak stabil.</strong><br><br>Bila laju sangat cepat sudah menyebabkan hipotensi, nyeri dada iskemik, edema paru, atau penurunan kesadaran, masalahnya bukan sekadar “AF biasa” melainkan instabilitas hemodinamik. Koreksi ritme dengan kardioversi sinkron menjadi prioritas dibanding menunggu obat kerja lambat.<ul><li>Stabilitas hemodinamik menentukan jalur terapi.</li><li>Jangan fokus pada monitor sambil melupakan perfusi klinis.</li><li>AF bisa menjadi penyebab syok, bukan hanya temuan tambahan.</li></ul><div class="trick-box"><strong>Workaround:</strong> tanyakan cepat: apakah pasien syok karena AF, atau AF muncul karena pasien sudah syok dari sebab lain?</div>`
+            },
+            {
+                cat: "Brady Shock",
+                q: "Pasien nadi 28 kali/menit, pusing, hipotensi, dan penurunan kesadaran. Fokus awal Anda apa?",
+                a: `<strong>Tangani sebagai bradikardia simptomatik tidak stabil.</strong><br><br>Nadi sangat rendah yang sudah menimbulkan tanda hipoperfusi adalah masalah klinis emergen. Menunggu EKG sempurna atau observasi panjang hanya menambah risiko henti jantung.<ul><li>Prioritas pada airway, sirkulasi, dan koreksi penyebab yang dapat dibalik.</li><li>Atropin, pacing, atau dukungan sirkulasi dipikirkan sesuai fasilitas.</li><li>Hiperkalemia, infark, dan obat harus masuk daftar cepat.</li></ul><div class="trick-box"><strong>Workaround:</strong> bila pasien sudah tidak perfusif, perlakukan ritme lambat itu sebagai ancaman nyawa sekarang, bukan teka-teki diagnostik dulu.</div>`
+            },
+            {
+                cat: "Hyperkalemia",
+                q: "Perubahan EKG apa yang harus langsung mengingatkan pada hiperkalemia berbahaya?",
+                a: `<strong>Gelombang T runcing, pelebaran QRS, hingga pola pra-henti.</strong><br><br>Hiperkalemia berat dapat dengan cepat menyebabkan aritmia fatal. Pada pasien gagal ginjal, pengguna obat tertentu, atau kondisi asidosis, kewaspadaan harus lebih tinggi walau hasil lab belum keluar lengkap.<ul><li>QRS yang makin melebar adalah tanda penting.</li><li>EKG dapat berubah cepat, jadi serial tracing bermanfaat.</li><li>Stabilisasi membran dapat menjadi prioritas bila klinis sangat mendukung.</li></ul><div class="trick-box"><strong>Workaround:</strong> bila EKG dan konteks sangat khas, jangan menunggu semua angka laboratorium sebelum memulai tata laksana emergensi.</div>`
+            },
+            {
+                cat: "DKA Shock",
+                q: "Mengapa pasien ketoasidosis diabetik bisa tampak seperti syok campuran?",
+                a: `<strong>Karena ada dehidrasi berat, asidosis, vasodilatasi relatif, dan kadang sepsis pencetus.</strong><br><br>DKA bukan sekadar gula tinggi. Kondisi ini dapat melibatkan kehilangan cairan besar, gangguan elektrolit, penurunan tonus vaskular relatif, serta infeksi atau faktor pemicu lain yang berjalan bersamaan.<ul><li>Satu label saja sering tidak cukup menjelaskan seluruh fisiologi.</li><li>Asidosis memperburuk kontraktilitas dan perfusi.</li><li>Tata laksana harus berjalan paralel dan terstruktur.</li></ul><div class="trick-box"><strong>Workaround:</strong> jangan puas dengan diagnosis DKA saja; selalu cari pencetus dan komponen syok lain yang menyertainya.</div>`
+            },
+            {
+                cat: "Burn Shock",
+                q: "Pada luka bakar luas, mengapa syok awal bisa terjadi walau perdarahan eksternal tampak minimal?",
+                a: `<strong>Karena kebocoran kapiler masif menyebabkan kehilangan cairan intravaskular ke jaringan.</strong><br><br>Plasma berpindah ke interstisium sehingga volume sirkulasi efektif turun tajam. Karena itu, pasien luka bakar luas bisa masuk syok walau tidak tampak banyak darah di luar tubuh.<ul><li>Luas luka bakar harus dihitung sejak awal.</li><li>Resusitasi cairan pada luka bakar punya prinsip khusus.</li><li>Pantau urine output dan tanda kongesti/under-resuscitation.</li></ul><div class="trick-box"><strong>Workaround:</strong> jangan menilai berat syok bakar hanya dari jumlah darah yang terlihat; pikirkan kehilangan plasma tersembunyi.</div>`
+            },
+            {
+                cat: "GI Bleeding",
+                q: "Pasien muntah hitam dan melena dengan tekanan darah borderline tetapi takikardia. Jebakan umum dalam menilai stabilitasnya apa?",
+                a: `<strong>Terlalu percaya pada tekanan darah yang belum jatuh.</strong><br><br>Perdarahan saluran cerna dapat sudah besar sebelum hipotensi tampak jelas, terutama bila kompensasi simpatis masih bekerja. Takikardia, pucat, sinkop berdiri, dan kelemahan progresif adalah alarm yang sering muncul lebih awal.<ul><li>Tekanan darah tunggal tidak menggambarkan keseluruhan cadangan pasien.</li><li>Status mental dan perfusi perifer memberi konteks penting.</li><li>Riwayat jumlah muntah darah atau frekuensi melena juga membantu.</li></ul><div class="trick-box"><strong>Workaround:</strong> pada perdarahan GI, perlakukan tren klinis sebagai penentu utama, bukan sekadar satu angka tekanan darah.</div>`
+            },
+            {
+                cat: "Occult Bleeding",
+                q: "Apa tiga lokasi klasik perdarahan tersembunyi besar pada trauma bila perdarahan luar tidak tampak?",
+                a: `<strong>Dada, abdomen/pelvis, dan paha.</strong><br><br>Ketiga kompartemen ini dapat menampung volume darah besar tanpa segera terlihat dari luar. Karena itu, pasien trauma bisa berada dalam syok berat walau lantai IGD tetap bersih.<ul><li>Periksa thoraks untuk hemotoraks.</li><li>Curigai abdomen dan pelvis pada mekanisme energi tinggi.</li><li>Paha dapat menyimpan darah banyak pada fraktur femur.</li></ul><div class="trick-box"><strong>Workaround:</strong> biasakan berpikir “where is the blood?” setiap kali menemui trauma hipotensif tanpa perdarahan eksternal nyata.</div>`
+            },
+            {
+                cat: "PE Shock",
+                q: "Mengapa emboli paru masif bisa menyebabkan syok?",
+                a: `<strong>Karena aliran ke sirkulasi pulmonal tersumbat mendadak dan ventrikel kanan kolaps.</strong><br><br>Hambatan akut di paru meningkatkan afterload ventrikel kanan, menurunkan aliran ke ventrikel kiri, lalu menjatuhkan curah jantung sistemik. Jadi akar masalahnya adalah obstruksi, bukan kekurangan cairan primer.<ul><li>Gejala bisa berupa sesak mendadak, sinkop, atau nyeri pleuritik.</li><li>Faktor risiko trombosis sangat membantu memperkuat kecurigaan.</li><li>Cairan berlebih tidak otomatis membantu dan bisa memperberat RV.</li></ul><div class="trick-box"><strong>Workaround:</strong> pada syok dengan sesak mendadak tanpa sumber jelas, selalu sisihkan ruang berpikir untuk emboli paru masif.</div>`
+            },
+            {
+                cat: "Tamponade Logic",
+                q: "Mengapa cairan bolus kecil kadang membantu sementara pada tamponade sebelum tindakan definitif?",
+                a: `<strong>Karena dapat sedikit meningkatkan preload dan mempertahankan pengisian jantung.</strong><br><br>Pada tamponade, jantung tertekan oleh cairan perikard sehingga pengisian diastolik terganggu. Tambahan preload kecil kadang memperbaiki keadaan sementara, tetapi tidak menghilangkan tekanan perikard sebagai penyebab utama.<ul><li>Perbaikan setelah cairan tidak menyingkirkan tamponade.</li><li>Distensi vena leher dan bunyi jantung dapat membantu, walau tidak selalu lengkap.</li><li>Tindakan definitif tetap diperlukan bila diagnosis kuat.</li></ul><div class="trick-box"><strong>Workaround:</strong> jangan tertipu oleh respons sementara; perlakukan cairan sebagai jembatan, bukan solusi akhir.</div>`
+            },
+            {
+                cat: "Spinal Shock",
+                q: "Mengapa pasien cedera medula bisa hipotensi tanpa takikardia?",
+                a: `<strong>Karena tonus simpatis hilang.</strong><br><br>Hilangnya kontrol simpatis menimbulkan vasodilatasi perifer dan menghambat respons takikardia kompensatorik. Inilah sebab syok neurogenik tampak berbeda dari syok hipovolemik klasik yang dingin dan takikardik.<ul><li>Bradikardia relatif adalah petunjuk penting.</li><li>Kulit dapat terasa lebih hangat dibanding syok perdarahan.</li><li>Namun trauma besar tetap dapat disertai perdarahan simultan.</li></ul><div class="trick-box"><strong>Workaround:</strong> jangan membiarkan diagnosis neurogenik membuat Anda lupa mencari perdarahan yang juga bisa membunuh pasien.</div>`
+            },
+            {
+                cat: "Adrenal Crisis",
+                q: "Kapan syok yang tidak responsif seperti biasa harus membuat Anda curiga krisis adrenal?",
+                a: `<strong>Saat ada hipotensi refrakter dengan riwayat penggunaan steroid, penyakit adrenal, hipoglikemia, atau hiponatremia.</strong><br><br>Krisis adrenal sering menyamar sebagai sepsis, gastroenteritis berat, atau kolaps nonspesifik. Respons yang buruk terhadap cairan dan vasopresor standar harus membuat kecurigaan meningkat, terutama bila riwayat mendukung.<ul><li>Tanya penggunaan steroid kronik atau penghentian mendadak.</li><li>Hipoglikemia dan gangguan natrium dapat menjadi petunjuk.</li><li>Penanganan tidak boleh tertunda bila kecurigaan tinggi.</li></ul><div class="trick-box"><strong>Workaround:</strong> saat syok terasa “tidak masuk pola”, cek kembali riwayat endokrin dan obat yang mungkin terlupakan.</div>`
+            },
+            {
+                cat: "Medication History",
+                q: "Mengapa riwayat obat sangat penting pada evaluasi syok?",
+                a: `<strong>Karena obat bisa menjadi penyebab, pemicu, atau penghambat respons kompensasi.</strong><br><br>Beta-blocker dapat menutupi takikardia, diuretik dapat memperberat dehidrasi, antikoagulan meningkatkan risiko perdarahan, dan insulin/obat antidiabetik bisa terkait hipoglikemia. Tanpa riwayat obat, gambaran syok sering hanya terlihat setengah. <ul><li>Tanyakan obat rutin, obat terakhir diminum kapan, dan obat baru.</li><li>Jangan lupa obat nonresep atau herbal tertentu.</li><li>Perubahan dosis baru sering penting.</li></ul><div class="trick-box"><strong>Workaround:</strong> minta keluarga menunjukkan foto obat dari rumah bila pasien tak dapat memberi riwayat yang baik.</div>`
+            },
+            {
+                cat: "ISDN Trap",
+                q: "Pertanyaan skrining apa yang harus ditanyakan sebelum memberi nitrat sublingual pada nyeri dada?",
+                a: `<strong>Apakah pasien memakai sildenafil, tadalafil, atau obat ereksi sejenis.</strong><br><br>Kombinasi nitrat dengan PDE-5 inhibitor dapat menyebabkan vasodilatasi berat dan hipotensi berbahaya. Pertanyaan ini sering terlewat karena dianggap sensitif, padahal justru sangat penting untuk keselamatan pasien.<ul><li>Masukkan ke daftar skrining rutin, bukan pertanyaan opsional.</li><li>Tanyakan waktu konsumsi terakhir bila jawabannya ya.</li><li>Risiko makin besar bila pasien sudah borderline hipotensif.</li></ul><div class="trick-box"><strong>Workaround:</strong> gunakan bahasa netral dan rutin agar pasien tidak merasa dihakimi saat menjawab.</div>`
+            },
+            {
+                cat: "Vasopressor Route",
+                q: "Mengapa norepinefrin di vena kecil punggung tangan berisiko tinggi?",
+                a: `<strong>Karena ekstravasasi dapat menyebabkan iskemia jaringan lokal berat.</strong><br><br>Vasopresor bersifat sangat vasokonstriktif. Bila bocor ke jaringan sekitar, aliran darah lokal dapat menurun drastis hingga menimbulkan nekrosis.<ul><li>Vena perifer proksimal besar lebih aman daripada vena distal kecil.</li><li>Area infus harus terlihat dan sering diperiksa.</li><li>Rasa nyeri, pucat, atau bengkak di sekitar infus adalah alarm.</li></ul><div class="trick-box"><strong>Workaround:</strong> bila terpaksa memakai akses perifer, pilih lokasi terbaik yang tersedia dan jadwalkan inspeksi ketat sejak menit pertama.</div>`
+            },
+            {
+                cat: "Shock Index",
+                q: "Apa kegunaan sederhana shock index di layanan primer?",
+                a: `<strong>Memberi petunjuk dini bahwa perfusi mulai bermasalah meski sistolik belum jatuh drastis.</strong><br><br>Shock index dihitung dari nadi dibagi tekanan sistolik. Kenaikan nilainya dapat menjadi alarm awal bahwa kompensasi sedang bekerja keras dan pasien mungkin menuju dekompensasi.<ul><li>Berguna sebagai alat bantu sederhana di bedside.</li><li>Tidak menggantikan pemeriksaan klinis komprehensif.</li><li>Lebih kuat bila dipakai serial.</li></ul><div class="trick-box"><strong>Workaround:</strong> gunakan shock index untuk memperkuat intuisi klinis saat angka tensi tampak “masih baik” padahal pasien terlihat buruk.</div>`
+            },
+            {
+                cat: "CRT",
+                q: "Mengapa capillary refill time harus dibaca hati-hati?",
+                a: `<strong>Karena dipengaruhi suhu lingkungan, pencahayaan, usia, dan teknik pemeriksaan.</strong><br><br>CRT berguna, tetapi sangat rentan bias bila dilakukan tidak konsisten. Hasil yang tampak “jelek” di ruangan dingin atau pada pasien usia lanjut belum tentu bermakna bila tidak dikaitkan dengan data lain.<ul><li>Gunakan lokasi dan durasi penekanan yang konsisten.</li><li>Interpretasikan bersama suhu akral dan status mental.</li><li>Nilai serial lebih penting daripada satu angka tunggal.</li></ul><div class="trick-box"><strong>Workaround:</strong> perlakukan CRT sebagai bagian dari mosaik perfusi, bukan hakim tunggal diagnosis syok.</div>`
+            },
+            {
+                cat: "Urine Output",
+                q: "Mengapa urine output sangat penting dalam memantau syok?",
+                a: `<strong>Karena ginjal adalah indikator sensitif perfusi organ.</strong><br><br>Penurunan produksi urine sering menandakan bahwa curah jantung atau perfusi efektif tidak mencukupi. Kadang-kadang, indikator ini lebih jujur daripada satu kali tekanan darah yang tampak masih normal.<ul><li>Oliguria adalah red flag yang harus dihormati.</li><li>Pencatatan serial membantu melihat respons terapi.</li><li>Interpretasi harus mempertimbangkan penyakit ginjal sebelumnya.</li></ul><div class="trick-box"><strong>Workaround:</strong> bila kondisi pasien cukup kritis, upayakan dokumentasi output serial sejak awal perjalanan tatalaksana.</div>`
+            },
+            {
+                cat: "Mental Status",
+                q: "Apa arti perubahan kesadaran baru pada pasien syok?",
+                a: `<strong>Itu tanda hipoperfusi serebral sampai terbukti bukan.</strong><br><br>Gelisah, bingung, apatis, atau penurunan kesadaran mendadak sering mencerminkan otak yang mulai kehilangan perfusi adekuat. Pada lansia, perubahan perilaku halus dapat menjadi sinyal yang sangat awal.<ul><li>Perubahan mental bukan gejala tambahan biasa.</li><li>Harus memicu evaluasi ulang ABC dan perfusi.</li><li>Perburukan kesadaran sering mendahului kolaps penuh.</li></ul><div class="trick-box"><strong>Workaround:</strong> bila keluarga berkata pasien “tidak seperti biasanya”, anggap itu data klinis penting, bukan komentar emosional.</div>`
+            },
+            {
+                cat: "Cold vs Warm Shock",
+                q: "Apa perbedaan konsep cold shock dan warm shock?",
+                a: `<strong>Cold shock didominasi perfusi perifer buruk dan vasokonstriksi, sedangkan warm shock didominasi vasodilatasi dengan ekstremitas hangat.</strong><br><br>Keduanya sama-sama berbahaya, tetapi tampil dengan fisiologi perifer yang berbeda. Sepsis awal dapat tampak warm, lalu berubah menjadi cold ketika kompensasi gagal atau curah jantung menurun.<ul><li>Sentuhan pada kulit memberi informasi penting.</li><li>Monitor saja tidak bisa memberi tahu suhu perifer.</li><li>Fenotipe dapat berubah sepanjang perjalanan penyakit.</li></ul><div class="trick-box"><strong>Workaround:</strong> biasakan menyentuh pasien dan menilai perifer langsung, jangan hanya membaca layar monitor.</div>`
+            },
+            {
+                cat: "Pediatric Shock",
+                q: "Mengapa anak bisa tiba-tiba kolaps walau sebelumnya tekanan darah tampak normal?",
+                a: `<strong>Karena anak mampu mengompensasi lama lalu dekompensasi mendadak.</strong><br><br>Hipotensi pada anak adalah tanda terlambat. Sebelum itu, tubuh anak bisa mempertahankan tekanan darah dengan takikardia dan vasokonstriksi kuat sampai cadangan kompensasi habis mendadak.<ul><li>Jangan menunggu hipotensi untuk mengakui syok pada anak.</li><li>Perhatikan interaksi, tangisan, CRT, dan kualitas nadi.</li><li>Takikardia persisten harus diinterpretasi serius.</li></ul><div class="trick-box"><strong>Workaround:</strong> pada pediatrik, deteksi syok harus lebih bertumpu pada perilaku dan perfusi daripada angka tekanan darah semata.</div>`
+            },
+            {
+                cat: "Pregnancy Shock",
+                q: "Apa jebakan khusus pada syok ibu hamil?",
+                a: `<strong>Tanda vital bisa menipu karena ada perubahan fisiologi kehamilan dan dua pasien harus dipikirkan sekaligus.</strong><br><br>Volume sirkulasi ibu meningkat selama kehamilan, sehingga perdarahan dapat sudah besar sebelum hipotensi tampak jelas. Selain itu, kompresi aortokaval pada kehamilan besar dapat memperburuk hemodinamik bila posisi pasien tidak diperhatikan.<ul><li>Sumber obstetri harus selalu dipikirkan.</li><li>Posisi miring kiri dapat membantu mengurangi kompresi.</li><li>Kondisi ibu tetap prioritas utama untuk menyelamatkan janin.</li></ul><div class="trick-box"><strong>Workaround:</strong> pada kehamilan lanjut, lakukan left uterine displacement atau miring kiri sambil tetap mengejar sumber syok.</div>`
+            },
+            {
+                cat: "Medication-induced Shock",
+                q: "Pasien baru mulai antihipertensi tambahan dan datang lemas, sinkop, dengan hipotensi tanpa tanda infeksi atau perdarahan jelas. Mengapa syok atau presyok akibat obat sering terlewat?",
+                a: `<strong>Karena klinisinya terlalu fokus mencari penyakit besar sambil melupakan iatrogenik.</strong><br><br>Obat baru, salah dosis, interaksi obat, atau kepatuhan yang berubah dapat menjatuhkan tekanan darah atau memperburuk kompensasi fisiologis. Riwayat waktu minum obat, perubahan resep, dan kemungkinan overdosis harus ditelusuri secara aktif.<ul><li>Tanyakan obat baru dalam 48 jam terakhir.</li><li>Periksa apakah ada duplikasi golongan atau salah minum dosis.</li><li>Hubungkan onset gejala dengan waktu konsumsi terakhir.</li></ul><div class="trick-box"><strong>Workaround:</strong> bila sebab besar belum jelas, audit semua obat pasien satu per satu sebelum menyimpulkan “idiopatik”.</div>`
+            },
+            {
+                cat: "Hypoglycemia Mimic",
+                q: "Mengapa hipoglikemia berat dapat meniru atau memperberat gambaran syok di layanan awal?",
+                a: `<strong>Karena hipoglikemia dapat menyebabkan penurunan kesadaran, diaforesis, takikardia, dan perfusi tampak buruk.</strong><br><br>Pasien bisa terlihat sangat sakit, gelisah, berkeringat, atau kolaps sehingga tampak seperti syok primer, padahal gangguan metabolik menjadi kontributor utama atau ko-faktor. Pemeriksaan glukosa kapiler yang cepat sering mengubah arah tatalaksana secara dramatis.<ul><li>Jangan menunda cek gula darah pada pasien dengan penurunan kesadaran.</li><li>Hipoglikemia bisa koeksis dengan sepsis, DKA tertentu, atau overdosis obat.</li><li>Perbaikan neurologis setelah koreksi glukosa memberi petunjuk penting.</li></ul><div class="trick-box"><strong>Workaround:</strong> masukkan glukosa kapiler ke paket evaluasi dini semua pasien kolaps atau perfusinya meragukan.</div>`
+            },
+            {
+                cat: "Temperature Clue",
+                q: "Bagaimana suhu tubuh membantu membaca tipe syok tanpa membuat Anda terjebak over-interpretation?",
+                a: `<strong>Suhu memberi petunjuk konteks, bukan diagnosis tunggal.</strong><br><br>Demam dapat mendukung sepsis, hipotermia dapat muncul pada syok berat atau pajanan lingkungan, dan suhu normal tidak menyingkirkan keduanya. Nilai suhu harus dibaca bersama perfusi perifer, riwayat pajanan, serta tanda infeksi atau trauma lain.<ul><li>Hipotermia memperburuk koagulopati pada trauma.</li><li>Lansia sepsis dapat tanpa demam.</li><li>Suhu perifer dan suhu inti bisa berbeda maknanya.</li></ul><div class="trick-box"><strong>Workaround:</strong> gunakan suhu untuk memperkaya pola klinis, bukan untuk menutup diagnosis lain terlalu cepat.</div>`
+            },
+            {
+                cat: "Transfer Timing",
+                q: "Kapan keputusan rujuk pada pasien syok justru menjadi terlambat walau terapi awal sudah dimulai?",
+                a: `<strong>Saat stabilisasi awal berubah menjadi alasan menunda transfer definitif.</strong><br><br>Resusitasi di FKTP bertujuan membeli waktu dan memperbaiki peluang transport, bukan menggantikan source control atau perawatan intensif yang tidak tersedia. Begitu kebutuhan pasien melampaui kemampuan fasilitas, rujukan harus dipercepat sambil terapi berjalan.<ul><li>Jangan menunggu semua parameter menjadi normal sebelum merujuk.</li><li>Koordinasi transport dan penerima harus dilakukan dini.</li><li>Terapi awal tetap diteruskan selama proses transfer.</li></ul><div class="trick-box"><strong>Workaround:</strong> putuskan rujukan berdasarkan kebutuhan definitif pasien, bukan berdasarkan rasa “belum puas” karena monitor belum sempurna.</div>`
+            },
+            {
+                cat: "Hemorrhagic Priorities",
+                q: "Pada syok perdarahan, apa prioritas selain cairan?",
+                a: `<strong>Kontrol sumber perdarahan.</strong><br><br>Cairan tanpa kontrol sumber hanya membeli waktu singkat dan kadang memperburuk koagulopati atau melepas bekuan. Perdarahan aktif harus dihentikan, dikurangi, atau dikompresi secepat mungkin.<ul><li>Tekanan langsung, tourniquet, binder pelvis, dan imobilisasi punya tempatnya.</li><li>Komunikasi rujukan dini sangat penting.</li><li>Tiap menit tanpa source control memperburuk peluang.</li></ul><div class="trick-box"><strong>Workaround:</strong> saat menyiapkan cairan, pikirkan secara paralel: dari mana darah keluar dan apa yang bisa saya lakukan sekarang terhadap sumber itu?</div>`
+            },
+            {
+                cat: "Communication Trap",
+                q: "Mengapa komunikasi rujukan yang buruk bisa memperparah outcome syok?",
+                a: `<strong>Karena waktu terbuang saat fasilitas penerima tidak mendapat gambaran beratnya kasus.</strong><br><br>Pasien syok membutuhkan transisi yang cepat dan terstruktur. Rujukan tanpa diagnosis kerja, sumber syok tersangka, terapi yang sudah diberikan, serta respons pasien membuat tim penerima memulai dari nol dan kehilangan waktu berharga.<ul><li>Sampaikan masalah utama dan apa yang paling ditakuti.</li><li>Laporkan akses IV, obat berjalan, dan respons cairan.</li><li>Pastikan kebutuhan lanjutan telah dikomunikasikan.</li></ul><div class="trick-box"><strong>Workaround:</strong> gunakan format singkat tetap untuk semua rujukan syok agar informasi kritis tidak ada yang tertinggal.</div>`
+            },
+            {
+                cat: "Reassessment",
+                q: "Mengapa re-evaluasi serial adalah inti tatalaksana syok?",
+                a: `<strong>Karena syok bersifat dinamis.</strong><br><br>Pasien dapat membaik sementara lalu jatuh lagi, atau tampak stabil beberapa menit sebelum dekompensasi. Setiap intervensi harus diikuti penilaian ulang apakah benar membantu, tidak berpengaruh, atau justru merugikan.<ul><li>Reassess setelah cairan, obat, tindakan airway, dan pemindahan.</li><li>Ulangi ABCDE dengan pola yang sama agar tidak ada yang terlewat.</li><li>Catat tren, bukan hanya snapshot.</li></ul><div class="trick-box"><strong>Workaround:</strong> buat kebiasaan mental: “intervensi besar = pemeriksaan ulang penuh”.</div>`
+            },
+            {
+                cat: "Single Data Trap",
+                q: "Apa jebakan kognitif paling sering pada penanganan syok di layanan awal?",
+                a: `<strong>Terlalu percaya pada satu data tunggal.</strong><br><br>Satu tensi normal, satu saturasi bagus, atau satu nilai lab belum cukup untuk menyingkirkan syok. Diagnosis lahir dari integrasi cerita klinis, pemeriksaan fisik, tren, dan respons terhadap terapi.<ul><li>Pasien yang tampak sakit harus dipercaya walau monitor tampak “lumayan”.</li><li>Data yang bertentangan harus memicu pencarian penjelasan, bukan pengabaian.</li><li>Konteks selalu lebih penting daripada satu angka.</li></ul><div class="trick-box"><strong>Workaround:</strong> jika data dan penampilan pasien tidak sejalan, anggap ada sesuatu yang belum Anda pahami dan ulangi evaluasi.</div>`
+            },
+            {
+                cat: "Final Principle",
+                q: "Kalimat prinsip apa yang paling penting diingat saat menangani tatalaksana shock di FKTP?",
+                a: `<strong>Kenali lebih cepat, resusitasi secukupnya tetapi tepat sasaran, dan jangan terlambat mencari sumber serta merujuk.</strong><br><br>Di FKTP, keberhasilan sering bukan karena tindakan paling canggih, melainkan karena diagnosis tidak terlewat, intervensi awal tidak salah arah, dan transfer dilakukan pada waktu yang tepat. Shock harus diurai sebagai sindrom: jenisnya apa, sumbernya di mana, dan intervensi mana yang membantu atau justru berbahaya.<ul><li>Kecepatan mengenali sering lebih penting daripada kelengkapan data awal.</li><li>Tatalaksana harus paralel: stabilisasi, identifikasi sebab, dan komunikasi.</li><li>Tujuan FKTP adalah menyelamatkan waktu dan mencegah kerusakan tambahan.</li></ul><div class="trick-box"><strong>Workaround:</strong> ulangi tiga pertanyaan ini pada setiap pasien: “jenis syoknya apa, sumbernya di mana, dan apa tindakan yang paling aman sekarang?”</div>`
+            }
+        ];
+
+        let cards = [...originalCards];
+        let currentIndex = 0;
+        let isFlipped = false;
+        
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let touchStartY = 0;
+        let isSwiping = false;
+        let isScrolling = false;
+
+        const flashcardEl = document.getElementById('flashcard');
+        const questionEl = document.getElementById('question-text');
+        const answerEl = document.getElementById('answer-text');
+        const counterEl = document.getElementById('card-counter');
+        const categoryEl = document.getElementById('card-category');
+
+        function renderCard() {
+            if (isFlipped) {
+                flashcardEl.classList.remove('is-flipped');
+                isFlipped = false;
+                setTimeout(() => {
+                    updateContent();
+                }, 400); // Wait for flip animation
+            } else {
+                updateContent();
+            }
+        }
+
+        function updateContent() {
+            const currentCard = cards[currentIndex];
+            questionEl.innerHTML = currentCard.q;
+            answerEl.innerHTML = currentCard.a;
+            categoryEl.textContent = currentCard.cat;
+            counterEl.textContent = `${currentIndex + 1} / ${cards.length}`;
+            
+            // Reset scroll positions
+            const answerContainer = document.querySelector('#answer-text').parentElement;
+            const questionContainer = document.querySelector('#question-text').parentElement;
+            if(answerContainer) answerContainer.scrollTop = 0;
+            if(questionContainer) questionContainer.scrollTop = 0;
+        }
+
+        function toggleFlip(e) {
+            if (isSwiping) return;
+            const selection = window.getSelection();
+            if (selection.toString().length > 0) return; // Allow text selection
+            
+            isFlipped = !isFlipped;
+            flashcardEl.classList.toggle('is-flipped');
+        }
+
+        function nextCard() {
+            if (currentIndex < cards.length - 1) {
+                currentIndex++;
+            } else {
+                currentIndex = 0;
+            }
+            renderCard();
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+            } else {
+                currentIndex = cards.length - 1; 
+            }
+            renderCard();
+        }
+
+        function shuffleCards() {
+            // Fisher-Yates Shuffle
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            currentIndex = 0;
+            renderCard();
+        }
+
+        flashcardEl.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+            isSwiping = false;
+            isScrolling = false;
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchmove', e => {
+            if (isScrolling) return;
+
+            const currentTouchX = e.changedTouches[0].screenX;
+            const currentTouchY = e.changedTouches[0].screenY;
+            
+            const diffX = Math.abs(currentTouchX - touchStartX);
+            const diffY = Math.abs(currentTouchY - touchStartY);
+
+            // Cancel swipe if scrolling vertically mostly
+            if (diffY > diffX && diffY > 15) {
+                isScrolling = true;
+                isSwiping = false;
+                return;
+            }
+
+            if (diffX > 20) {
+                isSwiping = true;
+            }
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            if (isSwiping && !isScrolling) {
+                handleSwipe();
+            }
+        }, {passive: true});
+
+        function handleSwipe() {
+            const swipeThreshold = 60; 
+            if (touchEndX < touchStartX - swipeThreshold) {
+                nextCard(); // Swipe left -> Next
+            } else if (touchEndX > touchStartX + swipeThreshold) {
+                prevCard(); // Swipe right -> Prev
+            }
+            setTimeout(() => { isSwiping = false; }, 150);
+        }
+
+        // Initialize first card
+        window.onload = renderCard;
+
+        // Keyboard accessibility
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                e.preventDefault(); 
+                toggleFlip();
+            } else if (e.code === 'ArrowRight') {
+                nextCard();
+            } else if (e.code === 'ArrowLeft') {
+                prevCard();
+            }
+        });
+    </script>
+</body>
+</html>
