@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Virtual Cath-Lab: Pro v5</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+        body { 
+            margin: 0; overflow: hidden; background-color: #020617; 
+            font-family: 'Inter', sans-serif; user-select: none; touch-action: none;
+        }
+        #canvas-container, #css2d-container { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; }
+        #canvas-container { z-index: 0; }
+        #css2d-container { z-index: 10; pointer-events: none; }
+        
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px);
+            border: 1px solid rgba(51, 65, 85, 0.8); box-shadow: 0 -10px 30px rgba(0,0,0,0.4);
+        }
+        .interactive { pointer-events: auto; }
+        .data-font { font-family: 'JetBrains Mono', monospace; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Sliders */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-thumb { 
+            -webkit-appearance: none; height: 24px; width: 14px; 
+            background: #cbd5e1; cursor: grab; margin-top: -9px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; border-radius: 3px; background: rgba(100, 116, 139, 0.6); }
+
+        /* Fluoro Monitor (PiP) */
+        #fluoro-monitor {
+            position: absolute; top: 20px; right: 20px; width: 340px; height: 340px;
+            border: 3px solid #1e293b; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.9), 0 0 0 1px #334155;
+            overflow: hidden; z-index: 20; pointer-events: auto; cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            /* CRITICAL FIX: Background MUST be transparent so WebGL scissor pass shows through */
+            background-color: transparent; 
+        }
+        #fluoro-monitor.expanded { width: 85vw; height: 85vh; top: 7.5vh; right: 7.5vw; border-width: 6px; }
+        
+        .crt::before {
+            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2; background-size: 100% 3px, 3px 100%; pointer-events: none;
+        }
+        .collimation-box {
+            position: absolute; inset: 0; 
+            background: radial-gradient(circle, transparent 55%, rgba(0,0,0,0.95) 95%);
+            pointer-events: none; z-index: 10;
+        }
+
+        .fluoro-overlay-text {
+            position: absolute; color: #10b981; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem; font-weight: bold; z-index: 21; pointer-events: none; text-shadow: 0 1px 2px black;
+        }
+
+        /* Simulated ECG */
+        #ecg-container {
+            position: absolute; bottom: 8px; right: 8px; width: 80px; height: 25px; z-index: 21;
+            border-bottom: 1px dashed rgba(16, 185, 129, 0.3); pointer-events: none;
+        }
+        .ecg-line {
+            width: 200%; height: 100%; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 25"><path d="M0 12 L20 12 L25 5 L30 20 L35 12 L100 12" stroke="%2310b981" stroke-width="1.5" fill="none"/></svg>') repeat-x;
+            background-size: 50px 100%; animation: ecgMove 1.2s linear infinite; opacity: 0.8;
+        }
+        @keyframes ecgMove { from { transform: translateX(0); } to { transform: translateX(-50px); } }
+
+        /* Clinical Drawer & Permanent Tab */
+        #clinical-drawer {
+            position: absolute; right: -400px; top: 0; height: 100vh; width: 380px;
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px);
+            border-left: 1px solid #334155; box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+            transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1); z-index: 50; pointer-events: auto;
+            display: flex; flex-direction: column;
+        }
+        #clinical-drawer.open { right: 0; }
+        
+        #btn-trigger-tab {
+            position: absolute; right: 0; top: 40%; transform: translateY(-50%);
+            background: linear-gradient(to bottom, #8b5cf6, #6d28d9);
+            border: 1px solid #a78bfa; border-right: none;
+            border-radius: 8px 0 0 8px; padding: 16px 8px; cursor: pointer; z-index: 45;
+            box-shadow: -4px 0 15px rgba(139, 92, 246, 0.4);
+            pointer-events: auto; transition: transform 0.2s, right 0.4s;
+            display: flex; flex-direction: column; align-items: center; gap: 12px;
+        }
+        #btn-trigger-tab:hover { transform: translateY(-50%) translateX(-4px); }
+        #btn-trigger-tab.hidden-tab { right: -50px; }
+        .vertical-text { writing-mode: vertical-rl; text-orientation: mixed; font-size: 0.75rem; font-weight: 800; letter-spacing: 2px; color: white; transform: rotate(180deg);}
+
+        /* 3D Labels */
+        .anatomy-label {
+            background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.5);
+            color: #e2e8f0; padding: 4px 8px; border-radius: 6px; font-size: 0.65rem;
+            font-weight: 600; pointer-events: auto; cursor: pointer; backdrop-filter: blur(4px);
+            transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); font-family: 'JetBrains Mono', monospace;
+        }
+        .anatomy-label:hover { background: rgba(56, 189, 248, 0.9); color: white; transform: scale(1.1); }
+
+        /* Analytics Table */
+        .fs-table th { background: rgba(30, 41, 59, 0.8); padding: 6px; text-align: left; font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;}
+        .fs-table td { padding: 6px; font-size: 0.75rem; border-bottom: 1px solid rgba(51, 65, 85, 0.5); font-family: 'JetBrains Mono', monospace;}
+        .fs-table tr:hover { background: rgba(51, 65, 85, 0.3); }
+
+        /* Modal Overlay */
+        #toast-container { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; flex-direction: column; gap: 8px; pointer-events: none;}
+        .toast { background: rgba(15, 23, 42, 0.9); border: 1px solid #38bdf8; color: white; padding: 12px 24px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.5); backdrop-filter: blur(8px); animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 640px) {
+            #fluoro-monitor { width: 160px; height: 160px; top: 12px; right: 12px; }
+            #clinical-drawer { width: 300px; right: -320px; }
+        }
+    </style>
+</head>
+<body class="text-slate-200">
+
+    <div id="canvas-container"></div>
+    <div id="css2d-container"></div>
+    <div id="toast-container"></div>
+    
+    <!-- Fluoro Monitor (PiP) -->
+    <div id="fluoro-monitor" class="crt" title="Tap to Expand/Collapse">
+        <div class="collimation-box"></div>
+        <div class="fluoro-overlay-text top-2 left-2 flex items-center gap-1">
+            <i data-lucide="video" class="w-3 h-3 text-slate-400"></i> LIVE FLUORO
+        </div>
+        <div class="fluoro-overlay-text top-2 right-2 flex flex-col items-end gap-1">
+            <span id="fluoro-dap" class="px-1 rounded bg-slate-900/80">DAP: LOW</span>
+            <span id="contrast-vol" class="text-purple-400 text-[10px] hidden">Vol: 0mL</span>
+        </div>
+        <div class="fluoro-overlay-text bottom-2 right-2" id="pip-projection">AP / CRA 0</div>
+        <div id="xray-indicator" class="fluoro-overlay-text bottom-2 left-2 text-slate-500 flex items-center gap-1 transition-colors">
+            <div class="w-2 h-2 bg-slate-500 rounded-full" id="xray-dot"></div> X-RAY
+        </div>
+        <!-- Contrast Timing Indicator -->
+        <div id="contrast-timing" class="fluoro-overlay-text top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white/50 text-[10px] hidden backdrop-blur-sm bg-black/30 px-2 py-1 rounded"></div>
+        <!-- Overlap Warning -->
+        <div id="fluoro-warn-overlap" class="absolute top-10 left-1/2 transform -translate-x-1/2 bg-amber-500/90 text-black text-[9px] font-bold px-2 py-0.5 rounded hidden whitespace-nowrap z-30 font-mono shadow-lg">
+            ⚠ OVERLAP DETECTED
+        </div>
+        <div id="ecg-container"><div class="ecg-line"></div></div>
+    </div>
+
+    <!-- Permanent Floating Trigger Tab -->
+    <div id="btn-trigger-tab" title="Open Clinical Guide">
+        <i data-lucide="activity" class="w-6 h-6 text-white"></i>
+        <div class="vertical-text">ANALYTICS</div>
+    </div>
+
+    <!-- Clinical Logic Drawer -->
+    <div id="clinical-drawer" class="flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-slate-700 bg-slate-900">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-indigo-500/20 rounded-lg border border-indigo-500/30">
+                    <i data-lucide="bar-chart-2" class="w-5 h-5 text-indigo-400"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-white uppercase tracking-wider">Analytics Engine</h3>
+                    <p class="text-[10px] text-slate-400 font-mono">Real-time Projection Data</p>
+                </div>
+            </div>
+            <button id="btn-close-drawer" class="p-1.5 hover:bg-slate-700 rounded-lg transition-colors border border-transparent hover:border-slate-600">
+                <i data-lucide="chevron-right" class="w-5 h-5 text-slate-300"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 flex-1 overflow-y-auto hide-scrollbar flex flex-col gap-5">
+            <!-- Dynamic Foreshortening Table -->
+            <div class="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
+                <div class="bg-slate-800 p-2.5 border-b border-slate-700 flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-300 flex items-center gap-2"><i data-lucide="ruler" class="w-4 h-4 text-sky-400"></i> Foreshortening / Segmen</span>
+                </div>
+                <table class="w-full fs-table" id="table-fs">
+                    <thead><tr><th>Segment</th><th>FS %</th><th>Status</th><th>Auto</th></tr></thead>
+                    <tbody id="tbody-fs">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Stenosis Controller -->
+            <div class="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-xs font-bold text-slate-300 flex items-center gap-2"><i data-lucide="target" class="w-4 h-4 text-amber-400"></i> Lesion Severity (Mid-LAD)</span>
+                    <span id="val-stenosis" class="text-xs font-mono font-bold text-amber-400 bg-amber-900/30 px-2 py-0.5 rounded">0%</span>
+                </div>
+                <input type="range" id="slider-stenosis" min="0" max="90" value="0" step="10">
+                <div class="flex justify-between text-[9px] text-slate-500 mt-1 font-mono">
+                    <span>Normal</span><span>Moderate</span><span>Severe</span>
+                </div>
+            </div>
+            
+            <!-- Skin Dose Visualizer Info -->
+            <div class="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+                <div class="flex items-center gap-2 mb-2">
+                    <i data-lucide="radio" class="w-4 h-4 text-red-400"></i>
+                    <span class="text-xs font-bold text-slate-300">Radiation Skin Dose</span>
+                </div>
+                <p class="text-[10px] text-slate-400 leading-relaxed">Sinar X memproyeksikan area merah pada permukaan kulit maya pasien. Sudut LAO steep dan CRA/CAU ekstrem (Spiders) mendistribusikan dosis masuk yang lebih tinggi pada area jaringan padat.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- UI Overlay Layer (Left Side) -->
+    <div id="ui-layer" class="absolute inset-0 pointer-events-none z-30 flex flex-col justify-between">
+        <div class="p-4 sm:p-6 interactive flex flex-col items-start pointer-events-none max-w-[80vw] sm:max-w-md">
+            <div class="bg-slate-900/80 backdrop-blur-md px-5 py-4 rounded-xl border border-slate-700/50 pointer-events-auto shadow-2xl w-full">
+                <div class="flex items-center gap-2 mb-1">
+                    <i data-lucide="heart-pulse" class="w-5 h-5 text-rose-400"></i>
+                    <h1 class="text-lg font-bold text-white tracking-wide">Virtual Cath-Lab</h1>
+                </div>
+                <p class="text-[10px] text-sky-400 font-mono uppercase tracking-widest mt-1 mb-3 font-bold">Pro Edition 5.0 - True Anatomy</p>
+                <p class="text-xs text-slate-400 hidden sm:block leading-relaxed mb-3">
+                    Drag area gelap untuk memutar pandangan 3D.<br>
+                    Gunakan panel bawah untuk mengontrol C-Arm X-Ray.
+                </p>
+                <div class="flex gap-2">
+                    <button id="btn-inject" class="w-full py-2 bg-slate-800 hover:bg-purple-600 border border-purple-500/30 rounded-lg text-xs font-bold transition-all shadow-lg flex items-center justify-center gap-2">
+                        <i data-lucide="syringe" class="w-4 h-4 text-purple-400"></i> Inject (Space)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Dashboard (Bottom) -->
+        <div class="interactive glass-panel w-full mt-auto border-t border-slate-700/50 rounded-t-2xl p-4 sm:p-5 pb-6">
+            <div class="max-w-6xl mx-auto flex flex-col gap-5">
+                <div class="grid grid-cols-2 gap-8 w-full px-2">
+                    <!-- RAO/LAO -->
+                    <div class="flex flex-col justify-end">
+                        <div class="flex justify-between items-end mb-2">
+                            <span class="text-xs text-red-400 font-bold font-mono bg-red-950/50 px-2 py-0.5 rounded">RAO 90°</span>
+                            <span class="text-2xl font-black text-white data-font drop-shadow-md" id="val-laorao">0°</span>
+                            <span class="text-xs text-blue-400 font-bold font-mono bg-blue-950/50 px-2 py-0.5 rounded">LAO 90°</span>
+                        </div>
+                        <input type="range" id="slider-laorao" min="-90" max="90" value="0" class="mb-1">
+                        <div class="h-1.5 w-full rounded-full bg-gradient-to-r from-red-500 via-slate-500 to-blue-500 mt-[-14px] pointer-events-none opacity-50"></div>
+                        <span class="text-[10px] text-center text-slate-400 uppercase font-bold mt-3 tracking-widest">Rotation (Y-Axis)</span>
+                    </div>
+                    <!-- CRA/CAU -->
+                    <div class="flex flex-col justify-end">
+                        <div class="flex justify-between items-end mb-2">
+                            <span class="text-xs text-orange-400 font-bold font-mono bg-orange-950/50 px-2 py-0.5 rounded">CAU 45°</span>
+                            <span class="text-2xl font-black text-white data-font drop-shadow-md" id="val-cracau">0°</span>
+                            <span class="text-xs text-emerald-400 font-bold font-mono bg-emerald-950/50 px-2 py-0.5 rounded">CRA 45°</span>
+                        </div>
+                        <input type="range" id="slider-cracau" min="-45" max="45" value="0" class="mb-1">
+                        <div class="h-1.5 w-full rounded-full bg-gradient-to-r from-orange-500 via-slate-500 to-emerald-500 mt-[-14px] pointer-events-none opacity-50"></div>
+                        <span class="text-[10px] text-center text-slate-400 uppercase font-bold mt-3 tracking-widest">Tilt (X-Axis)</span>
+                    </div>
+                </div>
+
+                <!-- Presets -->
+                <div class="w-full pt-4 border-t border-slate-700/50">
+                    <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-2 px-1 snap-x">
+                        <button class="preset-btn shrink-0 snap-center px-4 py-2 bg-slate-800 hover:bg-sky-700 rounded-lg text-xs font-bold transition-all border border-slate-600 shadow-md" data-lao="0" data-cra="0">AP</button>
+                        <button class="preset-btn shrink-0 snap-center px-4 py-2 bg-slate-800 hover:bg-sky-700 rounded-lg text-xs font-bold transition-all border border-slate-600 shadow-md" data-lao="40" data-cra="0">LAO 40</button>
+                        <button class="preset-btn shrink-0 snap-center px-4 py-2 bg-slate-800 hover:bg-sky-700 rounded-lg text-xs font-bold transition-all border border-slate-600 shadow-md" data-lao="-30" data-cra="0">RAO 30</button>
+                        <button class="preset-btn shrink-0 snap-center px-4 py-2 bg-slate-800 hover:bg-amber-600 rounded-lg text-xs font-bold transition-all border border-amber-500/50 shadow-md text-amber-400 bg-amber-950/20" data-lao="45" data-cra="-35">SPIDER</button>
+                        <button class="preset-btn shrink-0 snap-center px-4 py-2 bg-slate-800 hover:bg-sky-700 rounded-lg text-xs font-bold transition-all border border-slate-600 shadow-md" data-lao="0" data-cra="30">AP CRA</button>
+                        <button class="preset-btn shrink-0 snap-center px-4 py-2 bg-slate-800 hover:bg-sky-700 rounded-lg text-xs font-bold transition-all border border-slate-600 shadow-md" data-lao="35" data-cra="30">LAO CRA</button>
+                        <button class="preset-btn shrink-0 snap-center px-4 py-2 bg-slate-800 hover:bg-sky-700 rounded-lg text-xs font-bold transition-all border border-slate-600 shadow-md" data-lao="-30" data-cra="30">RAO CRA</button>
+                        <button class="preset-btn shrink-0 snap-center px-4 py-2 bg-slate-800 hover:bg-sky-700 rounded-lg text-xs font-bold transition-all border border-slate-600 shadow-md" data-lao="-30" data-cra="-25">RAO CAU</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+        lucide.createIcons();
+
+        // Toast System
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            t.className = 'toast'; t.innerHTML = msg;
+            container.appendChild(t);
+            setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(-20px)'; t.style.transition = 'all 0.3s'; setTimeout(()=>t.remove(), 300); }, 2500);
+        }
+
+        const container = document.getElementById('canvas-container');
+        const cssContainer = document.getElementById('css2d-container');
+        const scene = new THREE.Scene();
+        
+        // Explicit Layering Architecture
+        const LAYER_LAB = 0;   // Main 3D View
+        const LAYER_FLUORO = 1;// X-Ray PiP View
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.autoClear = false; // CRITICAL for dual view overlap
+        container.appendChild(renderer.domElement);
+
+        const labelRenderer = new CSS2DRenderer();
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        cssContainer.appendChild(labelRenderer.domElement);
+
+        // Cameras
+        const labCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+        labCamera.position.set(window.innerWidth <= 640 ? 45 : 35, 15, 50);
+        labCamera.layers.set(LAYER_LAB);
+
+        const fluoroCamera = new THREE.PerspectiveCamera(30, 1, 0.1, 200);
+        fluoroCamera.layers.set(LAYER_FLUORO);
+
+        const orbitControls = new OrbitControls(labCamera, renderer.domElement);
+        orbitControls.enableDamping = true;
+        orbitControls.target.set(0, 0, 0);
+        orbitControls.maxDistance = 150; orbitControls.minDistance = 20;
+        orbitControls.maxPolarAngle = Math.PI / 2 + 0.2;
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
+        ambientLight.layers.set(LAYER_LAB); scene.add(ambientLight);
+        
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+        hemiLight.layers.set(LAYER_LAB); scene.add(hemiLight);
+        
+        const mainLight = new THREE.SpotLight(0xffffff, 2000);
+        mainLight.position.set(20, 60, 30); mainLight.castShadow = true; mainLight.shadow.bias = -0.001;
+        mainLight.layers.set(LAYER_LAB); scene.add(mainLight);
+
+        // Patient Body / Skin Dose Visualizer
+        const torsoGeo = new THREE.CylinderGeometry(14, 14, 40, 32, 1, false, 0, Math.PI);
+        const torsoMat = new THREE.MeshPhysicalMaterial({ color: 0xe2e8f0, transparent: true, opacity: 0.08, roughness: 0.8, side: THREE.DoubleSide });
+        const torso = new THREE.Mesh(torsoGeo, torsoMat);
+        torso.rotation.z = Math.PI/2; torso.rotation.x = -Math.PI/2;
+        torso.position.set(0, -5, 0); torso.layers.set(LAYER_LAB); scene.add(torso);
+
+        const gridHelper = new THREE.GridHelper(150, 40, 0x334155, 0x0f172a);
+        gridHelper.position.y = -12;
+        gridHelper.layers.set(LAYER_LAB);
+        scene.add(gridHelper);
+
+        // X-Ray Projection Spotlight (Skin Dose)
+        const doseLight = new THREE.SpotLight(0xff0000, 0);
+        doseLight.angle = Math.PI/8; doseLight.penumbra = 0.5;
+        doseLight.layers.set(LAYER_LAB); scene.add(doseLight);
+        const doseTarget = new THREE.Object3D(); scene.add(doseTarget); doseLight.target = doseTarget;
+
+        function createFluoroShaderMat() {
+            return new THREE.ShaderMaterial({
+                uniforms: {
+                    progress: { value: 0.0 },
+                    colorEmpty: { value: new THREE.Color(0x64748b) },
+                    colorFilled: { value: new THREE.Color(0x020617) },
+                    alphaEmpty: { value: 0.35 }, 
+                    alphaFilled: { value: 0.95 }
+                },
+                vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+                fragmentShader: `
+                    uniform float progress; uniform vec3 colorEmpty; uniform vec3 colorFilled;
+                    uniform float alphaEmpty; uniform float alphaFilled; varying vec2 vUv;
+                    void main() {
+                        float isFilled = step(vUv.x, progress); 
+                        vec3 finalColor = mix(colorEmpty, colorFilled, isFilled);
+                        float finalAlpha = mix(alphaEmpty, alphaFilled, isFilled);
+                        gl_FragColor = vec4(finalColor, finalAlpha);
+                    }
+                `,
+                transparent: true, blending: THREE.NormalBlending, 
+                depthWrite: false
+            });
+        }
+
+        const mat3D_Aorta = new THREE.MeshPhysicalMaterial({ color: 0xaa2222, transparent: true, opacity: 0.4, roughness: 0.2, clearcoat: 0.5 });
+        const mat3D_Artery = new THREE.MeshPhysicalMaterial({ color: 0xff1111, roughness: 0.3, metalness: 0.1, clearcoat: 0.8, clearcoatRoughness: 0.2 });
+
+        const fMatAorta = new THREE.MeshBasicMaterial({ color: 0x94a3b8, transparent: true, opacity: 0.2, depthWrite: false });
+        const fMatLM = createFluoroShaderMat(); const fMatLAD = createFluoroShaderMat();
+        const fMatLCx = createFluoroShaderMat(); const fMatRCA = createFluoroShaderMat();
+
+        const heartGroupLab = new THREE.Group(); scene.add(heartGroupLab);
+        const heartGroupFluoro = new THREE.Group(); scene.add(heartGroupFluoro);
+        const vascularData = {};
+        const segmentsData = [];
+
+        function createVessel(name, pointsArr, radius, isAorta, fluoroMat, labelPtIdx = null) {
+            const points = pointsArr.map(p => new THREE.Vector3(p[0], p[1], p[2]));
+            const curve = new THREE.CatmullRomCurve3(points);
+            const geometry = new THREE.TubeGeometry(curve, 64, radius, isAorta ? 24 : 12, false);
+            
+            const meshLab = new THREE.Mesh(geometry, isAorta ? mat3D_Aorta : mat3D_Artery);
+            meshLab.userData = { name: name, defaultMat: isAorta ? mat3D_Aorta : mat3D_Artery };
+            heartGroupLab.add(meshLab);
+
+            const meshFluoro = new THREE.Mesh(geometry, fluoroMat);
+            heartGroupFluoro.add(meshFluoro);
+
+            vascularData[name] = { curve, points, lab: meshLab, fluoro: meshFluoro, radius, baseGeo: geometry.clone() };
+
+            if (labelPtIdx !== null && points[labelPtIdx]) {
+                const labelDiv = document.createElement('div');
+                labelDiv.className = 'anatomy-label'; labelDiv.textContent = name;
+                labelDiv.addEventListener('pointerdown', () => suggestBestViewForVessel(name));
+                const labelObj = new CSS2DObject(labelDiv);
+                labelObj.position.copy(points[labelPtIdx]); labelObj.position.y += radius + 0.5;
+                labelObj.layers.set(LAYER_LAB); meshLab.add(labelObj);
+            }
+            return vascularData[name];
+        }
+
+        function defineSegment(vesselName, segmentName, startIdx, endIdx) {
+            segmentsData.push({ vesselName, segmentName, startIdx, endIdx });
+        }
+
+        // TRUE ANATOMY RECONSTRUCTION
+        const ptsAorta = [[0, 9, 0], [1, 7, 1], [0.5, 5, 1.5], [0, 3.5, 0.5]];
+        createVessel("Aorta", ptsAorta, 2.0, true, fMatAorta);
+
+        const ptOstiumLCA = [1.5, 5.5, -0.5];
+        const ptBifurcation = [3.5, 4.5, -1.0];
+        createVessel("LM", [ptOstiumLCA, [2.5, 5.0, -0.8], ptBifurcation], 0.28, false, fMatLM, 1); 
+        defineSegment("LM", "#5 LM", 0, 2);
+
+        const ptsLAD = [
+            ptBifurcation, 
+            [3.0, 2.0, 0.5],   
+            [2.0, -1.0, 1.5],  
+            [0.5, -4.5, 2.0],  
+            [-0.5, -6.5, 1.5]  
+        ];
+        createVessel("LAD", ptsLAD, 0.22, false, fMatLAD, 2);
+        defineSegment("LAD", "#6 Prox", 0, 1);
+        defineSegment("LAD", "#7 Mid", 1, 2);
+        defineSegment("LAD", "#8 Dist", 2, 4);
+
+        const ptsLCx = [ptBifurcation, [4.5, 2.5, -3.0], [4.0, 0.5, -4.0], [2.5, -2.5, -4.5]];
+        createVessel("LCx", ptsLCx, 0.22, false, fMatLCx, 2);
+        defineSegment("LCx", "#11 Prox", 0, 1);
+        defineSegment("LCx", "#13 Dist", 1, 3);
+        createVessel("D1", [[3.0, 2.0, 0.5], [4.0, 0.5, 1.0], [4.5, -2.0, 0.8]], 0.16, false, fMatLAD);
+        createVessel("OM1", [[4.0, 0.5, -4.0], [4.8, -1.0, -3.5], [5.0, -3.0, -2.5]], 0.15, false, fMatLCx);
+
+        const ptsRCA = [[-1.0, 5.5, 1.0], [-3.5, 3.0, 2.5], [-5.0, 0.0, 1.0], [-4.0, -4.0, -1.5], [-1.5, -6.0, -2.0]];
+        createVessel("RCA", ptsRCA, 0.24, false, fMatRCA, 2);
+        defineSegment("RCA", "#1 Prox", 0, 1);
+        defineSegment("RCA", "#2 Mid", 1, 2);
+        defineSegment("RCA", "#3 Dist", 2, 4);
+        createVessel("PDA", [[-1.5, -6.0, -2.0], [-1.0, -7.5, 0.0]], 0.16, false, fMatRCA);
+
+        heartGroupLab.layers.set(LAYER_LAB); heartGroupFluoro.layers.set(LAYER_FLUORO);
+        heartGroupLab.traverse(c => { if(c.isMesh) c.layers.set(LAYER_LAB); });
+        heartGroupFluoro.traverse(c => { if(c.isMesh) c.layers.set(LAYER_FLUORO); });
+
+        const cArmRadius = 28;
+        const cArmPivot = new THREE.Group(); scene.add(cArmPivot);
+        const cArmArm = new THREE.Group(); cArmPivot.add(cArmArm);
+
+        const matHardware = new THREE.MeshStandardMaterial({color: 0xe2e8f0, roughness: 0.2, metalness: 0.8});
+        const arc = new THREE.Mesh(new THREE.TorusGeometry(cArmRadius, 1.8, 32, 64, Math.PI), matHardware);
+        arc.rotation.y = Math.PI/2; cArmArm.add(arc);
+
+        const detector = new THREE.Mesh(new THREE.BoxGeometry(12, 12, 2), new THREE.MeshStandardMaterial({color: 0x1e293b}));
+        detector.position.set(0, 0, cArmRadius); cArmArm.add(detector);
+        
+        const tube = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 5, 10), new THREE.MeshStandardMaterial({color: 0x0f172a}));
+        tube.rotation.x = Math.PI/2; tube.position.set(0, 0, -cArmRadius); cArmArm.add(tube);
+
+        fluoroCamera.position.set(0, 0, cArmRadius - 1);
+        fluoroCamera.lookAt(0, 0, 0); 
+        cArmArm.add(fluoroCamera);
+
+        cArmPivot.traverse(c => { if(c.isMesh) c.layers.set(LAYER_LAB); });
+
+        let state = {
+            laoRao: 0, craCau: 0, contrastActive: false, contrastTime: 0, 
+            totalVol: 0, stenosisSev: 0
+        };
+
+        const uiLaorao = document.getElementById('slider-laorao');
+        const uiCracau = document.getElementById('slider-cracau');
+        const tbodyFs = document.getElementById('tbody-fs');
+
+        function calculateAnalytics() {
+            const camDir = new THREE.Vector3();
+            fluoroCamera.getWorldDirection(camDir);
+
+            let html = '';
+
+            segmentsData.forEach(seg => {
+                const points = vascularData[seg.vesselName].points;
+                const pStart = points[seg.startIdx];
+                const pEnd = points[seg.endIdx];
+                
+                const segVec = new THREE.Vector3().subVectors(pEnd, pStart);
+                const actualLen = segVec.length();
+
+                const projVec = segVec.clone().projectOnPlane(camDir);
+                const projectedLen = projVec.length();
+                
+                let fsPct = Math.round((1.0 - (projectedLen / actualLen)) * 100);
+                if (fsPct < 0) fsPct = 0;
+
+                let status = "✓ OK", colorClass = "text-emerald-400";
+                if(fsPct > 40) { status = "✗ HIGH"; colorClass = "text-red-400 font-bold"; }
+                else if(fsPct > 15) { status = "⚠ MOD"; colorClass = "text-amber-400"; }
+
+                html += `<tr>
+                    <td>${seg.vesselName} ${seg.segmentName}</td>
+                    <td class="${colorClass}">${fsPct}%</td>
+                    <td class="${colorClass}">${status}</td>
+                    <td><button class="auto-view-btn px-2 py-0.5 bg-slate-700 hover:bg-sky-600 rounded text-[10px] text-white" data-vessel="${seg.vesselName}">Fix</button></td>
+                </tr>`;
+            });
+            tbodyFs.innerHTML = html;
+
+            document.querySelectorAll('.auto-view-btn').forEach(b => b.addEventListener('click', e => suggestBestViewForVessel(e.target.dataset.vessel)));
+
+            const ladMid = vascularData['LAD'].points[1].clone().add(vascularData['LAD'].points[2]).multiplyScalar(0.5);
+            const lcxMid = vascularData['LCx'].points[0].clone().add(vascularData['LCx'].points[1]).multiplyScalar(0.5);
+            
+            const ladProj = ladMid.project(fluoroCamera);
+            const lcxProj = lcxMid.project(fluoroCamera);
+            
+            const dist2D = new THREE.Vector2(ladProj.x, ladProj.y).distanceTo(new THREE.Vector2(lcxProj.x, lcxProj.y));
+            
+            if (dist2D < 0.25) {
+                document.getElementById('fluoro-warn-overlap').classList.remove('hidden');
+            } else {
+                document.getElementById('fluoro-warn-overlap').classList.add('hidden');
+            }
+        }
+
+        function suggestBestViewForVessel(vesselName) {
+            let suggestLao = 0, suggestCra = 0;
+            if (vesselName === "LAD") { suggestLao = 35; suggestCra = 30; } 
+            else if (vesselName === "LCx") { suggestLao = -30; suggestCra = -25; } 
+            else if (vesselName === "LM") { suggestLao = 45; suggestCra = -35; } 
+            else if (vesselName === "RCA") { suggestLao = 40; suggestCra = 0; } 
+
+            uiLaorao.value = suggestLao; uiCracau.value = suggestCra;
+            updateUIState();
+            showToast(`Applying Best View for ${vesselName}: ${suggestLao>0?'LAO':'RAO'} ${Math.abs(suggestLao)} / ${suggestCra>0?'CRA':'CAU'} ${Math.abs(suggestCra)}`);
+        }
+
+        function updateUIState() {
+            state.laoRao = parseInt(uiLaorao.value);
+            state.craCau = parseInt(uiCracau.value);
+            
+            document.getElementById('val-laorao').innerText = state.laoRao + "°";
+            document.getElementById('val-cracau').innerText = state.craCau + "°";
+            
+            let txtLR = state.laoRao === 0 ? "AP" : (state.laoRao > 0 ? `LAO ${state.laoRao}` : `RAO ${Math.abs(state.laoRao)}`);
+            let txtCC = state.craCau === 0 ? (state.laoRao === 0 ? "" : "CRA 0") : (state.craCau > 0 ? `CRA ${state.craCau}` : `CAU ${Math.abs(state.craCau)}`);
+            document.getElementById('pip-projection').innerText = txtLR + (txtCC ? " / " + txtCC : "");
+
+            let severity = Math.abs(state.laoRao) + Math.abs(state.craCau);
+            let dapEl = document.getElementById('fluoro-dap');
+            if (severity > 65 || state.craCau < -25) { dapEl.innerText = "DAP: HIGH"; dapEl.className = "px-1 rounded bg-red-900/80 text-white font-bold"; }
+            else if (severity > 35) { dapEl.innerText = "DAP: MED"; dapEl.className = "px-1 rounded bg-amber-900/80 text-amber-300"; }
+            else { dapEl.innerText = "DAP: LOW"; dapEl.className = "px-1 rounded bg-slate-900/80 text-emerald-400"; }
+
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                const isActive = parseInt(btn.dataset.lao) === state.laoRao && parseInt(btn.dataset.cra) === state.craCau;
+                btn.classList.toggle('ring-2', isActive); btn.classList.toggle('ring-sky-400', isActive);
+            });
+        }
+
+        uiLaorao.addEventListener('input', updateUIState);
+        uiCracau.addEventListener('input', updateUIState);
+        document.querySelectorAll('.preset-btn').forEach(btn => btn.addEventListener('click', (e) => {
+            uiLaorao.value = e.target.dataset.lao; uiCracau.value = e.target.dataset.cra; updateUIState();
+        }));
+
+        function applyStenosis(vesselObj, uStart, uEnd, severityFactor) {
+            const geo = vesselObj.baseGeo.clone();
+            const pos = geo.attributes.position;
+            const uv = geo.attributes.uv;
+            for(let i=0; i<pos.count; i++) {
+                let u = uv.getX(i);
+                if (u > uStart && u < uEnd) {
+                    let pinch = 1.0; let mid = (uStart + uEnd) / 2;
+                    if(u <= mid) pinch = THREE.MathUtils.lerp(1.0, 1.0 - severityFactor, (u-uStart)/(mid-uStart));
+                    else pinch = THREE.MathUtils.lerp(1.0 - severityFactor, 1.0, (u-mid)/(uEnd-mid));
+                    
+                    const center = vesselObj.curve.getPointAt(u);
+                    let dx = pos.getX(i) - center.x; let dy = pos.getY(i) - center.y; let dz = pos.getZ(i) - center.z;
+                    pos.setXYZ(i, center.x + dx*pinch, center.y + dy*pinch, center.z + dz*pinch);
+                }
+            }
+            geo.computeVertexNormals();
+            vesselObj.lab.geometry = geo; vesselObj.fluoro.geometry = geo;
+        }
+
+        document.getElementById('slider-stenosis').addEventListener('input', (e) => {
+            state.stenosisSev = parseInt(e.target.value) / 100;
+            document.getElementById('val-stenosis').innerText = e.target.value + "%";
+            applyStenosis(vascularData['LAD'], 0.35, 0.45, state.stenosisSev);
+        });
+
+        // Drawer Controls
+        const drawer = document.getElementById('clinical-drawer');
+        const triggerTab = document.getElementById('btn-trigger-tab');
+        function toggleDrawer(force) {
+            const open = force !== null ? force : !drawer.classList.contains('open');
+            if (open) { drawer.classList.add('open'); triggerTab.classList.add('hidden-tab'); } 
+            else { drawer.classList.remove('open'); triggerTab.classList.remove('hidden-tab'); }
+        }
+        triggerTab.addEventListener('click', () => toggleDrawer(true));
+        document.getElementById('btn-close-drawer').addEventListener('click', () => toggleDrawer(false));
+
+        function triggerInject() {
+            if(state.contrastActive) return;
+            state.contrastActive = true; state.contrastTime = 0;
+            state.totalVol += 8;
+            const volEl = document.getElementById('contrast-vol');
+            volEl.innerText = `Vol: ${state.totalVol}mL`; volEl.classList.remove('hidden');
+            if(state.totalVol > 200) volEl.classList.add('text-red-500');
+            document.getElementById('contrast-timing').classList.remove('hidden');
+        }
+        document.getElementById('btn-inject').addEventListener('click', triggerInject);
+        window.addEventListener('keydown', (e) => { if(e.code === 'Space') triggerInject(); });
+
+        document.getElementById('fluoro-monitor').addEventListener('pointerdown', function(e) {
+            this.classList.toggle('expanded'); e.stopPropagation();
+        });
+
+        window.addEventListener('resize', () => {
+            labCamera.aspect = window.innerWidth / window.innerHeight; labCamera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight); labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        const clock = new THREE.Clock();
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+            const time = clock.getElapsedTime();
+
+            cArmPivot.rotation.y = THREE.MathUtils.lerp(cArmPivot.rotation.y, THREE.MathUtils.degToRad(state.laoRao), 0.08);
+            cArmArm.rotation.x = THREE.MathUtils.lerp(cArmArm.rotation.x, THREE.MathUtils.degToRad(-state.craCau), 0.08);
+
+            const wPos = new THREE.Vector3(); tube.getWorldPosition(wPos);
+            doseLight.position.copy(wPos);
+            doseLight.intensity = (state.laoRao > 40 || state.craCau < -20) ? 200 : 0; 
+
+            const isMoving = Math.abs(cArmPivot.rotation.y - THREE.MathUtils.degToRad(state.laoRao)) > 0.01 || 
+                             Math.abs(cArmArm.rotation.x - THREE.MathUtils.degToRad(-state.craCau)) > 0.01;
+            
+            const xrayInd = document.getElementById('xray-indicator');
+            const xrayDot = document.getElementById('xray-dot');
+            if (isMoving) {
+                xrayInd.innerHTML = `<div class="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div> MOVING`;
+                xrayInd.classList.replace('text-red-500', 'text-amber-500');
+            } else {
+                xrayInd.innerHTML = `<div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div> X-RAY`;
+                xrayInd.classList.replace('text-amber-500', 'text-red-500');
+            }
+
+            calculateAnalytics();
+
+            const hrPhase = (time * 1.2) % 1; 
+            const isSystole = hrPhase < 0.3;
+            const beat = isSystole ? Math.pow(Math.sin(hrPhase * Math.PI / 0.3), 2) * 0.03 : 0;
+            const scale = 1 + beat;
+            heartGroupLab.scale.set(scale, scale, scale);
+            heartGroupFluoro.scale.set(scale, scale, scale);
+            heartGroupFluoro.position.y = isSystole ? 0.2 : 0;
+
+            if (state.contrastActive) {
+                state.contrastTime += delta;
+                let t = state.contrastTime;
+                let tc = document.getElementById('contrast-timing');
+                
+                if (t < 0.4) { tc.innerText = "LM Filling"; fMatLM.uniforms.progress.value = t/0.4; }
+                else if (t < 0.8) { tc.innerText = "Proximal LAD/LCx"; let p = (t-0.4)/0.8; fMatLAD.uniforms.progress.value = p; fMatLCx.uniforms.progress.value = p; }
+                else if (t < 1.5) { tc.innerText = "Distal Filling"; let p = (t-0.4)/0.8; fMatLAD.uniforms.progress.value = p; fMatLCx.uniforms.progress.value = p; fMatRCA.uniforms.progress.value = Math.min(t/1.2, 1); }
+                else if (t < 2.5) { tc.innerText = "Washout Begins"; }
+
+                if (t > 2.0) {
+                    let washout = 1.0 - THREE.MathUtils.clamp((t - 2.0) / 1.5, 0, 1);
+                    let a = THREE.MathUtils.lerp(0.35, 0.95, washout);
+                    [fMatLM, fMatLAD, fMatLCx, fMatRCA].forEach(m => m.uniforms.alphaFilled.value = a);
+                }
+                if (t > 3.5) {
+                    state.contrastActive = false; tc.classList.add('hidden');
+                    [fMatLM, fMatLAD, fMatLCx, fMatRCA].forEach(m => { m.uniforms.progress.value = 0; m.uniforms.alphaFilled.value = 0.95; });
+                }
+            }
+
+            orbitControls.update();
+
+            renderer.setClearColor(0x020617);
+            renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
+            renderer.setScissorTest(false);
+            renderer.clear();
+            renderer.render(scene, labCamera);
+            labelRenderer.render(scene, labCamera);
+
+            const monitorDOM = document.getElementById('fluoro-monitor');
+            const rect = monitorDOM.getBoundingClientRect();
+            const pipX = rect.left, pipY = window.innerHeight - rect.bottom, pipW = rect.width, pipH = rect.height;
+
+            renderer.setViewport(pipX, pipY, pipW, pipH);
+            renderer.setScissor(pipX, pipY, pipW, pipH);
+            renderer.setScissorTest(true);
+            
+            renderer.setClearColor(0xe2e8f0); 
+            renderer.clearColor(); 
+            renderer.clearDepth();
+            
+            fluoroCamera.aspect = pipW / pipH;
+            fluoroCamera.updateProjectionMatrix();
+            
+            if(isSystole && !monitorDOM.classList.contains('expanded')) {
+               fluoroCamera.position.x = (Math.random()-0.5)*0.03;
+               fluoroCamera.position.y = (Math.random()-0.5)*0.03;
+            } else {
+               fluoroCamera.position.x = 0;
+               fluoroCamera.position.y = 0;
+            }
+            fluoroCamera.position.z = cArmRadius - 1; 
+            
+            renderer.render(scene, fluoroCamera);
+        }
+
+        updateUIState();
+        animate();
+    </script>
+</body>
+</html>
