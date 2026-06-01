@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard Kasus Nyeri Dada (Angin Duduk) FKTP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        .card-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        .is-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05); 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2); 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.4); 
+        }
+
+        .answer-text {
+            line-height: 1.5;
+            letter-spacing: 0.01em;
+        }
+        .answer-text strong {
+            color: #b91c1c; /* red-700 untuk kontras kritis */
+        }
+        .answer-text ul, .answer-text ol {
+            padding-left: 1.25rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .answer-text ul { list-style-type: disc; }
+        .answer-text ol { list-style-type: decimal; }
+        .answer-text li {
+            margin-bottom: 0.35rem;
+        }
+        .answer-text em {
+            color: #64748b;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen font-sans flex flex-col overflow-x-hidden selection:bg-red-600 selection:text-white">
+
+    <header class="bg-red-700 text-white shadow-lg p-3 md:p-4 sticky top-0 z-20 border-b border-red-900">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0">
+            <div class="text-center sm:text-left">
+                <h1 class="text-lg sm:text-xl md:text-2xl font-bold flex items-center justify-center sm:justify-start gap-2 text-white">
+                    <span>💔</span> Flashcard Angin Duduk & ACS
+                </h1>
+                <p class="text-[10px] sm:text-xs md:text-sm text-red-200 font-medium tracking-wide">
+                    50 Kasus Nyeri Dada: Diagnosis, Pitfalls & Resusitasi di FKTP
+                </p>
+            </div>
+            <div class="text-[10px] sm:text-xs md:text-sm font-medium bg-red-900 px-3 py-1 rounded-full border border-red-500 shadow-sm text-center text-white">
+                Oleh dr. Bayushi | Trik Jaga IGD
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex flex-col items-center justify-start sm:justify-center p-4 md:p-8 max-w-4xl mx-auto w-full">
+        
+        <!-- Progress Info -->
+        <div class="w-full flex justify-between items-center mb-3 md:mb-4">
+            <span id="card-category" class="text-xs md:text-sm uppercase tracking-wider text-red-700 font-bold bg-red-100 border border-red-200 px-3 py-1 rounded shadow-sm">Kategori</span>
+            <span id="card-counter" class="text-xs md:text-sm bg-white px-3 py-1 rounded-full shadow-sm font-bold border border-slate-300 text-slate-700">1 / 50</span>
+        </div>
+
+        <div id="flashcard" tabindex="0" class="relative w-full max-w-2xl h-[68vh] min-h-[480px] md:h-[550px] perspective-1000 cursor-pointer group mb-6 md:mb-8 touch-pan-y focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-500 rounded-2xl md:rounded-3xl" onclick="toggleFlip(event)">
+            <div class="card-inner w-full h-full absolute transform-style-3d shadow-xl rounded-2xl md:rounded-3xl">
+                
+                <!-- Front (Question) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-white rounded-2xl md:rounded-3xl p-6 md:p-10 flex flex-col items-center justify-center text-center border-t-4 border-red-600 shadow-md">
+                    <div class="absolute top-4 left-5 text-slate-100 font-extrabold text-4xl md:text-5xl opacity-80">Kasus</div>
+                    <div class="w-full h-full flex flex-col justify-center overflow-y-auto custom-scrollbar pt-8 pb-8 pr-2">
+                        <p id="question-text" class="text-base sm:text-lg md:text-xl text-slate-800 font-bold leading-relaxed m-auto">
+                            Memuat pertanyaan...
+                        </p>
+                    </div>
+                    <div class="absolute bottom-4 text-xs md:text-sm text-slate-400 flex items-center gap-1 animate-pulse">
+                        <span class="hidden sm:inline">Ketuk kartu untuk melihat analisis klinis</span>
+                        <span class="sm:hidden">Ketuk: Jawaban • Usap: Lanjut</span>
+                    </div>
+                </div>
+
+                <!-- Back (Answer) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden bg-slate-50 rounded-2xl md:rounded-3xl p-6 md:p-8 flex flex-col items-start justify-start text-left rotate-y-180 border-t-4 border-indigo-600 shadow-inner overflow-hidden ring-1 ring-black/5">
+                    <div class="absolute top-4 right-5 text-indigo-100 font-extrabold text-4xl md:text-5xl opacity-60">Aksi</div>
+                    <div class="w-full h-full overflow-y-auto custom-scrollbar pt-8 pb-8 pr-4">
+                        <div id="answer-text" class="answer-text text-xs sm:text-sm md:text-base text-slate-800 w-full font-medium">
+                            Memuat jawaban...
+                        </div>
+                    </div>
+                    <div class="absolute bottom-4 left-0 w-full text-center text-xs md:text-sm text-slate-400 flex items-center justify-center gap-1 animate-pulse">
+                        <span class="hidden sm:inline">Ketuk kartu untuk kembali ke kasus</span>
+                        <span class="sm:hidden">Ketuk: Kembali • Usap: Lanjut</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="w-full max-w-2xl grid grid-cols-2 sm:flex sm:flex-row justify-center gap-3 md:gap-4 pb-8">
+            <button onclick="prevCard()" class="col-span-1 bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-sm transition-all border border-slate-300 flex justify-center items-center gap-1 active:scale-95">
+                <span>&larr;</span> <span class="hidden sm:inline">Sebelumnya</span><span class="sm:hidden">Prev</span>
+            </button>
+            <button onclick="nextCard()" class="col-span-1 bg-red-700 hover:bg-red-800 text-white font-bold text-sm md:text-base py-3 md:py-4 px-2 md:px-6 rounded-xl shadow-md transition-all flex justify-center items-center gap-1 active:scale-95">
+                <span class="hidden sm:inline">Selanjutnya</span><span class="sm:hidden">Next</span> <span>&rarr;</span>
+            </button>
+            <button onclick="shuffleCards()" class="col-span-2 sm:col-span-1 order-last sm:order-none bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm md:text-base py-3 md:py-4 px-4 md:px-6 rounded-xl shadow-md transition-all flex justify-center items-center active:scale-95">
+                Acak (Shuffle)
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        const originalCards = [
+            // ==========================================
+            // KATEGORI 1: Anamnesis & Fisik (The Deceivers)
+            // ==========================================
+            { 
+                cat: "Pitfall Obat: Antasida", 
+                q: "Wanita 55 th mengeluh nyeri ulu hati panas (*heartburn*) menjalar ke dada. Anda curiga GERD, berikan Sirup Antasida. 15 menit kemudian, <strong>nyerinya HILANG TOTAL</strong>. Pasien merasa sehat. <br><br>Bolehkah Anda menyingkirkan diagnosis Sindrom Koroner Akut (ACS)?", 
+                a: `<strong>KONTRAINDIKASI LOGIKA! (Pitfall Paling Mematikan).</strong><br><br>
+                    <strong>Analisis:</strong>
+                    <ul>
+                        <li>Menghilangnya nyeri setelah minum obat lambung <strong>TIDAK BISA</strong> menyingkirkan ACS. Mengapa? Karena iskemia jantung bersifat intermiten (spasme yang bisa membuka sendiri).</li>
+                        <li>Nyerinya mungkin mereda spontan berbarengan dengan saat ia minum antasida (Efek Plasebo/Waktu). Infark Inferior sangat sering menyamar murni sebagai dispepsia.</li>
+                        <li><strong>Rule:</strong> Jangan pernah pulangkan pasien risiko tinggi nyeri ulu hati sebelum rekam EKG!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Pitfall Obat: Nitrat Sublingual", 
+                q: "Bapak X dada seperti diremas. Anda berikan 1 tablet ISDN 5mg di bawah lidah. Dalam 5 menit, nyerinya <strong>sembuh 100%</strong>. Anda bangga dan yakin ini pasti Angina Pektoris (Jantung). <br><br>Benarkah respons ISDN menjamin ini penyakit koroner?", 
+                a: `<strong>TIDAK BENAR! Awas Jebakan Esofagus.</strong><br><br>
+                    <strong>Farmakologi:</strong>
+                    <ul>
+                        <li>Nitrat (ISDN) merelaksasi otot polos koroner. TAPI, obat ini juga merelaksasi <strong>otot polos saluran cerna (esofagus)</strong>.</li>
+                        <li>Penyakit <em>Diffuse Esophageal Spasm</em> (keram kerongkongan) memiliki gejala nyeri remasan dada sentral yang SANGAT MIRIP angina, dan ia juga akan <strong>Sembuh Total</strong> dengan Nitrat.</li>
+                        <li>Diagnosis pasti tetap EKG dan Enzim Jantung (Troponin), bukan respons obat.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Jebakan Nyeri Pleuritik", 
+                q: "Pemuda 28 th nyeri dada kiri tajam, tembus punggung, memburuk saat tarik napas (Pleuritik). Membaik saat membungkuk ke depan. EKG: Elevasi ST difus di hampir semua sadapan dengan PR depresi. <br><br>Ini STEMI Anterior Luas?", 
+                a: `<strong>BUKAN! Ini adalah Perikarditis Akut.</strong><br><br>
+                    <strong>Cara Membedakan di EKG:</strong>
+                    <ul>
+                        <li><strong>STEMI:</strong> ST Elevasi melengkung cembung (<em>convex/tombstone</em>), hanya pada sadapan tertentu (misal V1-V4), dan WAJIB ada <strong>ST Depresi Resiprokal</strong> (bayangan cermin) di sadapan lain.</li>
+                        <li><strong>Perikarditis:</strong> ST Elevasi melengkung cekung (<em>concave/smiley</em>) di SEMUA sadapan (karena radang bungkus jantung global), TANPA ST depresi resiprokal (kecuali di aVR dan V1). Disertai segmen PR yang turun (depresi).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Presentasi Asimtomatik Ekuivalen", 
+                q: "Kakek 70 tahun, diabetes melitus tipe 2 tidak terkontrol. Dibawa ke puskesmas karena sejak pagi tiba-tiba <strong>sangat lemas (fatigue), keringat dingin membasahi baju, dan mual</strong>. TIDAK ADA nyeri dada sama sekali. <br><br>Apakah ini murni hipoglikemia/gastritis?", 
+                a: `<strong>Waspada Angina Ekuivalen (Silent Myocardial Infarction).</strong><br><br>
+                    <strong>Patofisiologi:</strong>
+                    <ul>
+                        <li>Gula darah tinggi kronis merusak saraf sensoris otonom jantung (Neuropati Diabetik).</li>
+                        <li>Saat pembuluh darah jantung tersumbat total, kabel alarm nyerinya "terputus", sehingga <strong>tidak ada rasa sakit dada</strong>.</li>
+                        <li>Tubuh hanya merespons syok pompa (jantung gagal mendadak) dengan pelepasan adrenalin masif (keringat dingin/diaphoresis) dan sesak napas. <strong>Wajib EKG!</strong></li>
+                    </ul>` 
+            },
+            { 
+                cat: "Tricky Physical Exam", 
+                q: "Pasien mengeluh dada kiri sakit. Saat Anda tekan (palpasi) area parasternal kirinya, pasien menjerit kesakitan. Nyeri ini bisa di-reproduksi dengan tekanan. Anda mendiagnosis Costochondritis (nyeri otot/tulang). <br><br>Apakah boleh dipulangkan dengan antinyeri?", 
+                a: `<strong>Hati-hati Jebakan Koinsidensi (Red Herring).</strong><br><br>
+                    <strong>Analisis Kritis:</strong>
+                    <ul>
+                        <li>Memang benar nyeri tekan adalah ciri muskuloskeletal.</li>
+                        <li>NAMUN, hingga 15% pasien dengan Sindrom Koroner Akut (ACS) sejati juga bisa memiliki nyeri tekan dada (koinsidensi / memiliki dua masalah bersamaan).</li>
+                        <li>Jika pasien memiliki faktor risiko tinggi (Tua, Perokok, DM, Hipertensi), <strong>nyeri dada yang bisa ditekan TIDAK menyingkirkan diagnosis Iskemik Jantung</strong>. Lakukan EKG dulu sebelum memvonis murni nyeri tulang.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Keringat Dingin (Diaphoresis)", 
+                q: "Pasien nyeri dada di ruang tunggu. Nyeri biasa saja (skala 4/10), tapi Anda melihat bajunya basah kuyup oleh keringat dingin sebesar biji jagung. Wajah pucat pasi. <br><br>Mengapa tanda otonom ini membuat dokter jaga harus merinding?", 
+                a: `<strong>Diaphoresis adalah Penanda Syok Kardiogenik Impending.</strong><br><br>
+                    <strong>Patofisiologi:</strong>
+                    <ul>
+                        <li>Nyeri dada bisa subjektif (ada yang kuat nahan sakit). Tapi <strong>keringat dingin masif</strong> adalah respons objektif tubuh saat *Cardiac Output* (curah jantung) jatuh drastis.</li>
+                        <li>Otak merespons ancaman henti aliran darah dengan "memeras" kelenjar adrenal (Epinefrin masif).</li>
+                        <li>Ini pertanda area infark (otot mati) SANGAT LUAS. Pasien siap jatuh ke Ventrikel Fibrilasi atau henti jantung kapan saja. Pindahkan ke bed resusitasi sekarang!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Mitos 'Angin Duduk' Masuk Angin", 
+                q: "Pasien 'angin duduk' baru saja dikerok punggungnya oleh istri dan diberi minum air jahe panas karena dikira masuk angin. Setelah itu pasien dilarang bergerak dan disuruh tidur pulas. <br><br>Apa bahaya terbesar instruksi 'dibawa tidur' ini?", 
+                a: `<strong>Kematian Akibat Melewati Golden Period (Door-to-Balloon Time).</strong><br><br>
+                    <strong>Fakta Waktu:</strong>
+                    <ul>
+                        <li>Sumbatan total STEMI membunuh sel otot jantung menit demi menit (*Time is Muscle*).</li>
+                        <li>Tidur membiarkan otot jantung mati perlahan dalam keheningan hingga terbentuk jaringan parut mati (Infark luas), memicu gagal jantung permanen atau kematian mendadak saat tidur akibat *Lethal Arrhythmia* (VF).</li>
+                        <li>Setiap menit tertunda untuk ke IGD = persentase kematian meningkat tajam.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Diferensiasi Nyeri Berdasarkan Jari", 
+                q: "Pasien A menunjuk lokasi nyerinya dengan <strong>mengepalkan seluruh tangan</strong> di tengah dada. <br>Pasien B menunjuk nyerinya dengan <strong>satu jari telunjuk</strong> di sela iga kiri bawah. <br><br>Mana yang tanda iskemik sejati?", 
+                a: `<strong>Pasien A (Tanda Levine / Levine's Sign Positif).</strong><br><br>
+                    <strong>Neuroanatomi:</strong>
+                    <ul>
+                        <li>Saraf visceral jantung tidak dipetakan spesifik (titik kordinat) di otak besar. Oleh karena itu, nyeri jantung bersifat <strong>difus (menyebar luas)</strong> dan dirasakan sebagai area besar yang tertindih/tercekik.</li>
+                        <li>Jika pasien bisa menunjuk nyeri hanya sebesar ujung jari (*point tenderness*), nyaris 99% itu berasal dari dinding dada luar (saraf kulit, radang tulang rawan, pleura), bukan dari dalam organ jantung.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Anamnesis Durasi Nyeri", 
+                q: "Pemuda cemas bilang dada kirinya tiba-tiba disetrum listrik <strong>sangat nyeri selama 2-3 detik</strong>, lalu hilang total tak berbekas. Ia takut terkena serangan jantung. Diagnosis Anda?", 
+                a: `<strong>Bukan Jantung (Nyeri Kilat / Fleeting Pain).</strong><br><br>
+                    <strong>Aturan Durasi Nyeri:</strong>
+                    <ul>
+                        <li>Iskemia miokard memerlukan penumpukan asam laktat untuk memicu nyeri. Ini butuh waktu (Angina stabil 2-10 menit, ACS > 20 menit persisten).</li>
+                        <li>Nyeri dada yang berlangsung hanya dalam hitungan detik <strong>TIDAK PERNAH</strong> disebabkan oleh iskemia koroner.</li>
+                        <li>Kemungkinan terbesar: Spasme saraf interkostal (Precordial Catch Syndrome) atau GERD ringan.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Tanda Gagal Jantung Kanan Mendadak", 
+                q: "Pasien nyeri dada persisten. Tiba-tiba lehernya membengkak (JVP > 5+4 cmH2O) dan kakinya memerah bengkak unilateral (DVT di betis kiri). Tensi drop. Suara paru sebersih kristal tanpa ronki. <br><br>Jangan tertipu jantung, ini penyakit apa?", 
+                a: `<strong>Emboli Paru Masif (Massive Pulmonary Embolism).</strong><br><br>
+                    <strong>Patofisiologi:</strong>
+                    <ul>
+                        <li>Gumpalan darah dari kaki (DVT) lepas menyumbat total jalan darah ke paru-paru.</li>
+                        <li>Jantung kanan gagal memompa seketika menabrak bendungan ini (Akut Cor Pulmonale). Darah mengantre di vena leher (JVP meroket).</li>
+                        <li><strong>Tricky Part:</strong> Karena letaknya di pembuluh darah vaskular paru, <strong>jalan udara (bronkus/alveolus) tetap bersih!</strong> Pasien sesak mati-matian tapi paru tak ada ronki/mengi. (Rujuk untuk Trombolitik Paru!).</li>
+                    </ul>` 
+            },
+
+            // ==========================================
+            // KATEGORI 2: EKG Pitfalls (The Hidden Killers)
+            // ==========================================
+            { 
+                cat: "EKG: 'Normal' tapi Mematikan", 
+                q: "Bapak X dada hancur diremas. EKG 12-lead di Puskesmas hasilnya <strong>100% Sinus Ritme Normal</strong>. Dokter jaga menenangkan dan memberi paracetamol. 1 jam kemudian pasien Henti Jantung. <br><br>Wilayah jantung mana yang 'buta' di EKG standar?", 
+                a: `<strong>Sumbatan Arteri Sirkumfleks (LCx / Posterolateral).</strong><br><br>
+                    <strong>Blind Spot EKG:</strong>
+                    <ul>
+                        <li>EKG 12-lead sangat buruk dalam 'melihat' dinding Posterior dan Lateral tinggi dari ventrikel kiri. Sumbatan total pada arteri LCx dapat menghasilkan EKG awal yang <strong>benar-benar normal</strong> pada 30% kasus ACS akut!</li>
+                        <li><strong>Golden Rule:</strong> Jangan gunakan EKG normal untuk menyingkirkan diagnosis jika klinis (anamnesis) sangat khas angina. Rujuk pantau EKG serial/Troponin.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "EKG: STEMI Anterior Ekstensif", 
+                q: "EKG menunjukkan ST Elevasi tinggi mencolok seperti batu nisan (Tombstone) meluas dari V1, V2, V3, V4, V5 hingga V6. Terdapat ST depresi resiprokal di II, III, aVF. <br><br>Arteri apa yang tersumbat dan apa julukannya?", 
+                a: `<strong>Sumbatan Pangkal LAD (Left Anterior Descending). "The Widow Maker".</strong><br><br>
+                    <strong>Prognosis Maut:</strong>
+                    <ul>
+                        <li>Arteri LAD memberi makan >50% otot utama ventrikel kiri (pompa utama jantung).</li>
+                        <li>Sumbatan dari pangkal (proksimal) mematikan seluruh dinding depan jantung. Pasien berada di tubir Syok Kardiogenik masif dan Edema Paru akut. Risiko kematian mendadak sangat tinggi (Primary PCI Cito wajib!).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "EKG: Pitfall Infark Inferior", 
+                q: "STEMI Inferior (STE di II, III, aVF). Tensi pasien 80/50 mmHg. Paru BERSIH. Sebelum Anda memberi cairan infus, sadapan EKG manakah yang WAJIB digeser dan direkam ulang untuk menyelamatkan nyawa?", 
+                a: `<strong>EKG Sadapan Jantung Kanan (V3R dan V4R).</strong><br><br>
+                    <strong>Deteksi Right Ventricular (RV) Infarct:</strong>
+                    <ul>
+                        <li>Arteri RCA yang menyuplai Inferior sering kali juga menyuplai Ventrikel Kanan. 40% STEMI Inferior disertai infark RV (jantung kanan lumpuh).</li>
+                        <li>Pindah elektroda V3 dan V4 ke dada sebelah KANAN. Jika ada elevasi >1mm, terbukti Infark RV!</li>
+                        <li><strong>Urgensi:</strong> Jika Infark RV, <strong>DILARANG KERAS</strong> memberi obat nitrat (ISDN) atau morfin, karena akan menyebabkan kolaps vaskular mematikan. Terapinya justru <em>Loading Fluid</em> (Cairan guyur).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "EKG: Posterior Tersembunyi", 
+                q: "Nyeri dada hebat. EKG depan (V1-V4) TIDAK ADA ST Elevasi sama sekali. Yang ada malah <strong>ST Depresi sangat dalam dan gelombang R yang tinggi</strong> di V1-V3. Apakah ini sekadar NSTEMI risiko rendah?", 
+                a: `<strong>Hati-hati STEMI POSTERIOR Tersembunyi!</strong><br><br>
+                    <strong>Efek Cermin:</strong>
+                    <ul>
+                        <li>Dinding belakang jantung (posterior) tidak ditempel elektroda. Jika ia infark (ST Elevasi di belakang), EKG depan (V1-V3) akan melihat <strong>bayangan cerminnya terbalik (ST Depresi dalam)</strong>.</li>
+                        <li>Gelombang Q infark dari belakang akan terbaca sebagai Gelombang R tinggi memuncak di depan (V1-V2).</li>
+                        <li><strong>Bukti:</strong> Geser elektroda ke punggung (V7, V8, V9). Elevasi 0.5 mm saja di sana sudah sah divonis STEMI (Butuh reperfusi Cito).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "EKG: Wellens Syndrome (Bom Waktu)", 
+                q: "Pasien masuk IGD, tapi saat direkam EKG <strong>nyeri dadanya SUDAH HILANG TOTAL (Pain Free)</strong>. EKG tak ada elevasi, tapi ada gelombang T Inversi simetris sangat dalam (Biphasik/Inverted) di V2-V3. <br><br>Boleh rawat jalan?", 
+                a: `<strong>Wellens' Syndrome: JANGAN Suruh Pulang / Treadmill!</strong><br><br>
+                    <strong>Bom Waktu LAD Kritis:</strong>
+                    <ul>
+                        <li>T inversi dalam saat <em>bebas nyeri</em> menandakan pangkal LAD tersumbat sangat kritis (90-99%), tapi baru saja reperfusi spontan sedikittt (karena itu nyerinya hilang).</li>
+                        <li>Plak ini super tidak stabil. Ia siap menyumbat 100% (Anterior STEMI Masif) dalam hitungan hari bahkan jam. Pasien dalam kondisi kritis meski tersenyum, rujuk rawat inap & Angiografi.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "EKG: De Winter Pattern", 
+                q: "Pemuda nyeri dada perokok. EKG V1-V4 TIDAK ADA ST Elevasi. Namun ada: <strong>ST Depresi Upsloping yang langsung melesat tajam menjadi gelombang T sangat tinggi dan runcing (Hyperacute T)</strong>. Ini repolarisasi dini jinak?", 
+                a: `<strong>De Winter T Waves = Ekuivalen STEMI Anterior!</strong><br><br>
+                    <strong>Kegawatan Tersembunyi:</strong>
+                    <ul>
+                        <li>Sekitar 2% pasien sumbatan total LAD proksimal TIDAK memunculkan ST Elevasi klasik, melainkan pola De Winter.</li>
+                        <li>ST segmen 'ditarik' ke bawah (depresi) lalu melenting tinggi ke atas menempel T raksasa.</li>
+                        <li>Ini adalah <strong>STEMI secara fungsional</strong>. Jangan tunggu enzim! Langsung aktivasi protokol Reperfusi/Fibrinolitik/PCI.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "EKG: aVR Elevation (Left Main)", 
+                q: "Pasien syok kardiogenik keringat dingin. EKG menunjukkan <strong>ST Elevasi mencolok di sadapan aVR dan V1</strong>, sementara sisa 8 sadapan lainnya mengalami ST Depresi difus. <br><br>Obat antiplatelet apa yang mungkin harus Anda TAHAN?", 
+                a: `<strong>Sumbatan Left Main / Triple Vessel Disease. TAHAN Clopidogrel/Ticagrelor!</strong><br><br>
+                    <strong>Logika Klinis:</strong>
+                    <ul>
+                        <li>Elevasi aVR + ST depresi luas menandakan sumbatan di pangkal seluruh sistem kiri (LMCA). Jantung hampir mati.</li>
+                        <li>Kasus begini sering tidak bisa di-ring (PCI) dan butuh <strong>Operasi Bypass Dada Terbuka CITO (CABG)</strong>.</li>
+                        <li>Jika Anda meloading pasien dengan P2Y12 inhibitor (Clopidogrel/Brilinta) dosis tinggi di Puskesmas, dokter bedah jantung akan menolak mengoperasi selama 5-7 hari (risiko perdarahan maut). Beri Aspirin + Heparin (rujuk dulu).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "EKG: LBBB dengan STEMI (Sgarbossa)", 
+                q: "Kakek memiliki LBBB kronis sejak 2 tahun lalu (QRS lebar spt huruf M di V5/V6). Sekarang ia nyeri dada hebat. Karena LBBB merusak ST segmen, bagaimana Anda tahu ada STEMI akut menumpang di atas LBBB tersebut?", 
+                a: `<strong>Kriteria Sgarbossa (Smith-Modified).</strong><br><br>
+                    <strong>Cari 3 Tanda Emas Ini:</strong>
+                    <ul>
+                        <li><strong>Konkordan Elevasi (Skor 5):</strong> Jika arah QRS naik, dan ST Elevasi juga ikut naik ≥ 1 mm (Normalnya LBBB ST-nya berlawanan QRS). Ini pasti STEMI!</li>
+                        <li><strong>Konkordan Depresi (Skor 3):</strong> ST Depresi ≥ 1 mm di sadapan V1, V2, V3.</li>
+                        <li><strong>Diskordan Ekstrem (Skor 2 / Modifikasi):</strong> ST Elevasi sangat tinggi proporsional (≥ 25% dari dalamnya gelombang S di depannya). Jika ada ini, bunyikan alarm Cath Lab.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Bedakan Gelombang T Raksasa", 
+                q: "Pasien nyeri dada ringan. EKG V2-V5 ada Gelombang T tinggi dan runcing menjulang. Bagaimana membedakan ini Hyperacute T (Awal STEMI) vs Hiperkalemia (Kalium tinggi di gagal ginjal)?", 
+                a: `<strong>Bentuk Simetris vs Asimetris & Dasar Lebar/Sempit.</strong><br><br>
+                    <strong>Analisis Visual:</strong>
+                    <ul>
+                        <li><strong>Hiperkalemia (Kalium Racun):</strong> T wave tinggi tajam bagai tenda (*Tent-shaped*), <strong>simetris sempit</strong> (pangkalnya sempit). Biasa pada pasien CKD anuria.</li>
+                        <li><strong>Hyperacute T (Awal Infark):</strong> T wave membesar, gemuk berisi (*Bulky*), pangkalnya <strong>lebar</strong> (menyatu dengan ST elevasi samar), cenderung asimetris condong ke kiri. Berlangsung hanya sebentar 30 menit sebelum jadi STEMI klasik.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Pitfall Prinzmetal Angina", 
+                q: "Pemuda nyeri dada subuh hari, EKG IGD jelas menunjukkan ST Elevasi Inferior. Anda menyiapkan rujukan darurat, tapi 15 menit kemudian pasien kentut/sendawa, nyeri hilang, dan direkam ulang EKG-nya <strong>KEMBALI NORMAL 100%</strong> (ST Elevasi lenyap). Hantu apa ini?", 
+                a: `<strong>Vasospastic Angina (Prinzmetal Angina) akibat Vagal Refleks.</strong><br><br>
+                    <strong>Patofisiologi:</strong>
+                    <ul>
+                        <li>Bukan karena plak pecah (trombus), melainkan otot polos arteri koroner tiba-tiba <strong>kram/spasme</strong> mencekik total pembuluhnya. Sering dicetuskan dini hari, stres, kokain, atau refleks parasimpatis.</li>
+                        <li>Saat spasme hilang (spontan atau dengan Nitrat), jalan darah 100% lancar lagi, ST Elevasi langsung rata seketika. (Berbeda dengan STEMI bekuan plak, yang butuh fibrinolitik/stent untuk buka).</li>
+                    </ul>` 
+            },
+
+            // ==========================================
+            // KATEGORI 3: Tatalaksana & Resusitasi (The Fatal Moves)
+            // ==========================================
+            { 
+                cat: "Resusitasi Syok RV Infarct", 
+                q: "STEMI Inferior (II, III, aVF elevasi). Pasien pucat, tensi 70/40 (Syok), JVP leher tinggi penuh bendungan, suara jantung bersih. <br><br>Obat penunjang tensi pertama BUKAN Inotropik. Apa yang harus disuntikkan?", 
+                a: `<strong>Loading Cairan Kristaloid (NaCl 0.9% Guyur Cepat).</strong><br><br>
+                    <strong>Fisiologi Starling Law:</strong>
+                    <ul>
+                        <li>Ventrikel kanan (RV) yang infark jadi lumpuh. Darah tidak bisa didorong lewati paru menuju ventrikel kiri. Jantung kiri 'kering' volume, memicu syok hipotensi.</li>
+                        <li>Obatnya: <strong>Isi pipa venanya dengan cairan tambahan (500 cc cepat)</strong>! Tekanan volume hidrostatik ekstra ini akan mendongkrak darah paksa melewati paru secara pasif masuk ke jantung kiri. Tensi akan langsung pulih.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Kesalahan MONA: Oksigen", 
+                q: "Pasien STEMI datang. Ia tidak sesak. Saturasi oksigen di jarinya (SpO2) menunjukkan 98% (Normal). Karena protokol kuno M-O-N-A, perawat langsung memasang Oksigen NRM 15 Liter/menit. <br><br>Apa efek fatal Hiperoksia ini pada koroner?", 
+                a: `<strong>Vasokonstriksi Koroner Paradoksal (Menambah Luas Infark).</strong><br><br>
+                    <strong>Guideline AHA/ESC Terbaru:</strong>
+                    <ul>
+                        <li>Oksigen berlebihan di darah (Hiperoksia) akan memicu ledakan Reactive Oxygen Species (Radikal bebas stres oksidatif).</li>
+                        <li>Radikal bebas ini memaksa pembuluh darah koroner yang sehat ikut <strong>menyempit (vasokonstriksi)</strong>. Aliran darah kolateral ke area infark justru terputus, otot jantung makin luas yang mati!</li>
+                        <li><strong>Syarat Oksigen:</strong> HANYA berikan jika SpO2 < 90% atau ada gagal jantung akut.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Kesalahan MONA: Morfin di Puskesmas", 
+                q: "Bapak X meronta nyeri dada hebat. Nitrat 2x tidak mempan. Anda ingin menyuntikkan Morfin 2 mg IV sesuai teks buku untuk meredakan simpatis. Anda hanya di Puskesmas Desa tanpa alat *Airway* memadai. Bolehkah?", 
+                a: `<strong>TIDAK DIREKOMENDASIKAN Tanpa Pantauan ICU/Definitif.</strong><br><br>
+                    <strong>Kerugian Tersembunyi Morfin:</strong>
+                    <ul>
+                        <li><strong>Bahaya Akut:</strong> Depresi napas mendadak. Pasien akan henti napas (Apnea) dan hipotensi parah tanpa ada ventilator pendukung di desa Anda.</li>
+                        <li><strong>Bahaya Obat:</strong> Riset terbaru membuktikan Morfin melumpuhkan gerakan usus lambung (Gastroparesis), sehingga obat <strong>Clopidogrel / Ticagrelor TIDAK TERSERAP</strong>, bekuan trombus gagal luruh! Gunakan analgetik ringan atau segera evakuasi RS.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Kontraindikasi Fibrinolitik (Obat Hancur Bekuan)", 
+                q: "Pasien STEMI tiba di Puskesmas Pelosok (4 jam dari RS Jantung). Anda punya obat Streptokinase untuk menghancurkan gumpalan (Fibrinolisis). Pasien ini <strong>pernah Stroke Iskemik (penyumbatan otak) 2 bulan yang lalu</strong> tapi sekarang sudah bisa jalan. <br><br>Boleh di-Streptokinase?", 
+                a: `<strong>KONTRAINDIKASI ABSOLUT! Jangan Berikan.</strong><br><br>
+                    <strong>Mengapa Fatal?</strong>
+                    <ul>
+                        <li>Jaringan otak bekas stroke iskemik dalam 3 bulan terakhir kondisinya masih sangat lunak, rapuh, dan kaya akan pembuluh kapiler bocor.</li>
+                        <li>Jika disuntik obat penghancur bekuan super kuat (Fibrinolitik), darah akan langsung merembes membanjiri bekas stroke tersebut.</li>
+                        <li>Pasien akan tewas dalam 1 jam akibat <strong>Perdarahan Intrakranial Masif (Hemorrhagic Transformation)</strong>. Evakuasi segera ke RS rujukan PCI saja!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Dosis Loading Clopidogrel (Perbedaan CITO)", 
+                q: "Pasien UAP mau dirujuk. Anda punya Clopidogrel (75mg). Teori menyebutkan bisa diberi dosis muat 300 mg (4 tablet) atau 600 mg (8 tablet). <br><br>Kapan indikasi wajib memberikan <strong>dosis maksimal 600 mg (8 tablet sekaligus)</strong>?", 
+                a: `<strong>Saat Pasien akan Langsung Masuk Cath Lab (Primary PCI / Ring).</strong><br><br>
+                    <strong>Farmakokinetik:</strong>
+                    <ul>
+                        <li>Clopidogrel adalah Prodrug. Butuh liver untuk mengaktifkannya menjadi bentuk aktif. Jika dikasih 300 mg, butuh waktu 6-12 jam baru efek maksimal menghambat trombosit tercapai.</li>
+                        <li>Jika pasien direncanakan naik meja operasi *Catheterisasi* dalam 2 jam (misal rujukan RS dekat), dosis <strong>wajib digandakan 600 mg</strong> agar penghambatan agregasi platelet kuat langsung tercapai dalam 2 jam, demi mencegah *Stent Thrombosis Akut* di meja operasi.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Pitfall Henti Jantung Post-STEMI", 
+                q: "Di IGD Anda, pasien STEMI tiba-tiba bola matanya ke atas, napas mengorok (gasping), dan nadi karotis tak teraba (Henti Jantung). Anda refleks memasang pad Defibrilator (DC Shock). Layar menunjukkan <strong>Garis Lurus (Asistol)</strong>. <br><br>Bolehkah di-Shock 200 Joule?", 
+                a: `<strong>JANGAN PERNAH MEN-SHOCK ASISTOL (Garis Lurus)!</strong><br><br>
+                    <strong>Tatalaksana Listrik Henti Jantung:</strong>
+                    <ul>
+                        <li>Defibrilasi (Listrik) HANYA untuk "mereset" kekacauan listrik (*Shockable rhythm*: Ventricular Fibrillation/VF atau pulseless VT).</li>
+                        <li>Asistol berarti mesin listrik jantung <strong>sudah mati total</strong>. Di-shock tegangan jutaan volt pun tidak akan hidup. Obatnya hanya 1: <strong>Pompa Jantung Manual (CPR/Pijat Dada RJP kuat 100x/m)</strong> ditambah Epinefrin (Adrenalin) IV tiap 3 menit untuk memancing sel pacu jantung hidup kembali.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Antiplatelet Pertama (Aspirin Kunyah)", 
+                q: "Anak koas perawat baru Anda menyuruh pasien suspek Angina menelan utuh 4 pil Aspilet (Aspirin 320 mg) dengan segelas air mineral manis. <br><br>Mengapa ini kesalahan teknis yang memperburuk STEMI?", 
+                a: `<strong>Aspirin Wajib DIKUNYAH Dihancurkan di Mulut!</strong><br><br>
+                    <strong>Rahasia Absorpsi Cepat:</strong>
+                    <ul>
+                        <li>Jika ditelan utuh, butuh waktu hingga 45-60 menit bagi usus untuk melarutkan tablet enteric-coated dan memindahkannya ke darah. Waktu selama ini cukup untuk bekuan koroner membesar dan membunuh jantung.</li>
+                        <li>Jika dikunyah/hancur jadi bubuk dan bercampur air liur, obat ini diserap langsung lewat mukosa bukal (pembuluh leher) dan lambung proksimal. Penghambatan trombosit terjadi drastis dalam <strong>5 - 10 menit saja!</strong></li>
+                    </ul>` 
+            },
+            { 
+                cat: "Statin pada Akut: Bukan Turunkan Lemak", 
+                q: "Anda memberi pil Atorvastatin 40 mg pada pasien STEMI malam ini. Keluarganya bingung, 'Dok, kemarin kolesterol bapak saya normal 160, kok dikasih obat kolesterol?' <br><br>Apa efek rahasia (Pleiotropik) Statin dosis tinggi di malam serangan?", 
+                a: `<strong>Stabilisasi Plak & Anti-Inflamasi Pembuluh Darah (Pleiotropik).</strong><br><br>
+                    <strong>Bukan untuk besok pagi:</strong>
+                    <ul>
+                        <li>Statin dosis gajah (High Intensity) di awal serangan berfungsi menurunkan peradangan dinding endotel yang sedang membara.</li>
+                        <li>Ia membuat cangkang (fibrous cap) dari plak lemak yang sedang robek/koyak menjadi lebih tebal dan "dingin" (tidak lengket).</li>
+                        <li>Ini mencegah terbentuknya gumpalan lanjutan yang akan menyumbat ulang sisa celah urat koroner malam itu juga.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Tricky: STEMI Anterior Hipertensif", 
+                q: "STEMI Anterior (V1-V6 Elevasi). Pasien mengeluh sesak napas baring dan ronki basah. Tensi sangat tinggi 180/100 mmHg. Anda menunda rujukan sejenak. Obat injeksi utama penurun tensi dan sesak di FKTP sebelum merujuk pasien gagal jantung kiri ini?", 
+                a: `<strong>Injeksi Furosemide (Lasix) IV dan Titrasi Nitrat.</strong><br><br>
+                    <strong>Turunkan Preload Ekstrem:</strong>
+                    <ul>
+                        <li>Tensi 180 (Afterload tinggi) membuat jantung kiri yang sudah mati setengah (Anterior MI) tak sanggup mompa. Darah mundur merendam paru (ALO).</li>
+                        <li>Furosemide IV bekerja 5 menit mem-vasodilatasi vena besar menampung darah, lalu 30 menit kemudian membuang cairan via kencing. Beban jantung langsung ringan, sesak mereda, tensi turun ramah. Jangan guyur cairan pada pasien ini!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Peringatan Post-Tindakan Stent", 
+                q: "Bulan lalu bapak ini sukses dipasang Ring Jantung (*Stent*) oleh kardiolog. Hari ini datang IGD menjerit nyeri dada hebat 10/10, EKG STEMI luas di area stent lama. <br><br>Anda tanya 1 hal kritis: 'Obat pengencer darah (Ticagrelor) diminum terus kan Pak?' Ia jawab, 'Sudah habis seminggu lalu di Puskesmas, belum tebus Dok.' Apa nama komplikasinya?", 
+                a: `<strong>Stent Thrombosis Akut (Gumpalan Bekuan di dalam Ring Logam).</strong><br><br>
+                    <strong>Malapetaka Kepatuhan:</strong>
+                    <ul>
+                        <li>Ring adalah logam benda asing. Tubuh akan terus-terusan menyerang logam itu dengan keping darah pembeku (trombosit) selama setahun pertama.</li>
+                        <li>Dua obat (DAPT: Aspirin + Clopi/Brilinta) adalah "pelumas pelindung" wajib agar tak ada jendalan nyangkut di ring. </li>
+                        <li>Jika pasien PUTUS OBAT sepihak 1 hari saja, ring logam langsung diselimuti bekuan masif 100%. Tingkat kematian komplikasi ini jauh lebih parah dari STEMI pertama! Kunyahkan obat lagi, rujuk Cito Cath Lab.</li>
+                    </ul>` 
+            },
+
+            // ==========================================
+            // KATEGORI 4: Pasien Khusus (The Misfits)
+            // ==========================================
+            { 
+                cat: "Nyeri Dada & Kokain/Narkoba", 
+                q: "Pemuda 23 th dibawa dari diskotik. Dada nyeri diikat kencang, hipertensi berat 200/120, pupil mata melebar, nadi 130x. EKG Iskemik. Anda tahu ini keracunan kokain/sabu yang memicu spasme koroner. <br><br>DILARANG MUTLAK menurunkan nadi pemuda ini dengan obat Beta-Blocker (Bisoprolol/Atenolol). Kenapa?", 
+                a: `<strong>Bahaya "Unopposed Alpha Stimulation" (Stimulasi Alfa Tak Terlawan).</strong><br><br>
+                    <strong>Patofisiologi Reseptor:</strong>
+                    <ul>
+                        <li>Narkoba simpatomimetik (Kokain) merangsang reseptor Alfa (penyempit pembuluh) dan Beta (pemicu denyut).</li>
+                        <li>Jika Anda memblok reseptor Beta dengan obat, seluruh tonus adrenalin super masif itu akan 100% lari mengaktifkan reseptor Alfa yang tak terblokir!</li>
+                        <li>Akibatnya: <strong>Vasokonstriksi koroner dan sistemik akan jadi ganas tak terbatas</strong>. Tensi meroket tak terhingga, urat jantung menyempit total, pasien mati mendadak. Gunakan Diazepam IV & Nitrat untuk menenangkan krisis ini.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Nyeri Dada Kehamilan T3 (SCAD)", 
+                q: "Ibu Hamil kembar usia 36 minggu (Trimester 3), tanpa riwayat darah tinggi, tiba-tiba menjerit dada kirinya nyeri merobek lemas pingsan di kursi poli KIA. EKG: STEMI Anterior jelas. <br><br>Anda dilarang keras memberikan obat Fibrinolitik penghancur bekuan pada ibu ini. Mengapa plak lemak bisa menyumbat bumil muda sehat?", 
+                a: `<strong>Spontaneous Coronary Artery Dissection (SCAD).</strong><br><br>
+                    <strong>Bukan Plak Lemak!</strong>
+                    <ul>
+                        <li>Ini adalah tragedi jaringan ikat. Hormon estrogen dan relaksin kehamilan melemahkan struktur pembuluh nadi ibu.</li>
+                        <li>Tiba-tiba, tanpa ada plak kolesterol sama sekali, lapisan dalam urat koronernya (intima) <strong>ROBEK memanjang (Diseksi koroner)</strong> karena stres mengejan/gravitasi darah.</li>
+                        <li>Lumen asli terhimpit hematom, memicu STEMI. Jika Anda beri Trombolitik, robekan membesar, koroner hancur, ibu pendarahan fatal. Tata laksana SCAD sangat konservatif (Aspirin, bedrest, kadang CABG).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Tricky: Remaja Post-Vaksin/COVID", 
+                q: "Mahasiswa usia 19 tahun nyeri dada di ulu dada sejak 3 hari pasca demam batuk pilek ringan, atau pasca-vaksinasi mRNA tertentu. Nyeri ini tak menjalar, tapi sangat ngilu saat bernapas dalam dan EKG menunjukkan ST Elevasi merata. Enzim Troponin jantungnya meroket tinggi. Tapi setelah di-kateterisasi (Angiografi RS), koroner jantungnya 100% mulus (Normal)! <br><br>Penyakit apa ini?", 
+                a: `<strong>Acute Myocarditis (Radang Otot Jantung Akibat Virus/Imun).</strong><br><br>
+                    <strong>Infeksi Miokardium:</strong>
+                    <ul>
+                        <li>Virus (Coxsackie, Adenovirus, Covid) atau reaksi autoimun menyerang masuk langsung menghancurkan sel otot jantung tanpa menyumbat urat darah (*non-ischemic injury*).</li>
+                        <li>Kehancuran sel miokard melepaskan Troponin ke darah mirip STEMI, dan memicu EKG elevasi semu dari radang bungkusnya (Perimiokarditis).</li>
+                        <li>Tatalaksana puskesmas suportif anti-inflamasi kuat (Ibuprofen NSAID, Colchicine) dan larangan olahraga ketat 6 bulan untuk mencegah Henti Jantung akibat aritmia letal.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Takotsubo (Broken Heart Syndrome)", 
+                q: "Nenek 65 tahun, tidak punya riwayat jantung. 2 jam setelah menerima kabar putra tunggalnya meninggal kecelakaan motor, ia jatuh menangis histeris dengan nyeri dada kiri hancur. EKG persis STEMI Anterior luas, Troponin naik. Tapi lagi-lagi koronernya bersih tanpa bekuan. <br><br>Apa efek stres ekstrim ke ujung bilik jantung kirinya?", 
+                a: `<strong>Takotsubo Cardiomyopathy (Cardiomyopathy Stres).</strong><br><br>
+                    <strong>Banjir Katekolamin:</strong>
+                    <ul>
+                        <li>Kesedihan emosional mendalam memicu "Tsunami" hormon stres Adrenalin/Katekolamin dari otak.</li>
+                        <li>Hormon toksik ini menyengat dan melumpuhkan sementara otot ujung apex jantung. Akibatnya bilik kiri jantung melebar bulat seperti guci perangkap gurita Jepang (Takotsubo), tidak bisa berkontraksi.</li>
+                        <li>Gambaran EKG dan sesaknya sangat mirip STEMI gajah. Ajaibnya, jika didukung obat dan tenang, kondisi ini bisa <strong>sembuh kembali sempurna 100%</strong> dalam hitungan minggu tanpa ring stent.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "CKD & Peningkatan Troponin Semu", 
+                q: "Bapak X pasien gagal ginjal terminal menahun (CKD on HD) mengeluh dada pegal ringan sehabis makan padang (curiga GERD). Dokter iseng cek darah Trop-I (Enzim spesifik infark jantung), ternyata hasilnya NAIK! EKG normal stabil. Apakah ini diam-diam NSTEMI bahaya?", 
+                a: `<strong>Pitfall Laboratorium: Peningkatan Trop-I Kronis pada Gagal Ginjal.</strong><br><br>
+                    <strong>Pentingnya Kinetika Enzim:</strong>
+                    <ul>
+                        <li>Molekul Troponin dikeluarkan dan dibersihkan dari darah oleh Ginjal. Karena ginjal Bapak X rusak kronis, sisa Troponin selalu beredar ngendap di darah (Elevasi Baseline kronis).</li>
+                        <li><strong>Cara membedakan: Cek Ulang 2 jam kemudian!</strong> Jika Troponin NSTEMI asli jantung robek plak, angkanya akan meroket *spike* (misal dari 20 jadi 150) (Delta Troponin positif). Jika karena CKD, angkanya akan datar konstan di 25 terus-menerus.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Atlet Muda Kolaps di Lapangan", 
+                q: "Remaja atlet sepakbola tingkat SMA tiba-tiba roboh henti jantung (VF Arrest) saat sedang sprint di lapangan dengan keluhan dada tak enak sesaat. Saat otopsi, tidak ada urat lemak mampet. Malahan <strong>Otot pembatas tengah jantungnya (Septum) tebal tak wajar menutupi katup Aorta</strong>. Kelainan bawaan mematikan ini namanya?", 
+                a: `<strong>HOCM (Hypertrophic Obstructive Cardiomyopathy).</strong><br><br>
+                    <strong>Pembunuh Atlet #1:</strong>
+                    <ul>
+                        <li>Penyakit genetik dominan. Otot septum antar ventrikel membesar luar biasa kaku secara abnormal tanpa alasan.</li>
+                        <li>Saat denyut jantung dipercepat (lari/olahraga keras), septum tebal kaku ini justru maju menabrak daun katup mitral dan <strong>menyumbat total jalan keluar darah ke aorta (LVOT Obstruction)</strong>. </li>
+                        <li>Tubuh kehabisan darah saat berlari, iskemik demand fatal memicu V-Fibrilasi letal. (Deteksi awal: dengar Murmur sistolik kasar saat anak disuruh jongkok-berdiri waktu MCU Olahraga).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Sindrom Kounis (Alergi Membawa Angina)", 
+                q: "Anak muda sehat disengat tawon ndas (Vespa) berulang kali di hutan. Ia masuk syok anafilaktik (merah gatal sesak), namun anehnya EKG menunjukkan ST Elevasi Inferior akut mirip STEMI! <br><br>Mengapa zat alergi bisa memicu serangan jantung palsu?", 
+                a: `<strong>Kounis Syndrome (Vasospastic Allergic Angina).</strong><br><br>
+                    <strong>Patofisiologi Histamin:</strong>
+                    <ul>
+                        <li>Reaksi alergi parah melepaskan Histamin, Leukotrien, dan mediator sel mast raksasa ke darah.</li>
+                        <li>Zat-zat kimia ini selain bikin bengkak sesak napas tenggorokan, juga memiliki efek samping <strong>menyempitkan urat koroner sekuat tenaga (Vasospasme akut)</strong>. </li>
+                        <li>Jantung sehat pun tak dapat suplai darah. EKG jadi STEMI sementara. Sembuhkan dengan Anti-histamin masif, Steroid sistemik, dan Epinefrin IM, maka EKG akan kembali rata.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Tiroid & Demand Ischemia Tipe 2", 
+                q: "Wanita muda bola mata menonjol (Grave's disease/Hipertiroid) tak minum obat PTU. Datang gawat darurat jantung berdebar liar (Atrial Fibrilasi 160x/menit) dan nyeri dada diremas kencang (EKG ada ST depresi iskemia). <br><br>Obat pengencer darah Aspirin tidak akan menyelesaikan akar masalah nyeri dada wanita ini. Apa masalah aslinya?", 
+                a: `<strong>ACS Tipe 2: Demand Ischemia (Kebutuhan > Suplai akibat HR Ekstrem).</strong><br><br>
+                    <strong>Fisiologi Diastol Hancur:</strong>
+                    <ul>
+                        <li>Jantung koroner menyuplai darah ke ototnya sendiri <strong>hanya pada fase DIASTOL (fase relaksasi)</strong>.</li>
+                        <li>Badai tiroid memecut jantung berdetak 160 kali per menit. Waktu istirahat diastol terpotong ekstrem habis tak tersisa. Otot jantung perawan sehat pun menjerit miskin oksigen (Iskemia tipe 2).</li>
+                        <li>Tatalaksana FKTP: Hentikan laju debar jantungnya dulu (Rate Control Beta-Blocker jika tensi stabil) untuk melebarkan kembali waktu diastol agar otot jantung bisa makan darah segar.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Nyeri Dada Kemoterapi", 
+                q: "Wanita 45 th pasien kanker payudara sedang rutin kemoterapi obat injeksi Fluorouracil (5-FU) di RS. Saat kembali ke Puskesmas, ia mengeluh angin duduk, dada tertekan 3 hari berturut-turut. EKG normal-iskemik samar. <br><br>Pitfall kardio-onkologi apa yang sering terlewatkan?", 
+                a: `<strong>Cardiotoxicity (Spasme Koroner Akibat Obat Kemo).</strong><br><br>
+                    <strong>Efek Samping Tersembunyi:</strong>
+                    <ul>
+                        <li>Obat kemoterapi (seperti 5-FU, Capecitabine) terkenal sangat toksik pada pembuluh darah (endotel). Ia memicu <strong>spasme koroner akut</strong> tanpa adanya bekuan trombosit murni.</li>
+                        <li>Bahkan obat antrasiklin (Doxorubicin) bisa menghancurkan pompa jantung memicu gagal jantung kronis irreversible berbulan-bulan kemudian.</li>
+                        <li>Selalu curigai Cardiotoxicity pada pasien riwayat kanker dengan keluhan nyeri dada mendadak. Rujuk dengan info jenis kemoterapi.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Psikosomatis: Carpopedal Spasm", 
+                q: "Gadis remaja stres Ujian Nasional, putus pacar. Masuk IGD menjerit meronta sesak dada, 'Napas saya ditarik dok, dada panas sakit!' Napasnya menderu cepat pendek (Hiperventilasi 35x). Mendadak jemari tangannya kaku keras menekuk aneh. <br><br>Penyakit kardiak mautkah ini?", 
+                a: `<strong>Panic Attack (Serangan Panik) memicu Alkalosis Respiratorik.</strong><br><br>
+                    <strong>Mengapa Tangannya Keriting Kaku?</strong>
+                    <ul>
+                        <li>Hiperventilasi drastis <strong>membuang (washout) gas CO2</strong> ke udara. Darah menjadi tidak asam lagi, alias mendadak terlalu BASA (Alkalosis).</li>
+                        <li>Pada darah yang terlalu Basa, ion Kalsium mendadak diikat kuat oleh Albumin serum. Jumlah Kalsium bebas drop anjlok (*Transient Hypocalcemia*).</li>
+                        <li>Kekurangan kalsium bikin otot polos jadi kaku kejang (*tetany* / carpopedal spasm). JANGAN KASIH OKSIGEN! Beri pasien kantong kertas (paper-bag rebreathing) agar ia menghirup kembali CO2 nafasnya.</li>
+                    </ul>` 
+            },
+
+            // ==========================================
+            // KATEGORI 5: The Ultimate Mimickers (The Big 5 & Co)
+            // ==========================================
+            { 
+                cat: "Sang Penyamar UItimate: Diseksi Aorta Tipe A", 
+                q: "Pasien pria dada kiri nyeri luar biasa tembus punggung sobek. EKG menunjukkan: <strong>ST Elevasi Inferior nyata (II, III, aVF)</strong>. <br>Anda siap meloading Aspirin 4 tablet, Ticagrelor 2, dan Fibrinolitik pengencer darah karena ini STEMI Inferior. <br>Namun tiba-tiba pasien mengeluh, 'Dok tangan kiri saya tiba-tiba lumpuh tak bisa diangkat' (Stroke akur). <br><br>Mengapa pengencer darah Anda akan membunuhnya sekarang?", 
+                a: `<strong>Diseksi Aorta yang Menyumbat Arteri RCA & Karotis Sekaligus!</strong><br><br>
+                    <strong>Mekanisme Tipuan Iblis:</strong>
+                    <ul>
+                        <li>Robekan Aorta utama (Diseksi Tipe A) menganga besar, membuat flap dinding darah mengelupas turun dan <strong>MENGUNCI MULUT muara Arteri Koroner Kanan (RCA)</strong>. EKG pun muncul sebagai STEMI Inferior palsu!</li>
+                        <li>Robekan dinding itu juga merembet ke atas, memotong aliran Arteri Karotis ke otak kiri, memicu lengan lumpuh mati (Stroke).</li>
+                        <li>Memberikan Fibrinolitik pada aorta yang sedang robek pendarahan akan membuat pasien wafat kehabisan darah (eksanguinasi internal) saat itu juga. Cek Beda Nadi/Tensi kanan kiri!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Vagal Refleks Empedu (Biliary Colic)", 
+                q: "Ibu gemuk paruh baya, nyeri ulu hati kanan atas menembus skapula belikat tiap kali habis makan daging. Anda takut Infark Inferior, merekam EKG. Hasilnya ada <strong>T Inversi dan ST depresi ringan di lead Inferior (II, III, aVF)</strong>. <br><br>Tapi perut kanan dipalpasi saat tarik napas memicu henti napas kesakitan tajam (Murphy Sign +). Siapa pelakunya?", 
+                a: `<strong>Kolesistitis Akut (Batu Empedu) Memutar Balik EKG.</strong><br><br>
+                    <strong>Jebakan Saraf Vagus (Crosstalk):</strong>
+                    <ul>
+                        <li>Kantung empedu yang radang bernanah bersandar di diafragma, di bawah otot jantung Inferior.</li>
+                        <li>Nyeri kolik luar biasa ini merangsang Saraf Vagus perut (Refleks Vagal yang amat kuat). Stimulasi Vagus raksasa ini bisa 'menarik' listrik EKG di jantung bawah, memunculkan T Inversi palsu yang sembuh sendiri bila kantung empedu diangkat.</li>
+                        <li>Puskesmas: USG Abdomen & singkirkan Troponin.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Emboli Paru Menyamar Iskemia Anterior", 
+                q: "Lansia post-patah tulang panggul tiduran (bed-rest) sebulan. Tiba-tiba sesak mati-matian, takikardia 130x, nyeri dada kanan. <br>EKG Anda rekam: Tampak <strong>ST Depresi dan T Inversi di V1, V2, V3, V4</strong>. Wah gawat ini NSTEMI Iskemik Anteroseptal jantung kiri! Benarkah tebakan EKG Anda?", 
+                a: `<strong>SALAH! Itu EKG dari Regangan Ventrikel Kanan Akibat Emboli Paru.</strong><br><br>
+                    <strong>Strain Pattern Kanan:</strong>
+                    <ul>
+                        <li>Emboli bekuan kaki menyumbat paru. Jantung Kanan (Ventrikel Kanan/RV) memompa buntu menabrak beton, membengkak raksasa meregang akut (*Acute RV Strain*).</li>
+                        <li>V1 hingga V4 (yang posisinya EKG menempel dekat di depan dada) didorong mundur oleh jantung Kanan yang bengkak. Regangan miokard kanan ini memicu gambaran repolarisasi rusak (T Inversi palsu / Strain).</li>
+                        <li>Abaikan Aspirin (Penyakit bukan di plak kiri). Rujuk terapi Heparin / Trombolitik Paru!</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Nyeri Dada & Papan Kayu", 
+                q: "Bapak tua rutin minum obat Piroxicam/Ibuprofen warung setahun bebas maag. Tengah pasar jatuh meringkuk memegang perut tembus bawah dada. <br>Anda palpasi perut bapak itu: <strong>Seluruh otot perut keras, kaku tegang tak bisa ditekan layaknya sepotong papan kayu (Defans muskuler / Board-like abdomen)</strong>. Tensi tak terukur. <br><br>Adakah Angin Duduk dengan perut kayu?", 
+                a: `<strong>Tidak. Ini Ulkus Peptikum Perforasi (Lambung Pecah/Bocor).</strong><br><br>
+                    <strong>Bencana Asam Kimia Tumpah:</strong>
+                    <ul>
+                        <li>NSAID/Piroxicam kronis menggerus mukosa hingga lambung / usus dua belas jari berlubang tembus.</li>
+                        <li>Asam HCl tumpah ruah membakar organ usus lain (*Chemical Peritonitis Massif*). Tubuh refleks mati-matian mengejangkan semua otot perut agar area radang tak bergerak gesek (Defans).</li>
+                        <li>Bapak meninggal karena syok Sepsis perut, bukan jantung. Rujuk Bedah laparotomi cito (Jangan pernah beri Nitrat/Aspirin perut bolong).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Tamponade Jantung: Tanda JVP", 
+                q: "Bapak trauma KLL dada kepentok. Sesak merintih 40x/m, tensi drop 80/50. Vena Jugularis Leher (JVP) <strong>membengkak besar</strong>. <br>Anda tahu ini curiga Tamponade (Darah kurung jantung). Tanda Kussmaul (Kussmaul's Sign) mana yang membuktikan ini tamponade/konstriksi dan BUKAN Gagal Jantung Kanan biasa?", 
+                a: `<strong>JVP Makin Membengkak Tinggi Saat Tarik Napas (Inspirasi).</strong><br><br>
+                    <strong>Paradoks Hukum Fisika Paru:</strong>
+                    <ul>
+                        <li>Normalnya orang sehat: Saat tarik napas, tekanan dada turun memvakum, darah vena leher mudah kesedot masuk jantung (JVP turun mengecil rata).</li>
+                        <li>Pada Tamponade keras/Perikarditis Konstriktif: Jantung terkurung cangkang baja darah beku/kaku. Saat tarik napas, darah mau masuk tersedot tapi jantung <strong>MENOLAK MENGEMBANG</strong>.</li>
+                        <li>Akibatnya darah pasrah memantul mundur menabrak antrean leher, JVP justru membengkak besar saat inspirasi (Tanda Kussmaul positif). Rujuk pungsi jarum toraks cito.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Trauma: Tension Pneumothorax", 
+                q: "Mahasiswa Marfan (kurus jangkung) lari basket langsung roboh sesak biru dada kanan nyeri ditusuk pisau. <br>Ciri khas yang membuat Tension Pneumothorax Kanan ini mematikan dalam waktu 3 menit adalah <strong>Bergesernya Trakea ke kiri dan Nadi Hilang (Syok)</strong>. <br><br>Tindakan medis 'Jagal' apa yang melegakan di FKTP?", 
+                a: `<strong>Dekompresi Jarum Abocath (Needle Thoracostomy).</strong><br><br>
+                    <strong>Menusuk demi Kehidupan:</strong>
+                    <ul>
+                        <li>Udara bocor paru terjebak sistem katup satu arah, dada menggelembung meledak tak terlihat. Jantung ditendang geser ke kiri mampet.</li>
+                        <li>Gunakan jarum IV besar (Jarum infus 14G-16G orange/abu). Tusuk tegak lurus di rongga dada. Letak AHA baru: <strong>ICS ke-4 atau ke-5 garis ketiak depan (Anterior Axillary Line)</strong>, atau ICS-2 MCL klasik.</li>
+                        <li>Dengar desisan udara "Psssshhh!" keluar dari selongsong abocath, sirkulasi pulih. Pasien hidup untuk dirujuk.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Nyeri Dada Odinofagia", 
+                q: "Pemudi nyeri dada akut tengah (retrosternal) seperti terbakar perih tiap kali menelan air ludah atau makan. Ia cerita 3 hari terakhir sedang rawat jalan minum <strong>Kapsul Doxycycline / Clindamycin</strong> untuk jerawatnya sebelum tidur. EKG mulus. <br><br>Luka organ apa yang tak berhubungan dengan jantung ini?", 
+                a: `<strong>Pill-Induced Esophagitis (Ulkus Kerongkongan Akibat Obat).</strong><br><br>
+                    <strong>Kesalahan Minum Obat Awam:</strong>
+                    <ul>
+                        <li>Pasien meminum kapsul antibiotik keras / tablet KCL tanpa air yang cukup banyak, lalu langsung tiduran pulas.</li>
+                        <li>Kapsul menempel / lengket di dinding tengah kerongkongan (Esofagus) dan melarut malam itu melepaskan bahan kaustik kuat. Membakar mukosa membentuk bisul sariawan raksasa (Ulkus) tepat di belakang Jantung.</li>
+                        <li>Nyerinya dirasakan sebagai sakit dada tiap ditarik menelan (Odinofagia). Edukasi obat PPI dan minum tegak.</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Herpes Zoster Prodromal Cunning", 
+                q: "Kakek menjerit dada kiri seperti digesek setrum dan terbakar cabai. Anda bingung, EKG normal 100%, paru bersih, dan kulit dadanya <strong>MULUS bersih 100% tanpa bintik atau ruam sama sekali</strong>. <br><br>Anda mendiagnosis mialgia dan suruh pulang. 4 hari kemudian kakek kembali mengamuk menunjukkan koreng di dadanya. Pelajaran pitfall?", 
+                a: `<strong>Fase Prodromal (Pre-Eruptive) Herpes Zoster / Cacar Ular.</strong><br><br>
+                    <strong>Serangan Saraf Sebelum Kulit Terbakar:</strong>
+                    <ul>
+                        <li>Virus tertidur di Ganglion Akar Saraf interkostal (tulang iga belakang). Saat imun kakek drop, virus bereplikasi dan meluncur sepanjang kabel saraf ke depan dada.</li>
+                        <li>Selama 1-4 hari pertama merayap saraf ini, kulit depan belum melepuh, tapi kabel sarafnya sudah meradang hebat (Neuralgia setruman mematikan). Sering disangka serangan jantung, kram empedu, atau encok dada.</li>
+                        <li>Kunci kecurigaan: Nyerinya selalu mengikat searah garis dermatom (jalur sabuk), hanya <strong>SEPARUH SISI (Unilateral) tidak nyebrang garis tengah dada</strong>, dan hiperalgesia (baju nyentuh dikit sakit gila).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Nyeri Pankreatitis Akut Tembus", 
+                q: "Bapak X, pecandu alkohol, habis makan sate gulai kambing rakus. Tiba di IGD membungkuk memeluk lutut (posisi meringkuk), nyeri perut atas menembus ke pinggang dada bawah seperti ditikam dari pusar ke belakang punggung (Boring pain). Amilase darah dikabarkan 4x lipat tinggi. <br><br>Apakah organ di belakang perut yang hancur membakar diri?", 
+                a: `<strong>Pankreatitis Akut (Radang Kelenjar Getah Perut).</strong><br><br>
+                    <strong>Bencana Autodigesti Enzim:</strong>
+                    <ul>
+                        <li>Alkohol atau batu empedu sumbat duktus kelenjar pankreas. Cairan enzim amilase/lipase penghancur daging (pencerna makan) macet tak bisa keluar usus, akhirnya ia berbalik <strong>menghancurkan dan mencerna daging organ pankreasnya sendiri</strong>.</li>
+                        <li>Karena pankreas letaknya melintang di belakang perut menempel ke tulang punggung dekat diafragma bawah jantung, nyerinya sering tersaru hebat ke dada/pinggang.</li>
+                        <li>Aksi Puskesmas: Puasa total 100% pasang selang NGT (Makan setetes = enzim keluar organ makin hancur), Analgetik IV berat, resusitasi cairan kristaloid masif (Syok kapiler bocor).</li>
+                    </ul>` 
+            },
+            { 
+                cat: "Tanda Pembuluh Darah Terkoyak Cepat", 
+                q: "Pertanyaan mematikan penutup: Pasien berbadan tinggi (Marfan) dengan nyeri dada merobek Tearing Pain (Suspek Diseksi Aorta merambat). Dokter IGD men-rontgen dada dengan mesin puskesmas sederhana. Tanda Klasik bayangan foto Thorax Hitam-Putih 1 film yang membuktikan kecurigaan Aorta melebar hancur?", 
+                a: `<strong>Pelebaran Mediastinum (Widened Mediastinum > 8 cm).</strong><br><br>
+                    <strong>Tanda Rontgen Kegawatan Mutlak:</strong>
+                    <ul>
+                        <li>Ruang pembatas di tengah dada antara paru kiri dan paru kanan (Mediastinum - tempat berjalannya pipa darah raksasa Aorta) <strong>menjadi sangat LEBAR kembung (> 8 cm putih pekat)</strong> karena dijejali genangan darah yang tumpah mendesak dari Aorta robek.</li>
+                        <li>Bayangan ujung knob (tombol) lengkung aorta di Rontgen tak lagi tajam, tapi kabur pudar.</li>
+                        <li>Segera lupakan EKG normal, hubungi ambulans evakuasi bedah Vaskuler Cito! Target tensi sistolik turun <120 dengan Labetalol. Waktu Emas robekan hanya jam.</li>
+                    </ul>` 
+            }
+        ];
+
+        let cards = [...originalCards];
+        let currentIndex = 0;
+        let isFlipped = false;
+        
+        // Touch Variables for Swipe
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let touchStartY = 0;
+        let isSwiping = false;
+        let isScrolling = false;
+
+        const flashcardEl = document.getElementById('flashcard');
+        const questionEl = document.getElementById('question-text');
+        const answerEl = document.getElementById('answer-text');
+        const counterEl = document.getElementById('card-counter');
+        const categoryEl = document.getElementById('card-category');
+
+        function renderCard() {
+            if (isFlipped) {
+                flashcardEl.classList.remove('is-flipped');
+                isFlipped = false;
+                setTimeout(() => {
+                    updateContent();
+                }, 300);
+            } else {
+                updateContent();
+            }
+        }
+
+        function updateContent() {
+            const currentCard = cards[currentIndex];
+            questionEl.innerHTML = currentCard.q;
+            answerEl.innerHTML = currentCard.a;
+            categoryEl.textContent = currentCard.cat;
+            counterEl.textContent = `${currentIndex + 1} / ${cards.length}`;
+            
+            // Scroll answer to top whenever card changes
+            document.querySelector('#answer-text').parentElement.scrollTop = 0;
+            document.querySelector('#question-text').parentElement.scrollTop = 0;
+        }
+
+        function toggleFlip(e) {
+            if (isSwiping) return;
+            const selection = window.getSelection();
+            if (selection.toString().length > 0) return;
+            
+            isFlipped = !isFlipped;
+            flashcardEl.classList.toggle('is-flipped');
+        }
+
+        function nextCard() {
+            if (currentIndex < cards.length - 1) {
+                currentIndex++;
+                renderCard();
+            } else {
+                currentIndex = 0;
+                renderCard();
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderCard();
+            } else {
+                currentIndex = cards.length - 1; // loop to back
+                renderCard();
+            }
+        }
+
+        function shuffleCards() {
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            currentIndex = 0;
+            renderCard();
+        }
+
+        flashcardEl.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+            isSwiping = false;
+            isScrolling = false;
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchmove', e => {
+            if (isScrolling) return;
+
+            const currentTouchX = e.changedTouches[0].screenX;
+            const currentTouchY = e.changedTouches[0].screenY;
+            
+            const diffX = Math.abs(currentTouchX - touchStartX);
+            const diffY = Math.abs(currentTouchY - touchStartY);
+
+            // Mencegah trigger swipe horizontal jika dominan scroll vertikal
+            if (diffY > diffX && diffY > 10) {
+                isScrolling = true;
+                isSwiping = false;
+                return;
+            }
+
+            if (diffX > 15) {
+                isSwiping = true;
+            }
+        }, {passive: true});
+
+        flashcardEl.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+
+        function handleSwipe() {
+            const swipeThreshold = 50; 
+            if (touchEndX < touchStartX - swipeThreshold) {
+                nextCard();
+            } else if (touchEndX > touchStartX + swipeThreshold) {
+                prevCard();
+            }
+            setTimeout(() => {
+                isSwiping = false;
+            }, 100);
+        }
+
+        window.onload = renderCard;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                e.preventDefault(); 
+                toggleFlip();
+            } else if (e.code === 'ArrowRight') {
+                nextCard();
+            } else if (e.code === 'ArrowLeft') {
+                prevCard();
+            }
+        });
+    </script>
+</body>
+</html>
