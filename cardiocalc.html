@@ -1,0 +1,2248 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CardioCalc Hub - Platform Kalkulator Medis Jantung</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            200: '#a7f3d0',
+                            300: '#6ee7b7',
+                            400: '#34d399',
+                            500: '#10b981', // Emerald/Mint accent
+                            600: '#059669',
+                            700: '#047857',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar - High contrast and clean */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #10b981;
+            border-radius: 9999px;
+            border: 2px solid #f8fafc;
+            background-clip: padding-box;
+        }
+        
+        /* Glassmorphism utilities */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        
+        /* Soft custom focus rings */
+        .focus-ring:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.4);
+        }
+
+        /* Micro-animations */
+        .hover-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hover-card:hover {
+            transform: translateY(-1px);
+        }
+
+        /* Segmented control transition */
+        .segmented-btn {
+            transition: all 0.15s ease-out;
+        }
+
+        /* Input Range Customization */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #10b981;
+            cursor: pointer;
+            margin-top: -7px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+
+        /* High-contrast checked inputs selector */
+        label:has(input[type="radio"]:checked),
+        label:has(input[type="checkbox"]:checked) {
+            border-color: #059669 !important;
+            background-color: rgba(5, 150, 105, 0.08) !important;
+            box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.15);
+        }
+
+        /* Smooth slide-in for side drawer */
+        #drawer-menu {
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Custom styling to hide scrollbar when wanted */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* High Contrast Forest Green Gradient & Fresh Mint Overrides */
+        body {
+            background-color: #f8fafc !important; /* Fresh light background */
+            color: #0f172a !important;
+        }
+        
+        /* Light mode sidebar and main background contrast */
+        aside {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+        }
+        main {
+            background-color: #f1f5f9 !important; /* clean light slate */
+        }
+        
+        /* High contrast border overrides */
+        .border-slate-200, .border-slate-250, .border-slate-300 {
+            border-color: #cbd5e1 !important;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans h-screen overflow-hidden flex flex-col">
+
+    <!-- Top Navigation Header -->
+    <header class="sticky top-0 z-40 border-b border-slate-300 glass-panel shadow-sm px-4 lg:px-8 py-3.5 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+            <!-- Hamburger Menu Button (Mobile) -->
+            <button onclick="openDrawer()" class="lg:hidden p-2 -ml-2 rounded-lg text-slate-600 hover:bg-slate-100 focus:outline-none" title="Buka Menu">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-700 to-brand-400 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+                <i data-lucide="activity" class="w-5 h-5 animate-pulse"></i>
+            </div>
+            <div>
+                <h1 class="text-md lg:text-lg font-extrabold tracking-tight bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent flex items-center gap-1.5 leading-none">
+                    CardioCalc Hub
+                </h1>
+                <p class="text-[9px] text-slate-500 font-bold uppercase tracking-wider leading-none mt-1">
+                    Platform Klinis 26 Kalkulator Medis Jantung
+                </p>
+                <p class="text-[9px] text-slate-400 font-semibold mt-1 leading-none">
+                    part of <span class="font-bold text-emerald-500">CardiologyVault</span> • Developed by Bayushi Eka Putra, MD, FIHA
+                </p>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-2">
+            <!-- Quick Bookmark Menu Dropdown Link -->
+            <div class="relative">
+                <button onclick="toggleBookmarkDropdown()" class="p-2 rounded-lg hover:bg-slate-100 text-slate-600 transition flex items-center gap-1" title="Kalkulator Favorit">
+                    <i data-lucide="star" class="w-5 h-5 text-amber-500 fill-amber-500"></i>
+                    <span id="fav-count" class="text-xs bg-slate-200 px-1.5 py-0.5 rounded-full font-bold">0</span>
+                </button>
+                <div id="bookmark-dropdown" class="hidden absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-xl shadow-xl py-2 z-50">
+                    <div class="px-3 py-1.5 border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">Favorit Anda</div>
+                    <div id="fav-list-dropdown" class="max-h-60 overflow-y-auto py-1">
+                        <!-- Fav items will go here -->
+                        <div class="px-4 py-3 text-xs text-slate-500 text-center">Belum ada kalkulator favorit. Klik bintang di sebelah nama kalkulator.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Layout (Height-bounded for iframe Notion/desktop scroll synchronization) -->
+    <div class="flex-1 flex flex-col lg:flex-row overflow-hidden max-w-[1600px] w-full mx-auto relative h-[calc(100vh-72px)]">
+        
+        <!-- Drawer Backdrop Overlay (Mobile only) -->
+        <div id="drawer-overlay" onclick="closeDrawer()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-45 lg:hidden hidden transition-opacity duration-300 opacity-0"></div>
+        
+        <!-- Left Column: Search & Sidebar list of calculators (Drawer on Mobile) -->
+        <aside id="drawer-menu" class="fixed inset-y-0 left-0 z-50 w-80 lg:w-96 transform -translate-x-full lg:translate-x-0 lg:static lg:flex transition-transform duration-300 ease-in-out flex flex-col border-r border-slate-300 bg-white h-full overflow-y-auto lg:overflow-hidden shrink-0 shadow-2xl lg:shadow-none">
+            <!-- Close button for drawer (Mobile only) -->
+            <div class="flex items-center justify-between p-4 border-b border-slate-300 lg:hidden shrink-0">
+                <span class="text-xs font-black uppercase text-slate-400 tracking-wider">Navigasi</span>
+                <button onclick="closeDrawer()" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <!-- Search bar -->
+            <div class="p-4 border-b border-slate-300 space-y-3 shrink-0">
+                <div class="relative">
+                    <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="search-input" oninput="filterCalculators()" placeholder="Cari kalkulator (cth: HEART, ASCVD, DVT)..." class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring shadow-inner text-slate-800 transition">
+                </div>
+                
+                <!-- Category Tabs (Horizontal Scroll on Mobile) -->
+                <div class="flex gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar select-none">
+                    <button onclick="filterCategory('all')" id="cat-all" class="px-3 py-1.5 rounded-full font-bold bg-brand-500 text-white shadow-sm shrink-0 transition">Semua</button>
+                    <button onclick="filterCategory('koroner')" id="cat-koroner" class="px-3 py-1.5 rounded-full font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 shrink-0 transition">Koroner</button>
+                    <button onclick="filterCategory('aritmia')" id="cat-aritmia" class="px-3 py-1.5 rounded-full font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 shrink-0 transition">Aritmia</button>
+                    <button onclick="filterCategory('paru')" id="cat-paru" class="px-3 py-1.5 rounded-full font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 shrink-0 transition">Paru/Sepsis</button>
+                    <button onclick="filterCategory('gagaljantung')" id="cat-gagaljantung" class="px-3 py-1.5 rounded-full font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 shrink-0 transition">Gagal Jantung</button>
+                    <button onclick="filterCategory('hemodinamik')" id="cat-hemodinamik" class="px-3 py-1.5 rounded-full font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 shrink-0 transition">Hemodinamik</button>
+                </div>
+            </div>
+            
+            <!-- List of Calculators -->
+            <nav id="calc-list" class="flex-1 overflow-y-visible lg:overflow-y-auto p-3 space-y-1.5 bg-slate-50/50 min-h-0">
+                <!-- Javascript will inject list items here dynamically for easier searching/favoriting -->
+            </nav>
+        </aside>
+        
+        <!-- Right Column: Interactive Work Area -->
+        <main class="flex-1 bg-slate-50 overflow-y-auto h-full px-4 lg:px-8 py-6">
+            
+            <!-- Welcome Screen (Default) -->
+            <div id="welcome-panel" class="max-w-3xl mx-auto py-12 flex flex-col items-center text-center space-y-6">
+                <div class="w-20 h-20 rounded-3xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 shadow-inner">
+                    <i data-lucide="calculator" class="w-10 h-10"></i>
+                </div>
+                <div class="space-y-2">
+                    <h2 class="text-2xl font-black text-slate-800">Selamat Datang di CardioCalc Hub</h2>
+                    <p class="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+                        Pilih salah satu dari 26 kalkulator medis jantung terpenting di sebelah kiri untuk memulai kalkulasi klinis terpadu.
+                    </p>
+                </div>
+                
+                <!-- Quick Category Selector Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full pt-4">
+                    <button onclick="filterCategory('koroner'); scrollSidebarToTop();" class="p-4 rounded-2xl bg-white border border-slate-200 text-left hover-card shadow-sm flex flex-col justify-between h-32">
+                        <div class="p-2.5 rounded-xl bg-rose-500/10 text-rose-500 w-fit"><i data-lucide="heart-pulse" class="w-5 h-5"></i></div>
+                        <div>
+                            <div class="font-extrabold text-sm text-slate-800">Sindrom Koroner / ACS</div>
+                            <div class="text-[11px] text-slate-500 mt-1">HEART, GRACE, TIMI, Sgarbossa...</div>
+                        </div>
+                    </button>
+                    <button onclick="filterCategory('aritmia'); scrollSidebarToTop();" class="p-4 rounded-2xl bg-white border border-slate-200 text-left hover-card shadow-sm flex flex-col justify-between h-32">
+                        <div class="p-2.5 rounded-xl bg-blue-500/10 text-blue-500 w-fit"><i data-lucide="activity" class="w-5 h-5"></i></div>
+                        <div>
+                            <div class="font-extrabold text-sm text-slate-800">Aritmia & Antikoagulan</div>
+                            <div class="text-[11px] text-slate-500 mt-1">CHA2DS2-VASc, HAS-BLED, eGFR...</div>
+                        </div>
+                    </button>
+                    <button onclick="filterCategory('paru'); scrollSidebarToTop();" class="p-4 rounded-2xl bg-white border border-slate-200 text-left hover-card shadow-sm flex flex-col justify-between h-32">
+                        <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 w-fit"><i data-lucide="wind" class="w-5 h-5"></i></div>
+                        <div>
+                            <div class="font-extrabold text-sm text-slate-800">Emboli Paru & Sepsis</div>
+                            <div class="text-[11px] text-slate-500 mt-1">Wells' PE, Wells' DVT, PESI, qSOFA...</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Container where all calculators live -->
+            <div id="calculator-workspace" class="max-w-4xl mx-auto hidden">
+                <!-- Back Button for Mobile View -->
+                <button onclick="backToWelcome()" class="mb-4 lg:hidden text-xs bg-slate-200 px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 text-slate-600">
+                    <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Kembali ke Menu Utama
+                </button>
+
+                <!-- Calculator Container Template -->
+                <div class="bg-white border border-slate-200 rounded-3xl shadow-xl overflow-hidden">
+                    <!-- Calculator Title / Header -->
+                    <div class="px-6 lg:px-8 py-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                        <div class="flex-1 mr-4">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span id="active-calc-cat" class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-500">KORONER</span>
+                                <h2 id="active-calc-name" class="text-lg lg:text-xl font-black text-slate-800">HEART Score</h2>
+                            </div>
+                            <p id="active-calc-desc" class="text-xs text-slate-500 mt-1 leading-relaxed">Prediksi risiko Mayor Adverse Cardiac Event (MACE) dalam 6 minggu untuk pasien nyeri dada di IGD.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="favorite-btn" onclick="toggleFavoriteActive()" class="p-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-400 transition" title="Tambah ke Favorit">
+                                <i data-lucide="star" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Calculator Content Area -->
+                    <div class="flex flex-col md:flex-row">
+                        <!-- Left Sub-panel: Inputs -->
+                        <div class="flex-1 p-6 lg:p-8 space-y-6 max-h-[60vh] md:max-h-none overflow-y-auto border-b md:border-b-0 md:border-r border-slate-200" id="calc-inputs-container">
+                            <!-- Dynamic inputs loaded here -->
+                        </div>
+
+                        <!-- Right Sub-panel: Outputs (Sticky or Stacked) -->
+                        <div class="w-full md:w-80 p-6 lg:p-8 bg-slate-50/50 shrink-0 flex flex-col justify-between">
+                            <div class="space-y-6">
+                                <!-- Score Big Circle Display -->
+                                <div class="flex flex-col items-center text-center">
+                                    <div class="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest mb-2">Skor Hasil</div>
+                                    <div class="relative w-28 h-28 rounded-full flex flex-col items-center justify-center border-4 border-slate-200" id="result-score-ring">
+                                        <span id="result-score" class="text-3xl font-black text-slate-800">0</span>
+                                        <span id="result-max-score" class="text-[10px] text-slate-400 font-bold">dari 10</span>
+                                    </div>
+                                    <span id="result-badge" class="mt-4 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500">Risiko Rendah</span>
+                                </div>
+
+                                <!-- Interpretation card -->
+                                <div class="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm space-y-2">
+                                    <h4 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Interpretasi Klinis</h4>
+                                    <p id="result-interpretation" class="text-xs text-slate-600 leading-relaxed font-semibold">Tingkat risiko MACE 6 minggu: 0.9 - 1.7%. Pasien dapat dipertimbangkan untuk rawat jalan (discharge) langsung.</p>
+                                </div>
+                                
+                                <!-- Clinical recommendation / guidance -->
+                                <div class="bg-slate-100 p-4 rounded-2xl space-y-1.5 border border-slate-200/50">
+                                    <h4 class="text-xs font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1.5"><i data-lucide="shield-alert" class="w-4 h-4 text-brand-500"></i> Rekomendasi Terapi</h4>
+                                    <p id="result-recommendation" class="text-[11px] text-slate-600 leading-relaxed">Discharge aman. Rencanakan tindak lanjut rawat jalan oleh Spesialis Jantung.</p>
+                                </div>
+                            </div>
+
+                            <!-- Share/Export Action -->
+                            <div class="mt-8 pt-4 border-t border-slate-200">
+                                <button onclick="copyClinicalSummary()" class="w-full py-3 px-4 rounded-xl bg-slate-900 text-white hover:opacity-90 active:scale-95 text-xs font-black transition flex items-center justify-center gap-2 shadow-lg">
+                                    <i data-lucide="clipboard" class="w-4 h-4"></i> Salin Resume Klinis
+                                </button>
+                                <span id="copy-toast" class="hidden text-center block text-[10px] text-emerald-500 font-bold mt-2">Resume berhasil disalin ke clipboard!</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Guideline Source Reference Footer -->
+                    <div id="active-calc-source" class="px-6 py-3 bg-slate-100 border-t border-slate-200 text-[10px] text-slate-400 font-bold italic flex items-center gap-1.5 justify-between">
+                        <span>Sumber: Backus BE, et al. A chest pain score for ready triage in the emergency department. Crit Pathw Cardiol. 2008.</span>
+                        <span id="active-calc-ref-id" class="hidden text-slate-500">heart</span>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Main JavaScript Logic -->
+    <script>
+        // Data Structure for all 26 Calculators
+        const calculators = [
+            {
+                id: 'heart',
+                name: 'HEART Score',
+                category: 'koroner',
+                desc: 'Prediksi risiko Mayor Adverse Cardiac Event (MACE) dalam 6 minggu untuk pasien nyeri dada di IGD.',
+                source: 'Backus BE, et al. A chest pain score for ready triage in the emergency department. Crit Pathw Cardiol. 2008.',
+                inputs: [
+                    { id: 'history', label: 'Anamnesis / Riwayat (History)', type: 'radio', options: [{text: 'Sedikit mencurigakan (Slightly suspicious)', val: 0}, {text: 'Cukup mencurigakan (Moderately suspicious)', val: 1}, {text: 'Sangat mencurigakan (Highly suspicious)', val: 2}] },
+                    { id: 'ecg', label: 'EKG (Electrocardiogram)', type: 'radio', options: [{text: 'Normal', val: 0}, {text: 'Gangguan repolarisasi non-spesifik (LBBB/LVH/efek dig)', val: 1}, {text: 'Deviasi ST yang signifikan (depresi/elevasi baru)', val: 2}] },
+                    { id: 'age', label: 'Usia (Age)', type: 'radio', options: [{text: '< 45 tahun', val: 0}, {text: '45 - 64 tahun', val: 1}, {text: '≥ 65 tahun', val: 2}] },
+                    { id: 'risk', label: 'Faktor Risiko (Risk Factors)', type: 'radio', options: [{text: '0 faktor risiko', val: 0}, {text: '1-2 faktor risiko (HT, DM, Kolesterol, Rokok, Obesitas, CAD kel)', val: 1}, {text: '≥ 3 faktor risiko atau ada riwayat stroke/PVD/CAD terbukti', val: 2}] },
+                    { id: 'troponin', label: 'Troponin (1-2 jam pertama)', type: 'radio', options: [{text: 'Normal (≤ batas atas rujukan)', val: 0}, {text: 'Meningkat 1-2x lipat batas atas rujukan', val: 1}, {text: 'Meningkat > 2x lipat batas atas rujukan', val: 2}] }
+                ],
+                calculate: function(vals) {
+                    let score = Object.values(vals).reduce((a, b) => a + Number(b), 0);
+                    let risk = 'Rendah', color = 'emerald', interp = '', rec = '';
+                    if (score <= 3) {
+                        risk = 'Risiko Rendah';
+                        color = 'emerald';
+                        interp = 'Risiko MACE 6 minggu sekitar 0.9 - 1.7%.';
+                        rec = 'Dapat dipulangkan (discharge) dengan aman dan tindak lanjut outpatient kardiologi.';
+                    } else if (score <= 6) {
+                        risk = 'Risiko Menengah';
+                        color = 'amber';
+                        interp = 'Risiko MACE 6 minggu sekitar 12.0 - 16.6%.';
+                        rec = 'Pertimbangkan pemantauan (observasi) di rumah sakit, lakukan serial troponin dan echocardiografi / penunjang non-invasif.';
+                    } else {
+                        risk = 'Risiko Tinggi';
+                        color = 'rose';
+                        interp = 'Risiko MACE 6 minggu mencapai 50.1 - 65.0%.';
+                        rec = 'Perlu rawat inap segera. Pertimbangkan strategi invasif dini (kateterisasi jantung) dan terapi medis agresif.';
+                    }
+                    return { score, max: 10, risk, color, interpretation: interp, recommendation: rec };
+                }
+            },
+            {
+                id: 'grace',
+                name: 'GRACE Risk Score',
+                category: 'koroner',
+                desc: 'Menghitung estimasi mortalitas rumah sakit & 6 bulan pasca Sindrom Koroner Akut (ACS).',
+                source: 'Fox KA, et al. Register of Acute Coronary Events. BMJ. 2006.',
+                inputs: [
+                    { id: 'age', label: 'Usia (Tahun)', type: 'number', min: 18, max: 120, default: 60 },
+                    { id: 'hr', label: 'Heart Rate (bpm)', type: 'number', min: 30, max: 250, default: 80 },
+                    { id: 'sbp', label: 'Systolic BP (mmHg)', type: 'number', min: 50, max: 250, default: 120 },
+                    { id: 'creat', label: 'Serum Creatinine (mg/dL)', type: 'number', min: 0.1, max: 15.0, default: 1.0, step: 0.1 },
+                    { id: 'killip', label: 'Klasifikasi Killip (Gagal Jantung)', type: 'radio', options: [{text: 'Kelas I (Tidak ada tanda gagal jantung)', val: 0}, {text: 'Kelas II (Rales basah paru < 50%, JVD/S3)', val: 20}, {text: 'Kelas III (Edema paru akut menyeluruh)', val: 39}, {text: 'Kelas IV (Syok kardiogenik)', val: 59}] },
+                    { id: 'arrest', label: 'Henti Jantung saat MRS', type: 'radio', options: [{text: 'Tidak', val: 0}, {text: 'Ya', val: 39}] },
+                    { id: 'stdev', label: 'Deviasi Segmen ST pada EKG', type: 'radio', options: [{text: 'Tidak', val: 0}, {text: 'Ya', val: 28}] },
+                    { id: 'enzymes', label: 'Enzim Jantung Meningkat (Troponin/CKMB)', type: 'radio', options: [{text: 'Tidak', val: 0}, {text: 'Ya', val: 14}] }
+                ],
+                calculate: function(vals) {
+                    let score = 0;
+                    // Age points
+                    let age = Number(vals.age);
+                    if (age < 30) score += 0;
+                    else if (age < 40) score += 8;
+                    else if (age < 50) score += 25;
+                    else if (age < 60) score += 41;
+                    else if (age < 70) score += 58;
+                    else if (age < 80) score += 75;
+                    else if (age < 90) score += 91;
+                    else score += 100;
+
+                    // HR points
+                    let hr = Number(vals.hr);
+                    if (hr < 50) score += 0;
+                    else if (hr < 70) score += 3;
+                    else if (hr < 90) score += 9;
+                    else if (hr < 110) score += 15;
+                    else if (hr < 150) score += 24;
+                    else if (hr < 200) score += 38;
+                    else score += 46;
+
+                    // SBP points
+                    let sbp = Number(vals.sbp);
+                    if (sbp < 80) score += 58;
+                    else if (sbp < 100) score += 53;
+                    else if (sbp < 120) score += 43;
+                    else if (sbp < 140) score += 34;
+                    else if (sbp < 160) score += 24;
+                    else if (sbp < 200) score += 10;
+                    else score += 0;
+
+                    // Creatinine points
+                    let creat = Number(vals.creat);
+                    if (creat < 0.4) score += 1;
+                    else if (creat < 0.8) score += 3;
+                    else if (creat < 1.2) score += 5;
+                    else if (creat < 1.6) score += 7;
+                    else if (creat < 2.0) score += 9;
+                    else if (creat < 4.0) score += 15;
+                    else score += 20;
+
+                    // Add categorical points
+                    score += Number(vals.killip);
+                    score += Number(vals.arrest);
+                    score += Number(vals.stdev);
+                    score += Number(vals.enzymes);
+
+                    let risk = 'Rendah', color = 'emerald', interp = '', rec = '';
+                    if (score <= 108) {
+                        risk = 'Risiko Rendah';
+                        color = 'emerald';
+                        interp = 'Mortalitas di rumah sakit < 1% (UA/NSTEMI) atau < 2% (STEMI).';
+                        rec = 'Dapat dikelola secara konservatif / rawat jalan jika marker stabil.';
+                    } else if (score <= 140) {
+                        risk = 'Risiko Menengah';
+                        color = 'amber';
+                        interp = 'Mortalitas di rumah sakit 1-3% (UA/NSTEMI) atau 2-8% (STEMI).';
+                        rec = 'Lakukan kateterisasi jantung invasif dini dalam 24-72 jam.';
+                    } else {
+                        risk = 'Risiko Tinggi';
+                        color = 'rose';
+                        interp = 'Mortalitas di rumah sakit > 3% (UA/NSTEMI) atau > 8% (STEMI).';
+                        rec = 'Strategi invasif darurat/segera (< 24 jam) sangat disarankan, rawat di ruang intensif jantung (ICCU).';
+                    }
+                    return { score, max: 372, risk, color, interpretation: interp, recommendation: rec };
+                }
+            },
+            {
+                id: 'timi',
+                name: 'TIMI Risk Score (STEMI & NSTEMI)',
+                category: 'koroner',
+                desc: 'Alat stratifikasi risiko untuk memprediksi kematian atau re-infark pasca ACS (STEMI & UA/NSTEMI).',
+                source: 'Antman EM, et al. The TIMI Risk Score for Unstable Angina/Non-ST Elevation MI. JAMA. 2000.',
+                inputs: [
+                    { id: 'mode', label: 'Tipe Infark / ACS', type: 'select', options: [{text: 'UA / NSTEMI', val: 'nstemi'}, {text: 'STEMI', val: 'stemi'}] },
+                    // NSTEMI inputs
+                    { id: 'age65', label: 'Usia ≥ 65 tahun', type: 'checkbox', val: 1, cond: 'mode:nstemi' },
+                    { id: 'risk3', label: 'Faktor risiko CAD ≥ 3 (DM, HT, Silsilah kel, Lipid, Perokok)', type: 'checkbox', val: 1, cond: 'mode:nstemi' },
+                    { id: 'stenosis', label: 'Stenosis arteri koroner sebelumnya ≥ 50%', type: 'checkbox', val: 1, cond: 'mode:nstemi' },
+                    { id: 'asa', label: 'Konsumsi aspirin dalam 7 hari terakhir', type: 'checkbox', val: 1, cond: 'mode:nstemi' },
+                    { id: 'angina', label: 'Nyeri dada berat / angina ≥ 2x dalam 24 jam terakhir', type: 'checkbox', val: 1, cond: 'mode:nstemi' },
+                    { id: 'stchanges', label: 'Deviasi segmen ST pada EKG ≥ 0.5 mm', type: 'checkbox', val: 1, cond: 'mode:nstemi' },
+                    { id: 'markers', label: 'Peningkatan marka jantung (Troponin / CKMB)', type: 'checkbox', val: 1, cond: 'mode:nstemi' },
+                    // STEMI inputs
+                    { id: 'age_stemi', label: 'Usia Pasien', type: 'radio', options: [{text: '< 65 tahun', val: 0}, {text: '65 - 74 tahun', val: 2}, {text: '≥ 75 tahun', val: 3}], cond: 'mode:stemi' },
+                    { id: 'sbp_stemi', label: 'Tekanan Darah Sistolik < 100 mmHg', type: 'checkbox', val: 3, cond: 'mode:stemi' },
+                    { id: 'hr_stemi', label: 'Heart Rate > 100 bpm', type: 'checkbox', val: 2, cond: 'mode:stemi' },
+                    { id: 'killip_stemi', label: 'Klasifikasi Killip Kelas II - IV (Kongesti Paru)', type: 'checkbox', val: 2, cond: 'mode:stemi' },
+                    { id: 'weight_stemi', label: 'Berat badan < 67 kg', type: 'checkbox', val: 1, cond: 'mode:stemi' },
+                    { id: 'anterior_stemi', label: 'Elevasi ST anterior atau adanya LBBB baru', type: 'checkbox', val: 1, cond: 'mode:stemi' },
+                    { id: 'dm_ht_angina', label: 'Riwayat Diabetes, Hipertensi, atau Angina', type: 'checkbox', val: 1, cond: 'mode:stemi' },
+                    { id: 'time_stemi', label: 'Onset nyeri hingga reperfusi > 4 jam', type: 'checkbox', val: 1, cond: 'mode:stemi' }
+                ],
+                calculate: function(vals) {
+                    if (vals.mode === 'nstemi') {
+                        let score = 0;
+                        if (vals.age65) score += 1;
+                        if (vals.risk3) score += 1;
+                        if (vals.stenosis) score += 1;
+                        if (vals.asa) score += 1;
+                        if (vals.angina) score += 1;
+                        if (vals.stchanges) score += 1;
+                        if (vals.markers) score += 1;
+                        
+                        let interp = '', risk = '', color = '';
+                        if (score <= 2) {
+                            risk = 'Risiko Rendah'; color = 'emerald';
+                            interp = `Skor ${score} - Kejadian buruk 14 hari (kematian, reinfark, iskemia berulang): ~ 4.7 - 8.3%.`;
+                            rec = 'Strategi non-invasif awal dapat diterima.';
+                        } else if (score <= 4) {
+                            risk = 'Risiko Menengah'; color = 'amber';
+                            interp = `Skor ${score} - Kejadian buruk 14 hari: ~ 13.2 - 19.9%.`;
+                            rec = 'Direkomendasikan strategi invasif dini (kateterisasi).';
+                        } else {
+                            risk = 'Risiko Tinggi'; color = 'rose';
+                            interp = `Skor ${score} - Kejadian buruk 14 hari: ~ 26.2 - 40.9%.`;
+                            rec = 'Kateterisasi segera dan pemberian obat antikoagulan & antiplatelet ganda maksimal.';
+                        }
+                        return { score, max: 7, risk, color, interpretation: interp, recommendation: rec };
+                    } else {
+                        // STEMI
+                        let score = 0;
+                        score += Number(vals.age_stemi || 0);
+                        if (vals.sbp_stemi) score += 3;
+                        if (vals.hr_stemi) score += 2;
+                        if (vals.killip_stemi) score += 2;
+                        if (vals.weight_stemi) score += 1;
+                        if (vals.anterior_stemi) score += 1;
+                        if (vals.dm_ht_angina) score += 1;
+                        if (vals.time_stemi) score += 1;
+                        
+                        let interp = '', risk = '', color = '', rec = 'Reperfusi segera (PPCI / fibrinolitik) wajib dilakukan jika memenuhi indikasi onset.';
+                        let rate = 0;
+                        if (score === 0) rate = 0.8;
+                        else if (score === 1) rate = 1.6;
+                        else if (score === 2) rate = 2.2;
+                        else if (score === 3) rate = 4.4;
+                        else if (score === 4) rate = 7.3;
+                        else if (score === 5) rate = 12.4;
+                        else if (score === 6) rate = 16.1;
+                        else if (score === 7) rate = 23.4;
+                        else if (score === 8) rate = 26.8;
+                        else rate = 35.9;
+                        
+                        if (score <= 2) { risk = 'Risiko Rendah'; color = 'emerald'; }
+                        else if (score <= 5) { risk = 'Risiko Menengah'; color = 'amber'; }
+                        else { risk = 'Risiko Tinggi'; color = 'rose'; }
+                        
+                        interp = `Skor ${score} - Tingkat mortalitas 30 hari: ${rate}%.`;
+                        return { score, max: 14, risk, color, interpretation: interp, recommendation: rec };
+                    }
+                }
+            },
+            {
+                id: 'sgarbossa',
+                name: 'Sgarbossa Criteria & Modified Sgarbossa',
+                category: 'koroner',
+                desc: 'Mendiagnosis Myocardial Infarction (STEMI) akut dengan adanya LBBB (Left Bundle Branch Block) sebelumnya.',
+                source: 'Smith SW, et al. Diagnosis of acute myocardial infarction in patients with LBBB. Ann Emerg Med. 2012.',
+                inputs: [
+                    { id: 'concordant_ste', label: 'Elevasi segmen ST konkorodan ≥ 1 mm di lead mana saja dengan kompleks QRS positif (5 poin)', type: 'checkbox', val: 5 },
+                    { id: 'concordant_std', label: 'Depresi segmen ST konkorodan ≥ 1 mm di lead V1, V2, atau V3 (3 poin)', type: 'checkbox', val: 3 },
+                    { id: 'discordant_ste', label: 'Elevasi segmen ST diskordan ekstrem ≥ 5 mm (Original Sgarbossa - 2 poin)', type: 'checkbox', val: 2 },
+                    { id: 'modified_ratio', label: 'Rasio elevasi ST diskordan / amplitudo gelombang S ≤ -0.25 (Kriteria SMITH MODIFIED)', type: 'checkbox', val: 10 }
+                ],
+                calculate: function(vals) {
+                    let score = 0;
+                    if (vals.concordant_ste) score += 5;
+                    if (vals.concordant_std) score += 3;
+                    if (vals.discordant_ste) score += 2;
+                    
+                    let isOriginalPos = (score >= 3);
+                    let isModifiedPos = (vals.concordant_ste || vals.concordant_std || vals.modified_ratio);
+                    
+                    let risk = 'Negatif', color = 'slate', interp = '', rec = '';
+                    if (isOriginalPos || isModifiedPos) {
+                        risk = 'Positif Infark';
+                        color = 'rose';
+                        interp = `Skor Sgarbossa Original: ${score} poin (Saran positif jika ≥ 3). Modified Sgarbossa: ${isModifiedPos ? 'POSITIF' : 'NEGATIF'}. Kriteria Smith Modified sangat sensitif dan spesifik untuk oklusi koroner akut (OMI).`;
+                        rec = 'Segera aktivasi lab kateterisasi (Cath Lab) untuk Primary PCI! Pasien ini mengalami oklusi miokard akut.';
+                    } else {
+                        risk = 'Negatif / Meragukan';
+                        color = 'slate';
+                        interp = 'Skor tidak memenuhi ambang batas positif Sgarbossa. Namun, oklusi miokard tidak dapat sepenuhnya disingkirkan jika gejala klinis sangat mencurigakan.';
+                        rec = 'Lakukan serial EKG tiap 10-15 menit, periksa enzim jantung, dan lakukan bedside echocardiography untuk melihat abnormalitas gerakan dinding regional (RWMA).';
+                    }
+                    return { score, max: 10, risk, color, interpretation: interp, recommendation: rec };
+                }
+            },
+            {
+                id: 'crusade',
+                name: 'CRUSADE Bleeding Score',
+                category: 'koroner',
+                desc: 'Menilai risiko perdarahan mayor di rumah sakit pada pasien dengan NSTEMI / UA.',
+                source: 'Subherwal S, et al. CRUSADE Registry. Circulation. 2009.',
+                inputs: [
+                    { id: 'hct', label: 'Hematokrit Awal (%)', type: 'radio', options: [{text: '< 31%', val: 9}, {text: '31 - 33.9%', val: 7}, {text: '34 - 36.9%', val: 3}, {text: '37 - 39.9%', val: 2}, {text: '≥ 40%', val: 0}] },
+                    { id: 'crcl', label: 'Creatinine Clearance (mL/min)', type: 'radio', options: [{text: '< 15 mL/min', val: 39}, {text: '15 - 30 mL/min', val: 35}, {text: '30.1 - 60 mL/min', val: 28}, {text: '60.1 - 90 mL/min', val: 17}, {text: '90.1 - 120 mL/min', val: 7}, {text: '> 120 mL/min', val: 0}] },
+                    { id: 'hr', label: 'Heart Rate Masuk RS (bpm)', type: 'radio', options: [{text: '≤ 70 bpm', val: 0}, {text: '71 - 80 bpm', val: 1}, {text: '81 - 90 bpm', val: 3}, {text: '91 - 100 bpm', val: 6}, {text: '101 - 110 bpm', val: 8}, {text: '111 - 120 bpm', val: 10}, {text: '> 120 bpm', val: 11}] },
+                    { id: 'sbp', label: 'Tekanan Darah Sistolik Awal (mmHg)', type: 'radio', options: [{text: '< 90 mmHg', val: 10.5}, {text: '90 - 100 mmHg', val: 10}, {text: '101 - 110 mmHg', val: 8}, {text: '111 - 120 mmHg', val: 5}, {text: '121 - 180 mmHg', val: 1}, {text: '181 - 200 mmHg', val: 3}, {text: '> 200 mmHg', val: 5}] },
+                    { id: 'sex', label: 'Jenis Kelamin', type: 'radio', options: [{text: 'Pria', val: 0}, {text: 'Wanita', val: 8}] },
+                    { id: 'chf', label: 'Tanda Gagal Jantung Kongestif Akut', type: 'checkbox', val: 7 },
+                    { id: 'pvd', label: 'Riwayat Penyakit Vaskular Sebelumnya (PAD/Stroke)', type: 'checkbox', val: 6 },
+                    { id: 'dm', label: 'Riwayat Diabetes Mellitus', type: 'checkbox', val: 6 }
+                ],
+                calculate: function(vals) {
+                    let score = 0;
+                    score += Number(vals.hct || 0);
+                    score += Number(vals.crcl || 0);
+                    score += Number(vals.hr || 0);
+                    score += Number(vals.sbp || 0);
+                    score += Number(vals.sex || 0);
+                    if (vals.chf) score += 7;
+                    if (vals.pvd) score += 6;
+                    if (vals.dm) score += 6;
+                    
+                    let risk = '', color = '', interp = '', rate = 0;
+                    if (score <= 20) { risk = 'Risiko Sangat Rendah'; color = 'emerald'; rate = 3.1; }
+                    else if (score <= 30) { risk = 'Risiko Rendah'; color = 'teal'; rate = 5.5; }
+                    else if (score <= 40) { risk = 'Risiko Sedang'; color = 'amber'; rate = 8.6; }
+                    else if (score <= 50) { risk = 'Risiko Tinggi'; color = 'orange'; rate = 11.9; }
+                    else { risk = 'Risiko Sangat Tinggi'; color = 'rose'; rate = 19.5; }
+                    
+                    interp = `Skor Perdarahan: ${score}. Estimasi tingkat kejadian perdarahan mayor di rumah sakit: ~ ${rate}%.`;
+                    rec = 'Pilih dosis antikoagulan secara hati-hati, gunakan PPI pelindung lambung, dan pertimbangkan pendekatan akses arteri radialis (daripada femoralis) untuk PCI.';
+                    return { score, max: 96, risk, color, interpretation: interp, recommendation: rec };
+                }
+            },
+            {
+                id: 'dapt',
+                name: 'DAPT Score',
+                category: 'koroner',
+                desc: 'Menentukan rasio risiko/manfaat melanjutkan Dual Antiplatelet Therapy (DAPT) melampaui 12 bulan pasca-PCI.',
+                source: 'Maurish G, et al. The DAPT Score. JAMA. 2016.',
+                inputs: [
+                    { id: 'age', label: 'Usia Pasien', type: 'radio', options: [{text: '< 65 tahun', val: 0}, {text: '65 - 74 tahun', val: -1}, {text: '≥ 75 tahun', val: -2}] },
+                    { id: 'smoker', label: 'Perokok aktif saat ini', type: 'checkbox', val: 1 },
+                    { id: 'dm', label: 'Riwayat Diabetes Mellitus', type: 'checkbox', val: 1 },
+                    { id: 'mi', label: 'Infark Miokard (MI) saat presentasi', type: 'checkbox', val: 1 },
+                    { id: 'prior_pci_mi', label: 'Riwayat PCI sebelumnya atau riwayat MI sebelumnya', type: 'checkbox', val: 1 },
+                    { id: 'stent_tax', label: 'Stent eluting Paclitaxel (Taxus)', type: 'checkbox', val: 1 },
+                    { id: 'stent_diam', label: 'Diameter stent < 3.0 mm', type: 'checkbox', val: 1 },
+                    { id: 'chf', label: 'Gagal Jantung (CHF) atau LVEF < 30%', type: 'checkbox', val: 2 },
+                    { id: 'cabg_graft', label: 'Intervensi dilakukan pada graft vena (bypassed vein graft)', type: 'checkbox', val: 2 }
+                ],
+                calculate: function(vals) {
+                    let score = Number(vals.age || 0);
+                    if (vals.smoker) score += 1;
+                    if (vals.dm) score += 1;
+                    if (vals.mi) score += 1;
+                    if (vals.prior_pci_mi) score += 1;
+                    if (vals.stent_tax) score += 1;
+                    if (vals.stent_diam) score += 1;
+                    if (vals.chf) score += 2;
+                    if (vals.cabg_graft) score += 2;
+                    
+                    let risk = '', color = '', interp = '', rec = '';
+                    if (score < 2) {
+                        risk = 'DAPT Standar (12 Bulan)';
+                        color = 'amber';
+                        interp = `Skor DAPT: ${score}. Risiko perdarahan melebihi manfaat pencegahan iskemia jika DAPT diperpanjang.`;
+                        rec = 'Hentikan salah satu antiplatelet (biasanya clopidogrel/ticagrelor) setelah 12 bulan dan pertahankan monoterapi Aspirin.';
+                    } else {
+                        risk = 'DAPT Diperpanjang (30 Bulan)';
+                        color = 'emerald';
+                        interp = `Skor DAPT: ${score}. Manfaat pencegahan trombosis stent / re-infark melebihi peningkatan risiko perdarahan jika DAPT dilanjutkan.`;
+                        rec = 'Lanjutkan DAPT (Aspirin + P2Y12 inhibitor) hingga 30 bulan pasca-PCI jika tidak ada perdarahan klinis signifikan selama tahun pertama.';
+                    }
+                    return { score, max: 10, risk, color, interpretation: interp, recommendation: rec };
+                }
+            },
+            {
+                id: 'syntax',
+                name: 'SYNTAX Score (Simplified Interactive)',
+                category: 'koroner',
+                desc: 'Menilai kompleksitas anatomi lesi koroner untuk memandu keputusan antara PCI vs CABG.',
+                source: 'Sianos G, et al. SYNTAX Score. EuroIntervention. 2005.',
+                inputs: [
+                    { id: 'lm', label: 'Stenosis Left Main (LM) ≥ 50%', type: 'checkbox', val: 5 },
+                    { id: 'lm_bifur', label: 'LM terletak di distal bifurkasio / trifurkasio', type: 'checkbox', val: 2 },
+                    { id: 'lad', label: 'Stenosis LAD (Left Anterior Descending) ≥ 50%', type: 'checkbox', val: 3.5 },
+                    { id: 'lad_bifur', label: 'Lesi LAD melibatkan bifurkasio', type: 'checkbox', val: 1 },
+                    { id: 'lcx', label: 'Stenosis LCx (Left Circumflex) ≥ 50%', type: 'checkbox', val: 2.5 },
+                    { id: 'lcx_bifur', label: 'Lesi LCx melibatkan bifurkasio', type: 'checkbox', val: 1 },
+                    { id: 'rca', label: 'Stenosis RCA (Right Coronary Artery) ≥ 50%', type: 'checkbox', val: 1 },
+                    { id: 'calc', label: 'Adanya kalsifikasi berat di area lesi (kalsifikasi pembuluh darah)', type: 'checkbox', val: 2 },
+                    { id: 'cto', label: 'Adanya oklusi total kronis (CTO) di arteri mana saja', type: 'checkbox', val: 5 },
+                    { id: 'tortuosity', label: 'Tortuositas ekstrem pada pembuluh darah sasaran', type: 'checkbox', val: 1 }
+                ],
+                calculate: function(vals) {
+                    let score = 0;
+                    if (vals.lm) score += 5;
+                    if (vals.lm && vals.lm_bifur) score += 2;
+                    if (vals.lad) score += 3.5;
+                    if (vals.lad && vals.lad_bifur) score += 1;
+                    if (vals.lcx) score += 2.5;
+                    if (vals.lcx && vals.lcx_bifur) score += 1;
+                    if (vals.rca) score += 1;
+                    if (vals.calc) score += 2;
+                    if (vals.cto) score += 5;
+                    if (vals.tortuosity) score += 1;
+                    
+                    let risk = '', color = '', interp = '', rec = '';
+                    if (score <= 22) {
+                        risk = 'Kompleksitas Rendah';
+                        color = 'emerald';
+                        interp = `Skor: ${score}. Kompleksitas lesi anatomi koroner rendah.`;
+                        rec = 'Hasil klinis jangka panjang PCI setara dengan CABG. PCI dapat diutamakan karena kurang invasif.';
+                    } else if (score <= 32) {
+                        risk = 'Kompleksitas Sedang';
+                        color = 'amber';
+                        interp = `Skor: ${score}. Kompleksitas lesi menengah.`;
+                        rec = 'Pilihan antara PCI vs CABG disesuaikan dengan Heart Team, status diabetes, dan fraksi ejeksi. CABG memiliki angka re-intervensi lebih rendah pada multi-vessel disease.';
+                    } else {
+                        risk = 'Kompleksitas Tinggi';
+                        color = 'rose';
+                        interp = `Skor: ${score}. Kompleksitas lesi koroner sangat tinggi (sering kali melibatkan multi-vessel disease berat / Left Main kompleks).`;
+                        rec = 'CABG (bedah pintas koroner) memberikan survival rate jangka panjang yang jauh lebih baik dibandingkan PCI pada kelompok ini.';
+                    }
+                    return { score, max: 24, risk, color, interpretation: interp, recommendation: rec };
+                }
+            },
+            {
+                id: 'cha2ds2vasc',
+                name: 'CHA2DS2-VASc Score',
+                category: 'aritmia',
+                desc: 'Menilai risiko stroke tromboemboli pada pasien dengan Atrial Fibrilasi (AF) non-valvular.',
+                source: 'Lip GY, et al. CHA2DS2-VASc. Chest. 2010.',
+                inputs: [
+                    { id: 'chf', label: 'Congestive Heart Failure / LV dysfunction (EF ≤ 40%)', type: 'checkbox', val: 1 },
+                    { id: 'ht', label: 'Hipertensi (Riwayat HT atau TD > 140/90 mmHg)', type: 'checkbox', val: 1 },
+                    { id: 'age', label: 'Kategori Usia Pasien', type: 'radio', options: [{text: '< 65 tahun', val: 0}, {text: '65 - 74 tahun', val: 1}, {text: '≥ 75 tahun', val: 2}] },
+                    { id: 'dm', label: 'Diabetes Mellitus', type: 'checkbox', val: 1 },
+                    { id: 'stroke', label: 'Riwayat Stroke / TIA / Embolisasi Sistemik sebelumnya', type: 'checkbox', val: 2 },
+                    { id: 'vasc', label: 'Penyakit Vaskular (Riwayat MI, PAD, plak aorta kompleks)', type: 'checkbox', val: 1 },
+                    { id: 'gender', label: 'Jenis Kelamin', type: 'radio', options: [{text: 'Pria', val: 0}, {text: 'Wanita', val: 1}] }
+                ],
+                calculate: function(vals) {
+                    let score = 0;
+                    if (vals.chf) score += 1;
+                    if (vals.ht) score += 1;
+                    score += Number(vals.age || 0);
+                    if (vals.dm) score += 1;
+                    if (vals.stroke) score += 2;
+                    if (vals.vasc) score += 1;
+                    score += Number(vals.gender || 0);
+                    
+                    let risk = '', color = '', interp = '', rec = '';
+                    let isFemale = (Number(vals.gender) === 1);
+                    
+                    // Indication rules
+                    let actionThreshold = isFemale ? 3 : 2;
+                    let considerThreshold = isFemale ? 2 : 1;
+                    
+                    if (score >= actionThreshold) {
+                        risk = 'Risiko Tinggi (Rekomendasi Oral Antikoagulan)';
+                        color = 'rose';
+                        interp = `Skor: ${score}. Risiko stroke tahunan diperkirakan mencapai > 2-3% (dapat naik hingga 15% jika skor 9).`;
+                        rec = 'Oral Antikoagulan (DOAC seperti Rivaroxaban/Apixaban/Dabigatran, atau Warfarin target INR 2.0-3.0) sangat direkomendasikan (Kelas I, Guideline ESC/AHA).';
+                    } else if (score === considerThreshold) {
+                        risk = 'Risiko Menengah (Pertimbangkan Antikoagulan)';
+                        color = 'amber';
+                        interp = `Skor: ${score}. Risiko stroke sedang.`;
+                        rec = 'Pertimbangkan penggunaan Oral Antikoagulan (Kelas IIa). Evaluasi risiko perdarahan dan preferensi pasien.';
+                    } else {
+                        risk = 'Risiko Rendah (Tidak Perlu Antikoagulan)';
+                        color = 'emerald';
+                        interp = `Skor: ${score}. Risiko stroke sangat rendah (stroke rate mendekati 0%).`;
+                        rec = 'Tidak memerlukan terapi antitrombotik (baik antikoagulan maupun aspirin) untuk pencegahan stroke AF (Kelas III).';
+                    }
+                    return { score, max: 9, risk, color, interpretation: interp, recommendation: rec };
+                }
+            },
+            {
+                id: 'hasbled',
+                name: 'HAS-BLED Score',
+                category: 'aritmia',
+                desc: 'Menilai risiko perdarahan mayor pada pasien Atrial Fibrilasi yang mendapat antikoagulan.',
+                source: 'Pisters R, et al. HAS-BLED score. Chest. 2010.',
+                inputs: [
+                    { id: 'ht', label: 'Hypertension (Hipertensi sistolik tidak terkontrol > 160 mmHg)', type: 'checkbox', val: 1 },
+                    { id: 'renal', label: 'Abnormal Renal function (kreatinin ≥ 2.2 mg/dL atau transplantasi/dialisis)', type: 'checkbox', val: 1 },
+                    { id: 'liver', label: 'Abnormal Liver function (penyakit hati kronis, sirosis, bilirubin > 2x lipat, atau AST/ALT > 3x lipat)', type: 'checkbox', val: 1 },
+                    { id: 'stroke', label: 'Stroke (Riwayat stroke sebelumnya)', type: 'checkbox', val: 1 },
+                    { id: 'bleed', label: 'Bleeding (Riwayat perdarahan atau kecenderungan anemia/predisposisi)', type: 'checkbox', val: 1 },
+                    { id: 'inr', label: 'Labile INR (INR tidak stabil, time in therapeutic range < 60%)', type: 'checkbox', val: 1 },
+                    { id: 'elderly', label: 'Elderly (Usia > 65 tahun)', type: 'checkbox', val: 1 },
+                    { id: 'drugs', label: 'Drugs (Konsumsi Antiplatelet ganda/aspirin/NSAID)', type: 'checkbox', val: 1 },
+                    { id: 'alcohol', label: 'Alcohol (Konsumsi alkohol berlebih / etilisme ≥ 8 gelas/minggu)', type: 'checkbox', val: 1 }
+                ],
+                calculate: function(vals) {
+                    let score = 0;
+                    if (vals.ht) score += 1;
+                    if (vals.renal) score += 1;
+                    if (vals.liver) score += 1;
+                    if (vals.stroke) score += 1;
+                    if (vals.bleed) score += 1;
+                    if (vals.inr) score += 1;
+                    if (vals.elderly) score += 1;
+                    if (vals.drugs) score += 1;
+                    if (vals.alcohol) score += 1;
+                    
+                    let risk = '', color = '', interp = '', rec = '';
+                    if (score <= 2) {
+                        risk = 'Risiko Perdarahan Rendah-Sedang';
+                        color = 'emerald';
+                        interp = `Skor HAS-BLED: ${score}. Risiko perdarahan tahunan relatif rendah (< 3%).`;
+                        rec = 'Lanjutkan pemberian antikoagulan jika terindikasi CHA2DS2-VASc. Monitor rutin.';
+                    } else {
+                        risk = 'Risiko Perdarahan Tinggi';
+                        color = 'rose';
+                        interp = `Skor HAS-BLED: ${score}. Risiko perdarahan mayor tahunan diperkirakan > 5.8%.`;
+                        rec = 'HATI-HATI. Jangan serta-merta menghentikan antikoagulan, tetapi kelola faktor risiko yang dapat dimodifikasi (kontrol ketat TD, hentikan NSAID/Aspirin tidak perlu, kurangi alkohol, edukasi tanda perdarahan). Lakukan monitoring lebih ketat.';
+                    }
+                    return { score, max: 9, risk, color, interpretation: interp, recommendation: rec };
+                }
+            },
+            {
+                id: 'cockcroft',
+                name: 'Cockcroft-Gault Calculator (CrCl / eGFR)',
+                category: 'aritmia',
+                desc: 'Menghitung bersihan kreatinin (Creatinine Clearance) untuk panduan penyesuaian dosis antikoagulan oral (DOAC) dan obat ginjal lainnya.',
+                source: 'Cockcroft DW, Gault MH. Prediction of creatinine clearance from serum creatinine. Nephron. 1976.',
+                inputs: [
+                    { id: 'gender', label: 'Jenis Kelamin', type: 'radio', options: [{text: 'Pria', val: 'm'}, {text: 'Wanita', val: 'f'}] },
+                    { id: 'age', label: 'Usia (Tahun)', type: 'number', min: 1, max: 120, default: 65 },
+                    { id: 'weight', label: 'Berat Badan Aktual (kg)', type: 'number', min: 20, max: 300, default: 70 },
+                    { id: 'height', label: 'Tinggi Badan (cm) - Untuk IBW', type: 'number', min: 100, max: 250, default: 165 },
+                    { id: 'creat', label: 'Serum Creatinine', type: 'number', min: 0.1, max: 20.0, default: 1.2, step: 0.1 },
+                    { id: 'creat_unit', label: 'Satuan Kreatinin', type: 'select', options: [{text: 'mg/dL', val: 'mg'}, {text: 'µmol/L', val: 'umol'}] }
+                ],
+                calculate: function(vals) {
+                    let age = Number(vals.age);
+                    let weight = Number(vals.weight);
+                    let height = Number(vals.height);
+                    let scr = Number(vals.creat);
+                    let gender = vals.gender;
+                    
+                    // Convert creatinine to mg/dL if in umol/L
+                    if (vals.creat_unit === 'umol') {
+                        scr = scr / 88.4;
+                    }
+                    
+                    // Formulas
+                    // Ideal Body Weight (IBW)
+                    let heightInches = height / 2.54;
+                    let ibw = 0;
+                    if (gender === 'm') {
+                        ibw = 50.0 + 2.3 * (heightInches - 60);
+                    } else {
+                        ibw = 45.5 + 2.3 * (heightInches - 60);
+                    }
+                    if (ibw < 0) ibw = weight; // Safeguard for short heights
+                    
+                    // Adjust weight if obese (BMI > 30 or Weight > 1.3 * IBW)
+                    let calculatedWeight = weight;
+                    let isObese = false;
+                    let bmi = weight / Math.pow(height/100, 2);
+                    if (weight > 1.3 * ibw || bmi > 30) {
+                        calculatedWeight = ibw + 0.4 * (weight - ibw); // Adjusted Body Weight
+                        isObese = true;
+                    }
+                    
+                    // Cockcroft-Gault Equation
+                    let crcl = ((140 - age) * calculatedWeight) / (72 * scr);
+                    if (gender === 'f') {
+                        crcl = crcl * 0.85;
+                    }
+                    
+                    let roundedCrCl = Math.round(crcl * 10) / 10;
+                    let roundedIBW = Math.round(ibw * 10) / 10;
+                    
+                    let risk = '', color = '', interp = '', rec = '';
+                    if (roundedCrCl >= 90) {
+                        risk = 'Fungsi Ginjal Normal'; color = 'emerald';
+                        interp = `CrCl: ${roundedCrCl} mL/min (BBI/IBW: ${roundedIBW} kg). ${isObese ? 'Menggunakan berat badan penyesuaian (AjBW).' : ''}`;
+                        rec = 'Dosis antikoagulan standar (DOAC full-dose) aman diberikan.';
+                    } else if (roundedCrCl >= 60) {
+                        risk = 'Penurunan Fungsi Ginjal Ringan (G2)'; color = 'teal';
+                        interp = `CrCl: ${roundedCrCl} mL/min. Klirens ginjal stabil.`;
+                        rec = 'DOAC umumnya dosis penuh. Monitor kreatinin berkala (misal 1x setahun).';
+                    } else if (roundedCrCl >= 30) {
+                        risk = 'Gagal Ginjal Sedang (G3a/b)'; color = 'amber';
+                        interp = `CrCl: ${roundedCrCl} mL/min. Defisit ginjal signifikan.`;
+                        rec = 'Rekomendasi DOAC: Kurangi dosis (misal Apixaban 2x2.5mg jika memenuhi kriteria reduksi lain, atau Dabigatran 2x110mg, atau Rivaroxaban 15mg). Hindari jika CrCl mendekati <30.';
+                    } else if (roundedCrCl >= 15) {
+                        risk = 'Gagal Ginjal Berat (G4)'; color = 'orange';
+                        interp = `CrCl: ${roundedCrCl} mL/min. Risiko akumulasi obat tinggi.`;
+                        rec = 'Sebagian besar DOAC harus dihindari/kontraindikasi (Dabigatran/Rivaroxaban kontraindikasi di ESC jika < 15-30). Apixaban dapat digunakan dengan penyesuaian sangat ketat. Warfarin tetap menjadi pilihan utama.';
+                    } else {
+                        risk = 'Gagal Ginjal Stadium Akhir (G5)'; color = 'rose';
+                        interp = `CrCl: ${roundedCrCl} mL/min. Gagal ginjal berat / dialysis.`;
+                        rec = 'Kontraindikasi penuh untuk semua DOAC. Gunakan Warfarin jika indikasi stroke AF sangat kuat, dengan pemantauan ketat target INR.';
+                    }
+                    
+                    return { score: roundedCrCl, max: 'mL/min', risk, color, interpretation: interp, recommendation: rec };
+                }
+            },
+            {
+                id: 'wellspe',
+                name: 'Wells\' Score for Pulmonary Embolism (PE)',
+                category: 'paru',
+                desc: 'Alat diagnostik untuk memprediksi probabilitas klinis Emboli Paru akut.',
+                source: 'Wells PS, et al. Derivation of a simple clinical model to categorize patients probability of PE. Thromb Haemost. 2000.',
+                inputs: [
+                    { id: 'dvt_signs', label: 'Tanda & gejala klinis DVT (bengkak asimetris tungkai, nyeri palpasi vena dalam)', type: 'checkbox', val: 3 },
+                    { id: 'pe_most_likely', label: 'Diagnosis alternatif kurang memungkinkan dibandingkan emboli paru', type: 'checkbox', val: 3 },
+                    { id: 'tachycardia', label: 'Laju Nadi / Heart Rate > 100 kali/menit', type: 'checkbox', val: 1.5 },
+                    { id: 'immobilization', label: 'Imobilisasi tempat tidur ≥ 3 hari berturut-turut atau menjalani operasi besar dalam 4 minggu terakhir', type: 'checkbox', val: 1.5 },
+                    { id: 'prior_vte', label: 'Riwayat medis DVT atau Emboli Paru (VTE) sebelumnya', type: 'checkbox', val: 1.5 },
+                    { id: 'hemoptysis', label: 'Batuk berdarah (Hemoptisis)', type: 'checkbox', val: 1 },
+                    { id: 'malignancy', label: 'Adanya keganasan / kanker aktif (terapi berjalan atau paliatif dalam 6 bulan terakhir)', type: 'checkbox', val: 1 }
+                ],
+                calculate: function(vals) {
+                    let score = 0;
+                    if (vals.dvt_signs) score += 3;
+                    if (vals.pe_most_likely) score += 3;
+                    if (vals.tachycardia) score += 1.5;
+                    if (vals.immobilization) score += 1.5;
+                    if (vals.prior_vte) score += 1.5;
+                    if (vals.hemoptysis) score += 1;
+                    if (vals.malignancy) score += 1;
+                    
+                    let risk = '', color = '', interp = '', rec = '';
+                    if (score <= 1.5) {
+                        risk = 'Probabilitas Rendah (PE Unlikely)';
+                        color = 'emerald';
+                        interp = `Skor Wells: ${score}. Kemungkinan terjadi emboli paru sangat kecil.`;
+                        rec = 'Lakukan pemeriksaan D-Dimer berkualitas tinggi. Jika D-Dimer normal (negatif), diagnosis Emboli Paru dapat disingkirkan tanpa perlu CT Angiografi Paru (CTPA).';
+                    } else if (score <= 6) {
+                        risk = 'Probabilitas Sedang (PE Moderate)';
+                        color = 'amber';
+                        interp = `Skor Wells: ${score}. Probabilitas klinis sedang.`;
+                        rec = 'Lakukan D-Dimer. Jika D-Dimer positif/meningkat, lanjutkan ke pemeriksaan CTPA (Gold Standard) segera. Mulai antikoagulan jika indeks kecurigaan tinggi.';
+                    } else {
+                        risk = 'Probabilitas Tinggi (PE Likely)';
+                        color = 'rose';
+                        interp = `Skor Wells: ${score}. Kemungkinan besar mengalami emboli paru akut (PE likely).`;
+                        rec = 'JANGAN tunda pencitraan demi D-Dimer! Segera lakukan CT Angiografi Paru (CTPA) dan pertimbangkan pemberian heparin IV / LMWH segera selama menunggu konfirmasi diagnostik jika tidak ada kontraindikasi perdarahan.';
+                    }
+                    return { score, max: 12.5, risk, color, interpretation: interp, recommendation: rec };
+                }
+            },
+            {
+                id: 'wellsdvt',
+                name: 'Wells\' Score for Deep Vein Thrombosis (DVT)',
+                category: 'paru',
+                desc: 'Alat penunjang keputusan klinis untuk menentukan probabilitas terjadinya DVT pada ekstremitas bawah.',
+                source: 'Wells PS, et al. Evaluation of DVT in the outpatient setting by a clinical model. N Engl J Med. 2003.',
+                inputs: [
+                    { id: 'cancer', label: 'Kanker aktif (dalam pengobatan, paliatif, atau diobati dalam 6 bulan terakhir)', type: 'checkbox', val: 1 },
+                    { id: 'paralysis', label: 'Kelumpuhan, paresis, atau imobilisasi gips pada kaki', type: 'checkbox', val: 1 },
+                    { id: 'bedridden', label: 'Baru saja tirah baring/bedridden ≥ 3 hari atau operasi besar dalam 12 minggu terakhir', type: 'checkbox', val: 1 },
+                    { id: 'tenderness', label: 'Nyeri tekan lokal di sepanjang distribusi sistem vena dalam', type: 'checkbox', val: 1 },
+                    { id: 'swelling_whole', label: 'Seluruh tungkai bengkak', type: 'checkbox', val: 1 },
+                    { id: 'calf_swelling', label: 'Bengkak betis unilateral ≥ 3 cm lebih besar dibanding sisi yang sehat (diukur 10cm di bawah tuberositas tibia)', type: 'checkbox', val: 1 },
+                    { id: 'pitting', label: 'Pitting edema unilateral pada tungkai yang bergejala', type: 'checkbox', val: 1 },
+                    { id: 'collateral', label: 'Vena superfisial kolateral (non-varikosa)', type: 'checkbox', val: 1 },
+                    { id: 'prior_dvt', label: 'Riwayat DVT terdokumentasi sebelumnya', type: 'checkbox', val: 1 },
+                    { id: 'alt_diagnosis', label: 'Diagnosis alternatif lain minimal sama kuatnya dengan kecurigaan DVT (misal: selulitis, robekan Baker cyst, trauma otot)', type: 'checkbox', val: -2 }
+                ],
+                calculate: function(vals) {
+                    let score = 0;
+                    if (vals.cancer) score += 1;
+                    if (vals.paralysis) score += 1;
+                    if (vals.bedridden) score += 1;
+                    if (vals.tenderness) score += 1;
+                    if (vals.swelling_whole) score += 1;
+                    if (vals.calf_swelling) score += 1;
+                    if (vals.pitting) score += 1;
+                    if (vals.collateral) score += 1;
+                    if (vals.prior_dvt) score += 1;
+                    if (vals.alt_diagnosis) score += -2;
+                    
+                    let risk = '', color = '', interp = '', rec = '';
+                    if (score <= 0) {
+                        risk = 'Probabilitas Rendah (DVT Unlikely)';
+                        color = 'emerald';
+                        interp = `Skor Wells DVT: ${score}. Kemungkinan terjadi DVT sangat rendah (sekitar 3%).`;
+                        rec = 'Lakukan tes D-Dimer. Jika D-Dimer negatif, DVT dapat disingkirkan tanpa ultrasonografi vena (USG Duplex).';
+                    } else if (score <= 2) {
+                        risk = 'Probabilitas Sedang (DVT Intermediate)';
+                        color = 'amber';
+                        interp = `Skor Wells DVT: ${score}. Probabilitas sedang (kejadian sekitar 17%).`;
+                        rec = 'Lakukan pemeriksaan D-Dimer. Jika positif, wajib lakukan USG Duplex ekstremitas bawah. Jika USG awal negatif dan D-Dimer positif, pertimbangkan USG ulang 1 minggu kemudian.';
+                    } else {
+                        risk = 'Probabilitas Tinggi (DVT Likely)';
+                        color = 'rose';
+                        interp = `Skor Wells DVT: ${score}. Kemungkinan besar mengalami DVT tungkai bawah (sekitar 50-80%).`;
+                        rec = 'Segera lakukan USG Duplex Vena tanpa perlu tes D-Dimer. Mulai terapi antikoagulan (LMWH / Heparin / DOAC) jika hasil USG positif atau jika USG tertunda sementara kecurigaan sangat kuat.';
+                    }
+                    return { score, max: 9, risk, color, interpretation: interp, recommendation: rec };
+                }
+            },
+            {
+                id: 'pesi',
+                name: 'PESI & sPESI Score',
+                category: 'paru',
+                desc: 'Menilai keparahan dan risiko mortalitas 30 hari pada pasien dengan diagnosis Emboli Paru (PE) untuk memutuskan rawat inap vs rawat jalan.',
+                source: 'Aujesky D, et al. Simplified PESI for risk stratification of PE. Arch Intern Med. 2010.',
+                inputs: [
+                    { id: 'type', label: 'Metode Penilaian', type: 'select', options: [{text: 'sPESI (Simplified - Direkomendasikan)', val: 'spesi'}, {text: 'PESI Klasik (Original)', val: 'classic'}] },
+                    // sPESI fields
+                    { id: 'sp_age', label: 'Usia > 80 tahun', type: 'checkbox', val: 1, cond: 'type:spesi' },
+                    { id: 'sp_cancer', label: 'Riwayat Kanker / Keganasan aktif', type: 'checkbox', val: 1, cond: 'type:spesi' },
+                    { id: 'sp_cardio', label: 'Gagal Jantung Kronis atau Penyakit Paru Kronis (COPD)', type: 'checkbox', val: 1, cond: 'type:spesi' },
+                    { id: 'sp_hr', label: 'Heart Rate ≥ 110 kali/menit', type: 'checkbox', val: 1, cond: 'type:spesi' },
+                    { id: 'sp_sbp', label: 'Tekanan Darah Sistolik < 100 mmHg', type: 'checkbox', val: 1, cond: 'type:spesi' },
+                    { id: 'sp_spo2', label: 'Saturasi Oksigen (SpO2) < 90%', type: 'checkbox', val: 1, cond: 'type:spesi' },
+                    // Classic fields
+                    { id: 'cl_age', label: 'Usia Pasien (Tahun)', type: 'number', min: 1, max: 120, default: 60, cond: 'type:classic' },
+                    { id: 'cl_male', label: 'Jenis Kelamin Laki-laki (+10)', type: 'checkbox', val: 10, cond: 'type:classic' },
+                    { id: 'cl_cancer', label: 'Keganasan Aktif (+30)', type: 'checkbox', val: 30, cond: 'type:classic' },
+                    { id: 'cl_hf', label: 'Gagal Jantung (+10)', type: 'checkbox', val: 10, cond: 'type:classic' },
+                    { id: 'cl_lung', label: 'Penyakit Paru Kronik (+10)', type: 'checkbox', val: 10, cond: 'type:classic' },
+                    { id: 'cl_hr', label: 'Laju Nadi ≥ 110 kali/menit (+20)', type: 'checkbox', val: 20, cond: 'type:classic' },
+                    { id: 'cl_sbp', label: 'Tekanan Darah Sistolik < 100 mmHg (+30)', type: 'checkbox', val: 30, cond: 'type:classic' },
+                    { id: 'cl_rr', label: 'Laju Napas ≥ 30 kali/menit (+20)', type: 'checkbox', val: 20, cond: 'type:classic' },
+                    { id: 'cl_temp', label: 'Suhu Tubuh < 36.0°C (+20)', type: 'checkbox', val: 20, cond: 'type:classic' },
+                    { id: 'cl_mental', label: 'Kesadaran Berubah (Disorientasi/Gelisah/GCS turun) (+60)', type: 'checkbox', val: 60, cond: 'type:classic' },
+                    { id: 'cl_spo2', label: 'Saturasi Oksigen < 90% (+20)', type: 'checkbox', val: 20, cond: 'type:classic' }
+                ],
+                calculate: function(vals) {
+                    if (vals.type === 'spesi') {
+                        let score = 0;
+                        if (vals.sp_age) score += 1;
+                        if (vals.sp_cancer) score += 1;
+                        if (vals.sp_cardio) score += 1;
+                        if (vals.sp_hr) score += 1;
+                        if (vals.sp_sbp) score += 1;
+                        if (vals.sp_spo2) score += 1;
+                        
+                        let risk = '', color = '', interp = '', rec = '';
+                        if (score === 0) {
+                            risk = 'Risiko Rendah'; color = 'emerald';
+                            interp = 'Skor sPESI: 0. Angka mortalitas 30 hari diperkirakan sangat rendah (sekitar 1.0%).';
+                            rec = 'Dapat dipertimbangkan untuk rawat jalan (outpatient treatment) atau pemulangan dini (early discharge) dengan terapi DOAC jika kondisi sosial & kepatuhan pasien memadai.';
+                        } else {
+                            risk = 'Risiko Tinggi'; color = 'rose';
+                            interp = `Skor sPESI: ${score}. Risiko mortalitas 30 hari mencapai ~ 10.9%.`;
+                            rec = 'Rawat inap di rumah sakit diwajibkan. Monitor ketat parameter hemodinamik dan tanda disfungsi ventrikel kanan (RV).';
+                        }
+                        return { score, max: 6, risk, color, interpretation: interp, recommendation: rec };
+                    } else {
+                        // Classic PESI
+                        let score = Number(vals.cl_age || 0);
+                        if (vals.cl_male) score += 10;
+                        if (vals.cl_cancer) score += 30;
+                        if (vals.cl_hf) score += 10;
+                        if (vals.cl_lung) score += 10;
+                        if (vals.cl_hr) score += 20;
+                        if (vals.cl_sbp) score += 30;
+                        if (vals.cl_rr) score += 20;
+                        if (vals.cl_temp) score += 20;
+                        if (vals.cl_mental) score += 60;
+                        if (vals.cl_spo2) score += 20;
+                        
+                        let risk = '', color = '', interp = '', rec = '', maxScore = 200;
+                        if (score <= 65) { risk = 'Kelas I (Risiko Sangat Rendah)'; color = 'emerald'; interp = 'Mortalitas 30 hari: 0 - 1.6%.'; rec = 'Pertimbangkan rawat jalan / discharge dini.'; }
+                        else if (score <= 85) { risk = 'Kelas II (Risiko Rendah)'; color = 'teal'; interp = 'Mortalitas 30 hari: 1.7 - 3.5%.'; rec = 'Rawat inap singkat atau rawat jalan terawasi.'; }
+                        else if (score <= 105) { risk = 'Kelas III (Risiko Menengah)'; color = 'amber'; interp = 'Mortalitas 30 hari: 3.2 - 7.1%.'; rec = 'Rawat inap reguler, monitor status oksigenasi.'; }
+                        else if (score <= 125) { risk = 'Kelas IV (Risiko Tinggi)'; color = 'orange'; interp = 'Mortalitas 30 hari: 4.0 - 11.4%.'; rec = 'Rawat inap intensif, monitor tanda disfungsi ventrikel kanan (RV strain).'; }
+                        else { risk = 'Kelas V (Risiko Sangat Tinggi)'; color = 'rose'; interp = 'Mortalitas 30 hari: 10.9 - 24.5%.'; rec = 'Rawat intensif di ICU/ICCU. Siapkan penanganan trombolisis jika terjadi ketidakstabilan hemodinamik (syok).'; }
+                        
+                        return { score, max: maxScore, risk, color, interpretation: interp, recommendation: rec };
+                    }
+                }
+            },
+            {
+                id: 'qsofa',
+                name: 'qSOFA & SIRS Criteria',
+                category: 'paru',
+                desc: 'Skrining cepat sepsis di samping tempat tidur (bedside) dan kriteria respon inflamasi sistemik.',
+                source: 'Singer M, et al. Third International Consensus Definitions for Sepsis (Sepsis-3). JAMA. 2016.',
+                inputs: [
+                    { id: 'mode', label: 'Jenis Kriteria', type: 'select', options: [{text: 'qSOFA (Sepsis-3)', val: 'qsofa'}, {text: 'SIRS (Systemic Inflammatory Response)', val: 'sirs'}] },
+                    // qSOFA
+                    { id: 'q_rr', label: 'Tachypnea (Laju napas ≥ 22 kali/menit)', type: 'checkbox', val: 1, cond: 'mode:qsofa' },
+                    { id: 'q_gcs', label: 'Penurunan Kesadaran (GCS < 15 atau disorientasi baru)', type: 'checkbox', val: 1, cond: 'mode:qsofa' },
+                    { id: 'q_sbp', label: 'Hypotension (Tekanan darah sistolik ≤ 100 mmHg)', type: 'checkbox', val: 1, cond: 'mode:qsofa' },
+                    // SIRS
+                    { id: 's_temp', label: 'Suhu Tubuh ekstrem (< 36.0°C atau > 38.0°C)', type: 'checkbox', val: 1, cond: 'mode:sirs' },
+                    { id: 's_hr', label: 'Takikardia (Laju nadi / HR > 90 kali/menit)', type: 'checkbox', val: 1, cond: 'mode:sirs' },
+                    { id: 's_rr', label: 'Laju Napas > 20 kali/menit atau PaCO2 < 32 mmHg', type: 'checkbox', val: 1, cond: 'mode:sirs' },
+                    { id: 's_wbc', label: 'Abnormalitas Leukosit (< 4.000/µL atau > 12.000/µL atau > 10% bentuk imatur/band)', type: 'checkbox', val: 1, cond: 'mode:sirs' }
+                ],
+                calculate: function(vals) {
+                    if (vals.mode === 'qsofa') {
+                        let score = 0;
+                        if (vals.q_rr) score += 1;
+                        if (vals.q_gcs) score += 1;
+                        if (vals.q_sbp) score += 1;
+                        
+                        let risk = '', color = '', interp = '', rec = '';
+                        if (score >= 2) {
+                            risk = 'qSOFA POSITIF (Risiko Sepsis Tinggi)';
+                            color = 'rose';
+                            interp = `Skor: ${score} dari 3. Menandakan peningkatan signifikan risiko kematian di rumah sakit atau perawatan ICU yang lama.`;
+                            rec = 'Segera curigai sepsis! Mulai protokol sepsis (ambil kultur darah, periksa laktat serum, berikan antibiotik spektrum luas dalam 1 jam pertama, dan resusitasi cairan kristaloid jika ada hipotensi).';
+                        } else {
+                            risk = 'qSOFA Negatif';
+                            color = 'emerald';
+                            interp = `Skor: ${score} dari 3. Risiko mortalitas rendah akibat infeksi langsung, namun tetap lakukan evaluasi berkala.`;
+                            rec = 'Monitor tanda klinis secara reguler. Jika infeksi dicurigai, cari fokus infeksi dan tangani sesuai protokol lokal.';
+                        }
+                        return { score, max: 3, risk, color, interpretation: interp, recommendation: rec };
+                    } else {
+                        // SIRS
+                        let score = 0;
+                        if (vals.s_temp) score += 1;
+                        if (vals.s_hr) score += 1;
+                        if (vals.s_rr) score += 1;
+                        if (vals.s_wbc) score += 1;
+                        
+                        let risk = '', color = '', interp = '', rec = '';
+                        if (score >= 2) {
+                            risk = 'SIRS POSITIF';
+                            color = 'amber';
+                            interp = `Skor: ${score} dari 4 kriteria terpenuhi. Terjadi respon inflamasi sistemik.`;
+                            rec = 'Evaluasi kemungkinan penyebab non-infeksius (misal pankreatitis, trauma, luka bakar, MI) vs infeksius. Bila ada kecurigaan infeksi, ini dikategorikan sebagai Sepsis (Kriteria Sepsis Lama).';
+                        } else {
+                            risk = 'SIRS Negatif';
+                            color = 'emerald';
+                            interp = `Skor: ${score} dari 4. Respon inflamasi sistemik minimal.`;
+                            rec = 'Lanjutkan pemantauan klinis standard.';
+                        }
+                        return { score, max: 4, risk, color, interpretation: interp, recommendation: rec };
+                    }
+                }
+            },
+            {
+                id: 'seattle',
+                name: 'Seattle Heart Failure & MAGGIC Gagal Jantung',
+                category: 'gagaljantung',
+                desc: 'Estimasi prognosis angka mortalitas 1-tahun dan 3-tahun pada pasien Gagal Jantung kronis (menggunakan baseline skor MAGGIC terakreditasi).',
+                source: 'Pocock SJ, et al. Predictors of survival in heart failure: MAGGIC Risk Score. Eur Heart J. 2013.',
+                inputs: [
+                    { id: 'age', label: 'Usia Pasien', type: 'radio', options: [{text: '< 55 tahun', val: 0}, {text: '55 - 59 tahun', val: 2}, {text: '60 - 64 tahun', val: 4}, {text: '65 - 69 tahun', val: 6}, {text: '70 - 74 tahun', val: 8}, {text: '75 - 79 tahun', val: 10}, {text: '≥ 80 tahun', val: 13}] },
+                    { id: 'ef', label: 'Ejection Fraction (LVEF)', type: 'radio', options: [{text: 'Normal (≥ 40%)', val: 0}, {text: 'Penurunan Ringan-Sedang (30-39%)', val: 3}, {text: 'Penurunan Berat (20-29%)', val: 5}, {text: 'Sangat Rendah (< 20%)', val: 7}] },
+                    { id: 'nyha', label: 'Kelas Fungsional NYHA', type: 'radio', options: [{text: 'NYHA Kelas I', val: 0}, {text: 'NYHA Kelas II', val: 2}, {text: 'NYHA Kelas III', val: 6}, {text: 'NYHA Kelas IV', val: 8}] },
+                    { id: 'sbp', label: 'Tekanan Darah Sistolik (mmHg)', type: 'radio', options: [{text: '≥ 140 mmHg', val: 0}, {text: '130 - 139 mmHg', val: 2}, {text: '120 - 129 mmHg', val: 3}, {text: '110 - 119 mmHg', val: 4}, {text: '< 110 mmHg', val: 5}] },
+                    { id: 'creat', label: 'Serum Creatinine', type: 'radio', options: [{text: '< 1.0 mg/dL (< 90 µmol/L)', val: 0}, {text: '1.0 - 1.4 mg/dL (90-129 µmol/L)', val: 2}, {text: '1.5 - 1.9 mg/dL (130-169 µmol/L)', val: 4}, {text: '2.0 - 2.3 mg/dL (170-209 µmol/L)', val: 6}, {text: '≥ 2.4 mg/dL (≥ 210 µmol/L)', val: 8}] },
+                    { id: 'gender', label: 'Jenis Kelamin', type: 'radio', options: [{text: 'Wanita', val: 0}, {text: 'Pria', val: 1}] },
+                    { id: 'smoker', label: 'Perokok aktif saat ini', type: 'checkbox', val: 1 },
+                    { id: 'dm', label: 'Riwayat Diabetes Mellitus', type: 'checkbox', val: 3 },
+                    { id: 'copd', label: 'Riwayat COPD / PPOK', type: 'checkbox', val: 2 },
+                    { id: 'hf_time', label: 'Pertama kali didiagnosis gagal jantung > 18 bulan lalu', type: 'checkbox', val: 2 },
+                    { id: 'no_bb', label: 'TIDAK sedang mengonsumsi Beta Blocker', type: 'checkbox', val: 3 },
+                    { id: 'no_ace', label: 'TIDAK sedang mengonsumsi ACEi / ARB / ARNI', type: 'checkbox', val: 1 }
+                ],
+                calculate: function(vals) {
+                    let score = 0;
+                    score += Number(vals.age || 0);
+                    score += Number(vals.ef || 0);
+                    score += Number(vals.nyha || 0);
+                    score += Number(vals.sbp || 0);
+                    score += Number(vals.creat || 0);
+                    score += Number(vals.gender || 0);
+                    if (vals.smoker) score += 1;
+                    if (vals.dm) score += 3;
+                    if (vals.copd) score += 2;
+                    if (vals.hf_time) score += 2;
+                    if (vals.no_bb) score += 3;
+                    if (vals.no_ace) score += 1;
+                    
+                    // Approximate 1-year and 3-year mortality rates based on MAGGIC score tables
+                    let mort1yr = 0, mort3yr = 0;
+                    if (score <= 10) { mort1yr = 1.8; mort3yr = 5.2; }
+                    else if (score <= 15) { mort1yr = 3.6; mort3yr = 10.1; }
+                    else if (score <= 20) { mort1yr = 7.1; mort3yr = 19.1; }
+                    else if (score <= 25) { mort1yr = 13.5; mort3yr = 33.7; }
+                    else if (score <= 30) { mort1yr = 24.3; mort3yr = 53.6; }
+                    else { mort1yr = 39.8; mort3yr = 74.2; }
+                    
+                    let risk = '', color = '', interp = '';
+                    if (score <= 15) { risk = 'Prognosis Baik'; color = 'emerald'; }
+                    else if (score <= 25) { risk = 'Prognosis Sedang'; color = 'amber'; }
+                    else { risk = 'Prognosis Buruk'; color = 'rose'; }
+                    
+                    interp = `Skor Risiko Gagal Jantung MAGGIC: ${score}. Estimasi mortalitas 1-Tahun: ${mort1yr}%, mortalitas 3-Tahun: ${mort3yr}%.`;
+                    let rec = 'Optimalkan terapi medis sesuai guideline (GDMT) pilar gagal jantung (Beta-blocker, ACEi/ARB/ARNI, MRA, dan SGLT2i). Pertimbangkan evaluasi pemasangan ICD/CRT jika EF tetap <35% setelah optimalisasi terapi medis.';
+                    return { score, max: 54, risk, color, interpretation: interp, recommendation: rec };
+                }
+            },
+            {
+                id: 'h2fpef',
+                name: 'H2FPEF Score',
+                category: 'gagaljantung',
+                desc: 'Mendiagnosis kemungkinan Heart Failure dengan Preserved Ejection Fraction (HFpEF) pada pasien dengan sesak napas yang belum jelas penyebabnya.',
+                source: 'Reddy YN, et al. A simple evidence-based score to identify HFpEF. Circulation. 2018.',
+                inputs: [
+                    { id: 'heavy', label: 'Heavy: Obesitas / BMI > 30 kg/m² (2 poin)', type: 'checkbox', val: 2 },
+                    { id: 'hypertension', label: 'Hypertensive: Mengonsumsi ≥ 2 obat antihipertensi (1 poin)', type: 'checkbox', val: 1 },
+                    { id: 'fibrillation', label: 'Fibrillation: Riwayat Atrial Fibrilasi paroksismal / persisten (3 poin)', type: 'checkbox', val: 3 },
+                    { id: 'pulm_ht', label: 'Pulmonary HT: Tekanan sistolik pulmonal di echo (PASP) > 35 mmHg (1 poin)', type: 'checkbox', val: 1 },
+                    { id: 'elderly', label: 'Elderly: Usia > 60 tahun (1 poin)', type: 'checkbox', val: 1 },
+                    { id: 'filling', label: 'Filling pressure: Rasio mitral Doppler E/e\' > 9 di echocardiografi (1 poin)', type: 'checkbox', val: 1 }
+                ],
+                calculate: function(vals) {
+                    let score = 0;
+                    if (vals.heavy) score += 2;
+                    if (vals.hypertension) score += 1;
+                    if (vals.fibrillation) score += 3;
+                    if (vals.pulm_ht) score += 1;
+                    if (vals.elderly) score += 1;
+                    if (vals.filling) score += 1;
+                    
+                    let prob = 0;
+                    if (score === 0) prob = 4;
+                    else if (score === 1) prob = 11;
+                    else if (score === 2) prob = 23;
+                    else if (score === 3) prob = 43;
+                    else if (score === 4) prob = 66;
+                    else if (score === 5) prob = 84;
+                    else if (score === 6) prob = 93;
+                    else prob = 98; // >= 7
+                    
+                    let risk = '', color = '', interp = '', rec = '';
+                    if (score <= 1) {
+                        risk = 'Kemungkinan Rendah (< 20%)';
+                        color = 'emerald';
+                        interp = `Skor H2FPEF: ${score}. Probabilitas klinis mengalami HFpEF adalah ${prob}%. Diagnosis gagal jantung kurang memungkinkan.`;
+                        rec = 'Cari etiologi alternatif untuk keluhan sesak napas pasien (cth: penyakit paru, anemia, deconditioning fisik, iskemia jantung tersembunyi).';
+                    } else if (score <= 5) {
+                        risk = 'Kemungkinan Menengah (20-80%)';
+                        color = 'amber';
+                        interp = `Skor H2FPEF: ${score}. Probabilitas klinis mengalami HFpEF adalah ${prob}%.`;
+                        rec = 'Pemeriksaan lebih lanjut diperlukan (stress-echocardiography atau kateterisasi hemodinamika invasif saat latihan / exercise right heart catheterization).';
+                    } else {
+                        risk = 'Kemungkinan Tinggi (> 80%)';
+                        color = 'rose';
+                        interp = `Skor H2FPEF: ${score}. Probabilitas klinis mengalami HFpEF adalah ${prob}%.`;
+                        rec = 'Diagnosis HFpEF terkonfirmasi secara klinis. Mulai terapi diuresis (loop diuretic) untuk kongesti cairan dan optimalkan terapi penyakit penyerta (hipertensi, AF) serta berikan SGLT2 inhibitor (Empagliflozin/Dapagliflozin) sesuai ESC/AHA guideline.';
+                    }
+                    return { score, max: 9, risk, color, interpretation: interp, recommendation: rec };
+                }
+            },
+            {
+                id: 'rcri',
+                name: 'Revised Cardiac Risk Index (RCRI / Lee\'s Score)',
+                category: 'gagaljantung',
+                desc: 'Prediksi risiko komplikasi jantung perioperatif (MACE) pada pasien yang akan menjalani operasi non-cardiac mayor.',
+                source: 'Lee TH, et al. Derivation and prospective validation of a simple index for perioperative cardiac risk. Circulation. 1999.',
+                inputs: [
+                    { id: 'high_risk_surgery', label: 'Operasi berisiko tinggi (operasi vaskular suprainguinal, intratorakal, intraperitoneal)', type: 'checkbox', val: 1 },
+                    { id: 'cad', label: 'Riwayat Penyakit Jantung Koroner (Iskemik/CAD, riwayat MI, positif stress test, Q patologis EKG)', type: 'checkbox', val: 1 },
+                    { id: 'chf', label: 'Riwayat Gagal Jantung (CHF, edema paru, atau disfungsi ventrikel kiri)', type: 'checkbox', val: 1 },
+                    { id: 'cva', label: 'Riwayat Penyakit Serebrovaskular (Stroke atau TIA)', type: 'checkbox', val: 1 },
+                    { id: 'insulin', label: 'Riwayat Diabetes Mellitus yang membutuhkan terapi insulin preoperatif', type: 'checkbox', val: 1 },
+                    { id: 'renal', label: 'Riwayat Gangguan Ginjal (Serum Kreatinin preoperatif > 2.0 mg/dL)', type: 'checkbox', val: 1 }
+                ],
+                calculate: function(vals) {
+                    let score = 0;
+                    if (vals.high_risk_surgery) score += 1;
+                    if (vals.cad) score += 1;
+                    if (vals.chf) score += 1;
+                    if (vals.cva) score += 1;
+                    if (vals.insulin) score += 1;
+                    if (vals.renal) score += 1;
+                    
+                    let risk = '', color = '', interp = '', rec = '', rate = 0;
+                    if (score === 0) { risk = 'Kelas I (Risiko Sangat Rendah)'; color = 'emerald'; rate = 0.4; }
+                    else if (score === 1) { risk = 'Kelas II (Risiko Rendah)'; color = 'teal'; rate = 0.9; }
+                    else if (score === 2) { risk = 'Kelas III (Risiko Sedang)'; color = 'amber'; rate = 6.6; }
+                    else { risk = 'Kelas IV (Risiko Tinggi)'; color = 'rose'; rate = 11.0; }
+                    
+                    interp = `Skor Lee: ${score}. Estimasi angka kejadian komplikasi jantung mayor (MACE: MI, fibrilasi ventrikel, cardiac arrest, blok jantung komplit) perioperatif: ~ ${rate}%.`;
+                    rec = 'Untuk Kelas III & IV, optimalkan terapi medis preoperatif. Pertimbangkan pemberian / penerusan Beta-blocker dan statin perioperatif sesuai indikasi, cek EKG preoperatif, serta periksa Troponin pasca-operasi.';
+                    return { score, max: 6, risk, color, interpretation: interp, recommendation: rec };
+                }
+            },
+            {
+                id: 'euroscore',
+                name: 'EuroSCORE II',
+                category: 'gagaljantung',
+                desc: 'Menghitung perkiraan mortalitas di rumah sakit setelah operasi bedah jantung (bypass, katup jantung).',
+                source: 'Nashef SA, et al. EuroSCORE II. Eur J Cardiothorac Surg. 2012.',
+                inputs: [
+                    { id: 'age', label: 'Usia Pasien (Tahun)', type: 'number', min: 18, max: 100, default: 65 },
+                    { id: 'gender', label: 'Jenis Kelamin', type: 'radio', options: [{text: 'Pria', val: 'm'}, {text: 'Wanita', val: 'f'}] },
+                    { id: 'renal', label: 'Fungsi Ginjal (Clearance Kreatinin)', type: 'select', options: [{text: 'Normal (CrCl > 85 mL/min)', val: 'norm'}, {text: 'Gangguan Sedang (CrCl 50 - 85 mL/min)', val: 'mod'}, {text: 'Gangguan Berat (CrCl 30 - 49 mL/min)', val: 'sev'}, {text: 'Gagal Ginjal Akut / Dialisis', val: 'dial'}] },
+                    { id: 'extravasc', label: 'Arteriopathy Ekstrakardiak (PVD / stenosis karotis / aneurisma aorta)', type: 'checkbox', val: 1 },
+                    { id: 'mobility', label: 'Mobilitas Buruk (karena sebab muskuloskeletal atau saraf)', type: 'checkbox', val: 1 },
+                    { id: 'prior_surgery', label: 'Riwayat Operasi Jantung Sebelumnya', type: 'checkbox', val: 1 },
+                    { id: 'copd', label: 'Penyakit Paru Obstruktif Kronis (COPD/PPOK)', type: 'checkbox', val: 1 },
+                    { id: 'endocarditis', label: 'Endokarditis Aktif (masih dalam terapi antibiotik)', type: 'checkbox', val: 1 },
+                    { id: 'critical', label: 'Keadaan Preoperatif Kritis (syok kardiogenik, anuria, intubasi, ventilator)', type: 'checkbox', val: 1 },
+                    { id: 'insulin', label: 'Diabetes bergantung pada insulin', type: 'checkbox', val: 1 },
+                    { id: 'nyha', label: 'Kelas Gagal Jantung NYHA', type: 'radio', options: [{text: 'NYHA Kelas I atau II', val: '12'}, {text: 'NYHA Kelas III', val: '3'}, {text: 'NYHA Kelas IV', val: '4'}] },
+                    { id: 'ccs', label: 'Angina CCS Kelas IV (nyeri dada saat istirahat)', type: 'checkbox', val: 1 },
+                    { id: 'lv', label: 'Fraksi Ejeksi Ventrikel Kiri (LV Function)', type: 'select', options: [{text: 'Bagus (> 50%)', val: 'good'}, {text: 'Sedang (31 - 50%)', val: 'mod'}, {text: 'Buruk (21 - 30%)', val: 'poor'}, {text: 'Sangat Buruk (≤ 20%)', val: 'vpoor'}] },
+                    { id: 'recent_mi', label: 'Infark Miokard (MI) dalam 90 hari terakhir', type: 'checkbox', val: 1 },
+                    { id: 'pap', label: 'Hipertensi Pulmonal (PAP Sistolik)', type: 'select', options: [{text: 'Tidak ada / Ringan (≤ 30 mmHg)', val: 'none'}, {text: 'Sedang (31 - 55 mmHg)', val: 'mod'}, {text: 'Berat (> 55 mmHg)', val: 'sev'}] },
+                    { id: 'urgency', label: 'Kegawatan Prosedur', type: 'select', options: [{text: 'Elektif (Terjadwal biasa)', val: 'elec'}, {text: 'Urgent (Perlu operasi dalam beberapa hari)', val: 'urg'}, {text: 'Emergency (Operasi hari yang sama/darurat)', val: 'emerg'}, {text: 'Salvage (Resusitasi jantung paru berjalan)', val: 'salv'}] },
+                    { id: 'op_weight', label: 'Beban Operasi yang Direncanakan', type: 'select', options: [{text: 'Operasi Tunggal non-CABG (misal hanya katup)', val: 'single_nc'}, {text: 'Isolated CABG (Bypass koroner murni)', val: 'cabg'}, {text: 'Kombinasi 2 Prosedur (misal CABG + Katup)', val: 'double'}, {text: 'Kombinasi 3 Prosedur / Lebih', val: 'triple'}] },
+                    { id: 'aorta', label: 'Melibatkan Operasi Aorta Torakalis', type: 'checkbox', val: 1 }
+                ],
+                calculate: function(vals) {
+                    let b = -5.324537; // Constant
+                    
+                    // Age
+                    let age = Number(vals.age);
+                    if (age > 60) {
+                        b += (age - 60) * 0.026779;
+                    }
+                    
+                    // Gender
+                    if (vals.gender === 'f') b += 0.21964;
+                    
+                    // Renal
+                    if (vals.renal === 'mod') b += 0.30386;
+                    else if (vals.renal === 'sev') b += 0.85922;
+                    else if (vals.renal === 'dial') b += 0.64215;
+                    
+                    // Comorbidities
+                    if (vals.extravasc) b += 0.63214;
+                    if (vals.mobility) b += 0.24026;
+                    if (vals.prior_surgery) b += 1.00252;
+                    if (vals.copd) b += 0.18865;
+                    if (vals.endocarditis) b += 0.61916;
+                    if (vals.critical) b += 1.08652;
+                    if (vals.insulin) b += 0.35427;
+                    
+                    // NYHA / Angina
+                    if (vals.nyha === '3') b += 0.10705;
+                    else if (vals.nyha === '4') b += 0.39581;
+                    if (vals.ccs) b += 0.22261;
+                    
+                    // LV Function
+                    if (vals.lv === 'mod') b += 0.31506;
+                    else if (vals.lv === 'poor') b += 0.80840;
+                    else if (vals.lv === 'vpoor') b += 0.96328;
+                    
+                    if (vals.recent_mi) b += 0.15281;
+                    
+                    // PAP
+                    if (vals.pap === 'mod') b += 0.17889;
+                    else if (vals.pap === 'sev') b += 0.34914;
+                    
+                    // Urgency
+                    if (vals.urgency === 'urg') b += 0.31746;
+                    else if (vals.urgency === 'emerg') b += 0.70391;
+                    else if (vals.urgency === 'salv') b += 1.36295;
+                    
+                    // Op Weight
+                    if (vals.op_weight === 'single_nc') b += 0.0069542;
+                    else if (vals.op_weight === 'double') b += 0.5521478;
+                    else if (vals.op_weight === 'triple') b += 0.9724533;
+                    
+                    if (vals.aorta) b += 0.65272;
+                    
+                    let p = 100 / (1 + Math.exp(-b));
+                    let roundedP = Math.round(p * 100) / 100;
+                    
+                    let risk = '', color = '', interp = '';
+                    if (roundedP < 2) { risk = 'Risiko Rendah'; color = 'emerald'; }
+                    else if (roundedP < 5) { risk = 'Risiko Sedang'; color = 'amber'; }
+                    else { risk = 'Risiko Tinggi'; color = 'rose'; }
+                    
+                    interp = `Estimasi angka mortalitas dalam perawatan rumah sakit (hospital mortality) pasca operasi bedah jantung: ${roundedP}%.`;
+                    let rec = 'Skor ini memandu diskusi penawaran risiko-manfaat operasi kepada pasien. Untuk risiko sangat tinggi, pertimbangkan teknik bedah invasif minimal atau transkateter (TAVI/TEVAR) jika memungkinkan.';
+                    
+                    return { score: roundedP, max: '%', risk, color, interpretation: interp, recommendation: rec };
+                }
+            },
+            {
+                id: 'duketreadmill',
+                name: 'Duke Treadmill Score',
+                category: 'gagaljantung',
+                desc: 'Menilai prognosis kardiovaskular jangka panjang dari hasil uji latih beban jantung (Exercise Stress Test).',
+                source: 'Mark DB, et al. Prognostic value of a treadmill exercise score. N Engl J Med. 1991.',
+                inputs: [
+                    { id: 'time', label: 'Waktu Latihan Total (Menit - Protokol Bruce)', type: 'number', min: 1, max: 30, default: 9, step: 0.5 },
+                    { id: 'st_dev', label: 'Deviasi Segmen ST Maksimal (mm, depresi atau elevasi saat latihan)', type: 'number', min: 0, max: 10, default: 1, step: 0.5 },
+                    { id: 'angina', label: 'Indeks Angina Nyeri Dada Selama Latihan', type: 'radio', options: [{text: '0: Tidak ada angina', val: 0}, {text: '1: Angina terjadi tetapi tidak membatasi latihan', val: 1}, {text: '2: Angina membatasi atau menyebabkan uji latih dihentikan', val: 2}] }
+                ],
+                calculate: function(vals) {
+                    let time = Number(vals.time);
+                    let st = Number(vals.st_dev);
+                    let angina = Number(vals.angina);
+                    
+                    let score = time - (5 * st) - (4 * angina);
+                    let roundedScore = Math.round(score * 10) / 10;
+                    
+                    let risk = '', color = '', interp = '', rec = '', survival = 0, annualMort = 0;
+                    if (roundedScore >= 5) {
+                        risk = 'Risiko Rendah'; color = 'emerald';
+                        survival = 97; annualMort = 0.25;
+                        interp = `Skor Duke Treadmill: ${roundedScore}. Kelangsungan hidup 5-tahun diperkirakan ~ ${survival}%, dengan angka mortalitas tahunan sangat rendah ~ ${annualMort}%.`;
+                        rec = 'Umumnya tidak memerlukan kateterisasi jantung segera. Terapi medis dan modifikasi gaya hidup sangat disarankan.';
+                    } else if (roundedScore >= -10) {
+                        risk = 'Risiko Menengah'; color = 'amber';
+                        survival = 90; annualMort = 1.25;
+                        interp = `Skor Duke Treadmill: ${roundedScore}. Kelangsungan hidup 5-tahun diperkirakan ~ ${survival}%, dengan angka mortalitas tahunan ~ ${annualMort}%.`;
+                        rec = 'Keputusan untuk kateterisasi angiografi disesuaikan dengan derajat gejala klinis (angina) dan hasil imaging fungsional lainnya.';
+                    } else {
+                        risk = 'Risiko Tinggi'; color = 'rose';
+                        survival = 65; annualMort = 5.0;
+                        interp = `Skor Duke Treadmill: ${roundedScore}. Kelangsungan hidup 5-tahun hanya ~ ${survival}%, dengan angka mortalitas tahunan mencapai ~ ${annualMort}%.`;
+                        rec = 'Sangat direkomendasikan untuk melakukan kateterisasi jantung diagnostik (Coronary Angiography) segera guna mengevaluasi indikasi revaskularisasi (PCI / CABG).';
+                    }
+                    return { score: roundedScore, max: '', risk, color, interpretation: interp, recommendation: rec };
+                }
+            },
+            {
+                id: 'fick',
+                name: 'Cardiac Output (Fick Principle) & Cardiac Index (CI)',
+                category: 'hemodinamik',
+                desc: 'Menghitung curah jantung (Cardiac Output) menggunakan prinsip konsumsi oksigen Fick.',
+                source: 'Fick A. Ueber die Messung des Blutquantums in den Herzventrikeln. Verh Phys Med Ges. 1870.',
+                inputs: [
+                    { id: 'hb', label: 'Hemoglobin Pasien (g/dL)', type: 'number', min: 3, max: 25, default: 13, step: 0.1 },
+                    { id: 'sao2', label: 'Saturasi Oksigen Arteri (SaO2, %)', type: 'number', min: 40, max: 100, default: 98 },
+                    { id: 'svo2', label: 'Saturasi Oksigen Vena Campuran (SvO2, %)', type: 'number', min: 20, max: 95, default: 70 },
+                    { id: 'height', label: 'Tinggi Badan (cm)', type: 'number', min: 50, max: 250, default: 165 },
+                    { id: 'weight', label: 'Berat Badan (kg)', type: 'number', min: 10, max: 300, default: 60 }
+                ],
+                calculate: function(vals) {
+                    let hb = Number(vals.hb);
+                    let sao2 = Number(vals.sao2) / 100;
+                    let svo2 = Number(vals.svo2) / 100;
+                    let height = Number(vals.height);
+                    let weight = Number(vals.weight);
+                    
+                    // Calculate BSA (Mosteller)
+                    let bsa = Math.sqrt((height * weight) / 3600);
+                    
+                    // Estimate VO2 (Oxygen consumption) = 125 mL/min/m2 * BSA
+                    let vo2 = 125 * bsa;
+                    
+                    // Arterial O2 Content (CaO2) = Hb * 1.34 * SaO2
+                    let cao2 = hb * 1.34 * sao2;
+                    // Mixed Venous O2 Content (CvO2) = Hb * 1.34 * SvO2
+                    let cvo2 = hb * 1.34 * svo2;
+                    
+                    // Cardiac Output = VO2 / (CaO2 - CvO2) / 10 (to convert mL/dL to L)
+                    let co = vo2 / ((cao2 - cvo2) * 10);
+                    let ci = co / bsa;
+                    
+                    let roundedCO = Math.round(co * 100) / 100;
+                    let roundedCI = Math.round(ci * 100) / 100;
+                    let roundedBSA = Math.round(bsa * 100) / 100;
+                    
+                    let risk = '', color = '', interp = '';
+                    if (roundedCI >= 2.5) { risk = 'Hemodinamik Stabil'; color = 'emerald'; }
+                    else if (roundedCI >= 2.0) { risk = 'Borderline Low'; color = 'amber'; }
+                    else { risk = 'Low Output State (Syok)'; color = 'rose'; }
+                    
+                    interp = `Curah Jantung (CO): ${roundedCO} L/min. Indeks Jantung (CI): ${roundedCI} L/min/m² (BSA: ${roundedBSA} m²). O2 Content Diff: ${Math.round((cao2-cvo2)*10)/10} mL O2 per L darah.`;
+                    let rec = roundedCI < 2.0 
+                        ? 'Pasien berada dalam kondisi curah jantung rendah (cardiogenic shock / volume depletion). Evaluasi kecukupan cairan (preload) dan pertimbangkan bantuan inotropik (Dobutamin / Milrinon) atau vasopressor sesuai kondisi klinis.' 
+                        : 'Perfusi sistemik adekuat secara curah jantung. Lanjutkan terapi suportif sesuai kondisi klinis.';
+                    
+                    return { score: roundedCO, max: 'L/min', risk, color, interpretation: interp, recommendation: rec };
+                }
+            },
+            {
+                id: 'vascularres',
+                name: 'Vascular Resistance (SVR & PVR)',
+                category: 'hemodinamik',
+                desc: 'Menghitung resistensi pembuluh darah sistemik (SVR) dan resistensi pembuluh darah pulmonal (PVR).',
+                source: 'Standard Hemodynamic Equation.',
+                inputs: [
+                    { id: 'co', label: 'Cardiac Output (L/min)', type: 'number', min: 1.0, max: 20.0, default: 5.0, step: 0.1 },
+                    { id: 'map', label: 'Mean Arterial Pressure (MAP, mmHg)', type: 'number', min: 30, max: 200, default: 90 },
+                    { id: 'cvp', label: 'Central Venous Pressure (CVP, mmHg)', type: 'number', min: 0, max: 30, default: 8 },
+                    { id: 'mpap', label: 'Mean Pulmonary Artery Pressure (mPAP, mmHg)', type: 'number', min: 5, max: 80, default: 18 },
+                    { id: 'pawp', label: 'Pulmonary Artery Wedge Pressure (PAWP, mmHg)', type: 'number', min: 0, max: 40, default: 12 }
+                ],
+                calculate: function(vals) {
+                    let co = Number(vals.co);
+                    let map = Number(vals.map);
+                    let cvp = Number(vals.cvp);
+                    let mpap = Number(vals.mpap);
+                    let pawp = Number(vals.pawp);
+                    
+                    // SVR = 80 * (MAP - CVP) / CO
+                    let svr = 80 * (map - cvp) / co;
+                    let pvr = 80 * (mpap - pawp) / co;
+                    
+                    let woodSVR = svr / 80;
+                    let woodPVR = pvr / 80;
+                    
+                    let roundedSVR = Math.round(svr);
+                    let roundedPVR = Math.round(pvr);
+                    
+                    let risk = '', color = '', interp = '', rec = '';
+                    if (roundedPVR > 240) {
+                        risk = 'Hipertensi Pulmonal Berat'; color = 'rose';
+                    } else if (roundedSVR > 1500) {
+                        risk = 'Vasokonstriksi Sistemik Berat'; color = 'amber';
+                    } else {
+                        risk = 'Resistensi Normal'; color = 'emerald';
+                    }
+                    
+                    interp = `Systemic Vascular Resistance (SVR): ${roundedSVR} dynes·s/cm⁵ (${Math.round(woodSVR*10)/10} Wood Units). <br>Pulmonary Vascular Resistance (PVR): ${roundedPVR} dynes·s/cm⁵ (${Math.round(woodPVR*10)/10} Wood Units).`;
+                    rec = `Normal SVR: 800 - 1200 dynes·s/cm⁵. Normal PVR: 37 - 250 dynes·s/cm⁵. <br>${roundedPVR > 240 ? 'PVR tinggi menyiratkan penyakit vaskular pulmonal atau kongesti masif. Berikan vasodilator pulmonal atau kurangi kongesti vena paru.' : ''}`;
+                    
+                    return { score: roundedSVR, max: 'SVR', risk, color, interpretation: interp, recommendation: rec };
+                }
+            },
+            {
+                id: 'as_severity',
+                name: 'Aortic Stenosis Severity (AS Area)',
+                category: 'hemodinamik',
+                desc: 'Menghitung Aortic Valve Area (AVA) menggunakan Persamaan Kontinuitas (Continuity Equation) untuk derajat stenosis aorta.',
+                source: 'Baumgartner H, et al. EAE/ASE Recommendations for Echocardiographic Assessment of Valve Stenosis. J Am Soc Echocardiogr. 2009.',
+                inputs: [
+                    { id: 'lvot_d', label: 'LVOT Diameter (cm)', type: 'number', min: 1.0, max: 3.5, default: 2.0, step: 0.1 },
+                    { id: 'lvot_v', label: 'LVOT Velocity (V1, m/s) atau LVOT VTI (cm)', type: 'number', min: 0.5, max: 2.5, default: 1.0, step: 0.1 },
+                    { id: 'av_v', label: 'Aortic Valve Velocity (V2, m/s) atau AV VTI (cm)', type: 'number', min: 1.0, max: 7.0, default: 4.0, step: 0.1 }
+                ],
+                calculate: function(vals) {
+                    let d = Number(vals.lvot_d);
+                    let v1 = Number(vals.lvot_v);
+                    let v2 = Number(vals.av_v);
+                    
+                    // LVOT Area = pi * (d/2)^2 = 0.7854 * d^2
+                    let lvotArea = 0.7854 * d * d;
+                    // Continuity Equation: AVA = (LVOT Area * V1) / V2
+                    let ava = (lvotArea * v1) / v2;
+                    let roundedAVA = Math.round(ava * 100) / 100;
+                    
+                    // Dimensionless Index (DI) = V1 / V2
+                    let di = v1 / v2;
+                    let roundedDI = Math.round(di * 100) / 100;
+                    
+                    let risk = '', color = '', interp = '', rec = '';
+                    if (roundedAVA < 1.0) {
+                        risk = 'Stenosis Aorta Berat (Severe AS)'; color = 'rose';
+                        interp = `Aortic Valve Area (AVA): ${roundedAVA} cm² (Dimensionless Index: ${roundedDI}).`;
+                        rec = 'Terapi definitif adalah penggantian katup aorta (Surgical AVR atau TAVI) jika pasien bergejala atau memiliki fraksi ejeksi ventrikel kiri (LVEF) < 50%. Rujuk ke spesialis jantung intervensi.';
+                    } else if (roundedAVA <= 1.5) {
+                        risk = 'Stenosis Aorta Sedang (Moderate AS)'; color = 'amber';
+                        interp = `Aortic Valve Area (AVA): ${roundedAVA} cm² (Dimensionless Index: ${roundedDI}).`;
+                        rec = 'Lakukan monitoring ketat tanda-tanda klinis dan echocardiography rutin tiap 1-2 tahun. Kontrol ketat tekanan darah.';
+                    } else {
+                        risk = 'Stenosis Aorta Ringan (Mild AS)'; color = 'emerald';
+                        interp = `Aortic Valve Area (AVA): ${roundedAVA} cm² (Dimensionless Index: ${roundedDI}).`;
+                        rec = 'Umumnya jinak. Evaluasi klinis & echo tiap 3-5 tahun.';
+                    }
+                    return { score: roundedAVA, max: 'cm²', risk, color, interpretation: interp, recommendation: rec };
+                }
+            },
+            {
+                id: 'mappressure',
+                name: 'Mean Arterial Pressure (MAP) & Pulse Pressure',
+                category: 'hemodinamik',
+                desc: 'Menghitung MAP dan Pulse Pressure dari tekanan darah arteri sistolik dan diastolik.',
+                source: 'Standard Hemodynamic Calculations.',
+                inputs: [
+                    { id: 'sbp', label: 'Systolic Blood Pressure (mmHg)', type: 'number', min: 40, max: 250, default: 120 },
+                    { id: 'dbp', label: 'Diastolic Blood Pressure (mmHg)', type: 'number', min: 20, max: 180, default: 80 }
+                ],
+                calculate: function(vals) {
+                    let sbp = Number(vals.sbp);
+                    let dbp = Number(vals.dbp);
+                    
+                    // MAP = DBP + (SBP - DBP) / 3
+                    let map = dbp + (sbp - dbp) / 3;
+                    let pp = sbp - dbp;
+                    
+                    let roundedMAP = Math.round(map);
+                    
+                    let risk = '', color = '', interp = '', rec = '';
+                    if (roundedMAP < 65) {
+                        risk = 'Perfusi Organ Terancam (MAP < 65)'; color = 'rose';
+                        rec = 'Segera berikan resusitasi cairan kristaloid jika ada hipovolemia, atau pasang terapi vasopressor (Norepinefrin) untuk mempertahankan target MAP ≥ 65 mmHg.';
+                    } else if (roundedMAP > 115) {
+                        risk = 'Hipertensi Berat'; color = 'amber';
+                        rec = 'Turunkan tekanan darah secara gradual dengan antihipertensi oral atau infus kontinu IV jika terjadi Krisis Hipertensi / Target Organ Damage.';
+                    } else {
+                        risk = 'Perfusi Adekuat (MAP Normal)'; color = 'emerald';
+                        rec = 'Tekanan perfusi organ dalam batas target normal (MAP 70-100 mmHg). Monitor vital sign.';
+                    }
+                    
+                    interp = `Mean Arterial Pressure (MAP): ${roundedMAP} mmHg. <br>Pulse Pressure (PP): ${pp} mmHg.`;
+                    
+                    return { score: roundedMAP, max: 'mmHg', risk, color, interpretation: interp, recommendation: rec };
+                }
+            },
+            {
+                id: 'qtc',
+                name: 'Corrected QT Interval (QTc)',
+                category: 'aritmia',
+                desc: 'Mengoreksi interval QT berdasarkan laju denyut jantung menggunakan rumus Bazett, Fridericia, Framingham, dan Hodges.',
+                source: 'Postema PG, Wilde AA. The QT interval. Hosp Pract. 2014.',
+                inputs: [
+                    { id: 'qt', label: 'Interval QT Terukur (milidetik / ms)', type: 'number', min: 100, max: 800, default: 400 },
+                    { id: 'hr', label: 'Laju Jantung / Heart Rate (bpm)', type: 'number', min: 30, max: 220, default: 75 }
+                ],
+                calculate: function(vals) {
+                    let qt = Number(vals.qt);
+                    let hr = Number(vals.hr);
+                    let rr = 60 / hr; // in seconds
+                    
+                    // Bazett: QTc = QT / sqrt(RR)
+                    let qtcBazett = qt / Math.sqrt(rr);
+                    // Fridericia: QTc = QT / cbrt(RR)
+                    let qtcFridericia = qt / Math.pow(rr, 1/3);
+                    // Framingham: QTc = QT + 0.154*(1 - RR)
+                    let qtcFramingham = qt + 154 * (1 - rr);
+                    // Hodges: QTc = QT + 0.00175 * (HR - 60) * 1000
+                    let qtcHodges = qt + 1.75 * (hr - 60);
+                    
+                    let bazett = Math.round(qtcBazett);
+                    let frid = Math.round(qtcFridericia);
+                    let fram = Math.round(qtcFramingham);
+                    let hodg = Math.round(qtcHodges);
+                    
+                    let risk = '', color = '', interp = '', rec = '';
+                    if (bazett > 500) {
+                        risk = 'Prolonged Berat (Risiko Tinggi Torsades)'; color = 'rose';
+                        rec = 'HENTIKAN segera obat pemanjang QTc (cth: amiodarone, levofloxacin, metoklopramid, haloperidol). Koreksi gangguan elektrolit (target Kalium > 4.0 mEq/L, Magnesium > 2.0 mg/dL). Pasang monitor EKG.';
+                    } else if (bazett > 470) {
+                        risk = 'Prolonged QT Interval'; color = 'amber';
+                        rec = 'Hindari penambahan obat pemanjang QTc. Monitor EKG serial.';
+                    } else {
+                        risk = 'QTc Interval Normal'; color = 'emerald';
+                        rec = 'Interval QTc dalam batas normal (Normal laki-laki <450ms, perempuan <460ms).';
+                    }
+                    
+                    interp = `Bazett (terpopuler): <strong>${bazett} ms</strong><br>Fridericia (akurat saat takikardia): ${frid} ms<br>Framingham: ${fram} ms<br>Hodges: ${hodg} ms.`;
+                    
+                    return { score: bazett, max: 'ms', risk, color, interpretation: interp, recommendation: rec };
+                }
+            },
+            {
+                id: 'shockindex',
+                name: 'Shock Index & Modified Shock Index',
+                category: 'hemodinamik',
+                desc: 'Alat bantu klinis cepat untuk memprediksi syok tersembunyi (occult shock) dan kematian di ruang gawat darurat.',
+                source: 'Rady MY, et al. Shock index in relation to organ perfusion. Am J Emerg Med. 1994.',
+                inputs: [
+                    { id: 'hr', label: 'Heart Rate (bpm)', type: 'number', min: 30, max: 250, default: 110 },
+                    { id: 'sbp', label: 'Systolic Blood Pressure (mmHg)', type: 'number', min: 40, max: 250, default: 90 },
+                    { id: 'dbp', label: 'Diastolic Blood Pressure (mmHg)', type: 'number', min: 20, max: 180, default: 60 }
+                ],
+                calculate: function(vals) {
+                    let hr = Number(vals.hr);
+                    let sbp = Number(vals.sbp);
+                    let dbp = Number(vals.dbp);
+                    
+                    // Shock Index = HR / SBP
+                    let si = hr / sbp;
+                    // MAP
+                    let map = dbp + (sbp - dbp) / 3;
+                    // Modified Shock Index = HR / MAP
+                    let msi = hr / map;
+                    
+                    let roundedSI = Math.round(si * 100) / 100;
+                    let roundedMSI = Math.round(msi * 100) / 100;
+                    
+                    let risk = '', color = '', interp = '', rec = '';
+                    if (roundedSI >= 0.9) {
+                        risk = 'Indikasi Syok Positif'; color = 'rose';
+                        interp = `Shock Index: ${roundedSI} (Normal: 0.5 - 0.7). <br>Modified Shock Index: ${roundedMSI} (Normal: 0.7 - 1.3).`;
+                        rec = 'Hati-hati terhadap syok tersembunyi atau dekompensasi akut! Segera siapkan jalur infus IV besar, lakukan resusitasi cairan kristaloid agresif, cari tanda pendarahan, dan monitor produksi urine.';
+                    } else {
+                        risk = 'Hemodinamik Stabil'; color = 'emerald';
+                        interp = `Shock Index: ${roundedSI}. <br>Modified Shock Index: ${roundedMSI}.`;
+                        rec = 'Parameter dalam batas hemodinamik kompensasi normal.';
+                    }
+                    
+                    return { score: roundedSI, max: 'SI', risk, color, interpretation: interp, recommendation: rec };
+                }
+            },
+            {
+                id: 'ascvd',
+                name: 'ASCVD Risk Estimator',
+                category: 'hemodinamik',
+                desc: 'Menghitung risiko 10-tahun terkena kejadian kardiovaskular aterosklerotik pertama kali (Stroke, MI, Kematian akibat penyakit jantung koroner).',
+                source: 'Goff DC, et al. 2013 ACC/AHA Guideline on the Assessment of Cardiovascular Risk. Circulation. 2014.',
+                inputs: [
+                    { id: 'gender', label: 'Jenis Kelamin', type: 'radio', options: [{text: 'Pria', val: 'male'}, {text: 'Wanita', val: 'female'}] },
+                    { id: 'race', label: 'Ras / Etnisitas', type: 'radio', options: [{text: 'Kaukasia / Kulit Putih', val: 'white'}, {text: 'Afrika-Amerika / Kulit Hitam', val: 'black'}, {text: 'Asia / Lainnya (Diestimasi sebagai Kaukasia)', val: 'white'}] },
+                    { id: 'age', label: 'Usia Pasien (Tahun - Rentang 40-79 tahun)', type: 'number', min: 40, max: 79, default: 55 },
+                    { id: 'totchol', label: 'Total Kolesterol (mg/dL)', type: 'number', min: 130, max: 320, default: 200 },
+                    { id: 'hdl', label: 'HDL Kolesterol (mg/dL)', type: 'number', min: 20, max: 100, default: 50 },
+                    { id: 'sbp', label: 'Systolic Blood Pressure (mmHg)', type: 'number', min: 90, max: 200, default: 130 },
+                    { id: 'treated', label: 'Mendapat obat Hipertensi saat ini', type: 'checkbox', val: 1 },
+                    { id: 'smoker', label: 'Perokok aktif saat ini', type: 'checkbox', val: 1 },
+                    { id: 'diabetes', label: 'Memiliki riwayat Diabetes', type: 'checkbox', val: 1 }
+                ],
+                calculate: function(vals) {
+                    let gender = vals.gender;
+                    let race = vals.race;
+                    let age = Number(vals.age);
+                    let totChol = Number(vals.totchol);
+                    let hdl = Number(vals.hdl);
+                    let sbp = Number(vals.sbp);
+                    let treated = vals.treated ? true : false;
+                    let smoker = vals.smoker ? true : false;
+                    let diabetes = vals.diabetes ? true : false;
+                    
+                    let coeff = [];
+                    if (gender === 'female' && race === 'white') {
+                        coeff = [-29.799, 4.884, 13.540, -3.114, -13.578, 3.149, 2.019, 0, 1.957, 0, 7.574, -1.665, 0.661, -29.18, 0.9665];
+                    } else if (gender === 'female' && race === 'black') {
+                        coeff = [17.114, 0, 0.940, 0, -18.920, 4.475, 29.291, -6.432, 27.820, -6.087, 0.691, 0, 0.874, 86.61, 0.9533];
+                    } else if (gender === 'male' && race === 'white') {
+                        coeff = [12.344, 0, 11.853, -2.664, -7.990, 1.761, 1.797, 0, 1.764, 0, 7.837, -1.795, 0.658, 61.18, 0.9144];
+                    } else { // male black
+                        coeff = [2.469, 0, 0.302, 0, -2.307, 0, 1.916, 0, 1.809, 0, 0.549, 0, 0.645, 19.54, 0.8954];
+                    }
+
+                    let lnAge = Math.log(age);
+                    let lnTotChol = Math.log(totChol);
+                    let lnHDL = Math.log(hdl);
+                    let lnSBP = Math.log(sbp);
+
+                    let sum = 0;
+                    sum += coeff[0] * lnAge;
+                    if (coeff[1] !== 0) sum += coeff[1] * lnAge * lnAge;
+                    sum += coeff[2] * lnTotChol;
+                    if (coeff[3] !== 0) sum += coeff[3] * lnAge * lnTotChol;
+                    sum += coeff[4] * lnHDL;
+                    if (coeff[5] !== 0) sum += coeff[5] * lnAge * lnHDL;
+                    
+                    if (treated) {
+                        sum += coeff[6] * lnSBP;
+                        if (coeff[7] !== 0) sum += coeff[7] * lnAge * lnSBP;
+                    } else {
+                        sum += coeff[8] * lnSBP;
+                        if (coeff[9] !== 0) sum += coeff[9] * lnAge * lnSBP;
+                    }
+                    
+                    sum += coeff[10] * (smoker ? 1 : 0);
+                    if (coeff[11] !== 0) sum += coeff[11] * lnAge * (smoker ? 1 : 0);
+                    sum += coeff[12] * (diabetes ? 1 : 0);
+
+                    let risk = 1 - Math.pow(coeff[14], Math.exp(sum - coeff[13]));
+                    let rawRisk = risk * 100;
+                    let roundedRisk = Math.round(rawRisk * 10) / 10;
+                    if (roundedRisk < 0) roundedRisk = 0;
+                    if (roundedRisk > 100) roundedRisk = 100;
+                    
+                    let riskStr = '', color = '', interp = '', rec = '';
+                    if (roundedRisk < 5.0) {
+                        riskStr = 'Risiko Rendah'; color = 'emerald';
+                        interp = `Risiko 10-Tahun: ${roundedRisk}%. Risiko penyakit kardiovaskular rendah.`;
+                        rec = 'Lanjutkan gaya hidup sehat jantung (diet tinggi serat, olahraga kardio 150 menit/minggu, hindari asap rokok). Statin umumnya belum diperlukan.';
+                    } else if (roundedRisk < 7.5) {
+                        riskStr = 'Risiko Borderline'; color = 'teal';
+                        interp = `Risiko 10-Tahun: ${roundedRisk}%.`;
+                        rec = 'Pertimbangkan penggunaan Statin intensitas sedang jika ada faktor penguat risiko lain (sejarah keluarga, kalsium koroner tinggi CAC > 0).';
+                    } else if (roundedRisk < 20.0) {
+                        riskStr = 'Risiko Sedang (Intermediate)'; color = 'amber';
+                        interp = `Risiko 10-Tahun: ${roundedRisk}%.`;
+                        rec = 'Rekomendasi Statin intensitas sedang-tinggi (misal Atorvastatin 20-40mg atau Rosuvastatin 10-20mg) untuk menurunkan LDL kolesterol ≥ 30-50%.';
+                    } else {
+                        riskStr = 'Risiko Tinggi'; color = 'rose';
+                        interp = `Risiko 10-Tahun: ${roundedRisk}%. Peningkatan bahaya kejadian kardiovaskular mayor di masa depan.`;
+                        rec = 'Rekomendasi STATIN INTENSITAS TINGGI segera (Atorvastatin 40-80mg atau Rosuvastatin 20-40mg) untuk memangkas kadar LDL kolesterol hingga ≥ 50%. Kontrol ketat tekanan darah target < 130/80 mmHg.';
+                    }
+                    return { score: roundedRisk, max: '%', risk: riskStr, color, interpretation: interp, recommendation: rec };
+                }
+            }
+        ];
+
+        let favorites = [];
+
+        // App Initializer
+        window.addEventListener('DOMContentLoaded', () => {
+            loadFavorites();
+            renderCalculatorList();
+            lucide.createIcons();
+        });
+
+        // Load bookmarks from local storage
+        function loadFavorites() {
+            let favs = localStorage.getItem('cardio_favs');
+            if (favs) {
+                favorites = JSON.parse(favs);
+            }
+            updateFavCount();
+            renderFavDropdown();
+        }
+
+        // Toggle Favorite active
+        function toggleFavoriteActive() {
+            let activeId = document.getElementById('active-calc-ref-id').innerText;
+            if (!activeId) return;
+            
+            let idx = favorites.indexOf(activeId);
+            if (idx === -1) {
+                favorites.push(activeId);
+            } else {
+                favorites.splice(idx, 1);
+            }
+            localStorage.setItem('cardio_favs', JSON.stringify(favorites));
+            updateFavoriteBtnUI(activeId);
+            updateFavCount();
+            renderFavDropdown();
+            renderCalculatorList(); // Re-render lists to update star outlines
+        }
+
+        function updateFavoriteBtnUI(id) {
+            let btn = document.getElementById('favorite-btn');
+            if (!btn) return;
+            let isFav = favorites.includes(id);
+            if (isFav) {
+                btn.innerHTML = `<i data-lucide="star" class="w-5 h-5 text-amber-500 fill-amber-500"></i>`;
+                btn.classList.add('border-amber-400');
+            } else {
+                btn.innerHTML = `<i data-lucide="star" class="w-5 h-5"></i>`;
+                btn.classList.remove('border-amber-400');
+            }
+            lucide.createIcons();
+        }
+
+        function updateFavCount() {
+            let badge = document.getElementById('fav-count');
+            if (badge) badge.innerText = favorites.length;
+        }
+
+        function renderFavDropdown() {
+            let container = document.getElementById('fav-list-dropdown');
+            if (!container) return;
+            if (favorites.length === 0) {
+                container.innerHTML = `<div class="px-4 py-3 text-xs text-slate-500 text-center">Belum ada kalkulator favorit. Klik bintang di sebelah nama kalkulator.</div>`;
+                return;
+            }
+            let html = '';
+            favorites.forEach(id => {
+                let calc = calculators.find(c => c.id === id);
+                if (calc) {
+                    html += `
+                        <button onclick="selectCalculator('${calc.id}'); toggleBookmarkDropdown();" class="w-full text-left px-4 py-2 hover:bg-slate-100 text-xs font-bold flex items-center justify-between">
+                            <span>${calc.name}</span>
+                            <i data-lucide="chevron-right" class="w-3 h-3 text-slate-400"></i>
+                        </button>
+                    `;
+                }
+            });
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function toggleBookmarkDropdown() {
+            let dropdown = document.getElementById('bookmark-dropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        // Sidebar List Rendering
+        function renderCalculatorList(filter = '', category = 'all') {
+            const listContainer = document.getElementById('calc-list');
+            if (!listContainer) return;
+            
+            listContainer.innerHTML = '';
+            let filtered = calculators;
+            
+            // Filter search query
+            if (filter.trim() !== '') {
+                let q = filter.toLowerCase();
+                filtered = filtered.filter(c => c.name.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q) || c.category.toLowerCase().includes(q));
+            }
+            
+            // Filter category
+            if (category !== 'all') {
+                filtered = filtered.filter(c => c.category === category);
+            }
+            
+            if (filtered.length === 0) {
+                listContainer.innerHTML = '<div class="text-center py-8 text-xs text-slate-400">Tidak ada kalkulator yang cocok.</div>';
+                return;
+            }
+            
+            // Render items
+            filtered.forEach(calc => {
+                let isFav = favorites.includes(calc.id);
+                let catColors = getCategoryBadgeColors(calc.category);
+                let catLabel = calc.category.toUpperCase();
+                if (calc.category === 'gagaljantung') catLabel = 'GAGAL JANTUNG';
+                
+                let item = document.createElement('button');
+                item.id = `sidebar-item-${calc.id}`;
+                item.onclick = () => selectCalculator(calc.id);
+                item.className = "w-full text-left p-3 rounded-2xl hover:bg-slate-100 border border-transparent hover:border-slate-200 transition flex flex-col gap-1.5 hover-card";
+                item.innerHTML = `
+                    <div class="flex items-center justify-between w-full">
+                        <span class="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${catColors}">${catLabel}</span>
+                        <div class="flex items-center gap-1.5">
+                            ${isFav ? '<i data-lucide="star" class="w-3.5 h-3.5 text-amber-500 fill-amber-500"></i>' : ''}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="font-extrabold text-sm text-slate-800 leading-snug">${calc.name}</div>
+                        <div class="text-[10px] text-slate-500 font-semibold leading-relaxed line-clamp-1 mt-0.5">${calc.desc}</div>
+                    </div>
+                `;
+                listContainer.appendChild(item);
+            });
+            
+            lucide.createIcons();
+        }
+
+        function getCategoryBadgeColors(cat) {
+            switch(cat) {
+                case 'koroner': return 'bg-rose-500/10 text-rose-500';
+                case 'aritmia': return 'bg-blue-500/10 text-blue-500';
+                case 'paru': return 'bg-emerald-500/10 text-emerald-500';
+                case 'gagaljantung': return 'bg-indigo-500/10 text-indigo-500';
+                case 'hemodinamik': return 'bg-amber-500/10 text-amber-500';
+                default: return 'bg-slate-500/10 text-slate-500';
+            }
+        }
+
+        // Filter and Search Action
+        let currentFilterCategory = 'all';
+        function filterCategory(cat) {
+            currentFilterCategory = cat;
+            
+            // Update active states
+            const cats = ['all', 'koroner', 'aritmia', 'paru', 'gagaljantung', 'hemodinamik'];
+            cats.forEach(c => {
+                let el = document.getElementById(`cat-${c}`);
+                if (!el) return;
+                if (c === cat) {
+                    el.className = "px-3 py-1.5 rounded-full font-bold bg-brand-500 text-white shadow-sm shrink-0 transition";
+                } else {
+                    el.className = "px-3 py-1.5 rounded-full font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 shrink-0 transition";
+                }
+            });
+            
+            let query = document.getElementById('search-input').value;
+            renderCalculatorList(query, cat);
+        }
+
+        function filterCalculators() {
+            let query = document.getElementById('search-input').value;
+            renderCalculatorList(query, currentFilterCategory);
+        }
+
+        // Active selection loading
+        function selectCalculator(id) {
+            let calc = calculators.find(c => c.id === id);
+            if (!calc) return;
+            
+            // Show workspace, hide welcome
+            document.getElementById('welcome-panel').classList.add('hidden');
+            document.getElementById('calculator-workspace').classList.remove('hidden');
+            
+            // Set details
+            document.getElementById('active-calc-name').innerText = calc.name;
+            document.getElementById('active-calc-desc').innerText = calc.desc;
+            document.getElementById('active-calc-source').innerHTML = `<span>Sumber: ${calc.source}</span><span id="active-calc-ref-id" class="hidden text-slate-500">${calc.id}</span>`;
+            
+            let catBadge = document.getElementById('active-calc-cat');
+            let catLabel = calc.category.toUpperCase();
+            if (calc.category === 'gagaljantung') catLabel = 'GAGAL JANTUNG';
+            catBadge.innerText = catLabel;
+            
+            // Set categories colors
+            catBadge.className = `px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${getCategoryBadgeColors(calc.category)}`;
+            
+            // Update Star Bookmark Button
+            updateFavoriteBtnUI(calc.id);
+            
+            // Load custom fields inputs
+            loadInputs(calc.inputs);
+            
+            // Highlight active sidebar item
+            calculators.forEach(c => {
+                let el = document.getElementById(`sidebar-item-${c.id}`);
+                if (el) {
+                    if (c.id === id) {
+                        el.classList.add('bg-slate-100', 'border-slate-200');
+                    } else {
+                        el.classList.remove('bg-slate-100', 'border-slate-200');
+                    }
+                }
+            });
+            
+            // Force calculation initial
+            triggerCalculation();
+            
+            // Scroll to workspace on mobile
+            if (window.innerWidth < 1024) {
+                closeDrawer();
+                document.getElementById('calculator-workspace').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function loadInputs(inputs) {
+            let container = document.getElementById('calc-inputs-container');
+            container.innerHTML = '';
+            
+            inputs.forEach(inp => {
+                let div = document.createElement('div');
+                div.id = `input-block-${inp.id}`;
+                div.className = "space-y-2.5 transition-all";
+                
+                // Add conditional flags
+                if (inp.cond) {
+                    div.setAttribute('data-cond', inp.cond);
+                }
+                
+                let label = `<label class="block text-xs font-bold uppercase tracking-wider text-slate-400">${inp.label}</label>`;
+                let fieldHTML = '';
+                
+                if (inp.type === 'radio') {
+                    fieldHTML = `<div class="flex flex-col gap-2">`;
+                    inp.options.forEach((opt, idx) => {
+                        fieldHTML += `
+                            <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition select-none">
+                                <input type="radio" name="${inp.id}" value="${opt.val}" ${idx === 0 ? 'checked' : ''} onchange="triggerCalculation()" class="mt-0.5 accent-brand-500 w-4 h-4 shrink-0">
+                                <span class="text-xs font-semibold text-slate-700 leading-normal">${opt.text}</span>
+                            </label>
+                        `;
+                    });
+                    fieldHTML += `</div>`;
+                } 
+                else if (inp.type === 'checkbox') {
+                    let weight = inp.val;
+                    fieldHTML = `
+                        <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition select-none">
+                            <input type="checkbox" id="${inp.id}" value="${weight}" onchange="triggerCalculation()" class="mt-0.5 accent-brand-500 w-4 h-4 shrink-0">
+                            <span class="text-xs font-semibold text-slate-700 leading-normal">${inp.label}</span>
+                        </label>
+                    `;
+                    label = ''; // Label is inside checkbox
+                } 
+                else if (inp.type === 'number') {
+                    fieldHTML = `
+                        <div class="flex gap-2">
+                            <input type="number" id="${inp.id}" min="${inp.min}" max="${inp.max}" value="${inp.default}" step="${inp.step || 1}" oninput="triggerCalculation()" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm focus:ring focus-ring text-slate-800 transition">
+                        </div>
+                    `;
+                }
+                else if (inp.type === 'select') {
+                    fieldHTML = `<select id="${inp.id}" onchange="triggerCalculation(); checkConditionalInputs();" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm focus:ring focus-ring text-slate-800 transition">`;
+                    inp.options.forEach(opt => {
+                        fieldHTML += `<option value="${opt.val}">${opt.text}</option>`;
+                    });
+                    fieldHTML += `</select>`;
+                }
+                
+                div.innerHTML = label + fieldHTML;
+                container.appendChild(div);
+            });
+            
+            checkConditionalInputs();
+        }
+
+        // Hide/Show fields that depend on selections (e.g., TIMI STEMI vs NSTEMI inputs)
+        function checkConditionalInputs() {
+            let blocks = document.querySelectorAll('[data-cond]');
+            blocks.forEach(block => {
+                let cond = block.getAttribute('data-cond');
+                let parts = cond.split(':');
+                let parentId = parts[0];
+                let expectedVal = parts[1];
+                
+                let parentEl = document.getElementById(parentId);
+                if (!parentEl) {
+                    // Could be radio button
+                    let radios = document.getElementsByName(parentId);
+                    let actualVal = '';
+                    radios.forEach(r => { if (r.checked) actualVal = r.value; });
+                    if (actualVal === expectedVal) {
+                        block.classList.remove('hidden');
+                    } else {
+                        block.classList.add('hidden');
+                    }
+                } else {
+                    if (parentEl.value === expectedVal) {
+                        block.classList.remove('hidden');
+                    } else {
+                        block.classList.add('hidden');
+                    }
+                }
+            });
+        }
+
+        // Calculation processing
+        function triggerCalculation() {
+            let activeId = document.getElementById('active-calc-ref-id').innerText;
+            if (!activeId) return;
+            
+            let calc = calculators.find(c => c.id === activeId);
+            if (!calc) return;
+            
+            // Gather input values
+            let vals = {};
+            calc.inputs.forEach(inp => {
+                let block = document.getElementById(`input-block-${inp.id}`);
+                // Only gather if input is not hidden by conditional logic
+                if (block && block.classList.contains('hidden')) {
+                    return;
+                }
+                
+                if (inp.type === 'radio') {
+                    let radios = document.getElementsByName(inp.id);
+                    radios.forEach(rad => {
+                        if (rad.checked) vals[inp.id] = rad.value;
+                    });
+                } else if (inp.type === 'checkbox') {
+                    let check = document.getElementById(inp.id);
+                    vals[inp.id] = check ? check.checked : false;
+                } else if (inp.type === 'number') {
+                    let num = document.getElementById(inp.id);
+                    vals[inp.id] = num ? num.value : inp.default;
+                } else if (inp.type === 'select') {
+                    let sel = document.getElementById(inp.id);
+                    vals[inp.id] = sel ? sel.value : '';
+                }
+            });
+            
+            // Calculate
+            let result = calc.calculate(vals);
+            
+            // Display outputs
+            let scoreEl = document.getElementById('result-score');
+            let maxEl = document.getElementById('result-max-score');
+            let badge = document.getElementById('result-badge');
+            let interp = document.getElementById('result-interpretation');
+            let rec = document.getElementById('result-recommendation');
+            let ring = document.getElementById('result-score-ring');
+            
+            scoreEl.innerText = result.score;
+            if (typeof result.max === 'number') {
+                maxEl.innerText = `dari ${result.max}`;
+                maxEl.classList.remove('hidden');
+            } else {
+                maxEl.innerText = result.max; // Units string like 'mL/min' or '%'
+                if (!result.max) maxEl.classList.add('hidden');
+                else maxEl.classList.remove('hidden');
+            }
+            
+            badge.innerText = result.risk;
+            interp.innerHTML = result.interpretation;
+            rec.innerHTML = result.recommendation;
+            
+            // Apply colors based on risk
+            let color = result.color; // 'emerald', 'amber', 'rose', 'slate', 'teal', 'orange'
+            let ringColorClass = 'border-slate-200';
+            let badgeColorClass = '';
+            
+            if (color === 'emerald') {
+                ringColorClass = 'border-emerald-500';
+                badgeColorClass = 'bg-emerald-600 text-white shadow-md shadow-emerald-500/25';
+            } else if (color === 'teal') {
+                ringColorClass = 'border-teal-500';
+                badgeColorClass = 'bg-teal-600 text-white shadow-md shadow-teal-500/25';
+            } else if (color === 'amber') {
+                ringColorClass = 'border-amber-500';
+                badgeColorClass = 'bg-amber-400 text-slate-900 shadow-md shadow-amber-500/25 font-black';
+            } else if (color === 'orange') {
+                ringColorClass = 'border-orange-500';
+                badgeColorClass = 'bg-orange-500 text-white shadow-md shadow-orange-500/25';
+            } else if (color === 'rose') {
+                ringColorClass = 'border-rose-500';
+                badgeColorClass = 'bg-rose-500 text-white shadow-md shadow-rose-500/25';
+            } else {
+                ringColorClass = 'border-slate-400';
+                badgeColorClass = 'bg-slate-600 text-white shadow-md';
+            }
+            
+            ring.className = `relative w-28 h-28 rounded-full flex flex-col items-center justify-center border-4 ${ringColorClass} transition-colors duration-300`;
+            badge.className = `mt-4 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${badgeColorClass} transition-colors duration-300`;
+        }
+
+        // Copy clinically formatted summary to clipboard
+        function copyClinicalSummary() {
+            let activeId = document.getElementById('active-calc-ref-id').innerText;
+            let calc = calculators.find(c => c.id === activeId);
+            if (!calc) return;
+            
+            let score = document.getElementById('result-score').innerText;
+            let maxElText = document.getElementById('result-max-score').innerText;
+            let risk = document.getElementById('result-badge').innerText;
+            let interp = document.getElementById('result-interpretation').innerText;
+            let rec = document.getElementById('result-recommendation').innerText;
+            
+            // Build clinic text
+            let text = `[CardioCalc Hub - RESUME KLINIS]\n`;
+            text += `Alat Kalkulasi : ${calc.name}\n`;
+            text += `Hasil Akhir    : ${score} ${maxElText}\n`;
+            text += `Stratifikasi  : ${risk}\n`;
+            text += `Interpretasi  : ${interp}\n`;
+            text += `Rekomendasi   : ${rec}\n`;
+            text += `Waktu Input   : ${new Date().toLocaleString('id-ID')}\n`;
+            text += `----------------------------------------------\n`;
+            text += `*Konfirmasi klinis manual oleh dokter tetap diwajibkan.`;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                let toast = document.getElementById('copy-toast');
+                toast.classList.remove('hidden');
+                setTimeout(() => toast.classList.add('hidden'), 2500);
+            });
+        }
+
+        function scrollSidebarToTop() {
+            document.getElementById('calc-list').scrollTop = 0;
+        }
+
+        function backToWelcome() {
+            document.getElementById('welcome-panel').classList.remove('hidden');
+            document.getElementById('calculator-workspace').classList.add('hidden');
+            
+            // remove highlight in list
+            calculators.forEach(c => {
+                let el = document.getElementById(`sidebar-item-${c.id}`);
+                if (el) el.classList.remove('bg-slate-100', 'border-slate-200');
+            });
+        }
+
+        // Side Drawer controls for mobile
+        function openDrawer() {
+            const drawer = document.getElementById('drawer-menu');
+            const overlay = document.getElementById('drawer-overlay');
+            if (drawer && overlay) {
+                drawer.classList.remove('-translate-x-full');
+                drawer.classList.add('translate-x-0');
+                overlay.classList.remove('hidden');
+                setTimeout(() => {
+                    overlay.classList.remove('opacity-0');
+                    overlay.classList.add('opacity-100');
+                }, 10);
+            }
+        }
+
+        function closeDrawer() {
+            const drawer = document.getElementById('drawer-menu');
+            const overlay = document.getElementById('drawer-overlay');
+            if (drawer && overlay) {
+                drawer.classList.remove('translate-x-0');
+                drawer.classList.add('-translate-x-full');
+                overlay.classList.remove('opacity-100');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                }, 300);
+            }
+        }
+    </script>
+</body>
+</html>
