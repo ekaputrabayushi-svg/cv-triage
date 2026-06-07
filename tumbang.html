@@ -1,0 +1,1952 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0f172a">
+    <title>Kalkulator & Grafik Tumbuh Kembang WHO - Khusus PJB & Umum</title>
+    
+    <!-- CDNs -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        h1, h2, h3, h4, .font-display {
+            font-family: 'Outfit', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        /* =============================================
+           MOBILE-FIRST STYLES
+        ============================================= */
+
+        /* Safe-area bottom padding for phones with home bars */
+        .pb-safe {
+            padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+        }
+
+        /* Touch targets – all interactive elements at least 44px */
+        @media (max-width: 767px) {
+            input[type="text"],
+            input[type="date"],
+            input[type="number"],
+            select {
+                min-height: 44px;
+                font-size: 16px !important; /* Prevents iOS auto-zoom */
+            }
+            button {
+                min-height: 44px;
+            }
+        }
+
+        /* Collapsible sidebar panel on mobile */
+        #sidebar-toggle-btn {
+            display: none;
+        }
+        @media (max-width: 1023px) {
+            #sidebar-toggle-btn {
+                display: flex;
+            }
+            #sidebar-collapsible {
+                transition: max-height 0.35s ease, opacity 0.3s ease;
+                overflow: hidden;
+                max-height: 0;
+                opacity: 0;
+            }
+            #sidebar-collapsible.open {
+                max-height: 2000px;
+                opacity: 1;
+            }
+        }
+        @media (min-width: 1024px) {
+            #sidebar-collapsible {
+                max-height: none !important;
+                opacity: 1 !important;
+            }
+        }
+
+        /* Sticky bottom action bar (mobile only) */
+        #mobile-action-bar {
+            display: none;
+        }
+        @media (max-width: 767px) {
+            #mobile-action-bar {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 50;
+                background: rgba(15,23,42,0.97);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border-top: 1px solid rgba(255,255,255,0.08);
+                padding: 0.75rem 1rem;
+                padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+                gap: 0.75rem;
+            }
+        }
+
+        /* Chart tab bar: horizontal scroll on mobile */
+        #chart-tab-bar {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        #chart-tab-bar::-webkit-scrollbar { display: none; }
+
+        /* Smooth card entry animation */
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card-animate {
+            animation: cardIn 0.25s ease both;
+        }
+
+        /* Slider custom style */
+        .slider-rose {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 9999px;
+            background: linear-gradient(to right, #f43f5e, #fb923c);
+            outline: none;
+            cursor: pointer;
+        }
+        .slider-rose::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #f43f5e;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(244,63,94,0.4);
+        }
+        .slider-rose::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #f43f5e;
+            cursor: pointer;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+                font-size: 11pt !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            .print-card {
+                border: 1px solid #cbd5e1 !important;
+                box-shadow: none !important;
+                background: white !important;
+                page-break-inside: avoid;
+            }
+            .print-grid {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 1rem !important;
+            }
+            .chart-print-container {
+                max-height: 350px !important;
+                page-break-after: always;
+            }
+            #mobile-action-bar { display: none !important; }
+        }
+        .print-only {
+            display: none;
+        }
+    </style>
+</head><body class="bg-gradient-to-tr from-slate-50 via-slate-100 to-indigo-50/20 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-indigo-200 pb-safe">
+
+    <!-- Header (No Print) -->
+    <header class="bg-slate-900 text-white shadow-md border-b border-slate-800 sticky top-0 z-40 no-print">
+        <div class="max-w-7xl mx-auto px-3 md:px-4 py-3 md:py-3.5 flex justify-between items-center gap-2 md:gap-3">
+            <!-- Logo & Title -->
+            <div class="flex items-center gap-2.5 md:gap-3 min-w-0">
+                <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-rose-500 flex items-center justify-center shadow-lg shrink-0">
+                    <i data-lucide="heart-pulse" class="text-white w-5 h-5 md:w-6 md:h-6"></i>
+                </div>
+                <div class="min-w-0">
+                    <h1 class="text-sm md:text-lg font-black tracking-tight leading-none font-display truncate">Tumbuh Kembang WHO</h1>
+                    <span class="text-[9px] md:text-[10px] uppercase font-bold tracking-wider text-slate-400 hidden sm:block">Deteksi Gagal Tumbuh Pasien PJB &amp; Umum</span>
+                </div>
+            </div>
+            
+            <!-- Desktop action buttons -->
+            <div class="hidden md:flex items-center gap-2">
+                <button onclick="resetToNewCase()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 transition border border-slate-700">
+                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Kasus Baru (Reset)
+                </button>
+                <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 transition shadow-sm border border-emerald-500">
+                    <i data-lucide="printer" class="w-3.5 h-3.5"></i> Cetak PDF
+                </button>
+            </div>
+
+            <!-- Mobile: sidebar toggle + icon buttons -->
+            <div class="flex md:hidden items-center gap-1.5">
+                <button onclick="resetToNewCase()" class="w-9 h-9 bg-slate-800 border border-slate-700 rounded-lg flex items-center justify-center text-slate-300 active:bg-slate-700 transition" title="Kasus Baru">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                </button>
+                <button id="sidebar-toggle-btn" onclick="toggleSidebar()" class="w-9 h-9 bg-indigo-600 border border-indigo-500 rounded-lg flex items-center justify-center text-white active:bg-indigo-700 transition" title="Parameter Anak">
+                    <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Sticky Bottom Action Bar -->
+    <div id="mobile-action-bar" class="no-print">
+        <button onclick="resetToNewCase()" class="flex-1 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold py-2.5 rounded-xl transition active:scale-95">
+            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+            <span>Reset</span>
+        </button>
+        <button onclick="window.print()" class="flex-1 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2.5 rounded-xl transition active:scale-95">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            <span>Cetak PDF</span>
+        </button>
+        <button onclick="toggleSidebar()" class="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2.5 rounded-xl transition active:scale-95" id="mobile-sidebar-fab">
+            <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+            <span>Parameter</span>
+        </button>
+    </div>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-3 md:px-4 py-4 md:py-6 w-full flex-grow flex flex-col lg:flex-row gap-4 md:gap-6">
+
+        <!-- LEFT SIDEBAR: Child inputs & PJB Symptoms Checklist (No Print) -->
+        <!-- LEFT SIDEBAR: Child inputs & PJB Symptoms (collapsible on mobile) -->
+        <aside class="w-full lg:w-[350px] shrink-0 no-print">
+            <!-- Mobile collapsible toggle header -->
+            <button onclick="toggleSidebar()" class="lg:hidden w-full flex items-center justify-between glass-panel rounded-2xl border border-slate-200/60 px-4 py-3 mb-3 font-bold text-sm text-slate-700 active:bg-slate-50 transition">
+                <span class="flex items-center gap-2">
+                    <i data-lucide="user-round" class="w-4 h-4 text-indigo-500"></i>
+                    Parameter & Profil Anak
+                </span>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 sidebar-chevron transition-transform duration-300"></i>
+            </button>
+            <div id="sidebar-collapsible" class="space-y-4 md:space-y-5">
+            
+            <!-- Quick Child Profile Input Form -->
+            <div class="glass-panel rounded-2xl shadow-sm border border-slate-200/60 p-5">
+                <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-4 font-display">Parameter Anak</h2>
+                
+                <div class="space-y-3.5 text-xs font-semibold text-slate-700">
+                    <div>
+                        <label class="block text-slate-500 mb-1">Nama Anak (Opsional - untuk Laporan)</label>
+                        <input type="text" id="p-name" oninput="updateProfileFromInputs()" placeholder="Masukkan nama anak" class="w-full text-xs border border-slate-200 rounded-lg px-2.5 py-2 outline-none focus:border-indigo-500 font-bold text-slate-800">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-slate-500 mb-1">Jenis Kelamin</label>
+                            <select id="p-gender" onchange="updateProfileFromInputs()" class="w-full text-xs border border-slate-200 rounded-lg px-2.5 py-2 outline-none focus:border-indigo-500 font-bold text-slate-800 cursor-pointer">
+                                <option value="boys">Laki-laki (Boys)</option>
+                                <option value="girls">Perempuan (Girls)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-slate-500 mb-1">Tanggal Lahir</label>
+                            <input type="date" id="p-dob" onchange="updateProfileFromInputs()" class="w-full text-xs border border-slate-200 rounded-lg px-2 py-2 outline-none focus:border-indigo-500 font-bold text-slate-800">
+                        </div>
+                    </div>
+
+                    <!-- Prematurity Configuration -->
+                    <div class="bg-slate-50 border border-slate-100 rounded-xl p-3 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <label class="text-slate-600 font-bold cursor-pointer select-none" for="p-prem">Lahir Prematur (&lt; 37 Mgg)?</label>
+                            <input type="checkbox" id="p-prem" class="w-4 h-4 accent-indigo-600" onchange="togglePrematureInput(this.checked)">
+                        </div>
+                        <div id="prem-detail-section" class="hidden grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-slate-500 mb-1">Usia Gestasi (Mgg)</label>
+                                <input type="number" id="p-gest" min="24" max="36" value="32" oninput="updateProfileFromInputs()" class="w-full text-xs border border-slate-200 rounded-md px-2 py-1.5 outline-none focus:border-indigo-500 font-bold text-slate-800">
+                            </div>
+                            <div class="text-[10px] text-slate-400 leading-normal flex items-center">
+                                *Koreksi usia digunakan otomatis untuk grafik tumbuh kembang anak &lt; 2 tahun.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PJB (CHD) Symptoms Checklist -->
+            <div class="glass-panel rounded-2xl shadow-sm border border-slate-200/60 p-5">
+                <div class="flex justify-between items-center mb-3 border-b border-slate-100 pb-2">
+                    <h2 class="text-sm font-extrabold uppercase tracking-wider text-rose-500 flex items-center gap-1.5 font-display">
+                        <i data-lucide="heart-pulse" class="w-4 h-4"></i> Kondisi & Gejala PJB
+                    </h2>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="pjb-active" class="sr-only peer" onchange="togglePjbActive(this.checked)">
+                        <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-500"></div>
+                    </label>
+                </div>
+
+                <!-- PJB Config Checklist (Toggled) -->
+                <div id="pjb-checklist-section" class="space-y-4 pt-1 hidden">
+                    <div class="bg-rose-50/50 border border-rose-100 p-2.5 rounded-lg text-[10px] text-rose-950 font-medium leading-relaxed">
+                        Centang gejala di bawah untuk mengukur tingkat keparahan hemodinamik anak. <strong>Faktor stres kardiologi (AF) akan disesuaikan otomatis.</strong>
+                    </div>
+
+                    <div class="space-y-2.5 text-xs font-semibold text-slate-700">
+                        <label class="flex gap-2 items-start cursor-pointer select-none">
+                            <input type="checkbox" id="symp-fatigue" class="mt-0.5 w-3.5 h-3.5 accent-rose-500 rounded" onchange="updateProfileFromInputs()">
+                            <span>Mudah lelah saat menetek/makan (feeding fatigue)</span>
+                        </label>
+                        <label class="flex gap-2 items-start cursor-pointer select-none">
+                            <input type="checkbox" id="symp-sweat" class="mt-0.5 w-3.5 h-3.5 accent-rose-500 rounded" onchange="updateProfileFromInputs()">
+                            <span>Dahi berkeringat dingin saat makan/menyusu</span>
+                        </label>
+                        <label class="flex gap-2 items-start cursor-pointer select-none">
+                            <input type="checkbox" id="symp-tachypnea" class="mt-0.5 w-3.5 h-3.5 accent-rose-500 rounded" onchange="updateProfileFromInputs()">
+                            <span>Napas cepat/sesak saat istirahat (takipnea)</span>
+                        </label>
+                        <label class="flex gap-2 items-start cursor-pointer select-none">
+                            <input type="checkbox" id="symp-cyanosis" class="mt-0.5 w-3.5 h-3.5 accent-rose-500 rounded" onchange="updateProfileFromInputs()">
+                            <span>Bibir/ujung kuku jari membiru (sianosis)</span>
+                        </label>
+                        <label class="flex gap-2 items-start cursor-pointer select-none">
+                            <input type="checkbox" id="symp-meds" class="mt-0.5 w-3.5 h-3.5 accent-rose-500 rounded" onchange="updateProfileFromInputs()">
+                            <span>Mengonsumsi obat gagal jantung (Furosemid/Digoxin/dll.)</span>
+                        </label>
+                    </div>
+
+                    <div class="border-t border-slate-100 pt-3">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pola Pemberian Nutrisi</label>
+                        <select id="pjb-nut-type" onchange="updateProfileFromInputs()" class="w-full text-xs bg-white border border-slate-200 rounded px-2.5 py-1.5 outline-none font-semibold text-slate-700">
+                            <optgroup label="Bayi &lt; 6 Bulan">
+                                <option value="asi_murni">ASI Eksklusif (Menyusu Langsung)</option>
+                                <option value="asi_perah">ASI Perah (ASIP) / Botol</option>
+                                <option value="sufor_standar">Susu Formula Standar (0.67 kcal/mL)</option>
+                                <option value="sufor_tinggi">Susu Formula Padat Kalori (&ge; 1.0 kcal/mL)</option>
+                                <option value="asi_sufor">Campuran ASI + Susu Formula</option>
+                            </optgroup>
+                            <optgroup label="MPASI (6–24 Bulan)">
+                                <option value="mpasi_asi">MPASI + ASI/Sufor Lanjutan</option>
+                                <option value="mpasi_sufor">MPASI + Sufor Lanjutan Tinggi Kalori</option>
+                                <option value="mpasi_saja">MPASI Saja (tanpa susu)</option>
+                            </optgroup>
+                            <optgroup label="Anak &gt; 2 Tahun">
+                                <option value="diet_biasa">Makanan Keluarga / Diet Biasa</option>
+                                <option value="diet_tinggi_kalori">Diet Tinggi Kalori & Protein (Catch-up)</option>
+                                <option value="diet_lunak">Makanan Lunak / Dimodifikasi Tekstur</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Non PJB Info -->
+                <div id="pjb-off-section" class="text-xs text-slate-400 py-3 text-center font-medium leading-relaxed">
+                    Gejala PJB dinonaktifkan. Aktifkan sakelar di atas untuk mendeteksi tingkat keparahan dan menghitung faktor stres metabolisme.
+                </div>
+            </div>
+
+            </div>
+        </aside>
+
+        <!-- RIGHT AREA: Dashboards, Graphs, Logs, Recommendations -->
+        <div class="flex-grow space-y-4 md:space-y-6">
+            
+            <!-- CURRENT VISIT STATUS CARDS -->
+            <section class="grid grid-cols-3 gap-2 md:gap-4">
+                
+                <!-- BB/U Card -->
+                <div class="glass-panel rounded-xl md:rounded-2xl shadow-sm border border-slate-200/60 p-3 md:p-4 flex flex-col justify-between min-h-[90px] md:min-h-[110px] relative overflow-hidden card-animate" id="card-status-wfa">
+                    <div>
+                        <span class="text-[8px] md:text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block font-display leading-tight">BB/U</span>
+                        <h3 class="text-base md:text-xl font-black mt-0.5 md:mt-1 text-slate-800 leading-tight" id="stat-wfa-title">-</h3>
+                    </div>
+                    <div class="mt-2 md:mt-3 pt-1.5 md:pt-2 border-t border-slate-100/60">
+                        <span class="text-[9px] md:text-xs font-semibold text-slate-500 block" id="stat-wfa-zscore">Z: -</span>
+                        <span class="text-[8px] md:text-[9px] font-bold px-1.5 py-0.5 rounded-full block w-fit mt-0.5" id="stat-wfa-badge">-</span>
+                    </div>
+                </div>
+
+                <!-- TB/U Card -->
+                <div class="glass-panel rounded-xl md:rounded-2xl shadow-sm border border-slate-200/60 p-3 md:p-4 flex flex-col justify-between min-h-[90px] md:min-h-[110px] relative overflow-hidden card-animate" id="card-status-hfa">
+                    <div>
+                        <span class="text-[8px] md:text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block font-display leading-tight">TB/U</span>
+                        <h3 class="text-base md:text-xl font-black mt-0.5 md:mt-1 text-slate-800 leading-tight" id="stat-hfa-title">-</h3>
+                    </div>
+                    <div class="mt-2 md:mt-3 pt-1.5 md:pt-2 border-t border-slate-100/60">
+                        <span class="text-[9px] md:text-xs font-semibold text-slate-500 block" id="stat-hfa-zscore">Z: -</span>
+                        <span class="text-[8px] md:text-[9px] font-bold px-1.5 py-0.5 rounded-full block w-fit mt-0.5" id="stat-hfa-badge">-</span>
+                    </div>
+                </div>
+
+                <!-- IMT/U Card -->
+                <div class="glass-panel rounded-xl md:rounded-2xl shadow-sm border border-slate-200/60 p-3 md:p-4 flex flex-col justify-between min-h-[90px] md:min-h-[110px] relative overflow-hidden card-animate" id="card-status-bfa">
+                    <div>
+                        <span class="text-[8px] md:text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block font-display leading-tight">IMT/U</span>
+                        <h3 class="text-base md:text-xl font-black mt-0.5 md:mt-1 text-slate-800 leading-tight" id="stat-bfa-title">-</h3>
+                    </div>
+                    <div class="mt-2 md:mt-3 pt-1.5 md:pt-2 border-t border-slate-100/60">
+                        <span class="text-[9px] md:text-xs font-semibold text-slate-500 block" id="stat-bfa-zscore">Z: -</span>
+                        <span class="text-[8px] md:text-[9px] font-bold px-1.5 py-0.5 rounded-full block w-fit mt-0.5" id="stat-bfa-badge">-</span>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Failure to Thrive (FTT) Alert Card (Conditional) -->
+            <div id="ftt-warning-container" class="hidden no-print">
+                <!-- Filled dynamically by JS if FTT is detected -->
+            </div>
+
+            <!-- GRAPH SECTION -->
+            <section class="glass-panel rounded-2xl shadow-sm border border-slate-200/60 p-3 md:p-5 flex flex-col">
+                
+                <!-- Chart Navigation Tabs -->
+                <div class="flex flex-col sm:flex-row sm:flex-wrap sm:justify-between sm:items-center gap-2 md:gap-3 mb-3 md:mb-4 no-print">
+                    <!-- Scrollable tab bar -->
+                    <div id="chart-tab-bar" class="flex bg-slate-100 border border-slate-200 rounded-xl p-1 gap-1 w-full sm:w-auto">
+                        <button onclick="switchChartTab('weight')" id="tab-chart-weight" class="flex-1 sm:flex-none px-3 md:px-4 py-2 text-xs font-extrabold rounded-lg transition duration-200 shadow-sm bg-white text-slate-800 font-display whitespace-nowrap">⚖️ BB/U</button>
+                        <button onclick="switchChartTab('height')" id="tab-chart-height" class="flex-1 sm:flex-none px-3 md:px-4 py-2 text-xs font-extrabold rounded-lg transition duration-200 text-slate-500 hover:text-slate-700 bg-transparent font-display whitespace-nowrap">📏 TB/U</button>
+                        <button onclick="switchChartTab('bmi')" id="tab-chart-bmi" class="flex-1 sm:flex-none px-3 md:px-4 py-2 text-xs font-extrabold rounded-lg transition duration-200 text-slate-500 hover:text-slate-700 bg-transparent font-display whitespace-nowrap">📊 IMT/U</button>
+                    </div>
+                    
+                    <div class="text-[10px] md:text-xs font-medium text-slate-500 flex items-center gap-2 md:gap-3">
+                        <span class="flex items-center gap-1"><span class="w-3 h-0.5 bg-black inline-block border-t border-black"></span> Kurva Anak</span>
+                        <span class="flex items-center gap-1"><span class="w-3 h-2 rounded bg-emerald-500/20 border border-emerald-500 inline-block"></span> Normal</span>
+                    </div>
+                </div>
+
+                <!-- Chart Canvas Wrapper -->
+                <div class="relative w-full h-[260px] sm:h-[320px] md:h-[380px] chart-print-container">
+                    <canvas id="growthChart"></canvas>
+                </div>
+            </section>
+
+            <!-- MEASUREMENT LOGGER & HISTORY -->
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                
+                <!-- Input New Visit (No Print) -->
+                <div class="glass-panel rounded-2xl shadow-sm border border-slate-200/60 p-4 md:p-5 md:col-span-1 no-print">
+                    <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-500 border-b border-slate-100 pb-2 mb-3 md:mb-4 font-display">Tambah Pemeriksaan</h3>
+                    
+                    <form id="visit-form" onsubmit="addVisit(event)" class="space-y-3 md:space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Tanggal Pemeriksaan</label>
+                            <input type="date" id="v-date" required class="w-full text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 font-semibold">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Berat (kg)</label>
+                                <input type="number" step="0.01" id="v-weight" inputmode="decimal" required min="1" max="40" class="w-full text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 font-bold" placeholder="8.5">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Tinggi (cm)</label>
+                                <input type="number" step="0.1" id="v-height" inputmode="decimal" required min="35" max="130" class="w-full text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 font-bold" placeholder="72.4">
+                            </div>
+                        </div>
+                        <button type="submit" id="btn-add-visit" class="w-full font-bold py-3 rounded-xl transition duration-200 flex items-center justify-center gap-1.5 shadow-sm text-sm">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Tambah Pemeriksaan
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Visits History List -->
+                <div class="glass-panel rounded-2xl shadow-sm border border-slate-200/60 p-4 md:p-5 md:col-span-2 overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-500 border-b border-slate-100 pb-2 mb-3 font-display">Riwayat Pengukuran</h3>
+                        <!-- Mobile: card-style history; Desktop: table -->
+                        <div class="overflow-x-auto overflow-y-auto max-h-[220px] -mx-1">
+                            <table class="w-full text-xs text-left border-collapse min-w-[480px]">
+                                <thead>
+                                    <tr class="border-b border-slate-200 text-slate-400 font-bold">
+                                        <th class="py-2 px-1">Tanggal</th>
+                                        <th class="py-2 px-1">Usia</th>
+                                        <th class="py-2 px-1">BB (kg)</th>
+                                        <th class="py-2 px-1">TB (cm)</th>
+                                        <th class="py-2 px-1">IMT</th>
+                                        <th class="py-2 px-1 text-center no-print">Hapus</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="visit-history-rows" class="font-medium text-slate-700">
+                                    <!-- Filled by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="text-[10px] text-slate-400 font-semibold mt-3 pt-2 border-t border-slate-100 leading-tight">
+                        *Usia dihitung otomatis. Bayi prematur &lt;24 bln ditampilkan sebagai Usia Koreksi.
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- CLINICAL INSIGHTS: Catch-up Growth & Milk Fortification Calculator -->
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6" id="clinical-insights-section">
+                
+                <!-- Waterlow Catch-up Growth Calorie Calculator -->
+                <div class="glass-panel rounded-2xl shadow-sm border border-slate-200/60 p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-3">
+                            <h3 class="text-sm font-extrabold uppercase tracking-wider text-indigo-900 flex items-center gap-1.5 font-display">
+                                <i data-lucide="calculator" class="w-4 h-4 text-indigo-500"></i> Kalkulator Kalori Catch-up
+                            </h3>
+                            <span class="text-[9px] font-bold px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded">Formula Waterlow</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-4 leading-normal">
+                            Menghitung kebutuhan kalori harian untuk mengejar ketertinggalan pertumbuhan (*catch-up growth*) pada anak malnutrisi/PJB.
+                        </p>
+
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-xs font-bold text-slate-500 mb-1">
+                                    <span>Faktor Stres Metabolisme (AF)</span>
+                                    <span id="calc-af-display" class="text-indigo-600 font-extrabold">1.0 (Normal)</span>
+                                </div>
+                                <div class="bg-slate-100 p-2.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 flex justify-between items-center">
+                                    <span class="text-[10px] text-slate-500">Ditetapkan Otomatis:</span>
+                                    <span class="font-bold text-indigo-700" id="calc-af-desc">PJB Tanpa Gejala</span>
+                                </div>
+                                <span class="text-[9px] text-slate-400 block mt-1 leading-tight">
+                                    *Faktor stres AF disesuaikan secara real-time dari gejala klinis PJB yang Anda centang pada bilah sisi.
+                                </span>
+                            </div>
+
+                            <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-3 grid grid-cols-2 gap-3 text-center text-xs">
+                                <div>
+                                    <span class="block text-slate-400 text-[9px] uppercase font-bold mb-0.5">Target Kenaikan</span>
+                                    <strong class="text-slate-800 text-sm" id="calc-target-velocity">-</strong>
+                                </div>
+                                <div>
+                                    <span class="block text-slate-400 text-[9px] uppercase font-bold mb-0.5">BB Ideal (untuk TB)</span>
+                                    <strong class="text-slate-800 text-sm" id="calc-ideal-weight">-</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+                        <div class="text-left">
+                            <span class="text-[10px] font-bold uppercase text-slate-400 block">Kebutuhan Catch-up</span>
+                            <strong class="text-2xl font-black text-indigo-700 font-display" id="calc-catchup-total">- <span class="text-xs font-bold text-slate-500">kcal/hari</span></strong>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] font-bold uppercase text-slate-400 block">Kepadatan Kalori</span>
+                            <span class="text-sm font-extrabold text-slate-700" id="calc-catchup-per-kg">- kcal/kg/hari</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Milk Fortification Calculator -->
+                <div class="glass-panel rounded-2xl shadow-sm border border-slate-200/60 p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-3">
+                            <h3 class="text-sm font-extrabold uppercase tracking-wider text-rose-900 flex items-center gap-1.5 font-display">
+                                <i data-lucide="droplet" class="w-4 h-4 text-rose-500"></i> Modifikasi Densitas Kalori Susu
+                            </h3>
+                            <span class="text-[9px] font-bold px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 rounded">Panduan Nutrisi</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-4 leading-normal">
+                            Bayi PJB membutuhkan densitas kalori tinggi (0.8 - 1.0 kcal/mL) karena toleransi volume cairan yang rendah (risiko overload).
+                        </p>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="flex justify-between text-xs font-bold text-slate-500 mb-1">
+                                    <span>Target Kepadatan Kalori Susu</span>
+                                    <span id="fort-kcal-val" class="text-rose-600 font-extrabold">0.80 kcal/mL</span>
+                                </label>
+                                <input type="range" id="fort-kcal" min="0.67" max="1.0" step="0.05" value="0.8" oninput="recalculateFortification()" class="slider-rose">
+                                <span class="text-[9px] text-slate-400 block mt-0.5 leading-tight">
+                                    *Standard susu formula adalah 0.67 kcal/mL. Densitas &gt;0.8 kcal/mL harus dalam pengawasan dokter.
+                                </span>
+                            </div>
+
+                            <div class="bg-rose-50 border border-rose-100 rounded-xl p-3 text-xs leading-relaxed text-rose-950 font-medium">
+                                <strong class="block text-rose-800 font-bold mb-1" id="fort-recipe-title">Resep Pencampuran (Volume Akhir 100 mL):</strong>
+                                <div id="fort-recipe-body">
+                                    <!-- Filled by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-[9px] text-slate-400 font-semibold mt-3 leading-tight">
+                        *Catatan: Peningkatan densitas susu berisiko memicu diare osmotik atau dehidrasi jika diberikan tanpa asupan cairan bebas tambahan. Gunakan sesuai anjuran Dokter Spesialis Anak.
+                    </div>
+                </div>
+
+                        <!-- NUTRITION EDUCATION SECTION (Age-adaptive) -->
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6" id="chd-edu-section">
+
+                <!-- Left Panel: Age-adaptive nutrition education -->
+                <div class="glass-panel rounded-2xl shadow-sm border border-slate-200/60 p-5">
+                    <!-- Age group badge -->
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
+                        <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 font-display" id="edu-panel-title">Panduan Nutrisi</h3>
+                        <span id="edu-age-badge" class="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 uppercase tracking-wider">—</span>
+                    </div>
+                    <div id="edu-panel-body" class="text-xs text-slate-600 space-y-2.5 font-medium">
+                        <!-- Filled dynamically by JS based on child age -->
+                        <p class="text-slate-400 italic">Masukkan tanggal lahir anak untuk melihat panduan nutrisi yang sesuai usia.</p>
+                    </div>
+                </div>
+
+                <!-- Right Panel: Red Flags (always shown) -->
+                <div class="glass-panel rounded-2xl shadow-sm border-l-4 border-red-500 p-5">
+                    <h3 class="text-sm font-extrabold uppercase tracking-wider text-red-600 border-b border-red-100 pb-2 mb-3 font-display">Tanda Bahaya (Rujuk Segera!)</h3>
+                    <p class="text-xs text-slate-500 mb-3 leading-normal font-semibold">
+                        Segera hubungi dokter/kardiolog anak jika anak menunjukkan:
+                    </p>
+                    <ul class="text-xs text-red-950 space-y-2 font-medium" id="red-flags-list">
+                        <!-- Filled dynamically based on age -->
+                    </ul>
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+    <!-- Spacer for mobile bottom bar -->
+    <div class="md:hidden h-20"></div>
+
+    <!-- PRINT REPORT ONLY CONTAINER (Printed Page Template) -->
+    <div class="print-only max-w-4xl mx-auto p-6 space-y-6">
+        <div class="border-b-2 border-slate-900 pb-3 flex justify-between items-end">
+            <div>
+                <h1 class="text-2xl font-black font-display text-slate-900">Laporan Pemantauan Tumbuh Kembang Anak</h1>
+                <span class="text-xs font-bold text-slate-500">Resume Klinis & Grafik Pertumbuhan WHO</span>
+            </div>
+            <div class="text-right">
+                <strong class="text-sm font-bold block" id="print-date">Tanggal Cetak: -</strong>
+                <span class="text-xs text-slate-400">Dihasilkan secara digital</span>
+            </div>
+        </div>
+
+        <!-- Print Patient Summary Grid -->
+        <div class="print-grid print-card border border-slate-200 rounded-xl p-4 grid grid-cols-2 gap-4 text-xs font-semibold">
+            <div>
+                <h3 class="font-extrabold uppercase text-[10px] tracking-wider text-slate-400 mb-2 font-display">Identitas Pasien</h3>
+                <table class="w-full text-left">
+                    <tr><td class="text-slate-400 py-0.5">Nama:</td><td class="text-slate-800 py-0.5" id="pr-name">-</td></tr>
+                    <tr><td class="text-slate-400 py-0.5">Tgl Lahir:</td><td class="text-slate-800 py-0.5" id="pr-dob">-</td></tr>
+                    <tr><td class="text-slate-400 py-0.5">Jenis Kelamin:</td><td class="text-slate-800 py-0.5" id="pr-gender">-</td></tr>
+                    <tr><td class="text-slate-400 py-0.5">Riwayat Prematur:</td><td class="text-slate-800 py-0.5" id="pr-prem">-</td></tr>
+                </table>
+            </div>
+            <div>
+                <h3 class="font-extrabold uppercase text-[10px] tracking-wider text-slate-400 mb-2 font-display">Profil Klinis & Nutrisi</h3>
+                <table class="w-full text-left">
+                    <tr><td class="text-slate-400 py-0.5">Diagnosis PJB:</td><td class="text-slate-800 py-0.5" id="pr-pjb">-</td></tr>
+                    <tr><td class="text-slate-400 py-0.5">Gejala PJB:</td><td class="text-slate-800 py-0.5" id="pr-symptoms">-</td></tr>
+                    <tr><td class="text-slate-400 py-0.5">Pola Nutrisi:</td><td class="text-slate-800 py-0.5" id="pr-nut">-</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Print Diagnosis Status Grid -->
+        <div class="print-grid grid grid-cols-3 gap-3">
+            <div class="border border-slate-200 p-3 rounded-lg text-center">
+                <span class="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">BB/U (Berat / Usia)</span>
+                <strong class="text-sm font-bold text-slate-800 block" id="pr-wfa-title">-</strong>
+                <span class="text-[10px] text-slate-500 font-semibold" id="pr-wfa-z">-</span>
+            </div>
+            <div class="border border-slate-200 p-3 rounded-lg text-center">
+                <span class="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">TB/U (Tinggi / Usia)</span>
+                <strong class="text-sm font-bold text-slate-800 block" id="pr-hfa-title">-</strong>
+                <span class="text-[10px] text-slate-500 font-semibold" id="pr-hfa-z">-</span>
+            </div>
+            <div class="border border-slate-200 p-3 rounded-lg text-center">
+                <span class="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">IMT/U (IMT / Usia)</span>
+                <strong class="text-sm font-bold text-slate-800 block" id="pr-bfa-title">-</strong>
+                <span class="text-[10px] text-slate-500 font-semibold" id="pr-bfa-z">-</span>
+            </div>
+        </div>
+
+        <!-- Printable Growth Chart Info -->
+        <div class="border border-slate-200 rounded-xl p-4 text-xs leading-relaxed print-card">
+            <h3 class="font-extrabold uppercase text-[10px] tracking-wider text-slate-400 mb-2 font-display">Kesimpulan Kurva Pertumbuhan</h3>
+            <p id="pr-growth-conclusion" class="font-semibold text-slate-800"></p>
+        </div>
+
+        <!-- Printable Catch-up Calorie Info -->
+        <div class="border border-slate-200 rounded-xl p-4 text-xs leading-relaxed print-card" id="pr-catchup-container">
+            <h3 class="font-extrabold uppercase text-[10px] tracking-wider text-indigo-800 mb-2 font-display">Rencana Dukungan Nutrisi (Formula Waterlow)</h3>
+            <div class="grid grid-cols-2 gap-4 font-semibold text-slate-700">
+                <div>
+                    <span class="text-slate-400 block text-[9px] uppercase">Rekomendasi Energi Harian</span>
+                    <strong class="text-indigo-700 text-lg font-display" id="pr-kcal-total">- kcal/hari</strong>
+                    <span class="text-[10px] text-slate-500 block mt-0.5" id="pr-kcal-per-kg">- kcal/kg/hari</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-[9px] uppercase">Modifikasi Resep Susu</span>
+                    <span id="pr-fort-recipe" class="text-xs text-slate-800 block mt-0.5 leading-snug"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Printable History Table -->
+        <div class="border border-slate-200 rounded-xl p-4 print-card">
+            <h3 class="font-extrabold uppercase text-[10px] tracking-wider text-slate-400 mb-2 font-display">Tabel Riwayat Pengukuran</h3>
+            <table class="w-full text-xs text-left border-collapse font-semibold">
+                <thead>
+                    <tr class="border-b border-slate-200 text-slate-400 font-bold">
+                        <th class="py-1">Tanggal</th>
+                        <th class="py-1">Usia Pemeriksaan</th>
+                        <th class="py-1">Berat (kg)</th>
+                        <th class="py-1">Tinggi (cm)</th>
+                        <th class="py-1">IMT</th>
+                        <th class="py-1">Z-Score BB/U</th>
+                        <th class="py-1">Z-Score TB/U</th>
+                        <th class="py-1">Z-Score IMT/U</th>
+                    </tr>
+                </thead>
+                <tbody id="pr-history-rows" class="text-slate-800">
+                    <!-- Filled by JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- FOOTER (No Print) -->
+    <footer class="bg-slate-100 border-t border-slate-200 text-center py-4 text-xs font-semibold text-slate-400 mt-auto no-print">
+        &copy; 2026 Pediatric Growth & CHD Tracker. Aplikasi Alat Bantu Praktik Klinis Dokter Anak.
+    </footer>
+
+    <!-- JS LOGIC & DATABASE -->
+    <script>
+        // Injection of WHO growth standard tables
+        const WHO_GROWTH_DATA = {"boys":{"weight":{"0":{"L":0.3487,"M":3.3464,"S":0.14602,"sd3neg":2.1,"sd2neg":2.5,"sd1neg":2.9,"sd0":3.3,"sd1":3.9,"sd2":4.4,"sd3":5.0},"1":{"L":0.2297,"M":4.4709,"S":0.13395,"sd3neg":2.9,"sd2neg":3.4,"sd1neg":3.9,"sd0":4.5,"sd1":5.1,"sd2":5.8,"sd3":6.6},"2":{"L":0.197,"M":5.5675,"S":0.12385,"sd3neg":3.8,"sd2neg":4.3,"sd1neg":4.9,"sd0":5.6,"sd1":6.3,"sd2":7.1,"sd3":8.0},"3":{"L":0.1738,"M":6.3762,"S":0.11727,"sd3neg":4.4,"sd2neg":5.0,"sd1neg":5.7,"sd0":6.4,"sd1":7.2,"sd2":8.0,"sd3":9.0},"4":{"L":0.1553,"M":7.0023,"S":0.11316,"sd3neg":4.9,"sd2neg":5.6,"sd1neg":6.2,"sd0":7.0,"sd1":7.8,"sd2":8.7,"sd3":9.7},"5":{"L":0.1395,"M":7.5105,"S":0.1108,"sd3neg":5.3,"sd2neg":6.0,"sd1neg":6.7,"sd0":7.5,"sd1":8.4,"sd2":9.3,"sd3":10.4},"6":{"L":0.1257,"M":7.934,"S":0.10958,"sd3neg":5.7,"sd2neg":6.4,"sd1neg":7.1,"sd0":7.9,"sd1":8.8,"sd2":9.8,"sd3":10.9},"7":{"L":0.1134,"M":8.297,"S":0.10902,"sd3neg":5.9,"sd2neg":6.7,"sd1neg":7.4,"sd0":8.3,"sd1":9.2,"sd2":10.3,"sd3":11.4},"8":{"L":0.1021,"M":8.6151,"S":0.10882,"sd3neg":6.2,"sd2neg":6.9,"sd1neg":7.7,"sd0":8.6,"sd1":9.6,"sd2":10.7,"sd3":11.9},"9":{"L":0.0917,"M":8.9014,"S":0.10881,"sd3neg":6.4,"sd2neg":7.1,"sd1neg":8.0,"sd0":8.9,"sd1":9.9,"sd2":11.0,"sd3":12.3},"10":{"L":0.082,"M":9.1649,"S":0.10891,"sd3neg":6.6,"sd2neg":7.4,"sd1neg":8.2,"sd0":9.2,"sd1":10.2,"sd2":11.4,"sd3":12.7},"11":{"L":0.073,"M":9.4122,"S":0.10906,"sd3neg":6.8,"sd2neg":7.6,"sd1neg":8.4,"sd0":9.4,"sd1":10.5,"sd2":11.7,"sd3":13.0},"12":{"L":0.0644,"M":9.6479,"S":0.10925,"sd3neg":6.9,"sd2neg":7.7,"sd1neg":8.6,"sd0":9.6,"sd1":10.8,"sd2":12.0,"sd3":13.3},"13":{"L":0.0563,"M":9.8749,"S":0.10949,"sd3neg":7.1,"sd2neg":7.9,"sd1neg":8.8,"sd0":9.9,"sd1":11.0,"sd2":12.3,"sd3":13.7},"14":{"L":0.0487,"M":10.0953,"S":0.10976,"sd3neg":7.2,"sd2neg":8.1,"sd1neg":9.0,"sd0":10.1,"sd1":11.3,"sd2":12.6,"sd3":14.0},"15":{"L":0.0413,"M":10.3108,"S":0.11007,"sd3neg":7.4,"sd2neg":8.3,"sd1neg":9.2,"sd0":10.3,"sd1":11.5,"sd2":12.8,"sd3":14.3},"16":{"L":0.0343,"M":10.5228,"S":0.11041,"sd3neg":7.5,"sd2neg":8.4,"sd1neg":9.4,"sd0":10.5,"sd1":11.7,"sd2":13.1,"sd3":14.6},"17":{"L":0.0275,"M":10.7319,"S":0.11079,"sd3neg":7.7,"sd2neg":8.6,"sd1neg":9.6,"sd0":10.7,"sd1":12.0,"sd2":13.4,"sd3":14.9},"18":{"L":0.0211,"M":10.9385,"S":0.11119,"sd3neg":7.8,"sd2neg":8.8,"sd1neg":9.8,"sd0":10.9,"sd1":12.2,"sd2":13.7,"sd3":15.3},"19":{"L":0.0148,"M":11.143,"S":0.11164,"sd3neg":8.0,"sd2neg":8.9,"sd1neg":10.0,"sd0":11.1,"sd1":12.5,"sd2":13.9,"sd3":15.6},"20":{"L":0.0087,"M":11.3462,"S":0.11211,"sd3neg":8.1,"sd2neg":9.1,"sd1neg":10.1,"sd0":11.3,"sd1":12.7,"sd2":14.2,"sd3":15.9},"21":{"L":0.0029,"M":11.5486,"S":0.11261,"sd3neg":8.2,"sd2neg":9.2,"sd1neg":10.3,"sd0":11.5,"sd1":12.9,"sd2":14.5,"sd3":16.2},"22":{"L":-0.0028,"M":11.7504,"S":0.11314,"sd3neg":8.4,"sd2neg":9.4,"sd1neg":10.5,"sd0":11.8,"sd1":13.2,"sd2":14.7,"sd3":16.5},"23":{"L":-0.0083,"M":11.9514,"S":0.11369,"sd3neg":8.5,"sd2neg":9.5,"sd1neg":10.7,"sd0":12.0,"sd1":13.4,"sd2":15.0,"sd3":16.8},"24":{"L":-0.0137,"M":12.1515,"S":0.11426,"sd3neg":8.6,"sd2neg":9.7,"sd1neg":10.8,"sd0":12.2,"sd1":13.6,"sd2":15.3,"sd3":17.1},"25":{"L":-0.0189,"M":12.3502,"S":0.11485,"sd3neg":8.8,"sd2neg":9.8,"sd1neg":11.0,"sd0":12.4,"sd1":13.9,"sd2":15.5,"sd3":17.5},"26":{"L":-0.024,"M":12.5466,"S":0.11544,"sd3neg":8.9,"sd2neg":10.0,"sd1neg":11.2,"sd0":12.5,"sd1":14.1,"sd2":15.8,"sd3":17.8},"27":{"L":-0.0289,"M":12.7401,"S":0.11604,"sd3neg":9.0,"sd2neg":10.1,"sd1neg":11.3,"sd0":12.7,"sd1":14.3,"sd2":16.1,"sd3":18.1},"28":{"L":-0.0337,"M":12.9303,"S":0.11664,"sd3neg":9.1,"sd2neg":10.2,"sd1neg":11.5,"sd0":12.9,"sd1":14.5,"sd2":16.3,"sd3":18.4},"29":{"L":-0.0385,"M":13.1169,"S":0.11723,"sd3neg":9.2,"sd2neg":10.4,"sd1neg":11.7,"sd0":13.1,"sd1":14.8,"sd2":16.6,"sd3":18.7},"30":{"L":-0.0431,"M":13.3,"S":0.11781,"sd3neg":9.4,"sd2neg":10.5,"sd1neg":11.8,"sd0":13.3,"sd1":15.0,"sd2":16.9,"sd3":19.0},"31":{"L":-0.0476,"M":13.4798,"S":0.11839,"sd3neg":9.5,"sd2neg":10.7,"sd1neg":12.0,"sd0":13.5,"sd1":15.2,"sd2":17.1,"sd3":19.3},"32":{"L":-0.052,"M":13.6567,"S":0.11896,"sd3neg":9.6,"sd2neg":10.8,"sd1neg":12.1,"sd0":13.7,"sd1":15.4,"sd2":17.4,"sd3":19.6},"33":{"L":-0.0564,"M":13.8309,"S":0.11953,"sd3neg":9.7,"sd2neg":10.9,"sd1neg":12.3,"sd0":13.8,"sd1":15.6,"sd2":17.6,"sd3":19.9},"34":{"L":-0.0606,"M":14.0031,"S":0.12008,"sd3neg":9.8,"sd2neg":11.0,"sd1neg":12.4,"sd0":14.0,"sd1":15.8,"sd2":17.8,"sd3":20.2},"35":{"L":-0.0648,"M":14.1736,"S":0.12062,"sd3neg":9.9,"sd2neg":11.2,"sd1neg":12.6,"sd0":14.2,"sd1":16.0,"sd2":18.1,"sd3":20.4},"36":{"L":-0.0689,"M":14.3429,"S":0.12116,"sd3neg":10.0,"sd2neg":11.3,"sd1neg":12.7,"sd0":14.3,"sd1":16.2,"sd2":18.3,"sd3":20.7},"37":{"L":-0.0729,"M":14.5113,"S":0.12168,"sd3neg":10.1,"sd2neg":11.4,"sd1neg":12.9,"sd0":14.5,"sd1":16.4,"sd2":18.6,"sd3":21.0},"38":{"L":-0.0769,"M":14.6791,"S":0.1222,"sd3neg":10.2,"sd2neg":11.5,"sd1neg":13.0,"sd0":14.7,"sd1":16.6,"sd2":18.8,"sd3":21.3},"39":{"L":-0.0808,"M":14.8466,"S":0.12271,"sd3neg":10.3,"sd2neg":11.6,"sd1neg":13.1,"sd0":14.8,"sd1":16.8,"sd2":19.0,"sd3":21.6},"40":{"L":-0.0846,"M":15.014,"S":0.12322,"sd3neg":10.4,"sd2neg":11.8,"sd1neg":13.3,"sd0":15.0,"sd1":17.0,"sd2":19.3,"sd3":21.9},"41":{"L":-0.0883,"M":15.1813,"S":0.12373,"sd3neg":10.5,"sd2neg":11.9,"sd1neg":13.4,"sd0":15.2,"sd1":17.2,"sd2":19.5,"sd3":22.1},"42":{"L":-0.092,"M":15.3486,"S":0.12425,"sd3neg":10.6,"sd2neg":12.0,"sd1neg":13.6,"sd0":15.3,"sd1":17.4,"sd2":19.7,"sd3":22.4},"43":{"L":-0.0957,"M":15.5158,"S":0.12478,"sd3neg":10.7,"sd2neg":12.1,"sd1neg":13.7,"sd0":15.5,"sd1":17.6,"sd2":20.0,"sd3":22.7},"44":{"L":-0.0993,"M":15.6828,"S":0.12531,"sd3neg":10.8,"sd2neg":12.2,"sd1neg":13.8,"sd0":15.7,"sd1":17.8,"sd2":20.2,"sd3":23.0},"45":{"L":-0.1028,"M":15.8497,"S":0.12586,"sd3neg":10.9,"sd2neg":12.4,"sd1neg":14.0,"sd0":15.8,"sd1":18.0,"sd2":20.5,"sd3":23.3},"46":{"L":-0.1063,"M":16.0163,"S":0.12643,"sd3neg":11.0,"sd2neg":12.5,"sd1neg":14.1,"sd0":16.0,"sd1":18.2,"sd2":20.7,"sd3":23.6},"47":{"L":-0.1097,"M":16.1827,"S":0.127,"sd3neg":11.1,"sd2neg":12.6,"sd1neg":14.3,"sd0":16.2,"sd1":18.4,"sd2":20.9,"sd3":23.9},"48":{"L":-0.1131,"M":16.3489,"S":0.12759,"sd3neg":11.2,"sd2neg":12.7,"sd1neg":14.4,"sd0":16.3,"sd1":18.6,"sd2":21.2,"sd3":24.2},"49":{"L":-0.1165,"M":16.515,"S":0.12819,"sd3neg":11.3,"sd2neg":12.8,"sd1neg":14.5,"sd0":16.5,"sd1":18.8,"sd2":21.4,"sd3":24.5},"50":{"L":-0.1198,"M":16.6811,"S":0.1288,"sd3neg":11.4,"sd2neg":12.9,"sd1neg":14.7,"sd0":16.7,"sd1":19.0,"sd2":21.7,"sd3":24.8},"51":{"L":-0.123,"M":16.8471,"S":0.12943,"sd3neg":11.5,"sd2neg":13.1,"sd1neg":14.8,"sd0":16.8,"sd1":19.2,"sd2":21.9,"sd3":25.1},"52":{"L":-0.1262,"M":17.0132,"S":0.13005,"sd3neg":11.6,"sd2neg":13.2,"sd1neg":15.0,"sd0":17.0,"sd1":19.4,"sd2":22.2,"sd3":25.4},"53":{"L":-0.1294,"M":17.1792,"S":0.13069,"sd3neg":11.7,"sd2neg":13.3,"sd1neg":15.1,"sd0":17.2,"sd1":19.6,"sd2":22.4,"sd3":25.7},"54":{"L":-0.1325,"M":17.3452,"S":0.13133,"sd3neg":11.8,"sd2neg":13.4,"sd1neg":15.2,"sd0":17.3,"sd1":19.8,"sd2":22.7,"sd3":26.0},"55":{"L":-0.1356,"M":17.5111,"S":0.13197,"sd3neg":11.9,"sd2neg":13.5,"sd1neg":15.4,"sd0":17.5,"sd1":20.0,"sd2":22.9,"sd3":26.3},"56":{"L":-0.1387,"M":17.6768,"S":0.13261,"sd3neg":12.0,"sd2neg":13.6,"sd1neg":15.5,"sd0":17.7,"sd1":20.2,"sd2":23.2,"sd3":26.6},"57":{"L":-0.1417,"M":17.8422,"S":0.13325,"sd3neg":12.1,"sd2neg":13.7,"sd1neg":15.6,"sd0":17.8,"sd1":20.4,"sd2":23.4,"sd3":26.9},"58":{"L":-0.1447,"M":18.0073,"S":0.13389,"sd3neg":12.2,"sd2neg":13.8,"sd1neg":15.8,"sd0":18.0,"sd1":20.6,"sd2":23.7,"sd3":27.2},"59":{"L":-0.1477,"M":18.1722,"S":0.13453,"sd3neg":12.3,"sd2neg":14.0,"sd1neg":15.9,"sd0":18.2,"sd1":20.8,"sd2":23.9,"sd3":27.6},"60":{"L":-0.1506,"M":18.3366,"S":0.13517,"sd3neg":12.4,"sd2neg":14.1,"sd1neg":16.0,"sd0":18.3,"sd1":21.0,"sd2":24.2,"sd3":27.9}},"height":{"0":{"L":1.0,"M":49.8842,"S":0.03795,"sd3neg":44.2,"sd2neg":46.1,"sd1neg":48.0,"sd0":49.9,"sd1":51.8,"sd2":53.7,"sd3":55.6},"1":{"L":1.0,"M":54.7244,"S":0.03557,"sd3neg":48.9,"sd2neg":50.8,"sd1neg":52.8,"sd0":54.7,"sd1":56.7,"sd2":58.6,"sd3":60.6},"2":{"L":1.0,"M":58.4249,"S":0.03424,"sd3neg":52.4,"sd2neg":54.4,"sd1neg":56.4,"sd0":58.4,"sd1":60.4,"sd2":62.4,"sd3":64.4},"3":{"L":1.0,"M":61.4292,"S":0.03328,"sd3neg":55.3,"sd2neg":57.3,"sd1neg":59.4,"sd0":61.4,"sd1":63.5,"sd2":65.5,"sd3":67.6},"4":{"L":1.0,"M":63.886,"S":0.03257,"sd3neg":57.6,"sd2neg":59.7,"sd1neg":61.8,"sd0":63.9,"sd1":66.0,"sd2":68.0,"sd3":70.1},"5":{"L":1.0,"M":65.9026,"S":0.03204,"sd3neg":59.6,"sd2neg":61.7,"sd1neg":63.8,"sd0":65.9,"sd1":68.0,"sd2":70.1,"sd3":72.2},"6":{"L":1.0,"M":67.6236,"S":0.03165,"sd3neg":61.2,"sd2neg":63.3,"sd1neg":65.5,"sd0":67.6,"sd1":69.8,"sd2":71.9,"sd3":74.0},"7":{"L":1.0,"M":69.1645,"S":0.03139,"sd3neg":62.7,"sd2neg":64.8,"sd1neg":67.0,"sd0":69.2,"sd1":71.3,"sd2":73.5,"sd3":75.7},"8":{"L":1.0,"M":70.5994,"S":0.03124,"sd3neg":64.0,"sd2neg":66.2,"sd1neg":68.4,"sd0":70.6,"sd1":72.8,"sd2":75.0,"sd3":77.2},"9":{"L":1.0,"M":71.9687,"S":0.03117,"sd3neg":65.2,"sd2neg":67.5,"sd1neg":69.7,"sd0":72.0,"sd1":74.2,"sd2":76.5,"sd3":78.7},"10":{"L":1.0,"M":73.2812,"S":0.03118,"sd3neg":66.4,"sd2neg":68.7,"sd1neg":71.0,"sd0":73.3,"sd1":75.6,"sd2":77.9,"sd3":80.1},"11":{"L":1.0,"M":74.5388,"S":0.03125,"sd3neg":67.6,"sd2neg":69.9,"sd1neg":72.2,"sd0":74.5,"sd1":76.9,"sd2":79.2,"sd3":81.5},"12":{"L":1.0,"M":75.7488,"S":0.03137,"sd3neg":68.6,"sd2neg":71.0,"sd1neg":73.4,"sd0":75.7,"sd1":78.1,"sd2":80.5,"sd3":82.9},"13":{"L":1.0,"M":76.9186,"S":0.03154,"sd3neg":69.6,"sd2neg":72.1,"sd1neg":74.5,"sd0":76.9,"sd1":79.3,"sd2":81.8,"sd3":84.2},"14":{"L":1.0,"M":78.0497,"S":0.03174,"sd3neg":70.6,"sd2neg":73.1,"sd1neg":75.6,"sd0":78.0,"sd1":80.5,"sd2":83.0,"sd3":85.5},"15":{"L":1.0,"M":79.1458,"S":0.03197,"sd3neg":71.6,"sd2neg":74.1,"sd1neg":76.6,"sd0":79.1,"sd1":81.7,"sd2":84.2,"sd3":86.7},"16":{"L":1.0,"M":80.2113,"S":0.03222,"sd3neg":72.5,"sd2neg":75.0,"sd1neg":77.6,"sd0":80.2,"sd1":82.8,"sd2":85.4,"sd3":88.0},"17":{"L":1.0,"M":81.2487,"S":0.0325,"sd3neg":73.3,"sd2neg":76.0,"sd1neg":78.6,"sd0":81.2,"sd1":83.9,"sd2":86.5,"sd3":89.2},"18":{"L":1.0,"M":82.2587,"S":0.03279,"sd3neg":74.2,"sd2neg":76.9,"sd1neg":79.6,"sd0":82.3,"sd1":85.0,"sd2":87.7,"sd3":90.4},"19":{"L":1.0,"M":83.2418,"S":0.0331,"sd3neg":75.0,"sd2neg":77.7,"sd1neg":80.5,"sd0":83.2,"sd1":86.0,"sd2":88.8,"sd3":91.5},"20":{"L":1.0,"M":84.1996,"S":0.03342,"sd3neg":75.8,"sd2neg":78.6,"sd1neg":81.4,"sd0":84.2,"sd1":87.0,"sd2":89.8,"sd3":92.6},"21":{"L":1.0,"M":85.1348,"S":0.03376,"sd3neg":76.5,"sd2neg":79.4,"sd1neg":82.3,"sd0":85.1,"sd1":88.0,"sd2":90.9,"sd3":93.8},"22":{"L":1.0,"M":86.0477,"S":0.0341,"sd3neg":77.2,"sd2neg":80.2,"sd1neg":83.1,"sd0":86.0,"sd1":89.0,"sd2":91.9,"sd3":94.9},"23":{"L":1.0,"M":86.941,"S":0.03445,"sd3neg":78.0,"sd2neg":81.0,"sd1neg":83.9,"sd0":86.9,"sd1":89.9,"sd2":92.9,"sd3":95.9},"24":{"L":1.0,"M":1.0,"S":0.03507,"sd3neg":78.0,"sd2neg":81.0,"sd1neg":84.1,"sd0":87.1,"sd1":90.2,"sd2":93.2,"sd3":96.3},"25":{"L":1.0,"M":1.0,"S":0.03542,"sd3neg":78.6,"sd2neg":81.7,"sd1neg":84.9,"sd0":88.0,"sd1":91.1,"sd2":94.2,"sd3":97.3},"26":{"L":1.0,"M":1.0,"S":0.03576,"sd3neg":79.3,"sd2neg":82.5,"sd1neg":85.6,"sd0":88.8,"sd1":92.0,"sd2":95.2,"sd3":98.3},"27":{"L":1.0,"M":1.0,"S":0.0361,"sd3neg":79.9,"sd2neg":83.1,"sd1neg":86.4,"sd0":89.6,"sd1":92.9,"sd2":96.1,"sd3":99.3},"28":{"L":1.0,"M":1.0,"S":0.03642,"sd3neg":80.5,"sd2neg":83.8,"sd1neg":87.1,"sd0":90.4,"sd1":93.7,"sd2":97.0,"sd3":100.3},"29":{"L":1.0,"M":1.0,"S":0.03674,"sd3neg":81.1,"sd2neg":84.5,"sd1neg":87.8,"sd0":91.2,"sd1":94.5,"sd2":97.9,"sd3":101.2},"30":{"L":1.0,"M":1.0,"S":0.03704,"sd3neg":81.7,"sd2neg":85.1,"sd1neg":88.5,"sd0":91.9,"sd1":95.3,"sd2":98.7,"sd3":102.1},"31":{"L":1.0,"M":1.0,"S":0.03733,"sd3neg":82.3,"sd2neg":85.7,"sd1neg":89.2,"sd0":92.7,"sd1":96.1,"sd2":99.6,"sd3":103.0},"32":{"L":1.0,"M":1.0,"S":0.03761,"sd3neg":82.8,"sd2neg":86.4,"sd1neg":89.9,"sd0":93.4,"sd1":96.9,"sd2":100.4,"sd3":103.9},"33":{"L":1.0,"M":1.0,"S":0.03787,"sd3neg":83.4,"sd2neg":86.9,"sd1neg":90.5,"sd0":94.1,"sd1":97.6,"sd2":101.2,"sd3":104.8},"34":{"L":1.0,"M":1.0,"S":0.03812,"sd3neg":83.9,"sd2neg":87.5,"sd1neg":91.1,"sd0":94.8,"sd1":98.4,"sd2":102.0,"sd3":105.6},"35":{"L":1.0,"M":1.0,"S":0.03836,"sd3neg":84.4,"sd2neg":88.1,"sd1neg":91.8,"sd0":95.4,"sd1":99.1,"sd2":102.7,"sd3":106.4},"36":{"L":1.0,"M":1.0,"S":0.03858,"sd3neg":85.0,"sd2neg":88.7,"sd1neg":92.4,"sd0":96.1,"sd1":99.8,"sd2":103.5,"sd3":107.2},"37":{"L":1.0,"M":1.0,"S":0.03879,"sd3neg":85.5,"sd2neg":89.2,"sd1neg":93.0,"sd0":96.7,"sd1":100.5,"sd2":104.2,"sd3":108.0},"38":{"L":1.0,"M":1.0,"S":0.039,"sd3neg":86.0,"sd2neg":89.8,"sd1neg":93.6,"sd0":97.4,"sd1":101.2,"sd2":105.0,"sd3":108.8},"39":{"L":1.0,"M":1.0,"S":0.03919,"sd3neg":86.5,"sd2neg":90.3,"sd1neg":94.2,"sd0":98.0,"sd1":101.8,"sd2":105.7,"sd3":109.5},"40":{"L":1.0,"M":1.0,"S":0.03937,"sd3neg":87.0,"sd2neg":90.9,"sd1neg":94.7,"sd0":98.6,"sd1":102.5,"sd2":106.4,"sd3":110.3},"41":{"L":1.0,"M":1.0,"S":0.03954,"sd3neg":87.5,"sd2neg":91.4,"sd1neg":95.3,"sd0":99.2,"sd1":103.2,"sd2":107.1,"sd3":111.0},"42":{"L":1.0,"M":1.0,"S":0.03971,"sd3neg":88.0,"sd2neg":91.9,"sd1neg":95.9,"sd0":99.9,"sd1":103.8,"sd2":107.8,"sd3":111.7},"43":{"L":1.0,"M":1.0,"S":0.03986,"sd3neg":88.4,"sd2neg":92.4,"sd1neg":96.4,"sd0":100.4,"sd1":104.5,"sd2":108.5,"sd3":112.5},"44":{"L":1.0,"M":1.0,"S":0.04002,"sd3neg":88.9,"sd2neg":93.0,"sd1neg":97.0,"sd0":101.0,"sd1":105.1,"sd2":109.1,"sd3":113.2},"45":{"L":1.0,"M":1.0,"S":0.04016,"sd3neg":89.4,"sd2neg":93.5,"sd1neg":97.5,"sd0":101.6,"sd1":105.7,"sd2":109.8,"sd3":113.9},"46":{"L":1.0,"M":1.0,"S":0.04031,"sd3neg":89.8,"sd2neg":94.0,"sd1neg":98.1,"sd0":102.2,"sd1":106.3,"sd2":110.4,"sd3":114.6},"47":{"L":1.0,"M":1.0,"S":0.04045,"sd3neg":90.3,"sd2neg":94.4,"sd1neg":98.6,"sd0":102.8,"sd1":106.9,"sd2":111.1,"sd3":115.2},"48":{"L":1.0,"M":1.0,"S":0.04059,"sd3neg":90.7,"sd2neg":94.9,"sd1neg":99.1,"sd0":103.3,"sd1":107.5,"sd2":111.7,"sd3":115.9},"49":{"L":1.0,"M":1.0,"S":0.04073,"sd3neg":91.2,"sd2neg":95.4,"sd1neg":99.7,"sd0":103.9,"sd1":108.1,"sd2":112.4,"sd3":116.6},"50":{"L":1.0,"M":1.0,"S":0.04086,"sd3neg":91.6,"sd2neg":95.9,"sd1neg":100.2,"sd0":104.4,"sd1":108.7,"sd2":113.0,"sd3":117.3},"51":{"L":1.0,"M":1.0,"S":0.041,"sd3neg":92.1,"sd2neg":96.4,"sd1neg":100.7,"sd0":105.0,"sd1":109.3,"sd2":113.6,"sd3":117.9},"52":{"L":1.0,"M":1.0,"S":0.04113,"sd3neg":92.5,"sd2neg":96.9,"sd1neg":101.2,"sd0":105.6,"sd1":109.9,"sd2":114.2,"sd3":118.6},"53":{"L":1.0,"M":1.0,"S":0.04126,"sd3neg":93.0,"sd2neg":97.4,"sd1neg":101.7,"sd0":106.1,"sd1":110.5,"sd2":114.9,"sd3":119.2},"54":{"L":1.0,"M":1.0,"S":0.04139,"sd3neg":93.4,"sd2neg":97.8,"sd1neg":102.3,"sd0":106.7,"sd1":111.1,"sd2":115.5,"sd3":119.9},"55":{"L":1.0,"M":1.0,"S":0.04152,"sd3neg":93.9,"sd2neg":98.3,"sd1neg":102.8,"sd0":107.2,"sd1":111.7,"sd2":116.1,"sd3":120.6},"56":{"L":1.0,"M":1.0,"S":0.04165,"sd3neg":94.3,"sd2neg":98.8,"sd1neg":103.3,"sd0":107.8,"sd1":112.3,"sd2":116.7,"sd3":121.2},"57":{"L":1.0,"M":1.0,"S":0.04177,"sd3neg":94.7,"sd2neg":99.3,"sd1neg":103.8,"sd0":108.3,"sd1":112.8,"sd2":117.4,"sd3":121.9},"58":{"L":1.0,"M":1.0,"S":0.0419,"sd3neg":95.2,"sd2neg":99.7,"sd1neg":104.3,"sd0":108.9,"sd1":113.4,"sd2":118.0,"sd3":122.6},"59":{"L":1.0,"M":1.0,"S":0.04202,"sd3neg":95.6,"sd2neg":100.2,"sd1neg":104.8,"sd0":109.4,"sd1":114.0,"sd2":118.6,"sd3":123.2},"60":{"L":1.0,"M":1.0,"S":0.04214,"sd3neg":96.1,"sd2neg":100.7,"sd1neg":105.3,"sd0":110.0,"sd1":114.6,"sd2":119.2,"sd3":123.9}},"bmi":{"0":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"1":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"2":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"3":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"4":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"5":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"6":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"7":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"8":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"9":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"10":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"11":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"12":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"13":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"14":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"15":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"16":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"17":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"18":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"19":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"20":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"21":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"22":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"23":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"24":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"25":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"26":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"27":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"28":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"29":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"30":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"31":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"32":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"33":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"34":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"35":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"36":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"37":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"38":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"39":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"40":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"41":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"42":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"43":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"44":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"45":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"46":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"47":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"48":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"49":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"50":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"51":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"52":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"53":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"54":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"55":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"56":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"57":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"58":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"59":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"60":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1}}},"girls":{"weight":{"0":{"L":0.3809,"M":3.2322,"S":0.14171,"sd3neg":2.0,"sd2neg":2.4,"sd1neg":2.8,"sd0":3.2,"sd1":3.7,"sd2":4.2,"sd3":4.8},"1":{"L":0.1714,"M":4.1873,"S":0.13724,"sd3neg":2.7,"sd2neg":3.2,"sd1neg":3.6,"sd0":4.2,"sd1":4.8,"sd2":5.5,"sd3":6.2},"2":{"L":0.0962,"M":5.1282,"S":0.13,"sd3neg":3.4,"sd2neg":3.9,"sd1neg":4.5,"sd0":5.1,"sd1":5.8,"sd2":6.6,"sd3":7.5},"3":{"L":0.0402,"M":5.8458,"S":0.12619,"sd3neg":4.0,"sd2neg":4.5,"sd1neg":5.2,"sd0":5.8,"sd1":6.6,"sd2":7.5,"sd3":8.5},"4":{"L":-0.005,"M":6.4237,"S":0.12402,"sd3neg":4.4,"sd2neg":5.0,"sd1neg":5.7,"sd0":6.4,"sd1":7.3,"sd2":8.2,"sd3":9.3},"5":{"L":-0.043,"M":6.8985,"S":0.12274,"sd3neg":4.8,"sd2neg":5.4,"sd1neg":6.1,"sd0":6.9,"sd1":7.8,"sd2":8.8,"sd3":10.0},"6":{"L":-0.0756,"M":7.297,"S":0.12204,"sd3neg":5.1,"sd2neg":5.7,"sd1neg":6.5,"sd0":7.3,"sd1":8.2,"sd2":9.3,"sd3":10.6},"7":{"L":-0.1039,"M":7.6422,"S":0.12178,"sd3neg":5.3,"sd2neg":6.0,"sd1neg":6.8,"sd0":7.6,"sd1":8.6,"sd2":9.8,"sd3":11.1},"8":{"L":-0.1288,"M":7.9487,"S":0.12181,"sd3neg":5.6,"sd2neg":6.3,"sd1neg":7.0,"sd0":7.9,"sd1":9.0,"sd2":10.2,"sd3":11.6},"9":{"L":-0.1507,"M":8.2254,"S":0.12199,"sd3neg":5.8,"sd2neg":6.5,"sd1neg":7.3,"sd0":8.2,"sd1":9.3,"sd2":10.5,"sd3":12.0},"10":{"L":-0.17,"M":8.48,"S":0.12223,"sd3neg":5.9,"sd2neg":6.7,"sd1neg":7.5,"sd0":8.5,"sd1":9.6,"sd2":10.9,"sd3":12.4},"11":{"L":-0.1872,"M":8.7192,"S":0.12247,"sd3neg":6.1,"sd2neg":6.9,"sd1neg":7.7,"sd0":8.7,"sd1":9.9,"sd2":11.2,"sd3":12.8},"12":{"L":-0.2024,"M":8.9481,"S":0.12268,"sd3neg":6.3,"sd2neg":7.0,"sd1neg":7.9,"sd0":8.9,"sd1":10.1,"sd2":11.5,"sd3":13.1},"13":{"L":-0.2158,"M":9.1699,"S":0.12283,"sd3neg":6.4,"sd2neg":7.2,"sd1neg":8.1,"sd0":9.2,"sd1":10.4,"sd2":11.8,"sd3":13.5},"14":{"L":-0.2278,"M":9.387,"S":0.12294,"sd3neg":6.6,"sd2neg":7.4,"sd1neg":8.3,"sd0":9.4,"sd1":10.6,"sd2":12.1,"sd3":13.8},"15":{"L":-0.2384,"M":9.6008,"S":0.12299,"sd3neg":6.7,"sd2neg":7.6,"sd1neg":8.5,"sd0":9.6,"sd1":10.9,"sd2":12.4,"sd3":14.1},"16":{"L":-0.2478,"M":9.8124,"S":0.12303,"sd3neg":6.9,"sd2neg":7.7,"sd1neg":8.7,"sd0":9.8,"sd1":11.1,"sd2":12.6,"sd3":14.5},"17":{"L":-0.2562,"M":10.0226,"S":0.12306,"sd3neg":7.0,"sd2neg":7.9,"sd1neg":8.9,"sd0":10.0,"sd1":11.4,"sd2":12.9,"sd3":14.8},"18":{"L":-0.2637,"M":10.2315,"S":0.12309,"sd3neg":7.2,"sd2neg":8.1,"sd1neg":9.1,"sd0":10.2,"sd1":11.6,"sd2":13.2,"sd3":15.1},"19":{"L":-0.2703,"M":10.4393,"S":0.12315,"sd3neg":7.3,"sd2neg":8.2,"sd1neg":9.2,"sd0":10.4,"sd1":11.8,"sd2":13.5,"sd3":15.4},"20":{"L":-0.2762,"M":10.6464,"S":0.12323,"sd3neg":7.5,"sd2neg":8.4,"sd1neg":9.4,"sd0":10.6,"sd1":12.1,"sd2":13.7,"sd3":15.7},"21":{"L":-0.2815,"M":10.8534,"S":0.12335,"sd3neg":7.6,"sd2neg":8.6,"sd1neg":9.6,"sd0":10.9,"sd1":12.3,"sd2":14.0,"sd3":16.0},"22":{"L":-0.2862,"M":11.0608,"S":0.1235,"sd3neg":7.8,"sd2neg":8.7,"sd1neg":9.8,"sd0":11.1,"sd1":12.5,"sd2":14.3,"sd3":16.4},"23":{"L":-0.2903,"M":11.2688,"S":0.12369,"sd3neg":7.9,"sd2neg":8.9,"sd1neg":10.0,"sd0":11.3,"sd1":12.8,"sd2":14.6,"sd3":16.7},"24":{"L":-0.2941,"M":11.4775,"S":0.1239,"sd3neg":8.1,"sd2neg":9.0,"sd1neg":10.2,"sd0":11.5,"sd1":13.0,"sd2":14.8,"sd3":17.0},"25":{"L":-0.2975,"M":11.6864,"S":0.12414,"sd3neg":8.2,"sd2neg":9.2,"sd1neg":10.3,"sd0":11.7,"sd1":13.3,"sd2":15.1,"sd3":17.3},"26":{"L":-0.3005,"M":11.8947,"S":0.12441,"sd3neg":8.4,"sd2neg":9.4,"sd1neg":10.5,"sd0":11.9,"sd1":13.5,"sd2":15.4,"sd3":17.7},"27":{"L":-0.3032,"M":12.1015,"S":0.12472,"sd3neg":8.5,"sd2neg":9.5,"sd1neg":10.7,"sd0":12.1,"sd1":13.7,"sd2":15.7,"sd3":18.0},"28":{"L":-0.3057,"M":12.3059,"S":0.12506,"sd3neg":8.6,"sd2neg":9.7,"sd1neg":10.9,"sd0":12.3,"sd1":14.0,"sd2":16.0,"sd3":18.3},"29":{"L":-0.308,"M":12.5073,"S":0.12545,"sd3neg":8.8,"sd2neg":9.8,"sd1neg":11.1,"sd0":12.5,"sd1":14.2,"sd2":16.2,"sd3":18.7},"30":{"L":-0.3101,"M":12.7055,"S":0.12587,"sd3neg":8.9,"sd2neg":10.0,"sd1neg":11.2,"sd0":12.7,"sd1":14.4,"sd2":16.5,"sd3":19.0},"31":{"L":-0.312,"M":12.9006,"S":0.12633,"sd3neg":9.0,"sd2neg":10.1,"sd1neg":11.4,"sd0":12.9,"sd1":14.7,"sd2":16.8,"sd3":19.3},"32":{"L":-0.3138,"M":13.093,"S":0.12683,"sd3neg":9.1,"sd2neg":10.3,"sd1neg":11.6,"sd0":13.1,"sd1":14.9,"sd2":17.1,"sd3":19.6},"33":{"L":-0.3155,"M":13.2837,"S":0.12737,"sd3neg":9.3,"sd2neg":10.4,"sd1neg":11.7,"sd0":13.3,"sd1":15.1,"sd2":17.3,"sd3":20.0},"34":{"L":-0.3171,"M":13.4731,"S":0.12794,"sd3neg":9.4,"sd2neg":10.5,"sd1neg":11.9,"sd0":13.5,"sd1":15.4,"sd2":17.6,"sd3":20.3},"35":{"L":-0.3186,"M":13.6618,"S":0.12855,"sd3neg":9.5,"sd2neg":10.7,"sd1neg":12.0,"sd0":13.7,"sd1":15.6,"sd2":17.9,"sd3":20.6},"36":{"L":-0.3201,"M":13.8503,"S":0.12919,"sd3neg":9.6,"sd2neg":10.8,"sd1neg":12.2,"sd0":13.9,"sd1":15.8,"sd2":18.1,"sd3":20.9},"37":{"L":-0.3216,"M":14.0385,"S":0.12988,"sd3neg":9.7,"sd2neg":10.9,"sd1neg":12.4,"sd0":14.0,"sd1":16.0,"sd2":18.4,"sd3":21.3},"38":{"L":-0.323,"M":14.2265,"S":0.13059,"sd3neg":9.8,"sd2neg":11.1,"sd1neg":12.5,"sd0":14.2,"sd1":16.3,"sd2":18.7,"sd3":21.6},"39":{"L":-0.3243,"M":14.414,"S":0.13135,"sd3neg":9.9,"sd2neg":11.2,"sd1neg":12.7,"sd0":14.4,"sd1":16.5,"sd2":19.0,"sd3":22.0},"40":{"L":-0.3257,"M":14.601,"S":0.13213,"sd3neg":10.1,"sd2neg":11.3,"sd1neg":12.8,"sd0":14.6,"sd1":16.7,"sd2":19.2,"sd3":22.3},"41":{"L":-0.327,"M":14.7873,"S":0.13293,"sd3neg":10.2,"sd2neg":11.5,"sd1neg":13.0,"sd0":14.8,"sd1":16.9,"sd2":19.5,"sd3":22.7},"42":{"L":-0.3283,"M":14.9727,"S":0.13376,"sd3neg":10.3,"sd2neg":11.6,"sd1neg":13.1,"sd0":15.0,"sd1":17.2,"sd2":19.8,"sd3":23.0},"43":{"L":-0.3296,"M":15.1573,"S":0.1346,"sd3neg":10.4,"sd2neg":11.7,"sd1neg":13.3,"sd0":15.2,"sd1":17.4,"sd2":20.1,"sd3":23.4},"44":{"L":-0.3309,"M":15.341,"S":0.13545,"sd3neg":10.5,"sd2neg":11.8,"sd1neg":13.4,"sd0":15.3,"sd1":17.6,"sd2":20.4,"sd3":23.7},"45":{"L":-0.3322,"M":15.524,"S":0.1363,"sd3neg":10.6,"sd2neg":12.0,"sd1neg":13.6,"sd0":15.5,"sd1":17.8,"sd2":20.7,"sd3":24.1},"46":{"L":-0.3335,"M":15.7064,"S":0.13716,"sd3neg":10.7,"sd2neg":12.1,"sd1neg":13.7,"sd0":15.7,"sd1":18.1,"sd2":20.9,"sd3":24.5},"47":{"L":-0.3348,"M":15.8882,"S":0.138,"sd3neg":10.8,"sd2neg":12.2,"sd1neg":13.9,"sd0":15.9,"sd1":18.3,"sd2":21.2,"sd3":24.8},"48":{"L":-0.3361,"M":16.0697,"S":0.13884,"sd3neg":10.9,"sd2neg":12.3,"sd1neg":14.0,"sd0":16.1,"sd1":18.5,"sd2":21.5,"sd3":25.2},"49":{"L":-0.3374,"M":16.2511,"S":0.13968,"sd3neg":11.0,"sd2neg":12.4,"sd1neg":14.2,"sd0":16.3,"sd1":18.8,"sd2":21.8,"sd3":25.5},"50":{"L":-0.3387,"M":16.4322,"S":0.14051,"sd3neg":11.1,"sd2neg":12.6,"sd1neg":14.3,"sd0":16.4,"sd1":19.0,"sd2":22.1,"sd3":25.9},"51":{"L":-0.34,"M":16.6133,"S":0.14132,"sd3neg":11.2,"sd2neg":12.7,"sd1neg":14.5,"sd0":16.6,"sd1":19.2,"sd2":22.4,"sd3":26.3},"52":{"L":-0.3414,"M":16.7942,"S":0.14213,"sd3neg":11.3,"sd2neg":12.8,"sd1neg":14.6,"sd0":16.8,"sd1":19.4,"sd2":22.6,"sd3":26.6},"53":{"L":-0.3427,"M":16.9748,"S":0.14293,"sd3neg":11.4,"sd2neg":12.9,"sd1neg":14.8,"sd0":17.0,"sd1":19.7,"sd2":22.9,"sd3":27.0},"54":{"L":-0.344,"M":17.1551,"S":0.14371,"sd3neg":11.5,"sd2neg":13.0,"sd1neg":14.9,"sd0":17.2,"sd1":19.9,"sd2":23.2,"sd3":27.4},"55":{"L":-0.3453,"M":17.3347,"S":0.14448,"sd3neg":11.6,"sd2neg":13.2,"sd1neg":15.1,"sd0":17.3,"sd1":20.1,"sd2":23.5,"sd3":27.7},"56":{"L":-0.3466,"M":17.5136,"S":0.14525,"sd3neg":11.7,"sd2neg":13.3,"sd1neg":15.2,"sd0":17.5,"sd1":20.3,"sd2":23.8,"sd3":28.1},"57":{"L":-0.3479,"M":17.6916,"S":0.146,"sd3neg":11.8,"sd2neg":13.4,"sd1neg":15.3,"sd0":17.7,"sd1":20.6,"sd2":24.1,"sd3":28.5},"58":{"L":-0.3492,"M":17.8686,"S":0.14675,"sd3neg":11.9,"sd2neg":13.5,"sd1neg":15.5,"sd0":17.9,"sd1":20.8,"sd2":24.4,"sd3":28.8},"59":{"L":-0.3505,"M":18.0445,"S":0.14748,"sd3neg":12.0,"sd2neg":13.6,"sd1neg":15.6,"sd0":18.0,"sd1":21.0,"sd2":24.6,"sd3":29.2},"60":{"L":-0.3518,"M":18.2193,"S":0.14821,"sd3neg":12.1,"sd2neg":13.7,"sd1neg":15.8,"sd0":18.2,"sd1":21.2,"sd2":24.9,"sd3":29.5}},"height":{"0":{"L":1.0,"M":49.1477,"S":0.0379,"sd3neg":43.6,"sd2neg":45.4,"sd1neg":47.3,"sd0":49.1,"sd1":51.0,"sd2":52.9,"sd3":54.7},"1":{"L":1.0,"M":53.6872,"S":0.0364,"sd3neg":47.8,"sd2neg":49.8,"sd1neg":51.7,"sd0":53.7,"sd1":55.6,"sd2":57.6,"sd3":59.5},"2":{"L":1.0,"M":57.0673,"S":0.03568,"sd3neg":51.0,"sd2neg":53.0,"sd1neg":55.0,"sd0":57.1,"sd1":59.1,"sd2":61.1,"sd3":63.2},"3":{"L":1.0,"M":59.8029,"S":0.0352,"sd3neg":53.5,"sd2neg":55.6,"sd1neg":57.7,"sd0":59.8,"sd1":61.9,"sd2":64.0,"sd3":66.1},"4":{"L":1.0,"M":62.0899,"S":0.03486,"sd3neg":55.6,"sd2neg":57.8,"sd1neg":59.9,"sd0":62.1,"sd1":64.3,"sd2":66.4,"sd3":68.6},"5":{"L":1.0,"M":64.0301,"S":0.03463,"sd3neg":57.4,"sd2neg":59.6,"sd1neg":61.8,"sd0":64.0,"sd1":66.2,"sd2":68.5,"sd3":70.7},"6":{"L":1.0,"M":65.7311,"S":0.03448,"sd3neg":58.9,"sd2neg":61.2,"sd1neg":63.5,"sd0":65.7,"sd1":68.0,"sd2":70.3,"sd3":72.5},"7":{"L":1.0,"M":67.2873,"S":0.03441,"sd3neg":60.3,"sd2neg":62.7,"sd1neg":65.0,"sd0":67.3,"sd1":69.6,"sd2":71.9,"sd3":74.2},"8":{"L":1.0,"M":68.7498,"S":0.0344,"sd3neg":61.7,"sd2neg":64.0,"sd1neg":66.4,"sd0":68.7,"sd1":71.1,"sd2":73.5,"sd3":75.8},"9":{"L":1.0,"M":70.1435,"S":0.03444,"sd3neg":62.9,"sd2neg":65.3,"sd1neg":67.7,"sd0":70.1,"sd1":72.6,"sd2":75.0,"sd3":77.4},"10":{"L":1.0,"M":71.4818,"S":0.03452,"sd3neg":64.1,"sd2neg":66.5,"sd1neg":69.0,"sd0":71.5,"sd1":73.9,"sd2":76.4,"sd3":78.9},"11":{"L":1.0,"M":72.771,"S":0.03464,"sd3neg":65.2,"sd2neg":67.7,"sd1neg":70.3,"sd0":72.8,"sd1":75.3,"sd2":77.8,"sd3":80.3},"12":{"L":1.0,"M":74.015,"S":0.03479,"sd3neg":66.3,"sd2neg":68.9,"sd1neg":71.4,"sd0":74.0,"sd1":76.6,"sd2":79.2,"sd3":81.7},"13":{"L":1.0,"M":75.2176,"S":0.03496,"sd3neg":67.3,"sd2neg":70.0,"sd1neg":72.6,"sd0":75.2,"sd1":77.8,"sd2":80.5,"sd3":83.1},"14":{"L":1.0,"M":76.3817,"S":0.03514,"sd3neg":68.3,"sd2neg":71.0,"sd1neg":73.7,"sd0":76.4,"sd1":79.1,"sd2":81.7,"sd3":84.4},"15":{"L":1.0,"M":77.5099,"S":0.03534,"sd3neg":69.3,"sd2neg":72.0,"sd1neg":74.8,"sd0":77.5,"sd1":80.2,"sd2":83.0,"sd3":85.7},"16":{"L":1.0,"M":78.6055,"S":0.03555,"sd3neg":70.2,"sd2neg":73.0,"sd1neg":75.8,"sd0":78.6,"sd1":81.4,"sd2":84.2,"sd3":87.0},"17":{"L":1.0,"M":79.671,"S":0.03576,"sd3neg":71.1,"sd2neg":74.0,"sd1neg":76.8,"sd0":79.7,"sd1":82.5,"sd2":85.4,"sd3":88.2},"18":{"L":1.0,"M":80.7079,"S":0.03598,"sd3neg":72.0,"sd2neg":74.9,"sd1neg":77.8,"sd0":80.7,"sd1":83.6,"sd2":86.5,"sd3":89.4},"19":{"L":1.0,"M":81.7182,"S":0.0362,"sd3neg":72.8,"sd2neg":75.8,"sd1neg":78.8,"sd0":81.7,"sd1":84.7,"sd2":87.6,"sd3":90.6},"20":{"L":1.0,"M":82.7036,"S":0.03643,"sd3neg":73.7,"sd2neg":76.7,"sd1neg":79.7,"sd0":82.7,"sd1":85.7,"sd2":88.7,"sd3":91.7},"21":{"L":1.0,"M":83.6654,"S":0.03666,"sd3neg":74.5,"sd2neg":77.5,"sd1neg":80.6,"sd0":83.7,"sd1":86.7,"sd2":89.8,"sd3":92.9},"22":{"L":1.0,"M":84.604,"S":0.03688,"sd3neg":75.2,"sd2neg":78.4,"sd1neg":81.5,"sd0":84.6,"sd1":87.7,"sd2":90.8,"sd3":94.0},"23":{"L":1.0,"M":85.5202,"S":0.03711,"sd3neg":76.0,"sd2neg":79.2,"sd1neg":82.3,"sd0":85.5,"sd1":88.7,"sd2":91.9,"sd3":95.0},"24":{"L":1.0,"M":1.0,"S":0.03764,"sd3neg":76.0,"sd2neg":79.3,"sd1neg":82.5,"sd0":85.7,"sd1":88.9,"sd2":92.2,"sd3":95.4},"25":{"L":1.0,"M":1.0,"S":0.03786,"sd3neg":76.8,"sd2neg":80.0,"sd1neg":83.3,"sd0":86.6,"sd1":89.9,"sd2":93.1,"sd3":96.4},"26":{"L":1.0,"M":1.0,"S":0.03808,"sd3neg":77.5,"sd2neg":80.8,"sd1neg":84.1,"sd0":87.4,"sd1":90.8,"sd2":94.1,"sd3":97.4},"27":{"L":1.0,"M":1.0,"S":0.0383,"sd3neg":78.1,"sd2neg":81.5,"sd1neg":84.9,"sd0":88.3,"sd1":91.7,"sd2":95.0,"sd3":98.4},"28":{"L":1.0,"M":1.0,"S":0.03851,"sd3neg":78.8,"sd2neg":82.2,"sd1neg":85.7,"sd0":89.1,"sd1":92.5,"sd2":96.0,"sd3":99.4},"29":{"L":1.0,"M":1.0,"S":0.03872,"sd3neg":79.5,"sd2neg":82.9,"sd1neg":86.4,"sd0":89.9,"sd1":93.4,"sd2":96.9,"sd3":100.3},"30":{"L":1.0,"M":1.0,"S":0.03893,"sd3neg":80.1,"sd2neg":83.6,"sd1neg":87.1,"sd0":90.7,"sd1":94.2,"sd2":97.7,"sd3":101.3},"31":{"L":1.0,"M":1.0,"S":0.03913,"sd3neg":80.7,"sd2neg":84.3,"sd1neg":87.9,"sd0":91.4,"sd1":95.0,"sd2":98.6,"sd3":102.2},"32":{"L":1.0,"M":1.0,"S":0.03933,"sd3neg":81.3,"sd2neg":84.9,"sd1neg":88.6,"sd0":92.2,"sd1":95.8,"sd2":99.4,"sd3":103.1},"33":{"L":1.0,"M":1.0,"S":0.03952,"sd3neg":81.9,"sd2neg":85.6,"sd1neg":89.3,"sd0":92.9,"sd1":96.6,"sd2":100.3,"sd3":103.9},"34":{"L":1.0,"M":1.0,"S":0.03971,"sd3neg":82.5,"sd2neg":86.2,"sd1neg":89.9,"sd0":93.6,"sd1":97.4,"sd2":101.1,"sd3":104.8},"35":{"L":1.0,"M":1.0,"S":0.03989,"sd3neg":83.1,"sd2neg":86.8,"sd1neg":90.6,"sd0":94.4,"sd1":98.1,"sd2":101.9,"sd3":105.6},"36":{"L":1.0,"M":1.0,"S":0.04006,"sd3neg":83.6,"sd2neg":87.4,"sd1neg":91.2,"sd0":95.1,"sd1":98.9,"sd2":102.7,"sd3":106.5},"37":{"L":1.0,"M":1.0,"S":0.04024,"sd3neg":84.2,"sd2neg":88.0,"sd1neg":91.9,"sd0":95.7,"sd1":99.6,"sd2":103.4,"sd3":107.3},"38":{"L":1.0,"M":1.0,"S":0.04041,"sd3neg":84.7,"sd2neg":88.6,"sd1neg":92.5,"sd0":96.4,"sd1":100.3,"sd2":104.2,"sd3":108.1},"39":{"L":1.0,"M":1.0,"S":0.04057,"sd3neg":85.3,"sd2neg":89.2,"sd1neg":93.1,"sd0":97.1,"sd1":101.0,"sd2":105.0,"sd3":108.9},"40":{"L":1.0,"M":1.0,"S":0.04073,"sd3neg":85.8,"sd2neg":89.8,"sd1neg":93.8,"sd0":97.7,"sd1":101.7,"sd2":105.7,"sd3":109.7},"41":{"L":1.0,"M":1.0,"S":0.04089,"sd3neg":86.3,"sd2neg":90.4,"sd1neg":94.4,"sd0":98.4,"sd1":102.4,"sd2":106.4,"sd3":110.5},"42":{"L":1.0,"M":1.0,"S":0.04105,"sd3neg":86.8,"sd2neg":90.9,"sd1neg":95.0,"sd0":99.0,"sd1":103.1,"sd2":107.2,"sd3":111.2},"43":{"L":1.0,"M":1.0,"S":0.0412,"sd3neg":87.4,"sd2neg":91.5,"sd1neg":95.6,"sd0":99.7,"sd1":103.8,"sd2":107.9,"sd3":112.0},"44":{"L":1.0,"M":1.0,"S":0.04135,"sd3neg":87.9,"sd2neg":92.0,"sd1neg":96.2,"sd0":100.3,"sd1":104.5,"sd2":108.6,"sd3":112.7},"45":{"L":1.0,"M":1.0,"S":0.0415,"sd3neg":88.4,"sd2neg":92.5,"sd1neg":96.7,"sd0":100.9,"sd1":105.1,"sd2":109.3,"sd3":113.5},"46":{"L":1.0,"M":1.0,"S":0.04164,"sd3neg":88.9,"sd2neg":93.1,"sd1neg":97.3,"sd0":101.5,"sd1":105.8,"sd2":110.0,"sd3":114.2},"47":{"L":1.0,"M":1.0,"S":0.04179,"sd3neg":89.3,"sd2neg":93.6,"sd1neg":97.9,"sd0":102.1,"sd1":106.4,"sd2":110.7,"sd3":114.9},"48":{"L":1.0,"M":1.0,"S":0.04193,"sd3neg":89.8,"sd2neg":94.1,"sd1neg":98.4,"sd0":102.7,"sd1":107.0,"sd2":111.3,"sd3":115.7},"49":{"L":1.0,"M":1.0,"S":0.04206,"sd3neg":90.3,"sd2neg":94.6,"sd1neg":99.0,"sd0":103.3,"sd1":107.7,"sd2":112.0,"sd3":116.4},"50":{"L":1.0,"M":1.0,"S":0.0422,"sd3neg":90.7,"sd2neg":95.1,"sd1neg":99.5,"sd0":103.9,"sd1":108.3,"sd2":112.7,"sd3":117.1},"51":{"L":1.0,"M":1.0,"S":0.04233,"sd3neg":91.2,"sd2neg":95.6,"sd1neg":100.1,"sd0":104.5,"sd1":108.9,"sd2":113.3,"sd3":117.7},"52":{"L":1.0,"M":1.0,"S":0.04246,"sd3neg":91.7,"sd2neg":96.1,"sd1neg":100.6,"sd0":105.0,"sd1":109.5,"sd2":114.0,"sd3":118.4},"53":{"L":1.0,"M":1.0,"S":0.04259,"sd3neg":92.1,"sd2neg":96.6,"sd1neg":101.1,"sd0":105.6,"sd1":110.1,"sd2":114.6,"sd3":119.1},"54":{"L":1.0,"M":1.0,"S":0.04272,"sd3neg":92.6,"sd2neg":97.1,"sd1neg":101.6,"sd0":106.2,"sd1":110.7,"sd2":115.2,"sd3":119.8},"55":{"L":1.0,"M":1.0,"S":0.04285,"sd3neg":93.0,"sd2neg":97.6,"sd1neg":102.2,"sd0":106.7,"sd1":111.3,"sd2":115.9,"sd3":120.4},"56":{"L":1.0,"M":1.0,"S":0.04298,"sd3neg":93.4,"sd2neg":98.1,"sd1neg":102.7,"sd0":107.3,"sd1":111.9,"sd2":116.5,"sd3":121.1},"57":{"L":1.0,"M":1.0,"S":0.0431,"sd3neg":93.9,"sd2neg":98.5,"sd1neg":103.2,"sd0":107.8,"sd1":112.5,"sd2":117.1,"sd3":121.8},"58":{"L":1.0,"M":1.0,"S":0.04322,"sd3neg":94.3,"sd2neg":99.0,"sd1neg":103.7,"sd0":108.4,"sd1":113.0,"sd2":117.7,"sd3":122.4},"59":{"L":1.0,"M":1.0,"S":0.04334,"sd3neg":94.7,"sd2neg":99.5,"sd1neg":104.2,"sd0":108.9,"sd1":113.6,"sd2":118.3,"sd3":123.1},"60":{"L":1.0,"M":1.0,"S":0.04347,"sd3neg":95.2,"sd2neg":99.9,"sd1neg":104.7,"sd0":109.4,"sd1":114.2,"sd2":118.9,"sd3":123.7}},"bmi":{"0":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"1":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"2":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"3":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"4":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"5":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"6":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"7":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"8":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"9":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"10":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"11":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"12":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"13":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"14":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"15":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"16":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"17":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"18":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"19":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"20":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"21":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"22":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"23":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"24":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"25":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"26":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"27":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"28":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"29":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"30":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"31":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"32":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"33":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"34":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"35":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"36":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"37":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"38":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"39":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"40":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"41":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"42":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"43":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"44":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"45":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"46":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"47":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"48":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"49":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"50":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"51":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"52":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"53":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"54":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"55":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"56":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"57":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"58":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"59":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1},"60":{"L":-0.3053,"M":13.4069,"S":0.0956,"sd3neg":10.184,"sd2neg":11.133,"sd1neg":12.201,"sd0":13.407,"sd1":14.773,"sd2":16.326,"sd3":18.1}}}};
+        
+        // App State - Unified Session State (No patient database array to corrupt or complicate)
+        let sessionState = {
+            name: '',
+            gender: 'boys',
+            dob: '',
+            prem: false,
+            gest: 32,
+            pjbActive: true,
+            symptoms: {
+                fatigue: true,
+                sweat: true,
+                tachypnea: true,
+                cyanosis: false,
+                meds: true
+            },
+            nutType: 'sufor_standar',
+            visits: []
+        };
+        
+        let activeChartTab = 'weight'; // 'weight', 'height', 'bmi'
+        let growthChart = null;
+
+        // Initialize Application
+        window.addEventListener('DOMContentLoaded', () => {
+            // Set default date values
+            const today = new Date().toISOString().substring(0, 10);
+            document.getElementById('v-date').value = today;
+            
+            // Set default child DOB to exactly 12 months ago to be helpful on load
+            const defaultDob = new Date();
+            defaultDob.setMonth(defaultDob.getMonth() - 12);
+            document.getElementById('p-dob').value = defaultDob.toISOString().substring(0, 10);
+
+            // Load session state from localStorage or use defaults
+            loadSession();
+            
+            // Sync values from state to UI inputs
+            syncStateToInputs();
+            
+            // Render dashboard
+            updateDashboard();
+            
+            // Render Lucide icons
+            lucide.createIcons();
+        });
+
+        // Load state from localStorage
+        function loadSession() {
+            const data = localStorage.getItem('child_growth_session_state');
+            if (data) {
+                try {
+                    const parsed = JSON.parse(data);
+                    // Defensive validation
+                    if (parsed && typeof parsed === 'object') {
+                        sessionState = parsed;
+                        if (!sessionState.visits) sessionState.visits = [];
+                        if (!sessionState.symptoms) sessionState.symptoms = {};
+                    }
+                } catch (e) {
+                    console.error("Local storage state corrupted, using defaults:", e);
+                }
+            } else {
+                // Seed a demo state so the app looks populated immediately with Arjuna
+                const demoDob = new Date();
+                demoDob.setMonth(demoDob.getMonth() - 12); // 1 year old
+                const demoDobStr = demoDob.toISOString().substring(0, 10);
+                
+                // Helper to calculate date relative to dob
+                const relDate = (monthsOffset) => {
+                    const d = new Date(demoDob);
+                    d.setMonth(d.getMonth() + monthsOffset);
+                    return d.toISOString().substring(0, 10);
+                };
+
+                sessionState = {
+                    name: 'Arjuna Putra',
+                    gender: 'boys',
+                    dob: demoDobStr,
+                    prem: true,
+                    gest: 32,
+                    pjbActive: true,
+                    symptoms: {
+                        fatigue: true,
+                        sweat: true,
+                        tachypnea: true,
+                        cyanosis: false,
+                        meds: true
+                    },
+                    nutType: 'asi_perah',
+                    visits: [
+                        { id: 'v1', date: relDate(2), weight: 3.2, height: 49.0 },
+                        { id: 'v2', date: relDate(4), weight: 4.3, height: 55.2 },
+                        { id: 'v3', date: relDate(6), weight: 5.1, height: 60.1 },
+                        { id: 'v4', date: relDate(8), weight: 5.8, height: 64.3 },
+                        { id: 'v5', date: relDate(10), weight: 6.4, height: 68.2 },
+                        { id: 'v6', date: relDate(12), weight: 6.9, height: 71.0 }
+                    ]
+                };
+                saveSessionToStorage();
+            }
+        }
+
+        function saveSessionToStorage() {
+            localStorage.setItem('child_growth_session_state', JSON.stringify(sessionState));
+        }
+
+        // Sync local variables to input controls
+        function syncStateToInputs() {
+            document.getElementById('p-name').value = sessionState.name || '';
+            document.getElementById('p-gender').value = sessionState.gender || 'boys';
+            document.getElementById('p-dob').value = sessionState.dob || '';
+            
+            const premCheckbox = document.getElementById('p-prem');
+            premCheckbox.checked = sessionState.prem || false;
+            togglePrematureInput(sessionState.prem || false);
+            
+            document.getElementById('p-gest').value = sessionState.gest || 32;
+            
+            const pjbCheckbox = document.getElementById('pjb-active');
+            pjbCheckbox.checked = sessionState.pjbActive || false;
+            togglePjbActive(sessionState.pjbActive || false);
+
+            if (sessionState.symptoms) {
+                document.getElementById('symp-fatigue').checked = sessionState.symptoms.fatigue || false;
+                document.getElementById('symp-sweat').checked = sessionState.symptoms.sweat || false;
+                document.getElementById('symp-tachypnea').checked = sessionState.symptoms.tachypnea || false;
+                document.getElementById('symp-cyanosis').checked = sessionState.symptoms.cyanosis || false;
+                document.getElementById('symp-meds').checked = sessionState.symptoms.meds || false;
+            }
+            
+            document.getElementById('pjb-nut-type').value = sessionState.nutType || 'sufor_standar';
+        }
+
+        // Update profile state directly from inputs (Reactive)
+        function updateProfileFromInputs() {
+            sessionState.name = document.getElementById('p-name').value;
+            sessionState.gender = document.getElementById('p-gender').value;
+            sessionState.dob = document.getElementById('p-dob').value;
+            sessionState.prem = document.getElementById('p-prem').checked;
+            sessionState.gest = parseInt(document.getElementById('p-gest').value) || 32;
+            
+            sessionState.pjbActive = document.getElementById('pjb-active').checked;
+            
+            sessionState.symptoms = {
+                fatigue: document.getElementById('symp-fatigue').checked,
+                sweat: document.getElementById('symp-sweat').checked,
+                tachypnea: document.getElementById('symp-tachypnea').checked,
+                cyanosis: document.getElementById('symp-cyanosis').checked,
+                meds: document.getElementById('symp-meds').checked
+            };
+            
+            sessionState.nutType = document.getElementById('pjb-nut-type').value;
+            
+            saveSessionToStorage();
+            updateDashboard();
+        }
+
+        // Toggles Premature detailed input view
+        function togglePrematureInput(checked) {
+            const section = document.getElementById('prem-detail-section');
+            if (checked) {
+                section.classList.remove('hidden');
+            } else {
+                section.classList.add('hidden');
+            }
+            updateProfileFromInputs();
+        }
+
+        // Toggles PJB detailed symptoms checklist view
+        function togglePjbActive(checked) {
+            const formSec = document.getElementById('pjb-checklist-section');
+            const offSec = document.getElementById('pjb-off-section');
+            const chdEdu = document.getElementById('chd-edu-section');
+            
+            if (checked) {
+                formSec.classList.remove('hidden');
+                offSec.classList.add('hidden');
+                if (chdEdu) chdEdu.classList.remove('opacity-40');
+            } else {
+                formSec.classList.add('hidden');
+                offSec.classList.remove('hidden');
+                if (chdEdu) chdEdu.classList.add('opacity-40');
+            }
+            updateProfileFromInputs();
+        }
+
+        // AGE CALCULATORS
+        function calculateAgeInDays(dobStr, targetDateStr) {
+            if (!dobStr || !targetDateStr) return 0;
+            const dob = new Date(dobStr);
+            const target = new Date(targetDateStr);
+            const diffTime = target.getTime() - dob.getTime();
+            return Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+        }
+
+        function calculateCorrectedAgeInMonths(chronologicalAgeDays, gestationWeeks, isPremature) {
+            let ageDays = chronologicalAgeDays;
+            if (isPremature && gestationWeeks && gestationWeeks < 37) {
+                const weeksPremature = 40 - gestationWeeks;
+                const daysPremature = weeksPremature * 7;
+                
+                // Correction applies only up to 2 years (24 months) chronological age
+                const twoYearsDays = 24 * 30.4375;
+                if (chronologicalAgeDays < twoYearsDays) {
+                    ageDays = Math.max(0, chronologicalAgeDays - daysPremature);
+                }
+            }
+            return ageDays / 30.4375;
+        }
+
+        function formatAgeString(ageDays) {
+            if (ageDays <= 0) return '0 Hari';
+            
+            const totalMonths = ageDays / 30.4375;
+            const years = Math.floor(totalMonths / 12);
+            const remainingMonths = Math.floor(totalMonths % 12);
+            
+            // Calculate remaining days
+            const yearsInDays = years * 12 * 30.4375;
+            const monthsInDays = remainingMonths * 30.4375;
+            const remainingDays = Math.round(ageDays - yearsInDays - monthsInDays);
+            
+            let parts = [];
+            if (years > 0) parts.push(years + ' Thn');
+            if (remainingMonths > 0) parts.push(remainingMonths + ' Bln');
+            if (remainingDays > 0 || parts.length === 0) parts.push(remainingDays + ' Hri');
+            
+            return parts.join(' ');
+        }
+
+        // Z-SCORE CALCULATION ENGINE
+        function getInterpolatedSD(ageInMonths, gender, metric) {
+            const data = WHO_GROWTH_DATA[gender][metric];
+            const mFloor = Math.floor(ageInMonths);
+            const mCeil = Math.ceil(ageInMonths);
+            
+            if (mFloor >= 60) return data["60"];
+            if (mFloor < 0) return data["0"];
+            
+            if (mFloor === mCeil) return data[mFloor.toString()];
+            
+            const fData = data[mFloor.toString()];
+            const cData = data[mCeil.toString()];
+            const t = ageInMonths - mFloor;
+            
+            const interpolated = {};
+            ['L', 'M', 'S', 'sd3neg', 'sd2neg', 'sd1neg', 'sd0', 'sd1', 'sd2', 'sd3'].forEach(key => {
+                interpolated[key] = fData[key] * (1 - t) + cData[key] * t;
+            });
+            return interpolated;
+        }
+
+        function calculateZScore(val, sd) {
+            if (!sd) return 0;
+            const s0 = sd.sd0;
+            if (val === s0) return 0;
+            
+            if (val > s0) {
+                const s1 = sd.sd1;
+                const s2 = sd.sd2;
+                const s3 = sd.sd3;
+                
+                if (val <= s1) return (val - s0) / (s1 - s0);
+                if (val <= s2) return 1 + (val - s1) / (s2 - s1);
+                if (val <= s3) return 2 + (val - s2) / (s3 - s2);
+                return 3 + (val - s3) / (s3 - s2);
+            } else {
+                const s1neg = sd.sd1neg;
+                const s2neg = sd.sd2neg;
+                const s3neg = sd.sd3neg;
+                
+                if (val >= s1neg) return (val - s0) / (s0 - s1neg);
+                if (val >= s2neg) return -1 - (s1neg - val) / (s1neg - s2neg);
+                if (val >= s3neg) return -2 - (s2neg - val) / (s2neg - s3neg);
+                return -3 - (s3neg - val) / (s2neg - s3neg);
+            }
+        }
+
+        // CLINICAL BADGE COLOR SCHEMES
+        function getWfaClassification(z) {
+            if (z < -3) return { text: 'Sangat Kurang', color: 'bg-red-100 text-red-800 border-red-200' };
+            if (z < -2) return { text: 'Kurang (Underweight)', color: 'bg-orange-100 text-orange-800 border-orange-200' };
+            if (z <= 1) return { text: 'Normal', color: 'bg-emerald-100 text-emerald-800 border-emerald-200' };
+            return { text: 'Risiko BB Lebih', color: 'bg-indigo-100 text-indigo-800 border-indigo-200' };
+        }
+
+        function getHfaClassification(z) {
+            if (z < -3) return { text: 'Sangat Pendek (Severely Stunted)', color: 'bg-red-100 text-red-800 border-red-200' };
+            if (z < -2) return { text: 'Pendek (Stunted)', color: 'bg-orange-100 text-orange-800 border-orange-200' };
+            if (z <= 3) return { text: 'Normal', color: 'bg-emerald-100 text-emerald-800 border-emerald-200' };
+            return { text: 'Tinggi', color: 'bg-indigo-100 text-indigo-800 border-indigo-200' };
+        }
+
+        function getBfaClassification(z) {
+            if (z < -3) return { text: 'Gizi Buruk (Severely Wasted)', color: 'bg-red-100 text-red-800 border-red-200' };
+            if (z < -2) return { text: 'Gizi Kurang (Wasted)', color: 'bg-orange-100 text-orange-800 border-orange-200' };
+            if (z <= 1) return { text: 'Gizi Baik (Normal)', color: 'bg-emerald-100 text-emerald-800 border-emerald-200' };
+            if (z <= 2) return { text: 'Risiko Gizi Lebih', color: 'bg-blue-100 text-blue-800 border-blue-200' };
+            if (z <= 3) return { text: 'Gizi Lebih (Overweight)', color: 'bg-indigo-100 text-indigo-800 border-indigo-200' };
+            return { text: 'Obesitas', color: 'bg-purple-100 text-purple-800 border-purple-200' };
+        }
+
+        // ADD NEW VISIT LOG (Reactive & Defensive)
+        function addVisit(e) {
+            e.preventDefault();
+            
+            const date = document.getElementById('v-date').value;
+            const weight = parseFloat(document.getElementById('v-weight').value);
+            const height = parseFloat(document.getElementById('v-height').value);
+            
+            if (!date || isNaN(weight) || isNaN(height)) {
+                alert("Harap masukkan data tanggal, berat, dan tinggi dengan benar.");
+                return;
+            }
+
+            const newVisit = {
+                id: 'visit_' + Date.now(),
+                date: date,
+                weight: weight,
+                height: height
+            };
+            
+            sessionState.visits.push(newVisit);
+            // Sort visits chronologically
+            sessionState.visits.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            saveSessionToStorage();
+            
+            // Clear weight/height inputs for fast next entry
+            document.getElementById('v-weight').value = '';
+            document.getElementById('v-height').value = '';
+            
+            updateDashboard();
+        }
+
+        // DELETE VISIT LOG
+        function deleteVisit(id) {
+            sessionState.visits = sessionState.visits.filter(v => v.id !== id);
+            saveSessionToStorage();
+            updateDashboard();
+        }
+
+        // MOBILE: Toggle sidebar collapsible panel
+        function toggleSidebar() {
+            const panel = document.getElementById('sidebar-collapsible');
+            const chevrons = document.querySelectorAll('.sidebar-chevron');
+            const fab = document.getElementById('mobile-sidebar-fab');
+
+            const isOpen = panel.classList.contains('open');
+            panel.classList.toggle('open', !isOpen);
+
+            // Rotate chevron icon
+            chevrons.forEach(ch => {
+                ch.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+            });
+
+            // Update FAB label
+            if (fab) {
+                const span = fab.querySelector('span');
+                if (span) span.textContent = isOpen ? 'Parameter' : 'Tutup';
+            }
+
+            // Scroll sidebar into view when opened on mobile
+            if (!isOpen && window.innerWidth < 1024) {
+                setTimeout(() => {
+                    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
+        }
+
+        // RESET STATE FOR NEW CASE
+        function resetToNewCase() {
+            if (confirm("Apakah Anda ingin menghapus data pemeriksaan anak saat ini untuk memulai kasus baru?")) {
+                const today = new Date().toISOString().substring(0, 10);
+                
+                const defaultDob = new Date();
+                defaultDob.setMonth(defaultDob.getMonth() - 12);
+                
+                sessionState = {
+                    name: '',
+                    gender: 'boys',
+                    dob: defaultDob.toISOString().substring(0, 10),
+                    prem: false,
+                    gest: 32,
+                    pjbActive: false,
+                    symptoms: {
+                        fatigue: false,
+                        sweat: false,
+                        tachypnea: false,
+                        cyanosis: false,
+                        meds: false
+                    },
+                    nutType: 'sufor_standar',
+                    visits: []
+                };
+                
+                saveSessionToStorage();
+                syncStateToInputs();
+                
+                // Clear visit logger form
+                document.getElementById('v-date').value = today;
+                document.getElementById('v-weight').value = '';
+                document.getElementById('v-height').value = '';
+                
+                updateDashboard();
+            }
+        }
+
+        // Switch Active Chart Tab
+        function switchChartTab(tab) {
+            activeChartTab = tab;
+            
+            const tabs = ['weight', 'height', 'bmi'];
+            tabs.forEach(t => {
+                const btn = document.getElementById('tab-chart-' + t);
+                if (t === tab) {
+                    btn.className = "px-4 py-2 text-xs font-extrabold rounded-lg transition duration-200 shadow-sm bg-white text-slate-800 font-display";
+                } else {
+                    btn.className = "px-4 py-2 text-xs font-extrabold rounded-lg transition duration-200 text-slate-500 hover:text-slate-700 bg-transparent font-display";
+                }
+            });
+            
+            renderGrowthChart();
+        }
+
+        // =====================================================
+        // AGE-ADAPTIVE NUTRITION EDUCATION ENGINE
+        // =====================================================
+        function updateAgeBasedEducation() {
+            const title   = document.getElementById('edu-panel-title');
+            const badge   = document.getElementById('edu-age-badge');
+            const body    = document.getElementById('edu-panel-body');
+            const flags   = document.getElementById('red-flags-list');
+            if (!title || !badge || !body || !flags) return;
+
+            if (!sessionState.dob) {
+                body.innerHTML = '<p class="text-slate-400 italic">Masukkan tanggal lahir anak untuk melihat panduan nutrisi yang sesuai usia.</p>';
+                badge.textContent = '—';
+                flags.innerHTML = '';
+                return;
+            }
+
+            const today = new Date();
+            const dob = new Date(sessionState.dob);
+            const ageMonths = Math.floor((today - dob) / (1000 * 60 * 60 * 24 * 30.44));
+
+            const checkIcon = `<i data-lucide="check-circle" class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5"></i>`;
+            const warnIcon  = `<i data-lucide="alert-triangle" class="w-4 h-4 text-red-600 shrink-0 mt-0.5"></i>`;
+            const li = (icon, html) => `<li class="flex gap-2 items-start">${icon}<span>${html}</span></li>`;
+
+            let eduHTML = '';
+            let redHTML = '';
+            let badgeText = '';
+            let panelTitle = 'Panduan Nutrisi';
+
+            if (ageMonths < 6) {
+                // === BAYI < 6 BULAN: ASI / SUFOR eksklusif ===
+                badgeText = 'Bayi &lt; 6 Bulan';
+                panelTitle = 'Edukasi Pemberian ASI / Susu';
+                badge.className = 'text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 uppercase tracking-wider';
+                eduHTML = `
+                    ${li(checkIcon, '<strong>Pacing &amp; Posisi Tegak:</strong> Susui dalam posisi setengah tegak (45°) untuk mengurangi beban napas dan refluks lambung.')}
+                    ${li(checkIcon, '<strong>Sering tapi Sedikit (Small Frequent Feeds):</strong> Susui setiap 2 jam, durasi maksimal 20–30 menit per sesi. Lambung bayi PJB cepat penuh.')}
+                    ${li(checkIcon, '<strong>Istirahatkan Bayi:</strong> Beri jeda setiap beberapa menit jika napas memburu atau bayi tampak lelah.')}
+                    ${li(checkIcon, '<strong>Pertimbangkan Sendok / Cup Feeder:</strong> Jika menyusu langsung terlalu melelahkan, berikan ASI perah dengan sendok, gelas kecil, atau botol berkatup.')}
+                    ${li(checkIcon, '<strong>Pantau Kenaikan BB:</strong> Bayi sehat naik 150–200 g/minggu di 3 bulan pertama. Bayi PJB bisa lebih lambat — pantau ketat tiap 2 minggu.')}`;
+                redHTML = `
+                    ${li(warnIcon, '<strong>Takipnea Berat:</strong> Laju napas &gt;60×/mnt, atau retraksi dinding dada yang dalam saat istirahat.')}
+                    ${li(warnIcon, '<strong>Sianosis Berat (Blue Spell):</strong> Bibir/kuku membiru tiba-tiba, terutama saat menangis atau mengedan.')}
+                    ${li(warnIcon, '<strong>Feeding Fatigue Ekstrem:</strong> Bayi tertidur sebelum selesai menyusu, berkeringat dingin deras saat makan.')}
+                    ${li(warnIcon, '<strong>Oliguria:</strong> Popok kering &gt;6 jam, atau penurunan volume urine drastis.')}`;
+
+            } else if (ageMonths < 24) {
+                // === MPASI 6–24 BULAN ===
+                badgeText = 'MPASI (6–24 Bln)';
+                panelTitle = 'Panduan MPASI Anak PJB';
+                badge.className = 'text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 uppercase tracking-wider';
+                eduHTML = `
+                    ${li(checkIcon, '<strong>Mulai MPASI Tepat Waktu:</strong> MPASI diberikan mulai usia 6 bulan. Konsistensi dimulai dari puree/bubur halus, bertahap ke tekstur kasar sesuai kemampuan mengunyah.')}
+                    ${li(checkIcon, '<strong>Porsi Kecil, Padat Kalori:</strong> Anak PJB cepat lelah saat makan. Utamakan makanan padat kalori (misal ditambah minyak zaitun, santan, kuning telur, alpukat) dalam porsi kecil, 5–6× sehari.')}
+                    ${li(checkIcon, '<strong>Lanjutkan ASI / Sufor:</strong> ASI atau susu formula lanjutan tetap diberikan sebagai sumber energi dan imunitas hingga usia 2 tahun.')}
+                    ${li(checkIcon, '<strong>Protein Berkualitas Tiap Makan:</strong> Telur, daging, ikan, tahu/tempe — pastikan ada di setiap waktu makan untuk mendukung catch-up growth.')}
+                    ${li(checkIcon, '<strong>Hindari Minuman Manis & Jus:</strong> Gantikan volume lambung yang terbatas dengan makanan bergizi, bukan cairan kosong kalori.')}
+                    ${li(checkIcon, '<strong>Pantau Tanda Kelelahan:</strong> Hentikan pemberian makan jika anak napas memburu, berkeringat, atau menolak makan karena lelah.')}`;
+                redHTML = `
+                    ${li(warnIcon, '<strong>Gagal Naik BB (&gt;2 Minggu):</strong> Berat badan stagnasi atau turun selama 2 kunjungan berturut-turut — evaluasi asupan dan kondisi kardiak.')}
+                    ${li(warnIcon, '<strong>Tersedak / Aspirasi Berulang:</strong> Batuk kronik pasca makan, sering tersedak — curiga disfagia atau aspek aspirasi.')}
+                    ${li(warnIcon, '<strong>Hepatomegali:</strong> Perut terasa keras/membuncit di kanan atas — tanda overload cairan / bendungan vena hepatik.')}
+                    ${li(warnIcon, '<strong>Takipnea Pasca Makan:</strong> Napas cepat/sesak setelah makan — indikasi stres kardiopulmonar akibat refluks atau overload.')}`;
+
+            } else {
+                // === ANAK > 2 TAHUN ===
+                badgeText = ageMonths < 60 ? 'Batita (2–5 Thn)' : 'Anak &gt; 5 Thn';
+                panelTitle = 'Panduan Nutrisi Anak';
+                badge.className = 'text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 uppercase tracking-wider';
+                eduHTML = `
+                    ${li(checkIcon, '<strong>Gizi Seimbang Tumpeng Gizi WHO:</strong> Piring makan terdiri dari ½ sayur & buah, ¼ karbohidrat kompleks (nasi/kentang/jagung), ¼ protein (daging/telur/tahu/ikan).')}
+                    ${li(checkIcon, '<strong>Tingkatkan Densitas Kalori, Bukan Volume:</strong> Anak PJB tidak dapat makan dalam porsi besar. Tambahkan kalori dari lemak sehat: minyak zaitun, alpukat, kacang-kacangan, keju.')}
+                    ${li(checkIcon, '<strong>Snack Bergizi 2–3× Sehari:</strong> Jenis: kacang panggang, telur rebus, yogurt, buah, ubi kukus — hindari snack tinggi gula/garam.')}
+                    ${li(checkIcon, '<strong>Batasi Cairan Bebas Saat Makan:</strong> Minum besar saat makan membuat lambung cepat penuh. Minumkan di antara waktu makan.')}
+                    ${li(checkIcon, '<strong>Susu Tidak Wajib sebagai Minuman Utama:</strong> Di atas 2 tahun, susu bukan keharusan jika asupan kalsium terpenuhi dari sumber lain (tempe, tahu, sayuran hijau, ikan teri).')}
+                    ${li(checkIcon, '<strong>Timbang & Ukur Rutin:</strong> Jadwalkan pemantauan BB & TB setiap 1–3 bulan untuk deteksi dini gagal tumbuh.')}`;
+                redHTML = `
+                    ${li(warnIcon, '<strong>Penurunan BB Signifikan:</strong> BB turun &gt;5% dari pengukuran sebelumnya tanpa penyebab jelas — evaluasi segera.')}
+                    ${li(warnIcon, '<strong>Intoleransi Aktivitas Meningkat:</strong> Anak mudah sesak/biru saat bermain ringan, lebih cepat dari sebelumnya.')}
+                    ${li(warnIcon, '<strong>Edema / Pembengkakan:</strong> Kaki bengkak, wajah puffy — tanda retensi cairan atau dekompensasi jantung.')}
+                    ${li(warnIcon, '<strong>Penurunan Nafsu Makan Persisten:</strong> Tidak mau makan &gt;2 hari + lemas — bisa indikasi perburukan hemodinamik.')}`;
+            }
+
+            title.textContent = panelTitle;
+            badge.innerHTML = badgeText;
+            body.innerHTML = `<ul class="space-y-2.5">${eduHTML}</ul>`;
+            flags.innerHTML = redHTML;
+
+            // Re-render lucide icons for the newly injected content
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // MAIN UPDATE ENGINE
+        function updateDashboard() {
+
+            const genderColor = sessionState.gender === 'boys' ? 'blue' : 'rose';
+            
+            // Update UI brand colors depending on Gender (Pink for girl, Blue for boy)
+            const statCardWfa = document.getElementById('card-status-wfa');
+            const statCardHfa = document.getElementById('card-status-hfa');
+            const statCardBfa = document.getElementById('card-status-bfa');
+            
+            [statCardWfa, statCardHfa, statCardBfa].forEach(card => {
+                card.className = `glass-panel rounded-2xl shadow-sm border border-slate-200/60 p-4 flex flex-col justify-between min-h-[110px] relative overflow-hidden border-t-4 border-t-${genderColor}-500`;
+            });
+            
+            const btnAdd = document.getElementById('btn-add-visit');
+            btnAdd.className = `w-full text-white font-bold py-2.5 rounded-xl transition duration-200 flex items-center justify-center gap-1.5 shadow-sm text-sm bg-${genderColor}-600 hover:bg-${genderColor}-500`;
+            
+            // Calculate Current Age on Last Visit
+            const lastVisit = sessionState.visits.length > 0 ? sessionState.visits[sessionState.visits.length - 1] : null;
+            
+            if (lastVisit) {
+                const visitDays = calculateAgeInDays(sessionState.dob, lastVisit.date);
+                const visitMonths = calculateCorrectedAgeInMonths(visitDays, sessionState.gest, sessionState.prem);
+                
+                // Weight Status Z-Score
+                const wSd = getInterpolatedSD(visitMonths, sessionState.gender, 'weight');
+                const wZ = calculateZScore(lastVisit.weight, wSd);
+                const wClass = getWfaClassification(wZ);
+                
+                document.getElementById('stat-wfa-title').innerText = `${lastVisit.weight} kg`;
+                document.getElementById('stat-wfa-zscore').innerText = `Z-Score: ${wZ.toFixed(2)}`;
+                document.getElementById('stat-wfa-badge').innerText = wClass.text;
+                document.getElementById('stat-wfa-badge').className = `text-[9px] font-bold px-2 py-0.5 rounded-full ${wClass.color}`;
+                
+                // Height Status Z-Score
+                const hSd = getInterpolatedSD(visitMonths, sessionState.gender, 'height');
+                const hZ = calculateZScore(lastVisit.height, hSd);
+                const hClass = getHfaClassification(hZ);
+                
+                document.getElementById('stat-hfa-title').innerText = `${lastVisit.height} cm`;
+                document.getElementById('stat-hfa-zscore').innerText = `Z-Score: ${hZ.toFixed(2)}`;
+                document.getElementById('stat-hfa-badge').innerText = hClass.text;
+                document.getElementById('stat-hfa-badge').className = `text-[9px] font-bold px-2 py-0.5 rounded-full ${hClass.color}`;
+
+                // BMI Status Z-Score
+                const bmi = lastVisit.weight / Math.pow(lastVisit.height / 100, 2);
+                const bSd = getInterpolatedSD(visitMonths, sessionState.gender, 'bmi');
+                const bZ = calculateZScore(bmi, bSd);
+                const bClass = getBfaClassification(bZ);
+                
+                document.getElementById('stat-bfa-title').innerText = `${bmi.toFixed(1)}`;
+                document.getElementById('stat-bfa-zscore').innerText = `Z-Score: ${bZ.toFixed(2)}`;
+                document.getElementById('stat-bfa-badge').innerText = bClass.text;
+                document.getElementById('stat-bfa-badge').className = `text-[9px] font-bold px-2 py-0.5 rounded-full ${bClass.color}`;
+            } else {
+                // Set default cards if no visits logged
+                document.getElementById('stat-wfa-title').innerText = '-';
+                document.getElementById('stat-wfa-zscore').innerText = 'Z-Score: -';
+                document.getElementById('stat-wfa-badge').innerText = 'No Data';
+                document.getElementById('stat-wfa-badge').className = 'text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-400 border border-slate-200';
+                
+                document.getElementById('stat-hfa-title').innerText = '-';
+                document.getElementById('stat-hfa-zscore').innerText = 'Z-Score: -';
+                document.getElementById('stat-hfa-badge').innerText = 'No Data';
+                document.getElementById('stat-hfa-badge').className = 'text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-400 border border-slate-200';
+
+                document.getElementById('stat-bfa-title').innerText = '-';
+                document.getElementById('stat-bfa-zscore').innerText = 'Z-Score: -';
+                document.getElementById('stat-bfa-badge').innerText = 'No Data';
+                document.getElementById('stat-bfa-badge').className = 'text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-400 border border-slate-200';
+            }
+
+            // Render Chart.js curves
+            renderGrowthChart();
+            
+            // Render History Table List
+            renderHistoryTable();
+            
+            // Run Failure to Thrive diagnostics
+            runFttDiagnostics();
+            
+            // Calculate Waterlow requirements
+            recalculateCatchup();
+
+            // Calculate Milk Fortification recipes
+            recalculateFortification();
+            
+
+            // Update Printable HTML view
+            updatePrintReportData();
+
+            // Update age-adaptive nutrition education panel
+            updateAgeBasedEducation();
+            
+            lucide.createIcons();
+        }
+
+
+        // Render Riwayat Pengukuran Table Rows
+        function renderHistoryTable() {
+            const tbody = document.getElementById('visit-history-rows');
+            tbody.innerHTML = '';
+            
+            if (sessionState.visits.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-400 font-semibold">Belum ada riwayat pemeriksaan. Silakan ketik angka pada form "Tambah Pemeriksaan".</td></tr>`;
+                return;
+            }
+            
+            sessionState.visits.forEach(v => {
+                const days = calculateAgeInDays(sessionState.dob, v.date);
+                const correctedMonths = calculateCorrectedAgeInMonths(days, sessionState.gest, sessionState.prem);
+                const bmi = v.weight / Math.pow(v.height / 100, 2);
+                
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-slate-100 hover:bg-slate-50/50";
+                
+                const dateFormatted = new Date(v.date).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'});
+                const ageStr = formatAgeString(days);
+                const showAge = sessionState.prem && (days < 24 * 30.4375) ? formatAgeString(correctedMonths * 30.4375) + ' (Kor.)' : ageStr;
+                
+                tr.innerHTML = `
+                    <td class="py-2.5 font-bold">${dateFormatted}</td>
+                    <td class="py-2.5 font-semibold text-slate-500">${showAge}</td>
+                    <td class="py-2.5 font-bold">${v.weight} kg</td>
+                    <td class="py-2.5 font-bold">${v.height} cm</td>
+                    <td class="py-2.5 text-slate-500">${bmi.toFixed(1)}</td>
+                    <td class="py-2.5 text-center no-print">
+                        <button onclick="deleteVisit('${v.id}')" class="text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-md p-1.5 transition">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // FAILURE TO THRIVE (FTT) DIAGNOSTICS
+        function runFttDiagnostics() {
+            const container = document.getElementById('ftt-warning-container');
+            container.innerHTML = '';
+            container.classList.add('hidden');
+            
+            if (sessionState.visits.length === 0) return;
+            
+            let fttAlerts = [];
+            const lastIndex = sessionState.visits.length - 1;
+            const lastVisit = sessionState.visits[lastIndex];
+            
+            const lastVisitDays = calculateAgeInDays(sessionState.dob, lastVisit.date);
+            const lastVisitMonths = calculateCorrectedAgeInMonths(lastVisitDays, sessionState.gest, sessionState.prem);
+            const lastWSd = getInterpolatedSD(lastVisitMonths, sessionState.gender, 'weight');
+            const lastWZ = calculateZScore(lastVisit.weight, lastWSd);
+            
+            const lastBSd = getInterpolatedSD(lastVisitMonths, sessionState.gender, 'bmi');
+            const lastBMI = lastVisit.weight / Math.pow(lastVisit.height / 100, 2);
+            const lastBZ = calculateZScore(lastBMI, lastBSd);
+
+            // 1. Critical Red Flag: Severe Malnutrition (<-3 SD)
+            if (lastWZ < -3.0) {
+                fttAlerts.push({
+                    type: 'danger',
+                    title: 'Sangat Kurang (Severely Underweight)',
+                    desc: `Z-score BB/U bernilai <strong>${lastWZ.toFixed(2)} SD</strong> (&lt; -3 SD). Berat badan anak sangat di bawah ambang normal.`
+                });
+            }
+            if (lastBZ < -3.0) {
+                fttAlerts.push({
+                    type: 'danger',
+                    title: 'Gizi Buruk Akut (Severely Wasted)',
+                    desc: `Z-score IMT/U bernilai <strong>${lastBZ.toFixed(2)} SD</strong> (&lt; -3 SD). Anak membutuhkan intervensi terapi gizi medis segera.`
+                });
+            }
+
+            // 2. Growth Faltering / Flat Weight (BB Seret)
+            if (sessionState.visits.length >= 2) {
+                const prevVisit = sessionState.visits[lastIndex - 1];
+                const prevVisitDays = calculateAgeInDays(sessionState.dob, prevVisit.date);
+                
+                const timeDiffDays = lastVisitDays - prevVisitDays;
+                
+                if (timeDiffDays >= 14 && timeDiffDays <= 90) {
+                    const actualGain = (lastVisit.weight - prevVisit.weight) * 1000; // grams
+                    const actualVelocity = actualGain / timeDiffDays; // g/day
+                    
+                    let targetVelocity = 5.0; // g/day target
+                    const ageMonths = lastVisitMonths;
+                    if (ageMonths <= 3) targetVelocity = 25.0;
+                    else if (ageMonths <= 6) targetVelocity = 15.0;
+                    else if (ageMonths <= 12) targetVelocity = 10.0;
+                    else if (ageMonths <= 36) targetVelocity = 6.0;
+                    
+                    if (actualVelocity < (targetVelocity * 0.5)) {
+                        const recText = actualVelocity <= 0 
+                            ? 'Berat badan anak mendatar atau bahkan menurun!'
+                            : `Kenaikan berat badan anak hanya <strong>${actualVelocity.toFixed(1)} g/hari</strong> (Target ideal: &gt;${targetVelocity} g/hari).`;
+                        
+                        fttAlerts.push({
+                            type: 'warning',
+                            title: 'Kenaikan Berat Badan Tidak Adekuat (Growth Faltering)',
+                            desc: `${recText} Hal ini sangat krusial pada anak PJB karena pengeluaran energi basal (resting energy expenditure) yang tinggi akibat peningkatan kerja mekanik jantung.`
+                        });
+                    }
+                }
+            }
+
+            // 3. Percentile Crossing (Z-score drop)
+            if (sessionState.visits.length >= 2) {
+                const firstVisit = sessionState.visits[0];
+                const firstVisitDays = calculateAgeInDays(sessionState.dob, firstVisit.date);
+                const firstVisitMonths = calculateCorrectedAgeInMonths(firstVisitDays, sessionState.gest, sessionState.prem);
+                
+                const firstWSd = getInterpolatedSD(firstVisitMonths, sessionState.gender, 'weight');
+                const firstWZ = calculateZScore(firstVisit.weight, firstWSd);
+                
+                const zScoreDiff = lastWZ - firstWZ;
+                
+                if (zScoreDiff <= -1.0) {
+                    fttAlerts.push({
+                        type: 'warning',
+                        title: 'Penurunan Jalur Pertumbuhan (Z-Score Drop)',
+                        desc: `Kurva pertumbuhan anak meluncur ke bawah sebesar <strong>${Math.abs(zScoreDiff).toFixed(2)} SD</strong> sejak pemeriksaan awal. Hal ini menunjukkan kegagalan pertumbuhan progresif (*Failure to Thrive*).`
+                    });
+                }
+            }
+
+            // Display FTT warning panel if alerts exist
+            if (fttAlerts.length > 0) {
+                container.classList.remove('hidden');
+                
+                let html = `
+                    <div class="bg-red-50 border-l-4 border-red-500 rounded-2xl p-5 shadow-sm space-y-4">
+                        <div class="flex items-center gap-2 text-red-700 font-extrabold text-sm font-display">
+                            <i data-lucide="alert-octagon" class="w-5 h-5"></i>
+                            <span>ASISTEN KLINIS: Deteksi Risiko Gagal Tumbuh (Failure to Thrive)</span>
+                        </div>
+                        <div class="space-y-3 text-xs text-slate-800">
+                `;
+                
+                fttAlerts.forEach(alert => {
+                    const icon = alert.type === 'danger' ? 'alert-triangle' : 'info';
+                    const color = alert.type === 'danger' ? 'text-red-600' : 'text-amber-600';
+                    html += `
+                        <div class="flex gap-2.5 items-start pl-1">
+                            <i data-lucide="${icon}" class="w-4 h-4 ${color} shrink-0 mt-0.5"></i>
+                            <div>
+                                <strong class="block text-slate-900 font-bold mb-0.5">${alert.title}</strong>
+                                <p class="leading-relaxed font-medium">${alert.desc}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                if (sessionState.pjbActive) {
+                    html += `
+                        <div class="bg-white/80 p-3 rounded-lg border border-red-200 mt-2 font-semibold">
+                            <span class="block text-red-800 text-[10px] uppercase font-bold mb-1"><i data-lucide="heart" class="w-3.5 h-3.5 inline mr-1"></i>Peringatan Khusus PJB:</span>
+                            <p class="leading-relaxed text-red-950 font-medium">
+                                Pada anak dengan PJB shunt kiri-ke-kanan besar (VSD/PDA), gagal tumbuh biasanya memuncak pada usia 2-6 bulan akibat kongesti paru. Intervensi nutrisi berupa <strong>susu formula padat kalori (densitas tinggi)</strong> sangat direkomendasikan untuk mengejar berat badan sebelum tindakan bedah koreksi.
+                            </p>
+                        </div>
+                    `;
+                }
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+                container.innerHTML = html;
+                lucide.createIcons();
+            }
+        }
+
+        // CATCH-UP CALORIES CALCULATOR (WATERLOW FORMULA)
+        // Automatic stress factor calculation based on clinical symptoms checked
+        function calculateStressFactorFromSymptoms() {
+            if (!sessionState.pjbActive) return 1.0; // General pediatric normal metabolism
+            
+            let af = 1.0; // Baseline PJB without active symptoms
+            let count = 0;
+            
+            if (sessionState.symptoms.fatigue) { af += 0.05; count++; }
+            if (sessionState.symptoms.sweat) { af += 0.05; count++; }
+            if (sessionState.symptoms.tachypnea) { af += 0.10; count++; }
+            if (sessionState.symptoms.cyanosis) { af += 0.10; count++; }
+            if (sessionState.symptoms.meds) { af += 0.15; count++; }
+            
+            return Math.min(1.50, af);
+        }
+
+        function recalculateCatchup() {
+            if (sessionState.visits.length === 0) {
+                document.getElementById('calc-af-display').innerText = '1.0 (Normal)';
+                document.getElementById('calc-af-desc').innerText = 'PJB Non-Aktif';
+                document.getElementById('calc-target-velocity').innerText = '-';
+                document.getElementById('calc-ideal-weight').innerText = '-';
+                document.getElementById('calc-catchup-total').innerText = '-';
+                document.getElementById('calc-catchup-per-kg').innerText = '-';
+                return;
+            }
+            
+            const lastVisit = sessionState.visits[sessionState.visits.length - 1];
+            const ageDays = calculateAgeInDays(sessionState.dob, lastVisit.date);
+            const ageMonths = calculateCorrectedAgeInMonths(ageDays, sessionState.gest, sessionState.prem);
+            
+            // 1. Calculate Target Velocity for Age Group
+            let targetVelocity = '6-8 g/hari';
+            let rdaCalValue = 90; // kcal/kg/day target
+            if (ageMonths <= 3) { targetVelocity = '25-30 g/hari'; rdaCalValue = 110; }
+            else if (ageMonths <= 6) { targetVelocity = '15-20 g/hari'; rdaCalValue = 100; }
+            else if (ageMonths <= 12) { targetVelocity = '10-15 g/hari'; rdaCalValue = 95; }
+            else if (ageMonths <= 36) { targetVelocity = '6-8 g/hari'; rdaCalValue = 90; }
+            else { targetVelocity = '5-6 g/hari'; rdaCalValue = 85; }
+            
+            document.getElementById('calc-target-velocity').innerText = targetVelocity;
+
+            // 2. Find Height Age & Ideal Weight for Height
+            const hData = WHO_GROWTH_DATA[sessionState.gender]['height'];
+            let heightAgeMonths = 0;
+            let minDiff = 999;
+            
+            for (let m = 0; m <= 60; m++) {
+                const medianH = hData[m.toString()]['sd0'];
+                const diff = Math.abs(medianH - lastVisit.height);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    heightAgeMonths = m;
+                }
+            }
+            
+            const wData = WHO_GROWTH_DATA[sessionState.gender]['weight'];
+            const idealWeight = wData[heightAgeMonths.toString()]['sd0'];
+            
+            document.getElementById('calc-ideal-weight').innerText = `${idealWeight.toFixed(1)} kg`;
+
+            // 3. Compute stress factor AF automatically from checked symptoms
+            const af = calculateStressFactorFromSymptoms();
+            
+            let afDescription = 'Anak Umum';
+            if (sessionState.pjbActive) {
+                if (af === 1.0) afDescription = 'PJB Tanpa Gejala';
+                else if (af <= 1.15) afDescription = 'PJB Ringan / Kompensasi';
+                else if (af <= 1.30) afDescription = 'PJB Sedang / Simtomatik';
+                else afDescription = 'PJB Berat / Gagal Jantung Kongestif / Obat Aktif';
+            }
+            
+            document.getElementById('calc-af-display').innerText = `${af.toFixed(2)}`;
+            document.getElementById('calc-af-desc').innerText = afDescription;
+
+            // Waterlow Formula: RDA at Height Age * Ideal Weight for Height * Stress Factor
+            const totalEnergyNeed = rdaCalValue * idealWeight * af;
+            const energyPerKg = totalEnergyNeed / lastVisit.weight;
+            
+            document.getElementById('calc-catchup-total').innerHTML = `${Math.round(totalEnergyNeed)} <span class="text-xs font-bold text-slate-500">kcal/hari</span>`;
+            document.getElementById('calc-catchup-per-kg').innerText = `${Math.round(energyPerKg)} kcal/kg/hari`;
+        }
+
+        // SUSU FORMULA FORTIFICATION RECIPE
+        function recalculateFortification() {
+            const targetKcal = parseFloat(document.getElementById('fort-kcal').value);
+            document.getElementById('fort-kcal-val').innerText = `${targetKcal.toFixed(2)} kcal/mL`;
+            
+            const recipeBody = document.getElementById('fort-recipe-body');
+            const recipeTitle = document.getElementById('fort-recipe-title');
+            
+            recipeTitle.innerText = `Cara Membuat Susu ${targetKcal.toFixed(2)} kcal/mL (Volume Akhir 100 mL):`;
+            
+            let recipeHTML = '';
+            
+            if (targetKcal <= 0.68) {
+                recipeHTML = `
+                    <p>&bull; <strong>Air matang hangat:</strong> 90 mL</p>
+                    <p>&bull; <strong>Susu formula standar:</strong> 3 sendok takar peres (sekitar 13.5 gram)</p>
+                    <p class="text-[10px] text-slate-400 mt-2 font-medium">Ini adalah konsentrasi standar (0.67 kcal/mL). Aman digunakan secara umum.</p>
+                `;
+            } else if (targetKcal <= 0.82) {
+                recipeHTML = `
+                    <p>&bull; <strong>Air matang hangat:</strong> 90 mL</p>
+                    <p>&bull; <strong>Susu formula standar:</strong> 3.5 sendok takar peres</p>
+                    <p>&bull; <strong>Catatan:</strong> Larutkan perlahan dan kocok rata agar tidak menggumpal.</p>
+                    <p class="text-[10px] text-rose-600 mt-2 font-medium">*Konsentrasi 0.8 kcal/mL: Mengurangi asupan air sekitar 15% untuk kalori yang sama. Baik untuk penderita ASD/VSD dengan takipnea ringan.</p>
+                `;
+            } else if (targetKcal <= 0.92) {
+                recipeHTML = `
+                    <p>&bull; <strong>Air matang hangat:</strong> 85 mL</p>
+                    <p>&bull; <strong>Susu formula standar:</strong> 4 sendok takar peres</p>
+                    <p>&bull; <strong>Alternatif ASI:</strong> Tambahkan 1 sendok takar sufor standar ke dalam 100 mL ASI perah (ASI Fortifikasi Rumah Tangga).</p>
+                    <p class="text-[10px] text-rose-600 mt-2 font-medium">*Konsentrasi 0.9 kcal/mL: Hanya direkomendasikan jika anak mengalami kegagalan pertumbuhan berat dan tidak ada tanda intoleransi lambung.</p>
+                `;
+            } else {
+                recipeHTML = `
+                    <p>&bull; <strong>Air matang hangat:</strong> 80 mL</p>
+                    <p>&bull; <strong>Susu formula standar:</strong> 4.5 sendok takar peres</p>
+                    <p>&bull; <strong>Metode ASI:</strong> Larutkan 1.5 sendok takar sufor standar ke dalam 100 mL ASI perah.</p>
+                    <p class="text-[10px] text-red-600 mt-2 font-extrabold">*PENTING: Densitas 1.0 kcal/mL adalah konsentrasi tinggi. Dapat memicu diare osmotik atau dehidrasi jika diberikan tanpa asupan cairan bebas tambahan. Gunakan sesuai anjuran Dokter Spesialis Anak.</p>
+                `;
+            }
+            recipeBody.innerHTML = recipeHTML;
+        }
+
+        // CHART RENDER ENGINE (Chart.js)
+        function renderGrowthChart() {
+            const genderColor = sessionState.gender === 'boys' ? 'rgba(59, 130, 246, 1)' : 'rgba(244, 63, 94, 1)';
+            const genderBg = sessionState.gender === 'boys' ? 'rgba(59, 130, 246, 0.05)' : 'rgba(244, 63, 94, 0.05)';
+            
+            const xLabels = Array.from({ length: 61 }, (_, i) => i); // 0 to 60 months
+            
+            const sd3negData = [];
+            const sd2negData = [];
+            const sd0Data = [];
+            const sd2posData = [];
+            const sd3posData = [];
+            
+            const stdTable = WHO_GROWTH_DATA[sessionState.gender][activeChartTab];
+            
+            for (let m = 0; m <= 60; m++) {
+                const monthStr = m.toString();
+                sd3negData.push(stdTable[monthStr]['sd3neg']);
+                sd2negData.push(stdTable[monthStr]['sd2neg']);
+                sd0Data.push(stdTable[monthStr]['sd0']);
+                sd2posData.push(stdTable[monthStr]['sd2']);
+                sd3posData.push(stdTable[monthStr]['sd3']);
+            }
+            
+            // Plot child points using corrected age
+            const childPoints = sessionState.visits.map(v => {
+                const days = calculateAgeInDays(sessionState.dob, v.date);
+                const correctedMonths = calculateCorrectedAgeInMonths(days, sessionState.gest, sessionState.prem);
+                
+                let yVal = 0;
+                if (activeChartTab === 'weight') yVal = v.weight;
+                else if (activeChartTab === 'height') yVal = v.height;
+                else if (activeChartTab === 'bmi') yVal = v.weight / Math.pow(v.height / 100, 2);
+                
+                return { x: correctedMonths, y: yVal };
+            });
+
+            // Destroy previous chart
+            if (growthChart) {
+                growthChart.destroy();
+            }
+            
+            let yTitle = '';
+            if (activeChartTab === 'weight') yTitle = 'Berat Badan (kg)';
+            else if (activeChartTab === 'height') yTitle = 'Tinggi / Panjang Badan (cm)';
+            else if (activeChartTab === 'bmi') yTitle = 'Indeks Massa Tubuh (IMT)';
+            
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            
+            growthChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: xLabels,
+                    datasets: [
+                        {
+                            label: 'Kurva Tren Anak',
+                            data: childPoints,
+                            borderColor: '#0f172a',
+                            borderWidth: 3,
+                            pointBackgroundColor: '#0f172a',
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            fill: false,
+                            tension: 0.1,
+                            z: 10
+                        },
+                        {
+                            label: '+3 SD',
+                            data: sd3posData,
+                            borderColor: 'rgba(239, 68, 68, 0.4)',
+                            borderWidth: 1.5,
+                            borderDash: [4, 4],
+                            fill: false,
+                            pointRadius: 0
+                        },
+                        {
+                            label: '+2 SD',
+                            data: sd2posData,
+                            borderColor: 'rgba(245, 158, 11, 0.4)',
+                            borderWidth: 1.5,
+                            fill: false,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Median (0 SD)',
+                            data: sd0Data,
+                            borderColor: 'rgba(16, 185, 129, 0.6)',
+                            borderWidth: 2,
+                            fill: false,
+                            pointRadius: 0
+                        },
+                        {
+                            label: '-2 SD',
+                            data: sd2negData,
+                            borderColor: 'rgba(245, 158, 11, 0.4)',
+                            borderWidth: 1.5,
+                            fill: '-1',
+                            backgroundColor: genderBg,
+                            pointRadius: 0
+                        },
+                        {
+                            label: '-3 SD',
+                            data: sd3negData,
+                            borderColor: 'rgba(239, 68, 68, 0.4)',
+                            borderWidth: 1.5,
+                            borderDash: [4, 4],
+                            fill: false,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            title: {
+                                display: true,
+                                text: 'Usia Koreksi (Bulan)',
+                                font: { weight: 'bold', size: 11 }
+                            },
+                            min: 0,
+                            max: 60,
+                            ticks: {
+                                stepSize: 6
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: yTitle,
+                                font: { weight: 'bold', size: 11 }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                filter: function(item) {
+                                    return ['Kurva Tren Anak', 'Median (0 SD)', '+2 SD', '-2 SD'].includes(item.text);
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if (context.datasetIndex === 0) {
+                                        return `Pasien: ${context.parsed.y.toFixed(2)} (Bulan ${context.parsed.x.toFixed(1)})`;
+                                    }
+                                    return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // UPDATE PRINT REPORT DATA
+        function updatePrintReportData() {
+            document.getElementById('print-date').innerText = `Tanggal Cetak: ${new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}`;
+            
+            // Identity
+            document.getElementById('pr-name').innerText = sessionState.name || '(Tanpa Nama)';
+            document.getElementById('pr-dob').innerText = sessionState.dob ? new Date(sessionState.dob).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}) : '-';
+            document.getElementById('pr-gender').innerText = sessionState.gender === 'boys' ? 'Laki-laki' : 'Perempuan';
+            
+            let premText = 'Tidak (Lahir Cukup Bulan)';
+            if (sessionState.prem && sessionState.gest) {
+                premText = `Ya, Lahir pada Usia Gestasi ${sessionState.gest} Minggu (Prematur)`;
+            }
+            document.getElementById('pr-prem').innerText = premText;
+            
+            // PJB info
+            let pjbText = 'Anak Umum (Tanpa Diagnosis PJB)';
+            let symptomsText = '-';
+            let nutText = '-';
+            
+            if (sessionState.pjbActive) {
+                const af = calculateStressFactorFromSymptoms();
+                pjbText = `Ya, Pasien PJB (Faktor Stres AF = ${af.toFixed(2)})`;
+                
+                let sympArr = [];
+                if (sessionState.symptoms.fatigue) sympArr.push('Mudah Lelah saat menyusu');
+                if (sessionState.symptoms.sweat) sympArr.push('Keringat dingin di dahi');
+                if (sessionState.symptoms.tachypnea) sympArr.push('Takipnea (Napas cepat)');
+                if (sessionState.symptoms.cyanosis) sympArr.push('Sianosis (Biru)');
+                if (sessionState.symptoms.meds) sympArr.push('Konsumsi obat gagal jantung');
+                symptomsText = sympArr.length > 0 ? sympArr.join(', ') : 'Tidak ada gejala aktif';
+                
+                const selectNut = document.getElementById('pjb-nut-type');
+                nutText = selectNut.options[selectNut.selectedIndex].text;
+            }
+            document.getElementById('pr-pjb').innerText = pjbText;
+            document.getElementById('pr-symptoms').innerText = symptomsText;
+            document.getElementById('pr-nut').innerText = nutText;
+
+            // Current Zscores on print report
+            const lastVisit = sessionState.visits.length > 0 ? sessionState.visits[sessionState.visits.length - 1] : null;
+            const prCatchupContainer = document.getElementById('pr-catchup-container');
+            
+            if (lastVisit) {
+                const days = calculateAgeInDays(sessionState.dob, lastVisit.date);
+                const correctedMonths = calculateCorrectedAgeInMonths(days, sessionState.gest, sessionState.prem);
+                
+                const wSd = getInterpolatedSD(correctedMonths, sessionState.gender, 'weight');
+                const wZ = calculateZScore(lastVisit.weight, wSd);
+                const wClass = getWfaClassification(wZ);
+                document.getElementById('pr-wfa-title').innerText = wClass.text;
+                document.getElementById('pr-wfa-z').innerText = `Z-Score: ${wZ.toFixed(2)} SD`;
+                
+                const hSd = getInterpolatedSD(correctedMonths, sessionState.gender, 'height');
+                const hZ = calculateZScore(lastVisit.height, hSd);
+                const hClass = getHfaClassification(hZ);
+                document.getElementById('pr-hfa-title').innerText = hClass.text;
+                document.getElementById('pr-hfa-z').innerText = `Z-Score: ${hZ.toFixed(2)} SD`;
+
+                const bmi = lastVisit.weight / Math.pow(lastVisit.height / 100, 2);
+                const bSd = getInterpolatedSD(correctedMonths, sessionState.gender, 'bmi');
+                const bZ = calculateZScore(bmi, bSd);
+                const bClass = getBfaClassification(bZ);
+                document.getElementById('pr-bfa-title').innerText = bClass.text;
+                document.getElementById('pr-bfa-z').innerText = `Z-Score: ${bZ.toFixed(2)} SD`;
+
+                let conclusion = `Pada pemeriksaan terakhir (${new Date(lastVisit.date).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}), berat badan anak adalah ${lastVisit.weight} kg, tinggi badan ${lastVisit.height} cm, dengan indeks massa tubuh (IMT) ${bmi.toFixed(1)}. `;
+                if (wZ < -2.0 || hZ < -2.0 || bZ < -2.0) {
+                    conclusion += `Anak terindikasi mengalami gangguan pertumbuhan (Z-score &lt; -2 SD). Disarankan konsultasi intensif dengan kardiolog anak dan dokter gizi anak.`;
+                } else {
+                    conclusion += `Kurva pertumbuhan anak saat ini berada dalam batas normal. Lanjutkan pemantauan secara berkala.`;
+                }
+                document.getElementById('pr-growth-conclusion').innerHTML = conclusion;
+
+                prCatchupContainer.classList.remove('hidden');
+                document.getElementById('pr-kcal-total').innerText = document.getElementById('calc-catchup-total').innerText;
+                document.getElementById('pr-kcal-per-kg').innerText = document.getElementById('calc-catchup-per-kg').innerText;
+                document.getElementById('pr-fort-recipe').innerHTML = document.getElementById('fort-recipe-body').innerHTML;
+            } else {
+                document.getElementById('pr-wfa-title').innerText = '-';
+                document.getElementById('pr-wfa-z').innerText = '-';
+                document.getElementById('pr-hfa-title').innerText = '-';
+                document.getElementById('pr-hfa-z').innerText = '-';
+                document.getElementById('pr-bfa-title').innerText = '-';
+                document.getElementById('pr-bfa-z').innerText = '-';
+                document.getElementById('pr-growth-conclusion').innerText = 'Belum ada data pemeriksaan terbaru.';
+                prCatchupContainer.classList.add('hidden');
+            }
+
+            // Print table history
+            const prTbody = document.getElementById('pr-history-rows');
+            prTbody.innerHTML = '';
+            
+            if (sessionState.visits.length === 0) {
+                prTbody.innerHTML = `<tr><td colspan="8" class="py-4 text-center text-slate-400">Belum ada riwayat pemeriksaan.</td></tr>`;
+                return;
+            }
+            
+            sessionState.visits.forEach(v => {
+                const days = calculateAgeInDays(sessionState.dob, v.date);
+                const correctedMonths = calculateCorrectedAgeInMonths(days, sessionState.gest, sessionState.prem);
+                const bmi = v.weight / Math.pow(v.height / 100, 2);
+                
+                const wSd = getInterpolatedSD(correctedMonths, sessionState.gender, 'weight');
+                const wZ = calculateZScore(v.weight, wSd);
+                const hSd = getInterpolatedSD(correctedMonths, sessionState.gender, 'height');
+                const hZ = calculateZScore(v.height, hSd);
+                const bSd = getInterpolatedSD(correctedMonths, sessionState.gender, 'bmi');
+                const bZ = calculateZScore(bmi, bSd);
+                
+                const dateFormatted = new Date(v.date).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'});
+                const ageStr = formatAgeString(days);
+                const showAge = sessionState.prem && (days < 24 * 30.4375) ? formatAgeString(correctedMonths * 30.4375) + ' (Kor.)' : ageStr;
+                
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-slate-100";
+                tr.innerHTML = `
+                    <td class="py-1.5">${dateFormatted}</td>
+                    <td class="py-1.5">${showAge}</td>
+                    <td class="py-1.5">${v.weight} kg</td>
+                    <td class="py-1.5">${v.height} cm</td>
+                    <td class="py-1.5">${bmi.toFixed(1)}</td>
+                    <td class="py-1.5">${wZ.toFixed(2)}</td>
+                    <td class="py-1.5">${hZ.toFixed(2)}</td>
+                    <td class="py-1.5">${bZ.toFixed(2)}</td>
+                `;
+                prTbody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
