@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>CardioConvert — ACE-I, ARB & β-Blocker Converter</title>
+  <meta name="description" content="Evidence-based ACE inhibitor, ARB and beta blocker dose conversion calculator. Cross-convert ACE to ARB and ARB to ACE for clinical practice." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-deep: #060b18;
+      --bg-card: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.08);
+      --teal: #00d4aa;
+      --teal-dim: rgba(0,212,170,0.15);
+      --blue: #4facfe;
+      --blue-dim: rgba(79,172,254,0.15);
+      --purple: #a78bfa;
+      --purple-dim: rgba(167,139,250,0.15);
+      --orange: #fb923c;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --rose-dim: rgba(244,63,94,0.15);
+      --green: #22c55e;
+      --cyan: #06b6d4;
+      --text-primary: #f0f4ff;
+      --text-secondary: rgba(240,244,255,0.55);
+      --text-muted: rgba(240,244,255,0.3);
+      --radius-sm: 10px;
+      --radius-md: 16px;
+      --radius-lg: 24px;
+      --shadow-card: 0 8px 32px rgba(0,0,0,0.4);
+
+      /* ARB cross-convert accent */
+      --arb-accent: #f97316;
+      --arb-dim: rgba(249,115,22,0.15);
+      --ace-accent: #00d4aa;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -200px; left: -200px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(0,212,170,0.06) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -150px; right: -150px;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(79,172,254,0.06) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    .app-container {
+      position: relative; z-index: 1;
+      max-width: 480px; margin: 0 auto;
+      min-height: 100vh; display: flex;
+      flex-direction: column; padding-bottom: 56px;
+    }
+
+    /* ─── HEADER ─── */
+    .app-header { padding: 48px 24px 20px; text-align: center; }
+
+    .header-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--teal-dim); border: 1px solid rgba(0,212,170,0.25);
+      border-radius: 999px; padding: 5px 14px; font-size: 11px;
+      font-weight: 600; color: var(--teal); letter-spacing: 0.08em;
+      text-transform: uppercase; margin-bottom: 14px;
+    }
+
+    .app-title {
+      font-size: 34px; font-weight: 900; letter-spacing: -1.5px; line-height: 1.1;
+      background: linear-gradient(135deg, #f0f4ff 0%, var(--teal) 55%, var(--blue) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom: 8px;
+    }
+
+    .app-subtitle {
+      font-size: 13px; color: var(--text-secondary);
+      line-height: 1.6; max-width: 300px; margin: 0 auto;
+    }
+
+    /* ─── CLASS SWITCHER (3 tabs) ─── */
+    .class-switcher {
+      margin: 16px 20px 0;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 5px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 4px;
+    }
+
+    .class-tab {
+      padding: 12px 6px; border-radius: 18px; border: none;
+      background: transparent; color: var(--text-muted);
+      font-family: inherit; font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: all 0.3s ease;
+      display: flex; align-items: center; justify-content: center;
+      gap: 5px; letter-spacing: -0.2px; line-height: 1.2;
+      text-align: center;
+    }
+
+    .class-tab .tab-icon { font-size: 16px; transition: transform 0.3s ease; }
+    .class-tab:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+
+    .class-tab.active {
+      color: var(--text-primary);
+      border: 1px solid rgba(0,212,170,0.3);
+      box-shadow: 0 4px 20px rgba(0,212,170,0.1);
+    }
+
+    #tab-ace.active  { background: linear-gradient(135deg, rgba(0,212,170,0.2), rgba(79,172,254,0.12)); }
+    #tab-arb.active  { background: linear-gradient(135deg, rgba(249,115,22,0.2), rgba(167,139,250,0.12)); border-color: rgba(249,115,22,0.35); box-shadow: 0 4px 20px rgba(249,115,22,0.1); }
+    #tab-bb.active   { background: linear-gradient(135deg, rgba(79,172,254,0.2), rgba(167,139,250,0.12)); border-color: rgba(79,172,254,0.3); box-shadow: 0 4px 20px rgba(79,172,254,0.1); }
+
+    .class-tab.active .tab-icon { transform: scale(1.1); }
+
+    /* ─── MAIN CONTENT ─── */
+    .main-content { padding: 16px 20px; flex: 1; }
+
+    /* ─── SECTION CARD ─── */
+    .section-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 18px; margin-bottom: 14px;
+      backdrop-filter: blur(10px);
+    }
+
+    .section-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* ─── DRUG GRID ─── */
+    .drug-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .drug-pill {
+      padding: 10px 10px; border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border); background: rgba(255,255,255,0.025);
+      cursor: pointer; transition: all 0.25s ease; text-align: left;
+      position: relative; overflow: hidden;
+    }
+
+    .drug-pill::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 2px; background: var(--drug-color, var(--teal));
+      opacity: 0; transition: opacity 0.25s ease;
+    }
+
+    .drug-pill.selected {
+      border-color: var(--drug-color, var(--teal));
+      background: rgba(var(--drug-color-rgb, 0,212,170), 0.08);
+      box-shadow: 0 0 14px rgba(0,0,0,0.2);
+    }
+    .drug-pill.selected::before { opacity: 1; }
+
+    .drug-name { font-size: 12.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
+    .drug-brand { font-size: 10px; color: var(--text-muted); font-style: italic; }
+
+    /* ─── DOSE INPUT ─── */
+    .dose-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+
+    .dose-btn {
+      width: 44px; height: 44px; border-radius: 12px;
+      border: 1.5px solid var(--border); background: rgba(255,255,255,0.05);
+      color: var(--text-primary); font-size: 22px; font-weight: 300;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s ease; flex-shrink: 0;
+    }
+    .dose-btn:hover { background: rgba(0,212,170,0.15); border-color: var(--teal); color: var(--teal); }
+    .dose-btn:active { transform: scale(0.94); }
+
+    .dose-input-wrap { flex: 1; position: relative; }
+
+    .dose-input {
+      width: 100%; background: rgba(255,255,255,0.05); border: 1.5px solid var(--border);
+      border-radius: 12px; color: var(--text-primary); font-family: inherit;
+      font-size: 26px; font-weight: 700; text-align: center;
+      padding: 8px 46px 8px 16px; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -moz-appearance: textfield;
+    }
+    .dose-input::-webkit-outer-spin-button,
+    .dose-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .dose-input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(0,212,170,0.15); }
+
+    .dose-unit {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      font-size: 12px; font-weight: 600; color: var(--text-muted);
+    }
+
+    .dose-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+
+    .dose-chip {
+      padding: 5px 11px; border-radius: 999px; border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04); color: var(--text-secondary);
+      font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;
+    }
+    .dose-chip.active, .dose-chip:hover {
+      background: var(--teal-dim); border-color: rgba(0,212,170,0.4); color: var(--teal);
+    }
+
+    /* ─── FREQUENCY ─── */
+    .freq-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+
+    .freq-btn {
+      padding: 10px 6px; border-radius: var(--radius-sm); border: 1.5px solid var(--border);
+      background: rgba(255,255,255,0.025); color: var(--text-secondary);
+      font-family: inherit; font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s ease; text-align: center;
+    }
+    .freq-btn span { display: block; font-size: 9px; font-weight: 500; color: var(--text-muted); margin-top: 2px; }
+    .freq-btn.active { background: var(--teal-dim); border-color: rgba(0,212,170,0.4); color: var(--teal); }
+    .freq-btn.active span { color: rgba(0,212,170,0.7); }
+    .freq-btn:hover:not(.active) { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); }
+
+    /* ─── CONVERT BUTTON ─── */
+    .convert-btn {
+      width: 100%; padding: 16px; border-radius: var(--radius-md); border: none;
+      background: linear-gradient(135deg, #00d4aa, #4facfe); color: #060b18;
+      font-family: inherit; font-size: 15px; font-weight: 800; letter-spacing: -0.3px;
+      cursor: pointer; transition: all 0.25s ease; position: relative; overflow: hidden;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-bottom: 20px;
+    }
+    .convert-btn::before {
+      content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s ease;
+    }
+    .convert-btn:hover::before { left: 100%; }
+    .convert-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(0,212,170,0.35); }
+    .convert-btn:active { transform: translateY(0); }
+
+    /* ARB panel button variant */
+    #panel-arb .convert-btn {
+      background: linear-gradient(135deg, #f97316, #a78bfa);
+    }
+    #panel-arb .convert-btn:hover { box-shadow: 0 8px 28px rgba(249,115,22,0.35); }
+
+    /* BB panel button variant */
+    #panel-bb .convert-btn {
+      background: linear-gradient(135deg, #4facfe, #a78bfa);
+    }
+    #panel-bb .convert-btn:hover { box-shadow: 0 8px 28px rgba(79,172,254,0.35); }
+
+    /* ─── RESULTS ─── */
+    .results-section { margin-top: 0; }
+
+    .results-header {
+      padding: 0 4px 14px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .results-title {
+      font-size: 12px; font-weight: 700; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .summary-badge {
+      font-size: 11px; padding: 3px 10px; border-radius: 999px;
+      background: var(--teal-dim); color: var(--teal); font-weight: 700;
+      border: 1px solid rgba(0,212,170,0.2);
+    }
+
+    /* Result Card */
+    .result-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 16px; margin-bottom: 10px;
+      backdrop-filter: blur(10px); position: relative; overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      animation: slideUp 0.35s ease forwards; opacity: 0;
+    }
+    .result-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-card); }
+    .result-card::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+      background: var(--result-color, var(--teal)); border-radius: 3px 0 0 3px;
+    }
+
+    .result-card-top {
+      display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px;
+    }
+    .result-drug-name { font-size: 16px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.4px; }
+    .result-drug-brand { font-size: 10px; color: var(--text-muted); font-style: italic; margin-top: 2px; }
+    .result-dose-big { text-align: right; }
+    .dose-value {
+      font-size: 28px; font-weight: 900; letter-spacing: -1px;
+      color: var(--result-color, var(--teal)); line-height: 1;
+    }
+    .dose-freq-label { font-size: 10.5px; color: var(--text-muted); font-weight: 600; margin-top: 3px; }
+
+    .result-pills-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+
+    .result-pill { padding: 3px 10px; border-radius: 999px; font-size: 10.5px; font-weight: 600; border: 1px solid; }
+    .pill-daily  { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: var(--text-secondary); }
+    .pill-hf     { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.25); color: #86efac; }
+
+    .pill-note {
+      font-size: 11px; color: var(--text-muted); line-height: 1.5;
+      padding: 7px 10px; background: rgba(255,255,255,0.03);
+      border-radius: 8px; border: 1px solid var(--border);
+    }
+
+    /* ─── CROSS-CONVERT DIVIDER ─── */
+    .cross-divider {
+      display: flex; align-items: center; gap: 10px;
+      margin: 24px 0 16px;
+    }
+    .cross-divider-line { flex: 1; height: 1px; background: var(--border); }
+    .cross-divider-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; white-space: nowrap;
+    }
+    .cross-divider.ace-to-arb .cross-divider-label { color: var(--arb-accent); }
+    .cross-divider.arb-to-ace .cross-divider-label { color: var(--ace-accent); }
+
+    /* Cross-class info box */
+    .cross-info-box {
+      border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 12px;
+      display: flex; gap: 10px; align-items: flex-start;
+    }
+    .cross-info-box.ace-to-arb {
+      background: rgba(249,115,22,0.06); border: 1px solid rgba(249,115,22,0.2);
+    }
+    .cross-info-box.arb-to-ace {
+      background: rgba(0,212,170,0.06); border: 1px solid rgba(0,212,170,0.2);
+    }
+    .cross-info-box-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+    .cross-info-box-text { font-size: 11px; line-height: 1.5; }
+    .cross-info-box.ace-to-arb .cross-info-box-text { color: rgba(249,115,22,0.9); }
+    .cross-info-box.arb-to-ace .cross-info-box-text { color: rgba(0,212,170,0.9); }
+
+    /* Cross result card — slightly different accent */
+    .result-card.cross-card {
+      border-color: rgba(249,115,22,0.15);
+    }
+    .result-card.cross-card-ace { border-color: rgba(0,212,170,0.12); }
+
+    /* ─── BB MODE TOGGLE ─── */
+    .mode-toggle-wrap { margin-bottom: 14px; }
+    .mode-toggle {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 4px;
+    }
+    .mode-btn {
+      padding: 10px; border-radius: 12px; border: none;
+      background: transparent; color: var(--text-muted); font-family: inherit;
+      font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+    }
+    .mode-btn.active { background: rgba(167,139,250,0.15); color: var(--purple); border: 1px solid rgba(167,139,250,0.3); }
+
+    /* ─── INFO BOX ─── */
+    .info-box {
+      background: rgba(79,172,254,0.06); border: 1px solid rgba(79,172,254,0.2);
+      border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 14px;
+      display: flex; gap: 10px; align-items: flex-start;
+    }
+    .info-box-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+    .info-box-text { font-size: 11px; color: rgba(79,172,254,0.9); line-height: 1.6; }
+
+    /* ─── EMPTY STATE ─── */
+    .empty-state { text-align: center; padding: 40px 24px; color: var(--text-muted); }
+    .empty-icon { font-size: 52px; margin-bottom: 14px; opacity: 0.4; }
+    .empty-text { font-size: 13.5px; line-height: 1.6; }
+
+    /* ─── DISCLAIMER ─── */
+    .disclaimer {
+      margin: 12px 20px 0; padding: 12px 14px;
+      background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.2);
+      border-radius: var(--radius-md); font-size: 11px; color: rgba(244,63,94,0.8);
+      line-height: 1.6; text-align: center;
+    }
+
+    /* ─── PANEL ─── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── SCROLLBAR ─── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+    @media (min-width: 480px) {
+      .app-header { padding-top: 60px; }
+      .app-title { font-size: 38px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-container">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-badge"><span>💊</span> Evidence-Based Converter</div>
+    <h1 class="app-title">CardioConvert</h1>
+    <p class="app-subtitle">ACE-I · ARB · β-Blocker — dose equivalency for clinical practice</p>
+  </header>
+
+  <!-- 3-TAB SWITCHER -->
+  <div class="class-switcher">
+    <button class="class-tab active" id="tab-ace" onclick="switchClass('ace')">
+      <span class="tab-icon">🫀</span>ACE-I
+    </button>
+    <button class="class-tab" id="tab-arb" onclick="switchClass('arb')">
+      <span class="tab-icon">🔄</span>ARB
+    </button>
+    <button class="class-tab" id="tab-bb" onclick="switchClass('bb')">
+      <span class="tab-icon">⚡</span>β-Blocker
+    </button>
+  </div>
+
+  <main class="main-content">
+
+    <!-- ══════════════ ACE INHIBITOR PANEL ══════════════ -->
+    <div class="panel active" id="panel-ace">
+      <div class="section-card">
+        <p class="section-label">From Drug</p>
+        <div class="drug-grid" id="ace-drug-grid"></div>
+      </div>
+      <div class="section-card">
+        <p class="section-label">Per Dose (mg)</p>
+        <div class="dose-row">
+          <button class="dose-btn" onclick="adjustDose('ace',-1)">−</button>
+          <div class="dose-input-wrap">
+            <input class="dose-input" type="number" id="ace-dose-input" value="5" min="0.25" step="0.5"/>
+            <span class="dose-unit">mg</span>
+          </div>
+          <button class="dose-btn" onclick="adjustDose('ace',1)">+</button>
+        </div>
+        <div class="dose-chips" id="ace-dose-chips"></div>
+        <p class="section-label" style="margin-top:2px">Frequency</p>
+        <div class="freq-grid" id="ace-freq-grid"></div>
+      </div>
+      <button class="convert-btn" onclick="doConvert('ace')"><span>⇄</span> Convert Dose</button>
+      <div class="results-section" id="ace-results">
+        <div class="empty-state">
+          <div class="empty-icon">🔬</div>
+          <p class="empty-text">Select a drug, enter dose,<br>then tap <b>Convert Dose</b></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ ARB PANEL ══════════════ -->
+    <div class="panel" id="panel-arb">
+      <div class="section-card">
+        <p class="section-label">From Drug</p>
+        <div class="drug-grid" id="arb-drug-grid"></div>
+      </div>
+      <div class="section-card">
+        <p class="section-label">Per Dose (mg)</p>
+        <div class="dose-row">
+          <button class="dose-btn" onclick="adjustDose('arb',-1)">−</button>
+          <div class="dose-input-wrap">
+            <input class="dose-input" type="number" id="arb-dose-input" value="80" min="0.25" step="1"/>
+            <span class="dose-unit">mg</span>
+          </div>
+          <button class="dose-btn" onclick="adjustDose('arb',1)">+</button>
+        </div>
+        <div class="dose-chips" id="arb-dose-chips"></div>
+        <p class="section-label" style="margin-top:2px">Frequency</p>
+        <div class="freq-grid" id="arb-freq-grid"></div>
+      </div>
+      <button class="convert-btn" onclick="doConvert('arb')"><span>⇄</span> Convert Dose</button>
+      <div class="results-section" id="arb-results">
+        <div class="empty-state">
+          <div class="empty-icon">🔄</div>
+          <p class="empty-text">Select an ARB, enter dose,<br>then tap <b>Convert Dose</b></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ BETA BLOCKER PANEL ══════════════ -->
+    <div class="panel" id="panel-bb">
+      <div class="mode-toggle-wrap">
+        <div class="mode-toggle">
+          <button class="mode-btn active" id="bb-mode-hf" onclick="switchBBMode('hf')">❤️ Heart Failure</button>
+          <button class="mode-btn" id="bb-mode-gen" onclick="switchBBMode('gen')">💊 General / HTN</button>
+        </div>
+      </div>
+      <div class="section-card">
+        <p class="section-label">From Drug</p>
+        <div class="drug-grid" id="bb-drug-grid"></div>
+      </div>
+      <div class="section-card">
+        <p class="section-label">Per Dose (mg)</p>
+        <div class="dose-row">
+          <button class="dose-btn" onclick="adjustDose('bb',-1)">−</button>
+          <div class="dose-input-wrap">
+            <input class="dose-input" type="number" id="bb-dose-input" value="25" min="0.25" step="0.5"/>
+            <span class="dose-unit">mg</span>
+          </div>
+          <button class="dose-btn" onclick="adjustDose('bb',1)">+</button>
+        </div>
+        <div class="dose-chips" id="bb-dose-chips"></div>
+        <p class="section-label" style="margin-top:2px">Frequency</p>
+        <div class="freq-grid" id="bb-freq-grid"></div>
+      </div>
+      <button class="convert-btn" onclick="doConvert('bb')"><span>⇄</span> Convert Dose</button>
+      <div class="results-section" id="bb-results">
+        <div class="empty-state">
+          <div class="empty-icon">⚡</div>
+          <p class="empty-text">Select a drug, enter dose,<br>then tap <b>Convert Dose</b></p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <div class="disclaimer">
+    ⚠️ <b>Clinical Use Only.</b> Dose equivalencies are approximate. ACE↔ARB cross-conversion based on antihypertensive efficacy. Always individualize therapy. Not a substitute for clinical judgment.
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════════════════════════
+
+const FREQ_OPTIONS = [
+  { label: 'OD',  sub: 'Once daily',   n: 1 },
+  { label: 'BD',  sub: 'Twice daily',  n: 2 },
+  { label: 'TID', sub: 'Three times',  n: 3 },
+  { label: 'QID', sub: 'Four times',   n: 4 },
+];
+
+// Cross-conversion: enalapril 10mg/day ≈ losartan 50mg/day
+// ACE enalapril-equiv × 5 = ARB losartan-equiv
+const ACE_TO_ARB_RATIO = 5;
+
+// ═══════════════════════════════════════════════════════════
+//  ACE INHIBITORS
+//  factor = TDD relative to enalapril 10 mg/day (reference = 1)
+// ═══════════════════════════════════════════════════════════
+const ACE_DRUGS = [
+  {
+    id: 'captopril', name: 'Captopril', brand: 'Capoten',
+    factor: 7.5, defaultFreq: 3, doses: [6.25, 12.5, 25, 50],
+    color: '#f43f5e',
+    hfTarget: '50mg TID',
+    note: 'Shortest-acting ACE-I (T½ 2h); sulfhydryl group. Requires TID dosing. Take 30–60 min before meals.',
+    trial: 'SAVE'
+  },
+  {
+    id: 'enalapril', name: 'Enalapril', brand: 'Vasotec / Renitec',
+    factor: 1.0, defaultFreq: 2, doses: [2.5, 5, 10, 20],
+    color: '#00d4aa',
+    hfTarget: '10–20mg BD',
+    note: 'Reference compound. Prodrug → enalaprilat. Landmark HF evidence (CONSENSUS, SOLVD).',
+    trial: 'CONSENSUS, SOLVD'
+  },
+  {
+    id: 'lisinopril', name: 'Lisinopril', brand: 'Zestril / Prinivil',
+    factor: 1.0, defaultFreq: 1, doses: [2.5, 5, 10, 20, 40],
+    color: '#4facfe',
+    hfTarget: '5–35mg OD',
+    note: 'Not a prodrug; unchanged renal excretion. Once daily for adherence (ATLAS trial).',
+    trial: 'ATLAS, GISSI-3'
+  },
+  {
+    id: 'ramipril', name: 'Ramipril', brand: 'Altace / Tritace',
+    factor: 0.5, defaultFreq: 1, doses: [1.25, 2.5, 5, 10],
+    color: '#a78bfa',
+    hfTarget: '5–10mg OD',
+    note: 'Highly lipophilic. CV risk reduction (HOPE). Strong tissue ACE affinity. Post-MI HF (AIRE).',
+    trial: 'HOPE, AIRE'
+  },
+  {
+    id: 'perindopril', name: 'Perindopril', brand: 'Coversyl / Aceon',
+    factor: 0.4, defaultFreq: 1, doses: [2, 4, 8],
+    color: '#fb923c',
+    hfTarget: '4–8mg OD',
+    note: 'Arginine salt ≈ 1.25× erbumine potency. Potent tissue ACE inhibitor. CAD benefit (EUROPA).',
+    trial: 'EUROPA, PROGRESS'
+  },
+  {
+    id: 'quinapril', name: 'Quinapril', brand: 'Accupril',
+    factor: 2.0, defaultFreq: 2, doses: [5, 10, 20, 40],
+    color: '#22c55e',
+    hfTarget: '10–20mg BD',
+    note: 'High tissue selectivity (heart/vessel ACE). Avoid calcium antacids (reduce absorption).',
+    trial: 'QUILLTY'
+  },
+  {
+    id: 'fosinopril', name: 'Fosinopril', brand: 'Monopril',
+    factor: 1.0, defaultFreq: 1, doses: [10, 20, 40],
+    color: '#06b6d4',
+    hfTarget: '10–40mg OD',
+    note: 'Dual hepatic + renal clearance — preferred in significant renal impairment.',
+    trial: 'FAMIS'
+  },
+  {
+    id: 'trandolapril', name: 'Trandolapril', brand: 'Mavik / Gopten',
+    factor: 0.2, defaultFreq: 1, doses: [0.5, 1, 2, 4],
+    color: '#f59e0b',
+    hfTarget: '4mg OD',
+    note: 'Most potent ACE-I per mg. Once daily. Post-MI LV dysfunction (TRACE trial).',
+    trial: 'TRACE'
+  },
+];
+
+// ═══════════════════════════════════════════════════════════
+//  ARBs
+//  factor = TDD relative to losartan 50 mg/day (reference = 1)
+// ═══════════════════════════════════════════════════════════
+const ARB_DRUGS = [
+  {
+    id: 'losartan', name: 'Losartan', brand: 'Cozaar / Lifezar',
+    factor: 1.0, defaultFreq: 1, doses: [25, 50, 100],
+    color: '#00d4aa',
+    hfTarget: '50–150mg OD',
+    note: 'First ARB (1995). Unique uricosuric effect → preferred with gout. LVH regression vs atenolol (LIFE).',
+    trial: 'LIFE, HEAAL, ELITE-II'
+  },
+  {
+    id: 'valsartan', name: 'Valsartan', brand: 'Diovan',
+    factor: 1.6, defaultFreq: 1, doses: [40, 80, 160, 320],
+    color: '#4facfe',
+    hfTarget: '160mg BD',
+    note: 'Strongest HF mortality evidence among ARBs. Use 160mg BD for HFrEF (Val-HeFT). Post-MI (VALIANT).',
+    trial: 'Val-HeFT, VALIANT, VALUE'
+  },
+  {
+    id: 'candesartan', name: 'Candesartan', brand: 'Atacand',
+    factor: 0.32, defaultFreq: 1, doses: [4, 8, 16, 32],
+    color: '#a78bfa',
+    hfTarget: '32mg OD',
+    note: 'Most potent ARB per mg. Best HF evidence of all ARBs (CHARM). Target 32mg OD in HFrEF.',
+    trial: 'CHARM, SCOPE'
+  },
+  {
+    id: 'irbesartan', name: 'Irbesartan', brand: 'Avapro / Aprovel',
+    factor: 3.0, defaultFreq: 1, doses: [75, 150, 300],
+    color: '#f43f5e',
+    hfTarget: '150–300mg OD',
+    note: 'Preferred in diabetic nephropathy — reduces proteinuria (IDNT, IRMA-2). No food interaction.',
+    trial: 'IDNT, IRMA-2'
+  },
+  {
+    id: 'olmesartan', name: 'Olmesartan', brand: 'Benicar / Olmetec',
+    factor: 0.4, defaultFreq: 1, doses: [10, 20, 40],
+    color: '#fb923c',
+    hfTarget: '20–40mg OD',
+    note: 'Most potent AT₁ receptor occupancy. Rare sprue-like enteropathy at high doses. DM microalbuminuria (ROADMAP).',
+    trial: 'ROADMAP'
+  },
+  {
+    id: 'telmisartan', name: 'Telmisartan', brand: 'Micardis / Pritor',
+    factor: 0.8, defaultFreq: 1, doses: [20, 40, 80],
+    color: '#22c55e',
+    hfTarget: '80mg OD',
+    note: 'Longest T½ among ARBs (~24h) → best trough coverage. Partial PPAR-γ agonism (metabolic benefit). Non-inferior to ramipril (ONTARGET).',
+    trial: 'ONTARGET, TRANSCEND'
+  },
+  {
+    id: 'azilsartan', name: 'Azilsartan', brand: 'Edarbi / Azilva',
+    factor: 0.8, defaultFreq: 1, doses: [20, 40, 80],
+    color: '#06b6d4',
+    hfTarget: '40–80mg OD',
+    note: 'Newest ARB; superior 24h BP reduction vs olmesartan and valsartan. Limited HF outcome data.',
+    trial: 'REGAAL'
+  },
+  {
+    id: 'eprosartan', name: 'Eprosartan', brand: 'Teveten',
+    factor: 12.0, defaultFreq: 1, doses: [400, 600, 800],
+    color: '#f59e0b',
+    hfTarget: '600–800mg OD',
+    note: 'Blocks presynaptic AT₁ receptors → reduced norepinephrine release. May lower sympathetic activity. Stroke risk reduction (MOSES).',
+    trial: 'MOSES'
+  },
+];
+
+// ═══════════════════════════════════════════════════════════
+//  BETA BLOCKERS — HF (evidence-based mortality-reducing)
+//  factor = TDD relative to bisoprolol 10 mg/day
+// ═══════════════════════════════════════════════════════════
+const BB_HF = [
+  {
+    id: 'bisoprolol', name: 'Bisoprolol', brand: 'Concor / Zebeta',
+    factor: 1.0, defaultFreq: 1, doses: [1.25, 2.5, 5, 10],
+    color: '#00d4aa',
+    hfTarget: 'Target: 10mg OD',
+    note: 'β₁-selective. Most studied in HF (CIBIS-II). Safe in COPD/mild asthma.',
+    trial: 'CIBIS-II', selectivity: 'β₁-selective'
+  },
+  {
+    id: 'carvedilol', name: 'Carvedilol', brand: 'Coreg / Dilatrend',
+    factor: 5.0, defaultFreq: 2, doses: [3.125, 6.25, 12.5, 25],
+    color: '#f43f5e',
+    hfTarget: 'Target: 25mg BD',
+    note: 'Non-selective β + α₁ blocker. Vasodilatory. Take WITH food. COPD caution.',
+    trial: 'COPERNICUS, US Carvedilol', selectivity: 'β₁/β₂/α₁'
+  },
+  {
+    id: 'metoprolol-xl', name: 'Metoprolol Succ.', brand: 'Toprol-XL / Betaloc ZOK',
+    factor: 20.0, defaultFreq: 1, doses: [25, 50, 100, 200],
+    color: '#4facfe',
+    hfTarget: 'Target: 200mg OD (XL)',
+    note: 'Extended-release ONLY for HF (MERIT-HF). Tartrate NOT equivalent in HF evidence.',
+    trial: 'MERIT-HF', selectivity: 'β₁-selective'
+  },
+  {
+    id: 'nebivolol', name: 'Nebivolol', brand: 'Bystolic / Nebilet',
+    factor: 1.0, defaultFreq: 1, doses: [1.25, 2.5, 5, 10],
+    color: '#a78bfa',
+    hfTarget: 'Target: 10mg OD',
+    note: 'β₁-selective + NO-mediated vasodilation. Evidence in elderly HFrEF (SENIORS). Less mortality data vs others.',
+    trial: 'SENIORS', selectivity: 'β₁-selective + NO'
+  },
+];
+
+// ═══════════════════════════════════════════════════════════
+//  BETA BLOCKERS — General / HTN
+//  factor = TDD relative to bisoprolol 10 mg/day
+// ═══════════════════════════════════════════════════════════
+const BB_GEN = [
+  {
+    id: 'bisoprolol-g', name: 'Bisoprolol', brand: 'Concor / Zebeta',
+    factor: 1.0, defaultFreq: 1, doses: [1.25, 2.5, 5, 10],
+    color: '#00d4aa',
+    note: 'β₁-selective. T½ ~12h. Preferred in metabolic syndrome, COPD.',
+    selectivity: 'β₁-selective'
+  },
+  {
+    id: 'atenolol-g', name: 'Atenolol', brand: 'Tenormin',
+    factor: 5.0, defaultFreq: 1, doses: [12.5, 25, 50, 100],
+    color: '#4facfe',
+    note: 'β₁-selective. Renally excreted — dose-adjust in CKD. Less CNS side effects.',
+    selectivity: 'β₁-selective'
+  },
+  {
+    id: 'metoprolol-t', name: 'Metoprolol Tart.', brand: 'Lopressor / Betaloc',
+    factor: 10.0, defaultFreq: 2, doses: [25, 50, 100],
+    color: '#06b6d4',
+    note: 'β₁-selective. Immediate release — hepatic CYP2D6. T½ 3–7h.',
+    selectivity: 'β₁-selective'
+  },
+  {
+    id: 'carvedilol-g', name: 'Carvedilol', brand: 'Coreg / Dilatrend',
+    factor: 2.5, defaultFreq: 2, doses: [3.125, 6.25, 12.5, 25],
+    color: '#f43f5e',
+    note: 'Non-selective β + α₁. More vasodilation and weight gain vs selective BBs.',
+    selectivity: 'β₁/β₂/α₁'
+  },
+  {
+    id: 'propranolol-g', name: 'Propranolol', brand: 'Inderal',
+    factor: 16.0, defaultFreq: 2, doses: [10, 20, 40, 80, 160],
+    color: '#fb923c',
+    note: 'Non-selective. High lipophilicity → CNS effects. Thyrotoxicosis, migraine, tremor, portal HTN.',
+    selectivity: 'Non-selective'
+  },
+  {
+    id: 'nebivolol-g', name: 'Nebivolol', brand: 'Bystolic / Nebilet',
+    factor: 1.0, defaultFreq: 1, doses: [2.5, 5, 10],
+    color: '#a78bfa',
+    note: 'Highly β₁-selective + NO vasodilation. Best erectile function profile among BBs.',
+    selectivity: 'β₁-selective + NO'
+  },
+  {
+    id: 'labetalol-g', name: 'Labetalol', brand: 'Trandate / Normodyne',
+    factor: 40.0, defaultFreq: 2, doses: [100, 200, 300, 400],
+    color: '#f59e0b',
+    note: 'α:β = 1:7 oral. Drug of choice in hypertensive emergency in pregnancy.',
+    selectivity: 'β₁/β₂/α₁'
+  },
+];
+
+// ═══════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════
+const state = {
+  currentClass: 'ace',
+  bbMode: 'hf',
+  ace: { selectedDrug: null, freq: 1 },
+  arb: { selectedDrug: null, freq: 1 },
+  bb:  { selectedDrug: null, freq: 1 },
+};
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+function init() {
+  renderDrugGrid('ace', ACE_DRUGS);   renderFreqGrid('ace');
+  renderDrugGrid('arb', ARB_DRUGS);   renderFreqGrid('arb');
+  renderDrugGrid('bb',  BB_HF);       renderFreqGrid('bb');
+
+  selectDrug('ace', ACE_DRUGS[1]);  // enalapril
+  selectDrug('arb', ARB_DRUGS[1]);  // valsartan
+  selectDrug('bb',  BB_HF[0]);      // bisoprolol
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SWITCH CLASS
+// ═══════════════════════════════════════════════════════════
+const ALL_CLS = ['ace','arb','bb'];
+
+function switchClass(cls) {
+  state.currentClass = cls;
+  ALL_CLS.forEach(c => {
+    document.getElementById(`panel-${c}`).classList.toggle('active', c === cls);
+    document.getElementById(`tab-${c}`).classList.toggle('active', c === cls);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  BB MODE
+// ═══════════════════════════════════════════════════════════
+function switchBBMode(mode) {
+  state.bbMode = mode;
+  document.getElementById('bb-mode-hf').classList.toggle('active', mode === 'hf');
+  document.getElementById('bb-mode-gen').classList.toggle('active', mode === 'gen');
+  const drugs = mode === 'hf' ? BB_HF : BB_GEN;
+  renderDrugGrid('bb', drugs);
+  selectDrug('bb', drugs[0]);
+  resetResults('bb');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER DRUG GRID
+// ═══════════════════════════════════════════════════════════
+function renderDrugGrid(cls, drugs) {
+  const grid = document.getElementById(`${cls}-drug-grid`);
+  grid.innerHTML = '';
+  drugs.forEach(drug => {
+    const btn = document.createElement('button');
+    btn.className = 'drug-pill';
+    btn.id = `drug-${cls}-${drug.id}`;
+    btn.style.setProperty('--drug-color', drug.color);
+    btn.innerHTML = `<div class="drug-name">${drug.name}</div><div class="drug-brand">${drug.brand}</div>`;
+    btn.onclick = () => selectDrug(cls, drug);
+    grid.appendChild(btn);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SELECT DRUG
+// ═══════════════════════════════════════════════════════════
+function selectDrug(cls, drug) {
+  state[cls].selectedDrug = drug;
+  const grid = document.getElementById(`${cls}-drug-grid`);
+  grid.querySelectorAll('.drug-pill').forEach(el => el.classList.remove('selected'));
+  const btn = document.getElementById(`drug-${cls}-${drug.id}`);
+  if (btn) btn.classList.add('selected');
+  state[cls].freq = drug.defaultFreq;
+  updateFreqUI(cls);
+  renderDoseChips(cls);
+  const midDose = drug.doses[Math.floor(drug.doses.length / 2)];
+  document.getElementById(`${cls}-dose-input`).value = midDose;
+  resetResults(cls);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  FREQ GRID
+// ═══════════════════════════════════════════════════════════
+function renderFreqGrid(cls) {
+  const grid = document.getElementById(`${cls}-freq-grid`);
+  grid.innerHTML = '';
+  FREQ_OPTIONS.forEach(f => {
+    const btn = document.createElement('button');
+    btn.className = 'freq-btn';
+    btn.id = `freq-${cls}-${f.n}`;
+    btn.innerHTML = `${f.label}<span>${f.sub}</span>`;
+    btn.onclick = () => { state[cls].freq = f.n; updateFreqUI(cls); };
+    grid.appendChild(btn);
+  });
+  updateFreqUI(cls);
+}
+
+function updateFreqUI(cls) {
+  FREQ_OPTIONS.forEach(f => {
+    const btn = document.getElementById(`freq-${cls}-${f.n}`);
+    if (btn) btn.classList.toggle('active', state[cls].freq === f.n);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DOSE CHIPS
+// ═══════════════════════════════════════════════════════════
+function renderDoseChips(cls) {
+  const drug = state[cls].selectedDrug;
+  const wrap = document.getElementById(`${cls}-dose-chips`);
+  wrap.innerHTML = '';
+  if (!drug) return;
+  drug.doses.forEach(d => {
+    const chip = document.createElement('button');
+    chip.className = 'dose-chip';
+    chip.textContent = `${d} mg`;
+    chip.onclick = () => {
+      document.getElementById(`${cls}-dose-input`).value = d;
+      wrap.querySelectorAll('.dose-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    };
+    wrap.appendChild(chip);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ADJUST DOSE
+// ═══════════════════════════════════════════════════════════
+function adjustDose(cls, delta) {
+  const input = document.getElementById(`${cls}-dose-input`);
+  let val = parseFloat(input.value) || 0;
+  const drug = state[cls].selectedDrug;
+  const step = drug && drug.doses[0] < 1 ? 0.25 : (drug && drug.doses[0] < 10 ? 1 : 5);
+  val = Math.max(0.25, parseFloat((val + delta * step).toFixed(2)));
+  input.value = val;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RESET RESULTS
+// ═══════════════════════════════════════════════════════════
+const EMPTY_ICONS = { ace: '🔬', arb: '🔄', bb: '⚡' };
+function resetResults(cls) {
+  document.getElementById(`${cls}-results`).innerHTML = `
+    <div class="empty-state">
+      <div class="empty-icon">${EMPTY_ICONS[cls]}</div>
+      <p class="empty-text">Tap <b>Convert Dose</b> to see equivalents</p>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  FORMAT DOSE
+// ═══════════════════════════════════════════════════════════
+function fmtDose(v) {
+  if (v < 1)   return v.toFixed(2);
+  if (v < 10)  return parseFloat(v.toFixed(1)).toString();
+  return Math.round(v).toString();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  BUILD RESULT CARD HTML
+// ═══════════════════════════════════════════════════════════
+function buildCard(target, targetDailyDose, isSource, delay, extraClass = '') {
+  const perDoseCalc = targetDailyDose / target.defaultFreq;
+  const freqOpt = FREQ_OPTIONS.find(f => f.n === target.defaultFreq);
+  const freqStr = freqOpt ? freqOpt.label : `×${target.defaultFreq}`;
+  const color = target.color;
+
+  const sourceBadge = isSource
+    ? `<span class="result-pill" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.12);color:rgba(255,255,255,0.4);font-size:10px">SOURCE</span>`
+    : '';
+
+  const hfBadge = target.hfTarget
+    ? `<span class="result-pill pill-hf">🎯 ${target.hfTarget}</span>`
+    : '';
+
+  const trialBadge = target.trial
+    ? `<span class="result-pill" style="background:rgba(79,172,254,0.1);border-color:rgba(79,172,254,0.25);color:rgba(79,172,254,0.9);">📋 ${target.trial}</span>`
+    : '';
+
+  const selBadge = target.selectivity
+    ? `<span class="result-pill" style="background:rgba(167,139,250,0.1);border-color:rgba(167,139,250,0.25);color:rgba(167,139,250,0.9);">⚡ ${target.selectivity}</span>`
+    : '';
+
+  return `
+    <div class="result-card ${extraClass}" style="--result-color:${color}; animation-delay:${delay}ms; ${isSource ? 'opacity:0.65;border-color:rgba(255,255,255,0.1);' : ''}">
+      <div class="result-card-top">
+        <div>
+          <div class="result-drug-name">${target.name}</div>
+          <div class="result-drug-brand">${target.brand}</div>
+        </div>
+        <div class="result-dose-big">
+          <div class="dose-value" style="color:${color}">${isSource ? '─' : fmtDose(perDoseCalc)}</div>
+          <div class="dose-freq-label">${isSource ? 'source drug' : `mg × ${freqStr}`}</div>
+        </div>
+      </div>
+      ${!isSource ? `
+      <div class="result-pills-row">
+        <span class="result-pill pill-daily">Total: ${parseFloat(targetDailyDose.toFixed(1))} mg/day</span>
+        ${hfBadge}${trialBadge}${selBadge}
+      </div>` : `<div class="result-pills-row">${sourceBadge}</div>`}
+      <div class="pill-note">${target.note}</div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MAIN CONVERT
+// ═══════════════════════════════════════════════════════════
+function doConvert(cls) {
+  const drug = state[cls].selectedDrug;
+  if (!drug) { alert('Please select a drug first.'); return; }
+
+  const perDose = parseFloat(document.getElementById(`${cls}-dose-input`).value);
+  if (!perDose || perDose <= 0) { alert('Please enter a valid dose.'); return; }
+
+  const freq = state[cls].freq;
+  const totalDaily = perDose * freq;
+  const freqLabel = FREQ_OPTIONS.find(f => f.n === freq)?.label || '';
+  const resultsEl = document.getElementById(`${cls}-results`);
+
+  let html = `
+    <div class="results-header">
+      <span class="results-title">Equivalents</span>
+      <span class="summary-badge">${perDose}mg ${freqLabel} = ${totalDaily}mg/day</span>
+    </div>`;
+
+  // ── ACE panel ──
+  if (cls === 'ace') {
+    const refEnalapril = totalDaily / drug.factor;  // enalapril-equiv daily
+
+    html += `
+      <div class="info-box">
+        <span class="info-box-icon">ℹ️</span>
+        <p class="info-box-text">ACE inhibitor equivalencies based on RAAS inhibition & antihypertensive efficacy. Adjust to HF target doses as clinically indicated.</p>
+      </div>`;
+
+    ACE_DRUGS.forEach((t, i) => {
+      const tdd = refEnalapril * t.factor;
+      html += buildCard(t, tdd, t.id === drug.id, i * 55);
+    });
+
+    // ── Cross-convert: ACE → ARB ──
+    html += `
+      <div class="cross-divider ace-to-arb">
+        <div class="cross-divider-line"></div>
+        <span class="cross-divider-label">🔄 ACE → ARB Equivalents</span>
+        <div class="cross-divider-line"></div>
+      </div>
+      <div class="cross-info-box ace-to-arb">
+        <span class="cross-info-box-icon">⚠️</span>
+        <p class="cross-info-box-text">Cross-class approximation based on antihypertensive equivalency (Enalapril 10mg/day ≈ Losartan 50mg/day). Not a direct pharmacodynamic equivalence — consider individual drug HF evidence when switching class.</p>
+      </div>`;
+
+    const losartanEquiv = refEnalapril * ACE_TO_ARB_RATIO;
+    ARB_DRUGS.forEach((t, i) => {
+      const tdd = losartanEquiv * t.factor;
+      html += buildCard(t, tdd, false, i * 55, 'cross-card');
+    });
+  }
+
+  // ── ARB panel ──
+  else if (cls === 'arb') {
+    const refLosartan = totalDaily / drug.factor;  // losartan-equiv daily
+
+    html += `
+      <div class="info-box" style="background:rgba(249,115,22,0.06);border-color:rgba(249,115,22,0.2);">
+        <span class="info-box-icon">🔄</span>
+        <p class="info-box-text" style="color:rgba(249,115,22,0.9);">ARB equivalencies based on antihypertensive & AT₁ receptor blockade efficacy. Candesartan 32mg OD has strongest HF mortality evidence among ARBs.</p>
+      </div>`;
+
+    ARB_DRUGS.forEach((t, i) => {
+      const tdd = refLosartan * t.factor;
+      html += buildCard(t, tdd, t.id === drug.id, i * 55);
+    });
+
+    // ── Cross-convert: ARB → ACE ──
+    html += `
+      <div class="cross-divider arb-to-ace">
+        <div class="cross-divider-line"></div>
+        <span class="cross-divider-label">🫀 ARB → ACE-I Equivalents</span>
+        <div class="cross-divider-line"></div>
+      </div>
+      <div class="cross-info-box arb-to-ace">
+        <span class="cross-info-box-icon">⚠️</span>
+        <p class="cross-info-box-text">Cross-class approximation (Losartan 50mg/day ≈ Enalapril 10mg/day). Consider: ACE-I cause cough (~10–15%); ARBs preferred if intolerant. HF: both classes have Level I evidence.</p>
+      </div>`;
+
+    const enalaprilEquiv = refLosartan / ACE_TO_ARB_RATIO;
+    ACE_DRUGS.forEach((t, i) => {
+      const tdd = enalaprilEquiv * t.factor;
+      html += buildCard(t, tdd, false, i * 55, 'cross-card-ace');
+    });
+  }
+
+  // ── BB panel ──
+  else {
+    const allDrugs = state.bbMode === 'hf' ? BB_HF : BB_GEN;
+    const refBisoprolol = totalDaily / drug.factor;
+
+    if (state.bbMode === 'hf') {
+      html += `
+        <div class="info-box">
+          <span class="info-box-icon">❤️</span>
+          <p class="info-box-text">HF evidence: CIBIS-II (bisoprolol), MERIT-HF (metoprolol succinate XL), COPERNICUS (carvedilol), SENIORS (nebivolol). Start low, titrate every 2 weeks.</p>
+        </div>`;
+    } else {
+      html += `
+        <div class="info-box">
+          <span class="info-box-icon">💊</span>
+          <p class="info-box-text">Antihypertensive β-blocker equivalencies (approximate). Select based on comorbidities, renal function, and tolerability.</p>
+        </div>`;
+    }
+
+    allDrugs.forEach((t, i) => {
+      const tdd = refBisoprolol * t.factor;
+      html += buildCard(t, tdd, t.id === drug.id, i * 55);
+    });
+  }
+
+  resultsEl.innerHTML = html;
+}
+
+// ── BOOT ──
+init();
+</script>
+</body>
+</html>
