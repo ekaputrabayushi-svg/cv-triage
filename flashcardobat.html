@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>CardioFlash – Obat Kardiovaskular</title>
+  <meta name="description" content="50 Flashcard interaktif obat kardiovaskular berdasarkan Drugs for the Heart oleh Opie & Gersh. Belajar farmakologi jantung dengan cara menyenangkan." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ===== CSS RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0e1a;
+      --surface: #111827;
+      --surface2: #1a2236;
+      --border: rgba(255,255,255,0.08);
+      --accent: #6c63ff;
+      --accent2: #ff6584;
+      --accent3: #43e97b;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --card-front: linear-gradient(135deg, #1a2236 0%, #1e2d4a 100%);
+      --card-back: linear-gradient(135deg, #1a1f3a 0%, #2d1b69 100%);
+      --radius: 20px;
+      --shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    html { font-size: 16px; scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* ===== ANIMATED BG ===== */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background:
+        radial-gradient(ellipse at 20% 20%, rgba(108,99,255,0.12) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(255,101,132,0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(67,233,123,0.05) 0%, transparent 60%);
+      animation: bgPulse 8s ease-in-out infinite alternate;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes bgPulse {
+      from { transform: scale(1) rotate(0deg); opacity: 0.7; }
+      to   { transform: scale(1.1) rotate(3deg); opacity: 1; }
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      position: relative;
+      z-index: 10;
+      padding: 20px 20px 0;
+      text-align: center;
+    }
+
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(108,99,255,0.15);
+      border: 1px solid rgba(108,99,255,0.3);
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #a5a0ff;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    .logo-badge svg { width: 14px; height: 14px; }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(26px, 7vw, 36px);
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff 30%, #a5a0ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    /* ===== STATS BAR ===== */
+    .stats-bar {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      padding: 16px 20px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .stat-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 7px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-pill span { color: var(--text); }
+
+    /* ===== PROGRESS ===== */
+    .progress-wrap {
+      padding: 0 20px 10px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .progress-track {
+      height: 4px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      transition: width 0.5s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    /* ===== CATEGORY TABS ===== */
+    .cat-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 10px 20px;
+      scrollbar-width: none;
+      position: relative;
+      z-index: 10;
+    }
+    .cat-scroll::-webkit-scrollbar { display: none; }
+
+    .cat-btn {
+      flex-shrink: 0;
+      padding: 7px 14px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .cat-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(108,99,255,0.4);
+    }
+
+    .cat-btn:hover:not(.active) {
+      border-color: rgba(255,255,255,0.2);
+      color: var(--text);
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    main {
+      padding: 10px 20px 120px;
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ===== FLASHCARD ===== */
+    .card-container {
+      width: 100%;
+      max-width: 480px;
+      perspective: 1200px;
+      height: 380px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.7s cubic-bezier(0.34,1.2,0.64,1);
+    }
+
+    .card-inner.flipped { transform: rotateY(180deg); }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 28px 24px;
+      overflow: hidden;
+    }
+
+    .card-front {
+      background: var(--card-front);
+      border: 1px solid rgba(108,99,255,0.25);
+      box-shadow: var(--shadow), 0 0 0 1px rgba(108,99,255,0.1) inset;
+    }
+
+    .card-back {
+      background: var(--card-back);
+      border: 1px solid rgba(255,101,132,0.25);
+      box-shadow: var(--shadow), 0 0 0 1px rgba(255,101,132,0.1) inset;
+      transform: rotateY(180deg);
+    }
+
+    /* Decorative orb */
+    .card-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(40px);
+      pointer-events: none;
+    }
+
+    .card-front .card-orb {
+      width: 160px; height: 160px;
+      background: rgba(108,99,255,0.25);
+      top: -40px; right: -40px;
+    }
+
+    .card-back .card-orb {
+      width: 160px; height: 160px;
+      background: rgba(255,101,132,0.2);
+      bottom: -40px; left: -40px;
+    }
+
+    .card-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 100px;
+      margin-bottom: 16px;
+      width: fit-content;
+    }
+
+    .card-front .card-tag {
+      background: rgba(108,99,255,0.2);
+      color: #a5a0ff;
+      border: 1px solid rgba(108,99,255,0.3);
+    }
+
+    .card-back .card-tag {
+      background: rgba(255,101,132,0.2);
+      color: #ffb3c4;
+      border: 1px solid rgba(255,101,132,0.3);
+    }
+
+    .card-num {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-dim);
+    }
+
+    .card-question {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(17px, 4.5vw, 21px);
+      font-weight: 700;
+      line-height: 1.4;
+      color: #fff;
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
+
+    .card-answer {
+      font-size: clamp(13px, 3.5vw, 15px);
+      line-height: 1.65;
+      color: #e2e8f0;
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+    .card-answer::-webkit-scrollbar { display: none; }
+
+    .card-hint {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 12px;
+      font-weight: 500;
+    }
+
+    .card-hint svg { width: 12px; height: 12px; }
+
+    .answer-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #ff9ab0;
+      margin-bottom: 10px;
+    }
+
+    /* Key point highlight */
+    .key { color: #a5a0ff; font-weight: 600; }
+    .drug { color: #43e97b; font-weight: 600; }
+    .warn { color: #ffb347; font-weight: 600; }
+
+    /* ===== CONTROLS ===== */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 16px;
+    }
+
+    .ctrl-btn {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .ctrl-btn:hover:not(:disabled) {
+      border-color: rgba(108,99,255,0.4);
+      color: var(--accent);
+      transform: scale(1.05);
+    }
+
+    .ctrl-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .ctrl-btn svg { width: 20px; height: 20px; }
+
+    .flip-btn {
+      flex: 1;
+      height: 52px;
+      border-radius: 100px;
+      border: none;
+      background: linear-gradient(135deg, var(--accent), #8b83ff);
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      box-shadow: 0 8px 24px rgba(108,99,255,0.4);
+    }
+
+    .flip-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(108,99,255,0.5);
+    }
+
+    .flip-btn:active { transform: scale(0.97); }
+
+    /* ===== KNOW / DON'T KNOW ===== */
+    .result-row {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      max-width: 480px;
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: all 0.3s ease;
+    }
+
+    .result-row.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: all;
+    }
+
+    .res-btn {
+      flex: 1;
+      height: 46px;
+      border-radius: 100px;
+      border: 1px solid;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .res-btn.know {
+      border-color: rgba(67,233,123,0.4);
+      color: #43e97b;
+    }
+    .res-btn.know:hover {
+      background: rgba(67,233,123,0.15);
+      transform: translateY(-1px);
+    }
+
+    .res-btn.dontknow {
+      border-color: rgba(255,101,132,0.4);
+      color: #ff6584;
+    }
+    .res-btn.dontknow:hover {
+      background: rgba(255,101,132,0.15);
+      transform: translateY(-1px);
+    }
+
+    /* ===== MINI LIST ===== */
+    .card-list {
+      width: 100%;
+      max-width: 480px;
+      margin-top: 8px;
+    }
+
+    .list-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+
+    .card-dot-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .card-dot {
+      width: 28px;
+      height: 8px;
+      border-radius: 100px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .card-dot.current { background: var(--accent); border-color: var(--accent); }
+    .card-dot.known   { background: var(--accent3); border-color: var(--accent3); opacity: 0.7; }
+    .card-dot.unknown { background: var(--accent2); border-color: var(--accent2); opacity: 0.7; }
+
+    /* ===== COMPLETION SCREEN ===== */
+    .complete-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 40px 20px;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .complete-screen.show { display: flex; }
+
+    .trophy { font-size: 72px; margin-bottom: 16px; animation: bounce 0.6s ease; }
+    @keyframes bounce {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+
+    .complete-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #fff, #a5a0ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      width: 100%;
+      margin: 20px 0;
+    }
+
+    .score-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .score-card .val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+    }
+    .score-card .lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .score-card.green .val { color: var(--accent3); }
+    .score-card.red   .val { color: var(--accent2); }
+
+    .restart-btn {
+      width: 100%;
+      height: 54px;
+      border-radius: 100px;
+      border: none;
+      background: linear-gradient(135deg, var(--accent), #8b83ff);
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(108,99,255,0.4);
+      transition: all 0.2s ease;
+    }
+
+    .restart-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(108,99,255,0.5); }
+
+    /* ===== SWIPE INDICATOR ===== */
+    .swipe-hint {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-align: center;
+      margin-top: -6px;
+      margin-bottom: 8px;
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.95); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .card-animate { animation: cardIn 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+
+    @keyframes slideLeft {
+      from { opacity: 0; transform: translateX(60px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes slideRight {
+      from { opacity: 0; transform: translateX(-60px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .anim-left  { animation: slideLeft  0.35s cubic-bezier(0.34,1.2,0.64,1); }
+    .anim-right { animation: slideRight 0.35s cubic-bezier(0.34,1.2,0.64,1); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (min-width: 480px) {
+      .card-container { height: 420px; }
+    }
+
+    /* ===== SERIES & CURATOR ===== */
+    .series-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .part-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: linear-gradient(135deg, rgba(255,101,132,0.18), rgba(255,101,132,0.08));
+      border: 1px solid rgba(255,101,132,0.35);
+      border-radius: 100px;
+      padding: 5px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #ff9ab0;
+      letter-spacing: 0.5px;
+    }
+
+    .vault-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: linear-gradient(135deg, rgba(108,99,255,0.18), rgba(108,99,255,0.08));
+      border: 1px solid rgba(108,99,255,0.35);
+      border-radius: 100px;
+      padding: 5px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #a5a0ff;
+      letter-spacing: 0.3px;
+    }
+
+    .curator-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 8px;
+      margin-bottom: 2px;
+    }
+
+    .curator-avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .curator-text {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    .curator-text strong {
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* ===== FOOTER ===== */
+    .app-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      background: linear-gradient(to top, rgba(10,14,26,0.98) 60%, transparent);
+      padding: 10px 20px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .footer-dot {
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: var(--text-dim);
+    }
+
+    .footer-text {
+      font-size: 10px;
+      color: var(--text-dim);
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+
+    .footer-vault {
+      font-size: 10px;
+      font-weight: 700;
+      color: #a5a0ff;
+      letter-spacing: 0.3px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-badge">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+    </svg>
+    CardioFlash
+  </div>
+
+  <div class="series-row">
+    <span class="part-badge">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg>
+      Part 1 · More Coming Soon
+    </span>
+    <span class="vault-badge">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      CardiologyVault
+    </span>
+  </div>
+
+  <h1>Obat Kardiovaskular</h1>
+  <p class="subtitle">50 Flashcard · Berdasarkan Drugs for the Heart – Opie &amp; Gersh</p>
+
+  <div class="curator-row">
+    <div class="curator-avatar">B</div>
+    <p class="curator-text">Curated by <strong>Bayushi Eka Putra, MD, FIHA</strong></p>
+  </div>
+</header>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat-pill">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+    Kartu <span id="statCurrent">1</span>/<span id="statTotal">50</span>
+  </div>
+  <div class="stat-pill">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#43e97b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    Tahu <span id="statKnown" style="color:#43e97b">0</span>
+  </div>
+  <div class="stat-pill">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ff6584" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    Belum <span id="statUnknown" style="color:#ff6584">0</span>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div class="progress-wrap">
+  <div class="progress-label">
+    <span>Progress</span>
+    <span id="progPct">0%</span>
+  </div>
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill" style="width:0%"></div>
+  </div>
+</div>
+
+<!-- CATEGORY TABS -->
+<div class="cat-scroll" id="catScroll">
+  <button class="cat-btn active" onclick="filterCat('all')">Semua (50)</button>
+  <button class="cat-btn" onclick="filterCat('beta-blocker')">Beta-Blocker</button>
+  <button class="cat-btn" onclick="filterCat('acei')">ACE-I / ARB</button>
+  <button class="cat-btn" onclick="filterCat('diuretic')">Diuretik</button>
+  <button class="cat-btn" onclick="filterCat('statin')">Statin</button>
+  <button class="cat-btn" onclick="filterCat('nitrat')">Nitrat</button>
+  <button class="cat-btn" onclick="filterCat('antiaritmia')">Antiaritmia</button>
+  <button class="cat-btn" onclick="filterCat('antikoagulan')">Antikoagulan</button>
+  <button class="cat-btn" onclick="filterCat('ccb')">CCB</button>
+  <button class="cat-btn" onclick="filterCat('digoxin')">Digitalis</button>
+  <button class="cat-btn" onclick="filterCat('lain')">Lainnya</button>
+</div>
+
+<!-- MAIN -->
+<main id="mainContent">
+
+  <!-- CARD AREA -->
+  <div class="card-container" id="cardContainer" onclick="flipCard()">
+    <div class="card-inner" id="cardInner">
+      <!-- FRONT -->
+      <div class="card-face card-front">
+        <div class="card-orb"></div>
+        <div class="card-tag">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span id="cardCat">Pertanyaan</span>
+        </div>
+        <span class="card-num" id="cardNum">1/50</span>
+        <div class="card-question" id="cardQ">Memuat...</div>
+        <div class="card-hint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          Ketuk kartu untuk melihat jawaban
+        </div>
+      </div>
+      <!-- BACK -->
+      <div class="card-face card-back">
+        <div class="card-orb"></div>
+        <div class="card-tag">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Jawaban
+        </div>
+        <div class="answer-label">Jawaban Lengkap</div>
+        <div class="card-answer" id="cardA">...</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="swipe-hint">← geser atau tekan tombol di bawah →</p>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <button class="ctrl-btn" id="prevBtn" onclick="navigate(-1)" title="Sebelumnya">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <button class="flip-btn" onclick="flipCard()" id="flipBtn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+      Balik Kartu
+    </button>
+    <button class="ctrl-btn" id="nextBtn" onclick="navigate(1)" title="Berikutnya">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+
+  <!-- KNOW / DON'T KNOW -->
+  <div class="result-row" id="resultRow">
+    <button class="res-btn dontknow" onclick="markCard(false)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      Belum Tahu
+    </button>
+    <button class="res-btn know" onclick="markCard(true)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      Sudah Tahu
+    </button>
+  </div>
+
+  <!-- DOT NAVIGATION -->
+  <div class="card-list" style="margin-top:18px;">
+    <div class="list-label">Navigasi Cepat</div>
+    <div class="card-dot-row" id="dotRow"></div>
+  </div>
+
+  <!-- COMPLETE SCREEN -->
+  <div class="complete-screen" id="completeScreen">
+    <div class="trophy">🏆</div>
+    <div class="complete-title">Selesai!</div>
+    <p style="color:var(--text-muted);font-size:14px;">Kamu telah melewati semua flashcard</p>
+    <div class="score-grid">
+      <div class="score-card green">
+        <div class="val" id="finalKnown">0</div>
+        <div class="lbl">Sudah Tahu ✓</div>
+      </div>
+      <div class="score-card red">
+        <div class="val" id="finalUnknown">0</div>
+        <div class="lbl">Belum Tahu ✗</div>
+      </div>
+    </div>
+    <button class="restart-btn" onclick="restart()">🔄 Ulangi dari Awal</button>
+  </div>
+
+</main>
+
+<script>
+// ============================================================
+// DATA: 50 FLASHCARD OBAT KARDIOVASKULAR
+// Sumber: Drugs for the Heart – Opie & Gersh, 8th Edition
+// ============================================================
+const ALL_CARDS = [
+  // ── BETA-BLOCKER ──────────────────────────────────────────
+  {
+    id: 1, cat: 'beta-blocker',
+    q: "Apa mekanisme kerja utama beta-blocker dan bagaimana pengaruhnya pada jantung?",
+    a: `<span class='drug'>Beta-blocker</span> memblokir reseptor β-adrenergik (β1 dan/atau β2).\n\n<span class='key'>Efek kardiak:</span>\n• Menurunkan denyut jantung (kronotropik negatif)\n• Menurunkan kontraktilitas (inotropik negatif)\n• Menurunkan kecepatan konduksi AV\n• Menurunkan konsumsi O₂ miokardium\n• Menurunkan tekanan darah\n\n<span class='warn'>Manfaat klinis:</span> Angina, hipertensi, gagal jantung, aritmia, pasca-ACS.`
+  },
+  {
+    id: 2, cat: 'beta-blocker',
+    q: "Sebutkan kontraindikasi utama beta-blocker dan alasannya!",
+    a: `<span class='warn'>Kontraindikasi:</span>\n\n• <span class='key'>Asma berat / bronkospasme aktif</span> – blokade β2 menyebabkan bronkokonstriksi\n• <span class='key'>AV blok derajat 2-3 tanpa pacu jantung</span> – memperlambat konduksi lebih lanjut\n• <span class='key'>Bradikardi berat (HR <50 bpm)</span>\n• <span class='key'>Syok kardiogenik</span> – menurunkan cardiac output\n• <span class='key'>Fenomena Raynaud berat</span> (relatif)\n\n<span class='warn'>Hati-hati:</span> DM (menutup gejala hipoglikemia).`
+  },
+  {
+    id: 3, cat: 'beta-blocker',
+    q: "Apa perbedaan kardioselektivitas beta-blocker? Berikan contohnya!",
+    a: `<span class='key'>β1-Selektif (kardioselektif):</span>\n• <span class='drug'>Metoprolol, Bisoprolol, Atenolol, Nebivolol</span>\n• Lebih aman pada pasien asma ringan-sedang\n• Sedikit efek pada β2 (bronkus, pembuluh perifer)\n\n<span class='key'>Non-selektif (β1+β2):</span>\n• <span class='drug'>Propranolol, Carvedilol (juga α-blocker), Sotalol</span>\n• Efek lebih luas; hindari pada asma\n\n<span class='warn'>Catatan:</span> Pada dosis tinggi, kardioselektivitas menurun.`
+  },
+  {
+    id: 4, cat: 'beta-blocker',
+    q: "Mengapa beta-blocker digunakan pada gagal jantung meski bersifat inotropik negatif?",
+    a: `<span class='key'>Paradoks yang sudah terbukti secara klinis:</span>\n\nPada gagal jantung kronis, sistem simpatis teraktivasi berlebihan → kardiotoksik jangka panjang.\n\nBeta-blocker:\n• Menghambat stimulasi simpatis berlebihan\n• Mencegah remodeling ventrikel negatif\n• Meningkatkan EF jantung jangka panjang (reverse remodeling)\n• Menurunkan mortalitas 30-35%\n\n<span class='drug'>Pilihan:</span> Carvedilol, Bisoprolol, Metoprolol suksinat (evidence-based)\n<span class='warn'>Mulai dosis rendah, titrasi bertahap!</span>`
+  },
+  {
+    id: 5, cat: 'beta-blocker',
+    q: "Apa yang dimaksud dengan ISA (Intrinsic Sympathomimetic Activity) pada beta-blocker?",
+    a: `<span class='key'>ISA = aktivitas agonis parsial</span> terhadap reseptor β.\n\nObat dengan ISA:\n• <span class='drug'>Pindolol, Acebutolol</span>\n• Memblokir efek simpatis berlebihan NAMUN tetap mempertahankan sedikit stimulasi basal\n• Bradikardi lebih minimal\n\n<span class='warn'>Kekurangan:</span>\n• Kurang efektif dalam menurunkan mortalitas post-AMI\n• Tidak digunakan pada gagal jantung\n• Jarang dipakai dalam praktek kardiologi modern`
+  },
+
+  // ── ACE INHIBITOR / ARB ────────────────────────────────────
+  {
+    id: 6, cat: 'acei',
+    q: "Jelaskan mekanisme kerja ACE Inhibitor dan manfaatnya pada sistem kardiovaskular!",
+    a: `<span class='drug'>ACE Inhibitor</span> (contoh: Ramipril, Enalapril, Lisinopril) memblokir enzim konversi angiotensin.\n\n<span class='key'>Mekanisme:</span>\n• Mencegah konversi Angiotensin I → Angiotensin II\n• Mencegah degradasi bradikinin → efek vasodilatasi\n• Menurunkan aldosteron → diuresis ringan\n\n<span class='key'>Manfaat:</span>\n• Menurunkan preload & afterload\n• Kardioprotektor pada gagal jantung\n• Nefroproteksi pada DM\n• Menurunkan mortalitas post-MI`
+  },
+  {
+    id: 7, cat: 'acei',
+    q: "Apa perbedaan ACE Inhibitor dengan ARB? Kapan memilih ARB?",
+    a: `<span class='key'>ACE-I:</span> Blokir enzim konversi → akumulasi bradikinin → <span class='warn'>batuk kering (15-20%)</span>, angioedema.\n\n<span class='key'>ARB</span> (Losartan, Valsartan, Candesartan):\n• Blokir reseptor AT1 langsung\n• Tidak mempengaruhi bradikinin → <span class='drug'>batuk minimal</span>\n• Tolerabilitas lebih baik\n\n<span class='warn'>Pilih ARB jika:</span>\n• Intoleransi ACE-I (batuk, angioedema)\n• Gagal jantung dengan EF turun\n• Nefropati diabetik\n\n<span class='warn'>Jangan kombinasikan ACE-I + ARB</span> (risiko hiperkalemia, gagal ginjal akut).`
+  },
+  {
+    id: 8, cat: 'acei',
+    q: "Mengapa ACE Inhibitor dikontraindikasikan pada kehamilan?",
+    a: `<span class='warn'>Kontraindikasi absolut: Trimester 2 & 3 kehamilan</span>\n\nMekanisme bahaya:\n• Angiotensin II penting untuk perkembangan ginjal fetus\n• ACE-I menyebabkan <span class='key'>oligohidramnion</span> (cairan amnion berkurang)\n• Menyebabkan <span class='key'>displasia ginjal janin</span>\n• Hipoplasia tengkorak janin\n• Kematian janin / neonatus\n\n<span class='drug'>Alternatinya dalam kehamilan:</span>\n• Metildopa\n• Labetalol\n• Nifedipine (CCB)\n\nACE-I di trimester 1 masih kontroversial, namun umumnya dihindari.`
+  },
+  {
+    id: 9, cat: 'acei',
+    q: "Apa itu ARNI dan apa keunggulannya dibanding ACE-I pada gagal jantung?",
+    a: `<span class='drug'>ARNI = Angiotensin Receptor-Neprilysin Inhibitor</span>\n\n<span class='key'>Contoh: Sacubitril/Valsartan (Entresto)</span>\n\nMekanisme:\n• Valsartan: blokir reseptor AT1\n• Sacubitril: inhibisi neprilysin → meningkatkan peptida natriuretik (BNP, ANP)\n\n<span class='key'>Keunggulan (Studi PARADIGM-HF):</span>\n• Menurunkan mortalitas kardiovaskular 20% lebih baik dari Enalapril\n• Menurunkan rawat inap akibat HF\n\n<span class='warn'>Catatan:</span> Jangan gunakan ≤36 jam setelah ACE-I (risiko angioedema serius).`
+  },
+  {
+    id: 10, cat: 'acei',
+    q: "Sebutkan efek samping penting ACE Inhibitor yang harus dimonitor!",
+    a: `<span class='warn'>Efek samping ACE-I yang penting:</span>\n\n• <span class='key'>Batuk kering</span> – paling sering (akumulasi bradikinin), biasanya malam hari\n• <span class='key'>Hiperkalemia</span> – terutama jika dikombinasi diuretik hemat K atau gagal ginjal\n• <span class='key'>Hipotensi</span> – dosis pertama (first-dose hypotension)\n• <span class='key'>Gagal ginjal akut</span> – pada stenosis arteri renalis bilateral\n• <span class='key'>Angioedema</span> – jarang tapi fatal, hentikan segera\n• <span class='drug'>Monitor:</span> Kreatinin, kalium serum, tekanan darah secara rutin`
+  },
+
+  // ── DIURETIK ───────────────────────────────────────────────
+  {
+    id: 11, cat: 'diuretic',
+    q: "Jelaskan perbedaan mekanisme kerja tiga kelas utama diuretik!",
+    a: `<span class='key'>1. Loop Diuretik</span> (Furosemid, Torasemid):\n• Blokir transporter Na⁺-K⁺-2Cl⁻ di loop Henle asenden\n• Efek diuresis paling kuat\n\n<span class='key'>2. Tiazid</span> (Hidrochlorotiazid, Indapamide):\n• Blokir transporter Na⁺-Cl⁻ di tubulus distal\n• Efek moderat, ideal hipertensi\n\n<span class='key'>3. Hemat Kalium</span>:\n• <span class='drug'>Spironolakton/Eplerenon</span>: antagonis aldosteron\n• <span class='drug'>Amilorid, Triamterene</span>: blokir kanal Na⁺ tubulus collecting\n• Efek lemah, menjaga K⁺`
+  },
+  {
+    id: 12, cat: 'diuretic',
+    q: "Mengapa furosemide menjadi pilihan utama pada edema paru akut?",
+    a: `<span class='drug'>Furosemide</span> (Loop diuretik) sangat efektif pada edema paru akut karena:\n\n• <span class='key'>Onset cepat</span>: IV → efek diuresis dalam 5-15 menit\n• Efek venodilatasi langsung (sebelum diuresis) → menurunkan preload\n• Diuresis masif → mengurangi volume intravaskular → mengurangi kongesti paru\n• Efek bronkodilatasi ringan\n\n<span class='key'>Dosis IV:</span> 40-80 mg bolus, dapat diulang atau infus kontinu\n<span class='warn'>Monitor:</span> Elektrolit (K⁺, Mg²⁺), kreatinin, diuresis per jam`
+  },
+  {
+    id: 13, cat: 'diuretic',
+    q: "Apa peran spironolakton dalam gagal jantung dan hipertensi resisten?",
+    a: `<span class='drug'>Spironolakton</span> = Antagonis aldosteron\n\n<span class='key'>Pada Gagal Jantung (Studi RALES):</span>\n• Menurunkan mortalitas 30% pada HF berat (EF <35%)\n• Mencegah fibrosis miokardium\n• Efek anti-remodeling ventrikel\n\n<span class='key'>Pada Hipertensi Resisten:</span>\n• Efektif sebagai agen ke-4 ketika ACE-I + CCB + Tiazid belum cukup\n• Terutama jika aldosteron primer yang mendasari\n\n<span class='warn'>Efek samping:</span> Hiperkalemia, ginekomastia (pilih Eplerenon jika ginekomastia bermasalah)`
+  },
+  {
+    id: 14, cat: 'diuretic',
+    q: "Apa itu diuretik tiazid dan kapan menjadi pilihan pertama?",
+    a: `<span class='drug'>Tiazid:</span> Hidroklorotiazid (HCT), Indapamide, Klortalidone\n\n<span class='key'>Indikasi utama:</span>\n• <span class='key'>Hipertensi</span> – pilihan lini pertama JNC/ACC/AHA\n• Edema ringan-sedang\n• Batu ginjal (kalsium oksalat) – mengurangi kalsium urin\n• Diabetes insipidus nefrogenik\n\n<span class='warn'>Efek samping:</span>\n• Hipokalemia (paling sering)\n• Hiponatremia\n• Hiperglikemia (gunakan hati-hati pada DM)\n• Hiperurisemia (gout)\n• Hiperkolesterolemia ringan\n\n<span class='key'>Klortalidone</span> lebih lama kerjanya, lebih disukai daripada HCT.`
+  },
+
+  // ── STATIN ────────────────────────────────────────────────
+  {
+    id: 15, cat: 'statin',
+    q: "Jelaskan mekanisme kerja statin dan mengapa penting dalam kardioproteksi!",
+    a: `<span class='drug'>Statin</span> = Inhibitor HMG-CoA Reduktase\n\n<span class='key'>Mekanisme:</span>\n• Menghambat enzim HMG-CoA reduktase → sintesis kolesterol hati ↓\n• Sel hati meningkatkan ekspresi reseptor LDL → clearance LDL dari darah ↑\n• LDL-C turun 30-55% tergantung dosis/jenis\n\n<span class='key'>Efek Pleiotropik (non-lipid):</span>\n• Stabilisasi plak aterosklerosis\n• Efek anti-inflamasi (CRP ↓)\n• Perbaikan fungsi endotel\n• Antitrombotik\n\n<span class='warn'>Ini yang membuat statin menyelamatkan nyawa di luar efek lipidnya!`
+  },
+  {
+    id: 16, cat: 'statin',
+    q: "Sebutkan statin intensitas tinggi dan kapan digunakan!",
+    a: `<span class='key'>Statin Intensitas Tinggi</span> (target LDL ↓ ≥50%):\n• <span class='drug'>Atorvastatin 40-80 mg</span>\n• <span class='drug'>Rosuvastatin 20-40 mg</span>\n\n<span class='key'>Indikasi:</span>\n• ASCVD (aterosklerosis kardiovaskular) yang sudah terbukti (post-MI, stroke iskemik, PAD)\n• LDL sangat tinggi ≥190 mg/dL (familial hypercholesterolemia)\n• DM dengan risiko tinggi\n• Risiko 10 tahun ≥20% (ASCVD score)\n\n<span class='warn'>Target:</span>\n• ASCVD: LDL <55 mg/dL (ESC 2019) atau <70 mg/dL (ACC/AHA)\n• Risiko sangat tinggi: <55 mg/dL`
+  },
+  {
+    id: 17, cat: 'statin',
+    q: "Apa saja efek samping statin yang harus diwaspadai?",
+    a: `<span class='warn'>Efek Samping Statin:</span>\n\n• <span class='key'>Miopati</span> – nyeri/kelemahan otot (5-10% pasien)\n• <span class='key'>Rhabdomiolisis</span> – miopati berat + pelepasan mioglobin → gagal ginjal akut (JARANG, tapi serius)\n• <span class='key'>Peningkatan transaminase</span> – biasanya ringan, reversibel\n• <span class='key'>Diabetes baru</span> – risiko meningkat sedikit (terutama pada predisposisi)\n• <span class='key'>Perdarahan intraserebral</span> – risiko kecil, kontroversial\n\n<span class='drug'>Monitor:</span> CK jika simptomatis, transaminase jika ada gejala hepatitis\n<span class='warn'>Interaksi penting:</span> Statin + Fibrat → risiko miopati meningkat`
+  },
+
+  // ── NITRAT ────────────────────────────────────────────────
+  {
+    id: 18, cat: 'nitrat',
+    q: "Bagaimana mekanisme kerja nitrat organik dalam mengatasi angina?",
+    a: `<span class='drug'>Nitrat Organik</span> (Nitrogliserin/GTN, Isosorbid dinitrat, Isosorbid mononitrat)\n\n<span class='key'>Mekanisme:</span>\n• Dikonversi menjadi NO (nitric oxide) di sel otot polos\n• NO → aktivasi guanilat siklase → cGMP ↑ → relaksasi otot polos\n\n<span class='key'>Efek:</span>\n• <span class='key'>Venodilatasi</span> >> vasodilaitasi arteri → preload ↓ (efek utama)\n• Dilatasi arteri koroner (termasuk segmen stenosis)\n• Menurunkan kebutuhan O₂ miokard\n• Afterload sedikit turun\n\n<span class='warn'>Efek samping:</span> Sakit kepala (paling sering), hipotensi, flushing`
+  },
+  {
+    id: 19, cat: 'nitrat',
+    q: "Apa yang dimaksud toleransi nitrat dan bagaimana mencegahnya?",
+    a: `<span class='key'>Toleransi Nitrat</span> = berkurangnya efek hemodinamik nitrat setelah penggunaan kontinu.\n\n<span class='warn'>Mekanisme toleransi:</span>\n• Deplesi gugus sulfhidril (SH)\n• Aktivasi counter-regulatory (neurohormonal kompensasi)\n• Superoxide radical generation\n\n<span class='key'>Cara Mencegah:</span>\n• <span class='drug'>Nitrat-free interval:</span> jeda 8-12 jam bebas nitrat (biasanya malam/tidur)\n• Contoh: ISDN tidak diberikan dosis ke-4 malam hari\n• Patch GTN dilepas malam hari 8-12 jam\n\n<span class='warn'>Hindari:</span> Nitrogliserin IV kontinu tanpa jeda (toleransi cepat dalam 24-48 jam)`
+  },
+  {
+    id: 20, cat: 'nitrat',
+    q: "Mengapa nitrat dikontraindikasikan pada pasien yang menggunakan PDE-5 inhibitor?",
+    a: `<span class='warn'>KONTRAINDIKASI ABSOLUT:</span> Nitrat + PDE-5 inhibitor (Sildenafil/Tadalafil/Vardenafil)\n\n<span class='key'>Mekanisme:</span>\n• Nitrat → NO → ↑ cGMP\n• PDE-5 inhibitor → menghambat degradasi cGMP → cGMP menumpuk\n• Efek gabungan: <span class='warn'>vasodilatasi masif → hipotensi berat yang mengancam jiwa</span>\n\n<span class='key'>Jeda aman:</span>\n• Sildenafil/Vardenafil: tunggu ≥24 jam sebelum nitrat\n• Tadalafil: tunggu ≥48 jam sebelum nitrat\n\n<span class='drug'>Alternatif jika angina pada pasien PDE-5i:</span> Beta-blocker, CCB`
+  },
+
+  // ── ANTIARITMIA ────────────────────────────────────────────
+  {
+    id: 21, cat: 'antiaritmia',
+    q: "Jelaskan klasifikasi Vaughan Williams untuk obat antiaritmia!",
+    a: `<span class='key'>Klasifikasi Vaughan Williams:</span>\n\n• <span class='drug'>Kelas I</span> – Blokir kanal Na⁺\n  - Ia: Quinidine, Procainamide (perlambat repolarisasi)\n  - Ib: Lidokain, Mexiletine (persingkat repolarisasi)\n  - Ic: Flecainide, Propafenone (perlambat konduksi kuat)\n\n• <span class='drug'>Kelas II</span> – Beta-blocker (Propranolol, Metoprolol)\n\n• <span class='drug'>Kelas III</span> – Blokir kanal K⁺ (Amiodarone, Sotalol, Dofetilide)\n\n• <span class='drug'>Kelas IV</span> – Blokir kanal Ca²⁺ (Verapamil, Diltiazem)\n\n<span class='warn'>Catatan:</span> Amiodarone memiliki efek dari semua 4 kelas!`
+  },
+  {
+    id: 22, cat: 'antiaritmia',
+    q: "Apa yang harus diketahui tentang amiodarone sebagai antiaritmia?",
+    a: `<span class='drug'>Amiodarone</span> = Antiaritmia paling efektif & paling banyak digunakan\n\n<span class='key'>Mekanisme:</span> Blokir kanal K⁺, Na⁺, Ca²⁺, dan beta-blocker (semua kelas Vaughan Williams)\n\n<span class='key'>Indikasi:</span>\n• Fibrilasi ventrikel / VT monomorfik\n• Fibrilasi atrial\n• ACLS: obat pilihan setelah defibrilasi\n\n<span class='warn'>Efek samping (paling banyak):</span>\n• Toksisitas paru (pneumonitis) – paling serius\n• Hipotiroid / hipertiroid (mengandung iodium ~37%)\n• Fotosensitivitas kulit (biru-abu)\n• Neuropati optik\n• Hepatotoksisitas\n• QT prolongasi\n\n<span class='drug'>Monitor:</span> TFT, LFT, foto toraks, mata (setiap 6-12 bulan)`
+  },
+  {
+    id: 23, cat: 'antiaritmia',
+    q: "Bagaimana penatalaksanaan fibrilasi atrial dengan pendekatan rate vs rhythm control?",
+    a: `<span class='key'>Rate Control:</span>\n• Tujuan: menurunkan HR <110 bpm (atau <80 saat istirahat jika simptomatis)\n• Obat: <span class='drug'>Beta-blocker, Diltiazem/Verapamil, Digoxin</span>\n• Pilihan pada AF kronis/persisten, pasien tua, asimptomatik\n\n<span class='key'>Rhythm Control:</span>\n• Tujuan: restorasi sinus ritme\n• Obat: <span class='drug'>Amiodarone, Flecainide, Propafenone, Dofetilide</span>\n• Pilihan: AF paroksismal, HF simptomatis, pasien muda\n• Dapat dipertimbangkan awal untuk semua AF (studi EAST-AFNET 4)\n\n<span class='warn'>Antikoagulan tetap diperlukan pada keduanya berdasarkan skor CHA₂DS₂-VASc!`
+  },
+  {
+    id: 24, cat: 'antiaritmia',
+    q: "Apa itu adenosin dan bagaimana penggunaannya pada SVT?",
+    a: `<span class='drug'>Adenosin</span> = Antiaritmia ultra-short acting\n\n<span class='key'>Mekanisme:</span>\n• Bekerja pada reseptor A1 di AV node → hiperpolarisasi → blok AV transien\n• Menginterupsi sirkuit re-entry yang melibatkan AV node\n\n<span class='key'>Indikasi:</span>\n• SVT (AVNRT, AVRT) – <span class='drug'>pilihan utama terminasi akut</span>\n• Membantu diagnosis: memperlambat HR untuk melihat gelombang P pada EKG\n\n<span class='key'>Cara pemberian:</span>\n• 6 mg IV bolus cepat + flush NaCl cepat\n• Jika gagal 1-2 menit: 12 mg\n• Maksimal 12 mg (2x pemberian)\n\n<span class='warn'>Efek samping:</span> Flushing, chest tightness, sinus pause (bisa tampak menakutkan tapi transien <30 detik)\n<span class='warn'>Kontraindikasi:</span> Asma berat, AV blok, WPW dengan AF`
+  },
+  {
+    id: 25, cat: 'antiaritmia',
+    q: "Bagaimana cara menghitung skor CHA₂DS₂-VASc dan apa implikasinya?",
+    a: `<span class='key'>CHA₂DS₂-VASc Score</span> untuk risiko stroke pada AF:\n\n• <span class='drug'>C</span> – Congestive HF = 1\n• <span class='drug'>H</span> – Hypertension = 1\n• <span class='drug'>A₂</span> – Age ≥75 = 2\n• <span class='drug'>D</span> – Diabetes = 1\n• <span class='drug'>S₂</span> – Stroke/TIA sebelumnya = 2\n• <span class='drug'>V</span> – Vascular disease (MI, PAD, plak aorta) = 1\n• <span class='drug'>A</span> – Age 65-74 = 1\n• <span class='drug'>Sc</span> – Sex category (Perempuan) = 1\n\n<span class='warn'>Interpretasi:</span>\n• Skor 0 (laki) / 1 (perempuan): tidak perlu antikoagulan\n• Skor ≥2 (laki) / ≥3 (perempuan): <span class='drug'>antikoagulan direkomendasikan</span>`
+  },
+
+  // ── ANTIKOAGULAN ───────────────────────────────────────────
+  {
+    id: 26, cat: 'antikoagulan',
+    q: "Jelaskan perbedaan mekanisme warfarin vs NOAC (DOAC)!",
+    a: `<span class='drug'>Warfarin (VKA):</span>\n• Menghambat vitamin K epoksida reduktase\n• Mengurangi aktivasi faktor II, VII, IX, X\n• Onset lambat (2-5 hari), monitor INR\n• Banyak interaksi obat & makanan (vit K)\n\n<span class='drug'>NOAC / DOAC:</span>\n• <span class='key'>Dabigatran</span>: inhibitor langsung trombin (F.IIa)\n• <span class='key'>Rivaroxaban, Apixaban, Edoxaban</span>: inhibitor langsung F.Xa\n• Onset cepat, dosis tetap, tidak perlu monitoring rutin\n• Sedikit interaksi, reversal agent tersedia\n\n<span class='warn'>NOAC lebih disukai dari warfarin pada AF non-valvular (kecuali katup mekanik / MS reumatik).`
+  },
+  {
+    id: 27, cat: 'antikoagulan',
+    q: "Sebutkan antidot untuk NOAC dan warfarin!",
+    a: `<span class='key'>Antidot/Reversal Agent:</span>\n\n• <span class='drug'>Warfarin:</span>\n  - Vitamin K (oral/IV) – onset 6-12 jam\n  - FFP (Fresh Frozen Plasma) – lebih cepat, berisi semua faktor\n  - Konsentrat Protrombinkompleks (PCC) – paling cepat\n\n• <span class='drug'>Dabigatran:</span>\n  - <span class='key'>Idarucizumab</span> (Praxbind) – antibodi monoklonal, spesifik, onset menit\n\n• <span class='drug'>Rivaroxaban/Apixaban/Edoxaban:</span>\n  - <span class='key'>Andexanet alfa</span> (Ondexxya) – F.Xa decoy protein\n  - PCC (non-specific, digunakan jika andexanet tidak tersedia)\n\n<span class='warn'>Darurat? PCC 4-faktor adalah pilihan praktis untuk situasi mendesak.`
+  },
+  {
+    id: 28, cat: 'antikoagulan',
+    q: "Apa itu heparin tidak terfraksi (UFH) vs LMWH? Kapan masing-masing dipilih?",
+    a: `<span class='drug'>UFH (Unfractionated Heparin):</span>\n• Bekerja melalui antitrombin → inaktivasi trombin (F.IIa) & F.Xa\n• IV/subkutan, monitoring aPTT\n• Reversal: <span class='key'>Protamin sulfat</span>\n• Dipilih: perdarahan risiko tinggi, prosedur bedah, gagal ginjal berat\n\n<span class='drug'>LMWH (Enoxaparin, Fondaparinux):</span>\n• Lebih selektif blok F.Xa\n• Subkutan, dosis berdasarkan BB, tidak perlu monitor rutin\n• Bioavailabilitas lebih prediktabel\n• Dipilih: ACS, DVT/PE, profilaksis VTE\n\n<span class='warn'>LMWH hati-hati pada GFR <30 mL/min (akumulasi → perdarahan).`
+  },
+
+  // ── CCB ────────────────────────────────────────────────────
+  {
+    id: 29, cat: 'ccb',
+    q: "Jelaskan perbedaan dua kelas utama Calcium Channel Blocker!",
+    a: `<span class='drug'>CCB terbagi 2 kelompok besar:</span>\n\n<span class='key'>1. Dihidropiridin (DHP):</span>\n• Contoh: Amlodipine, Nifedipine, Felodipine\n• Lebih selektif pada otot polos vaskuler\n• Efek vasodilator kuat, sedikit efek jantung langsung\n• Sering menyebabkan: refleks takikardi, edema perifer\n• Digunakan: Hipertensi, Angina\n\n<span class='key'>2. Non-DHP:</span>\n• Verapamil: paling kuat efek kardiak (kronotropik & inotropik negatif)\n• Diltiazem: intermediate antara DHP dan verapamil\n• Digunakan: SVT, rate control AF, angina vasospastik\n\n<span class='warn'>Jangan kombinasi Non-DHP + Beta-blocker → risiko AV blok berat!`
+  },
+  {
+    id: 30, cat: 'ccb',
+    q: "Kapan amlodipine menjadi pilihan CCB terbaik?",
+    a: `<span class='drug'>Amlodipine</span> = CCB dihidropiridin kerja panjang (t½ ~35-50 jam)\n\n<span class='key'>Pilihan utama pada:</span>\n• Hipertensi (terutama pada lansia, ras Afrika)\n• Angina stabil (vasodilator koroner)\n• Angina vasospastik (Prinzmetal)\n• Pasien dengan kontraindikasi beta-blocker (asma berat)\n• Kombinasi dengan ACE-I atau ARB (terbukti dalam studi ACCOMPLISH)\n\n<span class='key'>Keunggulan:</span>\n• Dosis 1x sehari\n• Tolerabilitas baik\n• Tidak ada efek kronotropik negatif bermakna\n\n<span class='warn'>Efek samping utama:</span> Edema perifer (dose-dependent), flushing, sakit kepala`
+  },
+
+  // ── DIGOXIN / DIGITALIS ────────────────────────────────────
+  {
+    id: 31, cat: 'digoxin',
+    q: "Jelaskan mekanisme kerja digoxin dan penggunaannya yang masih relevan!",
+    a: `<span class='drug'>Digoxin</span> (Digitalis glikosida)\n\n<span class='key'>Mekanisme:</span>\n• Menghambat pompa Na⁺-K⁺-ATPase → Na⁺ intrasel ↑ → Na⁺/Ca²⁺ exchanger terbalik → Ca²⁺ intrasel ↑ → kontraktilitas ↑\n• Efek vagomimetik → HR ↓ (memperlambat konduksi AV)\n\n<span class='key'>Indikasi saat ini:</span>\n• Rate control AF dengan HR sulit dikendalikan\n• Gagal jantung simptomatis (HFrEF) – mengurangi rawat inap\n• Tidak terbukti menurunkan mortalitas (studi DIG)\n\n<span class='warn'>Window terapi sangat sempit! Kadar terapeutik: 0.5-0.9 ng/mL`
+  },
+  {
+    id: 32, cat: 'digoxin',
+    q: "Apa tanda-tanda toksisitas digoxin dan bagaimana penanganannya?",
+    a: `<span class='warn'>TOKSISITAS DIGOXIN – kenali segera!</span>\n\n<span class='key'>Gejala non-kardiak:</span>\n• Mual, muntah, anoreksia\n• Visual: xanthopsia (melihat warna kuning), penglihatan kabur\n• Fatigue, konfusi\n\n<span class='key'>Gejala kardiak (paling berbahaya):</span>\n• Bradikardi, AV blok\n• Bigeminisme, trigeminis PVC\n• VT bidireksional – <span class='warn'>patognomonik toksisitas digoxin!</span>\n• VF, asistol\n\n<span class='drug'>Penanganan:</span>\n• Hentikan digoxin\n• Koreksi hipokalemia (K⁺ ↓ memperburuk toksisitas!)\n• Antidot: <span class='key'>Digoxin-specific Fab antibody (Digibind/DigiFab)</span> – paling efektif\n• Atropin untuk bradikardi\n• Phenytoin/Lidokain untuk aritmia`
+  },
+
+  // ── LAINNYA ───────────────────────────────────────────────
+  {
+    id: 33, cat: 'lain',
+    q: "Apa itu ivabradine dan pada kondisi apa digunakan?",
+    a: `<span class='drug'>Ivabradine</span> = Inhibitor kanal If (funny channel) di SA node\n\n<span class='key'>Mekanisme:</span>\n• Memperlambat depolarisasi diastolik di SA node → HR ↓\n• Tidak memengaruhi tekanan darah atau kontraktilitas\n\n<span class='key'>Indikasi:</span>\n• Gagal jantung (HFrEF) + sinus ritme + HR ≥70 bpm meski sudah dosis maksimal beta-blocker\n• Angina kronik stabil pada pasien intoleran beta-blocker\n\n<span class='key'>Studi SHIFT:</span> Menurunkan rawat inap akibat HF + kematian kardiovaskular\n\n<span class='warn'>Efek samping:</span> Fosfen (kilatan cahaya visual), bradikardia\n<span class='warn'>Kontraindikasi:</span> AF, AV blok, HR <70 bpm, hamil`
+  },
+  {
+    id: 34, cat: 'lain',
+    q: "Jelaskan mekanisme kerja SGLT-2 inhibitor pada gagal jantung!",
+    a: `<span class='drug'>SGLT-2 Inhibitor:</span> Empagliflozin, Dapagliflozin, Canagliflozin\n\n<span class='key'>Mekanisme kardioproteksi (belum sepenuhnya dipahami):</span>\n• Diuresis osmotik + natriuresis → menurunkan preload\n• Penurunan tekanan darah ringan\n• Menurunkan berat badan\n• Efek anti-inflamasi, anti-fibrosis miokardium\n• Perbaikan metabolisme energi miokard (penggunaan keton)\n\n<span class='key'>Evidence:</span>\n• EMPEROR-Reduced: Empagliflozin ↓ rawat inap HF 25% (HFrEF)\n• DAPA-HF: Dapagliflozin ↓ mortalitas HF (HFrEF)\n• Juga efektif pada HFpEF (EMPEROR-Preserved)\n\n<span class='drug'>Kini masuk Guideline sebagai pilar terapi HF ke-4 bersama ACE-I/ARB/ARNI, beta-blocker, MRA`
+  },
+  {
+    id: 35, cat: 'lain',
+    q: "Apa itu milrinone dan dalam kondisi apa digunakan?",
+    a: `<span class='drug'>Milrinone</span> = Inhibitor PDE-III (phosphodiesterase type 3)\n\n<span class='key'>Mekanisme:</span>\n• Menghambat PDE3 → cAMP ↑ → Ca²⁺ intrasel ↑\n• Efek: inotropik positif + vasodilatasi (inodilator)\n\n<span class='key'>Indikasi:</span>\n• Gagal jantung akut dekompensasi berat\n• Syok kardiogenik\n• Bridging menuju transplantasi / LVAD\n• Jika dobutamin tidak efektif\n\n<span class='warn'>Efek samping:</span>\n• Hipotensi (vasodilatasi perifer)\n• Aritmia\n• Takikardi\n\n<span class='warn'>Hati-hati pada gagal ginjal (ekskresi renal), aritmia pre-existing\n<span class='key'>Bukan untuk jangka panjang – meningkatkan mortalitas jangka panjang`
+  },
+  {
+    id: 36, cat: 'lain',
+    q: "Apa saja obat anti-platelet yang digunakan pada ACS dan bagaimana mekanismenya?",
+    a: `<span class='key'>Dual Antiplatelet Therapy (DAPT) = Aspirin + P2Y12 inhibitor</span>\n\n<span class='drug'>Aspirin:</span>\n• Menghambat COX-1 irreversibel → TXA₂ ↓ → agregasi platelet ↓\n• 75-100 mg/hari, seumur hidup pasca-ACS\n\n<span class='drug'>P2Y12 Inhibitor:</span>\n• <span class='key'>Clopidogrel</span>: prodrug, perlu aktivasi CYP2C19, ireversibel\n• <span class='key'>Ticagrelor</span>: aktif langsung, lebih kuat, reversibel, dyspnea side effect\n• <span class='key'>Prasugrel</span>: paling kuat, ireversibel, hindari riwayat stroke/TIA\n\n<span class='warn'>DAPT durasi:</span>\n• Post-PCI elective: 1-3 bulan (stent DES baru)\n• Post-ACS: 12 bulan standar\n• High bleeding risk: bisa dipersingkat`
+  },
+  {
+    id: 37, cat: 'lain',
+    q: "Jelaskan perbedaan dobutamin vs dopamin sebagai agen inotropik!",
+    a: `<span class='drug'>Dobutamin:</span>\n• Agonis β1 selektif\n• ↑ Kontraktilitas + ↑ HR\n• Efek vaskuler minimal (sedikit ↓ SVR)\n• Pilihan: Syok kardiogenik, gagal jantung akut berat\n• Digunakan untuk stress echo dobutamin\n\n<span class='drug'>Dopamin:</span>\n• Efek tergantung dosis:\n  - <span class='key'>Dosis rendah (1-5 mcg/kg/min):</span> dopaminergik → vasodilatasi renal\n  - <span class='key'>Dosis sedang (5-10):</span> β1 → inotropik\n  - <span class='key'>Dosis tinggi (>10):</span> α1 → vasokonstriksi\n\n<span class='warn'>Dopaminergic renal dose tidak terbukti protektif renal dalam studi modern!\nDobutamin lebih disukai pada syok kardiogenik.`
+  },
+  {
+    id: 38, cat: 'lain',
+    q: "Apa itu ranolazine dan bagaimana mekanismenya pada angina refrakter?",
+    a: `<span class='drug'>Ranolazine</span> = Anti-angina metabolik\n\n<span class='key'>Mekanisme:</span>\n• Menghambat arus sodium lambat (late I-Na) di miosit jantung\n• Mencegah akumulasi Na⁺ dan Ca²⁺ intrasel yang menyebabkan iskemia\n• Tidak memengaruhi HR atau tekanan darah secara signifikan\n\n<span class='key'>Indikasi:</span>\n• Angina kronik refrakter yang tidak cukup dikontrol beta-blocker dan CCB\n• Add-on therapy (bukan lini pertama)\n\n<span class='warn'>Efek samping:</span> Dizziness, konstipasi, nausea, QT prolongasi ringan\n<span class='warn'>Interaksi:</span> Hindari dengan inhibitor CYP3A4 kuat (meningkatkan kadar ranolazine)`
+  },
+  {
+    id: 39, cat: 'lain',
+    q: "Apa fungsi vasopressor pada syok kardiogenik dan apa pilihannya?",
+    a: `<span class='key'>Vasopressor:</span> Meningkatkan MAP (mean arterial pressure) → mempertahankan perfusi organ\n\n<span class='drug'>Norepinefrin:</span>\n• Agonis α1 (vasokonstriksi) + β1 lemah\n• Meningkatkan MAP tanpa banyak takikardi\n• <span class='key'>PILIHAN UTAMA</span> syok kardiogenik (Studi SOAP II, PREMIER)\n\n<span class='drug'>Epinefrin:</span>\n• α1 + β1 + β2 kuat\n• Cadangan jika norepinefrin tidak cukup\n• Risiko: takikardi, aritmia, asidosis laktat\n\n<span class='drug'>Vasopressin:</span>\n• Agonis V1 langsung\n• Sparing norepinefrin\n• Tidak menyebabkan takikardi\n\n<span class='warn'>Norepinefrin > Dopamin pada syok kardiogenik (mortalitas lebih rendah)`
+  },
+  {
+    id: 40, cat: 'lain',
+    q: "Bagaimana prinsip terapi antihipertensi pada hipertensi krisis?",
+    a: `<span class='key'>Hipertensi Krisis = TD ≥180/120 mmHg</span>\n\n<span class='drug'>Hipertensi Urgensi</span> (tanpa end-organ damage):\n• Turunkan TD perlahan oral dalam 24-48 jam\n• Obat: Captopril, Amlodipine, Klonidin\n• Tidak perlu turun cepat!\n\n<span class='drug'>Hipertensi Emergensi</span> (dengan end-organ damage – stroke, AKI, diseksi, edema paru):\n• Turunkan MAP 10-15% dalam 1 jam pertama\n• JANGAN terlalu cepat → iskemia serebral/koroner\n\n<span class='key'>Obat IV pilihan (tergantung target organ):</span>\n• Labetalol, Nicardipine, Nitroprusside (TD-aorta)\n• Nitrogliserin (edema paru, ACS)\n• Esmolol (diseksi aorta)\n• Fenoldopam (gagal ginjal)\n\n<span class='warn'>Nitroprusside: waspadai toksisitas sianida jika >72 jam!`
+  },
+  {
+    id: 41, cat: 'antiaritmia',
+    q: "Apa itu torsade de pointes (TdP) dan obat apa yang dapat memicunya?",
+    a: `<span class='warn'>Torsade de Pointes (TdP)</span> = VT polimorfik dengan aksis berputar, terjadi pada QT interval memanjang.\n\n<span class='key'>Mekanisme:</span> QT panjang → early afterdepolarization (EAD) → triggered activity\n\n<span class='warn'>Obat pemicu TdP (memperpanjang QT):</span>\n\n<span class='key'>Kardiovaskular:</span>\n• Quinidine, Procainamide, Sotalol, Amiodarone\n• Dronedarone\n\n<span class='key'>Non-kardio:</span>\n• Antipsikotik: Haloperidol, Quetiapine\n• Antibiotik: Azithromycin, Eritromisin, Fluoroquinolon\n• Antiemetik: Ondansetron, Metoclopramid\n• Antihistamin: Terfenadine (lama)\n\n<span class='drug'>Tatalaksana TdP:</span>\n• <span class='key'>Magnesium sulfat IV</span> 2g bolus (pilihan utama!)\n• Koreksi elektrolit (K⁺, Mg²⁺)\n• Hentikan obat pemicu\n• Overdrive pacing jika berulang`
+  },
+  {
+    id: 42, cat: 'acei',
+    q: "Apa itu sacubitril/valsartan (ARNI) dan bagaimana posisinya dalam pedoman HF saat ini?",
+    a: `<span class='drug'>Sacubitril/Valsartan (Entresto)</span>\n\n<span class='key'>Posisi dalam HFrEF (LVEF ≤40%):</span>\n• Direkomendasikan menggantikan ACE-I/ARB jika masih simptomatis\n• Bagian dari "Fantastic Four" terapi HFrEF bersama:\n  1. ARNI (atau ACE-I/ARB)\n  2. Beta-blocker\n  3. MRA (Spironolakton/Eplerenon)\n  4. SGLT-2i\n\n<span class='key'>Studi PARADIGM-HF:</span>\n• VS Enalapril: ↓ mortalitas CV 20%, ↓ rawat inap HF 21%\n• Manfaat dimulai sejak minggu pertama\n\n<span class='warn'>Aturan penting:</span>\n• Tunggu ≥36 jam setelah ACE-I sebelum mulai ARNI\n• Kontraindikasi: hamil, angioedema riwayat, KG berat\n• Monitor: TD, K⁺, kreatinin`
+  },
+  {
+    id: 43, cat: 'beta-blocker',
+    q: "Beta-blocker mana yang terbukti efektif pada gagal jantung dalam uji klinis?",
+    a: `<span class='key'>Tiga beta-blocker dengan evidence kuat pada HFrEF:</span>\n\n• <span class='drug'>Carvedilol</span> (Studi US Carvedilol, COPERNICUS)\n  - Non-selektif β1+β2 + α1 blocker\n  - Dosis: mulai 3.125 mg 2x/hari → target 25 mg 2x/hari\n\n• <span class='drug'>Bisoprolol</span> (Studi CIBIS-II)\n  - β1 selektif\n  - Dosis: mulai 1.25 mg/hari → target 10 mg/hari\n\n• <span class='drug'>Metoprolol Suksinat CR/XL</span> (Studi MERIT-HF)\n  - β1 selektif, extended-release\n  - Dosis: mulai 12.5-25 mg/hari → target 200 mg/hari\n\n<span class='warn'>PENTING: Gunakan hanya saat kondisi stabil (euvolemik).\nJangan mulai saat gagal jantung akut/dekompensasi!`
+  },
+  {
+    id: 44, cat: 'diuretic',
+    q: "Apa itu resistensi diuretik dan bagaimana mengatasinya?",
+    a: `<span class='key'>Resistensi Diuretik</span> = Respons diuresis berkurang meski dosis ditingkatkan\n\n<span class='warn'>Penyebab:</span>\n• Hipovolemia efektif (sudah dehidrasi)\n• Absorpsi usus terganggu (edema usus pada HF berat)\n• Aktivasi neurohormonal: RAAS, simpatis ↑\n• Hipertrofi tubular (adaptasi jangka panjang)\n• Penggunaan NSAID (menghambat efek diuretik)\n\n<span class='drug'>Strategi mengatasi:</span>\n• Furosemide IV > oral (absorpsi lebih dapat diandalkan)\n• Infus furosemide kontinu (DOSE trial)\n• Kombinasi diuretik: Loop + Tiazid (sekuensial nephron blockade)\n• Spironolakton tambahan\n• Koreksi hiponatremia\n• Pertimbangkan ultrafiltrasi`
+  },
+  {
+    id: 45, cat: 'statin',
+    q: "Apa yang dimaksud dengan high-intensity vs moderate-intensity statin therapy?",
+    a: `<span class='key'>Berdasarkan panduan ACC/AHA 2018:</span>\n\n<span class='drug'>High-Intensity Statin</span> (LDL ↓ ≥50%):\n• Atorvastatin 40-80 mg\n• Rosuvastatin 20-40 mg\n\n<span class='drug'>Moderate-Intensity Statin</span> (LDL ↓ 30-49%):\n• Atorvastatin 10-20 mg\n• Rosuvastatin 5-10 mg\n• Simvastatin 20-40 mg\n• Pravastatin 40-80 mg\n\n<span class='drug'>Low-Intensity Statin</span> (LDL ↓ <30%):\n• Simvastatin 10 mg, Pravastatin 10-20 mg\n\n<span class='warn'>High-intensity: untuk ASCVD, FH, DM+risiko tinggi\nModerate: untuk primer prevention risiko menengah`
+  },
+  {
+    id: 46, cat: 'lain',
+    q: "Apa itu ezetimibe dan bagaimana perannya dalam terapi lipid?",
+    a: `<span class='drug'>Ezetimibe</span> = Inhibitor absorpsi kolesterol di usus halus\n\n<span class='key'>Mekanisme:</span>\n• Memblokir transporter NPC1L1 di brush border usus → absorpsi kolesterol makanan & empedu ↓\n• Menurunkan LDL ~15-20% (lebih rendah dari statin)\n\n<span class='key'>Penggunaan:</span>\n• Kombinasi dengan statin untuk mencapai target LDL\n• Alternatif jika statin tidak ditoleransi\n• Studi IMPROVE-IT: Simvastatin + Ezetimibe ↓ MACE vs simvastatin saja pada ACS\n\n<span class='key'>Dosis:</span> 10 mg 1x sehari (tetap, tidak ada titrasi)\n<span class='warn'>Efek samping minimal, aman secara umum\nKombinasi Statin + Ezetimibe + PCSK9i = "triple lipid therapy" pada risiko sangat tinggi`
+  },
+  {
+    id: 47, cat: 'lain',
+    q: "Apa itu PCSK9 inhibitor dan siapa yang paling mendapat manfaat?",
+    a: `<span class='drug'>PCSK9 Inhibitor:</span> Evolocumab (Repatha), Alirocumab (Praluent)\n\n<span class='key'>Mekanisme:</span>\n• PCSK9 mendegradasi reseptor LDL di hati\n• Menghambat PCSK9 → reseptor LDL lebih banyak tersedia → LDL clearance ↑\n• LDL turun 50-60% tambahan dari statin\n\n<span class='key'>Studi:</span>\n• FOURIER (Evolocumab): ↓ MACE 15%, LDL <25 mg/dL aman\n• ODYSSEY OUTCOMES (Alirocumab): ↓ mortalitas total post-ACS\n\n<span class='key'>Kandidat terbaik:</span>\n• Familial Hypercholesterolemia (heterozigot/homozigot)\n• ASCVD + LDL masih >70 mg/dL meski statin+ezetimibe\n• Intoleransi statin total\n\n<span class='warn'>Dosis: injeksi subkutan setiap 2-4 minggu\nSangat mahal, perlu justifikasi klinis yang jelas`
+  },
+  {
+    id: 48, cat: 'nitrat',
+    q: "Apa perbedaan nitrogliserin sublingual dengan patch nitrogliserin? Kapan masing-masing digunakan?",
+    a: `<span class='drug'>Nitrogliserin Sublingual (GTN SL):</span>\n• Onset: 1-3 menit, durasi: 20-30 menit\n• Digunakan: serangan angina akut\n• Dapat diulang setiap 5 menit, maksimal 3x\n• Jika tidak hilang → kemungkinan ACS → segera ke IGD!\n\n<span class='drug'>Patch Nitrogliserin (Transdermal):</span>\n• Onset lambat, durasi 12-14 jam\n• Digunakan: pencegahan angina kronik\n• Pastikan jeda 8-12 jam bebas patch (malam hari) untuk cegah toleransi\n\n<span class='drug'>Nitrogliserin IV:</span>\n• Edema paru akut, hipertensi urgensi/emergensi, angina tidak stabil\n• Dosis titrasi\n\n<span class='warn'>Simpan GTN SL di tempat sejuk, gelap; ganti setiap 6 bulan`
+  },
+  {
+    id: 49, cat: 'ccb',
+    q: "Bagaimana penggunaan verapamil dan diltiazem pada supraventricular tachycardia?",
+    a: `<span class='drug'>Verapamil dan Diltiazem (Non-DHP CCB)</span>\n\n<span class='key'>Mekanisme pada SVT:</span>\n• Memperlambat konduksi & meningkatkan refrakter AV node\n• Menginterupsi sirkuit re-entry di AV node\n\n<span class='key'>Indikasi SVT:</span>\n• Terminasi AVNRT dan AVRT yang stabil secara hemodinamik\n• Rate control pada AF/Flutter jika beta-blocker kontraindikasi\n\n<span class='drug'>Dosis (IV):</span>\n• Verapamil: 5-10 mg IV pelan dalam 2 menit\n• Diltiazem: 0.25 mg/kg IV bolus, maintenance 5-15 mg/jam\n\n<span class='warn'>KONTRAINDIKASI:</span>\n• WPW dengan AF (bisa percepat konduksi aksesori → VF!)\n• HF dengan EF rendah\n• Kombinasi dengan beta-blocker IV\n• Hipotensi, syok`
+  },
+  {
+    id: 50, cat: 'lain',
+    q: "Ringkasan: Jelaskan 'Fantastic Four' terapi gagal jantung dengan EF turun (HFrEF) saat ini!",
+    a: `<span class='key'>Empat Pilar Terapi HFrEF (Guideline ESC 2021 / ACC/AHA 2022):</span>\n\n<span class='drug'>1. ARNI / ACE-I / ARB</span>\n• Sacubitril/Valsartan → pilihan pertama\n• Jika tidak tersedia/kontraindikasi → ACE-I atau ARB\n\n<span class='drug'>2. Beta-Blocker</span>\n• Carvedilol, Bisoprolol, atau Metoprolol suksinat\n• Mulai setelah kondisi stabil/euvolemik\n\n<span class='drug'>3. MRA (Mineralocorticoid Receptor Antagonist)</span>\n• Spironolakton atau Eplerenon\n• Monitor K⁺ dan fungsi ginjal!\n\n<span class='drug'>4. SGLT-2 Inhibitor</span>\n• Dapagliflozin atau Empagliflozin\n• Efektif pada HFrEF maupun HFpEF\n\n<span class='warn'>Keempatnya terbukti menurunkan mortalitas secara independen!\nMulai semua 4 sedini mungkin, titrasi hingga dosis target.\nIvabradine dan Digoxin sebagai terapi tambahan.`
+  }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let filteredCards = [...ALL_CARDS];
+let currentIndex = 0;
+let isFlipped = false;
+let known = new Set();
+let unknown = new Set();
+let currentCat = 'all';
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  renderDots();
+  showCard(0, null);
+  updateStats();
+}
+
+// ============================================================
+// FILTER
+// ============================================================
+function filterCat(cat) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+
+  if (cat === 'all') {
+    filteredCards = [...ALL_CARDS];
+  } else {
+    filteredCards = ALL_CARDS.filter(c => c.cat === cat);
+  }
+  currentIndex = 0;
+  known = new Set();
+  unknown = new Set();
+  isFlipped = false;
+  renderDots();
+  showCard(0, null);
+  updateStats();
+  document.getElementById('resultRow').classList.remove('visible');
+  document.getElementById('completeScreen').classList.remove('show');
+  document.getElementById('mainContent').querySelectorAll('.card-container,.swipe-hint,.controls,.result-row,.card-list').forEach(e => e.style.display = '');
+}
+
+// ============================================================
+// SHOW CARD
+// ============================================================
+function showCard(index, direction) {
+  if (index < 0 || index >= filteredCards.length) return;
+  currentIndex = index;
+  const card = filteredCards[index];
+
+  // Reset flip
+  isFlipped = false;
+  const inner = document.getElementById('cardInner');
+  inner.classList.remove('flipped');
+  document.getElementById('resultRow').classList.remove('visible');
+
+  // Remove old animation classes
+  const container = document.getElementById('cardContainer');
+  container.classList.remove('anim-left', 'anim-right', 'card-animate');
+
+  // Animate
+  void container.offsetWidth; // reflow
+  if (direction === 1) container.classList.add('anim-left');
+  else if (direction === -1) container.classList.add('anim-right');
+  else container.classList.add('card-animate');
+
+  // Content
+  document.getElementById('cardQ').innerHTML = card.q;
+  document.getElementById('cardA').innerHTML = card.a.replace(/\n/g, '<br>');
+  document.getElementById('cardCat').textContent = catLabel(card.cat);
+  document.getElementById('cardNum').textContent = `${index + 1}/${filteredCards.length}`;
+
+  // Buttons
+  document.getElementById('prevBtn').disabled = index === 0;
+  document.getElementById('nextBtn').disabled = index === filteredCards.length - 1;
+
+  // Dots
+  renderDots();
+  updateStats();
+  updateProgress();
+}
+
+function catLabel(cat) {
+  const map = {
+    'beta-blocker':'Beta-Blocker','acei':'ACE-I / ARB','diuretic':'Diuretik',
+    'statin':'Statin','nitrat':'Nitrat','antiaritmia':'Antiaritmia',
+    'antikoagulan':'Antikoagulan','ccb':'CCB','digoxin':'Digitalis','lain':'Lainnya'
+  };
+  return map[cat] || 'Farmakologi';
+}
+
+// ============================================================
+// FLIP
+// ============================================================
+function flipCard() {
+  const inner = document.getElementById('cardInner');
+  isFlipped = !isFlipped;
+  inner.classList.toggle('flipped', isFlipped);
+  if (isFlipped) {
+    document.getElementById('resultRow').classList.add('visible');
+  } else {
+    document.getElementById('resultRow').classList.remove('visible');
+  }
+}
+
+// ============================================================
+// NAVIGATE
+// ============================================================
+function navigate(dir) {
+  const next = currentIndex + dir;
+  if (next >= 0 && next < filteredCards.length) {
+    showCard(next, dir);
+  }
+}
+
+// ============================================================
+// MARK KNOWN/UNKNOWN
+// ============================================================
+function markCard(isKnown) {
+  const card = filteredCards[currentIndex];
+  if (isKnown) {
+    known.add(card.id);
+    unknown.delete(card.id);
+  } else {
+    unknown.add(card.id);
+    known.delete(card.id);
+  }
+  updateStats();
+  renderDots();
+
+  // Auto-advance
+  const next = currentIndex + 1;
+  if (next < filteredCards.length) {
+    setTimeout(() => showCard(next, 1), 200);
+  } else {
+    showComplete();
+  }
+}
+
+// ============================================================
+// COMPLETE
+// ============================================================
+function showComplete() {
+  document.getElementById('finalKnown').textContent = known.size;
+  document.getElementById('finalUnknown').textContent = unknown.size;
+
+  // Hide card area, show complete
+  document.getElementById('cardContainer').style.display = 'none';
+  document.querySelector('.swipe-hint').style.display = 'none';
+  document.querySelector('.controls').style.display = 'none';
+  document.getElementById('resultRow').style.display = 'none';
+  document.querySelector('.card-list').style.display = 'none';
+  document.getElementById('completeScreen').classList.add('show');
+}
+
+function restart() {
+  known = new Set();
+  unknown = new Set();
+  currentIndex = 0;
+  isFlipped = false;
+
+  // Show card area
+  document.getElementById('cardContainer').style.display = '';
+  document.querySelector('.swipe-hint').style.display = '';
+  document.querySelector('.controls').style.display = '';
+  document.getElementById('resultRow').style.display = '';
+  document.querySelector('.card-list').style.display = '';
+  document.getElementById('completeScreen').classList.remove('show');
+
+  renderDots();
+  showCard(0, null);
+  updateStats();
+}
+
+// ============================================================
+// DOTS
+// ============================================================
+function renderDots() {
+  const row = document.getElementById('dotRow');
+  row.innerHTML = '';
+  filteredCards.forEach((card, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'card-dot';
+    if (i === currentIndex) dot.classList.add('current');
+    else if (known.has(card.id)) dot.classList.add('known');
+    else if (unknown.has(card.id)) dot.classList.add('unknown');
+    dot.onclick = () => showCard(i, i > currentIndex ? 1 : -1);
+    dot.title = `Kartu ${i + 1}`;
+    row.appendChild(dot);
+  });
+}
+
+// ============================================================
+// STATS
+// ============================================================
+function updateStats() {
+  const total = filteredCards.length;
+  document.getElementById('statCurrent').textContent = currentIndex + 1;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statKnown').textContent = known.size;
+  document.getElementById('statUnknown').textContent = unknown.size;
+}
+
+function updateProgress() {
+  const total = filteredCards.length;
+  const answered = known.size + unknown.size;
+  const pct = Math.round((answered / total) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progPct').textContent = pct + '%';
+}
+
+// ============================================================
+// SWIPE SUPPORT (TOUCH)
+// ============================================================
+let touchStartX = 0;
+let touchStartY = 0;
+
+document.getElementById('cardContainer').addEventListener('touchstart', e => {
+  touchStartX = e.changedTouches[0].screenX;
+  touchStartY = e.changedTouches[0].screenY;
+}, { passive: true });
+
+document.getElementById('cardContainer').addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].screenX - touchStartX;
+  const dy = e.changedTouches[0].screenY - touchStartY;
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+    if (dx < 0) navigate(1);
+    else navigate(-1);
+  } else if (Math.abs(dx) < 20 && Math.abs(dy) < 20) {
+    flipCard();
+  }
+}, { passive: true });
+
+// KEYBOARD
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'l') navigate(1);
+  if (e.key === 'ArrowLeft' || e.key === 'h') navigate(-1);
+  if (e.key === ' ' || e.key === 'f') { e.preventDefault(); flipCard(); }
+  if (e.key === 'y') markCard(true);
+  if (e.key === 'n') markCard(false);
+});
+
+// START
+init();
+</script>
+
+<!-- FOOTER -->
+<footer class="app-footer">
+  <span class="footer-vault">CardiologyVault</span>
+  <span class="footer-dot"></span>
+  <span class="footer-text">Part 1 of CardioFlash Series</span>
+  <span class="footer-dot"></span>
+  <span class="footer-text">Bayushi Eka Putra, MD, FIHA</span>
+</footer>
+
+</body>
+</html>
