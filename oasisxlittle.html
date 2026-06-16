@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -1314,7 +1315,16 @@
          JAVASCRIPT
     ============================================= -->
     <script>
-        lucide.createIcons();
+        function safeCreateIcons() {
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                try {
+                    lucide.createIcons();
+                } catch (e) {
+                    console.warn('Lucide icon load deferred or blocked:', e);
+                }
+            }
+        }
+        safeCreateIcons();
 
         let appMode = 'adult'; // 'adult' | 'kids'
         let activeTab = 'natrium';
@@ -1372,7 +1382,7 @@
             // Show/hide mode-specific fields
             updateModeSpecificUI();
             calculateAll();
-            lucide.createIcons();
+            safeCreateIcons();
         }
 
         function updateModeSpecificUI() {
@@ -1419,8 +1429,15 @@
             const specBtn = document.getElementById('btn-tab-special');
             specBtn.classList.toggle('active', tabId === specialTab);
 
-            lucide.createIcons();
-            if (tabId === 'hs') updateEcgDescription();
+            safeCreateIcons();
+
+            // When HS tab opens: canvas is now visible, resize & redraw
+            if (tabId === 'hs') {
+                requestAnimationFrame(() => {
+                    resizeCanvas();
+                    updateEcgDescription();
+                });
+            }
         }
 
         // ============================================================
@@ -1878,7 +1895,7 @@
             updateEcgDescription();
             updateDripAnimation(activeTab === 'hs' ? currentDripRate : hsHourly);
 
-            lucide.createIcons();
+            safeCreateIcons();
             calcInfus('k'); calcInfus('mg'); calcInfus('phos');
             calculateFluidBudget();
         }
@@ -1887,9 +1904,10 @@
         // ECG SIMULATOR
         // ============================================================
         const canvas = document.getElementById('ecg-canvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas ? canvas.getContext('2d') : null;
 
         function drawEcgGrid() {
+            if (!canvas || !ctx) return;
             ctx.fillStyle = '#f0f9ff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             const gs = 6;
@@ -1947,7 +1965,7 @@
         }
 
         function animateEcg() {
-            if (!canvas) return;
+            if (!canvas || !ctx) return;
             drawEcgGrid();
             const labK = getNum('inp-lab-k');
             let waveColor = '#22c55e';
@@ -2186,7 +2204,7 @@
             txt.innerText = msg;
             t.className = 'toast' + (isErr ? ' err' : '');
             icon.innerHTML = isErr ? '<i data-lucide="x-circle"></i>' : '<i data-lucide="check-circle-2" style="color:#4ade80;"></i>';
-            lucide.createIcons();
+            safeCreateIcons();
             requestAnimationFrame(() => t.classList.add('show'));
             if (toastTimer) clearTimeout(toastTimer);
             toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
@@ -2216,15 +2234,19 @@
             document.getElementById('inp-lab-ca').addEventListener('input', updateEcgDescription);
         };
 
-        // Resize canvas dynamically
+        // Resize canvas dynamically — fall back to viewport width when tab is hidden
         function resizeCanvas() {
             if (canvas) {
-                canvas.width = canvas.offsetWidth;
+                const w = canvas.offsetWidth || (Math.min(window.innerWidth, 480) - 28);
+                canvas.width = w;
                 canvas.height = 90;
             }
         }
         window.addEventListener('resize', resizeCanvas);
-        setTimeout(resizeCanvas, 100);
+        // Run immediately (before paint) so canvas is correctly sized
+        resizeCanvas();
+        // Also run after paint in case offsetWidth wasn't available yet
+        requestAnimationFrame(resizeCanvas);
     </script>
 </body>
 </html>
