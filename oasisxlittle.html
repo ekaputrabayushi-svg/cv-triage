@@ -1,0 +1,2230 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="description" content="OasisXLittle Lytes – Kalkulator elektrolit klinis lengkap untuk anak (pediatrik) dan dewasa. Bagian dari CardiologyVault oleh Bayushi Eka Putra, MD, FIHA.">
+    <title>OasisXLittle Lytes – Anak & Dewasa | CardiologyVault</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700;800&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* =============================================
+           CSS RESET & TOKENS
+        ============================================= */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --amber: #f59e0b; --orange: #f97316; --amber-dark: #b45309;
+            --rose: #f43f5e; --purple: #8b5cf6; --blue: #3b82f6; --teal: #14b8a6;
+            --bg: #FDF8EE; --bg-warm: #FDEBD0;
+            --card: rgba(255,255,255,0.88); --card-blur: rgba(255,255,255,0.65);
+            --s800: #292524; --s700: #44403c; --s600: #57534e; --s500: #78716c;
+            --s400: #a8a29e; --s300: #d6d3d1; --s100: #f5f5f4; --s50: #fafaf9;
+            --border: rgba(255,255,255,0.55);
+            --shadow-a: rgba(245,158,11,0.12);
+            --radius-xl: 1.25rem; --radius-2xl: 1.75rem; --radius-3xl: 2rem;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-top: env(safe-area-inset-top, 0px);
+        }
+        .mode-kids {
+            --accent: #f43f5e; --accent2: #fb923c; --accent-bg: #fff1f2;
+            --accent-border: #fecdd3; --accent-text: #be123c;
+        }
+        .mode-adult {
+            --accent: #f59e0b; --accent2: #f97316; --accent-bg: #fff7ed;
+            --accent-border: #fed7aa; --accent-text: #92400e;
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(145deg, #FDF8EE 0%, #FDEBD0 45%, #F5E4D0 100%);
+            min-height: 100dvh; color: var(--s800);
+            overflow-x: hidden; -webkit-font-smoothing: antialiased;
+            padding-top: var(--safe-top);
+        }
+        body.mode-kids { background: linear-gradient(145deg, #FFF1F2 0%, #FFE4E6 40%, #FFF5F5 100%); }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        ::selection { background: #fde68a; }
+
+        /* =============================================
+           LAYOUT
+        ============================================= */
+        .app { max-width: 480px; margin: 0 auto; padding-bottom: calc(82px + var(--safe-bottom)); }
+
+        /* =============================================
+           STICKY HEADER
+        ============================================= */
+        .header {
+            position: sticky; top: 0; z-index: 40;
+            background: rgba(253,248,238,0.93);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(245,158,11,0.13);
+            padding: 9px 14px 8px;
+            transition: background 0.4s;
+        }
+        body.mode-kids .header {
+            background: rgba(255,241,242,0.93);
+            border-bottom-color: rgba(244,63,94,0.13);
+        }
+        .header-row1 { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .brand { display: flex; align-items: center; gap: 9px; }
+        .brand-icon {
+            width: 34px; height: 34px; border-radius: 10px;
+            background: linear-gradient(135deg, #f59e0b, #f97316);
+            display: flex; align-items: center; justify-content: center;
+            color: white; box-shadow: 0 3px 10px rgba(249,115,22,0.35); flex-shrink: 0;
+            transition: background 0.4s;
+        }
+        body.mode-kids .brand-icon { background: linear-gradient(135deg, #f43f5e, #fb923c); box-shadow: 0 3px 10px rgba(244,63,94,0.35); }
+        .brand-icon svg { width: 17px; height: 17px; }
+        .brand-text-h { font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 800; background: linear-gradient(135deg, #d97706, #ea580c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        body.mode-kids .brand-text-h { background: linear-gradient(135deg, #be123c, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .brand-meta { display: flex; align-items: center; gap: 5px; margin-top: 1px; }
+        .brand-badge { font-size: 8px; font-weight: 900; color: #92400e; background: rgba(245,158,11,0.18); padding: 1px 5px; border-radius: 4px; border: 1px solid rgba(245,158,11,0.35); letter-spacing: 0.04em; cursor: pointer; }
+        body.mode-kids .brand-badge { color: #be123c; background: rgba(244,63,94,0.12); border-color: rgba(244,63,94,0.3); }
+        .brand-sub { font-size: 8px; color: rgba(120,80,14,0.55); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+
+        /* MODE TOGGLE */
+        .mode-toggle { display: flex; background: var(--s100); border-radius: 10px; padding: 3px; gap: 2px; }
+        .mode-btn {
+            padding: 5px 11px; border-radius: 7px; border: none; font-size: 11px; font-weight: 800;
+            cursor: pointer; transition: all 0.25s; background: transparent; color: var(--s500);
+            display: flex; align-items: center; gap: 4px; white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .mode-btn.active-adult { background: white; color: #d97706; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+        .mode-btn.active-kids { background: white; color: #be123c; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+        .mode-btn svg { width: 12px; height: 12px; }
+
+        /* HEADER INPUTS */
+        .header-inputs { display: flex; gap: 7px; align-items: flex-end; }
+        .inp-grp { flex: 1; }
+        .inp-lbl { display: block; font-size: 9px; font-weight: 800; color: var(--s500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+        .inp-f {
+            width: 100%; padding: 7px 9px; background: white; border: 1.5px solid rgba(0,0,0,0.08);
+            border-radius: 9px; font-size: 14px; font-weight: 800; color: var(--s800);
+            outline: none; transition: all 0.2s; -webkit-appearance: none; text-align: center;
+        }
+        .inp-f:focus { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(245,158,11,0.12); }
+        body.mode-kids .inp-f:focus { border-color: var(--rose); box-shadow: 0 0 0 3px rgba(244,63,94,0.1); }
+        select.inp-f { text-align: left; padding-right: 4px; font-size: 12px; }
+        .inp-warn-inline { display: none; color: #dc2626; font-size: 9px; font-weight: 700; margin-top: 2px; }
+        .inp-warn-inline.show { display: block; }
+
+        /* =============================================
+           BOTTOM TAB BAR
+        ============================================= */
+        .tab-bar {
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 480px;
+            background: rgba(255,255,255,0.97); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(0,0,0,0.07);
+            display: flex; align-items: stretch; z-index: 50;
+            padding-bottom: var(--safe-bottom);
+        }
+        .tab-item {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 7px 2px 5px; border: none; background: transparent; cursor: pointer;
+            transition: all 0.2s; position: relative; gap: 2px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .tab-icon { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 8px; transition: all 0.25s; }
+        .tab-icon svg { width: 15px; height: 15px; transition: color 0.2s; }
+        .tab-lbl { font-size: 9px; font-weight: 700; letter-spacing: 0.02em; color: var(--s400); transition: all 0.2s; line-height: 1; }
+        .tab-item.active .tab-icon { background: linear-gradient(135deg, #f59e0b, #f97316); box-shadow: 0 3px 9px rgba(249,115,22,0.38); }
+        .tab-item.active .tab-icon svg { color: white; }
+        .tab-item.active .tab-lbl { color: #d97706; }
+        .tab-item.tab-special.active .tab-icon { background: linear-gradient(135deg, #3b82f6, #6366f1); box-shadow: 0 3px 9px rgba(59,130,246,0.38); }
+        .tab-item.tab-special.active .tab-lbl { color: #3b82f6; }
+        body.mode-kids .tab-item.active .tab-icon { background: linear-gradient(135deg, #f43f5e, #f97316); box-shadow: 0 3px 9px rgba(244,63,94,0.38); }
+        body.mode-kids .tab-item.active .tab-lbl { color: #be123c; }
+        body.mode-kids .tab-item.tab-special.active .tab-icon { background: linear-gradient(135deg, #8b5cf6, #3b82f6); box-shadow: 0 3px 9px rgba(139,92,246,0.38); }
+        body.mode-kids .tab-item.tab-special.active .tab-lbl { color: #7c3aed; }
+        .tab-item.active::after { content: ''; position: absolute; top: 2px; width: 4px; height: 4px; background: #f97316; border-radius: 50%; }
+        body.mode-kids .tab-item.active::after { background: #f43f5e; }
+        .tab-item.tab-special.active::after { background: #3b82f6; }
+        body.mode-kids .tab-item.tab-special.active::after { background: #8b5cf6; }
+
+        /* =============================================
+           CONTENT
+        ============================================= */
+        .tab-content { display: none; padding: 14px; animation: fadeUp 0.28s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* =============================================
+           SECTION HEADER
+        ============================================= */
+        .sec-hdr { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
+        .sec-icon { width: 36px; height: 36px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .sec-icon svg { width: 19px; height: 19px; }
+        .sec-title { font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 700; }
+
+        /* =============================================
+           CARDS
+        ============================================= */
+        .card { background: var(--card); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-radius: var(--radius-2xl); border: 1px solid var(--border); box-shadow: 0 2px 14px var(--shadow-a); padding: 14px; margin-bottom: 10px; }
+        .card-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--s500); margin-bottom: 7px; }
+
+        /* =============================================
+           INPUT FIELDS
+        ============================================= */
+        .field-inp { width: 100%; padding: 11px 13px; border-radius: 11px; border: 1.5px solid rgba(0,0,0,0.07); background: white; font-size: 22px; font-weight: 800; color: var(--s800); outline: none; transition: all 0.2s; -webkit-appearance: none; }
+        .field-inp:focus { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,0.1); }
+        body.mode-kids .field-inp:focus { border-color: #f43f5e; box-shadow: 0 0 0 3px rgba(244,63,94,0.1); }
+        .field-inp.center { text-align: center; }
+        .warn-txt { display: none; font-size: 10px; color: #dc2626; font-weight: 700; margin-top: 5px; padding: 4px 8px; background: #fef2f2; border-radius: 6px; border: 1px solid #fecaca; align-items: center; gap: 4px; }
+        .warn-txt.show { display: flex; }
+
+        /* =============================================
+           STATUS BADGE
+        ============================================= */
+        .status-badge { width: 100%; padding: 10px 14px; border-radius: 11px; font-size: 11px; font-weight: 900; letter-spacing: 0.08em; text-align: center; text-transform: uppercase; border: 2px solid transparent; transition: all 0.3s; }
+        .badge-hypo { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+        .badge-hyper { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+        .badge-normal { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+
+        /* =============================================
+           RESULT CARDS
+        ============================================= */
+        .res-card { border-radius: var(--radius-xl); padding: 14px; margin-bottom: 9px; }
+        .res-card.amber { background: linear-gradient(135deg, #fff7ed, #ffedd5); border: 1px solid #fed7aa; }
+        .res-card.red { background: linear-gradient(135deg, #fef2f2, #ffe4e6); border: 1px solid #fecaca; }
+        .res-card.green { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1px solid #bbf7d0; }
+        .res-card.blue { background: linear-gradient(135deg, #eff6ff, #e0f2fe); border: 1px solid #bfdbfe; }
+        .res-card.rose { background: linear-gradient(135deg, #fff1f2, #ffe4e6); border: 1px solid #fecdd3; }
+        .res-card.purple { background: linear-gradient(135deg, #faf5ff, #ede9fe); border: 1px solid #ddd6fe; }
+        .res-val { font-family: 'Space Grotesk', sans-serif; font-size: 36px; font-weight: 700; line-height: 1; }
+        .res-unit { font-size: 13px; font-weight: 600; opacity: 0.55; margin-left: 3px; }
+        .res-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.55; margin-bottom: 3px; }
+
+        /* =============================================
+           INFO ROWS
+        ============================================= */
+        .info-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; background: rgba(255,255,255,0.7); border-radius: 9px; margin-bottom: 5px; }
+        .info-row-l { font-size: 11px; font-weight: 600; color: var(--s500); }
+        .info-row-r { font-size: 12px; font-weight: 800; }
+
+        /* =============================================
+           ALERT BOXES
+        ============================================= */
+        .alert { padding: 10px 11px; border-radius: 10px; font-size: 11px; font-weight: 600; line-height: 1.5; margin-top: 8px; }
+        .alert-d { background: #fef2f2; border: 1.5px solid #fecaca; color: #991b1b; }
+        .alert-w { background: #fffbeb; border: 1.5px solid #fde68a; color: #92400e; }
+        .alert-i { background: #eff6ff; border: 1.5px solid #bfdbfe; color: #1e40af; }
+        .alert-s { background: #f0fdf4; border: 1.5px solid #bbf7d0; color: #166534; }
+        .alert-rose { background: #fff1f2; border: 1.5px solid #fecdd3; color: #9f1239; }
+        .alert-t { display: flex; align-items: center; gap: 4px; font-weight: 900; font-size: 11px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+        .alert-t svg { width: 12px; height: 12px; flex-shrink: 0; }
+        @keyframes pulse-red { 0%,100%{color:#dc2626}50%{color:#991b1b} }
+        .pulse-red { animation: pulse-red 1.5s ease-in-out infinite; }
+
+        /* =============================================
+           GUIDELINE BOX (color-coded)
+        ============================================= */
+        .gl-box { border-radius: 13px; padding: 13px; color: white; margin-bottom: 9px; }
+        .gl-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.75; margin-bottom: 5px; display: flex; align-items: center; gap: 3px; }
+        .gl-text { font-size: 12px; font-weight: 700; line-height: 1.45; }
+        .gl-box.amber { background: linear-gradient(135deg, #f59e0b, #f97316); }
+        .gl-box.red { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+        .gl-box.green { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .gl-box.rose { background: linear-gradient(135deg, #f43f5e, #fb923c); }
+        .gl-box.purple { background: linear-gradient(135deg, #8b5cf6, #6366f1); }
+
+        /* =============================================
+           PROC BOX
+        ============================================= */
+        .proc-box { background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.07); border-radius: 13px; padding: 12px; margin-bottom: 9px; }
+        .proc-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--s500); display: flex; align-items: center; gap: 4px; margin-bottom: 9px; }
+        .proc-title svg { width: 12px; height: 12px; }
+        .proc-body { font-size: 11px; line-height: 1.6; color: var(--s700); }
+        .proc-body p { margin-bottom: 4px; }
+        .proc-body ul { padding-left: 15px; }
+        .proc-body li { margin-bottom: 3px; }
+
+        /* =============================================
+           PROTOCOL STEPS
+        ============================================= */
+        .proto-step { display: flex; gap: 9px; padding: 9px 11px; background: rgba(255,255,255,0.8); border-radius: 9px; margin-bottom: 7px; border: 1px solid rgba(0,0,0,0.05); }
+        .step-num { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; flex-shrink: 0; }
+        .step-num.d { background: #fef2f2; color: #dc2626; }
+        .step-num.w { background: #fff7ed; color: #c2410c; }
+        .step-num.n { background: var(--s100); color: var(--s700); }
+        .step-body { flex: 1; font-size: 11px; color: var(--s700); line-height: 1.5; }
+        .step-title { font-size: 11px; font-weight: 800; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+        /* =============================================
+           TOGGLE GROUP (Ca type, etc.)
+        ============================================= */
+        .toggle-grp { display: flex; background: var(--s100); border-radius: 10px; padding: 3px; gap: 2px; margin-bottom: 12px; }
+        .toggle-btn { flex: 1; padding: 7px 10px; border-radius: 7px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; background: transparent; color: var(--s500); }
+        .toggle-btn.on-amber { background: white; color: #d97706; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+        .toggle-btn.on-rose { background: white; color: #be123c; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+        .toggle-btn.on-orange { background: white; color: #ea580c; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+        /* =============================================
+           INFUS CALC
+        ============================================= */
+        .infus-calc { background: rgba(255,255,255,0.5); border: 1.5px solid rgba(245,158,11,0.18); border-radius: 13px; padding: 13px; margin-top: 9px; }
+        body.mode-kids .infus-calc { border-color: rgba(244,63,94,0.18); }
+        .infus-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #92400e; display: flex; align-items: center; gap: 4px; margin-bottom: 11px; }
+        body.mode-kids .infus-title { color: #9f1239; }
+        .infus-title svg { width: 12px; height: 12px; }
+        .infus-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; margin-bottom: 9px; }
+        .infus-f-wrap label { display: block; font-size: 9px; font-weight: 700; text-transform: uppercase; color: var(--s500); margin-bottom: 3px; letter-spacing: 0.04em; }
+        .infus-inp { width: 100%; padding: 8px; border-radius: 8px; border: 1.5px solid rgba(0,0,0,0.07); background: white; font-size: 14px; font-weight: 700; text-align: center; color: var(--s800); outline: none; -webkit-appearance: none; transition: all 0.2s; }
+        .infus-inp:focus { border-color: #f59e0b; box-shadow: 0 0 0 2px rgba(245,158,11,0.1); }
+        body.mode-kids .infus-inp:focus { border-color: #f43f5e; }
+        .infus-sel { width: 100%; padding: 8px 4px; border-radius: 8px; border: 1.5px solid rgba(0,0,0,0.07); background: white; font-size: 11px; font-weight: 700; color: var(--s800); outline: none; -webkit-appearance: none; }
+        .infus-res { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+        .infus-res-box { padding: 10px; border-radius: 9px; text-align: center; }
+        .infus-res-box.dark { background: var(--s800); color: white; }
+        .infus-res-box.light { background: white; border: 1px solid var(--s300); }
+        .infus-res-box .lbl { font-size: 8px; text-transform: uppercase; opacity: 0.5; margin-bottom: 2px; }
+        .infus-res-box .val { font-size: 19px; font-weight: 900; line-height: 1; }
+        .infus-res-box .unt { font-size: 9px; opacity: 0.55; }
+
+        /* =============================================
+           CORRECTED BOX
+        ============================================= */
+        .corrected-box { background: white; border: 1px solid var(--s300); border-radius: 11px; padding: 11px 13px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 9px; }
+        .corrected-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--s500); letter-spacing: 0.06em; }
+        .corrected-val { font-size: 22px; font-weight: 900; }
+
+        /* =============================================
+           MINI GRID INPUTS
+        ============================================= */
+        .mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 9px; }
+        .mini-f-wrap label { display: block; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--s500); margin-bottom: 3px; }
+        .mini-inp { width: 100%; padding: 9px; border-radius: 9px; border: 1.5px solid rgba(0,0,0,0.07); background: white; font-size: 20px; font-weight: 800; text-align: center; color: var(--s800); -webkit-appearance: none; outline: none; }
+        .mini-inp:focus { border-color: #f59e0b; box-shadow: 0 0 0 2px rgba(245,158,11,0.1); }
+        body.mode-kids .mini-inp:focus { border-color: #f43f5e; }
+
+        /* =============================================
+           COPY BUTTON
+        ============================================= */
+        .copy-btn { width: 100%; padding: 13px; border-radius: 13px; border: none; background: linear-gradient(135deg, var(--s800), var(--s700)); color: white; font-size: 14px; font-weight: 800; letter-spacing: 0.02em; display: flex; align-items: center; justify-content: center; gap: 7px; cursor: pointer; transition: all 0.2s; margin-top: 12px; -webkit-tap-highlight-color: transparent; box-shadow: 0 4px 12px rgba(0,0,0,0.14); }
+        .copy-btn:active { transform: scale(0.98); }
+        .copy-btn svg { width: 15px; height: 15px; }
+        .copy-btn.blue { background: linear-gradient(135deg, #3b82f6, #6366f1); box-shadow: 0 4px 12px rgba(59,130,246,0.28); }
+        .copy-btn.purple { background: linear-gradient(135deg, #8b5cf6, #6366f1); box-shadow: 0 4px 12px rgba(139,92,246,0.28); }
+        .copy-btn.rose { background: linear-gradient(135deg, #f43f5e, #f97316); box-shadow: 0 4px 12px rgba(244,63,94,0.28); }
+
+        /* =============================================
+           TOAST
+        ============================================= */
+        .toast { position: fixed; bottom: calc(82px + var(--safe-bottom) + 10px); left: 50%; transform: translateX(-50%) translateY(100%); background: var(--s800); color: white; padding: 11px 17px; border-radius: 11px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 7px; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,0.22); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s; opacity: 0; white-space: nowrap; }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast svg { width: 15px; height: 15px; }
+        .toast.err { background: #dc2626; }
+
+        /* =============================================
+           MODAL (BOTTOM SHEET)
+        ============================================= */
+        .modal-bd { position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 100; display: none; align-items: flex-end; justify-content: center; }
+        .modal-bd.show { display: flex; }
+        .modal-sheet { background: white; border-radius: var(--radius-3xl) var(--radius-3xl) 0 0; width: 100%; max-width: 480px; max-height: 85dvh; overflow: hidden; display: flex; flex-direction: column; animation: slideUp 0.32s cubic-bezier(0.32, 0.72, 0, 1); }
+        @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+        .modal-handle { width: 36px; height: 4px; background: var(--s300); border-radius: 99px; margin: 10px auto 6px; }
+        .modal-hdr { padding: 4px 15px 11px; border-bottom: 1px solid var(--s100); display: flex; justify-content: space-between; align-items: center; }
+        .modal-tit { font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 5px; }
+        .modal-tit svg { width: 15px; height: 15px; color: #f59e0b; }
+        .modal-close { width: 27px; height: 27px; background: var(--s100); border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--s500); }
+        .modal-close svg { width: 13px; height: 13px; }
+        .modal-body { flex: 1; overflow-y: auto; padding: 15px; -webkit-overflow-scrolling: touch; }
+
+        /* =============================================
+           DRAWER (CHANGELOG)
+        ============================================= */
+        .drawer-bd { position: fixed; inset: 0; background: rgba(0,0,0,0.38); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 80; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        .drawer-bd.open { opacity: 1; pointer-events: all; }
+        .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(84vw, 350px); background: white; z-index: 90; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; overflow: hidden; }
+        .drawer.open { transform: translateX(0); }
+        .drawer-hdr { padding: 15px; border-bottom: 1px solid var(--s100); display: flex; justify-content: space-between; align-items: center; background: var(--s50); }
+        .drawer-tit { font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 5px; text-transform: uppercase; letter-spacing: 0.04em; }
+        .drawer-tit svg { width: 15px; height: 15px; color: #f59e0b; }
+        .drawer-body { flex: 1; overflow-y: auto; padding: 15px; -webkit-overflow-scrolling: touch; }
+
+        /* =============================================
+           REFERENCES
+        ============================================= */
+        .ref-grp { margin-bottom: 13px; }
+        .ref-tag { display: inline-block; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 7px; border-radius: 99px; margin-bottom: 5px; }
+        .ref-txt { font-size: 11px; color: var(--s500); line-height: 1.5; margin-bottom: 3px; }
+        .ref-link { color: #3b82f6; text-decoration: none; }
+
+        /* =============================================
+           FLUID BUDGET
+        ============================================= */
+        .fluid-bar { background: #e7e5e4; border-radius: 99px; height: 9px; overflow: hidden; margin: 9px 0; }
+        .fluid-bar-fill { height: 100%; border-radius: 99px; transition: width 0.5s ease, background-color 0.5s; }
+        .fluid-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 11px; border-radius: 9px; background: rgba(255,255,255,0.7); border: 1px solid rgba(0,0,0,0.05); cursor: pointer; margin-bottom: 5px; -webkit-tap-highlight-color: transparent; }
+        .fluid-row:active { background: rgba(255,255,255,0.9); }
+        .fluid-row input[type="checkbox"] { width: 17px; height: 17px; accent-color: #3b82f6; flex-shrink: 0; }
+        .fluid-row-lbl { flex: 1; padding: 0 9px; font-size: 12px; font-weight: 600; color: var(--s700); }
+        .fluid-row-inp { width: 62px; padding: 5px 6px; background: rgba(0,0,0,0.05); border: none; border-radius: 7px; font-size: 13px; font-weight: 700; text-align: right; color: var(--s800); -webkit-appearance: none; }
+        .fluid-row-unit { font-size: 10px; color: var(--s500); font-weight: 600; margin-left: 3px; }
+        .fluid-row-val { font-size: 13px; font-weight: 800; color: #ea580c; }
+        .fluid-auto-grp { background: rgba(59,130,246,0.07); border: 1px solid rgba(59,130,246,0.2); border-radius: 11px; padding: 10px; margin-bottom: 7px; }
+        .fluid-auto-lbl { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #1d4ed8; display: flex; align-items: center; gap: 4px; margin-bottom: 7px; }
+        .fluid-auto-lbl svg { width: 12px; height: 12px; }
+        .fluid-sec-tit { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--s500); display: flex; align-items: center; gap: 5px; margin-bottom: 9px; }
+        .fluid-sec-tit svg { width: 13px; height: 13px; }
+        .fluid-auto-row { display: none; align-items: center; justify-content: space-between; padding: 6px 9px; background: white; border-radius: 7px; margin-bottom: 4px; border: 1px solid rgba(59,130,246,0.1); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .fluid-auto-row.vis { display: flex; }
+        .fluid-auto-row input[type="checkbox"] { width: 15px; height: 15px; accent-color: #3b82f6; flex-shrink: 0; }
+        .fluid-auto-row-lbl { flex: 1; padding: 0 7px; font-size: 11px; font-weight: 600; color: var(--s700); }
+        .fluid-auto-row-val { font-size: 12px; font-weight: 800; color: #1d4ed8; }
+        .summary-card { background: linear-gradient(135deg, #1c1917, #292524); border-radius: var(--radius-2xl); padding: 16px; color: white; margin-bottom: 11px; }
+        .summary-nums { display: grid; grid-template-columns: 1fr 1px 1fr 1px 1fr; gap: 0; margin-bottom: 14px; }
+        .summary-div { background: rgba(255,255,255,0.1); }
+        .summary-num { padding: 0 10px; text-align: center; }
+        .summary-num:first-child { padding-left: 0; text-align: left; }
+        .summary-num:last-child { padding-right: 0; text-align: right; }
+        .summary-num-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; opacity: 0.35; margin-bottom: 2px; }
+        .summary-num-val { font-size: 18px; font-weight: 900; line-height: 1; }
+        .summary-num-unit { font-size: 9px; opacity: 0.45; font-weight: 600; }
+        .budget-target-area { background: rgba(239,246,255,0.7); border: 1.5px solid rgba(59,130,246,0.2); border-radius: 15px; padding: 13px; margin-bottom: 11px; }
+        .budget-target-lbl { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #1d4ed8; margin-bottom: 9px; }
+        .budget-inp { flex: 1; padding: 10px 13px; background: white; border: 1.5px solid rgba(59,130,246,0.3); border-radius: 9px; font-size: 20px; font-weight: 800; color: var(--s800); outline: none; transition: all 0.2s; -webkit-appearance: none; }
+        .budget-inp:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        .preset-chips { display: flex; gap: 5px; }
+        .preset-chip { flex: 1; padding: 7px 7px; border-radius: 7px; border: 1.5px solid rgba(59,130,246,0.28); background: rgba(255,255,255,0.7); color: #1d4ed8; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center; -webkit-tap-highlight-color: transparent; }
+        .preset-chip:active { background: #eff6ff; }
+        .disclaimer-footer { margin-top: 7px; padding: 13px 14px; text-align: center; }
+        .disclaimer-txt { font-size: 10px; color: rgba(120,80,14,0.5); line-height: 1.5; margin-bottom: 7px; }
+        .ref-btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 13px; background: rgba(0,0,0,0.06); border: none; border-radius: 20px; font-size: 11px; font-weight: 700; color: var(--s500); cursor: pointer; }
+        .ref-btn svg { width: 12px; height: 12px; }
+
+        /* =============================================
+           PEDIATRIC HOLLIDAY-SEGAR TAB
+        ============================================= */
+        .hs-card { background: linear-gradient(135deg, #eff6ff, #dbeafe); border: 1.5px solid #bfdbfe; border-radius: var(--radius-2xl); padding: 14px; margin-bottom: 9px; }
+        .hs-big { font-family: 'Space Grotesk', sans-serif; font-size: 38px; font-weight: 800; color: #1d4ed8; }
+        .hs-unit { font-size: 14px; font-weight: 700; color: #60a5fa; margin-left: 3px; }
+        .hs-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #3b82f6; margin-bottom: 4px; }
+        .safety-card { background: linear-gradient(135deg, #fff1f2, #ffe4e6); border: 1.5px solid #fecdd3; border-radius: var(--radius-2xl); padding: 14px; margin-bottom: 9px; }
+        .safety-tit { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; color: #9f1239; display: flex; align-items: center; gap: 5px; margin-bottom: 9px; }
+        .safety-tit svg { width: 14px; height: 14px; }
+
+        /* =============================================
+           ECG CANVAS
+        ============================================= */
+        .ecg-container { background: rgba(255,255,255,0.7); border: 1px solid var(--s300); border-radius: var(--radius-xl); padding: 12px; margin-bottom: 9px; }
+        .ecg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .ecg-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #7c3aed; display: flex; align-items: center; gap: 4px; }
+        .ecg-title svg { width: 13px; height: 13px; }
+        .ecg-badges { display: flex; gap: 5px; }
+        .ecg-badge { padding: 3px 8px; background: rgba(139,92,246,0.1); border-radius: 99px; font-size: 10px; font-weight: 800; color: #7c3aed; }
+        #ecg-canvas { width: 100%; height: 90px; border-radius: 8px; display: block; }
+        .ecg-desc { font-size: 10px; font-weight: 600; color: var(--s600); line-height: 1.4; margin-top: 6px; }
+
+        /* =============================================
+           DRIP ANIMATION (Pediatric)
+        ============================================= */
+        @keyframes dripFall { 0%{transform:translateY(0);opacity:0} 15%{opacity:1} 85%{opacity:1} 100%{transform:translateY(30px);opacity:0} }
+        .drip-anim { animation: dripFall var(--drip-speed, 1.5s) infinite linear; }
+        .drip-card { background: rgba(239,246,255,0.7); border: 1px solid #bfdbfe; border-radius: var(--radius-xl); padding: 12px; margin-bottom: 9px; display: flex; gap: 12px; align-items: center; }
+        .drip-info { flex: 1; }
+        .drip-lbl { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #3b82f6; }
+        .drip-val { font-size: 22px; font-weight: 900; color: #1d4ed8; line-height: 1.1; }
+        .drip-sub { font-size: 11px; color: var(--s500); font-weight: 600; margin-top: 4px; }
+
+        /* =============================================
+           RATE CHIP
+        ============================================= */
+        .rate-chip { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: 9px; font-size: 14px; font-weight: 900; color: white; }
+        .info-note { font-size: 10px; color: var(--s500); font-style: italic; margin-top: 3px; padding: 0 2px; line-height: 1.4; }
+
+        /* =============================================
+           MODE SECTION LABEL (inline pill inside card)
+        ============================================= */
+        .mode-pill { display: inline-flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 8px; border-radius: 99px; margin-bottom: 8px; }
+        .mode-pill.adult { background: rgba(245,158,11,0.15); color: #b45309; border: 1px solid rgba(245,158,11,0.3); }
+        .mode-pill.kids { background: rgba(244,63,94,0.12); color: #9f1239; border: 1px solid rgba(244,63,94,0.25); }
+
+        /* =============================================
+           KCl Pediatric extra fields
+        ============================================= */
+        .ped-sel { width: 100%; padding: 8px 6px; border-radius: 8px; border: 1.5px solid rgba(0,0,0,0.08); background: white; font-size: 12px; font-weight: 700; color: var(--s800); outline: none; -webkit-appearance: none; margin-top: 2px; }
+
+        /* =============================================
+           INFO NOTE
+        ============================================= */
+        .section-divider { height: 1px; background: rgba(0,0,0,0.06); margin: 10px 0; }
+        .high-rate-warn { display: none; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-size: 10px; font-weight: 700; padding: 5px 8px; border-radius: 6px; margin-top: 5px; }
+        .high-rate-warn.show { display: block; }
+    </style>
+</head>
+<body class="mode-adult">
+
+    <!-- =============================================
+         HEADER
+    ============================================= -->
+    <header class="header">
+        <div class="header-row1">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg id="brand-icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/></svg>
+                </div>
+                <div>
+                    <div class="brand-text-h">OasisXLittle<span style="font-size:12px;font-weight:600;opacity:0.6;"> Lytes</span></div>
+                    <div class="brand-meta">
+                        <button class="brand-badge" onclick="openDrawer()">CHANGELOG ›</button>
+                        <span class="brand-sub">CardiologyVault</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mode-toggle">
+                <button class="mode-btn active-adult" id="btn-mode-adult" onclick="setMode('adult')">
+                    <i data-lucide="user"></i> Dewasa
+                </button>
+                <button class="mode-btn" id="btn-mode-kids" onclick="setMode('kids')">
+                    <i data-lucide="baby"></i> Anak
+                </button>
+            </div>
+        </div>
+        <div class="header-inputs">
+            <div class="inp-grp" style="max-width:100px;">
+                <label class="inp-lbl" for="g-weight">⚖️ BB (kg)</label>
+                <input type="number" id="g-weight" class="inp-f" value="60" inputmode="decimal" oninput="calculateAll()" placeholder="kg">
+                <div class="inp-warn-inline" id="warn-g-weight">BB harus &gt; 0</div>
+            </div>
+            <!-- Adult gender -->
+            <div class="inp-grp" id="field-gender">
+                <label class="inp-lbl" for="g-gender">👤 Gender</label>
+                <select id="g-gender" class="inp-f" onchange="calculateAll()">
+                    <option value="male">♂ Laki-laki</option>
+                    <option value="female">♀ Perempuan</option>
+                    <option value="elderly_female">♀ Lansia P</option>
+                </select>
+            </div>
+            <!-- Kids age -->
+            <div class="inp-grp" id="field-age" style="display:none">
+                <label class="inp-lbl" for="g-age">🎈 Usia</label>
+                <select id="g-age" class="inp-f" onchange="calculateAll()">
+                    <option value="neo">Neonatus</option>
+                    <option value="infant">Bayi</option>
+                    <option value="child" selected>Anak 1-12th</option>
+                    <option value="teen">Remaja</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <!-- =============================================
+         MAIN
+    ============================================= -->
+    <main class="app">
+
+        <!-- ===== ALBUMIN ===== -->
+        <section id="content-albumin" class="tab-content">
+            <div class="sec-hdr">
+                <div class="sec-icon" style="background:#fff7ed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg></div>
+                <h2 class="sec-title">Status Albumin</h2>
+            </div>
+
+            <div class="card">
+                <div class="card-lbl">Lab Albumin (g/dL)</div>
+                <input type="number" step="0.1" inputmode="decimal" id="inp-lab-alb" value="2.5" class="field-inp" oninput="calculateAll()">
+                <div class="warn-txt" id="warn-inp-lab-alb"><i data-lucide="alert-circle" style="width:12px;height:12px;"></i> Nilai ekstrem!</div>
+            </div>
+            <div class="card">
+                <div class="card-lbl">Target Albumin (g/dL)</div>
+                <input type="number" step="0.1" inputmode="decimal" id="inp-target-alb" value="3.5" class="field-inp" oninput="calculateAll()">
+                <div id="alb-size-toggle-row" style="display:none;margin-top:10px;">
+                    <div class="card-lbl" style="margin-bottom:5px;">Sediaan Flacon (mL)</div>
+                    <div style="display:flex;gap:7px;">
+                        <button onclick="setAlbSize(50)" id="btn-alb-50" class="toggle-btn" style="flex:1;background:var(--s100);border-radius:9px;">50 mL</button>
+                        <button onclick="setAlbSize(100)" id="btn-alb-100" class="toggle-btn on-amber" style="flex:1;background:white;border-radius:9px;box-shadow:0 1px 4px rgba(0,0,0,0.1);">100 mL</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-alb-hypo">
+                <div class="res-card amber">
+                    <div class="res-lbl" style="color:#92400e;">Total Kebutuhan</div>
+                    <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:11px;">
+                        <span class="res-val" style="color:#ea580c;" id="out-alb-grams">0.0</span>
+                        <span class="res-unit" style="color:#92400e;">gram</span>
+                    </div>
+                    <div class="info-row"><span class="info-row-l">Albumin 20% (<span class="out-alb-vol">100</span>mL/flacon)</span><span class="info-row-r" style="color:#c2410c;"><span id="out-alb-20">0.0</span> flacon</span></div>
+                    <div class="info-row" style="margin-bottom:0"><span class="info-row-l">Albumin 25% (<span class="out-alb-vol">100</span>mL/flacon)</span><span class="info-row-r" style="color:#c2410c;"><span id="out-alb-25">0.0</span> flacon</span></div>
+                </div>
+                <div class="alert alert-w"><div class="alert-t"><i data-lucide="info"></i> Tips Pemberian</div>Laju infus: <strong>1–2 mL/menit</strong>. Jangan diencerkan. Jangan campur dalam selang yang sama dengan TPN/Lemak.</div>
+            </div>
+
+            <div id="view-alb-hyper" style="display:none;">
+                <div class="res-card green" style="text-align:center;padding:24px;">
+                    <i data-lucide="check-circle-2" style="width:38px;height:38px;color:#16a34a;margin:0 auto 9px;display:block;"></i>
+                    <div style="font-weight:800;font-size:14px;color:#166534;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em;">Nilai Lab ≥ Target</div>
+                    <div style="font-size:12px;color:#15803d;line-height:1.5;">Tidak ada indikasi defisit albumin. Evaluasi status hidrasi pasien.</div>
+                </div>
+            </div>
+            <button class="copy-btn" id="copy-btn-alb" onclick="copyData('albumin')"><i data-lucide="copy"></i> Salin Instruksi Albumin</button>
+        </section>
+
+        <!-- ===== NATRIUM ===== -->
+        <section id="content-natrium" class="tab-content active">
+            <div class="sec-hdr">
+                <div class="sec-icon" style="background:#fff7ed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg></div>
+                <h2 class="sec-title">Status Natrium</h2>
+            </div>
+
+            <div class="card">
+                <div class="card-lbl">Lab Natrium (mEq/L)</div>
+                <input type="number" inputmode="decimal" id="inp-lab-na" value="121" class="field-inp" oninput="calculateAll()">
+                <div class="warn-txt" id="warn-inp-lab-na"><i data-lucide="alert-circle" style="width:12px;height:12px;"></i> Nilai ekstrem!</div>
+            </div>
+
+            <!-- Kids Emergency Toggle -->
+            <div id="na-symptomatic-container" style="display:none;margin-bottom:10px;">
+                <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#fef2f2;border:1.5px solid #fecaca;border-radius:11px;cursor:pointer;">
+                    <input type="checkbox" id="inp-na-symptomatic" onchange="calculateAll()" style="width:17px;height:17px;accent-color:#dc2626;">
+                    <span style="font-size:12px;font-weight:800;color:#dc2626;">🚨 Kejang / Koma (Gejala Berat)</span>
+                </label>
+            </div>
+
+            <div class="status-badge badge-hypo" id="badge-na-status">HIPONATREMIA</div>
+
+            <div id="inp-na-target-container" class="card" style="margin-top:10px;">
+                <div class="card-lbl">Target Kenaikan 24 Jam (mEq, Max 8–10)</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="number" inputmode="decimal" id="inp-target-na-24" value="8" class="field-inp" style="flex:1;" oninput="calculateAll()">
+                    <span style="font-size:13px;font-weight:700;color:var(--s500);">mEq</span>
+                </div>
+                <div class="info-note">*Batas aman kenaikan &lt;10-12 mEq/hari untuk cegah ODS.</div>
+            </div>
+
+            <!-- Hypo View -->
+            <div id="view-na-hypo">
+                <!-- KIDS: Emergency Bolus Box -->
+                <div id="view-na-symptomatic-bolus" style="display:none;margin-top:10px;">
+                    <div class="alert alert-d" style="margin-top:0;margin-bottom:10px;">
+                        <div class="alert-t pulse-red"><i data-lucide="siren"></i> 🚨 BOLUS DARURAT NaCl 3%</div>
+                        <div style="font-size:22px;font-weight:900;color:#dc2626;font-family:'Space Grotesk',sans-serif;margin:4px 0;"><span id="out-na-bolus-ml">0</span> mL <span style="font-size:12px;opacity:0.6;">NaCl 3%</span></div>
+                        <div style="font-size:10px;color:#991b1b;">*3 mL/kg IV lambat 10-20 menit. Dapat diulang jika kejang belum berhenti.</div>
+                    </div>
+                </div>
+
+                <div class="res-card amber" style="margin-top:10px;">
+                    <div class="card-lbl" style="margin-bottom:8px;"><i data-lucide="zap" style="display:inline-block;width:12px;height:12px;vertical-align:middle;margin-right:2px;"></i>Adrogue-Madias — NaCl 3% (Hipertonik)</div>
+                    <div style="background:rgba(255,255,255,0.72);border-radius:11px;padding:11px;margin-bottom:7px;border:1px solid rgba(249,115,22,0.18);">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+                            <span style="font-size:13px;font-weight:800;color:#92400e;">Efek per 1 Liter:</span>
+                            <span style="font-size:16px;font-weight:900;color:#c2410c;">+<span id="out-adrogue-3">0.00</span> mEq</span>
+                        </div>
+                        <div class="info-row" style="margin-bottom:5px;"><span class="info-row-l">Vol Total 24 Jam:</span><span class="info-row-r" style="color:#c2410c;"><span id="out-vol-3">0</span> mL</span></div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px;">
+                            <span style="font-size:10px;font-weight:700;color:var(--s500);text-transform:uppercase;">Laju Syringe Pump:</span>
+                            <span class="rate-chip" style="background:linear-gradient(135deg,#ea580c,#c2410c);font-size:13px;"><span id="out-rate-3">0.0</span> mL/jam</span>
+                        </div>
+                        <div class="high-rate-warn" id="warn-rate-high">⚠️ Laju &gt;50 mL/jam! Evaluasi ulang target kenaikan.</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.5);border-radius:11px;padding:11px;border:1px solid rgba(0,0,0,0.06);">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                            <span style="font-size:12px;font-weight:700;">NaCl 0.9% (NS)</span>
+                            <span style="font-size:13px;font-weight:900;color:#d97706;">+<span id="out-adrogue-09">0.00</span> mEq</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:10px;font-weight:700;color:var(--s500);text-transform:uppercase;">Laju Infus 24 Jam:</span>
+                            <span style="font-size:13px;font-weight:800;color:#d97706;"><span id="out-rate-09">0.0</span> mL/jam</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kids: HS combined rate display -->
+                <div id="na-kids-combined" style="display:none;">
+                    <div class="res-card blue" style="margin-bottom:9px;">
+                        <div class="res-lbl" style="color:#1e40af;">Total Combined Rate (Koreksi + Maint HS)</div>
+                        <div style="display:flex;align-items:baseline;gap:3px;margin-bottom:10px;">
+                            <span class="res-val" style="color:#2563eb;" id="out-na-combined-rate">0.0</span>
+                            <span class="res-unit" style="color:#1e40af;">mL/jam</span>
+                        </div>
+                        <div class="info-row" style="margin-bottom:4px;"><span class="info-row-l">Tetesan Makro (20 gtt/mL):</span><span class="info-row-r" style="color:#2563eb;"><span id="out-na-macro">0</span> TPM</span></div>
+                        <div class="info-row" style="margin-bottom:0;"><span class="info-row-l">Tetesan Mikro (60 gtt/mL):</span><span class="info-row-r" style="color:#2563eb;"><span id="out-na-micro">0</span> TPM</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hyper View -->
+            <div id="view-na-hyper" style="display:none;margin-top:10px;">
+                <div class="res-card red">
+                    <div class="res-lbl" style="color:#991b1b;">Free Water Deficit (FWD)</div>
+                    <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:12px;">
+                        <span class="res-val" style="color:#dc2626;" id="out-fwd">0.0</span>
+                        <span class="res-unit" style="color:#991b1b;">Liter</span>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.7);border-radius:10px;padding:10px;margin-bottom:7px;">
+                        <div style="font-size:11px;font-weight:800;color:#991b1b;margin-bottom:3px;">Rekomendasi Cairan:</div>
+                        <div style="font-size:11px;color:var(--s700);line-height:1.5;">D5W (Enteral/IV) atau NaCl 0.45%. Turunkan Na maks. <strong>10 mEq dalam 24 jam</strong>.</div>
+                    </div>
+                    <!-- Adult FWD rate -->
+                    <div id="na-adult-fwd" style="background:rgba(255,255,255,0.7);border-radius:10px;padding:10px;">
+                        <div style="font-size:11px;font-weight:800;color:#991b1b;margin-bottom:5px;">Est. Laju Penggantian FWD (48 jam):</div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:10px;font-weight:700;color:#991b1b;text-transform:uppercase;">Laju FWD only:</span>
+                            <span class="rate-chip" style="background:linear-gradient(135deg,#dc2626,#991b1b);font-size:13px;"><span id="out-fwd-rate">0</span> mL/jam</span>
+                        </div>
+                    </div>
+                    <!-- Kids FWD combined -->
+                    <div id="na-kids-fwd" style="display:none;background:rgba(255,255,255,0.7);border-radius:10px;padding:10px;margin-top:7px;">
+                        <div style="font-size:11px;font-weight:800;color:#991b1b;margin-bottom:5px;">Koreksi Anak (Defisit + Maintenance HS):</div>
+                        <div class="info-row" style="margin-bottom:4px;"><span class="info-row-l">Laju Defisit (48j):</span><span class="info-row-r" style="color:#dc2626;"><span id="out-fwd-pump">0.0</span> mL/jam</span></div>
+                        <div class="info-row" style="margin-bottom:4px;"><span class="info-row-l">Laju Maintenance (HS):</span><span class="info-row-r" style="color:#2563eb;"><span id="out-fwd-maint-rate">0.0</span> mL/jam</span></div>
+                        <div style="background:rgba(59,130,246,0.1);border-radius:8px;padding:8px;margin-top:5px;">
+                            <div style="font-size:10px;font-weight:800;color:#1d4ed8;text-transform:uppercase;">Total Combined:</div>
+                            <div style="font-size:20px;font-weight:900;color:#2563eb;"><span id="out-fwd-combined-rate">0.0</span> mL/jam</div>
+                        </div>
+                        <div class="info-row" style="margin-top:5px;margin-bottom:3px;"><span class="info-row-l">Makro (20 gtt):</span><span class="info-row-r"><span id="out-fwd-macro">0</span> TPM</span></div>
+                        <div class="info-row" style="margin-bottom:0;"><span class="info-row-l">Mikro (60 gtt):</span><span class="info-row-r"><span id="out-fwd-micro">0</span> TPM</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Normal View -->
+            <div id="view-na-normal" style="display:none;margin-top:10px;">
+                <div class="res-card green" style="text-align:center;padding:22px;">
+                    <i data-lucide="check-circle-2" style="width:38px;height:38px;color:#16a34a;margin:0 auto 9px;display:block;"></i>
+                    <div style="font-weight:800;font-size:14px;color:#166534;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em;">Natrium Normal (135–145 mEq/L)</div>
+                    <div style="font-size:12px;color:#15803d;line-height:1.5;">Tidak ada indikasi koreksi. Pertahankan cairan maintenance.</div>
+                </div>
+            </div>
+            <button class="copy-btn" id="copy-btn-na" onclick="copyData('natrium')"><i data-lucide="copy"></i> Salin Instruksi Natrium</button>
+        </section>
+
+        <!-- ===== KALIUM ===== -->
+        <section id="content-kalium" class="tab-content">
+            <div class="sec-hdr">
+                <div class="sec-icon" style="background:#fff1f2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>
+                <h2 class="sec-title">Status Kalium</h2>
+            </div>
+
+            <div class="card">
+                <div class="card-lbl">Lab Kalium (mEq/L)</div>
+                <input type="number" step="0.1" inputmode="decimal" id="inp-lab-k" value="3.3" class="field-inp" oninput="calculateAll()">
+                <div class="warn-txt" id="warn-inp-lab-k"><i data-lucide="alert-circle" style="width:12px;height:12px;"></i> Nilai ekstrem!</div>
+            </div>
+            <div class="status-badge badge-hypo" id="badge-k-status">HIPOKALEMIA</div>
+
+            <div class="card" id="inp-k-target-container" style="margin-top:10px;">
+                <div class="card-lbl">Target Kalium (mEq/L)</div>
+                <input type="number" step="0.1" inputmode="decimal" id="inp-target-k" value="4.5" class="field-inp" oninput="calculateAll()">
+            </div>
+
+            <!-- Hypo View -->
+            <div id="view-k-hypo" style="margin-top:4px;">
+                <div class="res-card rose">
+                    <div class="res-lbl" style="color:#9f1239;">Estimasi Defisit Kalium</div>
+                    <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:9px;">
+                        <span class="res-val" style="color:#f43f5e;" id="out-k-deficit">0.0</span>
+                        <span class="res-unit" style="color:#9f1239;">mEq</span>
+                    </div>
+                    <div class="info-note" style="font-style:normal;color:#9f1239;font-weight:700;font-size:11px;"><i data-lucide="shield-alert" style="width:12px;height:12px;display:inline-block;vertical-align:middle;"></i> Berikan <strong>50% dahulu</strong>, evaluasi EKG, lalu cek ulang lab.</div>
+                </div>
+
+                <!-- KIDS extra fields: jalur, sediaan, durasi -->
+                <div id="k-kids-options" style="display:none;" class="card">
+                    <div class="card-lbl" style="margin-bottom:9px;">Opsi Koreksi Pediatrik</div>
+                    <div class="mini-grid">
+                        <div class="mini-f-wrap">
+                            <label>Jalur Infus</label>
+                            <select id="inp-k-line" onchange="calculateAll()" class="ped-sel">
+                                <option value="perifer">Perifer (Max 40 mEq/L)</option>
+                                <option value="sentral">Sentral (Max 80 mEq/L)</option>
+                            </select>
+                        </div>
+                        <div class="mini-f-wrap">
+                            <label>Sediaan KCl</label>
+                            <select id="inp-k-sediaan" onchange="calculateAll()" class="ped-sel">
+                                <option value="7.46">7.46% (1 mEq/mL)</option>
+                                <option value="15">15% (2 mEq/mL)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mini-f-wrap">
+                        <label>Durasi Koreksi</label>
+                        <select id="inp-k-duration" onchange="calculateAll()" class="ped-sel" style="margin-top:2px;">
+                            <option value="4">4 Jam</option>
+                            <option value="6" selected>6 Jam (Standar)</option>
+                            <option value="12">12 Jam</option>
+                            <option value="24">24 Jam</option>
+                        </select>
+                    </div>
+                    <!-- Kids recipe -->
+                    <div id="k-kids-recipe" style="margin-top:10px;padding:10px;background:rgba(244,63,94,0.07);border-radius:10px;border:1px solid rgba(244,63,94,0.15);">
+                        <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#9f1239;margin-bottom:7px;letter-spacing:0.05em;">Resep Koreksi Campuran:</div>
+                        <div style="font-size:12px;color:var(--s700);line-height:1.6;">
+                            Ambil <strong id="out-k-kcl-ml" style="color:#f43f5e;">0.0</strong> mL sediaan KCl.<br>
+                            Campur dengan NaCl 0.9% / D5W sebanyak <strong id="out-k-diluent-ml" style="color:#f43f5e;">0.0</strong> mL (Total: <span id="out-k-total-fluid">0.0</span> mL).<br>
+                            Laju infus pump: <strong id="out-k-inf-rate" style="color:#f43f5e;">0.0</strong> mL/jam.
+                        </div>
+                        <div style="margin-top:7px;font-size:11px;font-weight:700;color:#9f1239;">Batas Maks: <span id="out-k-max-rate">0.0</span> mEq/jam (0.5 mEq/kg/jam). NEVER BOLUS!</div>
+                    </div>
+                </div>
+
+                <!-- Adult procedure -->
+                <div id="k-adult-proc" class="proc-box">
+                    <div class="proc-title"><i data-lucide="info"></i> Laju Pemberian KCl (Dewasa)</div>
+                    <div class="proc-body">
+                        <div class="info-row" style="margin-bottom:5px;"><span class="info-row-l">Laju Perifer (max):</span><span class="info-row-r" style="color:#d97706;">10 mEq/jam</span></div>
+                        <div class="info-row" style="margin-bottom:7px;"><span class="info-row-l">Laju Sentral (max):</span><span class="info-row-r" style="color:#ea580c;">20–40 mEq/jam*</span></div>
+                        <div class="info-note">*Wajib Cardiac Monitor (EKG kontinu) jika laju &gt;10 mEq/jam.</div>
+                        <div class="alert alert-w" style="margin-top:8px;">
+                            <strong>Perifer (Paling Aman):</strong> 1 Flacon KCl (25 mEq) + 500 cc NaCl 0.9%, drip lambat 12–24 jam.
+                        </div>
+                        <div class="alert alert-i" style="margin-top:6px;">
+                            <strong>Sentral (CVC):</strong> 1–2 Flacon KCl dalam 50–100 cc NaCl 0.9% via Syringe Pump, max 20 mEq/jam.
+                        </div>
+                        <div class="alert alert-d" style="margin-top:6px;"><strong>Pelarut WAJIB NaCl 0.9%.</strong> Dilarang: Asering/RL atau Dextrose.</div>
+                    </div>
+                </div>
+
+                <div class="alert alert-d">
+                    <div class="alert-t pulse-red"><i data-lucide="alert-octagon"></i> ⚠️ NEVER BOLUS KCl IV!</div>
+                    Pemberian KCl secara bolus dapat langsung menyebabkan <strong>HENTI JANTUNG & KEMATIAN!</strong>
+                </div>
+
+                <!-- Infus Calc -->
+                <div class="infus-calc">
+                    <div class="infus-title"><i data-lucide="timer"></i> Kalkulator Laju Infus Kalium</div>
+                    <div class="infus-grid">
+                        <div class="infus-f-wrap"><label>Volume (mL)</label><input type="number" id="inp-k-vol" value="500" class="infus-inp" oninput="calcInfus('k');calculateAll()"></div>
+                        <div class="infus-f-wrap"><label>Waktu (Jam)</label><input type="number" id="inp-k-time" value="24" class="infus-inp" oninput="calcInfus('k');calculateAll()"></div>
+                        <div class="infus-f-wrap"><label>Tetesan</label>
+                            <select id="inp-k-drop" class="infus-sel" onchange="calcInfus('k')">
+                                <option value="20">Makro 20</option>
+                                <option value="15">Makro 15</option>
+                                <option value="60">Mikro 60</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="infus-res">
+                        <div class="infus-res-box dark"><div class="lbl">Syringe Pump</div><div class="val"><span id="out-k-pump">0.0</span></div><div class="unt">mL/jam</div></div>
+                        <div class="infus-res-box light"><div class="lbl">Manual Drip</div><div class="val"><span id="out-k-drop">0</span></div><div class="unt">tpm</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hyper View -->
+            <div id="view-k-hyper" style="display:none;margin-top:10px;">
+                <div class="res-card red" style="padding:14px;">
+                    <div style="font-size:12px;font-weight:800;color:#991b1b;text-transform:uppercase;letter-spacing:0.04em;display:flex;align-items:center;gap:5px;margin-bottom:11px;border-bottom:1px solid rgba(220,38,38,0.2);padding-bottom:9px;">
+                        <i data-lucide="alert-triangle" style="width:14px;height:14px;"></i> Protokol Kegawatan Hiperkalemia
+                    </div>
+                    <div class="proto-step">
+                        <div class="step-num d">1</div>
+                        <div class="step-body">
+                            <div class="step-title" style="color:#dc2626;">Stabilisasi Membran Jantung</div>
+                            <strong>Calcium Gluconate 10%</strong> — Dewasa: 1 ampul (10 mL) IV pelan 2–3 mnt. Anak: <strong id="out-hk-ca-mg">0</strong> mg (<strong id="out-hk-ca">0.0</strong> mL) IV 2–5 mnt. Ulangi jika EKG belum membaik.
+                        </div>
+                    </div>
+                    <div class="proto-step">
+                        <div class="step-num w">2</div>
+                        <div class="step-body">
+                            <div class="step-title" style="color:#c2410c;">Shifting Intraseluler</div>
+                            Dewasa: 10 IU Insulin Regular + 50 mL D40% IV bolus.<br>
+                            Anak: <strong id="out-hk-ins">0.0</strong> IU Insulin + D10W <strong id="out-hk-d10">0</strong> mL.<br>
+                            + Salbutamol Nebulisasi: <strong id="out-hk-salb">0.0</strong> mg.
+                        </div>
+                    </div>
+                    <div class="proto-step" style="margin-bottom:0">
+                        <div class="step-num n">3</div>
+                        <div class="step-body">
+                            <div class="step-title">Eliminasi Kalium</div>
+                            Furosemide IV. Anak: <strong id="out-hk-furo">0.0</strong> mg (<strong id="out-hk-furo-ml">0.0</strong> mL). Kalimate/Kalitake (Pengikat K GIT). <strong>Hemodialisis</strong> jika refrakter/oliguria.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Normal View -->
+            <div id="view-k-normal" style="display:none;margin-top:10px;">
+                <div class="res-card green" style="text-align:center;padding:22px;">
+                    <i data-lucide="check-circle-2" style="width:38px;height:38px;color:#16a34a;margin:0 auto 9px;display:block;"></i>
+                    <div style="font-weight:800;font-size:14px;color:#166534;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em;">Kalium Normal (3.5–5.0 mEq/L)</div>
+                </div>
+            </div>
+            <button class="copy-btn rose" id="copy-btn-k" onclick="copyData('kalium')"><i data-lucide="copy"></i> Salin Instruksi Kalium</button>
+        </section>
+
+        <!-- ===== MAGNESIUM ===== -->
+        <section id="content-magnesium" class="tab-content">
+            <div class="sec-hdr">
+                <div class="sec-icon" style="background:#fefce8"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+                <h2 class="sec-title">Status Magnesium</h2>
+            </div>
+
+            <div class="card" style="text-align:center;">
+                <div class="card-lbl">Lab Magnesium (mg/dL)</div>
+                <input type="number" step="0.1" inputmode="decimal" id="inp-lab-mg" value="1.4" class="field-inp center" oninput="calculateAll()">
+                <div class="warn-txt" id="warn-inp-lab-mg" style="justify-content:center;"><i data-lucide="alert-circle" style="width:12px;height:12px;"></i> Nilai ekstrem!</div>
+            </div>
+
+            <!-- Kids: sediaan selector -->
+            <div class="card" id="mg-kids-sediaan" style="display:none;">
+                <div class="card-lbl">Sediaan MgSO4</div>
+                <select id="inp-mg-sediaan" onchange="calculateAll()" class="ped-sel">
+                    <option value="20">MgSO4 20% (200 mg/mL)</option>
+                    <option value="50">MgSO4 50% (500 mg/mL)</option>
+                </select>
+            </div>
+
+            <div class="gl-box amber" id="box-mg-guideline">
+                <div class="gl-lbl"><i data-lucide="activity" style="display:inline-block;width:12px;height:12px;vertical-align:middle;"></i> Rekomendasi</div>
+                <div class="gl-text" id="out-mg-guideline">Memproses...</div>
+                <!-- Kids dose info -->
+                <div id="mg-kids-dose-info" style="display:none;background:rgba(255,255,255,0.2);border-radius:8px;padding:8px;margin-top:8px;">
+                    <div style="font-size:10px;font-weight:800;text-transform:uppercase;opacity:0.8;margin-bottom:4px;">Dosis Target Anak (25-50 mg/kg):</div>
+                    <div style="font-size:22px;font-weight:900;"><span id="out-mg-dose-mg">0</span> mg = <span id="out-mg-dose-ml">0.0</span> mL <span id="out-mg-sediaan-text">MgSO4 20%</span></div>
+                </div>
+            </div>
+
+            <div class="proc-box">
+                <div class="proc-title" id="title-mg-procedure"><i data-lucide="info"></i> Prosedur Koreksi</div>
+                <div class="proc-body" id="out-mg-procedure">
+                    <p><strong>Sediaan:</strong> MgSO4 20% (1g=5mL) atau 40% (1g=2.5mL).</p>
+                    <p><strong>Pelarut:</strong> Wajib dilarutkan. Jangan bolus murni.</p>
+                    <p><strong>Contoh (4g):</strong> 10 mL MgSO4 40% + 100 cc NaCl 0.9%, drip habis 4 jam.</p>
+                    <p><strong style="color:#ea580c;">Monitoring:</strong> Cek Refleks Patella, RR &gt;16x/mnt, Urine &gt;0.5cc/kg/jam.</p>
+                </div>
+            </div>
+
+            <div class="infus-calc" id="calc-mg-infus" style="display:none;">
+                <div class="infus-title"><i data-lucide="timer"></i> Kalkulator Laju Infus MgSO4</div>
+                <div class="infus-grid">
+                    <div class="infus-f-wrap"><label>Volume (mL)</label><input type="number" id="inp-mg-vol" value="100" class="infus-inp" oninput="calcInfus('mg');calculateAll()"></div>
+                    <div class="infus-f-wrap"><label>Waktu (Jam)</label><input type="number" id="inp-mg-time" value="4" class="infus-inp" oninput="calcInfus('mg');calculateAll()"></div>
+                    <div class="infus-f-wrap"><label>Tetesan</label>
+                        <select id="inp-mg-drop" class="infus-sel" onchange="calcInfus('mg')">
+                            <option value="20">Makro 20</option>
+                            <option value="15">Makro 15</option>
+                            <option value="60">Mikro 60</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="infus-res">
+                    <div class="infus-res-box dark"><div class="lbl">Syringe Pump</div><div class="val"><span id="out-mg-pump">0.0</span></div><div class="unt">mL/jam</div></div>
+                    <div class="infus-res-box light"><div class="lbl">Manual Drip</div><div class="val"><span id="out-mg-drop">0</span></div><div class="unt">tpm</div></div>
+                </div>
+            </div>
+            <button class="copy-btn" onclick="copyData('magnesium')"><i data-lucide="copy"></i> Salin Instruksi Magnesium</button>
+        </section>
+
+        <!-- ===== KALSIUM ===== -->
+        <section id="content-kalsium" class="tab-content">
+            <div class="sec-hdr">
+                <div class="sec-icon" style="background:#fff7ed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c.5 4.5 2.5 5 3.5 8.5A6 6 0 0 1 12 22a6 6 0 0 1-3.5-11.5C9.5 7 11.5 6.5 12 2Z"/></svg></div>
+                <h2 class="sec-title">Status Kalsium</h2>
+            </div>
+
+            <div class="toggle-grp">
+                <button class="toggle-btn on-amber" id="btn-ca-ionized" onclick="setCaType('ionized')">Ionized Ca</button>
+                <button class="toggle-btn" id="btn-ca-total" onclick="setCaType('total')">Total Ca</button>
+            </div>
+
+            <!-- Ionized -->
+            <div id="view-ca-ionized">
+                <div class="card" style="text-align:center;">
+                    <div class="card-lbl">Lab Ionized Ca (mg/dL)</div>
+                    <div class="info-note" style="text-align:center;margin-bottom:5px;">1 mmol/L ≈ 4 mg/dL</div>
+                    <input type="number" step="0.1" inputmode="decimal" id="inp-lab-ca" value="3.2" class="field-inp center" oninput="calculateAll()">
+                    <div class="warn-txt" id="warn-inp-lab-ca" style="justify-content:center;"><i data-lucide="alert-circle" style="width:12px;height:12px;"></i> Ekstrem. Pastikan satuan mg/dL!</div>
+                </div>
+                <div class="gl-box amber" id="box-ca-guideline">
+                    <div class="gl-lbl"><i data-lucide="activity" style="display:inline-block;width:12px;height:12px;vertical-align:middle;"></i> Rekomendasi</div>
+                    <div class="gl-text" id="out-ca-guideline">Memproses...</div>
+                    <!-- Kids dose info -->
+                    <div id="ca-kids-dose-info" style="display:none;background:rgba(255,255,255,0.2);border-radius:8px;padding:8px;margin-top:8px;">
+                        <div style="font-size:10px;font-weight:800;text-transform:uppercase;opacity:0.8;margin-bottom:3px;" id="lbl-ca-dose-target">Dosis Target Anak Ca Gluconate:</div>
+                        <div style="font-size:22px;font-weight:900;"><span id="out-ca-dose-mg">0</span> mg = <span id="out-ca-dose">0.0</span> mL <span id="out-ca-sediaan-text">Ca Gluconate 10%</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total -->
+            <div id="view-ca-total" style="display:none;">
+                <div class="mini-grid">
+                    <div class="mini-f-wrap">
+                        <label>Total Ca (mg/dL)</label>
+                        <input type="number" step="0.1" id="inp-lab-totalca" value="7.2" class="mini-inp" oninput="calculateAll()">
+                        <div class="warn-txt" id="warn-inp-lab-totalca"><i data-lucide="alert-circle" style="width:11px;height:11px;"></i> Ekstrem!</div>
+                    </div>
+                    <div class="mini-f-wrap">
+                        <label>Albumin (g/dL)</label>
+                        <input type="number" step="0.1" id="inp-lab-alb-ca" value="2.5" class="mini-inp" oninput="calculateAll()">
+                    </div>
+                </div>
+                <div class="corrected-box">
+                    <div class="corrected-lbl">Corrected Calcium</div>
+                    <div><span class="corrected-val" id="out-corrected-ca">0.00</span> <span style="font-size:12px;font-weight:700;color:var(--s500);">mg/dL</span></div>
+                </div>
+                <div class="gl-box amber" id="box-total-ca-act">
+                    <div class="gl-text" id="out-total-ca-act">Memproses...</div>
+                    <span id="out-total-ca-freq" style="display:inline-block;margin-top:5px;background:rgba(0,0,0,0.18);padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;text-transform:uppercase;"></span>
+                </div>
+            </div>
+
+            <!-- Kids sediaan selector -->
+            <div class="card" id="ca-kids-sediaan" style="display:none;">
+                <div class="card-lbl">Sediaan Kalsium</div>
+                <select id="inp-ca-sediaan" onchange="calculateAll()" class="ped-sel">
+                    <option value="gluconate">Ca Gluconate 10% (Perifer OK)</option>
+                    <option value="chloride">Ca Chloride 10% (WAJIB Sentral)</option>
+                </select>
+                <div id="box-ca-warning" class="alert alert-d" style="margin-top:8px;font-size:10px;"><i data-lucide="alert-circle" style="width:13px;height:13px;display:inline;"></i> Berikan perlahan (10-30 menit) via infus pump. Hentikan jika bradikardia!</div>
+            </div>
+
+            <div class="proc-box">
+                <div class="proc-title" id="title-ca-procedure"><i data-lucide="info"></i> Prosedur Kalsium IV</div>
+                <div class="proc-body" id="out-ca-procedure">
+                    <p><strong>Sediaan:</strong> Calcium Gluconate 10% (1 ampul = 10 mL = ~93 mg Elemental Ca).</p>
+                    <p><strong>Contoh Resep:</strong> 1 Ampul (10 mL) + 100 cc NaCl 0.9% atau D5W, drip lambat 30–60 menit.</p>
+                    <p><strong>Kecepatan Max:</strong> 1–2 gram (10–20 mL) per jam drip lambat.</p>
+                    <p><strong style="color:#dc2626;text-transform:uppercase;">Inkompatibilitas:</strong> Jangan gabung dengan Bikarbonat atau Fosfat.</p>
+                </div>
+            </div>
+            <button class="copy-btn" onclick="copyData('kalsium')"><i data-lucide="copy"></i> Salin Instruksi Kalsium</button>
+        </section>
+
+        <!-- ===== FOSFAT ===== -->
+        <section id="content-fosfat" class="tab-content">
+            <div class="sec-hdr">
+                <div class="sec-icon" style="background:#fefce8"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></div>
+                <h2 class="sec-title">Status Fosfat</h2>
+            </div>
+
+            <div class="card" style="text-align:center;">
+                <div class="card-lbl">Lab Fosfor (mg/dL)</div>
+                <input type="number" step="0.1" inputmode="decimal" id="inp-lab-phos" value="1.8" class="field-inp center" oninput="calculateAll()">
+                <div class="warn-txt" id="warn-inp-lab-phos" style="justify-content:center;"><i data-lucide="alert-circle" style="width:12px;height:12px;"></i> Nilai ekstrem!</div>
+            </div>
+
+            <!-- Kids sediaan fosfat -->
+            <div class="card" id="phos-kids-sediaan" style="display:none;">
+                <div class="card-lbl">Sediaan Fosfat</div>
+                <select id="inp-phos-sediaan" onchange="calculateAll()" class="ped-sel">
+                    <option value="potassium">K-Phos (Jika K+ &lt; 4.0)</option>
+                    <option value="sodium">Na-Phos (Jika K+ &gt; 4.0)</option>
+                </select>
+                <div id="box-phos-safety-warn" class="alert alert-i" style="margin-top:8px;font-size:10px;">Memproses kandungan elektrolit...</div>
+            </div>
+
+            <div class="gl-box amber" id="box-phos-guideline">
+                <div class="gl-lbl"><i data-lucide="activity" style="display:inline-block;width:12px;height:12px;vertical-align:middle;"></i> Rekomendasi</div>
+                <div class="gl-text" id="out-phos-guideline">Memproses...</div>
+                <div id="warn-phos-disclaimer" style="display:none;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.28);border-radius:6px;padding:5px 8px;font-size:10px;font-weight:700;margin-top:7px;">⚠️ Sesuaikan dengan protokol lokal RS Anda.</div>
+                <!-- Kids dose -->
+                <div id="phos-kids-dose-info" style="display:none;background:rgba(255,255,255,0.2);border-radius:8px;padding:8px;margin-top:8px;">
+                    <div style="font-size:10px;font-weight:800;text-transform:uppercase;opacity:0.8;margin-bottom:3px;">Dosis Target Anak (0.15-0.3 mmol/kg):</div>
+                    <div style="font-size:22px;font-weight:900;"><span id="out-phos-dose">0.0</span> mmol = ~<span id="out-phos-dose-ml">0.0</span> mL</div>
+                </div>
+            </div>
+
+            <div class="proc-box">
+                <div class="proc-title" id="title-phos-procedure"><i data-lucide="info"></i> Prosedur Fosfat IV</div>
+                <div class="proc-body" id="out-phos-procedure">
+                    <p><strong>Pemilihan:</strong><br>• K-Phos jika K+ &lt; 4.0 mEq/L<br>• Na-Phos jika K+ &gt; 4.0 mEq/L</p>
+                    <p><strong>Contoh Resep:</strong> Larutkan ke dalam 250 cc NaCl 0.9%.</p>
+                    <p><strong>Kecepatan:</strong> Drip lambat 4–6 jam, maks 7.5 mmol/jam.</p>
+                    <p><strong style="color:#dc2626;">Perhatian:</strong> Cek Ca & Mg sebelum koreksi.</p>
+                </div>
+            </div>
+
+            <div class="infus-calc" id="calc-phos-infus" style="display:none;">
+                <div class="infus-title"><i data-lucide="timer"></i> Kalkulator Laju Infus Fosfat</div>
+                <div class="infus-grid">
+                    <div class="infus-f-wrap"><label>Volume (mL)</label><input type="number" id="inp-phos-vol" value="250" class="infus-inp" oninput="calcInfus('phos');calculateAll()"></div>
+                    <div class="infus-f-wrap"><label>Waktu (Jam)</label><input type="number" id="inp-phos-time" value="6" class="infus-inp" oninput="calcInfus('phos');calculateAll()"></div>
+                    <div class="infus-f-wrap"><label>Tetesan</label>
+                        <select id="inp-phos-drop" class="infus-sel" onchange="calcInfus('phos')">
+                            <option value="20">Makro 20</option>
+                            <option value="15">Makro 15</option>
+                            <option value="60">Mikro 60</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="infus-res">
+                    <div class="infus-res-box dark"><div class="lbl">Syringe Pump</div><div class="val"><span id="out-phos-pump">0.0</span></div><div class="unt">mL/jam</div></div>
+                    <div class="infus-res-box light"><div class="lbl">Manual Drip</div><div class="val"><span id="out-phos-drop">0</span></div><div class="unt">tpm</div></div>
+                </div>
+            </div>
+            <button class="copy-btn" onclick="copyData('fosfat')"><i data-lucide="copy"></i> Salin Instruksi Fosfat</button>
+        </section>
+
+        <!-- ===== FLUID BUDGET (ADULT ONLY) ===== -->
+        <section id="content-fluid" class="tab-content">
+            <div class="sec-hdr">
+                <div class="sec-icon" style="background:#eff6ff"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/></svg></div>
+                <h2 class="sec-title">Fluid Balance & Budget</h2>
+            </div>
+
+            <div class="budget-target-area">
+                <div class="budget-target-lbl">🎯 Target Fluid Budget (Intake Maks / 24 jam)</div>
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:9px;">
+                    <input type="number" id="inp-fluid-target" value="1500" class="budget-inp" oninput="calculateFluidBudget()">
+                    <span style="font-size:12px;font-weight:700;color:var(--s500);">mL/24j</span>
+                </div>
+                <div class="preset-chips">
+                    <button class="preset-chip" onclick="setFluidPreset(500)">⛔ Ketat<br><span style="font-size:10px;opacity:0.7">500</span></button>
+                    <button class="preset-chip" onclick="setFluidPreset(1500)">✅ Standar<br><span style="font-size:10px;opacity:0.7">1500</span></button>
+                    <button class="preset-chip" onclick="setFluidPreset(2000)">💧 Moderat<br><span style="font-size:10px;opacity:0.7">2000</span></button>
+                    <button class="preset-chip" onclick="setFluidPreset(2500)">🌊 Liberal<br><span style="font-size:10px;opacity:0.7">2500</span></button>
+                </div>
+            </div>
+
+            <!-- Intake -->
+            <div class="card">
+                <div class="fluid-sec-tit"><i data-lucide="arrow-down-to-line" style="color:#22c55e;"></i> Cairan Masuk (Intake)</div>
+                <div class="fluid-auto-grp">
+                    <div class="fluid-auto-lbl"><i data-lucide="zap"></i> Koreksi IV Terdeteksi</div>
+                    <div id="auto-iv-list">
+                        <label class="fluid-auto-row" id="lbl-auto-alb"><input type="checkbox" id="chk-auto-alb" onchange="calculateFluidBudget()"><span class="fluid-auto-row-lbl">Koreksi Albumin IV</span><span class="fluid-auto-row-val"><span id="val-auto-alb">0</span> mL</span></label>
+                        <label class="fluid-auto-row" id="lbl-auto-na"><input type="checkbox" id="chk-auto-na" onchange="calculateFluidBudget()"><span class="fluid-auto-row-lbl">Koreksi Natrium IV</span><span class="fluid-auto-row-val"><span id="val-auto-na">0</span> mL</span></label>
+                        <label class="fluid-auto-row" id="lbl-auto-k"><input type="checkbox" id="chk-auto-k" onchange="calculateFluidBudget()"><span class="fluid-auto-row-lbl">Koreksi Kalium IV</span><span class="fluid-auto-row-val"><span id="val-auto-k">0</span> mL</span></label>
+                        <label class="fluid-auto-row" id="lbl-auto-mg"><input type="checkbox" id="chk-auto-mg" onchange="calculateFluidBudget()"><span class="fluid-auto-row-lbl">Koreksi Magnesium IV</span><span class="fluid-auto-row-val"><span id="val-auto-mg">0</span> mL</span></label>
+                        <label class="fluid-auto-row" id="lbl-auto-ca"><input type="checkbox" id="chk-auto-ca" onchange="calculateFluidBudget()"><span class="fluid-auto-row-lbl">Koreksi Kalsium IV</span><span class="fluid-auto-row-val"><span id="val-auto-ca">0</span> mL</span></label>
+                        <label class="fluid-auto-row" id="lbl-auto-phos"><input type="checkbox" id="chk-auto-phos" onchange="calculateFluidBudget()"><span class="fluid-auto-row-lbl">Koreksi Fosfat IV</span><span class="fluid-auto-row-val"><span id="val-auto-phos">0</span> mL</span></label>
+                        <p id="msg-no-auto" style="font-size:11px;color:var(--s500);font-style:italic;padding:3px 2px;">Tidak ada koreksi IV aktif.</p>
+                    </div>
+                </div>
+                <label class="fluid-row" for="chk-in-maint"><input type="checkbox" id="chk-in-maint" onchange="calculateFluidBudget()"><span class="fluid-row-lbl">IV Maintenance (NaCl/RL)</span><input type="number" id="val-in-maint" value="1000" class="fluid-row-inp" oninput="if(document.getElementById('chk-in-maint').checked)calculateFluidBudget()"><span class="fluid-row-unit">mL</span></label>
+                <label class="fluid-row" for="chk-in-obat"><input type="checkbox" id="chk-in-obat" onchange="calculateFluidBudget()"><span class="fluid-row-lbl">Obat IV (Drip/Bolus)</span><input type="number" id="val-in-obat" value="100" class="fluid-row-inp" oninput="if(document.getElementById('chk-in-obat').checked)calculateFluidBudget()"><span class="fluid-row-unit">mL</span></label>
+                <label class="fluid-row" for="chk-in-enteral"><input type="checkbox" id="chk-in-enteral" onchange="calculateFluidBudget()"><span class="fluid-row-lbl">Nutrisi Enteral (NGT)</span><input type="number" id="val-in-enteral" value="500" class="fluid-row-inp" oninput="if(document.getElementById('chk-in-enteral').checked)calculateFluidBudget()"><span class="fluid-row-unit">mL</span></label>
+                <label class="fluid-row" for="chk-in-tpn"><input type="checkbox" id="chk-in-tpn" onchange="calculateFluidBudget()"><span class="fluid-row-lbl">Nutrisi Parenteral (TPN)</span><input type="number" id="val-in-tpn" value="1000" class="fluid-row-inp" oninput="if(document.getElementById('chk-in-tpn').checked)calculateFluidBudget()"><span class="fluid-row-unit">mL</span></label>
+                <label class="fluid-row" for="chk-in-oral"><input type="checkbox" id="chk-in-oral" onchange="calculateFluidBudget()"><span class="fluid-row-lbl">Minum Per Oral</span><input type="number" id="val-in-oral" value="600" class="fluid-row-inp" oninput="if(document.getElementById('chk-in-oral').checked)calculateFluidBudget()"><span class="fluid-row-unit">mL</span></label>
+                <label class="fluid-row" for="chk-in-flush" style="margin-bottom:0"><input type="checkbox" id="chk-in-flush" onchange="calculateFluidBudget()"><span class="fluid-row-lbl">Flush Line</span><input type="number" id="val-in-flush" value="50" class="fluid-row-inp" oninput="if(document.getElementById('chk-in-flush').checked)calculateFluidBudget()"><span class="fluid-row-unit">mL</span></label>
+            </div>
+
+            <!-- Output -->
+            <div class="card">
+                <div class="fluid-sec-tit"><i data-lucide="arrow-up-from-line" style="color:#f97316;"></i> Cairan Keluar (Output)</div>
+                <label class="fluid-row" for="chk-out-iwl"><input type="checkbox" id="chk-out-iwl" onchange="calculateFluidBudget()"><span class="fluid-row-lbl">IWL (BB × 10)</span><span class="fluid-row-val" id="val-out-iwl">0</span><span class="fluid-row-unit">mL</span></label>
+                <label class="fluid-row" for="chk-out-urine"><input type="checkbox" id="chk-out-urine" onchange="calculateFluidBudget()"><span class="fluid-row-lbl">Urine Output</span><input type="number" id="val-out-urine" value="1200" class="fluid-row-inp" oninput="if(document.getElementById('chk-out-urine').checked)calculateFluidBudget()"><span class="fluid-row-unit">mL</span></label>
+                <label class="fluid-row" for="chk-out-drain"><input type="checkbox" id="chk-out-drain" onchange="calculateFluidBudget()"><span class="fluid-row-lbl">Drain / WSD</span><input type="number" id="val-out-drain" value="100" class="fluid-row-inp" oninput="if(document.getElementById('chk-out-drain').checked)calculateFluidBudget()"><span class="fluid-row-unit">mL</span></label>
+                <label class="fluid-row" for="chk-out-muntah" style="margin-bottom:0"><input type="checkbox" id="chk-out-muntah" onchange="calculateFluidBudget()"><span class="fluid-row-lbl">Muntah / NGT Output</span><input type="number" id="val-out-muntah" value="200" class="fluid-row-inp" oninput="if(document.getElementById('chk-out-muntah').checked)calculateFluidBudget()"><span class="fluid-row-unit">mL</span></label>
+            </div>
+
+            <!-- Summary -->
+            <div class="summary-card">
+                <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.3);margin-bottom:11px;">Summary Fluid Balance</div>
+                <div class="summary-nums">
+                    <div class="summary-num"><div class="summary-num-lbl">Total Intake</div><div class="summary-num-val" style="color:#4ade80;">+<span id="sum-intake">0</span></div><div class="summary-num-unit">mL</div></div>
+                    <div class="summary-div"></div>
+                    <div class="summary-num" style="text-align:center;"><div class="summary-num-lbl">Balance (24j)</div><div class="summary-num-val" id="sum-balance" style="font-size:20px;">0 mL</div></div>
+                    <div class="summary-div"></div>
+                    <div class="summary-num"><div class="summary-num-lbl">Total Output</div><div class="summary-num-val" style="color:#fb923c;">-<span id="sum-output">0</span></div><div class="summary-num-unit">mL</div></div>
+                </div>
+                <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:11px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                        <span style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.45);">Intake vs Budget (<span id="txt-budget-target">1500</span> mL)</span>
+                        <span id="txt-budget-status" style="font-size:11px;font-weight:800;color:#4ade80;">Dalam Budget</span>
+                    </div>
+                    <div class="fluid-bar"><div class="fluid-bar-fill" id="bar-budget" style="width:0%;background:#4ade80;"></div></div>
+                    <div id="txt-budget-detail" style="font-size:10px;color:rgba(255,255,255,0.38);">Sisa ruang intake: <span style="font-weight:800;color:white;">0</span> mL</div>
+                </div>
+            </div>
+            <button class="copy-btn blue" onclick="copyData('fluid')"><i data-lucide="copy"></i> Salin Fluid Balance</button>
+            <div class="disclaimer-footer">
+                <div class="disclaimer-txt"><strong>Disclaimer Medis:</strong> OasisXLittle adalah alat bantu kalkulasi. Keputusan akhir adalah wewenang DPJP.</div>
+                <button class="ref-btn" onclick="openReferences()"><i data-lucide="book-open"></i> Lihat Referensi</button>
+            </div>
+        </section>
+
+        <!-- ===== HOLLIDAY-SEGAR (KIDS ONLY) ===== -->
+        <section id="content-hs" class="tab-content">
+            <div class="sec-hdr">
+                <div class="sec-icon" style="background:#ede9fe"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg></div>
+                <h2 class="sec-title">Holliday-Segar & ECG</h2>
+            </div>
+
+            <!-- Maintenance Card -->
+            <div class="hs-card">
+                <div class="hs-lbl">Kebutuhan Cairan 24 Jam</div>
+                <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:12px;">
+                    <span class="hs-big" id="hs-daily">0</span>
+                    <span class="hs-unit">mL/hari</span>
+                </div>
+                <div class="hs-lbl" style="color:#0ea5e9;">Laju Infus Pemeliharaan (Rumus 4-2-1)</div>
+                <div style="display:flex;align-items:baseline;gap:4px;">
+                    <span style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:800;color:#0ea5e9;" id="hs-hourly">0.0</span>
+                    <span style="font-size:13px;font-weight:700;color:#38bdf8;">mL/jam</span>
+                </div>
+            </div>
+
+            <!-- Electrolyte requirements -->
+            <div class="card">
+                <div class="card-lbl">Kebutuhan Elektrolit Harian</div>
+                <div class="info-row"><span class="info-row-l">Natrium (2-3 mEq/100 mL):</span><span class="info-row-r" style="color:#f97316;" id="hs-na-req">— mEq</span></div>
+                <div class="info-row" style="margin-bottom:0;"><span class="info-row-l">Kalium (1-2 mEq/100 mL):</span><span class="info-row-r" style="color:#f43f5e;" id="hs-k-req">— mEq</span></div>
+            </div>
+
+            <!-- ECG Simulator -->
+            <div class="ecg-container">
+                <div class="ecg-header">
+                    <div class="ecg-title"><i data-lucide="activity"></i> ECG Simulator Real-time</div>
+                    <div class="ecg-badges">
+                        <span class="ecg-badge">K: <span id="ecg-k-val">3.3</span></span>
+                        <span class="ecg-badge" style="background:rgba(20,184,166,0.1);color:#0f766e;">Ca: <span id="ecg-ca-val">3.2</span></span>
+                    </div>
+                </div>
+                <canvas id="ecg-canvas" height="90"></canvas>
+                <div class="ecg-desc" id="ecg-desc">Memulai simulasi EKG pediatrik...</div>
+            </div>
+
+            <!-- Drip animation -->
+            <div class="drip-card">
+                <svg viewBox="0 0 50 130" width="45" style="flex-shrink:0;">
+                    <rect x="18" y="2" width="14" height="30" rx="3" fill="#e0f2fe"/>
+                    <rect x="20" y="32" width="10" height="18" rx="2" fill="#bae6fd"/>
+                    <circle id="drip-drop" cx="25" cy="58" r="2" fill="#38bdf8" class="drip-anim" style="--drip-speed:0s;display:none;"/>
+                    <rect x="15" y="68" width="20" height="55" rx="5" fill="none" stroke="#93c5fd" stroke-width="1.5"/>
+                    <rect x="16" y="90" width="18" height="32" rx="4" fill="#dbeafe" opacity="0.6"/>
+                </svg>
+                <div class="drip-info">
+                    <div class="drip-lbl">Laju Animasi Aktif</div>
+                    <div class="drip-val"><span id="out-drip-rate-display">0.0</span> <span style="font-size:12px;color:var(--s400);font-weight:700;">mL/jam</span></div>
+                    <div class="drip-sub"><i data-lucide="droplets" style="width:10px;height:10px;display:inline;vertical-align:middle;"></i> <span id="out-drip-tpm">0</span> TPM &nbsp;|&nbsp; Interval: <span id="out-drip-interval">0.0</span> dtk/tetes</div>
+                    <div style="display:flex;gap:8px;margin-top:5px;">
+                        <select id="inp-drip-type" onchange="calculateAll()" class="ped-sel" style="font-size:11px;padding:4px;">
+                            <option value="macro">Makro (20 tpm/mL)</option>
+                            <option value="micro">Mikro (60 tpm/mL)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Safety Gate -->
+            <div class="safety-card">
+                <div class="safety-tit"><i data-lucide="siren"></i> Pediatrik Safety Gate</div>
+                <ul style="list-style:disc;padding-left:15px;font-size:11px;font-weight:600;color:#9f1239;line-height:1.7;space-y:4px;">
+                    <li><strong>Kalium Perifer:</strong> Konsentrasi maks KCl 40 mEq/L. Laju maks 0.5 mEq/kg/jam.</li>
+                    <li><strong>NaCl 3% IV:</strong> Waspada ODS. Koreksi lambat, maks 10-12 mEq/L/24 jam.</li>
+                    <li><strong>Calcium Gluconate:</strong> Monitor denyut jantung. Hentikan jika bradikardia.</li>
+                    <li><strong>MgSO4:</strong> Awasi refleks patella, RR, dan produksi urin selama infus.</li>
+                </ul>
+            </div>
+
+            <div class="disclaimer-footer">
+                <div class="disclaimer-txt"><strong>Pediatric Disclaimer:</strong> Seluruh dosis HARUS diverifikasi dengan protokol lokal RS dan disetujui DPJP Anak sebelum diaplikasikan.</div>
+                <button class="ref-btn" onclick="openReferences()"><i data-lucide="book-open"></i> Lihat Referensi</button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- BOTTOM TAB BAR -->
+    <nav class="tab-bar">
+        <button class="tab-item" id="btn-tab-albumin" onclick="setTab('albumin')">
+            <div class="tab-icon"><i data-lucide="droplet"></i></div>
+            <span class="tab-lbl">Albumin</span>
+        </button>
+        <button class="tab-item active" id="btn-tab-natrium" onclick="setTab('natrium')">
+            <div class="tab-icon"><i data-lucide="activity"></i></div>
+            <span class="tab-lbl">Natrium</span>
+        </button>
+        <button class="tab-item" id="btn-tab-kalium" onclick="setTab('kalium')">
+            <div class="tab-icon"><i data-lucide="heart-pulse"></i></div>
+            <span class="tab-lbl">Kalium</span>
+        </button>
+        <button class="tab-item" id="btn-tab-magnesium" onclick="setTab('magnesium')">
+            <div class="tab-icon"><i data-lucide="zap"></i></div>
+            <span class="tab-lbl">Mg</span>
+        </button>
+        <button class="tab-item" id="btn-tab-kalsium" onclick="setTab('kalsium')">
+            <div class="tab-icon"><i data-lucide="flame"></i></div>
+            <span class="tab-lbl">Kalsium</span>
+        </button>
+        <button class="tab-item" id="btn-tab-fosfat" onclick="setTab('fosfat')">
+            <div class="tab-icon"><i data-lucide="sun"></i></div>
+            <span class="tab-lbl">Fosfat</span>
+        </button>
+        <!-- 7th tab changes based on mode -->
+        <button class="tab-item tab-special" id="btn-tab-special" onclick="setTab('fluid')">
+            <div class="tab-icon"><i data-lucide="droplets"></i></div>
+            <span class="tab-lbl" id="lbl-tab-special">Fluid</span>
+        </button>
+    </nav>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast-msg">
+        <span id="toast-icon-span"></span>
+        <span id="toast-text">Berhasil disalin!</span>
+    </div>
+
+    <!-- MODAL REFERENSI -->
+    <div class="modal-bd" id="modal-references" onclick="if(event.target===this)closeReferences()">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-hdr">
+                <div class="modal-tit"><i data-lucide="library"></i> Referensi Literasi Medis</div>
+                <button class="modal-close" onclick="closeReferences()"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="ref-grp"><span class="ref-tag" style="background:#fff7ed;color:#c2410c;">Albumin</span><div class="ref-txt">Recommendations for use of albumin and immunoglobulins. <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2719274/" target="_blank" class="ref-link">PMC2719274</a>.</div></div>
+                <div class="ref-grp"><span class="ref-tag" style="background:#fff7ed;color:#ea580c;">Natrium</span><div class="ref-txt">Adrogué HJ, Madias NE. Hyponatremia. <em>N Engl J Med</em>. 2000;342(21):1581–1589.</div></div>
+                <div class="ref-grp"><span class="ref-tag" style="background:#fffbeb;color:#d97706;">Kalium</span><div class="ref-txt">Gennari FJ. Hypokalemia. <em>N Engl J Med</em>. 1998;339(7):451–458.</div></div>
+                <div class="ref-grp"><span class="ref-tag" style="background:#fef2f2;color:#dc2626;">Kalsium</span><div class="ref-txt">Payne RB, et al. Serum calcium in patients with abnormal serum proteins. <em>BMJ</em>. 1973;4:643–646.</div></div>
+                <div class="ref-grp"><span class="ref-tag" style="background:#f5f5f4;color:#44403c;">Mg & Fosfat</span><div class="ref-txt">Kraft MD, et al. Treatment of Electrolyte Disorders in ICU. <em>Am J Health-Syst Pharm</em>. 2005;62(16):1663–1682.</div></div>
+                <div class="ref-grp"><span class="ref-tag" style="background:#eff6ff;color:#1d4ed8;">Pediatrik</span><div class="ref-txt">Holliday MA, Segar WE. The maintenance need for water in parenteral fluid therapy. <em>Pediatrics</em>. 1957;19:823–832.</div></div>
+                <div class="ref-grp"><span class="ref-tag" style="background:#eff6ff;color:#1d4ed8;">Fluid Budget</span><div class="ref-txt">McDonagh TA, et al. 2021 ESC Guidelines for diagnosis and treatment of acute/chronic heart failure. <em>Eur Heart J</em>. 2021;42:3599–3726.</div></div>
+                <div style="border-top:1px solid var(--s100);padding-top:13px;margin-top:4px;text-align:center;">
+                    <div style="font-size:10px;font-weight:700;color:var(--s500);text-transform:uppercase;">OasisXLittle Lytes v1.0</div>
+                    <div style="font-size:9px;color:var(--s500);margin-top:2px;">Dev: Bayushi Eka Putra, MD, FIHA · CardiologyVault</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DRAWER -->
+    <div class="drawer-bd" id="drawer-bd" onclick="closeDrawer()"></div>
+    <div class="drawer" id="drawer-panel">
+        <div class="drawer-hdr">
+            <div class="drawer-tit"><i data-lucide="sparkles"></i> Changelog</div>
+            <button class="modal-close" onclick="closeDrawer()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="drawer-body">
+            <div style="background:linear-gradient(135deg,#fff1f2,#eff6ff);border:1.5px solid #fecdd3;border-radius:14px;padding:13px;margin-bottom:16px;">
+                <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;display:flex;align-items:center;gap:4px;margin-bottom:5px;background:linear-gradient(135deg,#be123c,#1d4ed8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">✨ OasisXLittle Lytes v1.0</div>
+                <div style="font-size:11px;color:var(--s600);line-height:1.5;background:none;-webkit-text-fill-color:var(--s600);">Fusion pertama: OasisLytes V3 (Dewasa) + LittleLytes V2 (Pediatrik) menjadi satu alat kalkulasi elektrolit lengkap untuk semua usia!</div>
+            </div>
+            <div style="margin-bottom:14px;display:flex;gap:10px;">
+                <div style="width:30px;height:30px;border-radius:10px;background:#fff1f2;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="baby" style="width:14px;height:14px;color:#f43f5e;"></i></div>
+                <div><div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px;">Mode Pediatrik Terintegrasi</div><div style="font-size:11px;color:var(--s500);line-height:1.5;">Holliday-Segar (4-2-1), dosis per-kg, ECG simulator real-time, drip animation, dan safety gate khusus anak.</div></div>
+            </div>
+            <div style="margin-bottom:14px;display:flex;gap:10px;">
+                <div style="width:30px;height:30px;border-radius:10px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="droplets" style="width:14px;height:14px;color:#3b82f6;"></i></div>
+                <div><div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px;">Fluid Budget Dashboard (Dewasa)</div><div style="font-size:11px;color:var(--s500);line-height:1.5;">Auto-akumulasi volume IV + intake manual, progress bar real-time, preset target ketat/standar/liberal.</div></div>
+            </div>
+            <div style="margin-bottom:14px;display:flex;gap:10px;">
+                <div style="width:30px;height:30px;border-radius:10px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="toggle-left" style="width:14px;height:14px;color:#16a34a;"></i></div>
+                <div><div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px;">Mode Switch Instan</div><div style="font-size:11px;color:var(--s500);line-height:1.5;">Toggle Dewasa ↔ Anak di header. Formula, dosis, dan tampilan UI berubah otomatis sesuai mode.</div></div>
+            </div>
+            <div style="border-top:1px solid var(--s100);padding-top:14px;text-align:center;">
+                <div style="font-size:10px;font-weight:700;color:var(--s500);text-transform:uppercase;">v1.0.0 – Juni 2026</div>
+                <div style="font-size:9px;color:var(--s500);margin-top:2px;">Dev: Bayushi Eka Putra, MD, FIHA</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =============================================
+         JAVASCRIPT
+    ============================================= -->
+    <script>
+        lucide.createIcons();
+
+        let appMode = 'adult'; // 'adult' | 'kids'
+        let activeTab = 'natrium';
+        let caType = 'ionized';
+        let albSize = 100;
+        let ecgOffset = 0;
+
+        // ============================================================
+        // MODE SWITCH
+        // ============================================================
+        function setMode(mode) {
+            appMode = mode;
+            document.body.className = 'mode-' + mode;
+
+            // Toggle header fields
+            document.getElementById('field-gender').style.display = mode === 'adult' ? '' : 'none';
+            document.getElementById('field-age').style.display = mode === 'kids' ? '' : 'none';
+
+            // Update brand icon
+            const icon = document.getElementById('brand-icon-svg');
+            if (mode === 'kids') {
+                icon.innerHTML = '<path d="M9 12h.01"/><path d="M15 12h.01"/><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"/><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"/>';
+            } else {
+                icon.innerHTML = '<path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/>';
+            }
+
+            // Toggle 7th special tab
+            const specBtn = document.getElementById('btn-tab-special');
+            const specLbl = document.getElementById('lbl-tab-special');
+            const specIcon = specBtn.querySelector('.tab-icon');
+            if (mode === 'kids') {
+                specIcon.innerHTML = '<i data-lucide="book-open-check"></i>';
+                specLbl.innerText = 'HS/ECG';
+            } else {
+                specIcon.innerHTML = '<i data-lucide="droplets"></i>';
+                specLbl.innerText = 'Fluid';
+            }
+
+            // Update mode buttons
+            document.getElementById('btn-mode-adult').className = 'mode-btn' + (mode === 'adult' ? ' active-adult' : '');
+            document.getElementById('btn-mode-kids').className = 'mode-btn' + (mode === 'kids' ? ' active-kids' : '');
+
+            // If current tab is fluid and mode=kids, switch to natrium
+            if (mode === 'kids' && activeTab === 'fluid') {
+                setTab('natrium');
+            } else if (mode === 'adult' && activeTab === 'hs') {
+                setTab('natrium');
+            } else {
+                setTab(activeTab); // just re-apply current tab to update special tab onclick
+            }
+
+            // Set special tab onclick
+            specBtn.onclick = () => setTab(mode === 'kids' ? 'hs' : 'fluid');
+
+            // Show/hide mode-specific fields
+            updateModeSpecificUI();
+            calculateAll();
+            lucide.createIcons();
+        }
+
+        function updateModeSpecificUI() {
+            const isKids = appMode === 'kids';
+            // Albumin
+            document.getElementById('alb-size-toggle-row').style.display = isKids ? '' : 'none';
+            // Natrium
+            document.getElementById('na-symptomatic-container').style.display = isKids ? '' : 'none';
+            document.getElementById('na-kids-combined').style.display = 'none';
+            document.getElementById('na-kids-fwd').style.display = 'none';
+            document.getElementById('na-adult-fwd').style.display = isKids ? 'none' : '';
+            // Kalium
+            document.getElementById('k-kids-options').style.display = isKids ? '' : 'none';
+            document.getElementById('k-adult-proc').style.display = isKids ? 'none' : '';
+            // Magnesium
+            document.getElementById('mg-kids-sediaan').style.display = isKids ? '' : 'none';
+            document.getElementById('mg-kids-dose-info').style.display = 'none';
+            // Kalsium
+            document.getElementById('ca-kids-sediaan').style.display = isKids ? '' : 'none';
+            document.getElementById('ca-kids-dose-info').style.display = 'none';
+            // Fosfat
+            document.getElementById('phos-kids-sediaan').style.display = isKids ? '' : 'none';
+            document.getElementById('phos-kids-dose-info').style.display = 'none';
+            // Target albumin: kids target 4.0, adult 3.5
+            document.getElementById('inp-target-alb').value = isKids ? 4.0 : 3.5;
+        }
+
+        // ============================================================
+        // TAB NAVIGATION
+        // ============================================================
+        function setTab(tabId) {
+            activeTab = tabId;
+            const tabs = ['albumin', 'natrium', 'kalium', 'magnesium', 'kalsium', 'fosfat', 'fluid', 'hs'];
+            const specialTab = appMode === 'kids' ? 'hs' : 'fluid';
+
+            tabs.forEach(t => {
+                const c = document.getElementById('content-' + t);
+                const b = document.getElementById('btn-tab-' + t);
+                if (c) c.classList.toggle('active', t === tabId);
+                if (b) b.classList.toggle('active', t === tabId);
+            });
+
+            // Handle special tab button
+            const specBtn = document.getElementById('btn-tab-special');
+            specBtn.classList.toggle('active', tabId === specialTab);
+
+            lucide.createIcons();
+            if (tabId === 'hs') updateEcgDescription();
+        }
+
+        // ============================================================
+        // Ca TYPE TOGGLE
+        // ============================================================
+        function setCaType(type) {
+            caType = type;
+            document.getElementById('view-ca-ionized').style.display = type === 'ionized' ? '' : 'none';
+            document.getElementById('view-ca-total').style.display = type === 'total' ? '' : 'none';
+
+            const btnI = document.getElementById('btn-ca-ionized');
+            const btnT = document.getElementById('btn-ca-total');
+            btnI.className = 'toggle-btn ' + (type === 'ionized' ? 'on-amber' : '');
+            btnT.className = 'toggle-btn ' + (type === 'total' ? 'on-amber' : '');
+            calculateAll();
+        }
+
+        // ============================================================
+        // ALBUMIN SIZE
+        // ============================================================
+        function setAlbSize(size) {
+            albSize = size;
+            const b50 = document.getElementById('btn-alb-50');
+            const b100 = document.getElementById('btn-alb-100');
+            b50.className = 'toggle-btn' + (size === 50 ? ' on-rose' : '');
+            b100.className = 'toggle-btn' + (size === 100 ? ' on-amber' : '');
+            b50.style.background = size === 50 ? 'white' : 'var(--s100)';
+            b100.style.background = size === 100 ? 'white' : 'var(--s100)';
+            b50.style.boxShadow = size === 50 ? '0 1px 4px rgba(0,0,0,0.1)' : 'none';
+            b100.style.boxShadow = size === 100 ? '0 1px 4px rgba(0,0,0,0.1)' : 'none';
+            const labels = document.getElementsByClassName('out-alb-vol');
+            for (let i = 0; i < labels.length; i++) labels[i].innerText = size;
+            calculateAll();
+        }
+
+        // ============================================================
+        // FLUID PRESET
+        // ============================================================
+        function setFluidPreset(val) {
+            document.getElementById('inp-fluid-target').value = val;
+            calculateFluidBudget();
+        }
+
+        // ============================================================
+        // UTILS
+        // ============================================================
+        function getNum(id) { return parseFloat(document.getElementById(id).value) || 0; }
+        function setText(id, t) { const el = document.getElementById(id); if (el) el.innerText = t; }
+        function showEl(id, show) { const el = document.getElementById(id); if (el) el.style.display = show ? '' : 'none'; }
+
+        function validatePlausible(id, min, max) {
+            const val = getNum(id);
+            const w = document.getElementById('warn-' + id);
+            if (w) w.classList.toggle('show', val !== 0 && (val < min || val > max));
+            return val;
+        }
+
+        // ============================================================
+        // INFUS CALC
+        // ============================================================
+        function calcInfus(type) {
+            const vol = getNum('inp-' + type + '-vol');
+            const time = getNum('inp-' + type + '-time');
+            const dropFactor = getNum('inp-' + type + '-drop');
+            if (time > 0) {
+                setText('out-' + type + '-pump', (vol / time).toFixed(1));
+                setText('out-' + type + '-drop', Math.round((vol * dropFactor) / (time * 60)));
+            }
+        }
+
+        // ============================================================
+        // MAIN CALCULATION
+        // ============================================================
+        function calculateAll() {
+            const weight = getNum('g-weight');
+            const warnEl = document.getElementById('warn-g-weight');
+            if (weight <= 0 || isNaN(weight)) {
+                warnEl.classList.add('show');
+                return;
+            }
+            warnEl.classList.remove('show');
+
+            const isKids = appMode === 'kids';
+
+            // TBW Factor
+            let tbwFactor = 0.6;
+            if (isKids) {
+                const ageCat = document.getElementById('g-age').value;
+                if (ageCat === 'neo') tbwFactor = 0.8;
+                else if (ageCat === 'infant') tbwFactor = 0.7;
+                else if (ageCat === 'teen') tbwFactor = 0.6;
+            } else {
+                const gender = document.getElementById('g-gender').value;
+                if (gender === 'female') tbwFactor = 0.5;
+                else if (gender === 'elderly_female') tbwFactor = 0.45;
+            }
+            const tbw = weight * tbwFactor;
+
+            // =========== HOLLIDAY-SEGAR ===========
+            let hsDaily = 0, hsHourly = 0;
+            if (weight <= 10) { hsDaily = weight * 100; hsHourly = weight * 4; }
+            else if (weight <= 20) { hsDaily = 1000 + (weight - 10) * 50; hsHourly = 40 + (weight - 10) * 2; }
+            else { hsDaily = 1500 + (weight - 20) * 20; hsHourly = 60 + (weight - 20) * 1; }
+            setText('hs-daily', Math.round(hsDaily));
+            setText('hs-hourly', hsHourly.toFixed(1));
+            const hsNaMin = Math.round((hsDaily / 100) * 2);
+            const hsNaMax = Math.round((hsDaily / 100) * 3);
+            const hsKMin = Math.round((hsDaily / 100) * 1);
+            const hsKMax = Math.round((hsDaily / 100) * 2);
+            setText('hs-na-req', `${hsNaMin} – ${hsNaMax} mEq`);
+            setText('hs-k-req', `${hsKMin} – ${hsKMax} mEq`);
+
+            let currentDripRate = hsHourly;
+
+            // =========== ALBUMIN ===========
+            const labAlb = validatePlausible('inp-lab-alb', 0.5, 6.0);
+            const targetAlb = getNum('inp-target-alb');
+            const hypoAlb = labAlb < targetAlb;
+            showEl('view-alb-hypo', hypoAlb);
+            showEl('view-alb-hyper', !hypoAlb);
+            if (hypoAlb) {
+                const albGrams = (targetAlb - labAlb) * weight * 0.8;
+                setText('out-alb-grams', albGrams.toFixed(1));
+                const vol20 = albGrams / 0.2;
+                const vol25 = albGrams / 0.25;
+                setText('out-alb-20', (vol20 / albSize).toFixed(1));
+                setText('out-alb-25', (vol25 / albSize).toFixed(1));
+                if (activeTab === 'albumin') currentDripRate = 90;
+            }
+
+            // =========== NATRIUM ===========
+            const labNa = validatePlausible('inp-lab-na', 100, 180);
+            const badgeNa = document.getElementById('badge-na-status');
+            showEl('view-na-hypo', false); showEl('view-na-hyper', false); showEl('view-na-normal', false);
+            showEl('inp-na-target-container', false);
+            showEl('view-na-symptomatic-bolus', false);
+
+            if (labNa < 135) {
+                showEl('view-na-hypo', true); showEl('inp-na-target-container', true);
+                badgeNa.className = 'status-badge badge-hypo';
+                badgeNa.innerText = 'HIPONATREMIA';
+
+                const targetDelta24 = getNum('inp-target-na-24');
+                const adrogue3 = (513 - labNa) / (tbw + 1);
+                const adrogue09 = (154 - labNa) / (tbw + 1);
+                setText('out-adrogue-3', adrogue3.toFixed(2));
+                setText('out-adrogue-09', adrogue09.toFixed(2));
+                const vol3 = (targetDelta24 / adrogue3) * 1000;
+                const rate3 = vol3 / 24;
+                setText('out-vol-3', Math.round(vol3));
+                setText('out-rate-3', rate3.toFixed(1));
+                setText('out-rate-09', ((targetDelta24 / adrogue09) * 1000 / 24).toFixed(1));
+                const warnHigh = document.getElementById('warn-rate-high');
+                if (warnHigh) warnHigh.classList.toggle('show', rate3 > 50);
+
+                // Kids: symptomatic bolus
+                if (isKids) {
+                    const symp = document.getElementById('inp-na-symptomatic');
+                    if (symp && symp.checked) {
+                        showEl('view-na-symptomatic-bolus', true);
+                        setText('out-na-bolus-ml', Math.round(weight * 3));
+                    }
+                    // Kids: combined rate = correction + maintenance
+                    const combinedRate = rate3 + hsHourly;
+                    showEl('na-kids-combined', true);
+                    setText('out-na-combined-rate', combinedRate.toFixed(1));
+                    setText('out-na-macro', Math.round(combinedRate * 20 / 60));
+                    setText('out-na-micro', Math.round(combinedRate * 60 / 60));
+                    if (activeTab === 'natrium') currentDripRate = combinedRate;
+                } else {
+                    showEl('na-kids-combined', false);
+                    if (activeTab === 'natrium') currentDripRate = rate3;
+                }
+            } else if (labNa > 145) {
+                showEl('view-na-hyper', true);
+                badgeNa.className = 'status-badge badge-hyper';
+                badgeNa.innerText = 'HIPERNATREMIA';
+                const fwd = tbw * ((labNa / 140) - 1);
+                setText('out-fwd', fwd.toFixed(2));
+                const fwdMl = fwd * 1000;
+                const fwdRate = fwdMl / 48;
+
+                if (isKids) {
+                    showEl('na-kids-fwd', true); showEl('na-adult-fwd', false);
+                    const combinedRate = fwdRate + hsHourly;
+                    setText('out-fwd-pump', fwdRate.toFixed(1));
+                    setText('out-fwd-maint-rate', hsHourly.toFixed(1));
+                    setText('out-fwd-combined-rate', combinedRate.toFixed(1));
+                    setText('out-fwd-macro', Math.round(combinedRate * 20 / 60));
+                    setText('out-fwd-micro', Math.round(combinedRate * 60 / 60));
+                    if (activeTab === 'natrium') currentDripRate = combinedRate;
+                } else {
+                    showEl('na-kids-fwd', false); showEl('na-adult-fwd', true);
+                    setText('out-fwd-rate', (fwdMl / 48).toFixed(1));
+                    if (activeTab === 'natrium') currentDripRate = fwdRate;
+                }
+            } else {
+                showEl('view-na-normal', true);
+                badgeNa.className = 'status-badge badge-normal';
+                badgeNa.innerText = 'NORMAL';
+            }
+
+            // =========== KALIUM ===========
+            const labK = validatePlausible('inp-lab-k', 1.0, 9.0);
+            const badgeK = document.getElementById('badge-k-status');
+            showEl('view-k-hypo', false); showEl('view-k-hyper', false); showEl('view-k-normal', false);
+            showEl('inp-k-target-container', false);
+
+            if (labK < 3.5) {
+                showEl('view-k-hypo', true); showEl('inp-k-target-container', true);
+                badgeK.className = 'status-badge badge-hypo';
+                badgeK.innerText = 'HIPOKALEMIA';
+                const targetK = getNum('inp-target-k');
+                const kDeficit = weight * 0.3 * Math.max(0, targetK - labK);
+                setText('out-k-deficit', kDeficit.toFixed(1));
+
+                if (isKids) {
+                    const maxRateMeq = weight * 0.5;
+                    setText('out-k-max-rate', maxRateMeq.toFixed(1));
+                    const line = document.getElementById('inp-k-line').value;
+                    const kSediaan = parseFloat(document.getElementById('inp-k-sediaan').value);
+                    const duration = parseFloat(document.getElementById('inp-k-duration').value);
+                    const kclFactor = kSediaan === 7.46 ? 1.0 : 2.0;
+                    const kclMl = kDeficit / kclFactor;
+                    const targetConc = line === 'perifer' ? 40 : 80;
+                    const totalVolFluid = (kDeficit / targetConc) * 1000;
+                    const diluentMl = Math.max(0, totalVolFluid - kclMl);
+                    const infRate = totalVolFluid / duration;
+                    setText('out-k-kcl-ml', kclMl.toFixed(1));
+                    setText('out-k-diluent-ml', Math.round(diluentMl));
+                    setText('out-k-total-fluid', Math.round(totalVolFluid));
+                    setText('out-k-inf-rate', infRate.toFixed(1));
+                    if (activeTab === 'kalium') currentDripRate = infRate;
+                } else {
+                    if (activeTab === 'kalium') currentDripRate = getNum('inp-k-vol') / getNum('inp-k-time');
+                }
+            } else if (labK > 5.0) {
+                showEl('view-k-hyper', true);
+                badgeK.className = 'status-badge badge-hyper';
+                badgeK.innerText = 'HIPERKALEMIA';
+                const hkCaMg = Math.min(weight * 50, 1000);
+                const hkIns = Math.min(weight * 0.1, 10);
+                const hkD10 = Math.min(weight * 5, 250);
+                const hkSalb = weight < 25 ? 2.5 : 5.0;
+                const hkFuroMg = Math.min(weight * 1, 40);
+                setText('out-hk-ca-mg', hkCaMg.toFixed(0));
+                setText('out-hk-ca', (hkCaMg / 100).toFixed(1));
+                setText('out-hk-ins', hkIns.toFixed(1));
+                setText('out-hk-d10', hkD10.toFixed(0));
+                setText('out-hk-salb', hkSalb.toFixed(1));
+                setText('out-hk-furo', hkFuroMg.toFixed(1));
+                setText('out-hk-furo-ml', (hkFuroMg / 10).toFixed(1));
+            } else {
+                showEl('view-k-normal', true);
+                badgeK.className = 'status-badge badge-normal';
+                badgeK.innerText = 'NORMAL';
+            }
+
+            // =========== MAGNESIUM ===========
+            const labMg = validatePlausible('inp-lab-mg', 0.5, 6.0);
+            const boxMg = document.getElementById('box-mg-guideline');
+            const titleMg = document.getElementById('title-mg-procedure');
+            const procMg = document.getElementById('out-mg-procedure');
+            showEl('calc-mg-infus', false);
+            showEl('mg-kids-dose-info', false);
+
+            if (labMg < 1.7) {
+                showEl('calc-mg-infus', true);
+                boxMg.className = 'gl-box amber';
+                titleMg.innerHTML = '<i data-lucide="info"></i> Prosedur MgSO4 (Hipomagnesemia)';
+                if (isKids) {
+                    showEl('mg-kids-dose-info', true);
+                    const mgSediaan = parseFloat(document.getElementById('inp-mg-sediaan').value);
+                    const mgDoseMg = Math.min(weight * 50, 2000);
+                    const mgDoseMl = mgDoseMg / (mgSediaan * 10);
+                    setText('out-mg-dose-mg', mgDoseMg.toFixed(0));
+                    setText('out-mg-dose-ml', mgDoseMl.toFixed(1));
+                    document.getElementById('out-mg-sediaan-text').innerText = 'MgSO4 ' + mgSediaan + '%';
+                    setText('out-mg-guideline', labMg < 1.3 ? 'Hipomagnesemia Berat. Infus MgSO4 dosis 50 mg/kg.' : 'Hipomagnesemia Ringan. Infus MgSO4 dosis 25-50 mg/kg.');
+                    procMg.innerHTML = `<p><strong>Dosis Anak:</strong> 25–50 mg/kg (maks 2000 mg). Encerkan minimal 2× volume dengan NaCl 0.9%.</p><p><strong>Durasi:</strong> Drip pelan 30–60 menit.</p><p><strong style="color:#ea580c;">Monitoring:</strong> Refleks Patella, RR &gt;16x/mnt, Urine &gt;0.5cc/kg/jam.</p>`;
+                    if (activeTab === 'magnesium') currentDripRate = 30;
+                } else {
+                    setText('out-mg-guideline', labMg < 1.3 ? 'Defisit Berat: Berikan 8 gram IV dalam 8 jam.' : 'Defisit Ringan: Berikan 4 gram IV dalam 4 jam.');
+                    procMg.innerHTML = `<p><strong>Sediaan:</strong> MgSO4 20% (1g=5mL) atau 40% (1g=2.5mL).</p><p><strong>Contoh (4g):</strong> 10 mL MgSO4 40% + 100 cc NaCl 0.9%, drip 4 jam.</p><p><strong style="color:#ea580c;">Monitoring:</strong> Cek Refleks Patella, RR &gt;16x/mnt, Urine &gt;0.5cc/kg/jam.</p>`;
+                    if (activeTab === 'magnesium') currentDripRate = getNum('inp-mg-vol') / getNum('inp-mg-time');
+                }
+            } else if (labMg > 2.5) {
+                boxMg.className = 'gl-box red';
+                setText('out-mg-guideline', 'Hipermagnesemia! Hentikan semua sumber Mg. Siapkan Calcium Gluconate IV sebagai antidotum.');
+                procMg.innerHTML = `<ul><li>Hentikan <strong>semua</strong> sumber Mg (antasida/pencahar).</li><li><strong>Calcium Gluconate 10%</strong> 1–2 ampul IV lambat jika ada aritmia/henti napas.</li><li>Loop Diuretik + hidrasi NaCl 0.9% untuk eliminasi Mg.</li><li><strong>Hemodialisis</strong> jika gagal ginjal berat.</li></ul>`;
+            } else {
+                boxMg.className = 'gl-box green';
+                setText('out-mg-guideline', 'Normal (1.7–2.5 mg/dL). Tidak diperlukan koreksi Magnesium.');
+                procMg.innerHTML = '<p>Nilai Magnesium dalam batas normal. Tidak diperlukan koreksi.</p>';
+            }
+
+            // =========== KALSIUM ===========
+            const labCa = validatePlausible('inp-lab-ca', 1.0, 8.0);
+            const labTotalCa = validatePlausible('inp-lab-totalca', 3.0, 18.0);
+            const albForCa = getNum('inp-lab-alb-ca');
+            const corrCa = labTotalCa + 0.8 * (4.0 - albForCa);
+            setText('out-corrected-ca', corrCa.toFixed(2));
+
+            const boxCaIon = document.getElementById('box-ca-guideline');
+            const boxCaTot = document.getElementById('box-total-ca-act');
+            const titleCa = document.getElementById('title-ca-procedure');
+            const procCa = document.getElementById('out-ca-procedure');
+            let isHyperCa = false, isHypoCa = false;
+
+            if (caType === 'ionized') {
+                if (labCa < 4.5) isHypoCa = true;
+                else if (labCa > (isKids ? 5.3 : 5.6)) isHyperCa = true;
+
+                if (isKids) {
+                    const caSediaan = document.getElementById('inp-ca-sediaan').value;
+                    let caDoseMg = 0;
+                    if (caSediaan === 'gluconate') {
+                        caDoseMg = Math.min(weight * 100, 1000);
+                        document.getElementById('lbl-ca-dose-target').innerText = 'Dosis Anak Ca Gluconate (50-100 mg/kg):';
+                        setText('out-ca-sediaan-text', 'Ca Gluconate 10%');
+                        const boxCaWarn = document.getElementById('box-ca-warning');
+                        if (boxCaWarn) { boxCaWarn.className = 'alert alert-d'; boxCaWarn.innerHTML = '<i data-lucide="alert-circle" style="width:12px;height:12px;display:inline;"></i> Berikan perlahan (10-30 menit) via infus pump. Hentikan jika bradikardia!'; }
+                    } else {
+                        caDoseMg = Math.min(weight * 20, 1000);
+                        document.getElementById('lbl-ca-dose-target').innerText = 'Dosis Anak Ca Chloride (20 mg/kg):';
+                        setText('out-ca-sediaan-text', 'Ca Chloride 10%');
+                        const boxCaWarn = document.getElementById('box-ca-warning');
+                        if (boxCaWarn) { boxCaWarn.className = 'alert alert-rose'; boxCaWarn.innerHTML = '<i data-lucide="siren" style="width:12px;height:12px;display:inline;"></i> WAJIB JALUR SENTRAL! Kalsium Klorida sangat sklerosik & risiko nekrosis jaringan jika ekstravasasi.'; }
+                    }
+                    if (isHypoCa) { showEl('ca-kids-dose-info', true); setText('out-ca-dose-mg', caDoseMg.toFixed(0)); setText('out-ca-dose', (caDoseMg / 100).toFixed(1)); if (activeTab === 'kalsium') currentDripRate = 25; }
+                    else showEl('ca-kids-dose-info', false);
+                }
+
+                if (isHypoCa) {
+                    boxCaIon.className = 'gl-box amber';
+                    if (!isKids) {
+                        let t = '';
+                        if (labCa < 2.5) t = 'Sangat Rendah: Berikan 10g Ca Gluconate IV & hubungi DPJP.';
+                        else if (labCa <= 2.9) t = 'Berikan 8g Ca Gluconate IV. Cek ulang 4 jam kemudian.';
+                        else if (labCa <= 3.4) t = 'Berikan 6g Ca Gluconate IV. Cek ulang 4 jam kemudian.';
+                        else t = 'Berikan 4g Ca Gluconate IV. Cek ulang lab pagi hari.';
+                        setText('out-ca-guideline', t);
+                    } else {
+                        setText('out-ca-guideline', 'Hipokalsemia. Indikasi pemberian Calcium IV lambat. Awasi spasme laring/kejang.');
+                    }
+                } else if (isHyperCa) {
+                    boxCaIon.className = 'gl-box red';
+                    setText('out-ca-guideline', 'HIPERKALSEMIA: Hidrasi agresif NaCl 0.9%. Loop Diuretik setelah normovolemia.');
+                } else {
+                    boxCaIon.className = 'gl-box green';
+                    setText('out-ca-guideline', `Normal. Target: 4.5–${isKids ? '5.3' : '5.6'} mg/dL`);
+                }
+            } else {
+                // Total Ca
+                if (corrCa < 8.5) isHypoCa = true;
+                else if (corrCa > 10.5) isHyperCa = true;
+
+                setText('out-total-ca-freq', '');
+                if (isHypoCa) {
+                    boxCaTot.className = 'gl-box amber';
+                    if (corrCa < 7.0) { setText('out-total-ca-act', 'Kalsium IV, lalu tappering ke 1000mg PO 3x.'); setText('out-total-ca-freq', 'Re-check: 1–4 Hari'); }
+                    else if (corrCa < 7.5) { setText('out-total-ca-act', 'Berikan 1000mg Kalsium PO 3x sehari.'); setText('out-total-ca-freq', 'Re-check: 1–2 Minggu'); }
+                    else { setText('out-total-ca-act', 'Berikan 500mg Kalsium PO 3x sehari.'); setText('out-total-ca-freq', 'Re-check: Bulanan'); }
+                } else if (isHyperCa) {
+                    boxCaTot.className = 'gl-box red';
+                    setText('out-total-ca-act', 'HIPERKALSEMIA: Hidrasi agresif NaCl 0.9%. Loop Diuretik HANYA setelah normovolemia.');
+                } else {
+                    boxCaTot.className = 'gl-box green';
+                    setText('out-total-ca-act', 'Normal. (Target: 8.5–10.5 mg/dL)');
+                }
+            }
+
+            if (isHyperCa) {
+                titleCa.innerHTML = '<i data-lucide="alert-triangle"></i> Protokol Hiperkalsemia';
+                procCa.innerHTML = `<ul><li><strong>Hidrasi Agresif</strong>: NaCl 0.9% 200–300 mL/jam (pantau overload).</li><li><strong>Loop Diuretic</strong>: Furosemide HANYA setelah normovolemia.</li><li><strong>Bisfosfonat</strong>: Jika hiperkalsemia akibat malignansi.</li><li>Hemodialisis: CKD anuria.</li></ul>`;
+            } else if (isHypoCa) {
+                titleCa.innerHTML = '<i data-lucide="info"></i> Prosedur Kalsium IV (Hipokalsemia)';
+                procCa.innerHTML = `<p><strong>Sediaan:</strong> Ca Gluconate 10% (1 amp = 10 mL = ~93 mg Elemental Ca).</p><p><strong>Resep Praktis:</strong> 1 Ampul (10 mL) + 100 cc NaCl 0.9%, drip lambat 30–60 menit.</p><p><strong>Maks:</strong> 1–2 gram per jam.<br><strong style="color:#dc2626;">Inkompatibel</strong> dengan Bikarbonat & Fosfat.</p>`;
+            } else {
+                titleCa.innerHTML = '<i data-lucide="check"></i> Status Kalsium';
+                procCa.innerHTML = '<p>Tidak ada indikasi koreksi kalsium khusus.</p>';
+            }
+
+            // =========== FOSFAT ===========
+            const labPhos = validatePlausible('inp-lab-phos', 0.5, 15.0);
+            const boxPhos = document.getElementById('box-phos-guideline');
+            const titlePhos = document.getElementById('title-phos-procedure');
+            const procPhos = document.getElementById('out-phos-procedure');
+            showEl('calc-phos-infus', false);
+            showEl('warn-phos-disclaimer', false);
+            showEl('phos-kids-dose-info', false);
+
+            // Kids: phos safety cross-check
+            if (isKids) {
+                const phosSediaan = document.getElementById('inp-phos-sediaan').value;
+                const phosDoseMmol = Math.min(weight * 0.3, 15);
+                const phosDoseMl = phosDoseMmol / 3;
+                setText('out-phos-dose', phosDoseMmol.toFixed(1));
+                setText('out-phos-dose-ml', phosDoseMl.toFixed(1));
+
+                const boxPhosSafety = document.getElementById('box-phos-safety-warn');
+                if (boxPhosSafety) {
+                    let safetyText = '';
+                    let safetyClass = 'alert alert-i';
+                    if (phosSediaan === 'potassium') {
+                        const addedK = phosDoseMl * 4.4;
+                        safetyText = `K-Phos mengandung <strong>${addedK.toFixed(1)} mEq Kalium</strong>. `;
+                        if (labK >= 4.0) { safetyClass = 'alert alert-d'; safetyText += '🚨 K Pasien ≥4.0. Ganti ke Na-Phos!'; }
+                        else safetyText += 'Kandungan K membantu koreksi hipokalemia.';
+                    } else {
+                        const addedNa = phosDoseMl * 4.0;
+                        safetyText = `Na-Phos mengandung <strong>${addedNa.toFixed(1)} mEq Natrium</strong>. `;
+                        if (labNa >= 145) { safetyClass = 'alert alert-d'; safetyText += '🚨 Hipernatremia aktif. Batasi laju infus.'; }
+                    }
+                    boxPhosSafety.className = safetyClass;
+                    boxPhosSafety.innerHTML = safetyText;
+                }
+            }
+
+            const phosLow = isKids ? labPhos < 4.0 : labPhos < 2.5;
+            const phosHigh = isKids ? labPhos > 6.0 : labPhos > 4.5;
+
+            if (phosLow) {
+                showEl('calc-phos-infus', true);
+                showEl('warn-phos-disclaimer', true);
+                if (isKids) showEl('phos-kids-dose-info', true);
+                boxPhos.className = 'gl-box amber';
+                titlePhos.innerHTML = '<i data-lucide="info"></i> Prosedur IV Phos (Hipofosfatemia)';
+                if (!isKids) {
+                    if (labPhos < 1.6) setText('out-phos-guideline', 'Berikan 45 mmol KPhos/NaPhos IV. Cek ulang 6 jam kemudian.');
+                    else if (labPhos <= 1.9) setText('out-phos-guideline', 'Berikan 30 mmol IV ATAU K-Phos Neutral 2 tab PO q4h x 4.');
+                    else setText('out-phos-guideline', 'Berikan 15 mmol IV ATAU K-Phos Neutral 2 tab PO q4h x 3.');
+                    procPhos.innerHTML = `<p><strong>Pemilihan:</strong><br>• K-Phos jika K+ &lt;4.0<br>• Na-Phos jika K+ &gt;4.0</p><p><strong>Resep:</strong> Larutkan ke 250 cc NaCl 0.9%. Drip 4–6 jam, maks 7.5 mmol/jam.</p><p><strong style="color:#dc2626;">Perhatian:</strong> Cek Ca & Mg sebelum koreksi.</p>`;
+                } else {
+                    if (labPhos < 2.0) setText('out-phos-guideline', 'Hipofosfatemia Berat. Berikan infus Fosfat 0.3 mmol/kg drip lambat 4-6 jam.');
+                    else setText('out-phos-guideline', 'Hipofosfatemia Ringan. Koreksi oral atau IV dosis rendah (0.15 mmol/kg).');
+                    procPhos.innerHTML = `<p><strong>Pilih:</strong><br>• K-Phos jika K+ &lt;4.0<br>• Na-Phos jika K+ &gt;4.0</p><p><strong>Cara:</strong> Larutkan dalam 100 cc NaCl 0.9%, drip pelan 4-6 jam, maks 7.5 mmol/jam.</p>`;
+                    if (activeTab === 'fosfat') currentDripRate = 20;
+                }
+            } else if (phosHigh) {
+                boxPhos.className = 'gl-box red';
+                titlePhos.innerHTML = '<i data-lucide="alert-triangle"></i> Tatalaksana Hiperfosfatemia';
+                procPhos.innerHTML = `<ul><li><strong>Restriksi Diet Fosfat</strong>: Batasi susu, keju, daging proses.</li><li><strong>Phosphate Binders</strong>: Berikan BERSAMAAN dengan makan.</li><li>Hindari Ca-Binders jika Ca × P &gt;55.</li><li><strong>Dialisis</strong>: Pada gagal ginjal berat.</li></ul>`;
+                setText('out-phos-guideline', 'Hiperfosfatemia. Restriksi diet & berikan Phosphate Binders.');
+            } else {
+                boxPhos.className = 'gl-box green';
+                titlePhos.innerHTML = '<i data-lucide="check"></i> Status Fosfat';
+                procPhos.innerHTML = '<p>Nilai Fosfat dalam batas normal. Tidak diperlukan koreksi.</p>';
+                setText('out-phos-guideline', 'Normal. Tidak diperlukan koreksi.');
+            }
+
+            // ECG values
+            setText('ecg-k-val', labK.toFixed(1));
+            setText('ecg-ca-val', (caType === 'ionized' ? labCa : corrCa).toFixed(1));
+            updateEcgDescription();
+            updateDripAnimation(activeTab === 'hs' ? currentDripRate : hsHourly);
+
+            lucide.createIcons();
+            calcInfus('k'); calcInfus('mg'); calcInfus('phos');
+            calculateFluidBudget();
+        }
+
+        // ============================================================
+        // ECG SIMULATOR
+        // ============================================================
+        const canvas = document.getElementById('ecg-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function drawEcgGrid() {
+            ctx.fillStyle = '#f0f9ff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            const gs = 6;
+            for (let x = 0; x < canvas.width; x += gs) {
+                const thick = x % (gs * 5) === 0;
+                ctx.strokeStyle = thick ? 'rgba(239,68,68,0.22)' : 'rgba(239,68,68,0.07)';
+                ctx.lineWidth = 0.5;
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += gs) {
+                const thick = y % (gs * 5) === 0;
+                ctx.strokeStyle = thick ? 'rgba(239,68,68,0.22)' : 'rgba(239,68,68,0.07)';
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+        }
+
+        function getEcgYValue(x) {
+            const labK = getNum('inp-lab-k');
+            const labCa = caType === 'ionized' ? getNum('inp-lab-ca') : getNum('inp-lab-totalca') + 0.8 * (4.0 - getNum('inp-lab-alb-ca'));
+            const baseline = canvas.height / 2;
+            const cycle = 160;
+            const phase = x % cycle;
+            let yOff = 0;
+
+            if (labK > 7.5) {
+                yOff = Math.sin(phase / cycle * 2 * Math.PI) * 22;
+                return baseline - yOff;
+            }
+
+            let pAmp = 6, prOffset = 0, stDuration = 18, tAmp = 10, uAmp = 0, stValue = 0;
+
+            if (labK < 3.0) { tAmp = -2; stValue = -4; uAmp = 7; }
+            else if (labK >= 5.5 && labK < 6.5) { tAmp = 26; }
+            else if (labK >= 6.5 && labK <= 7.5) { pAmp = 1.5; prOffset = 10; tAmp = 30; }
+
+            if ((caType === 'ionized' && labCa < 4.5) || (caType !== 'ionized' && labCa < 8.5)) stDuration = 32;
+            else if ((caType === 'ionized' && labCa > 5.3) || (caType !== 'ionized' && labCa > 10.5)) stDuration = 5;
+
+            if (phase >= 10 && phase < 26) yOff = Math.sin((phase - 10) / 16 * Math.PI) * pAmp;
+            const qrsStart = 40 + prOffset;
+            const qWidth = 3, rWidth = 4, sWidth = 4;
+            if (phase >= qrsStart && phase < qrsStart + qWidth) yOff = -3 * ((phase - qrsStart) / qWidth);
+            else if (phase >= qrsStart + qWidth && phase < qrsStart + qWidth + rWidth) yOff = -3 + ((phase - (qrsStart + qWidth)) / rWidth * 43);
+            else if (phase >= qrsStart + qWidth + rWidth && phase < qrsStart + qWidth + rWidth + sWidth) yOff = 40 - ((phase - (qrsStart + qWidth + rWidth)) / sWidth * 48);
+            else if (phase >= qrsStart + qWidth + rWidth + sWidth && phase < qrsStart + qWidth + rWidth + sWidth + 3) yOff = -8 + ((phase - (qrsStart + qWidth + rWidth + sWidth)) / 3 * (8 + stValue));
+            const stStart = qrsStart + qWidth + rWidth + sWidth + 3;
+            const stEnd = stStart + stDuration;
+            if (phase >= stStart && phase < stEnd) yOff = stValue;
+            const tStart = stEnd, tEnd = tStart + 32;
+            if (phase >= tStart && phase < tEnd) yOff = stValue + Math.sin((phase - tStart) / 32 * Math.PI) * tAmp;
+            const uStart = tEnd + 5, uEnd = uStart + 16;
+            if (phase >= uStart && phase < uEnd) yOff = Math.sin((phase - uStart) / 16 * Math.PI) * uAmp;
+
+            return baseline - yOff;
+        }
+
+        function animateEcg() {
+            if (!canvas) return;
+            drawEcgGrid();
+            const labK = getNum('inp-lab-k');
+            let waveColor = '#22c55e';
+            if (labK < 2.5 || labK > 7.0) waveColor = '#ef4444';
+            else if (labK < 3.5 || labK > 5.5) waveColor = '#f97316';
+
+            ctx.strokeStyle = waveColor;
+            ctx.lineWidth = 2.5;
+            ctx.shadowBlur = 4;
+            ctx.shadowColor = waveColor;
+            ctx.beginPath();
+            for (let x = 0; x < canvas.width; x++) {
+                const y = getEcgYValue(x + ecgOffset);
+                x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            ecgOffset += 1.8;
+            requestAnimationFrame(animateEcg);
+        }
+
+        function updateEcgDescription() {
+            const labK = getNum('inp-lab-k');
+            const labCa = caType === 'ionized' ? getNum('inp-lab-ca') : getNum('inp-lab-totalca') + 0.8 * (4.0 - getNum('inp-lab-alb-ca'));
+            const el = document.getElementById('ecg-desc');
+            if (!el) return;
+            let desc = '', cls = '';
+            if (labK < 2.5) { desc = '⚠️ Hipokalemia berat: ST depresi, T mendatar/terbalik, gelombang U menonjol. Risiko Torsades de Pointes.'; cls = 'ecg-desc'; el.style.color = '#ef4444'; el.style.fontWeight = '700'; }
+            else if (labK < 3.5) { desc = 'Hipokalemia ringan: Penurunan amplitudo T, elevasi minor gelombang U.'; el.style.color = '#f97316'; el.style.fontWeight = '600'; }
+            else if (labK > 7.5) { desc = '🚨 KRITIS: Gelombang Sinus! Risiko VF/Henti Jantung! Resusitasi stabilisasi jantung SEGERA!'; el.style.color = '#dc2626'; el.style.fontWeight = '900'; }
+            else if (labK > 6.5) { desc = '⚠️ Hiperkalemia sedang: QRS melebar, P mendatar, PR memanjang, Peaked T.'; el.style.color = '#ef4444'; el.style.fontWeight = '700'; }
+            else if (labK > 5.0) { desc = 'Hiperkalemia ringan: Gelombang T meninggi/peaked.'; el.style.color = '#f97316'; el.style.fontWeight = '600'; }
+            else if ((caType === 'ionized' && labCa < 4.5) || (caType !== 'ionized' && labCa < 8.5)) { desc = 'Hipokalsemia: Segmen ST memanjang → QT prolonged.'; el.style.color = '#f59e0b'; el.style.fontWeight = '600'; }
+            else if ((caType === 'ionized' && labCa > 5.3) || (caType !== 'ionized' && labCa > 10.5)) { desc = 'Hiperkalsemia: Segmen ST pendek → QT shortened.'; el.style.color = '#f59e0b'; el.style.fontWeight = '600'; }
+            else { desc = 'Irama Sinus Normal. Kompleks P, QRS, ST, dan T dalam batas normal.'; el.style.color = '#16a34a'; el.style.fontWeight = '600'; }
+            el.textContent = desc;
+        }
+
+        // ============================================================
+        // DRIP ANIMATION
+        // ============================================================
+        function updateDripAnimation(rateMlHr) {
+            const dripDrop = document.getElementById('drip-drop');
+            const dripType = document.getElementById('inp-drip-type').value;
+            setText('out-drip-rate-display', rateMlHr.toFixed(1));
+            if (rateMlHr <= 0) {
+                dripDrop.style.display = 'none';
+                setText('out-drip-tpm', '0'); setText('out-drip-interval', '0.0');
+                return;
+            }
+            dripDrop.style.display = 'block';
+            const tpm = dripType === 'micro' ? Math.round(rateMlHr) : Math.round(rateMlHr / 3);
+            const intervalSec = tpm > 0 ? 60 / tpm : 0;
+            setText('out-drip-tpm', tpm);
+            setText('out-drip-interval', intervalSec.toFixed(1));
+            if (intervalSec > 0) {
+                dripDrop.style.setProperty('--drip-speed', `${Math.max(0.2, intervalSec)}s`);
+            } else { dripDrop.style.display = 'none'; }
+        }
+
+        // ============================================================
+        // FLUID BUDGET
+        // ============================================================
+        function calculateFluidBudget() {
+            const weight = getNum('g-weight');
+            const target = getNum('inp-fluid-target');
+
+            const hypoAlbVis = document.getElementById('view-alb-hypo');
+            let albVol = (hypoAlbVis && hypoAlbVis.style.display !== 'none') ? parseFloat(document.getElementById('out-alb-20').innerText || 0) * albSize : 0;
+            const viewNaHypo = document.getElementById('view-na-hypo');
+            const viewNaHyper = document.getElementById('view-na-hyper');
+            let naVol = 0;
+            if (viewNaHypo && viewNaHypo.style.display !== 'none') naVol = parseFloat(document.getElementById('out-vol-3').innerText || 0);
+            else if (viewNaHyper && viewNaHyper.style.display !== 'none') naVol = parseFloat(document.getElementById('out-fwd-rate').innerText || 0) * 24;
+            const viewKHypo = document.getElementById('view-k-hypo');
+            let kVol = viewKHypo && viewKHypo.style.display !== 'none' ? getNum('inp-k-vol') : 0;
+            const calcMgInfus = document.getElementById('calc-mg-infus');
+            let mgVol = calcMgInfus && calcMgInfus.style.display !== 'none' ? getNum('inp-mg-vol') : 0;
+            const calcPhosInfus = document.getElementById('calc-phos-infus');
+            let phosVol = calcPhosInfus && calcPhosInfus.style.display !== 'none' ? getNum('inp-phos-vol') : 0;
+            const labCa = getNum('inp-lab-ca');
+            const corrCa = getNum('inp-lab-totalca') + 0.8 * (4.0 - getNum('inp-lab-alb-ca'));
+            let caVol = ((caType === 'ionized' && labCa < 4.5) || (caType === 'total' && corrCa < 8.5)) ? 100 : 0;
+
+            const autoItems = [
+                { id: 'alb', vol: albVol }, { id: 'na', vol: naVol }, { id: 'k', vol: kVol },
+                { id: 'mg', vol: mgVol }, { id: 'ca', vol: caVol }, { id: 'phos', vol: phosVol }
+            ];
+
+            let hasAnyAuto = false;
+            autoItems.forEach(item => {
+                const lbl = document.getElementById('lbl-auto-' + item.id);
+                const chk = document.getElementById('chk-auto-' + item.id);
+                const val = document.getElementById('val-auto-' + item.id);
+                if (lbl && chk && val) {
+                    if (item.vol > 0 && !isNaN(item.vol)) {
+                        lbl.classList.add('vis'); val.innerText = Math.round(item.vol); hasAnyAuto = true;
+                    } else { lbl.classList.remove('vis'); chk.checked = false; val.innerText = '0'; }
+                }
+            });
+            const msgNoAuto = document.getElementById('msg-no-auto');
+            if (msgNoAuto) msgNoAuto.style.display = hasAnyAuto ? 'none' : '';
+
+            const iwl = Math.round(weight * 10);
+            setText('val-out-iwl', iwl);
+
+            let totalIntake = 0;
+            autoItems.forEach(item => { const c = document.getElementById('chk-auto-' + item.id); if (c && c.checked) totalIntake += Math.round(item.vol); });
+            if (document.getElementById('chk-in-maint').checked) totalIntake += getNum('val-in-maint');
+            if (document.getElementById('chk-in-obat').checked) totalIntake += getNum('val-in-obat');
+            if (document.getElementById('chk-in-enteral').checked) totalIntake += getNum('val-in-enteral');
+            if (document.getElementById('chk-in-tpn').checked) totalIntake += getNum('val-in-tpn');
+            if (document.getElementById('chk-in-oral').checked) totalIntake += getNum('val-in-oral');
+            if (document.getElementById('chk-in-flush').checked) totalIntake += getNum('val-in-flush');
+
+            let totalOutput = 0;
+            if (document.getElementById('chk-out-iwl').checked) totalOutput += iwl;
+            if (document.getElementById('chk-out-urine').checked) totalOutput += getNum('val-out-urine');
+            if (document.getElementById('chk-out-drain').checked) totalOutput += getNum('val-out-drain');
+            if (document.getElementById('chk-out-muntah').checked) totalOutput += getNum('val-out-muntah');
+
+            setText('sum-intake', totalIntake);
+            setText('sum-output', totalOutput);
+            const balance = totalIntake - totalOutput;
+            const balEl = document.getElementById('sum-balance');
+            balEl.innerText = (balance > 0 ? '+' : '') + balance + ' mL';
+            balEl.style.color = balance > 0 ? '#4ade80' : (balance < 0 ? '#fb923c' : 'rgba(255,255,255,0.45)');
+
+            setText('txt-budget-target', target);
+            const pct = target > 0 ? (totalIntake / target) * 100 : 100;
+            const bar = document.getElementById('bar-budget');
+            const statusTxt = document.getElementById('txt-budget-status');
+            const detailTxt = document.getElementById('txt-budget-detail');
+
+            if (totalIntake > target) {
+                bar.style.width = '100%'; bar.style.background = '#ef4444';
+                statusTxt.innerText = `OVERLOAD (+${totalIntake - target} mL)`; statusTxt.style.color = '#f87171';
+                detailTxt.innerHTML = `Melebihi budget <span style="font-weight:800;color:#f87171;">${totalIntake - target} mL</span>! Kurangi intake.`;
+            } else {
+                bar.style.width = Math.min(pct, 100) + '%';
+                bar.style.background = pct > 85 ? '#fbbf24' : '#4ade80';
+                statusTxt.innerText = 'Dalam Budget'; statusTxt.style.color = '#4ade80';
+                detailTxt.innerHTML = `Sisa ruang intake: <span style="font-weight:800;color:white;">${target - totalIntake}</span> mL`;
+            }
+        }
+
+        // ============================================================
+        // COPY DATA
+        // ============================================================
+        function copyData(tab) {
+            const bb = document.getElementById('g-weight').value;
+            if (bb <= 0 || isNaN(bb)) { showToast('Masukkan berat badan yang valid!', true); return; }
+            const isKids = appMode === 'kids';
+            let modeHeader = isKids ? `[PEDIATRIC - ${document.getElementById('g-age').options[document.getElementById('g-age').selectedIndex].text}]` : `[DEWASA - ${document.getElementById('g-gender').options[document.getElementById('g-gender').selectedIndex].text}]`;
+            let copyText = `[OASISXLITTLE LYTES – CardiologyVault]\n${modeHeader}\nData Pasien: BB ${bb} kg\n`;
+            if (isKids) copyText += `Maintenance Cairan (HS): ${document.getElementById('hs-daily').innerText} mL/hari (~${document.getElementById('hs-hourly').innerText} mL/jam)\n`;
+            copyText += '\n';
+
+            if (tab === 'albumin') {
+                const labAlb = getNum('inp-lab-alb'), targetAlb = getNum('inp-target-alb');
+                copyText += `[STATUS ALBUMIN]\nLab: ${labAlb} g/dL (Target: ${targetAlb} g/dL)\n`;
+                if (labAlb < targetAlb) copyText += `Total Kebutuhan: ${document.getElementById('out-alb-grams').innerText} gram\n• Albumin 20% (${albSize}mL): ${document.getElementById('out-alb-20').innerText} flacon\n• Albumin 25% (${albSize}mL): ${document.getElementById('out-alb-25').innerText} flacon\nLaju: 1-2 mL/menit.`;
+                else copyText += 'STATUS: Normal/Hiperalbuminemia. Tidak ada indikasi koreksi.';
+
+            } else if (tab === 'natrium') {
+                const labNa = getNum('inp-lab-na');
+                copyText += `[STATUS NATRIUM]\nLab Na: ${labNa} mEq/L\n`;
+                if (labNa < 135) {
+                    copyText += `Status: HIPONATREMIA\nTarget Kenaikan: +${getNum('inp-target-na-24')} mEq/24 jam\n• Efek 1L NaCl 3%: +${document.getElementById('out-adrogue-3').innerText} mEq\n• Volume Total NaCl 3% (24j): ${document.getElementById('out-vol-3').innerText} mL\n• Laju Syringe Pump: ${document.getElementById('out-rate-3').innerText} mL/jam\n`;
+                    if (isKids) { const symp = document.getElementById('inp-na-symptomatic'); if (symp && symp.checked) copyText += `🚨 BOLUS DARURAT: ${document.getElementById('out-na-bolus-ml').innerText} mL NaCl 3% IV lambat 10-20 menit.\n`; copyText += `Combined Rate (Koreksi + HS): ${document.getElementById('out-na-combined-rate').innerText} mL/jam\n`; }
+                    copyText += '⚠️ Jangan menaikkan Na >10-12 mEq dalam 24 jam (risiko ODS).';
+                } else if (labNa > 145) {
+                    copyText += `Status: HIPERNATREMIA\nFree Water Deficit: ${document.getElementById('out-fwd').innerText} Liter\nCairan: D5W atau NaCl 0.45%.`;
+                    if (isKids) copyText += `\nLaju Defisit: ${document.getElementById('out-fwd-pump').innerText} mL/jam | HS: ${document.getElementById('out-fwd-maint-rate').innerText} mL/jam\nTotal Combined: ${document.getElementById('out-fwd-combined-rate').innerText} mL/jam`;
+                    else copyText += `\nEst. Laju Penggantian FWD (48j): ${document.getElementById('out-fwd-rate').innerText} mL/jam`;
+                    copyText += '\n⚠️ Turunkan Na maks 10 mEq/24 jam (risiko edema serebri).';
+                } else {
+                    copyText += 'Status: NORMAL (135-145 mEq/L). Pertahankan cairan maintenance.';
+                }
+            } else if (tab === 'kalium') {
+                const labK = getNum('inp-lab-k');
+                copyText += `[STATUS KALIUM]\nLab K: ${labK} mEq/L\n`;
+                if (labK < 3.5) {
+                    copyText += `Status: HIPOKALEMIA\nDefisit: ${document.getElementById('out-k-deficit').innerText} mEq\n`;
+                    if (isKids) { const lineText = document.getElementById('inp-k-line').value; const durText = document.getElementById('inp-k-duration').value; copyText += `Jalur: ${lineText.toUpperCase()} | Durasi: ${durText} Jam\nResep: ${document.getElementById('out-k-kcl-ml').innerText} mL KCl + ${document.getElementById('out-k-diluent-ml').innerText} mL NaCl 0.9% → ${document.getElementById('out-k-total-fluid').innerText} mL\nLaju Pump: ${document.getElementById('out-k-inf-rate').innerText} mL/jam\nBatas Maks: ${document.getElementById('out-k-max-rate').innerText} mEq/jam (0.5 mEq/kg/jam)\n`; }
+                    else { copyText += `Batas Laju Perifer: max 10 mEq/jam. Sentral: max 20-40 mEq/jam.\nResep Perifer: 1 Flacon KCl (25mEq) + 500cc NaCl 0.9%, drip 12-24 jam.\n`; }
+                    copyText += '⚠️ NEVER BOLUS KCl IV!';
+                } else if (labK > 5.0) {
+                    copyText += `Status: HIPERKALEMIA 🚨\n1. Ca Gluconate 10%: Anak ${document.getElementById('out-hk-ca-mg').innerText} mg (${document.getElementById('out-hk-ca').innerText} mL); Dewasa 1 ampul IV pelan.\n2. Insulin + D10W: ${document.getElementById('out-hk-ins').innerText} IU + ${document.getElementById('out-hk-d10').innerText} mL (D10W) | Salbutamol Neb: ${document.getElementById('out-hk-salb').innerText} mg.\n3. Furosemide: ${document.getElementById('out-hk-furo').innerText} mg (${document.getElementById('out-hk-furo-ml').innerText} mL IV). Pertimbangkan Hemodialisis.`;
+                } else { copyText += 'Status: NORMAL (3.5-5.0 mEq/L).'; }
+            } else if (tab === 'magnesium') {
+                const labMg = getNum('inp-lab-mg');
+                copyText += `[STATUS MAGNESIUM]\nLab Mg: ${labMg} mg/dL\nRekomendasi: ${document.getElementById('out-mg-guideline').innerText}`;
+                if (labMg < 1.7 && isKids) copyText += `\nDosis Target: ${document.getElementById('out-mg-dose-mg').innerText} mg = ${document.getElementById('out-mg-dose-ml').innerText} mL MgSO4.\nEncerkan 2× dalam NaCl 0.9%, drip 30-60 menit. Monitor: Refleks Patella, RR, Urin.`;
+                else if (labMg < 1.7) copyText += '\nResep: 10 mL MgSO4 40% + 100 cc NaCl 0.9%, drip 4 jam (1g/jam). Monitor: Refleks Patella, RR, Urin.';
+            } else if (tab === 'kalsium') {
+                copyText += `[STATUS KALSIUM]\n`;
+                if (caType === 'ionized') { const labCa = getNum('inp-lab-ca'); copyText += `Lab Ionized Ca: ${labCa} mg/dL\nStatus: ${labCa < 4.5 ? 'HIPOKALSEMIA' : (labCa > 5.6 ? 'HIPERKALSEMIA' : 'NORMAL')}\nRekomendasi: ${document.getElementById('out-ca-guideline').innerText}`; if (labCa < 4.5 && isKids) copyText += `\nDosis Anak: ${document.getElementById('out-ca-dose-mg').innerText} mg = ${document.getElementById('out-ca-dose').innerText} mL ${document.getElementById('out-ca-sediaan-text').innerText}`; }
+                else { const corrCa = document.getElementById('out-corrected-ca').innerText; copyText += `Corrected Ca: ${corrCa} mg/dL\nRekomendasi: ${document.getElementById('out-total-ca-act').innerText}`; }
+            } else if (tab === 'fosfat') {
+                const labPhos = getNum('inp-lab-phos');
+                copyText += `[STATUS FOSFAT]\nLab Phos: ${labPhos} mg/dL\nRekomendasi: ${document.getElementById('out-phos-guideline').innerText}`;
+                if (isKids && labPhos < 4.0) copyText += `\nDosis Anak: ${document.getElementById('out-phos-dose').innerText} mmol = ~${document.getElementById('out-phos-dose-ml').innerText} mL. Drip 4-6 jam.`;
+                else if (labPhos < 2.5) copyText += '\nResep: Larutkan ke 250 cc NaCl 0.9%, drip lambat 4-6 jam.';
+            } else if (tab === 'fluid') {
+                const target = getNum('inp-fluid-target');
+                const intake = document.getElementById('sum-intake').innerText;
+                const output = document.getElementById('sum-output').innerText;
+                const balance = document.getElementById('sum-balance').innerText;
+                const status = document.getElementById('txt-budget-status').innerText;
+                copyText += `[FLUID BUDGET & BALANCE (24 JAM)]\nTarget Intake (Budget): ${target} mL/24 jam\nStatus: ${status}\nTotal Intake: ${intake} mL | Total Output: ${output} mL\nBalance: ${balance}`;
+            }
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(copyText).then(() => showToast('Instruksi Berhasil Disalin!')).catch(() => legacyCopy(copyText));
+            } else { legacyCopy(copyText); }
+        }
+
+        function legacyCopy(text) {
+            const ta = document.createElement('textarea');
+            ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.select();
+            try { document.execCommand('copy'); showToast('Instruksi Berhasil Disalin!'); }
+            catch (e) { showToast('Gagal menyalin.', true); }
+            document.body.removeChild(ta);
+        }
+
+        // ============================================================
+        // TOAST
+        // ============================================================
+        let toastTimer = null;
+        function showToast(msg, isErr = false) {
+            const t = document.getElementById('toast-msg');
+            const icon = document.getElementById('toast-icon-span');
+            const txt = document.getElementById('toast-text');
+            txt.innerText = msg;
+            t.className = 'toast' + (isErr ? ' err' : '');
+            icon.innerHTML = isErr ? '<i data-lucide="x-circle"></i>' : '<i data-lucide="check-circle-2" style="color:#4ade80;"></i>';
+            lucide.createIcons();
+            requestAnimationFrame(() => t.classList.add('show'));
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+        }
+
+        // ============================================================
+        // MODAL / DRAWER
+        // ============================================================
+        function openReferences() { document.getElementById('modal-references').classList.add('show'); }
+        function closeReferences() { document.getElementById('modal-references').classList.remove('show'); }
+        function openDrawer() { document.getElementById('drawer-panel').classList.add('open'); document.getElementById('drawer-bd').classList.add('open'); }
+        function closeDrawer() { document.getElementById('drawer-panel').classList.remove('open'); document.getElementById('drawer-bd').classList.remove('open'); }
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        window.onload = () => {
+            setMode('adult');
+            setTab('natrium');
+            setCaType('ionized');
+            calculateAll();
+            animateEcg();
+            lucide.createIcons();
+
+            // Add ECG listener for live description
+            document.getElementById('inp-lab-k').addEventListener('input', updateEcgDescription);
+            document.getElementById('inp-lab-ca').addEventListener('input', updateEcgDescription);
+        };
+
+        // Resize canvas dynamically
+        function resizeCanvas() {
+            if (canvas) {
+                canvas.width = canvas.offsetWidth;
+                canvas.height = 90;
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+        setTimeout(resizeCanvas, 100);
+    </script>
+</body>
+</html>
