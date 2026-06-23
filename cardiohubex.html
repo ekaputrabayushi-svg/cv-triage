@@ -1,0 +1,1977 @@
+
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CardiologyVault Suite™ — Clinical Decision Suite</title>
+    <meta name="description" content="Suite lengkap farmakologi kardiovaskular: Maternal Safety, Pediatric Dose Calculator, Renal Dose Optimizer, dan CardioSafe CDSS dalam satu platform terintegrasi.">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-deep: #07070f;
+            --bg-dark: #0d0d1a;
+            --bg-card: #131325;
+            --bg-panel: #1a1a30;
+            --border: rgba(255,255,255,0.07);
+            --text-primary: #f0f0ff;
+            --text-secondary: #9090b8;
+            --text-muted: #5050788;
+
+            /* Module accent colors */
+            --maternal-start: #f43f5e;
+            --maternal-end: #ec4899;
+            --pediatric-start: #f97316;
+            --pediatric-end: #ef4444;
+            --renal-start: #f59e0b;
+            --renal-end: #ef4444;
+            --cardiosafe-start: #8b5cf6;
+            --cardiosafe-end: #3b82f6;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* =================== GLOBAL SCROLLBAR =================== */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(120,120,200,0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(139,92,246,0.6); }
+        
+        /* =================== ANIMATED BG =================== */
+        .orb {
+            position: fixed; border-radius: 50%; pointer-events: none; z-index: 0;
+            filter: blur(80px); opacity: 0.12;
+            animation: orbFloat 10s ease-in-out infinite;
+        }
+        @keyframes orbFloat {
+            0%,100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.05); }
+        }
+
+        /* =================== SPLASH / LANDING =================== */
+        #splash {
+            position: fixed; inset: 0; z-index: 200;
+            background: var(--bg-deep);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        #splash.hidden { opacity: 0; transform: scale(1.05); pointer-events: none; }
+
+        .splash-logo {
+            width: 80px; height: 80px;
+            background: linear-gradient(135deg, #8b5cf6, #3b82f6, #f43f5e);
+            border-radius: 24px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 36px; color: white;
+            box-shadow: 0 0 60px rgba(139,92,246,0.5);
+            margin-bottom: 24px;
+            animation: logoPulse 2s ease-in-out infinite;
+        }
+        @keyframes logoPulse {
+            0%,100% { box-shadow: 0 0 40px rgba(139,92,246,0.4); }
+            50% { box-shadow: 0 0 80px rgba(139,92,246,0.8), 0 0 120px rgba(59,130,246,0.3); }
+        }
+
+        .module-select-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 440px;
+            padding: 0 16px;
+        }
+
+        .module-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            text-align: center;
+        }
+        .module-card::before {
+            content: ''; position: absolute; inset: 0;
+            background: var(--grad); opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .module-card:hover { transform: translateY(-4px) scale(1.02); border-color: rgba(255,255,255,0.15); }
+        .module-card:hover::before { opacity: 0.07; }
+        .module-card:active { transform: scale(0.97); }
+
+        .module-card-icon {
+            width: 52px; height: 52px; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; color: white; position: relative; z-index: 1;
+        }
+        .module-card-title {
+            font-size: 12px; font-weight: 800; color: var(--text-primary);
+            line-height: 1.3; position: relative; z-index: 1;
+        }
+        .module-card-sub {
+            font-size: 10px; color: var(--text-secondary);
+            line-height: 1.3; position: relative; z-index: 1;
+        }
+
+        /* =================== APP SHELL =================== */
+        #app { display: none; flex-direction: column; min-height: 100vh; }
+        #app.visible { display: flex; }
+
+        /* =================== TOP BAR =================== */
+        .topbar {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(13,13,26,0.85);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 16px;
+            display: flex; align-items: center; height: 60px;
+            gap: 12px;
+        }
+
+        .topbar-logo {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; color: white; flex-shrink: 0;
+        }
+        .topbar-title { font-size: 15px; font-weight: 800; color: var(--text-primary); }
+        .topbar-sub { font-size: 10px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .tab-switcher {
+            display: flex; gap: 4px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 4px;
+            margin-left: auto;
+            overflow-x: auto;
+            max-width: calc(100vw - 200px);
+        }
+        .tab-switcher::-webkit-scrollbar { display: none; }
+
+        .tab-btn {
+            flex-shrink: 0;
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 12px;
+            border-radius: 10px;
+            border: none; cursor: pointer;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 11px; font-weight: 700;
+            color: var(--text-secondary);
+            background: transparent;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+        .tab-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+        .tab-btn.active { color: white; }
+        .tab-btn .dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            display: inline-block; flex-shrink: 0;
+        }
+
+        .tab-btn[data-module="maternal"].active { background: linear-gradient(135deg, rgba(244,63,94,0.25), rgba(236,72,153,0.15)); }
+        .tab-btn[data-module="pediatric"].active { background: linear-gradient(135deg, rgba(249,115,22,0.25), rgba(239,68,68,0.15)); }
+        .tab-btn[data-module="renal"].active { background: linear-gradient(135deg, rgba(245,158,11,0.25), rgba(239,68,68,0.15)); }
+        .tab-btn[data-module="cardiosafe"].active { background: linear-gradient(135deg, rgba(139,92,246,0.25), rgba(59,130,246,0.15)); }
+
+        .home-btn {
+            width: 36px; height: 36px; border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-secondary); cursor: pointer; transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .home-btn:hover { color: var(--text-primary); border-color: rgba(255,255,255,0.15); }
+
+        /* =================== MODULE CONTAINER =================== */
+        .module-view { display: none; flex: 1; }
+        .module-view.active { display: block; }
+
+        /* =================== MODULE HEADER =================== */
+        .module-header {
+            padding: 24px 16px 20px;
+            position: relative; overflow: hidden;
+        }
+        .module-header::before {
+            content: ''; position: absolute; inset: 0;
+            opacity: 0.06;
+        }
+        .module-header-inner { position: relative; z-index: 1; }
+
+        .module-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 10px; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 0.08em; padding: 4px 12px; border-radius: 100px;
+            margin-bottom: 8px;
+        }
+        .module-title {
+            font-size: 22px; font-weight: 900; color: white;
+            line-height: 1.2; margin-bottom: 4px;
+        }
+        .module-subtitle { font-size: 12px; color: rgba(255,255,255,0.55); font-weight: 500; }
+
+        /* =================== GLASS CARDS =================== */
+        .glass {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+        }
+        .glass-sm { border-radius: 14px; }
+
+        .section-title {
+            font-size: 11px; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 0.08em; color: var(--text-secondary);
+            margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+        }
+        .section-title::after {
+            content: ''; flex: 1; height: 1px;
+            background: var(--border);
+        }
+
+        /* =================== INPUTS =================== */
+        .inp {
+            width: 100%; background: rgba(0,0,0,0.35);
+            border: 1px solid var(--border);
+            border-radius: 12px; padding: 11px 14px;
+            color: var(--text-primary); font-family: inherit;
+            font-size: 14px; font-weight: 600;
+            outline: none; transition: all 0.2s;
+        }
+        .inp:focus { border-color: rgba(139,92,246,0.5); box-shadow: 0 0 0 3px rgba(139,92,246,0.1); }
+        .inp::placeholder { color: var(--text-secondary); font-weight: 400; }
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+        .label { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; display: block; }
+
+        /* =================== BUTTONS =================== */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+            padding: 10px 18px; border-radius: 12px; border: none; cursor: pointer;
+            font-family: inherit; font-size: 13px; font-weight: 700;
+            transition: all 0.2s ease; white-space: nowrap;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            color: white; box-shadow: 0 4px 20px rgba(139,92,246,0.3);
+        }
+        .btn-primary:hover { box-shadow: 0 4px 30px rgba(139,92,246,0.5); }
+        .btn-ghost { background: rgba(255,255,255,0.06); color: var(--text-primary); border: 1px solid var(--border); }
+        .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+        .btn-danger { background: rgba(244,63,94,0.15); color: #f43f5e; border: 1px solid rgba(244,63,94,0.2); }
+        .btn-sm { padding: 7px 13px; font-size: 11px; border-radius: 9px; }
+        .btn-full { width: 100%; }
+
+        /* =================== STATUS BADGES =================== */
+        .status-safe { background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
+        .status-caution { background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2); }
+        .status-danger { background: rgba(244,63,94,0.1); color: #f43f5e; border: 1px solid rgba(244,63,94,0.2); }
+        .status-info { background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.2); }
+
+        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 100px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
+
+        /* =================== TOAST =================== */
+        .toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 999; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+        .toast {
+            background: rgba(30,30,50,0.95); backdrop-filter: blur(20px);
+            border: 1px solid var(--border); border-radius: 100px;
+            padding: 10px 18px; font-size: 13px; font-weight: 600;
+            color: var(--text-primary); display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            animation: toastIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+        }
+        @keyframes toastIn { from { opacity:0; transform:translateY(16px) scale(0.9); } to { opacity:1; transform:translateY(0) scale(1); } }
+
+        /* =================== CARD ANIMATIONS =================== */
+        @keyframes cardFadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+        .card-anim { animation: cardFadeIn 0.4s ease-out forwards; }
+
+        /* =================== MATERNAL MODULE =================== */
+        .maternal-grad { background: linear-gradient(135deg, rgba(244,63,94,0.12), rgba(236,72,153,0.06)); }
+        .maternal-accent { color: #f43f5e; }
+
+        .drug-card-maternal {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 18px; padding: 16px; cursor: pointer;
+            transition: all 0.25s ease; active:scale(0.98);
+        }
+        .drug-card-maternal:hover { border-color: rgba(244,63,94,0.3); transform: translateY(-2px); background: rgba(25,25,45,1); }
+        .drug-card-maternal:active { transform: scale(0.98); }
+
+        /* =================== BOTTOM SHEET MODAL =================== */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 500;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+            display: flex; align-items: flex-end; justify-content: center;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+        .modal-sheet {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 28px 28px 0 0;
+            width: 100%; max-width: 680px;
+            max-height: 90vh; overflow-y: auto;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+        }
+        .modal-overlay.open .modal-sheet { transform: translateY(0); }
+
+        .modal-handle {
+            width: 44px; height: 5px; background: rgba(255,255,255,0.15);
+            border-radius: 100px; margin: 12px auto 0;
+        }
+
+        /* =================== PEDIATRIC MODULE =================== */
+        .pediatric-grad { background: linear-gradient(135deg, rgba(249,115,22,0.12), rgba(239,68,68,0.06)); }
+        .pediatric-accent { color: #f97316; }
+
+        .weight-display {
+            background: linear-gradient(135deg, rgba(249,115,22,0.1), rgba(239,68,68,0.05));
+            border: 1px solid rgba(249,115,22,0.2);
+            border-radius: 16px; padding: 16px; text-align: center;
+        }
+        .weight-number { font-size: 48px; font-weight: 900; color: #f97316; line-height: 1; }
+
+        .drug-result-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 16px; padding: 14px 16px;
+            margin-bottom: 10px;
+        }
+        .drug-result-card .dose-value { font-size: 18px; font-weight: 800; color: var(--text-primary); }
+
+        .quick-chip {
+            background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.2);
+            color: #f97316; border-radius: 10px; padding: 7px 12px;
+            font-size: 11px; font-weight: 700; cursor: pointer;
+            transition: all 0.2s; text-align: center;
+        }
+        .quick-chip:hover { background: rgba(249,115,22,0.2); }
+        .quick-chip:active { transform: scale(0.96); }
+
+        .equipment-chip {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 14px; padding: 12px;
+        }
+        .equipment-chip .eq-label { font-size: 9px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+        .equipment-chip .eq-value { font-size: 16px; font-weight: 800; color: var(--text-primary); }
+
+        /* =================== RENAL MODULE =================== */
+        .renal-grad { background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(239,68,68,0.06)); }
+        .renal-accent { color: #f59e0b; }
+
+        .gfr-display {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 18px; padding: 16px;
+        }
+        .gfr-value { font-size: 40px; font-weight: 900; line-height: 1; }
+        .gfr-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; margin-top: 8px; }
+        .gfr-bar-fill { height: 100%; border-radius: 10px; transition: width 0.7s cubic-bezier(0.34,1,0.64,1); }
+
+        .toggle-switch {
+            width: 48px; height: 26px; border-radius: 100px;
+            background: rgba(255,255,255,0.1); cursor: pointer;
+            position: relative; transition: background 0.3s;
+            border: 1px solid var(--border); flex-shrink: 0;
+        }
+        .toggle-switch.on { background: linear-gradient(135deg, #f43f5e, #e11d48); }
+        .toggle-knob {
+            width: 18px; height: 18px; border-radius: 50%;
+            background: white; position: absolute;
+            top: 3px; left: 3px;
+            transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        .toggle-switch.on .toggle-knob { transform: translateX(22px); }
+
+        .regimen-chip {
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+            border-radius: 10px; padding: 8px 12px;
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
+        }
+
+        .cat-pill {
+            flex-shrink: 0; padding: 5px 14px; border-radius: 100px;
+            border: 1px solid var(--border); font-size: 11px; font-weight: 700;
+            color: var(--text-secondary); background: transparent; cursor: pointer;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .cat-pill:hover { color: var(--text-primary); border-color: rgba(255,255,255,0.15); }
+        .cat-pill.active-renal {
+            background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(239,68,68,0.1));
+            color: #f59e0b; border-color: rgba(245,158,11,0.3);
+        }
+
+        /* =================== CARDIOSAFE MODULE =================== */
+        .cardiosafe-grad { background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(59,130,246,0.06)); }
+        .cardiosafe-accent { color: #8b5cf6; }
+
+        .tray-chip {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2);
+            border-radius: 100px; padding: 4px 10px 4px 8px;
+            font-size: 11px; font-weight: 700; color: #a78bfa;
+        }
+        .tray-chip .remove { cursor: pointer; opacity: 0.6; }
+        .tray-chip .remove:hover { opacity: 1; }
+
+        .condition-chip {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            border-radius: 12px; padding: 8px 12px; cursor: pointer;
+            font-size: 12px; font-weight: 600; color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+        .condition-chip:hover { border-color: rgba(255,255,255,0.12); color: var(--text-primary); }
+        .condition-chip.active { background: rgba(139,92,246,0.1); border-color: rgba(139,92,246,0.3); color: #a78bfa; }
+        .condition-chip .check { width: 16px; height: 16px; border-radius: 5px; border: 1.5px solid; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; }
+        .condition-chip.active .check { background: rgba(139,92,246,0.3); border-color: #8b5cf6; color: #a78bfa; }
+
+        .ddi-card {
+            background: var(--bg-card); border-radius: 16px; padding: 16px;
+            border-left: 4px solid;
+        }
+        .ddi-severity-high { border-left-color: #f43f5e; }
+        .ddi-severity-mod { border-left-color: #f59e0b; }
+        .ddi-severity-low { border-left-color: #10b981; }
+
+        .cs-tab { padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; color: var(--text-secondary); cursor: pointer; transition: all 0.2s; border: none; background: transparent; font-family: inherit; }
+        .cs-tab.active { background: rgba(255,255,255,0.07); color: white; }
+
+        /* =================== GLOBAL HOME =================== */
+        .home-module-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr);
+            gap: 12px; padding: 16px;
+        }
+        .home-module-btn {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 20px; padding: 20px 16px;
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+            display: flex; flex-direction: column; gap: 10px; align-items: flex-start;
+            position: relative; overflow: hidden;
+        }
+        .home-module-btn::after {
+            content: ''; position: absolute; right: 0; bottom: 0;
+            width: 80px; height: 80px; border-radius: 50%;
+            opacity: 0.05; transform: translate(20px, 20px);
+        }
+        .home-module-btn:hover { transform: translateY(-3px); }
+        .home-module-btn:active { transform: scale(0.98); }
+
+        .home-module-icon { width: 46px; height: 46px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; }
+        .home-module-name { font-size: 13px; font-weight: 800; color: var(--text-primary); }
+        .home-module-desc { font-size: 10px; color: var(--text-secondary); line-height: 1.4; }
+        .home-module-count { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 100px; }
+
+        /* =================== DISCLAIMER =================== */
+        .disclaimer {
+            background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.15);
+            border-radius: 14px; padding: 12px 14px;
+            font-size: 11px; color: rgba(245,158,11,0.8); line-height: 1.6;
+        }
+
+        /* =================== SEARCH =================== */
+        .search-wrap { position: relative; }
+        .search-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 13px; }
+        .search-wrap .inp { padding-left: 36px; }
+
+        /* =================== FLOATING ACTION =================== */
+        .fab {
+            position: fixed; bottom: 20px; right: 16px; z-index: 99;
+            width: 52px; height: 52px; border-radius: 16px; border: none;
+            background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+            color: white; font-size: 18px; cursor: pointer;
+            box-shadow: 0 8px 30px rgba(139,92,246,0.4);
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .fab:hover { transform: scale(1.1); }
+        .fab:active { transform: scale(0.95); }
+        .fab.hidden { display: none; }
+
+        /* =================== EMPTY STATE =================== */
+        .empty-state {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 40px 20px; text-align: center; gap: 12px;
+        }
+        .empty-icon { width: 70px; height: 70px; border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 30px; margin-bottom: 4px; }
+
+        /* =================== RESPONSIVE =================== */
+        @media (min-width: 640px) {
+            .module-select-grid { grid-template-columns: repeat(2, 1fr); max-width: 500px; }
+            .module-select-grid .module-card { padding: 28px 20px; }
+            .home-module-grid { grid-template-columns: repeat(2, 1fr); }
+            .tab-btn { font-size: 12px; padding: 8px 16px; }
+            .topbar-title { font-size: 16px; }
+        }
+
+        /* Make content scrollable */
+        .scroll-content { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+        /* Highlight search terms */
+        .highlight { background: rgba(245,158,11,0.25); border-radius: 3px; padding: 0 2px; }
+
+        /* Drug result section header */
+        .drug-section-hdr {
+            font-size: 11px; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 0.07em; padding: 12px 16px 8px;
+            color: var(--text-secondary); border-bottom: 1px solid var(--border);
+            background: rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 5;
+        }
+    </style>
+</head>
+<body>
+
+<!-- =================== ANIMATED BACKGROUND =================== -->
+<div class="orb" style="width:400px;height:400px;background:#8b5cf6;top:-100px;right:-100px;animation-delay:0s"></div>
+<div class="orb" style="width:350px;height:350px;background:#f43f5e;bottom:100px;left:-100px;animation-delay:3s"></div>
+<div class="orb" style="width:300px;height:300px;background:#f97316;top:50%;left:50%;animation-delay:6s"></div>
+
+<!-- =================== TOAST CONTAINER =================== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- =================== SPLASH SCREEN =================== -->
+<div id="splash">
+    <div class="splash-logo"><i class="fas fa-heartbeat"></i></div>
+    <div style="text-align:center; margin-bottom:32px">
+        <div style="font-size:26px;font-weight:900;color:white;margin-bottom:4px">CardiologyVault<span style="background:linear-gradient(135deg,#8b5cf6,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent"> Suite™</span></div>
+        <div style="font-size:12px;color:var(--text-secondary);font-weight:600;letter-spacing:0.06em;text-transform:uppercase">4-in-1 Clinical Decision Suite</div>
+        <div style="font-size:11px;color:rgba(144,144,184,0.6);margin-top:4px">dev. Bayushi Eka Putra, MD, FIHA</div>
+    </div>
+    <div style="padding:0 16px;width:100%;max-width:440px">
+        <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);text-align:center;margin-bottom:14px">Pilih Modul Klinisi</div>
+        <div class="module-select-grid">
+            <div class="module-card" onclick="launchModule('maternal')" style="--grad:linear-gradient(135deg,#f43f5e,#ec4899)">
+                <div class="module-card-icon" style="background:linear-gradient(135deg,#f43f5e,#ec4899)"><i class="fas fa-baby"></i></div>
+                <div class="module-card-title">Maternal SafeRx</div>
+                <div class="module-card-sub">Panduan Obat KV Kehamilan & Laktasi</div>
+                <div class="badge status-danger" style="font-size:9px">72+ Obat</div>
+            </div>
+            <div class="module-card" onclick="launchModule('pediatric')" style="--grad:linear-gradient(135deg,#f97316,#ef4444)">
+                <div class="module-card-icon" style="background:linear-gradient(135deg,#f97316,#ef4444)"><i class="fas fa-child"></i></div>
+                <div class="module-card-title">PediaCardio Vault™</div>
+                <div class="module-card-sub">Kalkulator Dosis Darurat Anak</div>
+                <div class="badge status-caution" style="font-size:9px">50+ Obat</div>
+            </div>
+            <div class="module-card" onclick="launchModule('renal')" style="--grad:linear-gradient(135deg,#f59e0b,#ef4444)">
+                <div class="module-card-icon" style="background:linear-gradient(135deg,#f59e0b,#ef4444)"><i class="fas fa-flask-vial"></i></div>
+                <div class="module-card-title">Renal Dose Optimizer</div>
+                <div class="module-card-sub">Penyesuaian Dosis CKD & Dialisis</div>
+                <div class="badge status-caution" style="font-size:9px">45+ Obat</div>
+            </div>
+            <div class="module-card" onclick="launchModule('cardiosafe')" style="--grad:linear-gradient(135deg,#8b5cf6,#3b82f6)">
+                <div class="module-card-icon" style="background:linear-gradient(135deg,#8b5cf6,#3b82f6)"><i class="fas fa-laptop-medical"></i></div>
+                <div class="module-card-title">CardioSafe CDSS</div>
+                <div class="module-card-sub">Deteksi Interaksi & Polifarmasi</div>
+                <div class="badge status-info" style="font-size:9px">80+ Obat</div>
+            </div>
+        </div>
+        <div style="margin-top:20px" class="disclaimer">
+            <i class="fas fa-shield-halved" style="color:#f59e0b;margin-right:6px"></i>
+            <strong>Disclaimer:</strong> Alat bantu komputasi klinis. Tidak menggantikan penilaian klinis profesional.
+        </div>
+    </div>
+</div>
+
+<!-- =================== MAIN APP =================== -->
+<div id="app">
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <button class="home-btn" onclick="showHome()" title="Home">
+            <i class="fas fa-grid-2"></i>
+        </button>
+        <div style="display:flex;flex-direction:column;gap:1px">
+            <div class="topbar-title">CardiologyVault Suite™</div>
+            <div class="topbar-sub" id="topbarSub">Select Module</div>
+        </div>
+        <div class="tab-switcher">
+            <button class="tab-btn" data-module="maternal" onclick="switchModule('maternal')">
+                <span class="dot" style="background:#f43f5e"></span>
+                <span>Maternal</span>
+            </button>
+            <button class="tab-btn" data-module="pediatric" onclick="switchModule('pediatric')">
+                <span class="dot" style="background:#f97316"></span>
+                <span>Pediatric</span>
+            </button>
+            <button class="tab-btn" data-module="renal" onclick="switchModule('renal')">
+                <span class="dot" style="background:#f59e0b"></span>
+                <span>Renal</span>
+            </button>
+            <button class="tab-btn" data-module="cardiosafe" onclick="switchModule('cardiosafe')">
+                <span class="dot" style="background:#8b5cf6"></span>
+                <span>CardioSafe</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- HOME VIEW -->
+    <div id="view-home" class="module-view active">
+        <div style="padding:20px 16px 8px">
+            <div style="font-size:20px;font-weight:900;color:white;margin-bottom:4px">Selamat Datang 👋</div>
+            <div style="font-size:13px;color:var(--text-secondary)">Pilih modul klinis untuk memulai</div>
+        </div>
+        <div class="home-module-grid">
+            <div class="home-module-btn" onclick="switchModule('maternal')" style="background:linear-gradient(135deg, rgba(244,63,94,0.1), var(--bg-card))">
+                <div class="home-module-icon" style="background:linear-gradient(135deg,#f43f5e,#ec4899)"><i class="fas fa-baby"></i></div>
+                <div class="home-module-name">Maternal SafeRx</div>
+                <div class="home-module-desc">Panduan obat kardiovaskular untuk ibu hamil & menyusui berdasarkan ESC/AHA Guidelines</div>
+                <div class="home-module-count" style="background:rgba(244,63,94,0.1);color:#f43f5e">72+ Obat · FDA · Hale</div>
+            </div>
+            <div class="home-module-btn" onclick="switchModule('pediatric')" style="background:linear-gradient(135deg, rgba(249,115,22,0.1), var(--bg-card))">
+                <div class="home-module-icon" style="background:linear-gradient(135deg,#f97316,#ef4444)"><i class="fas fa-child"></i></div>
+                <div class="home-module-name">PediaCardio Vault™</div>
+                <div class="home-module-desc">Kalkulator dosis berbasis BB, drip vasoaktif, RSI, PJB, PALS & alat resusitasi</div>
+                <div class="home-module-count" style="background:rgba(249,115,22,0.1);color:#f97316">50+ Obat · BB-based</div>
+            </div>
+            <div class="home-module-btn" onclick="switchModule('renal')" style="background:linear-gradient(135deg, rgba(245,158,11,0.1), var(--bg-card))">
+                <div class="home-module-icon" style="background:linear-gradient(135deg,#f59e0b,#ef4444)"><i class="fas fa-flask-vial"></i></div>
+                <div class="home-module-name">Renal Dose Optimizer</div>
+                <div class="home-module-desc">Penyesuaian dosis CKD/HD dengan algoritma Cockcroft-Gault & CKD-EPI + EMR Builder</div>
+                <div class="home-module-count" style="background:rgba(245,158,11,0.1);color:#f59e0b">45+ Obat · CrCl · eGFR</div>
+            </div>
+            <div class="home-module-btn" onclick="switchModule('cardiosafe')" style="background:linear-gradient(135deg, rgba(139,92,246,0.1), var(--bg-card))">
+                <div class="home-module-icon" style="background:linear-gradient(135deg,#8b5cf6,#3b82f6)"><i class="fas fa-laptop-medical"></i></div>
+                <div class="home-module-name">CardioSafe CDSS</div>
+                <div class="home-module-desc">Deteksi interaksi obat real-time, evaluasi farmakologi, jadwal minum & scoring klinis</div>
+                <div class="home-module-count" style="background:rgba(139,92,246,0.1);color:#8b5cf6">80+ Obat · DDI · CDSS</div>
+            </div>
+        </div>
+        <div style="padding:0 16px 16px">
+            <div class="disclaimer">
+                <i class="fas fa-scale-balanced" style="color:#f59e0b;margin-right:6px"></i>
+                <strong>CardiologyVault Suite™ v3.0</strong> — Dikembangkan oleh <strong>dr. Bayushi Eka Putra, FIHA</strong>. 
+                Berdasarkan ESC/AHA/PALS Guidelines. Alat bantu komputasi — tidak menggantikan penilaian klinis.
+            </div>
+        </div>
+    </div>
+
+    <!-- =================== MODULE: MATERNAL SAFERX =================== -->
+    <div id="view-maternal" class="module-view scroll-content" style="padding-bottom:80px">
+        <!-- Header -->
+        <div class="module-header maternal-grad">
+            <div class="module-header-inner">
+                <div class="module-badge" style="background:rgba(244,63,94,0.15);color:#f43f5e;border:1px solid rgba(244,63,94,0.2)">
+                    <i class="fas fa-baby"></i> Maternal SafeRx
+                </div>
+                <div class="module-title">Panduan Obat KV</div>
+                <div class="module-subtitle">Kehamilan & Laktasi · Berdasarkan ESC/AHA Guidelines</div>
+            </div>
+        </div>
+
+        <!-- Search & Filter -->
+        <div style="padding:12px 16px;display:flex;gap:8px;position:sticky;top:60px;z-index:10;background:rgba(7,7,15,0.9);backdrop-filter:blur(12px)">
+            <div class="search-wrap" style="flex:1">
+                <i class="fas fa-search"></i>
+                <input class="inp" id="maternalSearch" type="text" placeholder="Cari obat (mis. Nifedipine)..." oninput="renderMaternalCards()">
+            </div>
+            <select class="inp" id="maternalCat" style="max-width:160px;padding-right:8px" onchange="renderMaternalCards()">
+                <option value="Semua">Semua</option>
+                <option value="Hipertensi">Hipertensi</option>
+                <option value="Aritmia">Aritmia</option>
+                <option value="Gagal Jantung">Gagal Jantung</option>
+                <option value="Antikoagulan">Antikoagulan</option>
+                <option value="Antiplatelet">Antiplatelet</option>
+                <option value="Lipid/Statin">Lipid/Statin</option>
+                <option value="Hipertensi Pulmonal">Hipertensi Pulmonal</option>
+                <option value="Emergensi/ICU">Emergensi/ICU</option>
+            </select>
+        </div>
+
+        <!-- Drug Grid -->
+        <div id="maternalGrid" style="padding:0 16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px"></div>
+        <div id="maternalEmpty" class="empty-state" style="display:none">
+            <div class="empty-icon" style="background:rgba(244,63,94,0.1)"><i class="fas fa-search" style="color:#f43f5e"></i></div>
+            <div style="font-weight:700;color:var(--text-primary)">Obat tidak ditemukan</div>
+            <div style="font-size:12px;color:var(--text-secondary)">Coba kata kunci lain</div>
+        </div>
+    </div>
+
+    <!-- =================== MODULE: PEDIATRIC =================== -->
+    <div id="view-pediatric" class="module-view scroll-content" style="padding-bottom:80px">
+        <!-- Header -->
+        <div class="module-header pediatric-grad">
+            <div class="module-header-inner">
+                <div class="module-badge" style="background:rgba(249,115,22,0.15);color:#f97316;border:1px solid rgba(249,115,22,0.2)">
+                    <i class="fas fa-child"></i> PediaCardio Vault™
+                </div>
+                <div class="module-title">Kalkulator Dosis Anak</div>
+                <div class="module-subtitle">Kardiologi & Emergensi Pediatrik · AHA PALS & APLS 6th Ed</div>
+            </div>
+        </div>
+
+        <!-- Weight Input Section -->
+        <div style="padding:12px 16px;position:sticky;top:60px;z-index:10;background:rgba(7,7,15,0.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)">
+            <div style="display:flex;gap:8px;align-items:center">
+                <div style="flex:1;position:relative">
+                    <input class="inp" id="pedWeight" type="number" step="0.1" min="0.1" placeholder="Berat badan (kg)..." oninput="renderPediatric()" style="font-size:20px;font-weight:900;padding:12px 50px 12px 14px">
+                    <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:800;color:var(--text-secondary)">kg</span>
+                </div>
+                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('pedWeight').value='';renderPediatric()"><i class="fas fa-times"></i></button>
+            </div>
+            <!-- Quick weight chips -->
+            <div style="display:flex;gap:6px;margin-top:8px;overflow-x:auto;padding-bottom:2px">
+                <div class="quick-chip" onclick="setWeight(3)">Neo (3 kg)</div>
+                <div class="quick-chip" onclick="setWeight(5)">1-2 Bln (5)</div>
+                <div class="quick-chip" onclick="setWeight(10)">1 Thn (10)</div>
+                <div class="quick-chip" onclick="setWeight(15)">3 Thn (15)</div>
+                <div class="quick-chip" onclick="setWeight(20)">6 Thn (20)</div>
+                <div class="quick-chip" onclick="setWeight(30)">9 Thn (30)</div>
+            </div>
+            <!-- Age estimator toggle -->
+            <div style="margin-top:8px">
+                <button class="btn btn-ghost btn-sm" onclick="togglePedAgeEst()" style="font-size:10px"><i class="fas fa-calculator" style="color:#f97316"></i> Estimasi BB dari Usia</button>
+            </div>
+            <div id="pedAgeEst" style="display:none;margin-top:8px;background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.15);border-radius:12px;padding:10px">
+                <div style="display:flex;gap:8px;align-items:center">
+                    <input class="inp" id="pedAge" type="number" placeholder="Usia" style="flex:1;font-size:14px">
+                    <select class="inp" id="pedAgeUnit" style="flex:1;font-size:14px">
+                        <option value="years">Tahun</option>
+                        <option value="months">Bulan</option>
+                    </select>
+                    <button class="btn btn-sm" style="background:linear-gradient(135deg,#f97316,#ef4444);color:white;white-space:nowrap" onclick="calcPedAge()">Hitung</button>
+                </div>
+                <div style="font-size:10px;color:var(--text-secondary);margin-top:6px;font-weight:600">Formula APLS: [1-5 thn]: (2×usia)+8 | [>5 thn]: (3×usia)+7 | [<1 thn]: (usia/2)+4</div>
+            </div>
+        </div>
+
+        <!-- Search & Filter -->
+        <div style="padding:10px 16px;display:flex;gap:8px">
+            <div class="search-wrap" style="flex:1">
+                <i class="fas fa-search"></i>
+                <input class="inp" id="pedSearch" type="text" placeholder="Cari obat..." oninput="renderPediatric()">
+            </div>
+        </div>
+
+        <!-- Category pills -->
+        <div style="padding:0 16px 10px;display:flex;gap:6px;overflow-x:auto" id="pedCatPills"></div>
+
+        <!-- Content -->
+        <div id="pedEmpty" class="empty-state">
+            <div class="empty-icon" style="background:rgba(249,115,22,0.1)"><i class="fas fa-weight" style="color:#f97316"></i></div>
+            <div style="font-weight:700;color:var(--text-primary)">Masukkan Berat Badan</div>
+            <div style="font-size:12px;color:var(--text-secondary);max-width:240px">Isi berat badan pasien di atas untuk menghitung dosis otomatis</div>
+        </div>
+        <div id="pedResults" style="display:none;padding:0 16px">
+            <!-- Equipment section -->
+            <div style="margin-bottom:16px">
+                <div class="section-title"><i class="fas fa-box" style="color:#f97316"></i> Alat, Vitals & Defibrilasi</div>
+                <div id="pedEquipment" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>
+            </div>
+            <!-- Drug sections -->
+            <div id="pedDrugContainer"></div>
+        </div>
+    </div>
+
+    <!-- =================== MODULE: RENAL =================== -->
+    <div id="view-renal" class="module-view scroll-content" style="padding-bottom:80px">
+        <!-- Header -->
+        <div class="module-header renal-grad">
+            <div class="module-header-inner">
+                <div class="module-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.2)">
+                    <i class="fas fa-flask-vial"></i> Renal Dose Optimizer v2.0
+                </div>
+                <div class="module-title">Penyesuaian Dosis Ginjal</div>
+                <div class="module-subtitle">Algoritma Cockcroft-Gault & CKD-EPI · Smart Weight Dosing</div>
+            </div>
+        </div>
+
+        <!-- Patient Input -->
+        <div style="padding:12px 16px">
+            <div class="glass" style="padding:16px">
+                <div class="section-title"><i class="fas fa-user-doctor" style="color:#f59e0b"></i> Data Klinis Pasien</div>
+
+                <!-- HD Toggle -->
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:rgba(0,0,0,0.25);border-radius:12px;margin-bottom:12px;cursor:pointer" onclick="renalToggleHD()" id="renalHDToggle">
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <i class="fas fa-droplet" style="color:var(--text-secondary);width:16px"></i>
+                        <div>
+                            <div style="font-size:13px;font-weight:700;color:var(--text-primary)" id="renalHDLabel">Rutin Hemodialisa (ESRD On-HD)</div>
+                            <div style="font-size:10px;color:var(--text-secondary)">Aktifkan jika pasien sedang menjalani HD rutin</div>
+                        </div>
+                    </div>
+                    <div class="toggle-switch" id="renalHDSwitch"><div class="toggle-knob"></div></div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="renalInputFields">
+                    <div>
+                        <label class="label">Gender</label>
+                        <div style="display:flex;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:12px;padding:4px;gap:4px">
+                            <button id="renalGenderM" class="btn btn-sm" style="flex:1;background:rgba(244,63,94,0.2);color:#f43f5e;border:none" onclick="renalSetGender('M')">Laki-laki</button>
+                            <button id="renalGenderF" class="btn btn-sm" style="flex:1;background:transparent;color:var(--text-secondary);border:none" onclick="renalSetGender('F')">Perempuan</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="label">Usia (Thn)</label>
+                        <input class="inp" id="renalAge" type="number" placeholder="Cth: 65" oninput="renalRecalculate()">
+                    </div>
+                    <div>
+                        <label class="label">BB (kg)</label>
+                        <input class="inp" id="renalWeight" type="number" placeholder="Cth: 70" oninput="renalRecalculate()">
+                    </div>
+                    <div>
+                        <label class="label">SCr (mg/dL)</label>
+                        <input class="inp" id="renalScr" type="number" step="0.1" placeholder="Cth: 1.2" oninput="renalRecalculate()">
+                    </div>
+                </div>
+
+                <!-- GFR Results -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+                    <div class="gfr-display">
+                        <div style="font-size:10px;font-weight:800;color:#f43f5e;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">CrCl (Cockcroft-Gault)</div>
+                        <div class="gfr-value" id="renalCrClVal" style="color:#f43f5e">--</div>
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">mL/min</div>
+                    </div>
+                    <div class="gfr-display">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                            <div style="font-size:10px;font-weight:800;color:#f59e0b;text-transform:uppercase;letter-spacing:0.06em">eGFR (CKD-EPI)</div>
+                            <span id="renalStageBadge" class="badge" style="font-size:9px;background:rgba(255,255,255,0.08);color:var(--text-secondary)">-</span>
+                        </div>
+                        <div class="gfr-value" id="renalEgfrVal" style="color:#f59e0b">--</div>
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">mL/min/1.73m²</div>
+                        <div class="gfr-bar"><div class="gfr-bar-fill" id="renalStageBar" style="width:0;background:#f59e0b"></div></div>
+                        <div style="font-size:10px;font-weight:700;color:var(--text-secondary);margin-top:4px" id="renalStageDesc">Masukkan data...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EMR Builder -->
+            <div class="glass" style="padding:16px;margin-top:12px">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                    <div class="section-title" style="margin:0"><i class="fas fa-clipboard-list" style="color:#8b5cf6"></i> EMR Regimen Builder</div>
+                    <span id="renalRegimenCount" class="badge" style="background:rgba(139,92,246,0.15);color:#8b5cf6">0</span>
+                </div>
+                <div id="renalRegimenList" style="min-height:60px;max-height:150px;overflow-y:auto;margin-bottom:12px;display:flex;flex-direction:column;gap:6px">
+                    <div style="text-align:center;color:var(--text-secondary);font-size:12px;padding:16px">Klik <strong>+ Regimen</strong> pada daftar obat untuk menambahkan</div>
+                </div>
+                <button class="btn btn-full" style="background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.2)" onclick="renalCopyEMR()">
+                    <i class="fas fa-copy"></i> Copy EMR Report
+                </button>
+            </div>
+
+            <!-- Search & Categories -->
+            <div style="margin-top:12px">
+                <div class="search-wrap">
+                    <i class="fas fa-search"></i>
+                    <input class="inp" id="renalSearch" type="text" placeholder="Cari obat (mis. Enoxaparin)..." oninput="renderRenalDrugs()">
+                </div>
+            </div>
+            <div style="display:flex;gap:6px;overflow-x:auto;margin-top:10px;padding-bottom:4px" id="renalCatPills"></div>
+        </div>
+
+        <!-- Drug List -->
+        <div id="renalDrugList" style="padding:0 16px 16px"></div>
+    </div>
+
+    <!-- =================== MODULE: CARDIOSAFE =================== -->
+    <div id="view-cardiosafe" class="module-view scroll-content" style="padding-bottom:80px">
+        <!-- Header -->
+        <div class="module-header cardiosafe-grad">
+            <div class="module-header-inner">
+                <div class="module-badge" style="background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.2)">
+                    <i class="fas fa-laptop-medical"></i> CardioSafe CDSS
+                </div>
+                <div class="module-title">Evaluasi Polifarmasi</div>
+                <div class="module-subtitle">Drug-Drug Interaction Detector · Clinical Scoring · Timing Schedule</div>
+            </div>
+        </div>
+
+        <!-- Patient Parameters -->
+        <div style="padding:12px 16px">
+            <div class="glass" style="padding:16px">
+                <div class="section-title"><i class="fas fa-user-md" style="color:#8b5cf6"></i> Parameter Pasien</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                    <div><label class="label">Usia (Thn)</label><input class="inp" id="csAge" type="number" placeholder="Cth: 65" oninput="csRecalculate()"></div>
+                    <div>
+                        <label class="label">Gender</label>
+                        <select class="inp" id="csSex" onchange="csRecalculate()">
+                            <option value="M">Laki-laki</option>
+                            <option value="F">Perempuan</option>
+                        </select>
+                    </div>
+                    <div><label class="label">BB (kg)</label><input class="inp" id="csWeight" type="number" placeholder="Cth: 60" oninput="csRecalculate()"></div>
+                    <div><label class="label">SCr (mg/dL)</label><input class="inp" id="csScr" type="number" step="0.1" placeholder="Cth: 1.2" oninput="csRecalculate()"></div>
+                    <div><label class="label">Sistolik (mmHg)</label><input class="inp" id="csSbp" type="number" placeholder="Cth: 140" oninput="csRecalculate()"></div>
+                    <div><label class="label">Nadi (x/mnt)</label><input class="inp" id="csHr" type="number" placeholder="Cth: 80" oninput="csRecalculate()"></div>
+                </div>
+                <!-- Scores -->
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px">
+                    <div class="glass" style="padding:10px;text-align:center;border-radius:12px">
+                        <div style="font-size:9px;color:var(--text-secondary);font-weight:800;text-transform:uppercase;margin-bottom:4px">eGFR</div>
+                        <div style="font-size:18px;font-weight:900;color:var(--text-primary)" id="csEgfr"><span style="font-size:11px;color:var(--text-secondary)">Isi SCr</span></div>
+                    </div>
+                    <div class="glass" style="padding:10px;text-align:center;border-radius:12px">
+                        <div style="font-size:9px;color:var(--text-secondary);font-weight:800;text-transform:uppercase;margin-bottom:4px">GRACE</div>
+                        <div style="font-size:18px;font-weight:900;color:var(--text-primary)" id="csGrace"><span style="font-size:11px;color:var(--text-secondary)">Data</span></div>
+                    </div>
+                    <div class="glass" style="padding:10px;text-align:center;border-radius:12px">
+                        <div style="font-size:9px;color:var(--text-secondary);font-weight:800;text-transform:uppercase;margin-bottom:4px">CHA₂DS₂</div>
+                        <div style="font-size:18px;font-weight:900;color:var(--text-primary)" id="csChads"><span style="font-size:11px;color:var(--text-secondary)">Pilih AF</span></div>
+                    </div>
+                    <div class="glass" style="padding:10px;text-align:center;border-radius:12px">
+                        <div style="font-size:9px;color:var(--text-secondary);font-weight:800;text-transform:uppercase;margin-bottom:4px">HAS-BLED</div>
+                        <div style="font-size:18px;font-weight:900;color:var(--text-primary)" id="csHasbled">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conditions -->
+            <div class="glass" style="padding:16px;margin-top:12px">
+                <div class="section-title"><i class="fas fa-clipboard-list" style="color:#a78bfa"></i> Komorbiditas / Kondisi</div>
+                <div id="csConditions" style="display:grid;grid-template-columns:1fr 1fr;gap:6px"></div>
+            </div>
+
+            <!-- Drug Library & Tray -->
+            <div class="glass" style="padding:16px;margin-top:12px">
+                <div class="section-title"><i class="fas fa-pills" style="color:#10b981"></i> Database Obat</div>
+                <div class="search-wrap" style="margin-bottom:10px">
+                    <i class="fas fa-search"></i>
+                    <input class="inp" id="csDrugSearch" type="text" placeholder="Cari nama atau golongan obat..." oninput="renderCsDrugs()">
+                </div>
+                <div id="csDrugList" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:4px"></div>
+            </div>
+
+            <!-- Tray -->
+            <div class="glass" style="padding:16px;margin-top:12px">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                    <div style="display:flex;align-items:center;gap:8px">
+                        <i class="fas fa-inbox" style="color:#f59e0b"></i>
+                        <span style="font-weight:800;font-size:14px">Nampan Resep</span>
+                        <span id="csTrayCount" class="badge" style="background:rgba(245,158,11,0.2);color:#f59e0b">0</span>
+                    </div>
+                    <button class="btn btn-danger btn-sm" id="csClearTray" style="display:none" onclick="csClearTray()"><i class="fas fa-trash"></i> Reset</button>
+                </div>
+                <div id="csTrayChips" style="display:flex;flex-wrap:wrap;gap:6px;min-height:40px;margin-bottom:12px">
+                    <div style="color:var(--text-secondary);font-size:12px;padding:10px 0;width:100%;text-align:center">Tambahkan obat dari database di atas</div>
+                </div>
+                <button class="btn btn-full btn-primary" id="csAnalyzeBtn" onclick="csAnalyze()">
+                    <i class="fas fa-bolt"></i> Analisis Kombinasi Obat
+                </button>
+            </div>
+
+            <!-- Analysis Results -->
+            <div id="csAnalysisResult" style="margin-top:12px;display:none">
+                <!-- CS Tabs -->
+                <div style="display:flex;gap:4px;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:4px;margin-bottom:12px">
+                    <button class="cs-tab active" id="csTabSummaryBtn" onclick="csShowTab('summary')"><i class="fas fa-clipboard-check" style="color:#10b981"></i> Ringkasan</button>
+                    <button class="cs-tab" id="csTabDdiBtn" onclick="csShowTab('ddi')"><i class="fas fa-bolt" style="color:#f43f5e"></i> Interaksi <span id="csDdiCount" style="background:rgba(244,63,94,0.2);color:#f43f5e;padding:1px 6px;border-radius:6px;font-size:10px">0</span></button>
+                    <button class="cs-tab" id="csTabClinicalBtn" onclick="csShowTab('clinical')"><i class="fas fa-vials" style="color:#3b82f6"></i> Farmakologi</button>
+                    <button class="cs-tab" id="csTabTimingBtn" onclick="csShowTab('timing')"><i class="fas fa-clock" style="color:#f59e0b"></i> Jadwal</button>
+                </div>
+                <div id="csTabSummary"></div>
+                <div id="csTabDdi" style="display:none"></div>
+                <div id="csTabClinical" style="display:none"></div>
+                <div id="csTabTiming" style="display:none"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =================== MATERNAL DRUG DETAIL MODAL =================== -->
+<div class="modal-overlay" id="maternalModal" onclick="if(event.target===this)closeMaternalModal()">
+    <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div style="padding:16px 20px">
+            <!-- Modal Header -->
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px">
+                <div>
+                    <span id="mmCat" class="badge status-danger" style="margin-bottom:6px;display:inline-flex"></span>
+                    <div id="mmName" style="font-size:20px;font-weight:900;color:white"></div>
+                    <div id="mmClass" style="font-size:12px;color:var(--text-secondary);margin-top:2px"></div>
+                </div>
+                <button onclick="closeMaternalModal()" style="background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-secondary);flex-shrink:0"><i class="fas fa-times"></i></button>
+            </div>
+            <!-- Pregnancy -->
+            <div style="margin-bottom:12px">
+                <div class="section-title"><i class="fas fa-baby" style="color:#f43f5e"></i> Profil Kehamilan</div>
+                <div id="mmPregnancyBox" style="border-radius:14px;padding:14px;border-left:4px solid">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                        <span id="mmPregIcon"></span>
+                        <span id="mmPregLabel" style="font-weight:800;font-size:13px"></span>
+                        <span id="mmPregFda" style="margin-left:auto;font-size:10px;font-weight:800;background:rgba(255,255,255,0.1);padding:3px 8px;border-radius:8px"></span>
+                    </div>
+                    <div id="mmPregNote" style="font-size:12px;line-height:1.6;opacity:0.85"></div>
+                </div>
+            </div>
+            <!-- Lactation -->
+            <div style="margin-bottom:12px">
+                <div class="section-title"><i class="fas fa-heart" style="color:#ec4899"></i> Profil Laktasi</div>
+                <div id="mmLactationBox" style="border-radius:14px;padding:14px;border-left:4px solid">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                        <span id="mmLactIcon"></span>
+                        <span id="mmLactLabel" style="font-weight:800;font-size:13px"></span>
+                        <span id="mmLactHale" style="margin-left:auto;font-size:10px;font-weight:800;background:rgba(255,255,255,0.1);padding:3px 8px;border-radius:8px"></span>
+                    </div>
+                    <div id="mmLactNote" style="font-size:12px;line-height:1.6;opacity:0.85"></div>
+                </div>
+            </div>
+            <!-- Clinical tip -->
+            <div style="background:rgba(244,63,94,0.06);border:1px solid rgba(244,63,94,0.15);border-radius:14px;padding:14px;margin-bottom:20px">
+                <div style="font-size:10px;font-weight:800;color:#f43f5e;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px"><i class="fas fa-lightbulb"></i> Mutiara Klinis</div>
+                <div id="mmTip" style="font-size:12px;color:rgba(244,63,94,0.9);line-height:1.6;font-style:italic"></div>
+            </div>
+            <button class="btn btn-full btn-ghost" onclick="closeMaternalModal()">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<!-- =================== FAB COPY BUTTON =================== -->
+<button class="fab hidden" id="pedCopyFab" onclick="pedCopyResults()"><i class="fas fa-copy"></i></button>
+
+<script>
+// =================== GLOBAL STATE ===================
+let activeModule = null;
+let pedActiveCategory = 'Semua';
+let renalState = { age:'', weight:'', scr:'', gender:'M', isDialysis:false, crcl:null, egfr:null, activeCategory:'All', searchQuery:'', regimen:[] };
+let csState = { flags:[], trayIds:[], searchQuery:'', inputs:{age:null,weight:null,scr:null,sex:'M',sbp:null,hr:null} };
+let pedCurrentWeight = 0;
+
+// =================== SPLASH / NAVIGATION ===================
+function launchModule(mod) {
+    document.getElementById('splash').classList.add('hidden');
+    setTimeout(() => {
+        document.getElementById('app').classList.add('visible');
+        switchModule(mod);
+    }, 300);
+}
+
+function switchModule(mod) {
+    activeModule = mod;
+    // Hide all
+    document.querySelectorAll('.module-view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    // Show active
+    document.getElementById('view-' + mod).classList.add('active');
+    document.querySelector(`.tab-btn[data-module="${mod}"]`)?.classList.add('active');
+    // Update topbar
+    const subs = {maternal:'Maternal SafeRx',pediatric:'PediaCardio Vault™',renal:'Renal Dose Optimizer',cardiosafe:'CardioSafe CDSS'};
+    document.getElementById('topbarSub').textContent = subs[mod] || '';
+    // FAB
+    document.getElementById('pedCopyFab').classList.toggle('hidden', mod !== 'pediatric' || pedCurrentWeight === 0);
+    // Init modules
+    if (mod === 'maternal') initMaternal();
+    if (mod === 'pediatric') initPediatric();
+    if (mod === 'renal') initRenal();
+    if (mod === 'cardiosafe') initCardioSafe();
+    window.scrollTo(0,0);
+}
+
+function showHome() {
+    activeModule = null;
+    document.querySelectorAll('.module-view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('view-home').classList.add('active');
+    document.getElementById('topbarSub').textContent = 'Select Module';
+    document.getElementById('pedCopyFab').classList.add('hidden');
+    window.scrollTo(0,0);
+}
+
+// =================== TOAST ===================
+function showToast(msg, icon='fa-circle-check', color='#10b981') {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.innerHTML = `<i class="fas ${icon}" style="color:${color}"></i> ${msg}`;
+    document.getElementById('toastContainer').appendChild(t);
+    setTimeout(() => t.remove(), 2800);
+}
+
+// =================== MATERNAL DATABASE ===================
+const maternalDB = [
+    // ======= HIPERTENSI =======
+    {id:1,name:'Methyldopa',class:'Alpha-2 Agonist',category:'Hipertensi',pregnancy:{status:'safe',fda:'B',note:'Obat lini pertama untuk hipertensi kronik pada kehamilan. Sangat banyak data keamanan jangka panjang pada janin.'},lactation:{status:'safe',hale:'L2',note:'Aman untuk menyusui. Disekresi dalam ASI dalam jumlah sangat kecil.'},clinicalTip:'Dapat menyebabkan sedasi ringan dan depresi pada ibu. Evaluasi berkala.'},
+    {id:2,name:'Labetalol',class:'Alpha/Beta Blocker',category:'Hipertensi',pregnancy:{status:'safe',fda:'C',note:'Obat pilihan utama untuk hipertensi emergensi (IV) dan pemeliharaan (Oral) pada preeklampsia.'},lactation:{status:'safe',hale:'L2',note:'Aman. Kadar dalam ASI sangat rendah.'},clinicalTip:'Waspada bradikardia atau hipoglikemia neonatal jika digunakan dosis tinggi menjelang persalinan.'},
+    {id:3,name:'Nifedipine SR',class:'CCB (DHP)',category:'Hipertensi',pregnancy:{status:'safe',fda:'C',note:'Sangat umum digunakan dan direkomendasikan untuk preeklampsia dan hipertensi gestasional. Lini pertama bersama Labetalol dan Methyldopa.'},lactation:{status:'safe',hale:'L2',note:'Aman. Jumlah yang masuk ASI minimal.'},clinicalTip:'Hindari nifedipine sublingual untuk krisis hipertensi — risiko hipotensi berat & fetal distress.'},
+    {id:38,name:'Amlodipine',class:'CCB (DHP) Long-acting',category:'Hipertensi',pregnancy:{status:'caution',fda:'C',note:'Digunakan sebagai lini kedua atau tambahan untuk hipertensi kronik bila Nifedipine tidak cukup. Data manusia lebih terbatas daripada Nifedipine SR.'},lactation:{status:'safe',hale:'L3',note:'Aman saat laktasi. Kadar dalam ASI sangat rendah. Waktu paruh panjang namun konsentrasi bayi tidak bermakna.'},clinicalTip:'Onset lambat dan waktu paruh panjang (35-50 jam) menjadikannya kurang ideal untuk emergensi, namun sangat baik untuk kontrol TD jangka panjang.'},
+    {id:39,name:'Hydralazine',class:'Vasodilator Direk',category:'Hipertensi',pregnancy:{status:'safe',fda:'C',note:'Standar emas terapi IV untuk hipertensi berat/emergensi pada kehamilan di banyak negara. Data keamanan sangat panjang dan luas.'},lactation:{status:'safe',hale:'L2',note:'Aman saat menyusui. Ekskresi ke ASI minimal.'},clinicalTip:'Berikan 5-10 mg IV bolus pelan, tunggu 20 menit sebelum dosis ulang. Risiko takikardia refleks — pertimbangkan kombinasi dengan beta-blocker.'},
+    {id:40,name:'Clonidine',class:'Alpha-2 Agonis Sentral',category:'Hipertensi',pregnancy:{status:'caution',fda:'C',note:'Alternatif methyldopa jika tidak tersedia atau tidak ditoleransi. Data keamanan lebih terbatas. Jarang digunakan sebagai lini pertama.'},lactation:{status:'caution',hale:'L3',note:'Diekskresi ke ASI. Pantau bayi untuk sedasi dan hipotensi. Penggunaan jangka pendek umumnya aman.'},clinicalTip:'Jangan hentikan mendadak — risiko rebound hypertension berat. Tapering wajib dilakukan perlahan.'},
+    {id:17,name:'Metoprolol / Bisoprolol',class:'Beta-1 Selective Blocker',category:'Hipertensi',pregnancy:{status:'caution',fda:'C',note:'Metoprolol adalah pilihan beta-blocker yang aman. Pilihan utama rate control takikardia dan hipertensi gestasional.'},lactation:{status:'safe',hale:'L2',note:'Metoprolol sangat aman (L2). Bisoprolol relatif aman.'},clinicalTip:'Tapering 2-3 hari sebelum persalinan elektif untuk cegah bradikardia/hipoglikemia neonatal.'},
+    {id:41,name:'Carvedilol',class:'Alpha/Beta Blocker Non-Selektif',category:'Hipertensi',pregnancy:{status:'caution',fda:'C',note:'Kurang data dibanding Labetalol, namun secara farmakologis serupa. Digunakan terutama untuk HFrEF maternal yang sudah ada sebelum kehamilan.'},lactation:{status:'caution',hale:'L3',note:'Data laktasi terbatas. Pantau bayi untuk bradikardia dan hipoglikemia.'},clinicalTip:'Pilihan lebih baik daripada Metoprolol untuk pasien HFrEF karena efek alpha-blocking tambahan. Hindari stop mendadak.'},
+    {id:42,name:'Propranolol',class:'Beta Blocker Non-Selektif',category:'Hipertensi',pregnancy:{status:'caution',fda:'C',note:'Digunakan terutama untuk tirotoksikosis maternal, migrain, atau tremor esensial. Risiko IUGR lebih besar dari beta-1 selektif.'},lactation:{status:'safe',hale:'L2',note:'Aman untuk menyusui dalam dosis biasa. Pantau bayi untuk hipoglikemia.'},clinicalTip:'Tidak disukai untuk hipertensi gestasional — gunakan Labetalol atau Metoprolol sebagai gantinya.'},
+    {id:18,name:'Atenolol',class:'Beta-1 Selective Blocker',category:'Hipertensi',pregnancy:{status:'danger',fda:'D',note:'HINDARI PENGGUNAAN. Berkaitan kuat dengan IUGR / retardasi pertumbuhan janin. Paling sering dikaitkan dengan outcome buruk di antara beta-blocker.'},lactation:{status:'caution',hale:'L3',note:'Konsentrasi dalam ASI tinggi, berisiko menyebabkan bradikardia pada bayi.'},clinicalTip:'Jika pasien datang dengan Atenolol, ganti segera ke Metoprolol atau Labetalol.'},
+    {id:4,name:'ACE Inhibitor (Captopril/Ramipril)',class:'ACE Inhibitor',category:'Hipertensi',pregnancy:{status:'danger',fda:'D',note:'KONTRAINDIKASI. Teratogenik trimester 2 & 3: toksisitas ginjal janin, oligohidramnion, hipoplasia kalvaria, IUGR berat.'},lactation:{status:'caution',hale:'L2/L3',note:'Enalapril/Captopril relatif aman di ASI (L2). Hindari pada bayi prematur/neonatus.'},clinicalTip:'Ganti ke Labetalol atau Nifedipine SEBELUM merencanakan kehamilan. Enalapril pilihan terbaik pasca-persalinan.'},
+    {id:67,name:'Enalapril (Pasca-Persalinan)',class:'ACE Inhibitor',category:'Hipertensi',pregnancy:{status:'danger',fda:'D',note:'KONTRAINDIKASI selama kehamilan (teratogenik T2-T3). Namun dapat diberikan pasca-persalinan untuk HFrEF atau hipertensi kronik.'},lactation:{status:'safe',hale:'L2',note:'Aman untuk menyusui. Enalapril adalah ACEi pilihan saat laktasi karena kadar ASI sangat rendah.'},clinicalTip:'Pastikan pasien tidak hamil sebelum memulai Enalapril. Pasca-melahirkan: MULAI segera untuk pasien HFrEF untuk prognostik.'},
+    {id:68,name:'Ramipril (Pasca-Persalinan)',class:'ACE Inhibitor',category:'Hipertensi',pregnancy:{status:'danger',fda:'D',note:'KONTRAINDIKASI selama kehamilan. Boleh dimulai kembali pasca-persalinan dan setelah selesai menyusui (atau jika menyusui: pertimbangkan Enalapril).'},lactation:{status:'caution',hale:'L3',note:'Data laktasi lebih terbatas dibanding Enalapril. Pilih Enalapril jika memungkinkan saat menyusui.'},clinicalTip:'Untuk pasien yang sebelumnya mendapat Ramipril pre-kehamilan, switch ke Enalapril saat menyusui lebih direkomendasikan.'},
+    {id:5,name:'ARB (Valsartan/Candesartan/Losartan)',class:'Angiotensin Receptor Blocker',category:'Hipertensi',pregnancy:{status:'danger',fda:'D',note:'KONTRAINDIKASI absolut semua ARB — sama seperti ACE Inhibitor. Teratogenik T2-T3, fetotoksik.'},lactation:{status:'danger',hale:'L3/L4',note:'Tidak direkomendasikan. Data pada laktasi sangat terbatas untuk semua ARB.'},clinicalTip:'Stop segera jika pasien diketahui hamil. Tidak ada ARB yang aman saat kehamilan.'},
+    // ======= ARITMIA =======
+    {id:6,name:'Digoxin',class:'Glikosida Kardiak / Antiaritmia',category:'Aritmia',pregnancy:{status:'safe',fda:'C',note:'Aman. Obat pilihan pertama untuk SVT janin (diberikan transplasental). Juga untuk rate control AF kronik.'},lactation:{status:'safe',hale:'L2',note:'Aman. Kadar dalam ASI sangat rendah.'},clinicalTip:'Kebutuhan dosis ibu meningkat selama kehamilan (peningkatan GFR & volume distribusi). Lakukan TDM serial.'},
+    {id:65,name:'Digoxin (Tx SVT Janin)',class:'Glikosida Kardiak (Transplasental)',category:'Aritmia',pregnancy:{status:'safe',fda:'C',note:'Dosis maternal ditingkatkan untuk mencapai level terapeutik transplasental pada janin dengan SVT/Fluter Atrium. Level ibu target 1.5-2.5 ng/mL.'},lactation:{status:'safe',hale:'L2',note:'Aman untuk menyusui. Kadar ASI tidak bermakna klinis.'},clinicalTip:'Kombinasikan dengan Flecainide atau Sotalol untuk SVT janin refrakter. Lakukan evaluasi echokardiografi janin serial.'},
+    {id:8,name:'Adenosine',class:'Antiaritmia Purin',category:'Aritmia',pregnancy:{status:'safe',fda:'C',note:'Sangat aman — obat pilihan terminasi akut SVT maternal di IGD. Waktu paruh sangat singkat.'},lactation:{status:'safe',hale:'L2',note:'Sangat aman karena waktu paruh sangat singkat (<10 detik). Tidak ada kadar berarti dalam ASI.'},clinicalTip:'Berikan bolus cepat IV dibilas NaCl 0.9% 20mL. Lakukan CTG/fetal monitoring. Mulai 6mg, ulang 12mg jika perlu.'},
+    {id:25,name:'Verapamil',class:'Non-DHP CCB',category:'Aritmia',pregnancy:{status:'caution',fda:'C',note:'Relatif aman (lini kedua SVT setelah adenosine). Verapamil lebih aman dari Diltiazem untuk aritmia maternal.'},lactation:{status:'safe',hale:'L2',note:'Aman saat laktasi, diekskresi ke ASI dalam jumlah kecil dan tidak bermakna klinis.'},clinicalTip:'Hati-hati risiko hipotensi maternal yang mengurangi aliran uteroplasenta. Jangan berikan bersamaan Flecainide oral.'},
+    {id:43,name:'Diltiazem',class:'Non-DHP CCB',category:'Aritmia',pregnancy:{status:'caution',fda:'C',note:'Data lebih terbatas dari Verapamil. Digunakan sebagai rate control alternatif. Hindari di Trimester 1 jika bisa.'},lactation:{status:'safe',hale:'L3',note:'Ditemukan dalam ASI dalam kadar kecil. Umumnya aman untuk menyusui jangka pendek.'},clinicalTip:'Gunakan Verapamil sebagai pilihan pertama Non-DHP CCB. Diltiazem lebih banyak untuk rate control kronis.'},
+    {id:56,name:'Sotalol',class:'Antiaritmia Kelas III / Beta Blocker',category:'Aritmia',pregnancy:{status:'caution',fda:'B',note:'Aman dan sering digunakan untuk SVT maternal atau untuk mengobati aritmia janin (transplasental) bersama Digoxin.'},lactation:{status:'caution',hale:'L3',note:'Ditemukan dalam ASI konsentrasi cukup tinggi. Pantau bayi untuk bradikardia dan hipoglikemia.'},clinicalTip:'Pilihan utama bersama Digoxin untuk SVT janin. Perpanjang QTc — monitoring EKG serial maternal wajib.'},
+    {id:55,name:'Flecainide',class:'Antiaritmia Kelas Ic',category:'Aritmia',pregnancy:{status:'caution',fda:'C',note:'Digunakan untuk SVT / Fluter Atrium refrakter maternal, atau SVT janin melalui transplasental bila Digoxin+Sotalol gagal.'},lactation:{status:'safe',hale:'L2',note:'Aman untuk menyusui dalam dosis terapi biasa. Kadar ASI rendah.'},clinicalTip:'Pilihan ketiga setelah Digoxin+Sotalol untuk SVT janin. Lakukan EKG ibu dan monitoring QRS sebelum inisiasi.'},
+    {id:57,name:'Quinidine',class:'Antiaritmia Kelas Ia',category:'Aritmia',pregnancy:{status:'caution',fda:'C',note:'Data historis cukup banyak. Digunakan untuk VT/aritmia refrakter maternal jika pilihan lain gagal. Sekarang jarang digunakan.'},lactation:{status:'caution',hale:'L2',note:'Diekskresikan ke ASI dalam kadar rendah. Umumnya aman, pantau bayi untuk trombositopenia.'},clinicalTip:'Perpanjang QTc — hindari kombinasi dengan obat lain yang memperpanjang QT. Sekarang jarang digunakan karena tersedia pilihan lebih aman.'},
+    {id:32,name:'Ivabradine',class:'If Channel Blocker',category:'Aritmia',pregnancy:{status:'danger',fda:'D',note:'KONTRAINDIKASI. Toksisitas janin dan bradikardia fetal dalam studi hewan. Tidak ada data keamanan manusia.'},lactation:{status:'danger',hale:'L4',note:'Tidak direkomendasikan. Hindari selama menyusui.'},clinicalTip:'Gunakan Beta-blocker (Metoprolol) atau Verapamil untuk rate control maternal sebagai alternatif.'},
+    {id:7,name:'Amiodarone',class:'Antiaritmia Kelas III',category:'Aritmia',pregnancy:{status:'danger',fda:'D',note:'HINDARI KECUALI LIFE-SAVING. Menyebabkan hipotiroidisme neonatal, goiter, retardasi pertumbuhan, dan bradikardia janin. Kandungan yodium tinggi.'},lactation:{status:'danger',hale:'L3',note:'Dikontraindikasikan saat laktasi (toksisitas yodium, waktu paruh 40-55 hari).'},clinicalTip:'Gunakan HANYA jika aritmia maternal (VT/VF) mengancam jiwa dan refrakter terhadap semua pilihan lain.'},
+    {id:58,name:'Lidocaine (IV)',class:'Antiaritmia Kelas Ib / Anestesi Lokal',category:'Aritmia',pregnancy:{status:'safe',fda:'B',note:'Aman untuk terminasi VT atau sebagai anestesi regional (epidural/spinal). Menembus plasenta namun cepat dimetabolisme janin.'},lactation:{status:'safe',hale:'L2',note:'Sangat aman saat laktasi. Bioavailabilitas oral rendah bayi, tidak bermakna klinis.'},clinicalTip:'Hindari dosis berlebih: toksisitas SSP (konvulsi) dan kardiotoksisitas. Selalu siapkan lipid emulsion 20% sebagai antidotum.'},
+    // ======= ANTIKOAGULAN =======
+    {id:44,name:'UFH (Unfractionated Heparin)',class:'Antikoagulan Parenteral',category:'Antikoagulan',pregnancy:{status:'safe',fda:'C',note:'Aman absolut — tidak menembus plasenta. Pilihan WAJIB menjelang persalinan. Juga standar untuk katup mekanik (infus kontinu terpantau).'},lactation:{status:'safe',hale:'L1',note:'SANGAT AMAN saat menyusui (rating L1 — paling aman). Molekul besar, tidak terserap secara oral oleh bayi.'},clinicalTip:'Monitor APTT ratio 1.5-2.5x kontrol untuk terapi VTE. 2.5-3.5x untuk katup mekanik. Hentikan 4-6 jam sebelum anestesi neuraksial.'},
+    {id:9,name:'Enoxaparin / LMWH',class:'LMWH / Factor Xa Inhibitor',category:'Antikoagulan',pregnancy:{status:'safe',fda:'B',note:'Obat pilihan utama untuk profilaksis/terapi VTE dan ACS saat hamil. Tidak menembus plasenta. Lebih mudah diprediksi dari UFH.'},lactation:{status:'safe',hale:'L2',note:'Aman. Tidak terserap di saluran cerna bayi secara oral karena molekul besar.'},clinicalTip:'Dosis disesuaikan BB ibu seiring usia gestasi (volume distribusi meningkat). Ganti ke UFH 36-38 minggu menjelang persalinan.'},
+    {id:11,name:'Warfarin',class:'Vitamin K Antagonist',category:'Antikoagulan',pregnancy:{status:'danger',fda:'D/X',note:'KONTRAINDIKASI Trimester 1 (Warfarin Embryopathy: hidung pesek, epifisis punctata). Kadang terpaksa TM 2&3 untuk katup mekanik risiko sangat tinggi.'},lactation:{status:'safe',hale:'L2',note:'SANGAT AMAN untuk laktasi! Sangat terikat protein plasma ibu, tidak diekskresi ke ASI secara bermakna.'},clinicalTip:'Keputusan gunakan Warfarin pada katup mekanik saat hamil harus melalui diskusi Heart Team ketat (ICU/CVCU). Dosis <5mg/hari lebih aman.'},
+    {id:12,name:'Rivaroxaban / Apixaban (DOAC)',class:'Direct Oral Anticoagulant',category:'Antikoagulan',pregnancy:{status:'danger',fda:'C',note:'TIDAK DIREKOMENDASIKAN. Bebas menembus plasenta. Data keselamatan janin sangat minim. Tidak ada antidotum terjangkau.'},lactation:{status:'danger',hale:'L3',note:'Hindari. Data laktasi sangat kurang untuk semua DOAC.'},clinicalTip:'Segera switch ke LMWH jika pasien dengan terapi DOAC terdeteksi hamil. Jangan tunda.'},
+    {id:45,name:'Dabigatran (Pradaxa)',class:'Direct Thrombin Inhibitor',category:'Antikoagulan',pregnancy:{status:'danger',fda:'C',note:'HINDARI. Menembus plasenta. Tidak ada antidotum terjangkau (Idarucizumab sangat mahal). Data keselamatan janin sangat kurang.'},lactation:{status:'danger',hale:'L4',note:'Tidak direkomendasikan. Data sangat terbatas.'},clinicalTip:'Switch ke LMWH segera begitu kehamilan terdeteksi. Tidak ada antidotum mudah seperti Protamine untuk UFH.'},
+    {id:66,name:'Heparin UFH (Katup Mekanik)',class:'Antikoagulan Parenteral Kontinu',category:'Antikoagulan',pregnancy:{status:'safe',fda:'C',note:'Pilihan WAJIB untuk pasien dengan katup mekanik risiko tinggi menjelang/saat persalinan. Infus kontinu dengan monitoring APTT ketat.'},lactation:{status:'safe',hale:'L1',note:'Sangat aman. Tidak diserap oral, tidak menembus ke ASI secara bermakna.'},clinicalTip:'Target APTT 2.5-3.5x kontrol untuk katup mekanik. Infus harus di ruang monitored intensif dengan TDM serial.'},
+    // ======= ANTIPLATELET =======
+    {id:20,name:'Aspirin (Dosis Rendah 81-150 mg)',class:'Antiplatelet / Prostaglandin Inhibitor',category:'Antiplatelet',pregnancy:{status:'safe',fda:'C',note:'SANGAT DIREKOMENDASIKAN untuk profilaksis preeklampsia risiko tinggi. Mulai sebelum 16 minggu gestasi untuk efek optimal.'},lactation:{status:'safe',hale:'L2',note:'Aman pada dosis profilaksis KV (81mg). Hindari dosis analgetik tinggi (>500mg) saat laktasi.'},clinicalTip:'Dosis profilaksis: 75-150mg malam hari (malam lebih efektif dari pagi). Hentikan 5-7 hari sebelum persalinan elektif.'},
+    {id:21,name:'Clopidogrel',class:'P2Y12 Inhibitor',category:'Antiplatelet',pregnancy:{status:'caution',fda:'B',note:'Digunakan jika ada indikasi absolut (pasca-PCI stenting baru <1 tahun atau ACS akut). Data keamanan manusia terbatas.'},lactation:{status:'caution',hale:'L3',note:'Pertimbangkan manfaat vs risiko, data manusia sangat terbatas. Hentikan jika tidak ada indikasi absolut.'},clinicalTip:'Jika pasien stenting (<1 tahun) hamil, DAPT dengan Clopidogrel adalah P2Y12 inhibitor paling aman. Hindari Ticagrelor.'},
+    {id:22,name:'Ticagrelor / Prasugrel',class:'P2Y12 Inhibitor Baru',category:'Antiplatelet',pregnancy:{status:'danger',fda:'C',note:'TIDAK DIREKOMENDASIKAN. Data keselamatan pada manusia sangat minim. Risiko perdarahan janin dan neonatal tinggi.'},lactation:{status:'danger',hale:'L4',note:'Hindari penggunaan. Data laktasi sangat kurang.'},clinicalTip:'Switch ke Clopidogrel jika DAPT mutlak diperlukan. Jangan gunakan Ticagrelor/Prasugrel saat hamil.'},
+    // ======= LIPID/STATIN =======
+    {id:23,name:'Statin (Atorvastatin/Rosuvastatin)',class:'HMG-CoA Reductase Inhibitor',category:'Lipid/Statin',pregnancy:{status:'danger',fda:'X/C',note:'DIHINDARI. Kolesterol esensial untuk perkembangan CNS dan sintesis steroid janin. Rosuvastatin terbaru diuji untuk preeklampsia tapi masih investigasional.'},lactation:{status:'danger',hale:'L3',note:'Kontraindikasi potensial karena gangguan biosintesis lipid pada bayi yang berkembang.'},clinicalTip:'Stop Statin minimal 1-2 bulan sebelum program kehamilan. Jika hiperkolesterolemia berat: gunakan Cholestyramine.'},
+    {id:49,name:'Cholestyramine / Colestipol',class:'Bile Acid Sequestrant',category:'Lipid/Statin',pregnancy:{status:'safe',fda:'C',note:'AMAN untuk kehamilan — tidak diserap sistemik. Menurunkan LDL meski kurang efektif dari Statin. Pilihan alternatif saat Statin dikontraindikasikan.'},lactation:{status:'safe',hale:'L2',note:'Sangat aman — tidak diabsorpsi, tidak masuk ASI sama sekali.'},clinicalTip:'Dapat mengganggu absorpsi vitamin larut lemak (A,D,E,K) dan asam folat. Suplementasi wajib. Berikan obat lain 1 jam sebelum atau 4 jam sesudah.'},
+    // ======= GAGAL JANTUNG =======
+    {id:13,name:'Furosemide',class:'Diuretik Loop',category:'Gagal Jantung',pregnancy:{status:'caution',fda:'C',note:'Gunakan HANYA untuk gagal jantung akut/kongestif — jangan untuk edema fisiologis kehamilan atau preeklampsia.'},lactation:{status:'caution',hale:'L3',note:'Efek diuretik kuat dapat menghentikan produksi ASI ibu secara drastis dengan mengurangi volume darah.'},clinicalTip:'Pantau ketat volume cairan ketuban (risiko oligohidramnion pada penggunaan kronik). Gunakan dosis terkecil efektif.'},
+    {id:64,name:'Thiazide (HCT / Indapamide)',class:'Diuretik Thiazide',category:'Gagal Jantung',pregnancy:{status:'caution',fda:'C/D',note:'Tidak direkomendasikan sebagai pilihan pertama saat hamil. Risiko trombositopenia neonatal, hiponatremia, dan mengurangi volume plasma.'},lactation:{status:'caution',hale:'L3',note:'Efek diuretik dapat menekan produksi ASI. Gunakan Furosemide jika diuretik diperlukan.'},clinicalTip:'Pada kehamilan, diuretik hanya untuk gagal jantung — JANGAN untuk preeklampsia (memperburuk perfusi plasenta) atau edema fisiologis.'},
+    {id:14,name:'Spironolactone',class:'MRA (Mineral-Receptor Antagonist)',category:'Gagal Jantung',pregnancy:{status:'caution',fda:'C',note:'Hindari jika mungkin. Risiko teoritis efek anti-androgenik pada janin laki-laki (feminisasi) karena blokade reseptor androgen.'},lactation:{status:'safe',hale:'L2',note:'Aman. Metabolit aktif masuk dalam jumlah sangat kecil ke ASI.'},clinicalTip:'Bukan terapi lini pertama untuk gagal jantung saat hamil. Stop 4-6 minggu sebelum persalinan jika memungkinkan.'},
+    {id:47,name:'Eplerenone',class:'MRA Selektif',category:'Gagal Jantung',pregnancy:{status:'caution',fda:'B',note:'Data sangat terbatas pada manusia. Lebih selektif dari Spironolactone, risiko anti-androgenik lebih rendah secara teoritis.'},lactation:{status:'caution',hale:'L3',note:'Data tidak cukup. Gunakan Spironolactone jika MRA diperlukan (lebih banyak data laktasi tersedia).'},clinicalTip:'Umumnya tidak digunakan sebagai lini pertama HF saat hamil. Furosemide lebih dipilih untuk manajemen kongesti.'},
+    {id:29,name:'Nitroglycerin / ISDN',class:'Nitrat Organik',category:'Gagal Jantung',pregnancy:{status:'caution',fda:'C',note:'Digunakan (IV/Sublingual) untuk ADHF, angina maternal, atau krisis hipertensi. Aman untuk janin secara molekuler.'},lactation:{status:'caution',hale:'L3',note:'Waktu paruh sangat pendek (<5 menit IV), kemungkinan besar aman.'},clinicalTip:'Risiko utama: hipotensi maternal yang menyebabkan fetal distress. Titrasi hati-hati. Monitor CTG.'},
+    {id:48,name:'Isosorbide Mononitrate (ISMN)',class:'Nitrat Organik Long-acting',category:'Gagal Jantung',pregnancy:{status:'caution',fda:'C',note:'Digunakan untuk angina kronik atau gagal jantung dengan komponen iskemik. Data lebih terbatas dari Nitroglycerin.'},lactation:{status:'caution',hale:'L3',note:'Data terbatas. Waktu paruh lebih panjang dari ISDN. Pertimbangkan manfaat vs risiko.'},clinicalTip:'Toleransi nitrat berkembang dalam 24-48 jam pada penggunaan terus-menerus. Perlu interval bebas nitrat 8-10 jam.'},
+    {id:46,name:'Sacubitril/Valsartan (Entresto)',class:'ARNi (ARNI)',category:'Gagal Jantung',pregnancy:{status:'danger',fda:'D',note:'KONTRAINDIKASI — mengandung Valsartan (ARB) yang teratogenik T2-T3. Hentikan sebelum atau segera setelah kehamilan terdeteksi.'},lactation:{status:'danger',hale:'L4',note:'Tidak direkomendasikan. Data laktasi sangat minim. Komponen Valsartan tidak diperbolehkan.'},clinicalTip:'Pasien HFrEF yang merencanakan hamil: switch ke ACEi + Beta-blocker + Diuretik sebelum konsepsi.'},
+    {id:69,name:'Sacubitril/Valsartan (Pasca-Persalinan)',class:'ARNi (ARNI)',category:'Gagal Jantung',pregnancy:{status:'danger',fda:'D',note:'KONTRAINDIKASI saat hamil. Boleh dimulai SETELAH persalinan dan setelah selesai menyusui sepenuhnya.'},lactation:{status:'danger',hale:'L4',note:'Tidak direkomendasikan selama menyusui karena komponen Valsartan (ARB).'},clinicalTip:'Untuk PPCM dengan EF membaik pasca-Bromocriptine+standar terapi, ARNi adalah pilihan excellent setelah masa menyusui selesai.'},
+    {id:63,name:'Bromocriptine',class:'Agonis Dopamin D2 / Penghambat Prolaktin',category:'Gagal Jantung',pregnancy:{status:'caution',fda:'B',note:'Direkomendasikan khusus untuk Kardiomiopati Peripartum (PPCM). Menghambat pelepasan prolaktin yang berperan dalam patofisiologi PPCM (cleaved prolaktin 16-kDa).'},lactation:{status:'danger',hale:'L5',note:'MENGHENTIKAN ASI secara permanen. Tidak bisa menyusui selama menggunakan Bromocriptine (mekanisme kerjanya menghambat prolaktin).'},clinicalTip:'Dosis: 2.5mg 2x1 selama ≥8 minggu. Indikasikan pada PPCM dengan EF <25% atau sangat simtomatik. Hindari jika TD sistolik <90 mmHg.'},
+    // ======= HIPERTENSI PULMONAL =======
+    {id:33,name:'Sildenafil / Tadalafil',class:'PDE-5 Inhibitor',category:'Hipertensi Pulmonal',pregnancy:{status:'caution',fda:'B',note:'Dapat digunakan untuk manajemen PAH maternal. Sildenafil dilaporkan memperbaiki aliran uteroplasenta. Data Tadalafil lebih terbatas.'},lactation:{status:'caution',hale:'L3',note:'Data laktasi terbatas untuk keduanya. Gunakan jika manfaat lebih besar dari risiko.'},clinicalTip:'PAH pada kehamilan memiliki mortalitas sangat tinggi (>30%). Sildenafil sering jadi tulang punggung terapi bersama Prostanoid.'},
+    {id:34,name:'Epoprostenol / Iloprost',class:'Prostacyclin Analog',category:'Hipertensi Pulmonal',pregnancy:{status:'caution',fda:'B',note:'Sering digunakan via infus kontinu/inhalasi untuk krisis PAH atau PAH berat pada ibu hamil. Tidak menembus plasenta secara bermakna.'},lactation:{status:'caution',hale:'L3',note:'Data minim, tapi waktu paruh sangat singkat (Epoprostenol 3-5 mnt). Mungkin aman.'},clinicalTip:'Manajemen PAH harus di pusat tersier (ICU/CVCU) dengan tim multidisiplin. Mortalitas ibu sangat tinggi meski dengan terapi optimal.'},
+    {id:35,name:'Bosentan / Macitentan / Ambrisentan',class:'Endothelin Receptor Antagonist',category:'Hipertensi Pulmonal',pregnancy:{status:'danger',fda:'X',note:'KONTRAINDIKASI ABSOLUT. Teratogenik parah pada hewan (anomali wajah, organ utama). Program REMS wajib di semua negara.'},lactation:{status:'danger',hale:'L4',note:'Tidak direkomendasikan sama sekali.'},clinicalTip:'Wanita usia subur wajib menggunakan 2 metode kontrasepsi andal. Uji kehamilan bulanan wajib selama terapi ERA.'},
+    {id:51,name:'Riociguat (Adempas)',class:'Soluble Guanylate Cyclase Stimulator',category:'Hipertensi Pulmonal',pregnancy:{status:'danger',fda:'X',note:'KONTRAINDIKASI ABSOLUT. Teratogenik parah. Program REMS ketat. Tidak ada dosis aman untuk kehamilan.'},lactation:{status:'danger',hale:'L4',note:'Kontraindikasi absolut.'},clinicalTip:'Jangan gunakan bersamaan nitrat atau PDE-5i. Program REMS Adempas wajib. Kontrasepsi ketat selama terapi.'},
+    // ======= EMERGENSI/ICU =======
+    {id:15,name:'Epinephrine / Norepinephrine',class:'Katekolamin / Vasopresor',category:'Emergensi/ICU',pregnancy:{status:'caution',fda:'C',note:'Vasokonstriksi kuat dapat menurunkan perfusi plasenta. MUTLAK digunakan jika ibu syok/henti jantung (Life-saving — prioritas ibu).'},lactation:{status:'safe',hale:'L2',note:'Aman. Waktu paruh sangat singkat, hancur di saluran cerna bayi.'},clinicalTip:'Penyelamatan janin paling efektif adalah dengan memulihkan hemodinamik ibunya secepat mungkin. Norepinephrine lebih disukai dari Dopamine untuk syok vasodilatori.'},
+    {id:53,name:'Dopamine / Dobutamine',class:'Inotropik / Katekolamin',category:'Emergensi/ICU',pregnancy:{status:'caution',fda:'C',note:'Digunakan untuk syok kardiogenik atau sepsis berat saat hamil. Dopamin dosis rendah dapat memperbaiki aliran ginjal.'},lactation:{status:'caution',hale:'L2',note:'Waktu paruh sangat pendek. Aman digunakan dalam monitoring ICU.'},clinicalTip:'Dopamine dosis tinggi dapat menyebabkan vasokonstriksi uterus. Pada syok, Norepinephrine lebih disukai sebagai vasopresor utama.'},
+    {id:70,name:'Vasopressin',class:'Vasopresor Hormon',category:'Emergensi/ICU',pregnancy:{status:'caution',fda:'C',note:'Digunakan sebagai vasopresor lini kedua pada syok vasodilatori refrakter. Isomer oksitosin — dapat menstimulasi kontraksi uterus pada dosis tinggi.'},lactation:{status:'caution',hale:'L3',note:'Waktu paruh sangat pendek. Data laktasi terbatas namun tidak bermakna klinis pada penggunaan sesaat.'},clinicalTip:'Hati-hati dosis tinggi: dapat memicu vasokonstriksi koroner, iskemia usus. Gunakan dosis tetap rendah (0.03-0.04 U/mnt).'},
+    {id:52,name:'Magnesium Sulfat (MgSO4)',class:'Antikonvulsan / Tokolisis / Neuroprotektan',category:'Emergensi/ICU',pregnancy:{status:'safe',fda:'A',note:'STANDAR WAJIB untuk pencegahan dan terapi kejang eklampsia. Neuroprotektan janin pada persalinan prematur <34 minggu (ESC/ACOG).'},lactation:{status:'safe',hale:'L1',note:'Sangat aman (L1 — paling aman). Konsentrasi ASI minimal setelah beberapa jam, tidak bermakna klinis.'},clinicalTip:'Target Mg serum 4-7 mEq/L untuk antikonvulsan. Antidotum: Calcium Gluconate 1g IV perlahan. Pantau: refleks patela, urine output >25mL/jam, RR >12x/mnt.'},
+    {id:8+'_atropine',name:'Atropine',class:'Antikolinergik',category:'Emergensi/ICU',pregnancy:{status:'safe',fda:'C',note:'Aman untuk bradikardia simtomatik maternal atau dalam premedikasi anestesi. Menembus plasenta — bisa menyebabkan takikardia janin sementara.'},lactation:{status:'caution',hale:'L3',note:'Menekan produksi ASI (efek antikolinergik). Gunakan sesekali saja, tidak untuk terapi kronik.'},clinicalTip:'Takikardia janin transien pasca-atropine maternal bukan indikasi fetal distress — biasanya hilang sendiri dalam 30-60 menit.'},
+    {id:8,name:'Adenosine',class:'Antiaritmia Purin',category:'Emergensi/ICU',pregnancy:{status:'safe',fda:'C',note:'Sangat aman — obat pilihan terminasi akut SVT maternal di IGD. Waktu paruh sangat singkat (<10 detik).'},lactation:{status:'safe',hale:'L2',note:'Sangat aman. Tidak ada kadar berarti dalam ASI karena metabolisme sangat cepat.'},clinicalTip:'Berikan bolus cepat IV dibilas NaCl 0.9% 20mL. Lakukan CTG/fetal monitoring. Mulai 6mg, ulang 12mg jika perlu.'},
+    {id:36,name:'Sodium Nitroprusside',class:'Vasodilator Direk',category:'Emergensi/ICU',pregnancy:{status:'danger',fda:'C',note:'HINDARI kecuali sangat terpaksa dan jangka sangat pendek. Metabolit sianida sangat toksik bagi janin dan fetal liver imatur.'},lactation:{status:'danger',hale:'L4',note:'Risiko toksisitas sianida/tiosianat pada bayi.'},clinicalTip:'Gunakan Nitroglycerin (IV) atau Nicardipine sebagai pilihan jauh lebih aman untuk krisis hipertensi/ALO di ICU.'},
+    {id:37,name:'Midazolam / Propofol',class:'Sedasi / Anestesi',category:'Emergensi/ICU',pregnancy:{status:'caution',fda:'D(Midazolam)/B(Propofol)',note:'Propofol aman untuk sedasi singkat (DC Shock/Kardioversi Elektrik). Midazolam hindari TM 1 & menjelang persalinan (neonatal withdrawal).'},lactation:{status:'safe',hale:'L2/L3',note:'Laktasi bisa dilanjutkan setelah ibu sadar penuh pasca-sedasi ringan. Pump and dump tidak diperlukan jika hanya dosis tunggal.'},clinicalTip:'Untuk DC Shock maternal, Propofol 1-2 mg/kg adalah pilihan sedasi/induksi paling direkomendasikan (onset cepat, onset sadar cepat).'},
+    // ======= REUMATOLOGI/INFLAMASI =======
+    {id:59,name:'Colchicine',class:'Anti-inflamasi (Perikarditis)',category:'Reumatologi/Inflamasi',pregnancy:{status:'danger',fda:'C',note:'HINDARI terutama Trimester 1. Potensi teratogenik (data konflik). ESC 2022 tidak merekomendasikan selama kehamilan untuk perikarditis.'},lactation:{status:'caution',hale:'L3',note:'Diekskresikan ke ASI dalam kadar rendah. Kontraindikasi relatif — pertimbangkan NSAID atau Steroid untuk perikarditis akut.'},clinicalTip:'Untuk perikarditis ibu hamil: NSAID (TM 1-2) atau Prednisone 0.25-0.5 mg/kg/hari jauh lebih aman daripada Colchicine.'},
+    {id:60,name:'NSAID (Ibuprofen/Naproxen)',class:'Anti-inflamasi Non-Steroid',category:'Reumatologi/Inflamasi',pregnancy:{status:'caution',fda:'B/D',note:'AMAN di TM 1 & 2 untuk perikarditis/MSK. KONTRAINDIKASI KERAS di TM 3 (penutupan prematur duktus arteriosus, oligohidramnion, gagal ginjal janin).'},lactation:{status:'safe',hale:'L1',note:'Ibuprofen adalah NSAID pilihan terbaik saat laktasi (L1 — paling aman). Naproxen L3 (waktu paruh lebih panjang).'},clinicalTip:'Selalu cek usia gestasi sebelum resepkan NSAID. Hentikan MUTLAK setelah 28-32 minggu usia gestasi (banyak pusat menghentikan di 20 minggu).'},
+    {id:61,name:'Prednisone / Methylprednisolone',class:'Kortikosteroid Sistemik',category:'Reumatologi/Inflamasi',pregnancy:{status:'caution',fda:'C',note:'Digunakan untuk autoimun, miokarditis, perikarditis berat, atau maturasi paru janin. Dosis rendah (<10 mg prednisone ekuivalen) umumnya aman.'},lactation:{status:'safe',hale:'L2',note:'Aman untuk menyusui. Tunggu 4 jam setelah dosis jika menggunakan dosis tinggi (>20mg) untuk mengurangi eksposur bayi.'},clinicalTip:'Dexamethasone/Betamethasone khusus untuk maturasi paru janin (2 dosis IM). Hindari kortikosteroid kronik dosis tinggi.'},
+    {id:62,name:'Hydroxychloroquine',class:'Antimalaria / Imunomodulator',category:'Reumatologi/Inflamasi',pregnancy:{status:'safe',fda:'C',note:'AMAN dan bahkan DIREKOMENDASIKAN untuk pasien SLE atau APAS yang hamil. Menurunkan risiko flare dan blok jantung kongenital pada neonatal Lupus.'},lactation:{status:'safe',hale:'L2',note:'Aman saat menyusui. Konsentrasi ASI rendah dan stabil. Manfaat pada bayi SLE > risiko.'},clinicalTip:'JANGAN hentikan Hydroxychloroquine saat kehamilan pada pasien SLE — risiko flare sangat tinggi jika dihentikan.'},
+    {id:72,name:'Paracetamol / Asetaminofen',class:'Analgetik / Antipiretik',category:'Reumatologi/Inflamasi',pregnancy:{status:'safe',fda:'B',note:'Analgetik/antipiretik PALING AMAN selama kehamilan. Data keamanan sangat luas. Gunakan dosis efektif terendah dan durasi terpendek.'},lactation:{status:'safe',hale:'L1',note:'SANGAT AMAN (L1 — paling aman). Pilihan analgetik pertama selama menyusui.'},clinicalTip:'Hindari penggunaan kronik dosis tinggi. Asosiasi lemah dengan ADHD (masih kontroversial, jangan menghentikan jika ada indikasi nyata).'}
+];
+
+// =================== MATERNAL MODULE FUNCTIONS ===================
+let maternalInitialized = false;
+function initMaternal() {
+    if (!maternalInitialized) { maternalInitialized = true; renderMaternalCards(); }
+}
+
+function getMaternalStatusConfig(status) {
+    switch(status) {
+        case 'safe': return {cls:'status-safe', icon:'fa-shield-check', label:'Aman / Direkomendasikan', borderColor:'#10b981', bg:'rgba(16,185,129,0.06)'};
+        case 'caution': return {cls:'status-caution', icon:'fa-triangle-exclamation', label:'Hati-hati / Indikasi Khusus', borderColor:'#f59e0b', bg:'rgba(245,158,11,0.06)'};
+        case 'danger': return {cls:'status-danger', icon:'fa-shield-exclamation', label:'Hindari / Kontraindikasi', borderColor:'#f43f5e', bg:'rgba(244,63,94,0.06)'};
+        default: return {cls:'status-info', icon:'fa-circle-info', label:'Data Terbatas', borderColor:'#3b82f6', bg:'rgba(59,130,246,0.06)'};
+    }
+}
+
+function renderMaternalCards() {
+    const q = document.getElementById('maternalSearch').value.toLowerCase();
+    const cat = document.getElementById('maternalCat').value;
+    const filtered = maternalDB.filter(d => {
+        const matchQ = d.name.toLowerCase().includes(q) || d.class.toLowerCase().includes(q) || d.category.toLowerCase().includes(q);
+        const matchC = cat === 'Semua' || d.category === cat;
+        return matchQ && matchC;
+    });
+    const grid = document.getElementById('maternalGrid');
+    const empty = document.getElementById('maternalEmpty');
+    if (!filtered.length) { grid.innerHTML=''; empty.style.display='flex'; return; }
+    empty.style.display = 'none';
+    grid.innerHTML = filtered.map((d,i) => {
+        const pCfg = getMaternalStatusConfig(d.pregnancy.status);
+        const lCfg = getMaternalStatusConfig(d.lactation.status);
+        return `<div class="drug-card-maternal card-anim" style="animation-delay:${i*0.03}s" onclick="openMaternalModal(${d.id})">
+            <div class="badge ${pCfg.cls === 'status-danger' ? 'status-danger' : pCfg.cls}" style="font-size:9px;margin-bottom:6px">${d.category}</div>
+            <div style="font-size:14px;font-weight:800;color:white;line-height:1.3;margin-bottom:3px">${d.name}</div>
+            <div style="font-size:10px;color:var(--text-secondary);margin-bottom:10px;line-height:1.3">${d.class}</div>
+            <div style="display:flex;flex-direction:column;gap:5px">
+                <div style="display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;border:1px solid;background:${pCfg.bg}" class="${pCfg.cls}">
+                    <i class="fas fa-baby" style="width:12px;font-size:11px;opacity:0.7"></i>
+                    <div><div style="font-size:8px;font-weight:800;text-transform:uppercase;opacity:0.7">Kehamilan</div><div style="font-size:10px;font-weight:700;line-height:1.2">${pCfg.label}</div></div>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;border:1px solid;background:${lCfg.bg}" class="${lCfg.cls}">
+                    <i class="fas fa-heart" style="width:12px;font-size:11px;opacity:0.7"></i>
+                    <div><div style="font-size:8px;font-weight:800;text-transform:uppercase;opacity:0.7">Laktasi</div><div style="font-size:10px;font-weight:700;line-height:1.2">${lCfg.label}</div></div>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function openMaternalModal(id) {
+    const d = maternalDB.find(x => x.id === id);
+    if (!d) return;
+    const pCfg = getMaternalStatusConfig(d.pregnancy.status);
+    const lCfg = getMaternalStatusConfig(d.lactation.status);
+    document.getElementById('mmCat').textContent = d.category;
+    document.getElementById('mmName').textContent = d.name;
+    document.getElementById('mmClass').textContent = d.class;
+    const pb = document.getElementById('mmPregnancyBox');
+    pb.style.background = pCfg.bg; pb.style.borderLeftColor = pCfg.borderColor;
+    document.getElementById('mmPregIcon').innerHTML = `<i class="fas ${pCfg.icon}" style="color:${pCfg.borderColor}"></i>`;
+    document.getElementById('mmPregLabel').textContent = pCfg.label;
+    document.getElementById('mmPregFda').textContent = `FDA: ${d.pregnancy.fda}`;
+    document.getElementById('mmPregNote').textContent = d.pregnancy.note;
+    const lb = document.getElementById('mmLactationBox');
+    lb.style.background = lCfg.bg; lb.style.borderLeftColor = lCfg.borderColor;
+    document.getElementById('mmLactIcon').innerHTML = `<i class="fas ${lCfg.icon}" style="color:${lCfg.borderColor}"></i>`;
+    document.getElementById('mmLactLabel').textContent = lCfg.label;
+    document.getElementById('mmLactHale').textContent = `Hale: ${d.lactation.hale}`;
+    document.getElementById('mmLactNote').textContent = d.lactation.note;
+    document.getElementById('mmTip').textContent = `"${d.clinicalTip}"`;
+    document.getElementById('maternalModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeMaternalModal() {
+    document.getElementById('maternalModal').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+// =================== PEDIATRIC DATABASE (SUBSET) ===================
+const pedDrugs = [
+    // RESUSITASI & EMERGENSI
+    {id:'epi_bolus',name:'Epinefrin 1:10.000',category:'Resusitasi & Emergensi',icon:'fa-bolt',route:'IV/IO',doseGuide:'0.01 mg/kg. Maks: 1 mg.',calc:(w)=>{const d=Math.min(w*0.01,1),v=Math.min(w*0.1,10);return `<b>${d.toFixed(2)} mg</b> (${v.toFixed(1)} mL)`;},notes:'Ulangi tiap 3-5 menit selama RJP. Sediaan: 1 mg/10 mL.',prep:'Ambil 1 mL sediaan 1:1.000 + 9 mL NaCl 0.9% = 10 mL (0.1 mg/mL)'},
+    {id:'atropine',name:'Atropin',category:'Resusitasi & Emergensi',icon:'fa-bolt',route:'IV/IO',doseGuide:'0.02 mg/kg. Min: 0.1 mg, Maks: 0.5 mg.',calc:(w)=>{let d=Math.max(Math.min(w*0.02,0.5),0.1);return `<b>${d.toFixed(2)} mg</b>`;},notes:'Bradikardia vagal. Bukan untuk bradikardia hipoksia.',prep:'Sediaan 0.25 mg/mL. Diberikan langsung.'},
+    {id:'adenosine',name:'Adenosin',category:'Resusitasi & Emergensi',icon:'fa-bolt',route:'IV/IO',doseGuide:'D1: 0.1 mg/kg (Maks 6mg). D2-3: 0.2 mg/kg (Maks 12mg).',calc:(w)=>{const d1=Math.min(w*0.1,6),d2=Math.min(w*0.2,12);return `<b>Dosis 1: ${d1.toFixed(1)} mg</b><br><span style="font-size:12px;color:var(--text-secondary)">Dosis 2-3: ${d2.toFixed(1)} mg</span>`;},notes:'Rapid push diikuti flush NaCl 5-10cc.',prep:'Sediaan 6 mg/2 mL. Tidak perlu diencerkan.'},
+    // INOTROPIK
+    {id:'dopamine',name:'Dopamin (Infus)',category:'Inotropik & Drip Vasoaktif',icon:'fa-droplet',route:'IV/IO Kontinu',doseGuide:'2-20 mcg/kg/menit',calc:(w)=>{const mn=(w*2*60)/4000,mx=(w*20*60)/4000;return `<b>${(w*2).toFixed(1)}-${(w*20).toFixed(1)} mcg/mnt</b><br><span style="font-size:12px;color:var(--text-secondary)">Pump: ${mn.toFixed(1)}-${mx.toFixed(1)} cc/jam</span>`;},notes:'Reseptor dopaminergik (rendah), beta-1 (sedang), alpha-1 (tinggi).',prep:'1 ampul 200mg ke spuit 50cc, genapkan NaCl 0.9% 50cc (4000 mcg/mL).'},
+    {id:'dobutamine',name:'Dobutamin (Infus)',category:'Inotropik & Drip Vasoaktif',icon:'fa-droplet',route:'IV/IO Kontinu',doseGuide:'2-20 mcg/kg/menit',calc:(w)=>{const mn=(w*2*60)/5000,mx=(w*20*60)/5000;return `<b>${(w*2).toFixed(1)}-${(w*20).toFixed(1)} mcg/mnt</b><br><span style="font-size:12px;color:var(--text-secondary)">Pump: ${mn.toFixed(1)}-${mx.toFixed(1)} cc/jam</span>`;},notes:'Inotropik murni. Awas hipotensi.',prep:'1 ampul 250mg ke spuit 50cc, genapkan NaCl 0.9% (5000 mcg/mL).'},
+    {id:'norepinephrine',name:'Norepinefrin (Vascon)',category:'Inotropik & Drip Vasoaktif',icon:'fa-droplet',route:'IV/IO Kontinu',doseGuide:'0.05-1 mcg/kg/menit',calc:(w)=>{const mn=(w*0.05*60)/80,mx=(w*1*60)/80;return `<b>${(w*0.05).toFixed(2)}-${(w*1).toFixed(2)} mcg/mnt</b><br><span style="font-size:12px;color:var(--text-secondary)">Pump: ${mn.toFixed(2)}-${mx.toFixed(1)} cc/jam</span>`;},notes:'Vasopresor pilihan utama syok vasodilatori.',prep:'1 ampul 4mg/4mL ke spuit 50cc, genapkan D5W (80 mcg/mL).'},
+    {id:'milrinone',name:'Milrinon (Infus)',category:'Inotropik & Drip Vasoaktif',icon:'fa-droplet',route:'IV/IO Kontinu',doseGuide:'Load: 50 mcg/kg. Maint: 0.25-0.75 mcg/kg/mnt',calc:(w)=>{const mn=(w*0.25*60)/200,mx=(w*0.75*60)/200;return `<b>Load: ${(w*50).toFixed(0)} mcg</b><br><span style="font-size:12px;color:var(--text-secondary)">Pump: ${mn.toFixed(1)}-${mx.toFixed(1)} cc/jam</span>`;},notes:'Inodilator (Inotropik+Vasodilator). Sering paska operasi jantung.',prep:'1 ampul 10mg/10cc ke spuit 50cc, tambah 40cc D5W (200 mcg/mL).'},
+    {id:'nicardipine',name:'Nicardipine',category:'Inotropik & Drip Vasoaktif',icon:'fa-droplet',route:'IV Drip',doseGuide:'0.5-5 mcg/kg/menit',calc:(w)=>{const mn=(w*0.5*60)/100,mx=(w*5*60)/100;return `<b>${(w*0.5).toFixed(1)}-${(w*5).toFixed(1)} mcg/mnt</b><br><span style="font-size:12px;color:var(--text-secondary)">Pump: ${mn.toFixed(1)}-${mx.toFixed(1)} cc/jam</span>`;},notes:'Pilihan untuk krisis hipertensi anak. Turunkan TD bertahap max 25% dalam 8 jam.',prep:'1 ampul 10mg/10mL dilarutkan 90mL NaCl 0.9% (100 mcg/mL).'},
+    // ANTI-ARITMIA
+    {id:'amiodarone_bolus',name:'Amiodaron (Bolus)',category:'Anti-Aritmia',icon:'fa-heart-crack',route:'IV/IO',doseGuide:'5 mg/kg bolus (Maks 300mg).',calc:(w)=>{const d=Math.min(w*5,300);return `<b>${d.toFixed(1)} mg</b>`;},notes:'Bisa diulang hingga total 15 mg/kg. Hati-hati hipotensi.',prep:'Encerkan 150mg/3mL dengan D5W. 3mL obat + 17mL D5W = 20mL (7.5 mg/mL).'},
+    {id:'lidocaine',name:'Lidokain 2%',category:'Anti-Aritmia',icon:'fa-heart-crack',route:'IV/IO',doseGuide:'Bolus: 1 mg/kg. Maint: 20-50 mcg/kg/mnt',calc:(w)=>{const b=w*1,mn=(w*20*60)/2000,mx=(w*50*60)/2000;return `<b>Bolus: ${b.toFixed(1)} mg</b><br><span style="font-size:12px;color:var(--text-secondary)">Pump: ${mn.toFixed(1)}-${mx.toFixed(1)} cc/jam</span>`;},notes:'Alternatif amiodaron untuk VF/pVT.',prep:'Bolus: dari sediaan 2% (20mg/mL) encerkan jadi 10mg/mL. Maint: 100mg dalam 50cc D5W.'},
+    {id:'esmolol',name:'Esmolol',category:'Anti-Aritmia',icon:'fa-heart-crack',route:'IV/IO',doseGuide:'Load: 500 mcg/kg (1 mnt). Maint: 50-200 mcg/kg/mnt',calc:(w)=>{const l=w*500/1000,mn=(w*50*60)/10000,mx=(w*200*60)/10000;return `<b>Load: ${l.toFixed(1)} mg</b><br><span style="font-size:12px;color:var(--text-secondary)">Pump: ${mn.toFixed(1)}-${mx.toFixed(1)} cc/jam</span>`;},notes:'Ultra-short acting beta blocker. Sangat baik untuk SVT refrakter.',prep:'Sediaan 100mg/10mL. Pump: 500mg dalam 50cc D5W (10mg/mL = 10.000 mcg/mL).'},
+    // DIURETIK & HF ORAL
+    {id:'furosemide',name:'Furosemid',category:'Diuretik & Gagal Jantung',icon:'fa-pills',route:'IV/PO',doseGuide:'1-2 mg/kg/dosis. Tiap 6-12 jam.',calc:(w)=>`<b>${(w*1).toFixed(1)}-${(w*2).toFixed(1)} mg / dosis</b>`,notes:'Maks 6 mg/kg/hari. Pantau hipokalemia.',prep:'Ampul: 20mg/2mL. IV pelan.'},
+    {id:'captopril',name:'Kaptopril (ACE-i)',category:'Diuretik & Gagal Jantung',icon:'fa-pills',route:'PO',doseGuide:'Bayi: 0.1-0.5 mg/kg/dosis. Anak: 0.3-0.5 mg/kg (Tiap 8 jam)',calc:(w)=>`<b>${(w*0.1).toFixed(2)}-${(w*0.5).toFixed(2)} mg / dosis</b>`,notes:'ACE Inhibitor. Test dose kecil dulu, awas hipotensi first-dose.',prep:'Tablet 12.5mg atau 25mg diramu. Berikan 1 jam sebelum makan.'},
+    {id:'carvedilol',name:'Carvedilol',category:'Diuretik & Gagal Jantung',icon:'fa-pills',route:'PO',doseGuide:'Inisiasi: 0.05 mg/kg/dosis (2x sehari).',calc:(w)=>`<b>${(w*0.05).toFixed(2)} mg / dosis</b>`,notes:'Beta-blocker pilihan HF anak (disfungsi sistolik). Start low, go slow.',prep:'Tablet 6.25mg atau 25mg diracik puyer ketat.'},
+    {id:'propranolol',name:'Propranolol',category:'Diuretik & Gagal Jantung',icon:'fa-pills',route:'PO',doseGuide:'Rumatan (TOF): 1-4 mg/kg/hari ÷ 3-4 dosis',calc:(w)=>{const mn=w*1,mx=w*4;return `<b>Total: ${mn.toFixed(1)}-${mx.toFixed(1)} mg/hari</b><br><span style="font-size:12px;color:var(--text-secondary)">Per Dosis (tiap 8j): ${(mn/3).toFixed(1)}-${(mx/3).toFixed(1)} mg</span>`;},notes:'Krusial untuk mencegah Cyanotic Spell pada pasien Tetralogy of Fallot (TOF).',prep:'Tablet 10mg atau 40mg diracik puyer.'},
+    {id:'digoxin_tdd',name:'Digoxin (TDD/Digitalisasi)',category:'Diuretik & Gagal Jantung',icon:'fa-pills',route:'PO/IV Lambat',doseGuide:'TDD: 20-40 mcg/kg. Berikan 50% awal, lalu 25%+25% tiap 6-8 jam.',calc:(w)=>{const mn=w*20,mx=w*40;return `<b>TDD: ${mn.toFixed(0)}-${mx.toFixed(0)} mcg</b><br><span style="font-size:12px;color:var(--text-secondary)">Dosis I (50%): ${(mn/2).toFixed(0)}-${(mx/2).toFixed(0)} mcg</span>`;},notes:'IV harus sangat lambat (>5-10 menit). Monitoring EKG kontinu.',prep:'IV: 250mcg/mL. Oral: Tablet 0.25mg atau Elixir 50mcg/mL.'},
+    {id:'spironolactone',name:'Spironolakton',category:'Diuretik & Gagal Jantung',icon:'fa-pills',route:'PO',doseGuide:'1-3 mg/kg/hari. Dibagi 1-2 dosis.',calc:(w)=>`<b>${(w*1).toFixed(1)}-${(w*3).toFixed(1)} mg / HARI</b>`,notes:'Diuretik hemat kalium. Bermanfaat untuk remodeling ventrikel.',prep:'Tablet 25mg atau 100mg diracik puyer.'},
+    // PJB
+    {id:'pge1',name:'Prostaglandin E1 (Alprostadil)',category:'Ductus Modulator (PJB)',icon:'fa-heart-pulse',route:'IV/Umbilikal',doseGuide:'Awal: 0.05-0.1 mcg/kg/mnt. Rumatan: 0.01-0.025 mcg/kg/mnt',calc:(w)=>{const mn=(w*0.05*60)/10,mx=(w*0.1*60)/10,rm=(w*0.01*60)/10;return `<b>Awal: ${mn.toFixed(2)}-${mx.toFixed(2)} cc/jam</b><br><span style="font-size:12px;color:var(--text-secondary)">Rumatan: ${rm.toFixed(2)} cc/jam</span>`;},notes:'Mempertahankan PDA (Ductus Dependent Lesion). WAJIB intubasi stand-by (risiko apnea).',prep:'Sediaan 500mcg/1mL + 49cc D5W/NaCl (10 mcg/mL).'},
+    {id:'indomethacin',name:'Indometasin (Tutup PDA)',category:'Ductus Modulator (PJB)',icon:'fa-circle-xmark',route:'IV Drip',doseGuide:'3 dosis interval 12-24j. <48j: 0.2→0.1→0.1 mg/kg. >7h: 0.2→0.25→0.25 mg/kg',calc:(w)=>`<b>Dosis 1: ${(w*0.2).toFixed(2)} mg</b><br><span style="font-size:12px;color:var(--text-secondary)">Dosis 2-3: 0.1-0.25 mg/kg</span>`,notes:'KI jika oliguria (urine <0.6cc/kg/j), bleeding aktif, atau NEC.',prep:'Infus lambat 20-30 menit untuk minimalisir efek iskemia renal.'},
+    // CAIRAN
+    {id:'fluid_bolus',name:'Bolus Cairan (RL/NaCl 0.9%)',category:'Cairan & Elektrolit',icon:'fa-droplets',route:'IV/IO',doseGuide:'Syok Kardio: 5-10cc/kg. Syok lain: 10-20cc/kg.',calc:(w)=>`<b>Kardio: ${(w*5).toFixed(0)}-${(w*10).toFixed(0)} mL</b><br><span style="font-size:12px;color:var(--text-secondary)">Non-Kardio: ${(w*20).toFixed(0)} mL</span>`,notes:'Auskultasi paru dan raba hepar sebelum/sesudah bolus.',prep:'Gunakan spuit besar atau pressure bag. Syok kardio: berikan pelan (10-20 mnt).'},
+    {id:'calcium_gluc',name:'Kalsium Glukonas 10%',category:'Cairan & Elektrolit',icon:'fa-flask',route:'IV Lambat',doseGuide:'1-2 mL/kg (100-200 mg/kg). Maks 20 mL.',calc:(w)=>{const v=Math.min(w*1,10),mx=Math.min(w*2,20);return `<b>${v.toFixed(1)}-${mx.toFixed(1)} mL</b>`;},notes:'Hipokalsemia simtomatik, hiperkalemia, hipermagnesia. Berikan IV lambat (>5-10 mnt) pantau EKG.',prep:'Sediaan 10% (100mg/mL). Bisa diencerkan 1:1 D5W/NaCl.'},
+    // ANTIKOAGULAN
+    {id:'enoxaparin',name:'Enoksaparin (LMWH)',category:'Antikoagulan',icon:'fa-syringe',route:'SC',doseGuide:'Terapi: 1.5 mg/kg/12 jam. Profilaksis: 0.5 mg/kg/12j.',calc:(w)=>`<b>Terapi: ${(w*1.5).toFixed(1)} mg / 12 jam</b><br><span style="font-size:12px;color:var(--text-secondary)">Profilaksis: ${(w*0.5).toFixed(1)} mg / 12 jam</span>`,notes:'Anti-Xa target 0.5-1 IU/mL (terapi), 0.2-0.4 IU/mL (profilaksis).',prep:'Sediaan 40mg/0.4mL atau 60mg/0.6mL.'},
+    // SEDASI & RSI
+    {id:'midazolam',name:'Midazolam (Sedasi/RSI)',category:'Sedasi & Intubasi (RSI)',icon:'fa-cloud',route:'IV/IO/IM',doseGuide:'Sedasi: 0.05-0.1 mg/kg. RSI: 0.1-0.3 mg/kg.',calc:(w)=>`<b>Sedasi: ${(w*0.05).toFixed(2)}-${(w*0.1).toFixed(2)} mg</b><br><span style="font-size:12px;color:var(--text-secondary)">RSI: ${(w*0.1).toFixed(2)}-${(w*0.3).toFixed(2)} mg</span>`,notes:'Titrasi perlahan. Awas depresi napas dan hipotensi. Sediakan Flumazenil.',prep:'Sediaan 5mg/mL. Encerkan ke 1mg/mL sebelum titrasi.'},
+    {id:'ketamine',name:'Ketamin (Sedasi/RSI)',category:'Sedasi & Intubasi (RSI)',icon:'fa-cloud',route:'IV/IM',doseGuide:'Sedasi IV: 1-2 mg/kg. RSI IV: 1-2 mg/kg. IM: 4-6 mg/kg.',calc:(w)=>`<b>IV: ${(w*1).toFixed(1)}-${(w*2).toFixed(1)} mg</b><br><span style="font-size:12px;color:var(--text-secondary)">IM: ${(w*4).toFixed(1)}-${(w*6).toFixed(1)} mg</span>`,notes:'Pilihan terbaik untuk RSI pada syok (mempertahankan tonus simpatis). Dapat memicu hipersalivasi.',prep:'Sediaan 500mg/10mL (50mg/mL). Encerkan ke 10mg/mL.'},
+    {id:'succinylcholine',name:'Suksinilkolin (Relaksan RSI)',category:'Sedasi & Intubasi (RSI)',icon:'fa-ban',route:'IV/IO',doseGuide:'IV: 1-2 mg/kg. Neonatus & Infant: 2 mg/kg.',calc:(w)=>`<b>1-2 mg/kg: ${(w*1).toFixed(1)}-${(w*2).toFixed(1)} mg</b>`,notes:'KONTRA jika riwayat miopati, hiperkalemia, atau luka bakar luas. Onset 45-60 detik.',prep:'Sediaan 200mg/10mL. Berikan rapid IV bolus.'},
+    // DEMAM REMATIK
+    {id:'aspirin_rf',name:'Aspirin (Demam Rematik)',category:'Demam Rematik & Kawasaki',icon:'fa-shield',route:'PO',doseGuide:'Artritis saja: 50-75 mg/kg/hari (÷4 dosis, maks 3g/hari)',calc:(w)=>`<b>${(w*50).toFixed(0)}-${(w*75).toFixed(0)} mg / HARI</b><br><span style="font-size:12px;color:var(--text-secondary)">Per dosis (tiap 6j): ${(w*12.5).toFixed(0)}-${(w*18.75).toFixed(0)} mg</span>`,notes:'Lanjutkan sampai CRP/LED normal (4-8 minggu).',prep:'Tablet 100mg atau 500mg diracik puyer.'},
+    {id:'ivig',name:'IVIG (Kawasaki Disease)',category:'Demam Rematik & Kawasaki',icon:'fa-vial',route:'IV Drip',doseGuide:'2 gram/kg (Dosis tunggal)',calc:(w)=>`<b>${(w*2).toFixed(1)} Gram</b>`,notes:'Standar Kawasaki Disease. Berikan idealnya dalam 10 hari pertama onset demam.',prep:'Sediaan 5% (50mg/mL). Mulai 0.5-1 mL/kg/jam, naikkan perlahan jika stabil.'},
+    // ANTIBIOTIK
+    {id:'amoxicillin_ie',name:'Amoksisilin (Profilaksis IE)',category:'Antibiotik & Anti-Infeksi',icon:'fa-shield-heart',route:'PO',doseGuide:'50 mg/kg (Dosis tunggal). Maks: 2 gram.',calc:(w)=>`<b>${Math.min(w*50,2000).toFixed(0)} mg</b>`,notes:'Berikan 30-60 menit sebelum prosedur gigi/respiratori.',prep:'Sirup 125mg/5mL atau 250mg/5mL.'},
+    {id:'sildenafil_pah',name:'Sildenafil (Hipertensi Pulmonal)',category:'Obat Khusus & Lainnya',icon:'fa-lungs',route:'PO',doseGuide:'0.5-2 mg/kg/dosis. Tiap 4-6 jam.',calc:(w)=>`<b>${(w*0.5).toFixed(1)}-${(w*2).toFixed(1)} mg / dosis</b>`,notes:'Target PAH krisis atau pasca-koreksi VSD/ASD. Awas hipotensi sistemik.',prep:'Tablet 20mg atau 50mg diracik puyer presisi.'},
+    {id:'paracetamol_ped',name:'Parasetamol (Antipiretik)',category:'Obat Khusus & Lainnya',icon:'fa-thermometer',route:'PO/IV',doseGuide:'10-15 mg/kg/dosis. Tiap 4-6 jam.',calc:(w)=>{const mn=Math.min(w*10,1000),mx=Math.min(w*15,1000);return `<b>${mn.toFixed(0)}-${mx.toFixed(0)} mg / dosis</b>`;},notes:'Maks 60 mg/kg/hari atau 4000mg/hari.',prep:'IV: 10mg/mL. PO: Sirup 120mg/5mL atau Drops 60mg/0.6mL.'}
+];
+
+const pedCategoryOrder = ['Resusitasi & Emergensi','Inotropik & Drip Vasoaktif','Anti-Aritmia','Diuretik & Gagal Jantung','Ductus Modulator (PJB)','Cairan & Elektrolit','Sedasi & Intubasi (RSI)','Antikoagulan','Demam Rematik & Kawasaki','Antibiotik & Anti-Infeksi','Obat Khusus & Lainnya'];
+const pedCategories = pedCategoryOrder.filter(c => pedDrugs.some(d => d.category === c));
+
+// =================== PEDIATRIC FUNCTIONS ===================
+let pedInitialized = false;
+function initPediatric() {
+    if (!pedInitialized) {
+        pedInitialized = true;
+        renderPedCatPills();
+    }
+}
+
+function setWeight(w) { document.getElementById('pedWeight').value = w; renderPediatric(); }
+function togglePedAgeEst() { const el = document.getElementById('pedAgeEst'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
+function calcPedAge() {
+    const age = parseFloat(document.getElementById('pedAge').value);
+    const unit = document.getElementById('pedAgeUnit').value;
+    if (!age || age <= 0) return;
+    let est = unit === 'months' ? (age/2)+4 : (age>=1&&age<=5?(2*age)+8:(3*age)+7);
+    document.getElementById('pedWeight').value = est.toFixed(1);
+    renderPediatric();
+    document.getElementById('pedAgeEst').style.display = 'none';
+}
+
+function renderPedCatPills() {
+    const container = document.getElementById('pedCatPills');
+    const pills = ['Semua', ...pedCategories];
+    container.innerHTML = pills.map(c => `<div class="cat-pill ${c===pedActiveCategory?'active-renal':''}" onclick="setPedCat('${c.replace(/'/g,"\\'")}');">${c}</div>`).join('');
+}
+// Make cat pills look right with orange when active
+document.querySelectorAll && document.querySelectorAll;
+
+function setPedCat(cat) {
+    pedActiveCategory = cat;
+    renderPedCatPills();
+    if (pedCurrentWeight > 0) renderPediatric();
+}
+
+function renderPediatric() {
+    const wVal = parseFloat(document.getElementById('pedWeight').value);
+    const q = document.getElementById('pedSearch').value.toLowerCase();
+    
+    if (!wVal || wVal <= 0) {
+        pedCurrentWeight = 0;
+        document.getElementById('pedEmpty').style.display = 'flex';
+        document.getElementById('pedResults').style.display = 'none';
+        document.getElementById('pedCopyFab').classList.add('hidden');
+        return;
+    }
+    pedCurrentWeight = wVal;
+    document.getElementById('pedEmpty').style.display = 'none';
+    document.getElementById('pedResults').style.display = 'block';
+    document.getElementById('pedCopyFab').classList.remove('hidden');
+
+    // Render Equipment
+    renderPedEquipment(wVal);
+    
+    // Filter drugs
+    const filtered = pedDrugs.filter(d => {
+        const mQ = d.name.toLowerCase().includes(q) || d.category.toLowerCase().includes(q);
+        const mC = pedActiveCategory === 'Semua' || d.category === pedActiveCategory;
+        return mQ && mC;
+    });
+
+    // Group by category
+    const groups = {};
+    filtered.forEach(d => { if (!groups[d.category]) groups[d.category]; (groups[d.category] = groups[d.category] || []).push(d); });
+    
+    let html = '';
+    const catsToShow = pedCategories.filter(c => groups[c]?.length > 0);
+    catsToShow.forEach(cat => {
+        html += `<div style="margin-bottom:20px">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-secondary);margin-bottom:8px;display:flex;align-items:center;gap:6px">
+                <span style="height:1px;flex:1;background:var(--border)"></span>${cat}<span style="height:1px;flex:1;background:var(--border)"></span>
+            </div>`;
+        groups[cat].forEach((d,i) => {
+            const dose = d.calc(wVal);
+            html += `<div class="drug-result-card card-anim" style="animation-delay:${i*0.05}s">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px">
+                    <div>
+                        <div style="font-size:14px;font-weight:800;color:white;margin-bottom:2px">${d.name}</div>
+                        <div style="font-size:10px;color:var(--text-secondary);font-weight:600">${d.route}</div>
+                    </div>
+                    <div style="text-align:right">
+                        <div class="dose-value" style="font-size:16px">${dose}</div>
+                    </div>
+                </div>
+                <div style="font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:3px">📝 ${d.doseGuide}</div>
+                <div style="font-size:11px;color:rgba(144,144,184,0.7);line-height:1.5;border-top:1px solid var(--border);padding-top:6px;margin-top:6px">
+                    <strong style="color:var(--text-secondary)">Catatan:</strong> ${d.notes}
+                </div>
+                <div style="font-size:11px;color:rgba(249,115,22,0.8);line-height:1.5;margin-top:4px">
+                    <strong style="color:#f97316">⚗️ Racikan:</strong> ${d.prep}
+                </div>
+            </div>`;
+        });
+        html += `</div>`;
+    });
+
+    if (!html) html = `<div class="empty-state"><div class="empty-icon" style="background:rgba(249,115,22,0.1)"><i class="fas fa-search" style="color:#f97316"></i></div><div style="font-weight:700">Tidak ada obat ditemukan</div></div>`;
+    document.getElementById('pedDrugContainer').innerHTML = html;
+}
+
+function renderPedEquipment(w) {
+    // ETT size
+    function getETT(w) {
+        if (w<1) return {ett:'2.5 mm',cuffed:'Microcuff',blade:'0 (Lurus)',lma:'1'};
+        if (w<3) return {ett:'3.0 mm',cuffed:'3.0 mm',blade:'0 (Lurus)',lma:'1'};
+        if (w<5) return {ett:'3.5 mm',cuffed:'3.0 mm',blade:'1 (Lurus)',lma:'1.5'};
+        if (w<10) return {ett:'4.0 mm',cuffed:'3.5 mm',blade:'1 (Lurus)',lma:'1.5'};
+        if (w<15) return {ett:'4.5 mm',cuffed:'4.0 mm',blade:'2 (Lurus)',lma:'2'};
+        if (w<20) return {ett:'5.0 mm',cuffed:'4.5 mm',blade:'2 (Lengkung)',lma:'2'};
+        if (w<30) return {ett:'5.5 mm',cuffed:'5.0 mm',blade:'2-3',lma:'2.5'};
+        return {ett:'6.0 mm',cuffed:'5.5 mm',blade:'3 (Lengkung)',lma:'3'};
+    }
+    // Holliday-Segar
+    const hs = w<=10 ? w*100 : w<=20 ? 1000+(w-10)*50 : 1500+(w-20)*20;
+    const defib = Math.min(w*2, 200);
+    const sync = Math.min(w*1, 100);
+    const eq = getETT(w);
+    
+    const items = [
+        {label:'ETT (Uncuffed)', value: eq.ett},
+        {label:'ETT (Cuffed)', value: eq.cuffed},
+        {label:'Blade / LMA', value: `${eq.blade} · LMA ${eq.lma}`},
+        {label:'Defib (Asinc)', value: `${defib.toFixed(0)} J`},
+        {label:'Cardioversi (Sinc)', value: `${sync.toFixed(0)} J`},
+        {label:'Cairan/hari (Holliday)', value: `${hs.toFixed(0)} mL (${(hs/24).toFixed(1)}/jam)`},
+    ];
+    document.getElementById('pedEquipment').innerHTML = items.map(item => `
+        <div class="equipment-chip">
+            <div class="eq-label">${item.label}</div>
+            <div class="eq-value">${item.value}</div>
+        </div>`).join('');
+}
+
+function pedCopyResults() {
+    const w = pedCurrentWeight;
+    if (!w) return;
+    let text = `🏥 CARDIOLOGYVAULT PEDIACARD VAULT™\nBB Pasien: ${w} kg\n${'='.repeat(40)}\n\n`;
+    pedDrugs.filter(d => pedActiveCategory === 'Semua' || d.category === pedActiveCategory).forEach(d => {
+        const dose = d.calc(w).replace(/<[^>]*>/g,'').replace(/\n/g,' ');
+        text += `• ${d.name} (${d.route}): ${dose}\n`;
+    });
+    text += `\n${'='.repeat(40)}\nCardiologyVault Suite™ — dev. Bayushi Eka Putra, MD, FIHA`;
+    navigator.clipboard.writeText(text).then(() => showToast('Berhasil disalin ke clipboard!'));
+}
+
+// =================== RENAL DATABASE ===================
+const renalDrugs = [
+    {name:'Clopidogrel',category:'Antiplatelet',getDose:(c,hd,w)=>!c&&!hd?'Masukkan data.':'TIDAK PERLU PENYESUAIAN DOSIS. (75 mg/hari). Waspadai disfungsi platelet intrinsik pada uremia/ESRD.'},
+    {name:'Ticagrelor',category:'Antiplatelet',getDose:(c,hd,w)=>!c&&!hd?'Masukkan data.':'TIDAK PERLU PENYESUAIAN DOSIS. (90 mg BID). Hati-hati peningkatan risiko perdarahan pada CKD lanjut.'},
+    {name:'Prasugrel',category:'Antiplatelet',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';const warn=Number(w)>0&&Number(w)<60?' <strong style="color:#f43f5e">[BB<60kg]: Reduksi ke 5mg/hari!</strong>':'';return`TIDAK PERLU PENYESUAIAN DOSIS. Tidak direkomendasikan ESRD (risiko perdarahan fatal).${warn}`;}},
+    {name:'Aspirin (Asetosal)',category:'Antiplatelet',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Aman untuk dosis kardioprotektif (80-100 mg/hari). Hindari dosis analgetik tinggi (>325 mg) karena risiko tinggi perdarahan Uremik.';const n=Number(c);if(n<30)return'Aman untuk dosis kardioprotektif (80-100 mg/hari). Hindari dosis analgetik tinggi (risiko nefrotoksisitas aditif & perdarahan).';return'TIDAK PERLU PENYESUAIAN DOSIS untuk dosis kardioprotektif (80-100 mg/hari).';}},
+    {name:'Rivaroxaban (Xarelto)',category:'OAC (DOAC/VKA)',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'KONTRAINDIKASI pada Hemodialisa rutin.';const n=Number(c);if(n>50)return'Dosis Standar: 20mg sekali sehari.';if(n>=15)return'Dosis Reduksi: 15mg sekali sehari.';return'TIDAK DISARANKAN / KONTRAINDIKASI: CrCl <15.';}},
+    {name:'Apixaban (Eliquis)',category:'OAC (DOAC/VKA)',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'PENGGUNAAN KHUSUS (FDA/Off-label): 2.5mg BID. Observasi perdarahan ketat.';const n=Number(c);if(n<15)return'TIDAK DISARANKAN: Data sangat terbatas CrCl<15.';return n<30?'Severe CKD: Reduksi ke 2.5mg BID.':Number(renalState.scr)>=1.5&&Number(renalState.age)>=80&&Number(renalState.weight)<=60?'Dosis Reduksi (≥2 kriteria): 2.5mg BID.':'Dosis Standar: 5mg BID.';}},
+    {name:'Dabigatran (Pradaxa)',category:'OAC (DOAC/VKA)',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'KONTRAINDIKASI: Terdialisis. Sangat berbahaya.';const n=Number(c);if(n>50)return'Dosis Standar: 150mg BID.';if(n>=30)return'Dosis Reduksi: 110mg BID.';return'KONTRAINDIKASI: CrCl <30.';}},
+    {name:'Warfarin (VKA)',category:'OAC (DOAC/VKA)',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'TIDAK PERLU PENYESUAIAN (tidak terdialisis). Waspada labilitas INR & kalsifilaksis (calciphylaxis).';return Number(c)>=30?'Titrasi berdasarkan target INR (2.0-3.0).':'Butuh dosis pemeliharaan lebih rendah. Awasi INR sangat ketat. Risiko perdarahan meningkat.';}},
+    {name:'Ramipril',category:'Anti-HF / ACEi / ARB',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Inisiasi 1.25mg sekali sehari. Berikan SETELAH HD (sebagian terdialisis).';return Number(c)>=30?'Dosis Standar: 2.5mg, titrasi max 10mg/hari.':'Dosis Reduksi: Inisiasi 1.25mg/hari, max 5mg/hari. Monitor K+ & SCr.';}},
+    {name:'Lisinopril',category:'Anti-HF / ACEi / ARB',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Inisiasi 2.5mg/hari. Dialyzable 20-30%. Berikan setelah HD.';const n=Number(c);if(n>=30)return'Dosis Standar: 5-10mg/hari. Titrasi hingga max 40mg/hari.';if(n>=10)return'Dosis Reduksi: Inisiasi 2.5-5mg/hari.';return'Dosis Reduksi: 2.5mg/hari (CrCl<10).';}},
+    {name:'Captopril',category:'Anti-HF / ACEi / ARB',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Inisiasi 6.25mg - 12.5mg tiap 8-12 jam. Berikan setelah HD (terdialisis ~30-40%).';const n=Number(c);if(n>=50)return'Dosis Standar: 12.5mg - 50mg tiap 8-12 jam.';if(n>=15)return'Dosis Reduksi: Mulai 6.25mg - 12.5mg tiap 8-12 jam. Titrasi lambat.';return'Dosis Reduksi Ekstrim: Mulai 6.25mg tiap 12-24 jam. Monitor ketat K+ dan SCr.';}},
+    {name:'Candesartan',category:'Anti-HF / ACEi / ARB',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Dosis Inisiasi Rendah: 2-4 mg sekali sehari. Tidak terdialisis. Monitor hiperkalemia post-HD.';const n=Number(c);if(n>=30)return'Dosis Standar: 4-8 mg sekali sehari, titrasi hingga max 32 mg/hari.';return'Dosis Reduksi: Mulai 2 mg sekali sehari. Titrasi sangat perlahan.';}},
+    {name:'Telmisartan',category:'Anti-HF / ACEi / ARB',getDose:(c,hd,w)=>!c&&!hd?'Masukkan data.':'TIDAK PERLU PENYESUAIAN DOSIS. (40-80 mg sekali sehari). Eliminasi hampir sepenuhnya lewat bilier/hepatik. Pilihan ARB paling ideal untuk CKD/HD.'},
+    {name:'Valsartan',category:'Anti-HF / ACEi / ARB',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Inisiasi 40 mg sekali sehari. Tidak terdialisis. Pantau ketat kalium.';const n=Number(c);if(n>=30)return'Dosis Standar: 80 mg - 160 mg sekali sehari.';return'Dosis Reduksi: Mulai 40 mg sekali sehari, titrasi bertahap.';}} ,
+    {name:'Sacubitril/Valsartan (ARNI / Entresto)',category:'Anti-HF / ACEi / ARB',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Dosis Reduksi: Inisiasi 24/26 mg BID. Observasi ketat hipotensi post-HD (tidak terdialisis signifikan).';const n=Number(c);if(n>=30)return'Dosis Standar: Inisiasi 49/51 mg BID, titrasi hingga target 97/103 mg BID.';return'Dosis Reduksi: Inisiasi 24/26 mg BID, titrasi perlahan.';}},
+    {name:'Dapagliflozin (Forxiga)',category:'Anti-HF / ACEi / ARB',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'TIDAK EFEKTIF / KONTRAINDIKASI pada hemodialisa.';const n=Number(renalState.egfr||c);if(n>=25)return'Dosis Standar: 10 mg sekali sehari. Sangat bermanfaat menurunkan risiko progresi CKD dan rawat inap HF.';if(n>=20)return'Dosis Standar (Inisiasi): 10 mg sekali sehari. Diijinkan oleh guideline terbaru untuk CKD.';return'TIDAK DIREKOMENDASIKAN untuk memulai inisiasi baru jika eGFR <20 mL/min/1.73m² (efikasi glikemik hilang, data ginjal terbatas).';}},
+    {name:'Empagliflozin (Jardiance)',category:'Anti-HF / ACEi / ARB',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'TIDAK EFEKTIF / KONTRAINDIKASI pada hemodialisa.';const n=Number(renalState.egfr||c);if(n>=20)return'Dosis Standar: 10 mg sekali sehari. Menurunkan progresi CKD, kejadian kardiovaskular, dan rawat inap Gagal Jantung (EMPA-KIDNEY).';return'TIDAK DIREKOMENDASIKAN untuk inisiasi baru jika eGFR <20 mL/min/1.73m².';}},
+    {name:'Finerenone (Kerendia)',category:'Anti-HF / ACEi / ARB',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'KONTRAINDIKASI / Tidak disarankan pada dialisis rutin.';const n=Number(renalState.egfr||c);if(n>=60)return'Dosis Standar: 20 mg sekali sehari. Indikasi untuk menurunkan progresi CKD dan risiko KV pada DM tipe 2.';if(n>=25)return'Dosis Reduksi: Inisiasi 10 mg sekali sehari. Titrasi ke 20 mg/hari setelah 4 minggu bila Kalium ≤4.8 mEq/L.';return'TIDAK DIREKOMENDASIKAN untuk inisiasi jika eGFR <25 mL/min/1.73m².';}},
+    {name:'Spironolactone',category:'Anti-HF / ACEi / ARB',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'KONTRAINDIKASI: Risiko tinggi hiperkalemia fatal intradialisis.';const n=Number(c);if(n>50)return'Dosis Standar: 12.5-25mg/hari.';if(n>=30)return'Dosis Reduksi: 12.5mg/hari ATAU 25mg selang sehari. Awasi K+ ketat.';return'KONTRAINDIKASI jika CrCl/eGFR <30 (risiko hiperkalemia berat).';}},
+    {name:'Eplerenone (Inspra)',category:'Anti-HF / ACEi / ARB',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'KONTRAINDIKASI ABSOLUT pada dialisis.';const n=Number(c);if(n>=50)return'Dosis Standar: 25-50 mg sekali sehari.';if(n>=30)return'Dosis Reduksi: Mulai 25 mg selang sehari. Pantau kalium ketat.';return'KONTRAINDIKASI jika CrCl/eGFR <30.';}},
+    {name:'Bisoprolol',category:'Beta Blocker',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Dosis Reduksi: Mulai 2.5 mg sekali sehari, max 5 mg/hari. Dialyzable minimal.';return Number(c)>=20?'Dosis Standar: Titrasi hingga max 10mg/hari.':'Dosis Reduksi: Max 5mg/hari (CrCl<20).';}},
+    {name:'Carvedilol',category:'Beta Blocker',getDose:(c,hd,w)=>!c&&!hd?'Masukkan data.':'TIDAK PERLU PENYESUAIAN DOSIS. Metabolisme dominan hepatik. Beta-blocker pilihan utama untuk pasien CKD berat dan hemodialisa.'},
+    {name:'Metoprolol (Succinate)',category:'Beta Blocker',getDose:(c,hd,w)=>!c&&!hd?'Masukkan data.':'TIDAK PERLU PENYESUAIAN DOSIS. Eliminasi hepatik ekstensif. Sangat aman pada CKD/HD.'},
+    {name:'Atenolol (Tenormin)',category:'Beta Blocker',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Dosis Reduksi & Dialysis: 25-50 mg diberikan SETELAH sesi HD (highly dialyzable 50-75%). Atau 50 mg 3x seminggu.';const n=Number(c);if(n>=35)return'Dosis Standar: 50-100 mg sekali sehari.';if(n>=15)return'Dosis Reduksi: Max 50 mg/hari (atau 50 mg selang sehari).';return'Dosis Reduksi: Max 25 mg/hari (atau 50 mg tiap 48-72 jam).';}},
+    {name:'Nebivolol (Bystolic)',category:'Beta Blocker',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Dosis Reduksi: Inisiasi 2.5 mg sekali sehari. Monitor ketat. Tidak terbuang via dialisis.';const n=Number(c);if(n>=30)return'Dosis Standar: 5 mg sekali sehari, titrasi hingga max 40 mg/hari.';return'Dosis Reduksi: Inisiasi 2.5 mg sekali sehari. Titrasi perlahan.';}},
+    {name:'Amlodipine / Nifedipine',category:'CCB / Anti-HTN',getDose:(c,hd,w)=>!c&&!hd?'Masukkan data.':'TIDAK PERLU PENYESUAIAN DOSIS. Eliminasi utama lewat hepatik. CCB Dihidropiridin sangat aman dan menjadi pilihan utama hipertensi pada CKD/HD.'},
+    {name:'Diltiazem / Verapamil',category:'CCB / Anti-HTN',getDose:(c,hd,w)=>!c&&!hd?'Masukkan data.':'TIDAK PERLU PENYESUAIAN DOSIS. Metabolisme terutama di hati. Waspada efek konstipasi aditif (terutama Verapamil) dan bradikardia pada uremia.'},
+    {name:'Hydralazine',category:'CCB / Anti-HTN',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'TIDAK PERLU PENYESUAIAN. (10-50 mg tiap 8 jam). Tidak dialisis.';const n=Number(c);if(n>=30)return'Dosis Standar: 10 mg - 50 mg tiap 8 jam.';return'Dosis Reduksi: Mulai 10 mg tiap 8-12 jam. Titrasi berdasarkan respon klinis.';}},
+    {name:'Methyldopa',category:'CCB / Anti-HTN',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Dosis Reduksi: 250 mg tiap 12-24 jam. Berikan SETELAH HD karena obat bersifat dializable (~60%).';const n=Number(c);if(n>=30)return'Dosis Standar: 250 mg - 500 mg tiap 8-12 jam.';if(n>=15)return'Dosis Reduksi: Berikan tiap 12 jam.';return'Dosis Reduksi: Berikan tiap 12-24 jam.';}} ,
+    {name:'Clonidine',category:'CCB / Anti-HTN',getDose:(c,hd,w)=>!c&&!hd?'Masukkan data.':'TIDAK PERLU PENYESUAIAN DOSIS. (0.1 - 0.3 mg dua kali sehari). Tidak dibersihkan secara signifikan oleh dialisis.'},
+    {name:'Furosemide (Oral)',category:'Diuretik',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Sering tidak efektif jika pasien sudah anuria. Dosis sangat tinggi (80-240mg/hari) terkadang dicoba untuk pertahankan volume urin sisa.';const n=Number(c);if(n>=50)return'Dosis Standar: 20-40mg/hari.';if(n>=20)return'Dosis Lebih Tinggi: 40-80mg/hari. Ceiling dose naik hingga ~160mg/hari.';return'Dosis Sangat Tinggi: Ceiling dose naik ke ~160-240mg/hari. Pertimbangkan konversi ke IV jika edema refrakter.';}},
+    {name:'Hydrochlorothiazide (HCTZ)',category:'Diuretik',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'KONTRAINDIKASI / TIDAK EFEKTIF pada ESRD/HD.';return Number(c)>=30?'Dosis Standar: 12.5-25mg/hari.':'TIDAK EFEKTIF pada CrCl <30. Kehilangan efikasi diuretik secara signifikan. Ganti ke Loop Diuretic.';}},
+    {name:'Metolazone (Zaroxolyn)',category:'Diuretik',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Sangat kurang efektif pada hemodialisa. Hanya berguna jika ada residual renal function.';const n=Number(c);if(n>=30)return'Dosis Standar: 2.5 - 5 mg sekali sehari. Tetap efektif pada gangguan ginjal sedang.';return'Dosis CKD Berat: 5 - 10 mg sekali sehari. Sering dikombinasikan dengan Loop Diuretic untuk sequential nephron blockade. Monitor elektrolit ketat.';}},
+    {name:'Torsemide (Demadex)',category:'Diuretik',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Inefektif jika anuria. Metabolisme utama lewat hepatik, tidak perlu penyesuaian dosis matematis.';const n=Number(c);if(n>=30)return'Dosis Standar: 10 - 20 mg sekali sehari.';return'Dosis Tinggi: 50 - 100 mg sekali sehari, titrasi up to 200 mg jika respon kurang.';}},
+    {name:'Chlorthalidone',category:'Diuretik',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'TIDAK EFEKTIF / KONTRAINDIKASI pada HD.';const n=Number(c);if(n>=30)return'Dosis Standar: 12.5 - 25 mg sekali sehari.';return'Efikasi Terbukti (CLICK trial): 12.5 mg sekali sehari, titrasi hingga max 25 mg/hari. Bermanfaat untuk HTN pada eGFR 15-30. Monitor ketat hipokalemia.';}},
+    {name:'Atorvastatin',category:'Statin',getDose:(c,hd,w)=>!c&&!hd?'Masukkan data.':'TIDAK PERLU PENYESUAIAN DOSIS. (10-80 mg sekali sehari). Statin pilihan teraman untuk CKD lanjut dan pasien hemodialisa.'},
+    {name:'Rosuvastatin',category:'Statin',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Dosis Reduksi: Mulai 5mg sekali sehari, max 10mg/hari. Risiko toksisitas otot meningkat.';const n=Number(c);if(n>=30)return'Dosis Standar: 5 - 40 mg sekali sehari.';return'Dosis Reduksi: Mulai 5mg sekali sehari, max 10mg/hari (CrCl<30).';}},
+    {name:'Simvastatin',category:'Statin',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Dosis Reduksi: Max 10-20 mg sekali sehari. Risiko miopati/rhabdomyolysis tinggi.';const n=Number(c);if(n>=30)return'Dosis Standar: 10 - 40 mg sekali sehari.';return'Dosis Reduksi: Mulai 5 mg sekali sehari, max 10 mg sekali sehari (CrCl<30).';}},
+    {name:'Ezetimibe (Zetia)',category:'Statin',getDose:(c,hd,w)=>!c&&!hd?'Masukkan data.':'TIDAK PERLU PENYESUAIAN DOSIS. (10 mg sekali sehari). Aman digunakan tunggal atau dikombinasi dengan Simvastatin (studi SHARP) pada CKD/HD.'},
+    {name:'Amiodarone',category:'Anti-Aritmia',getDose:(c,hd,w)=>!c&&!hd?'Masukkan data.':hd?'TIDAK PERLU PENYESUAIAN. (200 mg/hari maint). Tidak dibuang via dialisis karena ikatan protein sangat tinggi.':'TIDAK PERLU PENYESUAIAN. Relatif aman digunakan pada CKD berat.'},
+    {name:'Digoxin',category:'Anti-Aritmia',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Dosis Reduksi Ekstrim: 0.125 mg diberikan 2-3x SEMINGGU setelah sesi HD. Tidak terdialisis, sangat rentan akumulasi & toksik!';const n=Number(c);if(n>50)return'Dosis Standar: 0.125 - 0.25 mg sekali sehari.';if(n>=10)return'Dosis Reduksi: Kurangi dosis 50% (cth: 0.125 mg selang sehari atau 0.0625 mg/hari).';return'Dosis Reduksi: Kurangi dosis 75% atau berikan tiap 48-72 jam (CrCl<10). Wajib pantau kadar serum digoxin.';}},
+    {name:'Ivabradine',category:'Anti-Aritmia',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'TIDAK DISARANKAN: Kurang data klinis keamanan pada hemodialisa.';return Number(c)>=15?'TIDAK PERLU PENYESUAIAN DOSIS. (5 - 7.5 mg BID). Eliminasi terutama hepatik.':'TIDAK DISARANKAN jika CrCl <15 karena keterbatasan data.';}},
+    {name:'Enoxaparin (LMWH)',category:'Parenteral/IV',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'KONTRAINDIKASI ABSOLUT pada HD rutin (risiko akumulasi fatal). Gunakan UFH.';const n=Number(c),wt=Number(w);if(n>=30){const d=wt>0?` (~<b>${(wt*1).toFixed(0)}mg</b>/12jam)`:'';return`Dosis Standar: Terapi 1mg/kg tiap 12 jam${d} | Profilaksis 40mg tiap 24 jam.`;}if(n>=15){const d=wt>0?` (~<b>${(wt*1).toFixed(0)}mg</b>/24jam)`:'';return`Dosis Reduksi: Terapi 1mg/kg tiap 24 jam${d} | Profilaksis 30mg tiap 24 jam. Monitor aktivitas anti-Xa.`;}return'KONTRAINDIKASI / Sangat tidak disarankan jika CrCl <15. Risiko akumulasi tinggi dan perdarahan mayor. Gunakan UFH.';}},
+    {name:'Heparin (UFH)',category:'Parenteral/IV',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';const wt=Number(w);const b=wt>0?` (Bolus estimasi: <b>${(wt*60).toFixed(0)} unit</b>)`:'';return`TIDAK PERLU PENYESUAIAN DOSIS. Antikoagulan pilihan utama pada CKD berat dan hemodialisa. Bolus VTE/ACS 60-80 U/kg${b}, rumatan infus 12-18 U/kg/jam. Monitor ketat aPTT.`;}},
+    {name:'Fondaparinux',category:'Parenteral/IV',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'KONTRAINDIKASI ABSOLUT pada hemodialisa (ekskresi murni via ginjal).';const n=Number(c);if(n>=50)return'Dosis Standar: 2.5 mg SC sekali sehari (atau 7.5 mg SC sekali sehari untuk terapi DVT/PE).';if(n>=30)return'Gunakan sangat hati-hati untuk profilaksis (2.5 mg SC). Kontraindikasi untuk dosis terapi (VTE/ACS).';return'KONTRAINDIKASI jika CrCl <30. Ganti ke UFH.';}},
+    {name:'Metformin',category:'Anti-Diabetik',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'KONTRAINDIKASI MUTLAK: Risiko asidosis laktat sangat tinggi. Ganti insulin/linagliptin.';const n=Number(c);if(n>=45)return'Dosis Standar: Max 2000 mg/hari.';if(n>=30)return'Dosis Reduksi: Max 1000 mg/hari. Jangan lakukan inisiasi terapi baru pada range eGFR ini.';return'KONTRAINDIKASI MUTLAK jika eGFR/CrCl <30.';}},
+    {name:'Linagliptin',category:'Anti-Diabetik',getDose:(c,hd,w)=>!c&&!hd?'Masukkan data.':'TIDAK PERLU PENYESUAIAN DOSIS. (5 mg sekali sehari). Sangat aman di semua derajat gangguan ginjal dan hemodialisa karena diekskresikan lewat empedu/feses.'},
+    {name:'Sitagliptin',category:'Anti-Diabetik',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Dosis Reduksi Ekstrim: 25 mg sekali sehari. Berikan setelah sesi HD.';const n=Number(c);if(n>=50)return'Dosis Standar: 100 mg sekali sehari.';if(n>=30)return'Dosis Reduksi: 50 mg sekali sehari.';return'Dosis Reduksi Ekstrim: 25 mg sekali sehari (CrCl<30).';}},
+    {name:'Glipizide (Glucotrol)',category:'Anti-Diabetik',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Dosis Inisiasi Rendah: Mulai 2.5 mg sekali sehari. Tidak ada metabolit aktif ginjal. Sulfonylurea pilihan di CKD/HD. Awasi risiko hipoglikemia.';const n=Number(c);if(n>=30)return'Dosis Standar: 5 - 10 mg sekali sehari.';return'Dosis Inisiasi Rendah: Mulai 2.5 mg sekali sehari. Pantau ketat glukosa darah.';}},
+    {name:'Glimepiride (Amaryl)',category:'Anti-Diabetik',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'KONTRAINDIKASI / Sangat tidak disarankan. Metabolit aktif ginjal menumpuk, picu hipoglikemia berkepanjangan.';const n=Number(c);if(n>=60)return'Dosis Standar: 1 - 4 mg sekali sehari.';if(n>=30)return'Gunakan dengan sangat hati-hati: Mulai 1 mg sekali sehari. Risiko hipoglikemia tinggi.';return'KONTRAINDIKASI / Sangat tidak disarankan jika CrCl <30. Ganti ke Glipizide or Insulin.';}},
+    {name:'Insulin (Glargine / Detemir / Regular)',category:'Anti-Diabetik',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Butuh Reduksi Dosis Signifikan: Kurangi dosis total sebanyak ~50%. Klirens insulin ginjal turun secara dramatis. Titrasi ketat berdasarkan EMR/monitoring gula darah.';const n=Number(c);if(n>=50)return'Dosis Standar. Titrasi berdasarkan profil glukosa.';if(n>=10)return'Reduksi Dosis Ringan-Sedang: Kurangi dosis awal sekitar 25%.';return'Reduksi Dosis Signifikan: Kurangi dosis awal sekitar 50% (CrCl<10).';}},
+    {name:'Allopurinol',category:'Metabolik',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Dosis Reduksi: Mulai 50-100mg/hari atau 300mg 3x seminggu. Berikan SETELAH HD karena metabolit aktif (oxypurinol) terdialisis.';const n=Number(c);if(n>=60)return'Dosis Standar: 100 mg - 300 mg sekali sehari.';if(n>=30)return'Dosis Reduksi: Max 200 mg/hari.';if(n>=15)return'Dosis Reduksi: Max 100 mg/hari.';return'Dosis Reduksi Ekstrim: Max 50-100 mg/hari atau selang sehari.';}},
+    {name:'Colchicine',category:'Metabolik',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'KONTRAINDIKASI ABSOLUT pada dialisis. Berisiko miopati dan neuromyopathy fatal.';const n=Number(c);if(n>=30)return'Dosis Standar (Akut: 1.2 mg dilanjutkan 0.6 mg dalam 1 jam | Profilaksis: 0.6 mg 1-2x sehari).';return'Dosis Reduksi (Akut): Max 0.6 mg dosis tunggal. JANGAN diulang dalam 2 minggu. KONTRAINDIKASI untuk profilaksis rutin.';}},
+    {name:'Fenofibrate',category:'Metabolik',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'KONTRAINDIKASI MUTLAK pada hemodialisa.';const n=Number(c);if(n>=60)return'Dosis Standar: 145 mg sekali sehari.';if(n>=30)return'Dosis Reduksi: Max 48 mg sekali sehari.';return'KONTRAINDIKASI MUTLAK jika CrCl <30.';}},
+    {name:'Erythropoietin (EPO / Epoetin Alfa)',category:'Metabolik',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Dosis Terapi Anemia CKD: 50-100 U/kg IV atau SC 3 kali seminggu. Sering diberikan IV pasca-HD. Target Hb 10.0-11.5 g/dL (hindari >11.5 g/dL karena risiko tromboemboli/stroke).';return'Dosis Terapi Anemia CKD: 50-100 U/kg SC 3 kali seminggu. Monitor Hb/Hct berkala, pastikan cadangan besi cukup.';}},
+    {name:'Iron Sucrose (Venofer)',category:'Metabolik',getDose:(c,hd,w)=>!c&&!hd?'Masukkan data.':hd?'Dosis Terapi: 100 mg IV diberikan perlahan saat sesi HD (total 1000 mg dalam 10 sesi). Sangat penting mengatasi anemia defisiensi besi fungsional pada HD.':'Dosis Terapi: 100-200 mg IV infus perlahan. Tidak perlu penyesuaian dosis ginjal. Pantau status besi (Serum Ferritin & TSAT).'},
+    {name:'Sevelamer Carbonate (Renvela)',category:'Metabolik',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Pengikat Fosfat Non-Kalsium: 800 - 1600 mg TID bersama makanan besar. Sesuaikan berdasarkan kadar fosfat serum.';const n=Number(c);if(n<30)return'Dosis Standar: 800 - 1600 mg tiga kali sehari diberikan BERSAMA makanan. Mencegah kalsifikasi vaskular pada CKD lanjut.';return'Gunakan hanya jika ada indikasi hiperfosfatemia (biasanya pada CKD lanjut).';}},
+    {name:'Calcium Carbonate',category:'Metabolik',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Pengikat Fosfat: 500 mg - 1000 mg TID bersama makanan. Batasi asupan kalsium elemental total <2000 mg/hari untuk mencegah kalsifikasi vaskular.';const n=Number(c);if(n<30)return'Dosis Standar: 500 mg - 1000 mg tiga kali sehari BERSAMA makanan sebagai pengikat fosfat.';return'Dosis Suplemen: 500 mg 1-2x sehari sesudah makan.';}},
+    {name:'Sodium Bicarbonate',category:'Metabolik',getDose:(c,hd,w)=>{if(!c&&!hd)return'Masukkan data.';if(hd)return'Biasanya asidosis dikoreksi lewat cairan dialisat. Suplemen oral jarang diperlukan kecuali asidosis berat interdialisis (awasi retensi natrium/cairan).';const n=Number(c);if(n<30)return'Terapi Asidosis Metabolik: 650 mg - 1300 mg 2-3x sehari. Target HCO3- serum 22-26 mEq/L. Awasi ketat overload cairan dan tensi.';return'Gunakan hanya jika terbukti asidosis metabolik kronis (HCO3 <22 mEq/L).';}},
+    {name:'Patiromer (Veltassa)',category:'Metabolik',getDose:(c,hd,w)=>!c&&!hd?'Masukkan data.':'Pengikat Kalium Oral: 8.4 g sekali sehari, larutkan dalam air. Dapat dititrasi hingga max 25.2 g/hari. Jeda pemberian obat oral lain minimal 3 jam sebelum/setelah Patiromer.'},
+    {name:'Sodium Zirconium Cyclosilicate (Lokelma)',category:'Metabolik',getDose:(c,hd,w)=>!c&&!hd?'Masukkan data.':'Pengikat Kalium Oral: Fase koreksi hiperkalemia 10 g TID (hingga 48 jam), dilanjutkan fase rumatan 5-10 g sekali sehari. Berikan jeda 2 jam dengan obat oral lain.'}
+];
+const renalCategories = ['All',...[...new Set(renalDrugs.map(d=>d.category))]];
+
+// =================== RENAL FUNCTIONS ===================
+let renalInitialized = false;
+function initRenal() {
+    if (!renalInitialized) {
+        renalInitialized = true;
+        renderRenalCatPills();
+        renderRenalDrugs();
+    }
+}
+
+function renalSetGender(g) {
+    renalState.gender = g;
+    document.getElementById('renalGenderM').style.cssText = g==='M'?'flex:1;background:rgba(244,63,94,0.2);color:#f43f5e;border:none':'flex:1;background:transparent;color:var(--text-secondary);border:none';
+    document.getElementById('renalGenderF').style.cssText = g==='F'?'flex:1;background:rgba(244,63,94,0.2);color:#f43f5e;border:none':'flex:1;background:transparent;color:var(--text-secondary);border:none';
+    renalRecalculate();
+}
+
+function renalToggleHD() {
+    renalState.isDialysis = !renalState.isDialysis;
+    const sw = document.getElementById('renalHDSwitch');
+    sw.classList.toggle('on', renalState.isDialysis);
+    document.getElementById('renalHDLabel').textContent = renalState.isDialysis ? 'Mode Dialisis Aktif ✓' : 'Rutin Hemodialisa (ESRD On-HD)';
+    ['renalAge','renalWeight','renalScr'].forEach(id => document.getElementById(id).disabled = renalState.isDialysis);
+    if (renalState.isDialysis) { renalState.crcl=null; renalState.egfr=null; renalRecalculate(); }
+    else renalRecalculate();
+    renderRenalDrugs();
+}
+
+function renalRecalculate() {
+    renalState.age = document.getElementById('renalAge').value;
+    renalState.weight = document.getElementById('renalWeight').value;
+    renalState.scr = document.getElementById('renalScr').value;
+    
+    if (renalState.age && renalState.weight && renalState.scr && Number(renalState.scr)>0) {
+        let v = ((140-Number(renalState.age))*Number(renalState.weight))/(72*Number(renalState.scr));
+        if (renalState.gender==='F') v*=0.85;
+        renalState.crcl = v.toFixed(1);
+    } else renalState.crcl = null;
+    
+    if (renalState.age && renalState.scr && Number(renalState.scr)>0) {
+        const k=renalState.gender==='F'?0.7:0.9, a=renalState.gender==='F'?-0.241:-0.302;
+        const s=Number(renalState.scr), mn=Math.min(s/k,1), mx=Math.max(s/k,1);
+        let gfr=142*Math.pow(mn,a)*Math.pow(mx,-1.200)*Math.pow(0.9938,Number(renalState.age));
+        if (renalState.gender==='F') gfr*=1.012;
+        renalState.egfr = gfr.toFixed(1);
+    } else renalState.egfr = null;
+    
+    // Update display
+    document.getElementById('renalCrClVal').textContent = renalState.isDialysis ? 'Dialisis' : (renalState.crcl || '--');
+    document.getElementById('renalEgfrVal').textContent = renalState.isDialysis ? 'ESRD' : (renalState.egfr || '--');
+    
+    // CKD Stage
+    const stageInfo = getRenalStageInfo();
+    document.getElementById('renalStageBadge').textContent = stageInfo.stage;
+    document.getElementById('renalStageBadge').style.background = stageInfo.badgeBg;
+    document.getElementById('renalStageBadge').style.color = stageInfo.color;
+    document.getElementById('renalStageBar').style.width = stageInfo.w;
+    document.getElementById('renalStageBar').style.background = stageInfo.color;
+    document.getElementById('renalStageDesc').textContent = stageInfo.desc;
+    document.getElementById('renalStageDesc').style.color = stageInfo.color;
+    
+    renderRenalDrugs();
+}
+
+function getRenalStageInfo() {
+    if (renalState.isDialysis) return {stage:'G5D',desc:'End-Stage / Dialysis',color:'#f43f5e',badgeBg:'rgba(244,63,94,0.2)',w:'100%'};
+    if (!renalState.egfr) return {stage:'-',desc:'Masukkan data pasien...',color:'var(--text-secondary)',badgeBg:'rgba(255,255,255,0.08)',w:'0%'};
+    const v=Number(renalState.egfr);
+    if (v>=90) return {stage:'G1',desc:'Normal / High',color:'#10b981',badgeBg:'rgba(16,185,129,0.2)',w:'100%'};
+    if (v>=60) return {stage:'G2',desc:'Mildly Decreased',color:'#84cc16',badgeBg:'rgba(132,204,22,0.2)',w:'80%'};
+    if (v>=45) return {stage:'G3a',desc:'Mild-Mod Decreased',color:'#eab308',badgeBg:'rgba(234,179,8,0.2)',w:'60%'};
+    if (v>=30) return {stage:'G3b',desc:'Mod-Sev Decreased',color:'#f59e0b',badgeBg:'rgba(245,158,11,0.2)',w:'45%'};
+    if (v>=15) return {stage:'G4',desc:'Severely Decreased',color:'#f97316',badgeBg:'rgba(249,115,22,0.2)',w:'25%'};
+    return {stage:'G5',desc:'Kidney Failure',color:'#f43f5e',badgeBg:'rgba(244,63,94,0.2)',w:'10%'};
+}
+
+function renderRenalCatPills() {
+    document.getElementById('renalCatPills').innerHTML = renalCategories.map(c => `<div class="cat-pill ${c===renalState.activeCategory?'active-renal':''}" onclick="renalSetCat('${c.replace(/'/g,"\\'")}');">${c==='All'?'Semua Kategori':c}</div>`).join('');
+}
+function renalSetCat(c) { renalState.activeCategory=c; renderRenalCatPills(); renderRenalDrugs(); }
+
+function renderRenalDrugs() {
+    const q = document.getElementById('renalSearch')?.value?.toLowerCase() || '';
+    const filtered = renalDrugs.filter(d => {
+        const mQ = d.name.toLowerCase().includes(q);
+        const mC = renalState.activeCategory==='All' || d.category===renalState.activeCategory;
+        return mQ && mC;
+    });
+    
+    if (!filtered.length) { document.getElementById('renalDrugList').innerHTML = `<div class="empty-state"><div class="empty-icon" style="background:rgba(245,158,11,0.1)"><i class="fas fa-search" style="color:#f59e0b"></i></div><div style="font-weight:700">Tidak ada obat ditemukan</div></div>`; return; }
+    
+    document.getElementById('renalDrugList').innerHTML = filtered.map(d => {
+        const doseHtml = d.getDose(renalState.crcl, renalState.isDialysis, renalState.weight);
+        const isKontra = doseHtml.toUpperCase().includes('KONTRAINDIKASI') || doseHtml.toUpperCase().includes('SANGAT TIDAK DISARANKAN');
+        const isReducted = doseHtml.toUpperCase().includes('REDUKSI') || doseHtml.toUpperCase().includes('STANDAR') && !isKontra;
+        const isInRegimen = renalState.regimen.includes(d.name);
+        const borderColor = isKontra?'#f43f5e':isReducted?'#f59e0b':'#10b981';
+        return `<div style="background:var(--bg-card);border:1px solid var(--border);border-left:4px solid ${borderColor};border-radius:14px;padding:14px 16px;margin-bottom:10px">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+                <div style="flex:1">
+                    <div style="font-size:13px;font-weight:800;color:white;margin-bottom:2px">${d.name}</div>
+                    <div style="font-size:10px;color:var(--text-secondary);font-weight:600;margin-bottom:8px">${d.category}</div>
+                    <div style="font-size:12px;color:var(--text-primary);line-height:1.6">${doseHtml}</div>
+                </div>
+                <button onclick="renalToggleRegimen('${d.name.replace(/'/g,"\\'")}');" class="btn btn-sm" style="flex-shrink:0;${isInRegimen?'background:rgba(139,92,246,0.2);color:#a78bfa;border:1px solid rgba(139,92,246,0.3)':'background:rgba(255,255,255,0.05);color:var(--text-secondary);border:1px solid var(--border)'}">
+                    <i class="fas ${isInRegimen?'fa-check':'fa-plus'}"></i> ${isInRegimen?'Ada':'+ Reg'}
+                </button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function renalToggleRegimen(name) {
+    const idx = renalState.regimen.indexOf(name);
+    if (idx>-1) { renalState.regimen.splice(idx,1); showToast('Dihapus dari Regimen','fa-trash','#f43f5e'); }
+    else { renalState.regimen.push(name); showToast('Ditambahkan ke Regimen'); }
+    renderRenalRegimen();
+    renderRenalDrugs();
+}
+
+function renderRenalRegimen() {
+    document.getElementById('renalRegimenCount').textContent = renalState.regimen.length;
+    if (!renalState.regimen.length) {
+        document.getElementById('renalRegimenList').innerHTML = `<div style="text-align:center;color:var(--text-secondary);font-size:12px;padding:16px">Klik <strong>+ Reg</strong> pada daftar obat</div>`;
+        return;
+    }
+    document.getElementById('renalRegimenList').innerHTML = renalState.regimen.map(name => {
+        const d = renalDrugs.find(x=>x.name===name);
+        const dose = d ? d.getDose(renalState.crcl,renalState.isDialysis,renalState.weight).replace(/<[^>]*>/g,'').substring(0,60)+'...' : '-';
+        return `<div class="regimen-chip">
+            <div style="flex:1;overflow:hidden">
+                <div style="font-size:12px;font-weight:700;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+                <div style="font-size:10px;color:var(--text-secondary)">${dose}</div>
+            </div>
+            <button onclick="renalToggleRegimen('${name.replace(/'/g,"\\'")}');" style="background:none;border:none;color:#f43f5e;cursor:pointer;font-size:12px"><i class="fas fa-trash-can"></i></button>
+        </div>`;
+    }).join('');
+}
+
+function renalCopyEMR() {
+    if (!renalState.regimen.length) { showToast('Tidak ada obat dalam regimen','fa-circle-exclamation','#f43f5e'); return; }
+    let text = `📋 RENAL DOSE OPTIMIZER — EMR REGIMEN\n${'='.repeat(45)}\n`;
+    if (renalState.isDialysis) text += `Mode: ESRD / Hemodialisa Rutin\n`;
+    else {
+        if (renalState.crcl) text += `CrCl: ${renalState.crcl} mL/min\n`;
+        if (renalState.egfr) text += `eGFR: ${renalState.egfr} mL/min/1.73m²\n`;
+    }
+    text += `\nREGIMEN OBAT:\n`;
+    renalState.regimen.forEach(name => {
+        const d = renalDrugs.find(x=>x.name===name);
+        const dose = d ? d.getDose(renalState.crcl,renalState.isDialysis,renalState.weight).replace(/<[^>]*>/g,'') : '-';
+        text += `• ${name}: ${dose}\n`;
+    });
+    text += `\n${'='.repeat(45)}\nCardiologyVault Suite™ — dev. Bayushi Eka Putra, MD, FIHA`;
+    navigator.clipboard.writeText(text).then(() => showToast('EMR Report berhasil disalin!'));
+}
+
+// =================== CARDIOSAFE DATABASE (SUBSET KEY DRUGS) ===================
+const csDrugDB = {
+    // NSAIDS
+    ibuprofen:{name:'Ibuprofen',class:'NSAID',classId:'nsaid',dose:'400mg tiap 6-8 jam PRN',icon:'fa-capsules',timing:'Sesudah Makan',timeVal:'Sesudah makan',reason:'Iritasi mukosa lambung.',monitor:'TD, SCr, nyeri lambung',getVerdict:(ctx)=>ctx.flags.includes('preg')?{status:'danger',text:'TERATOGENIK: KI absolut TM3.'}:ctx.flags.includes('hf')||ctx.eGFR<45?{status:'danger',text:'KONTRAINDIKASI: Retensi cairan perburuk HF & GFR.'}:ctx.flags.includes('ulcer')?{status:'danger',text:'KONTRA: Risiko perdarahan GI.'}:{status:'safe',text:'Aman dengan durasi tersingkat.'},eval:['eGFR>45 ml/min sebelum pakai','PPI jika riwayat dispepsia'],mechanism:'Hambat prostaglandin ginjal (vasodilator), micu retensi cairan.',substitutions:[{level:'Analgesik aman KV',text:'Paracetamol (max 3-4g/hari)'}]},
+    pct:{name:'Paracetamol',class:'Analgesik/Antipiretik',classId:'nsaid',dose:'500-1000mg tiap 6-8 jam',icon:'fa-tablets',timing:'Bebas',timeVal:'Kapan saja',reason:'Tidak mengiritasi lambung.',monitor:'Fungsi hati (jika >3g/hari)',getVerdict:(ctx)=>ctx.flags.includes('liver')?{status:'warning',text:'Batas max 2g/hari pada sirosis.'}:{status:'safe',text:'Analgesik teraman untuk pasien KV.'},eval:['Max 4000 mg/hari dewasa normal'],mechanism:'Inhibisi COX sentral murni.',substitutions:[]},
+    // ANTIHIPERTENSI
+    capto:{name:'Captopril (ACE-i)',class:'Antihipertensi/HF',classId:'htn',dose:'12.5-50mg tiap 8-12 jam',icon:'fa-heartbeat',timing:'Sebelum Makan',timeVal:'1 jam sebelum makan',reason:'Makanan menurunkan absorpsi 40%.',monitor:'SCr, K+',getVerdict:(ctx)=>ctx.flags.includes('preg')?{status:'danger',text:'TERATOGENIK ABSOLUT.'}:ctx.eGFR>0&&ctx.eGFR<30?{status:'warning',text:'Mulai dosis sangat rendah, pantau K+.'}:ctx.flags.includes('hf')?{status:'safe',text:'Pilar utama HFrEF.'}:{status:'safe',text:'Pilar utama HT & DM.'},eval:['Pantau batuk kering (Efek bradikinin)'],mechanism:'Hambat RAAS, vasodilator, proteksi ginjal.',substitutions:[{level:'Batuk intoleran',text:'ARB (Valsartan/Candesartan)'}]},
+    ramipril:{name:'Ramipril (ACE-i)',class:'Antihipertensi/HF',classId:'htn',dose:'2.5-10mg 1x sehari',icon:'fa-heartbeat',timing:'Bebas',timeVal:'Pagi hari',reason:'Compliance lebih baik.',monitor:'SCr, K+',getVerdict:(ctx)=>ctx.flags.includes('preg')?{status:'danger',text:'TERATOGENIK ABSOLUT.'}:{status:'safe',text:'Sangat baik untuk profilaksis KV (HOPE Trial).'},eval:['Bisa memicu batuk kering'],mechanism:'Hambat RAAS.',substitutions:[]},
+    valsartan:{name:'Valsartan (ARB)',class:'Antihipertensi/HF',classId:'htn',dose:'80-160mg 1x sehari',icon:'fa-heartbeat',timing:'Bebas',timeVal:'Pagi atau Malam',reason:'Absorpsi bebas makanan.',monitor:'SCr, K+',getVerdict:(ctx)=>ctx.flags.includes('preg')?{status:'danger',text:'TERATOGENIK ABSOLUT.'}:ctx.flags.includes('hf')?{status:'safe',text:'Strongly indicated HF.'}:{status:'safe',text:'Pengganti ACE-i jika batuk.'},eval:['Cek SCr & Kalium'],mechanism:'Blok selektif reseptor AT1.',substitutions:[]},
+    amlo:{name:'Amlodipine (CCB)',class:'Antihipertensi',classId:'htn',dose:'5-10mg 1x sehari',icon:'fa-heartbeat',timing:'Bebas',timeVal:'Pagi hari',reason:'Efektif 24 jam.',monitor:'Edema perifer',getVerdict:(ctx)=>ctx.flags.includes('hf')?{status:'warning',text:'Bukan terapi penyembuh HF, tapi aman.'}:{status:'safe',text:'Poten untuk hipertensi sistolik.'},eval:['Bengkak kaki bukan krn ginjal'],mechanism:'Blok kalsium perifer.',substitutions:[]},
+    bisoprolol:{name:'Bisoprolol (Beta-1)',class:'Beta-Blocker',classId:'cardio',dose:'1.25-10mg 1x sehari',icon:'fa-heart',timing:'Bebas',timeVal:'Pagi hari',reason:'Mencegah insomnia.',monitor:'Nadi (HR >60)',getVerdict:(ctx)=>ctx.inputs.sbp<90?{status:'danger',text:'Syok/Hipotensi berat.'}:ctx.flags.includes('asma')?{status:'danger',text:'KONTRAINDIKASI: Bronkospasme fatal (Asma/PPOK).'}:ctx.flags.includes('af')?{status:'safe',text:'Rate control AF.'}:{status:'safe',text:'Pilar utama HF & CAD.'},eval:['Titrasi lambat pada HF'],mechanism:'Blok Beta-1 (turunkan HR & beban).',substitutions:[]},
+    carvedilol:{name:'Carvedilol',class:'Beta-Blocker (Non-Sel)',classId:'cardio',dose:'3.125-25mg 2x sehari',icon:'fa-heart',timing:'Sesudah Makan',timeVal:'Sesudah makan',reason:'Kurangi hipotensi ortostatik.',monitor:'Tensi, Nadi',getVerdict:(ctx)=>ctx.flags.includes('asma')?{status:'danger',text:'KONTRA MUTLAK ASMA.'}:{status:'safe',text:'Best beta-blocker untuk HF disfungsi berat.'},eval:['Vasodilatasi via alfa-blokade'],mechanism:'Blok Beta1, Beta2, Alpha1.',substitutions:[]},
+    // DIURETIK
+    furosemide_cs:{name:'Furosemide',class:'Loop Diuretik',classId:'diuretik',dose:'20-40mg 1-2x sehari',icon:'fa-tint',timing:'Pagi Hari',timeVal:'Pagi (Max jam 2 siang)',reason:'Absorpsi baik.',monitor:'Urine, BB, K+',getVerdict:(ctx)=>ctx.flags.includes('dm')?{status:'warning',text:'Hipokalemia & memperburuk glikemik (DM).'}:{status:'safe',text:'Diuretik paling efektif HF.'},eval:['Awas hipokalemia'],mechanism:'Hambat Na-K-2Cl di Loop of Henle.',substitutions:[]},
+    spiro_cs:{name:'Spironolactone',class:'Diuretik Hemat K',classId:'diuretik',dose:'25-50mg 1x sehari',icon:'fa-tint',timing:'Sesudah Makan',timeVal:'Siang/Sore',reason:'Meningkatkan absorpsi.',monitor:'K+ (wajib), SCr',getVerdict:(ctx)=>ctx.flags.includes('preg')?{status:'danger',text:'KONTRA: Feminisasi janin laki-laki.'}:ctx.eGFR>0&&ctx.eGFR<30?{status:'danger',text:'KONTRA eGFR<30: Hiperkalemia fatal.'}:{status:'safe',text:'Pilar HF (Antagonis Aldosteron).'},eval:['Cek Kalium sebelum & selama terapi'],mechanism:'Blok reseptor aldosteron (K-sparing).',substitutions:[]},
+    hct_cs:{name:'Hidroklorotiazid (HCT)',class:'Diuretik Tiazid',classId:'diuretik',dose:'12.5-25mg 1x sehari',icon:'fa-tint',timing:'Pagi Hari',timeVal:'Pagi',reason:'Hindari nokturia.',monitor:'K+, Asam Urat, Gula',getVerdict:(ctx)=>ctx.flags.includes('gout')?{status:'danger',text:'KI: Memperburuk hiperurisemia/gout.'}:ctx.flags.includes('dm')?{status:'warning',text:'Memperburuk resistensi insulin.'}:ctx.eGFR>0&&ctx.eGFR<30?{status:'warning',text:'Kehilangan efikasi eGFR rendah.'}:{status:'safe',text:'Lini pertama HT.'},eval:['Risiko hipokalemia'],mechanism:'Hambat Na-Cl symporter tubulus distal.',substitutions:[]},
+    // ANTIPLATELET & ANTIKOAGULAN
+    clopi_cs:{name:'Clopidogrel',class:'Anti-Platelet',classId:'antiplatelet',dose:'75mg 1x sehari',icon:'fa-vial',timing:'Bebas',timeVal:'Kapan saja',reason:'Mudah diminum.',monitor:'Tanda perdarahan',getVerdict:()=>({status:'safe',text:'Esensial pasca-Stent (PCI).'}),eval:['Cek interaksi PPI (Omeprazole)'],mechanism:'Blok reseptor P2Y12 ireversibel.',substitutions:[]},
+    ticagrelor_cs:{name:'Ticagrelor',class:'Anti-Platelet Poten',classId:'antiplatelet',dose:'90mg 2x sehari',icon:'fa-vial',timing:'Bebas',timeVal:'Bebas',reason:'Reversibel P2Y12.',monitor:'Sesak napas, perdarahan',getVerdict:(ctx)=>ctx.flags.includes('stroke')?{status:'danger',text:'KONTRA: Perdarahan intrakranial.'}:{status:'safe',text:'Lebih poten dari Clopidogrel untuk ACS.'},eval:['Bisa memicu dispnea'],mechanism:'Blok P2Y12 reversibel.',substitutions:[]},
+    warfarin_cs:{name:'Warfarin',class:'Antikoagulan (VKA)',classId:'anticoag',dose:'Target INR-guided',icon:'fa-syringe',timing:'Malam Hari',timeVal:'Jam 17.00-20.00',reason:'Stabil absorbsi, mudah kontrol INR.',monitor:'INR 2x/minggu awal',getVerdict:(ctx)=>ctx.flags.includes('preg')?{status:'danger',text:'KONTRA TM1 & persiapan persalinan.'}:ctx.flags.includes('stroke')?{status:'safe',text:'Antikoagulan pilihan untuk stroke embolik AF.'}:{status:'safe',text:'Efektif jika TTR terkontrol.'},eval:['Target INR 2.0-3.0 (AF/VTE)','INR 2.5-3.5 (Katup Mekanik)'],mechanism:'Hambat faktor koagulasi vit-K dependen.',substitutions:[]},
+    rivaroxaban_cs:{name:'Rivaroxaban',class:'DOAC (Anti-Xa)',classId:'anticoag',dose:'20mg 1x sehari (bersama makan malam)',icon:'fa-syringe',timing:'Sesudah Makan Malam',timeVal:'Bersama makan besar',reason:'Meningkatkan bioavailabilitas ~39%.',monitor:'Perdarahan, SCr',getVerdict:(ctx)=>ctx.flags.includes('preg')?{status:'danger',text:'KONTRA: Bebas menembus plasenta.'}:ctx.eGFR>0&&ctx.eGFR<15?{status:'danger',text:'KI: CrCl/eGFR<15.'}:ctx.eGFR>0&&ctx.eGFR<30?{status:'warning',text:'Kurangi dosis 15mg/hari.'}:{status:'safe',text:'DOAC pilihan untuk NVAF & VTE.'},eval:['Harus bersama makanan besar!'],mechanism:'Hambat langsung Faktor Xa.',substitutions:[]},
+    apixaban_cs:{name:'Apixaban',class:'DOAC (Anti-Xa)',classId:'anticoag',dose:'5mg 2x sehari',icon:'fa-syringe',timing:'Bebas',timeVal:'Bebas',reason:'Tidak dipengaruhi makanan.',monitor:'Perdarahan, SCr',getVerdict:(ctx)=>ctx.flags.includes('preg')?{status:'danger',text:'KONTRA: Data keamanan janin kurang.'}:ctx.eGFR>0&&ctx.eGFR<25?{status:'warning',text:'Off-label: 2.5mg BID. Observasi ketat.'}:{status:'safe',text:'DOAC dengan data keamanan terluas.'},eval:['Kurangi ke 2.5mg BID jika ≥2 kriteria (usia≥80, BB≤60, SCr≥1.5)'],mechanism:'Hambat langsung Faktor Xa.',substitutions:[]},
+    enoxaparin_cs:{name:'Enoxaparin (LMWH)',class:'Antikoagulan (LMWH)',classId:'anticoag',dose:'1mg/kg SC tiap 12 jam',icon:'fa-syringe',timing:'Bebas',timeVal:'Tiap 12 jam',reason:'Subkutan, stabil.',monitor:'Anti-Xa, perdarahan',getVerdict:(ctx)=>ctx.flags.includes('preg')?{status:'safe',text:'PILIHAN UTAMA antikoagulan kehamilan.'}:ctx.eGFR>0&&ctx.eGFR<30?{status:'warning',text:'Kurangi ke 1mg/kg/24 jam.'}:ctx.eGFR>0&&ctx.eGFR<15?{status:'danger',text:'KI: Risiko akumulasi. Ganti UFH.'}:{status:'safe',text:'Standar terapi VTE/ACS.'},eval:['Monitor Anti-Xa jika CKD','BB>100kg: pantau kadar'],mechanism:'Inhibisi Faktor Xa & IIa.',substitutions:[]},
+    // LIPID
+    atorva:{name:'Atorvastatin',class:'Statin (HMG-CoA RI)',classId:'lipid',dose:'10-80mg 1x sehari',icon:'fa-pills',timing:'Malam Hari',timeVal:'Menjelang tidur',reason:'HMG-CoA aktif malam hari.',monitor:'CPK (jika nyeri otot), LFT',getVerdict:(ctx)=>ctx.flags.includes('liver')?{status:'danger',text:'KONTRA: Hepatotoksik pada sirosis aktif.'}:ctx.flags.includes('preg')?{status:'danger',text:'TERATOGENIK (Kategori X). Stop segera.'}:{status:'safe',text:'Bukti klinis terkuat menurunkan risiko KV.'},eval:['Awas miopati jika + amiodaron','Pantau CK jika nyeri otot berat'],mechanism:'Hambat HMG-CoA Reductase (sintesis kolesterol hepatik).',substitutions:[]},
+    rosuva:{name:'Rosuvastatin',class:'Statin',classId:'lipid',dose:'5-40mg 1x sehari',icon:'fa-pills',timing:'Bebas',timeVal:'Bebas (Pagi/Malam)',reason:'Waktu paruh panjang.',monitor:'CPK, LFT',getVerdict:(ctx)=>ctx.flags.includes('liver')?{status:'danger',text:'KONTRA: Hepatotoksik.'}:ctx.flags.includes('preg')?{status:'danger',text:'TERATOGENIK.'}:{status:'safe',text:'Sangat poten, turunkan LDL lebih kuat.'},eval:['Dosis rendah untuk pasien Asia'],mechanism:'Hambat HMG-CoA Reductase.',substitutions:[]},
+    // ANTIARITMIA
+    amiodarone_cs:{name:'Amiodarone',class:'Antiaritmia (Kelas III)',classId:'cardio',dose:'Load 200mg 3x/hari (1 mgg), lalu 200mg/hari',icon:'fa-heart-pulse',timing:'Sesudah Makan',timeVal:'Sesudah makan',reason:'Mengurangi iritasi lambung.',monitor:'TFT, LFT, foto toraks, EKG (QTc)',getVerdict:(ctx)=>ctx.flags.includes('preg')?{status:'danger',text:'HINDARI: Toksisitas yodium janin.'}:{status:'warning',text:'Sangat efektif tapi profil toksisitas luas.'},eval:['Cek TFT sebelum terapi','EKG berkala (QTc prolongation)'],mechanism:'Hambat kanal K+, Na+, Ca++ & Alpha/Beta blocker.',substitutions:[]},
+    digoksin_cs:{name:'Digoksin',class:'Glikosida Jantung',classId:'cardio',dose:function(ctx){return ctx.eGFR>0&&ctx.eGFR<30?'0.125mg tiap 2 hari':'0.125-0.25mg 1x sehari'},icon:'fa-heart-pulse',timing:'Sesudah Makan',timeVal:'Pagi hari',reason:'Pantau keluhan halo kuning.',monitor:'HR, Mual, Kadar K+',getVerdict:(ctx)=>ctx.flags.includes('af')?{status:'safe',text:'Rate control AF + HF.'}:{status:'warning',text:'Indeks terapeutik sangat sempit.'},eval:['Awas toksisitas jika hipokalemia','Dosis turun pada CKD'],mechanism:'Inhibisi Na+/K+ ATPase.',substitutions:[]},
+    // LAINNYA
+    sildenafil_cs:{name:'Sildenafil (Viagra)',class:'PDE5 Inhibitor',classId:'ed',dose:'50mg PRN',icon:'fa-mars',timing:'Bebas',timeVal:'1 jam sebelum aktivitas',reason:'Onset cepat.',monitor:'TD, Mata',getVerdict:()=>({status:'warning',text:'Menyebabkan hipotensi. KI ABSOLUT dengan Nitrat.'}),eval:['KONTRA absolut dengan nitrat (ISDN/GTN)'],mechanism:'Inhibisi Fosfodiesterase-5.',substitutions:[]},
+    isdn_cs:{name:'ISDN (Nitrat)',class:'Anti-Angina/Vasodilator',classId:'cardio',dose:'5mg SL (Akut) / 5-20mg PO',icon:'fa-wind',timing:'Sebelum Makan',timeVal:'Perut kosong',reason:'Percepat efek.',monitor:'TD',getVerdict:(ctx)=>ctx.inputs.sbp<100?{status:'danger',text:'KONTRA: Hipotensi membahayakan.'}:{status:'warning',text:'Waspada sakit kepala berdenyut.'},eval:['Beri jeda bebas nitrat 8-12 jam'],mechanism:'Donor Nitric Oxide (NO) vena.',substitutions:[]},
+    omeprazole_cs:{name:'Omeprazole (PPI)',class:'Pelindung Lambung',classId:'gastro',dose:'20mg 1x sehari',icon:'fa-shield-heart',timing:'Sebelum Makan',timeVal:'30 menit sebelum makan',reason:'Absorpsi optimal.',monitor:'Elektrolit (jika >1 tahun)',getVerdict:()=>({status:'safe',text:'Sangat penting sebagai gastroproteksi pada polifarmasi KV.'}),eval:['Interaksi Clopidogrel: gunakan Pantoprazole/Lansoprazole'],mechanism:'Hambat pompa proton (H+/K+ ATPase).',substitutions:[{level:'Jika dengan Clopidogrel',text:'Ganti ke Pantoprazole atau Lansoprazole'}]},
+    metformin_cs:{name:'Metformin',class:'Anti-Diabetik (Biguanid)',classId:'dm',dose:'500-1000mg 2-3x sehari',icon:'fa-pills',timing:'Sesudah Makan',timeVal:'Sesudah makan',reason:'Kurangi mual lambung.',monitor:'SCr, laktat (jika kontras)',getVerdict:(ctx)=>ctx.eGFR>0&&ctx.eGFR<30?{status:'danger',text:'KONTRA eGFR<30: Asidosis Laktat.'}:ctx.flags.includes('hf')&&ctx.inputs.sbp<90?{status:'danger',text:'KONTRA: Syok/Hipoperfusi.'}:ctx.eGFR>0&&ctx.eGFR<45?{status:'warning',text:'Kurangi dosis, max 1000mg/hari.'}:{status:'safe',text:'Lini pertama DM2, kardioprotektif.'},eval:['Stop 48 jam sebelum/sesudah kontras'],mechanism:'Hambat glukoneogenesis hepatik.',substitutions:[]},
+};
+
+// DDI Database
+const csDDIs = [
+    {drugs:['warfarin_cs','ibuprofen'],severity:'high',name:'Warfarin + NSAID',desc:'Risiko perdarahan GI masif. NSAID menghambat agregasi platelet & merusak mukosa lambung, sementara Warfarin memperpanjang waktu pembekuan.'},
+    {drugs:['warfarin_cs','atorva'],severity:'mod',name:'Warfarin + Statin',desc:'Beberapa statin (terutama Rosuvastatin, Fluvastatin) meningkatkan efek antikoagulan Warfarin via inhibisi CYP2C9. Monitor INR lebih ketat saat inisiasi.'},
+    {drugs:['bisoprolol','amiodarone_cs'],severity:'high',name:'Beta Blocker + Amiodarone',desc:'Risiko bradikardia berat dan blok AV. Kombinasi menghasilkan efek kronotropik dan dromotropik negatif yang sinergis. Monitor EKG dan HR ketat.'},
+    {drugs:['bisoprolol','diltiazem'],severity:'high',name:'Beta Blocker + Diltiazem/Verapamil',desc:'SANGAT BERBAHAYA: Kombinasi dua agen penekan nodus AV menghasilkan bradikardia berat, blok jantung, dan gagal jantung akut.'},
+    {drugs:['clopi_cs','omeprazole_cs'],severity:'mod',name:'Clopidogrel + Omeprazole',desc:'Omeprazole menghambat CYP2C19, mengurangi konversi Clopidogrel ke metabolit aktifnya. Gunakan Pantoprazole atau Lansoprazole sebagai alternatif PPI.'},
+    {drugs:['sildenafil_cs','isdn_cs'],severity:'high',name:'Sildenafil + Nitrat (FATAL)',desc:'KONTRAINDIKASI ABSOLUT. Kombinasi PDE5 inhibitor dengan nitrat menyebabkan hipotensi refrakter yang bisa fatal. Jangan pernah dikombinasikan!'},
+    {drugs:['spiro_cs','capto'],severity:'mod',name:'Spironolactone + ACE-i',desc:'Kombinasi hiperkalemia: Spironolactone menahan K+, ACE-i menurunkan ekskresi K+. Monitor K+ serum secara berkala.'},
+    {drugs:['metformin_cs','furosemide_cs'],severity:'low',name:'Metformin + Furosemide',desc:'Furosemide dapat meningkatkan kadar metformin plasma dengan bersaing pada sekresi tubular. Monitor fungsi ginjal dan tanda-tanda asidosis laktat.'},
+    {drugs:['ticagrelor_cs','amiodarone_cs'],severity:'mod',name:'Ticagrelor + Amiodarone',desc:'Amiodarone menghambat CYP3A4/P-gp, meningkatkan kadar Ticagrelor secara signifikan. Risiko perdarahan dan bradiaritmia meningkat.'},
+    {drugs:['rivaroxaban_cs','amiodarone_cs'],severity:'mod',name:'DOAC + Amiodarone',desc:'Amiodarone menghambat P-gp, meningkatkan kadar Rivaroxaban/Apixaban. Pantau tanda perdarahan lebih ketat.'},
+    {drugs:['hct_cs','amiodarone_cs'],severity:'mod',name:'Tiazid + Amiodarone (QTc)',desc:'Tiazid menyebabkan hipokalemia/hipomagnesemia → memperpanjang interval QTc → meningkatkan risiko Torsades de Pointes (TdP) jika dengan Amiodarone.'},
+    {drugs:['digoksin_cs','amiodarone_cs'],severity:'high',name:'Digoksin + Amiodarone (Toksisitas)',desc:'Amiodarone menghambat klirens Digoksin dan P-gp. Kadar Digoksin bisa meningkat 2x lipat → toksisitas (mual, bradikardia, aritmia). Kurangi dosis Digoksin 30-50%.'},
+    {drugs:['capto','hct_cs'],severity:'low',name:'ACE-i + Tiazid (Sinergi)',desc:'Kombinasi sinergis antihipertensi yang sangat umum. Efek samping: hipokalemia (dari tiazid) dikurangi sedikit oleh ACE-i. Monitor K+ dan SCr.'},
+    {drugs:['capto','spiro_cs'],severity:'mod',name:'ACE-i + Spironolactone (K+)',desc:'Keduanya meningkatkan retensi kalium. Risiko hiperkalemia fatal terutama pada CKD. Monitor K+ setiap 1-2 minggu saat inisiasi.'},
+];
+
+const csConditions = [
+    {id:'hf',label:'Gagal Jantung (HF)'},
+    {id:'vasc',label:'CAD / PAD'},
+    {id:'stroke',label:'Riwayat Stroke/TIA'},
+    {id:'af',label:'Fibrilasi Atrium'},
+    {id:'ht',label:'Hipertensi'},
+    {id:'dm',label:'Diabetes Melitus'},
+    {id:'liver',label:'Gangguan Hati/Sirosis'},
+    {id:'qt',label:'QT Interval Panjang'},
+    {id:'ulcer',label:'Tukak Lambung'},
+    {id:'preg',label:'Kehamilan/Menyusui'},
+    {id:'asma',label:'Asma / PPOK'},
+    {id:'gout',label:'Gout / Asam Urat'},
+];
+
+// =================== CARDIOSAFE FUNCTIONS ===================
+let csInitialized = false;
+function initCardioSafe() {
+    if (!csInitialized) {
+        csInitialized = true;
+        renderCsConditions();
+        renderCsDrugs();
+    }
+}
+
+function renderCsConditions() {
+    document.getElementById('csConditions').innerHTML = csConditions.map(c => `
+        <div class="condition-chip ${csState.flags.includes(c.id)?'active':''}" onclick="csToggleFlag('${c.id}');">
+            <div class="check">${csState.flags.includes(c.id)?'<i class="fas fa-check" style="font-size:8px"></i>':''}</div>
+            <span>${c.label}</span>
+        </div>`).join('');
+}
+function csToggleFlag(id) {
+    const idx = csState.flags.indexOf(id);
+    if (idx>-1) csState.flags.splice(idx,1); else csState.flags.push(id);
+    renderCsConditions();
+    csRecalculate();
+    // Pregnancy alert
+    document.getElementById('csAnalysisResult').style.display === 'none' || csState.trayIds.length > 0 ? csAnalyze() : null;
+}
+
+function csRecalculate() {
+    csState.inputs.age = Number(document.getElementById('csAge').value)||null;
+    csState.inputs.weight = Number(document.getElementById('csWeight').value)||null;
+    csState.inputs.scr = Number(document.getElementById('csScr').value)||null;
+    csState.inputs.sex = document.getElementById('csSex').value;
+    csState.inputs.sbp = Number(document.getElementById('csSbp').value)||null;
+    csState.inputs.hr = Number(document.getElementById('csHr').value)||null;
+    
+    // eGFR
+    if (csState.inputs.age && csState.inputs.scr) {
+        const k = csState.inputs.sex==='F'?0.7:0.9, a = csState.inputs.sex==='F'?-0.241:-0.302;
+        const s = csState.inputs.scr, mn = Math.min(s/k,1), mx = Math.max(s/k,1);
+        let gfr = 142*Math.pow(mn,a)*Math.pow(mx,-1.200)*Math.pow(0.9938,csState.inputs.age);
+        if (csState.inputs.sex==='F') gfr *= 1.012;
+        csState.eGFR = Math.round(gfr);
+        document.getElementById('csEgfr').textContent = csState.eGFR;
+    } else { csState.eGFR = 0; document.getElementById('csEgfr').innerHTML = '<span style="font-size:11px;color:var(--text-secondary)">Isi SCr</span>'; }
+    
+    // CHA2DS2-VASc
+    if (csState.flags.includes('af')) {
+        let s = 0;
+        if (csState.flags.includes('hf')) s++;
+        if (csState.flags.includes('ht')) s++;
+        if (csState.inputs.age >= 75) s+=2; else if (csState.inputs.age >= 65) s++;
+        if (csState.flags.includes('dm')) s++;
+        if (csState.flags.includes('stroke')) s+=2;
+        if (csState.flags.includes('vasc')) s++;
+        if (csState.inputs.sex === 'F') s++;
+        csState.chads = s;
+        document.getElementById('csChads').textContent = s;
+    } else { csState.chads = null; document.getElementById('csChads').innerHTML = '<span style="font-size:11px;color:var(--text-secondary)">Pilih AF</span>'; }
+    
+    // HAS-BLED
+    let bled = 0;
+    if (csState.flags.includes('ht') && csState.inputs.sbp > 160) bled++;
+    if (csState.eGFR > 0 && csState.eGFR < 30) bled++;
+    if (csState.flags.includes('liver')) bled++;
+    if (csState.flags.includes('stroke')) bled++;
+    if (csState.flags.includes('ulcer')) bled++;
+    if (csState.inputs.age >= 65) bled++;
+    csState.hasbled = bled;
+    document.getElementById('csHasbled').textContent = bled;
+    
+    // GRACE (simplified estimate)
+    if (csState.inputs.age && csState.inputs.hr && csState.inputs.sbp) {
+        let grace = 0;
+        if (csState.inputs.age >= 70) grace += 75; else if (csState.inputs.age >= 60) grace += 58; else if (csState.inputs.age >= 50) grace += 36;
+        if (csState.inputs.hr >= 100) grace += 46; else if (csState.inputs.hr >= 80) grace += 24;
+        if (csState.inputs.sbp < 100) grace += 58; else if (csState.inputs.sbp < 120) grace += 36;
+        if (csState.eGFR > 0 && csState.eGFR < 30) grace += 36;
+        if (csState.flags.includes('hf')) grace += 24;
+        if (csState.flags.includes('trop')) grace += 30;
+        document.getElementById('csGrace').textContent = grace;
+    } else document.getElementById('csGrace').innerHTML = '<span style="font-size:11px;color:var(--text-secondary)">Data</span>';
+}
+
+function renderCsDrugs() {
+    const q = document.getElementById('csDrugSearch').value.toLowerCase();
+    const filtered = Object.entries(csDrugDB).filter(([k,d]) => d.name.toLowerCase().includes(q) || d.class.toLowerCase().includes(q));
+    const classColors = {nsaid:'#f97316',htn:'#20d489',cardio:'#3b82f6',antiplatelet:'#f43f5e',anticoag:'#ef4444',dm:'#c026d3',gastro:'#10b981',lipid:'#8b5cf6',diuretik:'#06b6d4',neuro:'#7c3aed',ed:'#ec4899'};
+    document.getElementById('csDrugList').innerHTML = filtered.map(([key,d]) => {
+        const inTray = csState.trayIds.includes(key);
+        const col = classColors[d.classId] || '#94a3b8';
+        return `<div style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:10px;background:rgba(0,0,0,0.25);border:1px solid var(--border);transition:all 0.15s;cursor:pointer" onclick="csToggleTray('${key}')">
+            <div style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></div>
+            <div style="flex:1;overflow:hidden">
+                <div style="font-size:12px;font-weight:700;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.name}</div>
+                <div style="font-size:10px;color:var(--text-secondary)">${d.class}</div>
+            </div>
+            <div class="btn btn-sm" style="flex-shrink:0;${inTray?'background:rgba(245,158,11,0.2);color:#f59e0b;border:1px solid rgba(245,158,11,0.3)':'background:rgba(255,255,255,0.05);color:var(--text-secondary);border:1px solid var(--border)'}">
+                <i class="fas ${inTray?'fa-check':'fa-plus'}"></i>
+            </div>
+        </div>`;
+    }).join('') || `<div class="empty-state" style="padding:20px"><div style="font-size:12px;color:var(--text-secondary)">Tidak ada obat ditemukan</div></div>`;
+}
+
+function csToggleTray(key) {
+    const idx = csState.trayIds.indexOf(key);
+    if (idx>-1) { csState.trayIds.splice(idx,1); showToast('Dihapus dari nampan','fa-trash','#f43f5e'); }
+    else { csState.trayIds.push(key); showToast('Ditambahkan ke nampan'); }
+    renderCsTray();
+    renderCsDrugs();
+}
+function csClearTray() { csState.trayIds=[]; renderCsTray(); renderCsDrugs(); document.getElementById('csAnalysisResult').style.display='none'; }
+
+function renderCsTray() {
+    const count = csState.trayIds.length;
+    document.getElementById('csTrayCount').textContent = count;
+    document.getElementById('csClearTray').style.display = count > 0 ? '' : 'none';
+    const chips = document.getElementById('csTrayChips');
+    if (!count) { chips.innerHTML = '<div style="color:var(--text-secondary);font-size:12px;padding:10px 0;width:100%;text-align:center">Tambahkan obat dari database di atas</div>'; return; }
+    chips.innerHTML = csState.trayIds.map(k => `<div class="tray-chip">${csDrugDB[k]?.name||k}<span class="remove" onclick="csToggleTray('${k}')"><i class="fas fa-times-circle" style="font-size:11px"></i></span></div>`).join('');
+}
+
+function csShowTab(tab) {
+    ['summary','ddi','clinical','timing'].forEach(t => {
+        document.getElementById(`csTab${t.charAt(0).toUpperCase()+t.slice(1)}`).style.display = t===tab?'block':'none';
+        document.getElementById(`csTab${t.charAt(0).toUpperCase()+t.slice(1)}Btn`).classList.toggle('active', t===tab);
+    });
+}
+
+function csAnalyze() {
+    if (!csState.trayIds.length) { showToast('Tambahkan obat ke nampan dahulu','fa-circle-exclamation','#f43f5e'); return; }
+    
+    const ctx = {
+        flags: csState.flags,
+        age: csState.inputs.age || 0,
+        eGFR: csState.eGFR || 0,
+        sbp: csState.inputs.sbp || 0,
+        inputs: csState.inputs
+    };
+    
+    // Detect DDIs
+    const foundDDIs = csDDIs.filter(ddi => ddi.drugs.every(d => csState.trayIds.includes(d)));
+    document.getElementById('csDdiCount').textContent = foundDDIs.length;
+    
+    // Summary Tab
+    const summaryHtml = csState.trayIds.map(key => {
+        const d = csDrugDB[key]; if (!d) return '';
+        const dose = typeof d.dose === 'function' ? d.dose(ctx) : d.dose;
+        const verdict = d.getVerdict(ctx);
+        const statusColor = verdict.status==='danger'?'#f43f5e':verdict.status==='warning'?'#f59e0b':'#10b981';
+        const statusBg = verdict.status==='danger'?'rgba(244,63,94,0.1)':verdict.status==='warning'?'rgba(245,158,11,0.1)':'rgba(16,185,129,0.1)';
+        const statusIcon = verdict.status==='danger'?'fa-triangle-exclamation':verdict.status==='warning'?'fa-circle-exclamation':'fa-circle-check';
+        return `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px">
+            <div style="display:flex;align-items:flex-start;gap:10px">
+                <div style="background:${statusBg};border:1px solid ${statusColor}40;border-radius:10px;padding:8px;flex-shrink:0">
+                    <i class="fas ${statusIcon}" style="color:${statusColor}"></i>
+                </div>
+                <div style="flex:1">
+                    <div style="font-size:14px;font-weight:800;color:white;margin-bottom:2px">${d.name}</div>
+                    <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px">${d.class} · ${dose}</div>
+                    <div style="font-size:12px;color:${statusColor};font-weight:600">${verdict.text}</div>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+    document.getElementById('csTabSummary').innerHTML = summaryHtml || '<div class="empty-state">Tidak ada obat dipilih.</div>';
+    
+    // DDI Tab
+    const ddiHtml = foundDDIs.length ? foundDDIs.map(ddi => {
+        const sev = ddi.severity, col = sev==='high'?'#f43f5e':sev==='mod'?'#f59e0b':'#10b981';
+        const icon = sev==='high'?'fa-skull-crossbones':sev==='mod'?'fa-triangle-exclamation':'fa-info-circle';
+        return `<div class="ddi-card ddi-severity-${sev==='high'?'high':sev==='mod'?'mod':'low'}" style="margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                <i class="fas ${icon}" style="color:${col}"></i>
+                <div style="font-size:13px;font-weight:800;color:white">${ddi.name}</div>
+                <span class="badge" style="margin-left:auto;background:${col}22;color:${col};font-size:9px">${sev==='high'?'SEVERE':sev==='mod'?'MODERATE':'MINOR'}</span>
+            </div>
+            <div style="font-size:12px;color:var(--text-secondary);line-height:1.6">${ddi.desc}</div>
+        </div>`;
+    }).join('') : `<div class="empty-state"><div class="empty-icon" style="background:rgba(16,185,129,0.1)"><i class="fas fa-shield-check" style="color:#10b981"></i></div><div style="font-weight:700;color:#10b981">Tidak Ada Interaksi Terdeteksi</div><div style="font-size:12px;color:var(--text-secondary)">Kombinasi obat dalam nampan tampak aman dari basis data DDI kami.</div></div>`;
+    document.getElementById('csTabDdi').innerHTML = ddiHtml;
+    
+    // Clinical Tab
+    const clinicalHtml = csState.trayIds.map(key => {
+        const d = csDrugDB[key]; if (!d) return '';
+        return `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px">
+            <div style="font-size:14px;font-weight:800;color:white;margin-bottom:8px">${d.name}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+                <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:10px">
+                    <div style="font-size:9px;font-weight:800;color:var(--text-secondary);text-transform:uppercase;margin-bottom:3px">Dosis Lazim</div>
+                    <div style="font-size:12px;font-weight:700;color:var(--text-primary)">${typeof d.dose==='function'?d.dose(ctx):d.dose}</div>
+                </div>
+                <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:10px">
+                    <div style="font-size:9px;font-weight:800;color:var(--text-secondary);text-transform:uppercase;margin-bottom:3px">Monitoring</div>
+                    <div style="font-size:12px;font-weight:700;color:var(--text-primary)">${d.monitor}</div>
+                </div>
+            </div>
+            ${d.eval&&d.eval.length?`<div style="font-size:11px;color:rgba(59,130,246,0.9);line-height:1.6"><strong style="color:#3b82f6">📋 Catatan:</strong> ${d.eval.join(' · ')}</div>`:''}
+            <div style="font-size:11px;color:rgba(144,144,184,0.7);line-height:1.6;margin-top:6px"><strong style="color:var(--text-secondary)">⚙️ Mekanisme:</strong> ${d.mechanism}</div>
+            ${d.substitutions&&d.substitutions.length?`<div style="font-size:11px;color:rgba(16,185,129,0.8);margin-top:6px"><strong style="color:#10b981">🔄 Alternatif:</strong> ${d.substitutions.map(s=>`${s.level}: ${s.text}`).join(' | ')}</div>`:''}
+        </div>`;
+    }).join('');
+    document.getElementById('csTabClinical').innerHTML = clinicalHtml;
+    
+    // Timing Tab
+    const timingHtml = csState.trayIds.map(key => {
+        const d = csDrugDB[key]; if (!d) return '';
+        const timeColors = {'Sebelum Makan':'#f59e0b','Sesudah Makan':'#10b981','Malam Hari':'#8b5cf6','Pagi Hari':'#3b82f6','Bebas':'#94a3b8'};
+        const tKey = Object.keys(timeColors).find(k=>d.timing.includes(k))||'Bebas';
+        const tColor = timeColors[tKey];
+        return `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:46px;height:46px;border-radius:14px;background:${tColor}22;border:1px solid ${tColor}44;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                    <i class="fas fa-clock" style="color:${tColor}"></i>
+                </div>
+                <div style="flex:1">
+                    <div style="font-size:14px;font-weight:800;color:white">${d.name}</div>
+                    <div style="font-size:13px;font-weight:700;color:${tColor}">${d.timeVal}</div>
+                    <div style="font-size:11px;color:var(--text-secondary)">${d.reason}</div>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+    document.getElementById('csTabTiming').innerHTML = timingHtml;
+    
+    document.getElementById('csAnalysisResult').style.display = 'block';
+    csShowTab('summary');
+    showToast(`Analisis selesai! ${foundDDIs.length} interaksi ditemukan`, foundDDIs.length>0?'fa-triangle-exclamation':'fa-circle-check', foundDDIs.length>0?'#f43f5e':'#10b981');
+    setTimeout(() => document.getElementById('csAnalysisResult').scrollIntoView({behavior:'smooth',block:'start'}), 200);
+}
+
+// =================== INITIALIZATION ===================
+// Auto-show splash on load
+window.addEventListener('load', () => {
+    // Init category pills (Renal & Pediatric need rendering)
+    setTimeout(() => {
+        // Already rendered on switch
+    }, 100);
+});
+
+// Override the cat pill active style for pediatric (orange)
+const styleOverride = document.createElement('style');
+styleOverride.textContent = `
+.cat-pill.active-renal { background: linear-gradient(135deg,rgba(249,115,22,0.2),rgba(239,68,68,0.1)); color:#f97316; border-color:rgba(249,115,22,0.3); }
+#view-renal .cat-pill.active-renal { background: linear-gradient(135deg,rgba(245,158,11,0.2),rgba(239,68,68,0.1)); color:#f59e0b; border-color:rgba(245,158,11,0.3); }
+`;
+document.head.appendChild(styleOverride);
+</script>
+</body>
+</html>
