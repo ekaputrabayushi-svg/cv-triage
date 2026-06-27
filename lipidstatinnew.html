@@ -1,0 +1,2206 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Lipid & Statin Decision Support v4.0 — CardiologyVault</title>
+    <meta name="description" content="Kalkulator lipid dan panduan terapi statin berbasis guideline ACC/AHA/ESC 2024. Evaluasi risiko ASCVD, target LDL, risk modifier Lp(a), CAC, DM, TG/HDL ratio.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #D97706;
+            --gold-light: #FDE68A;
+            --gold-dark: #92400E;
+            --bg-main: #0F1117;
+            --bg-card: #1A1D27;
+            --bg-card2: #1E2130;
+            --border: #2A2F45;
+            --text: #E2E8F0;
+            --text-muted: #94A3B8;
+            --accent: #F59E0B;
+        }
+        
+        * { box-sizing: border-box; }
+        
+        html { scroll-behavior: smooth; }
+        
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* ──────── SCROLLBAR ──────── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-main); }
+        ::-webkit-scrollbar-thumb { background: #3A4060; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+        /* ──────── GLASS CARD ──────── */
+        .glass-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+        .glass-card-2 {
+            background: var(--bg-card2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        /* ──────── INPUTS ──────── */
+        .form-input, .form-select {
+            width: 100%;
+            padding: 10px 14px;
+            background: #0F1117;
+            border: 1.5px solid #2A2F45;
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+        }
+        .form-select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+        }
+        .form-input[type="number"] { appearance: textfield; -moz-appearance: textfield; }
+        .form-input[type="number"]::-webkit-inner-spin-button,
+        .form-input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+        /* ──────── LABEL ──────── */
+        .form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        /* ──────── SECTION HEADER ──────── */
+        .section-header {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #475569;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #1E2130;
+            margin-bottom: 12px;
+        }
+
+        /* ──────── GOLD BTN ──────── */
+        .btn-gold {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #D97706, #B45309);
+            color: #FFF8E1;
+            border: none;
+            border-radius: 14px;
+            font-weight: 800;
+            font-size: 15px;
+            letter-spacing: -0.01em;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 24px rgba(217,119,6,0.30);
+        }
+        .btn-gold:hover { background: linear-gradient(135deg, #B45309, #92400E); transform: translateY(-1px); box-shadow: 0 6px 30px rgba(217,119,6,0.40); }
+        .btn-gold:active { transform: scale(0.98); }
+
+        /* ──────── RISK BADGE ──────── */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .badge-red { background: rgba(239,68,68,0.15); color: #FCA5A5; border: 1px solid rgba(239,68,68,0.25); }
+        .badge-orange { background: rgba(249,115,22,0.15); color: #FDBA74; border: 1px solid rgba(249,115,22,0.25); }
+        .badge-yellow { background: rgba(234,179,8,0.15); color: #FDE047; border: 1px solid rgba(234,179,8,0.25); }
+        .badge-green { background: rgba(34,197,94,0.15); color: #86EFAC; border: 1px solid rgba(34,197,94,0.25); }
+
+        /* ──────── RISK MODIFIER PILL ──────── */
+        .modifier-active {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 700;
+            background: rgba(245,158,11,0.12);
+            border: 1px solid rgba(245,158,11,0.3);
+            color: #FCD34D;
+        }
+        .modifier-inactive {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 600;
+            background: rgba(51,65,85,0.3);
+            border: 1px solid #334155;
+            color: #475569;
+        }
+
+        /* ──────── ANIMATED PROGRESS BAR ──────── */
+        .progress-bar-bg { background: #1E2130; border-radius: 999px; height: 6px; overflow: hidden; }
+        .progress-bar { height: 100%; border-radius: 999px; transition: width 0.6s cubic-bezier(0.16,1,0.3,1); }
+
+        /* ──────── STUDY CARD ──────── */
+        .study-card {
+            border-left: 3px solid var(--gold);
+            padding: 12px 16px;
+            background: rgba(217,119,6,0.04);
+            border-radius: 0 10px 10px 0;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .study-card:hover { border-color: #F59E0B; background: rgba(217,119,6,0.08); }
+        .study-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 1px 8px;
+            border-radius: 999px;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-right: 4px;
+        }
+        .tag-rct { background: rgba(59,130,246,0.15); color: #93C5FD; border: 1px solid rgba(59,130,246,0.25); }
+        .tag-meta { background: rgba(139,92,246,0.15); color: #C4B5FD; border: 1px solid rgba(139,92,246,0.25); }
+        .tag-cohort { background: rgba(20,184,166,0.15); color: #5EEAD4; border: 1px solid rgba(20,184,166,0.25); }
+        .tag-rwe { background: rgba(249,115,22,0.15); color: #FDBA74; border: 1px solid rgba(249,115,22,0.25); }
+        .tag-score { background: rgba(234,179,8,0.15); color: #FDE047; border: 1px solid rgba(234,179,8,0.25); }
+
+        /* ──────── MOBILE STICKY RESULT ──────── */
+        .sticky-result {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: var(--bg-main);
+            padding: 8px 0;
+        }
+
+        /* ──────── TOOLTIP ──────── */
+        .tooltip-wrapper { position: relative; display: inline-flex; }
+        .tooltip-text {
+            visibility: hidden;
+            opacity: 0;
+            width: 220px;
+            background: #1E2130;
+            color: var(--text-muted);
+            font-size: 11px;
+            line-height: 1.5;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 99;
+            transition: all 0.15s;
+            pointer-events: none;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+        .tooltip-wrapper:hover .tooltip-text { visibility: visible; opacity: 1; }
+
+        /* ──────── RISK MODIFIER CARD ──────── */
+        .modifier-card {
+            background: #0F1117;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            transition: border-color 0.25s;
+        }
+        .modifier-card.active-lpa { border-color: rgba(239,68,68,0.5); background: rgba(239,68,68,0.04); }
+        .modifier-card.active-cac { border-color: rgba(249,115,22,0.5); background: rgba(249,115,22,0.04); }
+        .modifier-card.active-dm { border-color: rgba(245,158,11,0.5); background: rgba(245,158,11,0.04); }
+        .modifier-card.active-tghdl { border-color: rgba(139,92,246,0.5); background: rgba(139,92,246,0.04); }
+
+        /* ──────── PULSE DOT ──────── */
+        @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .pulse-dot { width: 8px; height: 8px; border-radius: 50%; animation: pulse-dot 2s ease-in-out infinite; }
+        .pulse-red { background: #EF4444; box-shadow: 0 0 6px rgba(239,68,68,0.5); }
+        .pulse-orange { background: #F97316; box-shadow: 0 0 6px rgba(249,115,22,0.5); }
+        .pulse-yellow { background: #EAB308; box-shadow: 0 0 6px rgba(234,179,8,0.5); }
+        .pulse-green { background: #22C55E; box-shadow: 0 0 6px rgba(34,197,94,0.5); }
+
+        /* ──────── DIVIDER ──────── */
+        .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+        /* ──────── FLOATING CALC BTN ──────── */
+        #calc-fab {
+            position: fixed;
+            bottom: 24px;
+            right: 20px;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 20px;
+            border-radius: 50px;
+            background: linear-gradient(135deg, #D97706, #B45309);
+            color: #FFF8E1;
+            font-size: 13px;
+            font-weight: 800;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 6px 24px rgba(217,119,6,0.5);
+            transition: all 0.2s;
+        }
+        #calc-fab:hover { transform: scale(1.05); }
+        @media (min-width: 1024px) { #calc-fab { display: none; } }
+
+        /* ──────── TABS ──────── */
+        .tab-btn {
+            flex: 1;
+            padding: 10px 8px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+        }
+        .tab-btn.active { color: #F59E0B; border-bottom-color: #F59E0B; }
+
+        /* ──────── PDF TEMPLATE ──────── */
+        .pdf-template { display: none; }
+
+        @media print { .no-print { display: none !important; } }
+
+        /* ──────── HIGHLIGHT BOX ──────── */
+        .highlight-box-red { background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; }
+        .highlight-box-orange { background: rgba(249,115,22,0.07); border: 1px solid rgba(249,115,22,0.2); border-radius: 10px; }
+        .highlight-box-yellow { background: rgba(234,179,8,0.07); border: 1px solid rgba(234,179,8,0.2); border-radius: 10px; }
+        .highlight-box-purple { background: rgba(139,92,246,0.07); border: 1px solid rgba(139,92,246,0.2); border-radius: 10px; }
+        .highlight-box-green { background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.2); border-radius: 10px; }
+
+        /* ──────── ANIMATE APPEAR ──────── */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-up { animation: fadeUp 0.4s ease forwards; }
+
+        /* ──────── SLIDER RANGE STYLE ──────── */
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #1E2130;
+            border-radius: 999px;
+            outline: none;
+            margin: 8px 0;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+            transition: transform 0.1s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+            border: none;
+            transition: transform 0.1s;
+        }
+        input[type="range"]::-moz-range-thumb:hover {
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MOBILE HEADER -->
+    <header class="sticky top-0 z-40 no-print" style="background: rgba(15,17,23,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid #1A1D27;">
+        <div class="max-w-screen-xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="w-8 h-8 shrink-0 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, #D97706, #92400E);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M8 12h8M12 8v8" stroke-linecap="round"/></svg>
+                </div>
+                <div class="min-w-0">
+                    <h1 class="text-sm font-black text-white truncate leading-none">Lipid &amp; Statin DSS</h1>
+                    <p class="text-[10px] font-bold" style="color: #D97706;">CardiologyVault · v4.0</p>
+                </div>
+            </div>
+            <div class="shrink-0 flex items-center gap-2">
+                <span class="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded" style="background: rgba(217,119,6,0.15); color: #F59E0B; border: 1px solid rgba(217,119,6,0.3);">ESC/ACC/AHA</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- FLOATING CALCULATE BUTTON (mobile only) -->
+    <button id="calc-fab" onclick="scrollToResult()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Lihat Hasil
+    </button>
+
+    <div class="max-w-screen-xl mx-auto px-4 py-5 pb-24 lg:pb-8">
+
+        <!-- DISCLAIMER BANNER -->
+        <div class="glass-card p-3 mb-5 flex items-start gap-3" style="background: rgba(245,158,11,0.05); border-color: rgba(245,158,11,0.2);">
+            <svg class="shrink-0 mt-0.5" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <p class="text-[11px] leading-relaxed" style="color: #94A3B8;"><strong style="color: #F59E0B;">Alat bantu klinis, bukan pengganti penilaian DPJP.</strong> Berbasis ACC/AHA 2024 &amp; ESC 2023. Selalu pertimbangkan konteks klinis penuh. Developed by <strong style="color: #F59E0B;">Bayushi Eka Putra, MD, FIHA</strong>.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+            <!-- ═══════════════════════════════════════════════════════════════════ -->
+            <!-- LEFT / INPUT PANEL -->
+            <!-- ═══════════════════════════════════════════════════════════════════ -->
+            <div class="space-y-4" id="input-panel">
+
+                <!-- 1 ── KONTEKS KLINIS -->
+                <div class="glass-card p-4">
+                    <div class="section-header flex items-center gap-2">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        Konteks Klinis &amp; Status Terapi
+                    </div>
+
+                    <div class="space-y-3">
+                        <div>
+                            <label class="form-label">Jenis Pencegahan</label>
+                            <select id="prevention" class="form-select">
+                                <option value="primary">⚡ Primary Prevention — Belum ada riwayat ASCVD</option>
+                                <option value="secondary">🔴 Secondary Prevention — Riwayat ACS / Stroke / PAD / Revaskularisasi</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Status Terapi Lipid Saat Ini</label>
+                            <select id="currentStatin" class="form-select">
+                                <option value="none">Belum Terapi / Statin Naïve</option>
+                                <option value="low_mod">Statin Intensitas Rendah–Sedang (Atorva ≤20mg / Rosuva ≤10mg)</option>
+                                <option value="high">Statin Intensitas Tinggi (Atorva 40–80mg / Rosuva 20–40mg)</option>
+                                <option value="combo">Statin Intensitas Tinggi + Ezetimibe</option>
+                            </select>
+                        </div>
+                        <div class="p-3 rounded-xl" style="background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2);">
+                            <label class="form-label flex items-center gap-1.5">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#F87171" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                <span style="color: #F87171;">Safety Check / Red Flags</span>
+                            </label>
+                            <select id="safety" class="form-select" style="border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.04);">
+                                <option value="no">Tidak Ada — Aman untuk Statin</option>
+                                <option value="yes">⛔ Ya — Hamil/Menyusui / Penyakit Hati Aktif / Intoleransi Berat</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2 ── DEMOGRAFI -->
+                <div class="glass-card p-4">
+                    <div class="section-header flex items-center gap-2">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        Demografi
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="form-label mb-0">Usia (Tahun)</label>
+                                <span id="age-val" class="text-xs font-black text-amber-500">50</span>
+                            </div>
+                            <input type="range" id="age" value="50" min="18" max="95" class="w-full">
+                        </div>
+                        <div>
+                            <label class="form-label">Jenis Kelamin</label>
+                            <select id="gender" class="form-select">
+                                <option value="male">Laki-laki</option>
+                                <option value="female">Perempuan</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Merokok Aktif</label>
+                            <select id="smoker" class="form-select">
+                                <option value="no">Tidak</option>
+                                <option value="yes">Ya — Perokok Aktif</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Hipertensi Dalam Terapi</label>
+                            <select id="htnTreated" class="form-select">
+                                <option value="no">Tidak</option>
+                                <option value="yes">Ya (Treated HTN)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3 ── PROFIL LIPID & VITAL SIGN -->
+                <div class="glass-card p-4" style="border-color: rgba(217,119,6,0.3);">
+                    <div class="section-header flex items-center gap-2" style="color: #D97706; border-color: rgba(217,119,6,0.2);">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        Profil Lipid &amp; Tanda Vital
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="form-label mb-0">TD Sistolik (mmHg)</label>
+                                <span id="sbp-val" class="text-xs font-black text-amber-500">130</span>
+                            </div>
+                            <input type="range" id="sbp" value="130" min="80" max="220" class="w-full">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="form-label mb-0">Total Cholesterol (mg/dL)</label>
+                                <span id="tc-val" class="text-xs font-black text-amber-500">220</span>
+                            </div>
+                            <input type="range" id="tc" value="220" min="100" max="450" class="w-full">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="form-label mb-0">HDL-C (mg/dL)</label>
+                                <span id="hdl-val" class="text-xs font-black text-amber-500">45</span>
+                            </div>
+                            <input type="range" id="hdl" value="45" min="15" max="100" class="w-full">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="form-label mb-0">Trigliserida (mg/dL)</label>
+                                <span id="tg-val" class="text-xs font-black text-amber-500">150</span>
+                            </div>
+                            <input type="range" id="tg" value="150" min="50" max="500" class="w-full">
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="form-label mb-0 flex items-center gap-1.5" style="color: #F59E0B;">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                                LDL-C Aktual (mg/dL)
+                            </label>
+                            <span id="ldl-val" class="text-sm font-black" style="color: #FCD34D;">145</span>
+                        </div>
+                        <input type="range" id="ldl" value="145" min="30" max="350" class="w-full">
+                    </div>
+
+                    <!-- Live-computed ratios -->
+                    <div class="mt-3 grid grid-cols-3 gap-2">
+                        <div class="glass-card-2 p-2 text-center">
+                            <div class="text-[9px] font-bold uppercase tracking-wider" style="color: #475569;">Non-HDL</div>
+                            <div id="live-nonhdl" class="text-sm font-black" style="color: #F59E0B;">—</div>
+                        </div>
+                        <div class="glass-card-2 p-2 text-center">
+                            <div class="text-[9px] font-bold uppercase tracking-wider" style="color: #475569;">TG/HDL Ratio</div>
+                            <div id="live-tghdl" class="text-sm font-black">—</div>
+                        </div>
+                        <div class="glass-card-2 p-2 text-center">
+                            <div class="text-[9px] font-bold uppercase tracking-wider" style="color: #475569;">TC/HDL Ratio</div>
+                            <div id="live-tchdl" class="text-sm font-black">—</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4 ── DIABETES MELLITUS SECTION (Detailed) -->
+                <div class="glass-card p-4" id="dm-card">
+                    <div class="section-header flex items-center gap-2" style="color: #F59E0B; border-color: rgba(245,158,11,0.2);">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/><path d="M8.5 14.5s1.5 2 3.5 2 3.5-2 3.5-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                        Diabetes Mellitus — Risk Stratifier Utama
+                    </div>
+
+                    <div class="space-y-3">
+                        <div>
+                            <label class="form-label">Status Diabetes Mellitus</label>
+                            <select id="dm" class="form-select">
+                                <option value="no">Tidak Ada Diabetes</option>
+                                <option value="yes_simple">DM Tipe 2 — Tanpa Komplikasi / ≤ 10 Tahun</option>
+                                <option value="yes_complex">DM Tipe 2 — Komplikasi End-Organ / ≥ 10 Tahun / ≥ 3 RF</option>
+                                <option value="t1dm">DM Tipe 1 — Duration &gt; 20 Tahun / Nefropati</option>
+                            </select>
+                        </div>
+
+                        <!-- DM Context Box -->
+                        <div id="dm-context-box" class="rounded-xl p-3 space-y-1.5 hidden" style="background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.2);">
+                            <div class="text-[10px] font-bold uppercase tracking-wider" style="color: #F59E0B;">Implikasi Guideline (ESC 2023)</div>
+                            <div id="dm-context-text" class="text-[11px] leading-relaxed" style="color: #94A3B8;"></div>
+                        </div>
+
+                        <!-- DM Komplikasi checklist (shown when DM yes) -->
+                        <div id="dm-complications" class="hidden space-y-2">
+                            <div class="text-[10px] font-bold uppercase tracking-wider mb-1" style="color: #94A3B8;">Komplikasi / Risk Factor Penyerta pada DM</div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <label class="flex items-center gap-2 cursor-pointer p-2 rounded-lg" style="background: #0F1117; border: 1px solid #2A2F45;">
+                                    <input type="checkbox" id="dm-ckd" class="rounded" style="accent-color: #F59E0B;">
+                                    <span class="text-[11px] font-medium" style="color: #94A3B8;">Nefropati DM / CKD</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer p-2 rounded-lg" style="background: #0F1117; border: 1px solid #2A2F45;">
+                                    <input type="checkbox" id="dm-retino" class="rounded" style="accent-color: #F59E0B;">
+                                    <span class="text-[11px] font-medium" style="color: #94A3B8;">Retinopati DM</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer p-2 rounded-lg" style="background: #0F1117; border: 1px solid #2A2F45;">
+                                    <input type="checkbox" id="dm-neuro" class="rounded" style="accent-color: #F59E0B;">
+                                    <span class="text-[11px] font-medium" style="color: #94A3B8;">Neuropati DM</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer p-2 rounded-lg" style="background: #0F1117; border: 1px solid #2A2F45;">
+                                    <input type="checkbox" id="dm-htn" class="rounded" style="accent-color: #F59E0B;">
+                                    <span class="text-[11px] font-medium" style="color: #94A3B8;">Hipertensi Terkontrol Buruk</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5 ── RISK MODIFIERS SECTION -->
+                <div class="glass-card p-4">
+                    <div class="section-header flex items-center gap-2">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        Risk Modifiers / Enhancers
+                    </div>
+
+                    <!-- 5a ── Lp(a) -->
+                    <div class="modifier-card mb-3" id="lpa-card">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-black" style="color: #F87171;">Lp(a) — Lipoprotein(a)</span>
+                                <span class="badge badge-red">Major RF</span>
+                            </div>
+                            <div class="tooltip-wrapper">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" class="cursor-help"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                <div class="tooltip-text">Lp(a) &gt;50 mg/dL atau &gt;125 nmol/L = High Risk (ESC 2023). Lp(a) &gt;180 mg/dL setara risiko Familial Hypercholesterolemia. Tidak dipengaruhi statin.</div>
+                            </div>
+                        </div>
+                        <select id="lpa" class="form-select mb-2">
+                            <option value="no">Normal / Belum Diperiksa (&lt;50 mg/dL)</option>
+                            <option value="borderline">Borderline Tinggi: 30–50 mg/dL</option>
+                            <option value="high">Tinggi: 50–180 mg/dL (&gt;125 nmol/L)</option>
+                            <option value="very_high">Sangat Tinggi: &gt;180 mg/dL (≈ FH Risk Level)</option>
+                        </select>
+                        <div id="lpa-detail" class="text-[10px] leading-relaxed hidden" style="color: #94A3B8;"></div>
+                        <!-- Guideline note -->
+                        <div class="mt-2 text-[10px] leading-relaxed" style="color: #475569;">
+                            📌 <strong style="color: #64748B;">ESC 2023:</strong> Periksa Lp(a) minimal 1× seumur hidup. Jika &gt;50 mg/dL → upscale target LDL lebih agresif. Lp(a) ≥180 mg/dL → pertimbangkan seperti FH.
+                        </div>
+                    </div>
+
+                    <!-- 5b ── CT Calcium Score / CAC -->
+                    <div class="modifier-card mb-3" id="cac-card">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-black" style="color: #FDBA74;">CT Calcium Score (CAC)</span>
+                                <span class="badge badge-orange">Imaging Biomarker</span>
+                            </div>
+                            <div class="tooltip-wrapper">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" class="cursor-help"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                <div class="tooltip-text">Coronary Artery Calcium (CAC) oleh CT non-kontras. CAC=0 → 10-yr event sangat rendah, dapat tunda statin (ACC/AHA). CAC≥100 → upscale ke high intensity.</div>
+                            </div>
+                        </div>
+                        <select id="cac" class="form-select mb-2">
+                            <option value="unknown">Tidak Diketahui / Belum CT Scan</option>
+                            <option value="zero">CAC = 0 — Agatston Score 0 (Tidak Ada Plak)</option>
+                            <option value="low">CAC 1–99 — Plak Ringan (Agatston &lt;100)</option>
+                            <option value="moderate">CAC 100–299 — Plak Moderat</option>
+                            <option value="high">CAC ≥ 300 / Plak Obstruktif — High Risk Imaging</option>
+                        </select>
+                        <!-- CAC visual indicator -->
+                        <div id="cac-detail" class="text-[10px] leading-relaxed hidden" style="color: #94A3B8;"></div>
+                        <div class="mt-2 text-[10px] leading-relaxed" style="color: #475569;">
+                            📌 <strong style="color: #64748B;">ACC/AHA 2019:</strong> CAC=0 → dapat tunda statin ("statin holiday") kecuali perokok/DM/riwayat keluarga kuat. CAC 1-99 → mendukung memulai statin borderline risk. CAC ≥100 → mulai high-intensity statin.
+                        </div>
+                    </div>
+
+                    <!-- 5c ── TG/HDL Ratio -->
+                    <div class="modifier-card mb-3" id="tghdl-card">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-black" style="color: #C4B5FD;">TG/HDL Ratio — Insulin Resistance Proxy</span>
+                                <span class="badge" style="background: rgba(139,92,246,0.15); color: #C4B5FD; border: 1px solid rgba(139,92,246,0.3);">Metabolik</span>
+                            </div>
+                            <div class="tooltip-wrapper">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" class="cursor-help"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                <div class="tooltip-text">TG/HDL &gt;3.0 (mg/dL) = proksi insulin resistance &amp; risiko sdLDL tinggi. Otomatis dihitung dari input lipid. Berkorelasi dengan risiko ASCVD residual.</div>
+                            </div>
+                        </div>
+                        <!-- Auto-calculated from lipid inputs -->
+                        <div id="tghdl-display" class="p-3 rounded-xl flex items-center justify-between" style="background: #0F1117; border: 1px solid #2A2F45;">
+                            <div>
+                                <div class="text-[9px] font-bold uppercase tracking-wider mb-0.5" style="color: #475569;">TG ÷ HDL Ratio (Dihitung Otomatis)</div>
+                                <div id="tghdl-value-big" class="text-2xl font-black" style="color: #C4B5FD;">—</div>
+                            </div>
+                            <div id="tghdl-badge-display" class="text-right">
+                                <div id="tghdl-category" class="text-[10px] font-black"></div>
+                                <div id="tghdl-risk-label" class="text-[9px] mt-0.5" style="color: #475569;"></div>
+                            </div>
+                        </div>
+
+                        <!-- TG/HDL Interpretation Bar -->
+                        <div class="mt-2">
+                            <div class="flex justify-between text-[8px] font-bold mb-1" style="color: #334155;">
+                                <span>Optimal &lt;2</span><span>Borderline 2–3</span><span>Tinggi &gt;3</span><span>Sangat Tinggi &gt;5</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div id="tghdl-bar" class="progress-bar" style="background: #C4B5FD; width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div class="mt-2 text-[10px] leading-relaxed" style="color: #475569;">
+                            📌 <strong style="color: #64748B;">NLA 2023 / Cooney et al.:</strong> TG/HDL &gt;3.0 (mg/dL) berkaitan dengan peningkatan sdLDL &amp; resistensi insulin. Tidak termasuk target primer guideline namun relevan untuk deteksi residual risk &amp; indikasi fenofibrat/omega-3.
+                        </div>
+                    </div>
+
+                    <!-- 5d ── Other Enhancers -->
+                    <div class="glass-card-2 p-3 space-y-3">
+                        <div class="text-[10px] font-bold uppercase tracking-wider" style="color: #475569;">Faktor Risiko Tambahan</div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div>
+                                <label class="form-label">Penyakit Ginjal Kronis (CKD)</label>
+                                <select id="ckd" class="form-select">
+                                    <option value="no">Tidak Ada</option>
+                                    <option value="g3">CKD G3 (eGFR 30–59)</option>
+                                    <option value="g4g5">CKD G4–G5 (eGFR &lt;30) / Dialisis</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Riwayat ASCVD Prematur</label>
+                                <select id="fh" class="form-select">
+                                    <option value="no">Tidak Ada</option>
+                                    <option value="yes">Ya — ♂ &lt;55 thn / ♀ &lt;65 thn</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Apo B (mg/dL)</label>
+                                <select id="apoB" class="form-select">
+                                    <option value="no">Normal / Belum Diperiksa</option>
+                                    <option value="borderline">Borderline: 100–129 mg/dL</option>
+                                    <option value="high">Tinggi: ≥ 130 mg/dL</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Penyakit Inflamasi Kronis</label>
+                                <select id="inflam" class="form-select">
+                                    <option value="no">Tidak Ada</option>
+                                    <option value="yes">Ya — RA / Lupus / HIV / Preeklampsia / Psoriasis</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CALC BUTTON (desktop) -->
+                <div class="hidden lg:block">
+                    <button id="calc-btn-desktop" class="btn-gold">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        Hitung &amp; Evaluasi Pathway
+                    </button>
+                </div>
+
+            </div>
+            <!-- END INPUT PANEL -->
+
+            <!-- ═══════════════════════════════════════════════════════════════════ -->
+            <!-- RIGHT / RESULT PANEL -->
+            <!-- ═══════════════════════════════════════════════════════════════════ -->
+            <div class="space-y-4" id="result-panel">
+
+                <!-- RISK CLASSIFICATION CARD -->
+                <div id="risk-card" class="glass-card p-5 transition-all duration-300">
+                    <div class="flex items-start justify-between gap-3 mb-4">
+                        <div>
+                            <div class="text-[10px] font-bold uppercase tracking-widest mb-1" style="color: #475569;">Klasifikasi Risiko &amp; Prioritas Intervensi</div>
+                            <div id="res-category" class="text-xl font-black leading-tight" style="color: #F59E0B;">Menghitung...</div>
+                        </div>
+                        <div id="risk-pulse-dot" class="pulse-dot pulse-yellow shrink-0 mt-2"></div>
+                    </div>
+                    <div id="res-context" class="text-[11px] font-semibold mb-3" style="color: #94A3B8;"></div>
+
+                    <!-- Active Modifier Pills -->
+                    <div id="res-reasons" class="flex flex-wrap gap-1.5 mb-3"></div>
+
+                    <!-- LDL Progress toward target -->
+                    <div class="glass-card-2 p-3 mt-3">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[10px] font-bold uppercase tracking-wider" style="color: #475569;">LDL-C vs Target</span>
+                            <div class="flex items-center gap-2">
+                                <span id="ldl-actual-label" class="text-[10px] font-bold" style="color: #94A3B8;"></span>
+                                <span id="ldl-status-badge" class="badge"></span>
+                            </div>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div id="ldl-progress-bar" class="progress-bar" style="width: 0%;"></div>
+                        </div>
+                        <div class="flex justify-between mt-1.5">
+                            <span class="text-[9px]" style="color: #334155;">0</span>
+                            <span id="ldl-target-label" class="text-[9px] font-bold" style="color: #F59E0B;"></span>
+                            <span class="text-[9px]" style="color: #334155;">300</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TARGET PANEL -->
+                <div class="glass-card p-4">
+                    <div class="section-header flex items-center gap-2">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                        Target Pencapaian Guideline
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 mb-3">
+                        <div class="glass-card-2 p-3 text-center" style="border-color: rgba(245,158,11,0.3);">
+                            <div class="text-[9px] font-bold uppercase tracking-wider mb-1" style="color: #D97706;">Target LDL-C</div>
+                            <div id="res-target-ldl" class="text-base font-black" style="color: #FCD34D;">—</div>
+                            <div id="res-actual-ldl" class="text-[9px] mt-1" style="color: #64748B;">Aktual: —</div>
+                        </div>
+                        <div class="glass-card-2 p-3 text-center">
+                            <div class="text-[9px] font-bold uppercase tracking-wider mb-1" style="color: #64748B;">Non-HDL</div>
+                            <div id="res-target-nonhdl" class="text-base font-black" style="color: #E2E8F0;">—</div>
+                            <div id="res-actual-nonhdl" class="text-[9px] mt-1" style="color: #64748B;">Aktual: —</div>
+                        </div>
+                        <div class="glass-card-2 p-3 text-center">
+                            <div class="text-[9px] font-bold uppercase tracking-wider mb-1" style="color: #64748B;">Apo B</div>
+                            <div id="res-target-apob" class="text-base font-black" style="color: #E2E8F0;">—</div>
+                            <div id="res-actual-apob" class="text-[9px] mt-1" style="color: #64748B;">Aktual: —</div>
+                        </div>
+                    </div>
+                    <!-- TG/HDL context in result -->
+                    <div id="tghdl-result-context" class="rounded-xl p-3 hidden" style="background: rgba(139,92,246,0.07); border: 1px solid rgba(139,92,246,0.2);">
+                        <div class="text-[10px] font-bold uppercase tracking-wider mb-1" style="color: #A78BFA;">TG/HDL Ratio — Residual Risk Flag</div>
+                        <div id="tghdl-result-text" class="text-[11px]" style="color: #94A3B8;"></div>
+                    </div>
+                </div>
+
+                <!-- RECOMMENDATION -->
+                <div class="glass-card p-4">
+                    <div class="section-header flex items-center gap-2" style="color: #D97706; border-color: rgba(217,119,6,0.2);">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+                        Rekomendasi Terapi
+                    </div>
+                    <div id="statin-box" class="rounded-xl p-4 mb-4 transition-all">
+                        <p id="res-statin" class="text-base font-black leading-snug">—</p>
+                    </div>
+                    <div class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color: #475569;">Dasar Strategi Klinis</div>
+                    <ul id="res-strategy" class="space-y-2"></ul>
+                </div>
+
+                <!-- PRINT BUTTON -->
+                <button id="download-btn" class="btn-gold no-print">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/><line x1="12" y1="15" x2="12" y2="3"/><path d="M5 20h14"/></svg>
+                    Unduh / Cetak Laporan PDF
+                </button>
+
+            </div>
+            <!-- END RESULT PANEL -->
+
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════════ -->
+        <!-- EVIDENCE-BASED STUDIES SECTION -->
+        <!-- ═══════════════════════════════════════════════════════════════════════ -->
+        <div class="mt-8" id="evidence-section">
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style="background: rgba(217,119,6,0.12); border: 1px solid rgba(217,119,6,0.25);">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                </div>
+                <div>
+                    <h2 class="text-base font-black" style="color: #E2E8F0;">Evidence Base &amp; Studi Pendukung</h2>
+                    <p class="text-[11px]" style="color: #475569;">Landmark trials &amp; guideline pillars yang mendasari rekomendasi ini</p>
+                </div>
+            </div>
+
+            <!-- TABS -->
+            <div class="flex border-b mb-4" style="border-color: #1E2130;">
+                <button class="tab-btn active" onclick="switchTab('lpa-tab', this)" id="tab-lpa">Lp(a)</button>
+                <button class="tab-btn" onclick="switchTab('cac-tab', this)" id="tab-cac">CT CAC Score</button>
+                <button class="tab-btn" onclick="switchTab('dm-tab', this)" id="tab-dm">Diabetes &amp; Statin</button>
+                <button class="tab-btn" onclick="switchTab('tghdl-tab', this)" id="tab-tghdl">TG/HDL Ratio</button>
+                <button class="tab-btn" onclick="switchTab('statin-tab', this)" id="tab-statin">Statin Core</button>
+            </div>
+
+            <!-- ── TAB: Lp(a) ── -->
+            <div id="lpa-tab" class="tab-content space-y-3 fade-up">
+                <div class="glass-card p-4 mb-3" style="border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.03);">
+                    <div class="flex items-start gap-3 mb-3">
+                        <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style="background: rgba(239,68,68,0.15);">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F87171" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-black mb-1" style="color: #FCA5A5;">Ringkasan Klinis Lp(a)</h3>
+                            <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">Lp(a) adalah partikel LDL-like yang mengandung apolipoprotein(a) — bersifat proaterogenik, protrombotik, dan proinflammatory. Kadarnya 90% ditentukan genetik (gen LPA), tidak dipengaruhi statin. Prevalensi Lp(a) &gt;50 mg/dL: ~20% populasi global.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div class="rounded-xl p-2 text-center" style="background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2);">
+                            <div class="text-[9px] font-bold uppercase" style="color: #86EFAC;">Optimal</div>
+                            <div class="text-sm font-black" style="color: #4ADE80;">&lt;30 mg/dL</div>
+                        </div>
+                        <div class="rounded-xl p-2 text-center" style="background: rgba(234,179,8,0.08); border: 1px solid rgba(234,179,8,0.2);">
+                            <div class="text-[9px] font-bold uppercase" style="color: #FDE047;">Borderline</div>
+                            <div class="text-sm font-black" style="color: #FBBF24;">30–50 mg/dL</div>
+                        </div>
+                        <div class="rounded-xl p-2 text-center" style="background: rgba(249,115,22,0.08); border: 1px solid rgba(249,115,22,0.2);">
+                            <div class="text-[9px] font-bold uppercase" style="color: #FDBA74;">Tinggi</div>
+                            <div class="text-sm font-black" style="color: #FB923C;">50–180 mg/dL</div>
+                        </div>
+                        <div class="rounded-xl p-2 text-center" style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);">
+                            <div class="text-[9px] font-bold uppercase" style="color: #FCA5A5;">Sangat Tinggi</div>
+                            <div class="text-sm font-black" style="color: #EF4444;">&gt;180 mg/dL</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-meta">Meta-Analysis</span>
+                        <span class="study-tag tag-score">N=200,000+</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">Emerging Risk Factors Collaboration — Lp(a) ASCVD Meta-Analysis</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>JAMA. 2009;302(4):412–423</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">Meta-analisis &gt;200.000 subjek. Setiap kenaikan 3.5-fold Lp(a) → HR 1.13 (95%CI 1.09–1.18) untuk CHD. Hubungan bersifat log-linear, independen dari LDL-C, memperkuat Lp(a) sebagai kausal risk factor.</p>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-rct">Mendelian Randomization</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">Kamstrup et al. — Copenhagen City Heart Study</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>JAMA. 2009;301(22):2331–2339</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">Mendelian Randomization pada 9.330 subjek Danish. Lp(a) ≥95th percentile → RR 2.6 (MI), 1.9 (CHD). Analisis MR mendukung hubungan kausal, bukan hanya asosiasi. Implikasi: Lp(a) tinggi bukan sekadar biomarker residual tetapi kausal risk factor yang independen.</p>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-rct">Phase 3 RCT (Ongoing)</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">OCEAN(a)-OUTCOMES Trial — Olpasiran</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>N Engl J Med. 2023;389:2544–2555 (Phase 2)</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">Olpasiran (siRNA anti-Lp(a)) menurunkan Lp(a) 70–100% dari baseline. Phase 3 sedang berjalan. Implikasi: Terapi spesifik Lp(a) akan segera tersedia; saat ini, guideline merekomendasikan eskalasi terapi LDL agresif pada Lp(a) tinggi.</p>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-rct">RCT Post-hoc</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">FOURIER Trial — Lp(a) Subanalysis</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>Circulation. 2019;139(12):1483–1492</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">Analisis 25.096 subjek FOURIER: Evolocumab menurunkan Lp(a) ~26.9%. Pasien dengan Lp(a) baseline tertinggi mendapat manfaat terbesar dari PCSK9i — setiap penurunan 25 nmol/L Lp(a) → CV risk reduction tambahan. Mendukung PCSK9i sebagai pilihan pada Lp(a) tinggi + secondary prevention.</p>
+                </div>
+
+                <div class="glass-card p-3 mt-2" style="background: rgba(239,68,68,0.04); border-color: rgba(239,68,68,0.15);">
+                    <div class="text-[10px] font-black uppercase tracking-wider mb-1.5" style="color: #F87171;">Implikasi Guideline Praktis</div>
+                    <div class="space-y-1.5 text-[11px]" style="color: #94A3B8;">
+                        <div class="flex items-start gap-2"><span style="color: #EF4444;">▸</span><span><strong style="color: #FCA5A5;">ESC 2023:</strong> Periksa Lp(a) minimal 1× seumur hidup. Jika &gt;50 mg/dL → intensifikan target LDL lebih agresif.</span></div>
+                        <div class="flex items-start gap-2"><span style="color: #EF4444;">▸</span><span><strong style="color: #FCA5A5;">ACC/AHA 2022:</strong> Lp(a) ≥50 mg/dL = risk-enhancing factor → mendorong eskalasi statin atau tambahan PCSK9i pada borderline risk.</span></div>
+                        <div class="flex items-start gap-2"><span style="color: #EF4444;">▸</span><span><strong style="color: #FCA5A5;">Lp(a) ≥180 mg/dL:</strong> Pertimbangkan seperti FH — risiko setara major ASCVD lifetime risk 3× lipat.</span></div>
+                        <div class="flex items-start gap-2"><span style="color: #EF4444;">▸</span><span>Aspirin &amp; niacin tidak terbukti konsisten menurunkan Lp(a)-related outcomes. PCSK9i penurunan Lp(a) ~26–30%.</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── TAB: CT CAC Score ── -->
+            <div id="cac-tab" class="tab-content space-y-3 fade-up hidden">
+                <div class="glass-card p-4 mb-3" style="border-color: rgba(249,115,22,0.2); background: rgba(249,115,22,0.03);">
+                    <div class="flex items-start gap-3 mb-3">
+                        <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style="background: rgba(249,115,22,0.15);">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FDBA74" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="4"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-black mb-1" style="color: #FDBA74;">Coronary Artery Calcium (CAC) Score</h3>
+                            <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">CAC score (Agatston) dari CT non-kontras adalah biomarker imaging terbaik untuk kuantifikasi kalsifikasi koroner. Merupakan surrogate aterosklerosis subklinis dengan nilai prediktif prognostik superior terhadap traditional risk scoring.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div class="rounded-xl p-2 text-center" style="background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2);">
+                            <div class="text-[9px] font-bold uppercase" style="color: #86EFAC;">Tidak Ada Plak</div>
+                            <div class="text-sm font-black" style="color: #4ADE80;">CAC = 0</div>
+                            <div class="text-[8px] mt-0.5" style="color: #16A34A;">Dapat Tunda Statin</div>
+                        </div>
+                        <div class="rounded-xl p-2 text-center" style="background: rgba(234,179,8,0.08); border: 1px solid rgba(234,179,8,0.2);">
+                            <div class="text-[9px] font-bold uppercase" style="color: #FDE047;">Plak Ringan</div>
+                            <div class="text-sm font-black" style="color: #FBBF24;">CAC 1–99</div>
+                            <div class="text-[8px] mt-0.5" style="color: #D97706;">Dukung Inisiasi</div>
+                        </div>
+                        <div class="rounded-xl p-2 text-center" style="background: rgba(249,115,22,0.08); border: 1px solid rgba(249,115,22,0.2);">
+                            <div class="text-[9px] font-bold uppercase" style="color: #FDBA74;">Plak Moderat</div>
+                            <div class="text-sm font-black" style="color: #FB923C;">CAC 100–299</div>
+                            <div class="text-[8px] mt-0.5" style="color: #EA580C;">High Intensity</div>
+                        </div>
+                        <div class="rounded-xl p-2 text-center" style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);">
+                            <div class="text-[9px] font-bold uppercase" style="color: #FCA5A5;">Beban Tinggi</div>
+                            <div class="text-sm font-black" style="color: #EF4444;">CAC ≥ 300</div>
+                            <div class="text-[8px] mt-0.5" style="color: #DC2626;">Target LDL &lt;70</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-cohort">Prospective Cohort</span>
+                        <span class="study-tag tag-score">N=6,814</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">MESA Trial — Multi-Ethnic Study of Atherosclerosis</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>JAMA. 2004;292(11):1341–1352 + follow-up data</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">Studi kohort prospektif 6.814 peserta (45–84 thn), 10 tahun follow-up. CAC=0 → 10-year event rate hanya 0.4%. CAC &gt;300 → event rate 7.4%. Penambahan CAC ke PCE meningkatkan C-statistic secara signifikan (0.778 vs 0.755). CAC reclassified 23% pasien intermediate-risk menjadi low atau high risk.</p>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-rct">RCT</span>
+                        <span class="study-tag tag-score">N=5,185</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">JUPITER Trial — CAC Subanalysis (Ridker et al.)</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>N Engl J Med. 2008;359:2195–2207 / Circ 2010;122:2230–2237</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">17.802 peserta low–intermediate risk dengan hs-CRP tinggi dirandomisasi rosuvastatin 20mg vs. plasebo. Pasien dengan CAC=0 mendapat NNT sangat tinggi (tidak ada manfaat bermakna), sementara CAC&gt;0 mendapat NNT rendah (25 untuk 5 tahun). Implikasi: CAC dapat memandu keputusan "treat or not treat" pada populasi intermediate.</p>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-cohort">Registry / Observational</span>
+                        <span class="study-tag tag-score">N=66,636</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">Mortensen et al. — CAC=0 and Statin</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>J Am Coll Cardiol. 2020;76(10):1124–1134</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">Registry 66.636 pasien intermediate-risk (PCE 7.5–20%). Pasien dengan CAC=0 yang diinisiasi statin vs tidak → tidak ada perbedaan bermakna dalam ASCVD events pada 10 tahun. Mendukung "statin holiday" pada CAC=0 kecuali ada faktor risiko dominan (DM, riwayat keluarga, perokok berat).</p>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-meta">Meta-Analysis</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">Blaha et al. — CAC Reclassification Meta-analysis</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>Eur Heart J. 2016;37(25):1966–1975</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">Meta-analisis 85.000+ pasien. CAC reclassified 26–40% pasien intermediate-risk secara bermakna. Net Reclassification Index (NRI) positif 0.17 untuk CAC. CAC superior terhadap hs-CRP, ankle-brachial index, dan carotid intima media thickness sebagai risk modifier tunggal.</p>
+                </div>
+
+                <div class="glass-card p-3 mt-2" style="background: rgba(249,115,22,0.04); border-color: rgba(249,115,22,0.15);">
+                    <div class="text-[10px] font-black uppercase tracking-wider mb-1.5" style="color: #FDBA74;">Implikasi Guideline Praktis (ACC/AHA 2019 / ESC 2023)</div>
+                    <div class="space-y-1.5 text-[11px]" style="color: #94A3B8;">
+                        <div class="flex items-start gap-2"><span style="color: #F97316;">▸</span><span><strong style="color: #FDBA74;">CAC = 0:</strong> Pertimbangkan tunda terapi statin kecuali perokok aktif, DM, atau riwayat keluarga ASCVD dini yang kuat. Ulangi CT dalam 5 tahun jika masih tanpa statin.</span></div>
+                        <div class="flex items-start gap-2"><span style="color: #F97316;">▸</span><span><strong style="color: #FDBA74;">CAC 1–99:</strong> Bukti plak ada → mendukung inisiasi statin intensitas sedang pada borderline risk. Diskusi shared-decision making.</span></div>
+                        <div class="flex items-start gap-2"><span style="color: #F97316;">▸</span><span><strong style="color: #FDBA74;">CAC 100–299:</strong> Setara risiko tinggi → statin intensitas tinggi direkomendasikan. Target LDL &lt;70 mg/dL.</span></div>
+                        <div class="flex items-start gap-2"><span style="color: #F97316;">▸</span><span><strong style="color: #FDBA74;">CAC ≥ 300:</strong> Beban plak sangat tinggi → pertimbangkan target LDL &lt;55 mg/dL seperti secondary prevention pada sebagian panduan.</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── TAB: DM & Statin ── -->
+            <div id="dm-tab" class="tab-content space-y-3 fade-up hidden">
+                <div class="glass-card p-4 mb-3" style="border-color: rgba(245,158,11,0.2); background: rgba(245,158,11,0.03);">
+                    <div class="flex items-start gap-3 mb-3">
+                        <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style="background: rgba(245,158,11,0.15);">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-black mb-1" style="color: #FCD34D;">DM &amp; Statin — Stratifikasi Risiko ESC 2023</h3>
+                            <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">DM adalah risk multiplier independen untuk ASCVD. ESC 2023 membagi DM dalam 3 kategori risiko tergantung komplikasi, durasi, dan faktor penyerta — menentukan target LDL dari 70 hingga 55 mg/dL.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div class="rounded-xl p-3" style="background: rgba(234,179,8,0.08); border: 1px solid rgba(234,179,8,0.2);">
+                            <div class="text-[9px] font-black uppercase tracking-wider mb-1" style="color: #FDE047;">RISIKO SEDANG</div>
+                            <div class="text-xs font-bold mb-0.5" style="color: #FBBF24;">DM Muda (&lt;35 thn)</div>
+                            <div class="text-[10px]" style="color: #92400E;">Tanpa RF lain, durasi &lt;10 thn<br>Target LDL: &lt;100 mg/dL</div>
+                        </div>
+                        <div class="rounded-xl p-3" style="background: rgba(249,115,22,0.08); border: 1px solid rgba(249,115,22,0.2);">
+                            <div class="text-[9px] font-black uppercase tracking-wider mb-1" style="color: #FDBA74;">RISIKO TINGGI</div>
+                            <div class="text-xs font-bold mb-0.5" style="color: #FB923C;">DM T2 Tanpa Komplikasi</div>
+                            <div class="text-[10px]" style="color: #7C3AED40; color: #94A3B8;">≥ 10 tahun / usia &gt;40 thn<br>Target LDL: &lt;70 mg/dL + ≥50% reduksi</div>
+                        </div>
+                        <div class="rounded-xl p-3" style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);">
+                            <div class="text-[9px] font-black uppercase tracking-wider mb-1" style="color: #FCA5A5;">RISIKO SANGAT TINGGI</div>
+                            <div class="text-xs font-bold mb-0.5" style="color: #F87171;">DM + End-Organ Damage</div>
+                            <div class="text-[10px]" style="color: #94A3B8;">CKD / Retino / Neuro / ≥3 RF<br>Target LDL: &lt;55 mg/dL + ≥50%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-rct">RCT</span>
+                        <span class="study-tag tag-score">N=5,963</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">CARDS Trial — Atorvastatin pada DM Tipe 2</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>Lancet. 2004;364(9435):685–696</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">5.963 pasien DM T2 tanpa riwayat ASCVD, dirandomisasi atorvastatin 10mg vs. plasebo, follow-up 3.9 thn. Atorvastatin menurunkan major CV events 37% (HR 0.63, 95%CI 0.48–0.83, p=0.001), stroke 48%. Trial dihentikan prematur karena manfaat bermakna. Menjadi bukti utama bahwa pasien DM membutuhkan statin terlepas dari kadar LDL baseline.</p>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-meta">Meta-Analysis</span>
+                        <span class="study-tag tag-score">N=18,686</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">CTT Collaboration — DM &amp; Statin Subgroup</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>Lancet. 2008;371(9607):117–125</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">Meta-analisis 18.686 pasien DM dari 14 statin trials. Setiap penurunan LDL 1 mmol/L (±38.7 mg/dL) → penurunan major vascular events 21% pada DM (HR 0.79, 95%CI 0.72–0.86). Manfaat proporsional sama dengan non-DM, namun risiko absolut lebih tinggi = absolute benefit lebih besar.</p>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-cohort">Observational</span>
+                        <span class="study-tag tag-score">N=8,888</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">HPS2-THRIVE — Statin pada DM T2 dengan CKD</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>N Engl J Med. 2013;369:2089–2099</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">Subset DM dengan eGFR 30–59: Statin intensitas tinggi vs moderate → penurunan CV events bermakna. Diperkuat oleh 4D Trial (atorva pada DM + HD) yang menunjukkan benefit pada pre-dialisis namun tidak pada dialisis — implikasi penting bahwa manfaat statin pada DM+CKD bergantung pada stadium eGFR.</p>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-rct">RCT Post-hoc</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">IMPROVE-IT — DM Subgroup (Ezetimibe + Statin)</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>N Engl J Med. 2015;372:2387–2397 / Diabetologia 2016</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">18.144 post-ACS pasien. Subgrup DM (n=4.933): Simvastatin+Ezetimibe vs. Simva saja. Pasien DM mendapat manfaat lebih besar dari penambahan ezetimibe → HR 0.86 vs 0.94 pada non-DM. NNT lebih rendah pada DM. Mendukung intensifikasi lebih agresif (kombinasi) pada DM.</p>
+                </div>
+
+                <div class="glass-card p-3 mt-2" style="background: rgba(245,158,11,0.04); border-color: rgba(245,158,11,0.15);">
+                    <div class="text-[10px] font-black uppercase tracking-wider mb-1.5" style="color: #FCD34D;">Statin &amp; Risiko New-Onset DM — Perlu Diketahui</div>
+                    <div class="space-y-1.5 text-[11px]" style="color: #94A3B8;">
+                        <div class="flex items-start gap-2"><span style="color: #F59E0B;">▸</span><span><strong style="color: #FCD34D;">SATURNUS Meta-analysis (Preiss et al. 2011):</strong> Statin intensitas tinggi meningkatkan risiko new-onset DM ~12% dibanding statin intensitas sedang. Namun: benefit CV jauh melebihi risiko DM (rasio 9:1 pada risiko tinggi).</span></div>
+                        <div class="flex items-start gap-2"><span style="color: #F59E0B;">▸</span><span>Pasien pra-DM (IFG/IGT) tetap mendapat benefit statin. Pantau glukosa puasa/HbA1c saat inisiasi HIS.</span></div>
+                        <div class="flex items-start gap-2"><span style="color: #F59E0B;">▸</span><span>Rosuvastatin &gt; Atorvastatin dalam risiko DM (perbedaan minor, tidak mengubah indikasi klinis).</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── TAB: TG/HDL Ratio ── -->
+            <div id="tghdl-tab" class="tab-content space-y-3 fade-up hidden">
+                <div class="glass-card p-4 mb-3" style="border-color: rgba(139,92,246,0.2); background: rgba(139,92,246,0.03);">
+                    <div class="flex items-start gap-3 mb-3">
+                        <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style="background: rgba(139,92,246,0.15);">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-black mb-1" style="color: #C4B5FD;">TG/HDL Ratio — Proksi Insulin Resistance &amp; sdLDL</h3>
+                            <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">TG/HDL ratio (dalam mg/dL) adalah proksi sederhana untuk small dense LDL (sdLDL), resistensi insulin, dan metabolik sindrom. Meskipun bukan target primer guideline, rasio ini relevan untuk identifikasi residual ASCVD risk dan memandu indikasi terapi non-statin tambahan.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div class="rounded-xl p-2 text-center" style="background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2);">
+                            <div class="text-[9px] font-bold uppercase" style="color: #86EFAC;">Optimal</div>
+                            <div class="text-sm font-black" style="color: #4ADE80;">&lt; 2.0</div>
+                            <div class="text-[8px] mt-0.5" style="color: #16A34A;">IR rendah</div>
+                        </div>
+                        <div class="rounded-xl p-2 text-center" style="background: rgba(234,179,8,0.08); border: 1px solid rgba(234,179,8,0.2);">
+                            <div class="text-[9px] font-bold uppercase" style="color: #FDE047;">Borderline</div>
+                            <div class="text-sm font-black" style="color: #FBBF24;">2.0–3.0</div>
+                            <div class="text-[8px] mt-0.5" style="color: #D97706;">Monitor</div>
+                        </div>
+                        <div class="rounded-xl p-2 text-center" style="background: rgba(249,115,22,0.08); border: 1px solid rgba(249,115,22,0.2);">
+                            <div class="text-[9px] font-bold uppercase" style="color: #FDBA74;">Tinggi</div>
+                            <div class="text-sm font-black" style="color: #FB923C;">3.0–5.0</div>
+                            <div class="text-[8px] mt-0.5" style="color: #EA580C;">sdLDL ↑</div>
+                        </div>
+                        <div class="rounded-xl p-2 text-center" style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);">
+                            <div class="text-[9px] font-bold uppercase" style="color: #FCA5A5;">Sangat Tinggi</div>
+                            <div class="text-sm font-black" style="color: #EF4444;">&gt; 5.0</div>
+                            <div class="text-[8px] mt-0.5" style="color: #DC2626;">High CVD Risk</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-cohort">Prospective Cohort</span>
+                        <span class="study-tag tag-score">N=5,426</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">Framingham Offspring Study — TG/HDL &amp; CHD Risk</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>Arterioscler Thromb Vasc Biol. 1997;17:1163–1168</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">5.426 subjek Framingham Offspring, follow-up 12 tahun. TG/HDL ratio (mg/dL) &gt;4 dikaitkan dengan peningkatan 4.8× risiko MI pada pria (tertile tertinggi vs terendah). TG/HDL ratio berkorelasi kuat dengan small dense LDL (sdLDL) subtype — partikel LDL paling aterogenik.</p>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-rwe">Real-World Evidence</span>
+                        <span class="study-tag tag-score">N=11,419</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">Jeppesen et al. — Non-fasting TG/HDL &amp; Ischemic Heart Disease</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>Circulation. 2006;114(5):459–465</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">Copenhagen City Heart Study, 11.419 peserta. Non-fasting TG/HDL sebagai prediktor ischemic heart disease lebih kuat daripada TG atau HDL sendiri. Tertile TG/HDL tertinggi vs terendah: HR 1.89 pria, 1.69 perempuan untuk CHD. Mendukung penggunaan rasio ini pada skrining metabolik.</p>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-meta">Meta-Analysis</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">Da Luz et al. — TG/HDL Cutoffs &amp; CAD</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>Clinics (São Paulo). 2008;63(4):427–432</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">Analisis ROC: Cut-off TG/HDL 3.8 mg/dL optimal untuk prediksi CAD (AUC 0.75, Se 60%, Sp 82%). Pasien dengan TG/HDL &gt;3.8 memiliki proporsi sdLDL subtype &gt;75% — implikasi terhadap residual risk meski LDL-C terkontrol.</p>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-rct">RCT Post-hoc</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">ACCORD-Lipid / FIELD Trial — Fenofibrat pada TG Tinggi + HDL Rendah</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>N Engl J Med. 2010;362:1563–1574 (ACCORD) / Lancet 2005 (FIELD)</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">ACCORD-Lipid: 5.518 DM T2, simvastatin ± fenofibrat. Overall tidak bermakna. Namun subgrup TG ≥204 mg/dL &amp; HDL ≤34 mg/dL (= TG/HDL &gt;6): HR 0.69 untuk CV events dengan fenofibrat (interaksi signifikan p=0.057). Mendukung fenofibrat/omega-3 selektif pada TG/HDL sangat tinggi meski statin sudah optimal.</p>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-rct">RCT</span>
+                        <span class="study-tag tag-score">N=8,179</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">REDUCE-IT — Icosapent Ethyl pada TG Tinggi</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>N Engl J Med. 2019;380:11–22</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">8.179 pasien risiko tinggi (ASCVD atau DM+RF) dengan TG 135–499 mg/dL meski sudah statin, dirandomisasi icosapent ethyl 4g/hari vs plasebo. Penurunan MACE 25% (HR 0.75, p&lt;0.001). Pasien dengan TG/HDL tinggi mendapat manfaat terbesar. Menjadi dasar rekomendasi omega-3 EPA pada TG ≥150 mg/dL yang tidak terkontrol meski statin.</p>
+                </div>
+
+                <div class="glass-card p-3 mt-2" style="background: rgba(139,92,246,0.04); border-color: rgba(139,92,246,0.15);">
+                    <div class="text-[10px] font-black uppercase tracking-wider mb-1.5" style="color: #C4B5FD;">Implikasi Praktis TG/HDL Ratio</div>
+                    <div class="space-y-1.5 text-[11px]" style="color: #94A3B8;">
+                        <div class="flex items-start gap-2"><span style="color: #8B5CF6;">▸</span><span><strong style="color: #C4B5FD;">NLA Position Statement 2023:</strong> TG/HDL bukan target terapi primer, namun berguna untuk identifikasi residual risk &amp; indikasi terapi fibrat/EPA.</span></div>
+                        <div class="flex items-start gap-2"><span style="color: #8B5CF6;">▸</span><span><strong style="color: #C4B5FD;">TG/HDL &gt; 3.0 + LDL terkontrol:</strong> Pertimbangkan non-HDL sebagai target sekunder. Evaluasi pola makan (karbohidrat olahan/alkohol). Pertimbangkan fenofibrat atau icosapent ethyl.</span></div>
+                        <div class="flex items-start gap-2"><span style="color: #8B5CF6;">▸</span><span><strong style="color: #C4B5FD;">Catatan unit:</strong> TG/HDL &gt;3.0 (mg/dL) ≈ TG/HDL &gt;1.33 dalam mmol/L. Hati-hati konversi.</span></div>
+                        <div class="flex items-start gap-2"><span style="color: #8B5CF6;">▸</span><span>Non-fasting TG tetap valid untuk rasio ini, namun fasting lebih akurat untuk sdLDL phenotyping.</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── TAB: Statin Core Evidence ── -->
+            <div id="statin-tab" class="tab-content space-y-3 fade-up hidden">
+                <div class="glass-card p-4 mb-3" style="border-color: rgba(217,119,6,0.2); background: rgba(217,119,6,0.03);">
+                    <h3 class="text-sm font-black mb-2" style="color: #FCD34D;">Landmark Statin Trials — Core Evidence</h3>
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div class="rounded-xl p-2" style="background: rgba(217,119,6,0.08); border: 1px solid rgba(217,119,6,0.2);">
+                            <div class="text-base font-black" style="color: #F59E0B;">1 mmol/L</div>
+                            <div class="text-[9px]" style="color: #78350F;">Penurunan LDL</div>
+                            <div class="text-xs font-black" style="color: #FCD34D;">↓22% MACE</div>
+                        </div>
+                        <div class="rounded-xl p-2" style="background: rgba(217,119,6,0.08); border: 1px solid rgba(217,119,6,0.2);">
+                            <div class="text-base font-black" style="color: #F59E0B;">High-IS</div>
+                            <div class="text-[9px]" style="color: #78350F;">vs Low-IS</div>
+                            <div class="text-xs font-black" style="color: #FCD34D;">↓15% lebih</div>
+                        </div>
+                        <div class="rounded-xl p-2" style="background: rgba(217,119,6,0.08); border: 1px solid rgba(217,119,6,0.2);">
+                            <div class="text-base font-black" style="color: #F59E0B;">PCSK9i</div>
+                            <div class="text-[9px]" style="color: #78350F;">Added to statin</div>
+                            <div class="text-xs font-black" style="color: #FCD34D;">↓15% MACE</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-meta">CTT Meta-Analysis</span>
+                        <span class="study-tag tag-score">N=170,000+</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">CTT Collaboration — Cholesterol Treatment Trialists</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>Lancet. 2010;376:1670–1681</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">Meta-analisis 26 trials, 170.000+ pasien. Setiap penurunan LDL 1 mmol/L (38.7 mg/dL) → penurunan major vascular events 22% (RR 0.78, p&lt;0.0001). Hubungan log-linear: semakin rendah LDL, semakin besar benefit. Tidak ada threshold aman di bawah. Menjadi fondasi prinsip "lower is better".</p>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-rct">RCT</span>
+                        <span class="study-tag tag-score">N=18,144</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">IMPROVE-IT — Ezetimibe + Statin</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>N Engl J Med. 2015;372:2387–2397</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">18.144 post-ACS pasien, Simvastatin 40mg vs Simvastatin+Ezetimibe. LDL turun dari 69.5 → 53.7 mg/dL. MACE turun 6.4% relatif (HR 0.936, p=0.016). Membuktikan bahwa menurunkan LDL dengan non-statin (ezetimibe) juga memberikan outcome benefit → mendukung prinsip "LDL lowering, class-agnostic".</p>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-rct">RCT</span>
+                        <span class="study-tag tag-score">N=27,564</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">FOURIER — Evolocumab (PCSK9i) + Statin</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>N Engl J Med. 2017;376:1713–1722</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">27.564 pasien ASCVD dengan statin optimal, dirandomisasi evolocumab vs plasebo. LDL median 30 mg/dL vs 92 mg/dL. MACE turun 15% (HR 0.85), CV death/MI/stroke turun 20% pada 3 tahun. Mendukung PCSK9i sebagai next step pasca statin+ezetimibe pada secondary prevention.</p>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-rct">RCT</span>
+                        <span class="study-tag tag-score">N=18,924</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">ODYSSEY OUTCOMES — Alirocumab (PCSK9i)</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>N Engl J Med. 2018;379:2097–2107</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">18.924 post-ACS pasien, alirocumab vs plasebo. LDL median 39 mg/dL vs 93 mg/dL. MACE turun 15% (HR 0.85, p&lt;0.001). Pasien dengan LDL ≥100 mg/dL baseline mendapat manfaat terbesar (HR 0.76). Pertama menunjukkan trend mortalitas all-cause (HR 0.85 exploratory). Mendukung PCSK9i post-ACS khususnya LDL &gt;100 meski statin tinggi.</p>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-rct">RCT</span>
+                        <span class="study-tag tag-score">N=14,541</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">TNT Trial — Intensive vs Moderate Statin</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>N Engl J Med. 2005;352:1425–1435</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">14.541 pasien stable CHD: Atorvastatin 80mg vs 10mg. LDL 77 vs 101 mg/dL. Major CV events turun 22% (HR 0.78, p&lt;0.001). Membuktikan high-intensity statin superior terhadap moderate-intensity pada secondary prevention. Mendukung target LDL &lt;70 mg/dL.</p>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-rct">RCT Primary Prevention</span>
+                        <span class="study-tag tag-score">N=17,802</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">JUPITER Trial — Rosuvastatin Primary Prevention</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>N Engl J Med. 2008;359:2195–2207</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">17.802 peserta LDL &lt;130 mg/dL namun hs-CRP ≥2 mg/L. Rosuvastatin 20mg vs plasebo. MACE turun 44% (HR 0.56, p&lt;0.00001), CV mortality turun 47%. Dihentikan prematur karena benefit dramatis. Mendukung konsep statin pada intermediate-risk primary prevention berbasis hs-CRP sebagai enhancer.</p>
+                </div>
+
+                <div class="study-card">
+                    <div class="flex items-start gap-2 mb-1.5">
+                        <span class="study-tag tag-rct">RCT</span>
+                        <span class="study-tag tag-score">N=13,970</span>
+                    </div>
+                    <h4 class="text-sm font-bold mb-0.5" style="color: #E2E8F0;">CLEAR Outcomes — Bempedoic Acid (Non-Statin)</h4>
+                    <p class="text-[11px] mb-1" style="color: #64748B;"><em>N Engl J Med. 2023;388:1353–1364</em></p>
+                    <p class="text-[11px] leading-relaxed" style="color: #94A3B8;">13.970 pasien intoleransi statin atau menolak statin. Bempedoic acid vs plasebo. LDL turun 21.1%. MACE turun 13% (HR 0.87, p=0.004). Membuktikan bahwa penurunan LDL oleh non-statin memberikan outcome benefit bahkan pada intoleransi statin. Alternatif untuk pasien safety issue berat.</p>
+                </div>
+            </div>
+
+        </div>
+        <!-- END EVIDENCE SECTION -->
+
+        <!-- FOOTER -->
+        <div class="mt-8 pb-4 text-center">
+            <p class="text-[10px]" style="color: #1E293B;">Developed by <strong style="color: #D97706;">Bayushi Eka Putra, MD, FIHA</strong> · CardiologyVault v4.0 · Evidence-based Clinical Decision Support Tool</p>
+            <p class="text-[9px] mt-1" style="color: #0F172A80; color: #334155;">Berbasis ESC/EAS 2023, ACC/AHA 2022-2024, NLA 2023. Bukan pengganti penilaian klinis komprehensif DPJP.</p>
+        </div>
+    </div>
+
+    <!-- PDF OVERLAY TEMPLATE -->
+    <div id="pdf-overlay" class="fixed inset-0 z-50 bg-slate-900/90 hidden justify-center items-start overflow-auto py-10 backdrop-blur-sm">
+        <div id="pdf-document-node" class="bg-white px-10 py-10 font-sans text-slate-900 flex flex-col shadow-2xl relative" style="width: 794px; min-height: 1123px; box-sizing: border-box; font-family: 'Inter', sans-serif;">
+            <div class="z-10 flex flex-col h-full">
+                <div class="flex justify-between items-end border-b-4 border-amber-700 pb-3 mb-6">
+                    <div>
+                        <h1 class="text-xl font-black text-slate-900 mb-1 tracking-tight">Laporan Pathway Klinis Lipid & Statin</h1>
+                        <p class="text-xs text-slate-600 font-semibold">Guideline-Directed Medical Therapy Assistant (ESC/ACC/AHA 2023–2024) — v4.0</p>
+                    </div>
+                    <div class="text-right pb-1">
+                        <span class="text-[10px] font-black text-amber-800 bg-amber-50 px-3 py-1.5 rounded-md uppercase tracking-widest border border-amber-200">CardiologyVault</span>
+                    </div>
+                </div>
+                <div class="mb-5">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs text-slate-900">
+                        <div class="grid grid-cols-2 gap-y-2 gap-x-8">
+                            <div class="flex items-end border-b border-dotted border-slate-300 pb-1">
+                                <strong class="whitespace-nowrap mr-2 w-28 text-slate-600">Nama Pasien</strong>: <span class="w-full font-bold"></span>
+                            </div>
+                            <div class="flex items-end border-b border-dotted border-slate-300 pb-1">
+                                <strong class="whitespace-nowrap mr-2 w-28 text-slate-600">Tanggal</strong>: <span id="pdf-date" class="w-full font-bold"></span>
+                            </div>
+                            <div class="col-span-2 mt-2 pt-2 border-t border-slate-200">
+                                <strong class="text-slate-600 block mb-1">Baseline Profil:</strong>
+                                <span id="pdf-params" class="font-medium text-slate-800 leading-relaxed block"></span>
+                            </div>
+                            <div class="col-span-2 mt-1">
+                                <strong class="text-slate-600 block mb-1">Risk Modifiers Aktif:</strong>
+                                <span id="pdf-enhancers" class="font-medium text-slate-800 leading-relaxed block italic"></span>
+                            </div>
+                            <div class="col-span-2 mt-1 border-t border-rose-100 pt-2" id="pdf-safety-container">
+                                <strong class="text-rose-700 block mb-1">Safety Checks:</strong>
+                                <span id="pdf-safety" class="font-bold text-rose-900 leading-relaxed block"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-4 flex-grow">
+                    <div id="pdf-risk-card" class="p-4 rounded-xl border-2">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Prioritas Intervensi Utama</div>
+                        <div id="pdf-res-category" class="text-lg font-black text-slate-900"></div>
+                        <div id="pdf-res-context" class="text-[11px] font-semibold text-slate-700 mt-1"></div>
+                        <div class="mt-2 pt-2 border-t border-slate-200/50">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Faktor Penentu:</span>
+                            <div id="pdf-res-reasons" class="text-[10px] font-medium text-slate-700 mt-0.5"></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-4 gap-3">
+                        <div class="p-3 rounded-xl border border-amber-200 bg-amber-50/50 shadow-sm col-span-2">
+                            <div class="text-[9px] text-amber-800 font-black mb-1 uppercase tracking-widest text-center border-b border-amber-200 pb-1">TARGET LDL-C</div>
+                            <div id="pdf-res-target-ldl" class="text-base font-black text-amber-900 text-center py-1">-</div>
+                            <div id="pdf-actual-ldl" class="text-[10px] font-bold text-amber-700 text-center mt-1">Aktual: -</div>
+                        </div>
+                        <div class="p-3 rounded-xl border bg-slate-50 border-slate-300 col-span-2">
+                            <div class="text-[9px] text-slate-600 font-bold mb-1 uppercase tracking-widest text-center border-b border-slate-200 pb-1">TARGET SEKUNDER</div>
+                            <div class="grid grid-cols-2 gap-1 mt-1">
+                                <div>
+                                    <div class="text-[8px] text-slate-500 font-bold uppercase text-center">Non-HDL</div>
+                                    <div id="pdf-res-target-nonhdl" class="text-xs font-bold text-slate-900 text-center">-</div>
+                                    <div id="pdf-actual-nonhdl" class="text-[9px] font-bold text-slate-600 text-center">Aktual: -</div>
+                                </div>
+                                <div class="border-l border-slate-200 pl-1">
+                                    <div class="text-[8px] text-slate-500 font-bold uppercase text-center">Apo B</div>
+                                    <div id="pdf-res-target-apob" class="text-xs font-bold text-slate-900 text-center">-</div>
+                                    <div id="pdf-actual-apob" class="text-[9px] font-bold text-slate-600 text-center">Aktual: -</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border border-amber-200 bg-white rounded-xl p-4 mt-2 shadow-sm">
+                        <div class="text-[10px] font-black text-amber-800 uppercase mb-2 tracking-widest">Rekomendasi Terapi Saat Ini</div>
+                        <div id="pdf-statin-box" class="border p-3 rounded-lg mb-3 bg-slate-50">
+                            <p id="pdf-res-statin" class="text-sm font-black">-</p>
+                        </div>
+                        <div class="text-[10px] font-black text-amber-700 uppercase mb-2 tracking-widest border-t border-slate-100 pt-3">Dasar Strategi Klinis</div>
+                        <ul id="pdf-res-strategy" class="space-y-1.5 text-xs text-slate-800 font-medium pl-1"></ul>
+                    </div>
+                </div>
+                <div class="mt-6 pt-4 border-t-4 border-amber-700">
+                    <p class="text-[9px] text-slate-500 mb-6 text-justify leading-relaxed">
+                        <strong>Disclaimer Klinis:</strong> Dokumen ini merupakan alat bantu <em>rule-based pathway assistant</em> berbasis pedoman (ACC/AHA 2024 &amp; ESC 2023). Bukan kalkulator risiko absolut dan bukan pengganti penilaian klinis komprehensif DPJP. Semua keputusan terapi tunduk pada penilaian klinis akhir Dokter Penanggung Jawab Pelayanan.
+                    </p>
+                    <div class="flex justify-between items-end">
+                        <div class="text-[10px] text-slate-400 font-medium">CardiologyVault App — Module v4.0 (Gold Ed.)</div>
+                        <div class="text-center w-64">
+                            <p class="mb-14 text-slate-800 text-[11px] font-medium">Tangerang Selatan, ........................</p>
+                            <p class="font-black text-slate-900 text-sm border-b border-slate-800 pb-1">Bayushi Eka Putra, MD, FIHA</p>
+                            <p class="text-[9px] text-slate-600 mt-1 font-bold uppercase tracking-widest">Dokter Penanggung Jawab (DPJP)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // ── ELEMENT REFERENCES ──
+        const el = id => document.getElementById(id);
+
+        const preventionEl = el('prevention');
+        const currentStatinEl = el('currentStatin');
+        const safetyEl = el('safety');
+        const ageEl = el('age');
+        const genderEl = el('gender');
+        const smokerEl = el('smoker');
+        const dmEl = el('dm');
+        const htnTreatedEl = el('htnTreated');
+        const sbpEl = el('sbp');
+        const tcEl = el('tc');
+        const hdlEl = el('hdl');
+        const tgEl = el('tg');
+        const ldlEl = el('ldl');
+        const cacEl = el('cac');
+        const ckdEl = el('ckd');
+        const fhEl = el('fh');
+        const lpaEl = el('lpa');
+        const apoBEl = el('apoB');
+        const inflamEl = el('inflam');
+
+        const allInputs = [
+            preventionEl, currentStatinEl, safetyEl, ageEl, genderEl, smokerEl,
+            dmEl, htnTreatedEl, sbpEl, tcEl, hdlEl, tgEl, ldlEl,
+            cacEl, ckdEl, fhEl, lpaEl, apoBEl, inflamEl
+        ];
+
+        // DM Subtype inputs
+        const dmComplications = ['dm-ckd', 'dm-retino', 'dm-neuro', 'dm-htn'];
+
+        // ── DM SHOW/HIDE LOGIC ──
+        function handleDmChange() {
+            const dmVal = dmEl.value;
+            const contextBox = el('dm-context-box');
+            const compBox = el('dm-complications');
+            const contextText = el('dm-context-text');
+
+            if (dmVal === 'no') {
+                contextBox.classList.add('hidden');
+                compBox.classList.add('hidden');
+            } else {
+                contextBox.classList.remove('hidden');
+
+                if (dmVal === 'yes_simple') {
+                    contextText.textContent = 'DM T2 tanpa komplikasi end-organ, durasi ≤10 tahun → Risiko TINGGI (ESC 2023). Target LDL < 70 mg/dL + reduksi ≥50%. Inisiasi statin intensitas tinggi direkomendasikan.';
+                    compBox.classList.add('hidden');
+                } else if (dmVal === 'yes_complex') {
+                    contextText.textContent = 'DM T2 dengan komplikasi end-organ (CKD/Retino/Neuro) atau ≥10 tahun atau ≥3 faktor risiko → Risiko SANGAT TINGGI (ESC 2023). Target LDL < 55 mg/dL + reduksi ≥50%. Pertimbangkan kombinasi statin + ezetimibe sejak awal.';
+                    compBox.classList.remove('hidden');
+                } else if (dmVal === 't1dm') {
+                    contextText.textContent = 'DM Tipe 1 dengan durasi >20 tahun atau nefropati → Risiko SANGAT TINGGI. Target LDL < 55 mg/dL. Evidence: pasien T1DM mendapat manfaat bermakna dari statin (CTT 2008).';
+                    compBox.classList.remove('hidden');
+                }
+            }
+            updateUI();
+        }
+        dmEl.addEventListener('change', handleDmChange);
+        dmComplications.forEach(id => {
+            const el_comp = el(id);
+            if (el_comp) el_comp.addEventListener('change', updateUI);
+        });
+
+        // ── TAB SWITCHING ──
+        function switchTab(tabId, btnEl) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            el(tabId).classList.remove('hidden');
+            btnEl.classList.add('active');
+            el(tabId).classList.add('fade-up');
+        }
+
+        // ── SCROLL TO RESULT ──
+        function scrollToResult() {
+            el('result-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // ── CALCULATE TGHDL LIVE ──
+        function updateLiveRatios() {
+            const tc = Number(tcEl.value) || 0;
+            const hdl = Number(hdlEl.value) || 1;
+            const tg = Number(tgEl.value) || 0;
+
+            const nonHdl = tc - hdl;
+            const tgHdl = hdl > 0 ? (tg / hdl).toFixed(2) : '—';
+            const tcHdl = hdl > 0 ? (tc / hdl).toFixed(2) : '—';
+
+            el('live-nonhdl').textContent = nonHdl > 0 ? `${nonHdl} mg/dL` : '—';
+            el('live-tchdl').textContent = tcHdl;
+
+            // TG/HDL display
+            const ratio = parseFloat(tgHdl);
+            el('tghdl-value-big').textContent = isNaN(ratio) ? '—' : tgHdl;
+
+            // Color + category
+            const tghdlValue = el('tghdl-value-big');
+            const tghdlCat = el('tghdl-category');
+            const tghdlRisk = el('tghdl-risk-label');
+            const tghdlBar = el('tghdl-bar');
+
+            if (!isNaN(ratio)) {
+                const pct = Math.min((ratio / 8) * 100, 100);
+                tghdlBar.style.width = pct + '%';
+
+                if (ratio < 2) {
+                    tghdlValue.style.color = '#4ADE80';
+                    tghdlCat.textContent = '✓ Optimal';
+                    tghdlCat.style.color = '#4ADE80';
+                    tghdlRisk.textContent = 'IR rendah, sdLDL minimal';
+                    tghdlBar.style.background = '#22C55E';
+                    el('live-tghdl').style.color = '#4ADE80';
+                } else if (ratio < 3) {
+                    tghdlValue.style.color = '#FBBF24';
+                    tghdlCat.textContent = '⚠ Borderline';
+                    tghdlCat.style.color = '#FBBF24';
+                    tghdlRisk.textContent = 'Monitor metabolik';
+                    tghdlBar.style.background = '#EAB308';
+                    el('live-tghdl').style.color = '#FBBF24';
+                } else if (ratio < 5) {
+                    tghdlValue.style.color = '#FB923C';
+                    tghdlCat.textContent = '↑ Tinggi';
+                    tghdlCat.style.color = '#FB923C';
+                    tghdlRisk.textContent = 'sdLDL ↑ — Residual risk';
+                    tghdlBar.style.background = '#F97316';
+                    el('live-tghdl').style.color = '#FB923C';
+                } else {
+                    tghdlValue.style.color = '#EF4444';
+                    tghdlCat.textContent = '↑↑ Sangat Tinggi';
+                    tghdlCat.style.color = '#EF4444';
+                    tghdlRisk.textContent = 'Pertimbangkan EPA/Fibrat';
+                    tghdlBar.style.background = '#EF4444';
+                    el('live-tghdl').style.color = '#EF4444';
+                }
+            }
+            el('live-tghdl').textContent = isNaN(ratio) ? '—' : tgHdl;
+
+            // Lp(a) card highlight
+            const lpaVal = lpaEl.value;
+            const lpaCard = el('lpa-card');
+            const lpaDetail = el('lpa-detail');
+            if (lpaVal === 'no') {
+                lpaCard.classList.remove('active-lpa');
+                lpaDetail.classList.add('hidden');
+            } else {
+                lpaCard.classList.add('active-lpa');
+                lpaDetail.classList.remove('hidden');
+                const lpaMessages = {
+                    borderline: 'Borderline 30–50 mg/dL: Monitoring rutin. Pertimbangkan eskalasi terapi LDL jika terdapat faktor risiko lain.',
+                    high: 'Lp(a) >50 mg/dL (>125 nmol/L): Risk modifier bermakna (ESC 2023). Upscale target LDL lebih agresif. PCSK9i menurunkan Lp(a) ~26–30%. Terapi spesifik Lp(a) (olpasiran, lepodisiran) sedang dalam uji fase 3.',
+                    very_high: 'Lp(a) >180 mg/dL: Setara risiko Familial Hypercholesterolemia. Pertimbangkan target LDL seperti very high risk (<55 mg/dL). Konsultasi Kardiovaskular dianjurkan. Terapi spesifik Lp(a) (siRNA) segera tersedia.'
+                };
+                lpaDetail.textContent = lpaMessages[lpaVal] || '';
+            }
+
+            // CAC card highlight
+            const cacVal = cacEl.value;
+            const cacCard = el('cac-card');
+            const cacDetail = el('cac-detail');
+            if (cacVal === 'unknown') {
+                cacCard.classList.remove('active-cac');
+                cacDetail.classList.add('hidden');
+            } else {
+                cacCard.classList.add('active-cac');
+                cacDetail.classList.remove('hidden');
+                const cacMessages = {
+                    zero: 'CAC = 0 (Agatston): Tidak ditemukan kalsium koroner. Risiko 10-tahun event sangat rendah (0.4% dalam MESA). Dapat dipertimbangkan tunda statin pada intermediate risk kecuali ada DM/perokok/riwayat keluarga kuat (ACC/AHA 2019, Kelas IIb).',
+                    low: 'CAC 1–99 (Plak Ringan): Ada bukti aterosklerosis subklinis. Mendukung inisiasi statin pada pasien borderline risk. ACC/AHA: Kelas IIa untuk mulai statin. Diskusikan dengan pasien.',
+                    moderate: 'CAC 100–299 (Plak Moderat): High risk imaging. Direkomendasikan statin intensitas tinggi. Target LDL <70 mg/dL. Setara dengan risiko kategori tinggi untuk sebagian guideline.',
+                    high: 'CAC ≥300 (Plak Obstruktif): Beban plak berat. Pertimbangkan target LDL <55 mg/dL seperti secondary prevention. Statin intensitas tinggi. Evaluasi referral kardiologi untuk pemeriksaan lebih lanjut.'
+                };
+                cacDetail.textContent = cacMessages[cacVal] || '';
+            }
+        }
+
+        // ── MAIN CALCULATE FUNCTION ──
+        function calculateRisk() {
+            const isSecondary = preventionEl.value === 'secondary';
+            const curStatin = currentStatinEl.value;
+            const hasSafetyIssue = safetyEl.value === 'yes';
+
+            const age = Number(ageEl.value);
+            const tc = Number(tcEl.value);
+            const hdl = Number(hdlEl.value) || 1;
+            const tg = Number(tgEl.value);
+            const ldl = Number(ldlEl.value);
+            const sbp = Number(sbpEl.value);
+
+            const isMale = genderEl.value === 'male';
+            const isSmoker = smokerEl.value === 'yes';
+            const dmVal = dmEl.value;
+            const hasDM = dmVal !== 'no';
+            const hasDMComplex = dmVal === 'yes_complex' || dmVal === 't1dm';
+            const hasDMSimple = dmVal === 'yes_simple';
+            const htnTreated = htnTreatedEl.value === 'yes';
+
+            const cac = cacEl.value;
+            const ckdVal = ckdEl.value;
+            const hasCKD = ckdVal !== 'no';
+            const hasSevereCKD = ckdVal === 'g4g5';
+            const hasFH = fhEl.value === 'yes';
+            const lpaVal = lpaEl.value;
+            const hasLpaHigh = lpaVal === 'high' || lpaVal === 'very_high';
+            const hasLpaVeryHigh = lpaVal === 'very_high';
+            const apoBVal = apoBEl.value;
+            const hasApoBHigh = apoBVal === 'high';
+            const hasInflam = inflamEl.value === 'yes';
+
+            const hasHighTg = tg >= 175;
+            const tgHdlRatio = hdl > 0 ? tg / hdl : 0;
+            const hasHighTgHdl = tgHdlRatio >= 3.0;
+            const hasVeryHighTgHdl = tgHdlRatio >= 5.0;
+
+            const actualNonHdl = tc - hdl;
+
+            // DM-specific complications
+            const hasDmCKD = document.getElementById('dm-ckd') ? document.getElementById('dm-ckd').checked : false;
+            const hasDmRetino = document.getElementById('dm-retino') ? document.getElementById('dm-retino').checked : false;
+            const hasDmNeuro = document.getElementById('dm-neuro') ? document.getElementById('dm-neuro').checked : false;
+            const hasDmHtn = document.getElementById('dm-htn') ? document.getElementById('dm-htn').checked : false;
+            const hasDmEndOrgan = hasDmCKD || hasDmRetino || hasDmNeuro || hasDmHtn;
+
+            let hasPrimaryEnhancers = hasCKD || hasFH || hasLpaHigh || hasApoBHigh || hasInflam || hasHighTg || hasHighTgHdl;
+
+            let category = '';
+            let context = '';
+            let targetLdlNum = 116;
+            let statin = '';
+            let strategy = [];
+            let reasons = [];
+
+            // Reasons tracking
+            if (isSecondary) reasons.push("Secondary Prevention (ASCVD)");
+            if (ldl >= 190) reasons.push("LDL-C ≥ 190 mg/dL");
+            if (hasDMComplex || (hasDM && hasDmEndOrgan)) reasons.push("DM + Komplikasi End-Organ");
+            else if (hasDMSimple) reasons.push("Diabetes Mellitus T2");
+            else if (hasDM) reasons.push("Diabetes Mellitus");
+            if (hasSevereCKD) reasons.push("CKD G4–G5 / Dialisis");
+            else if (hasCKD) reasons.push("CKD G3 (eGFR 30–59)");
+            if (cac === 'high') reasons.push("CAC ≥ 300 (Plak Obstruktif)");
+            else if (cac === 'moderate') reasons.push("CAC 100–299 (Plak Moderat)");
+            else if (cac === 'low') reasons.push("CAC 1–99 (Plak Ringan)");
+            else if (cac === 'zero') reasons.push("CAC = 0 (Tidak Ada Plak)");
+            if (hasLpaVeryHigh) reasons.push("Lp(a) > 180 mg/dL (FH-like)");
+            else if (hasLpaHigh) reasons.push("Lp(a) > 50 mg/dL");
+            else if (lpaVal === 'borderline') reasons.push("Lp(a) Borderline 30–50 mg/dL");
+            if (hasApoBHigh) reasons.push("Apo B ≥ 130 mg/dL");
+            if (hasHighTgHdl) reasons.push(`TG/HDL ${tgHdlRatio.toFixed(1)} (Tinggi)`);
+            else if (hasHighTg) reasons.push("TG ≥ 175 mg/dL");
+            if (isSmoker) reasons.push("Perokok Aktif");
+            if (hasInflam) reasons.push("Penyakit Inflamasi Kronis");
+            if (hasFH) reasons.push("ASCVD Prematur (Riwayat Keluarga)");
+
+            // === RISK CLASSIFICATION ===
+            if (isSecondary) {
+                category = 'Prioritas Intervensi Sangat Tinggi';
+                context = 'Secondary Prevention — Clinical ASCVD Terkonfirmasi';
+                targetLdlNum = 55;
+            }
+            else if (ldl >= 190) {
+                const isVeryHigh = hasDMComplex || hasSevereCKD || cac === 'high' || hasLpaVeryHigh || (hasDM && hasDmEndOrgan);
+                category = isVeryHigh ? 'Prioritas Intervensi Sangat Tinggi' : 'Prioritas Intervensi Tinggi';
+                context = 'Kecurigaan Severe Hypercholesterolemia / Familial HC (LDL ≥ 190)';
+                targetLdlNum = isVeryHigh ? 55 : 70;
+            }
+            else {
+                if (age < 40) {
+                    if (cac === 'high' || cac === 'moderate') {
+                        category = 'Prioritas Intervensi Tinggi';
+                        context = 'Bukti Plak Koroner Signifikan di Usia Muda (CAC ≥ 100)';
+                        targetLdlNum = 70;
+                    } else if ((hasDMComplex || (hasDM && hasDmEndOrgan)) || (hasDM && hasPrimaryEnhancers)) {
+                        category = 'Prioritas Intervensi Tinggi';
+                        context = 'Usia Muda, DM dengan Komplikasi / Multi Risk Factor';
+                        targetLdlNum = 70;
+                    } else if (hasDM) {
+                        category = 'Prioritas Intervensi Sedang';
+                        context = 'Usia Muda dengan DM — Pertimbangkan Lifetime Risk';
+                        targetLdlNum = 100;
+                    } else if (hasLpaVeryHigh) {
+                        category = 'Prioritas Intervensi Tinggi';
+                        context = 'Lp(a) Sangat Tinggi (>180 mg/dL) — Setara Risiko FH';
+                        targetLdlNum = 70;
+                    } else if (hasPrimaryEnhancers || cac === 'low') {
+                        category = 'Prioritas Intervensi Sedang';
+                        context = 'Terdapat Risk Modifiers Bermakna di Usia Muda';
+                        targetLdlNum = 100;
+                    } else {
+                        category = 'Prioritas Intervensi Rendah';
+                        context = 'Usia Muda, Fokus Gaya Hidup & Pencegahan Jangka Panjang';
+                        targetLdlNum = 116;
+                    }
+                }
+                else {
+                    // Main stratification >=40
+                    if (hasDMComplex || (hasDM && hasDmEndOrgan)) {
+                        category = 'Prioritas Intervensi Sangat Tinggi';
+                        context = 'DM dengan Komplikasi End-Organ / Risiko Kardiovaskular Sangat Tinggi';
+                        targetLdlNum = 55;
+                    } else if (hasSevereCKD) {
+                        category = 'Prioritas Intervensi Sangat Tinggi';
+                        context = 'CKD G4–G5 / Dialisis — Risiko Kardiovaskular Sangat Tinggi';
+                        targetLdlNum = 55;
+                    } else if (hasDM && (hasCKD || isSmoker || sbp >= 160 || cac === 'high' || cac === 'moderate' || hasLpaHigh || hasHighTgHdl)) {
+                        category = 'Prioritas Intervensi Sangat Tinggi';
+                        context = 'DM T2 dengan ≥1 Faktor Risiko Berat / End-Organ Risk';
+                        targetLdlNum = 55;
+                    } else if (hasDMSimple) {
+                        category = 'Prioritas Intervensi Tinggi';
+                        context = 'Diabetes Mellitus T2 Tanpa Komplikasi Berat';
+                        targetLdlNum = 70;
+                    } else if (hasCKD || cac === 'high') {
+                        category = 'Prioritas Intervensi Tinggi';
+                        context = 'Penyakit Ginjal Kronis atau CAC ≥300 — Aterosklerosis Subklinis Berat';
+                        targetLdlNum = 70;
+                    } else if (hasLpaVeryHigh) {
+                        category = 'Prioritas Intervensi Tinggi';
+                        context = 'Lp(a) Sangat Tinggi (>180 mg/dL) — Risiko Setara FH';
+                        targetLdlNum = 70;
+                    } else {
+                        // Scoring fallback
+                        let score = 0;
+                        if (age >= 65) score += 3; else if (age >= 55) score += 2; else score += 1;
+                        if (isMale) score += 1;
+                        if (isSmoker) score += 2;
+                        if (sbp >= 140) score += (htnTreated ? 2 : 1);
+                        if (tc >= 240) score += 2; else if (tc >= 200) score += 1;
+                        if (cac === 'moderate') score += 2;
+                        if (hasLpaHigh) score += 1;
+                        if (hasHighTgHdl) score += 1;
+
+                        if (sbp >= 180 || tc >= 310) {
+                            category = 'Prioritas Intervensi Tinggi';
+                            context = 'Faktor Risiko Tunggal Ekstrem (TD ≥ 180 atau TC ≥ 310)';
+                            targetLdlNum = 70;
+                        } else if (score >= 6) {
+                            category = (age >= 70) ? 'Prioritas Intervensi Tinggi' : 'Prioritas Intervensi Sangat Tinggi';
+                            context = 'Estimasi Beban Risiko Tinggi (Multi-Factor Score)';
+                            targetLdlNum = (age >= 70) ? 70 : 55;
+                        } else if (score >= 4) {
+                            category = 'Prioritas Intervensi Tinggi';
+                            context = 'Estimasi Risiko Menengah-Tinggi';
+                            targetLdlNum = 70;
+                        } else if (score >= 2) {
+                            category = 'Prioritas Intervensi Sedang';
+                            context = 'Estimasi Risiko Menengah (Borderline) — Shared Decision Making';
+                            targetLdlNum = 100;
+                        } else {
+                            category = 'Prioritas Intervensi Rendah';
+                            context = 'Estimasi Risiko Mayor Minimal';
+                            targetLdlNum = 116;
+                        }
+
+                        // Modifier adjustments
+                        if (category === 'Prioritas Intervensi Tinggi') {
+                            if (hasLpaHigh) {
+                                category = 'Prioritas Intervensi Sangat Tinggi';
+                                context += ' → Dinaikkan ke Sangat Tinggi karena Lp(a) Tinggi (>50 mg/dL)';
+                                targetLdlNum = 55;
+                            } else if (hasApoBHigh) {
+                                category = 'Prioritas Intervensi Sangat Tinggi';
+                                context += ' → Dinaikkan ke Sangat Tinggi karena Apo B Tinggi (≥130 mg/dL)';
+                                targetLdlNum = 55;
+                            } else if (cac === 'high') {
+                                category = 'Prioritas Intervensi Sangat Tinggi';
+                                context += ' → Dinaikkan ke Sangat Tinggi karena Plak Obstruktif (CAC ≥ 300)';
+                                targetLdlNum = 55;
+                            }
+                        } else if (category === 'Prioritas Intervensi Sedang') {
+                            if (cac === 'zero') {
+                                category = 'Prioritas Intervensi Rendah';
+                                context += ' → Diturunkan karena CAC = 0';
+                                targetLdlNum = 116;
+                            } else if (cac === 'low') {
+                                context += ' → Mendukung terapi (CAC 1–99 ada plak ringan)';
+                            } else if (hasLpaHigh) {
+                                category = 'Prioritas Intervensi Tinggi';
+                                context += ' → Dinaikkan ke Tinggi karena Lp(a) Tinggi (>50 mg/dL)';
+                                targetLdlNum = 70;
+                            } else if (hasApoBHigh) {
+                                category = 'Prioritas Intervensi Tinggi';
+                                context += ' → Dinaikkan ke Tinggi karena Apo B Tinggi (≥130 mg/dL)';
+                                targetLdlNum = 70;
+                            } else if (hasHighTgHdl) {
+                                context += ` → TG/HDL Tinggi (${tgHdlRatio.toFixed(1)}) mendukung intervensi`;
+                            }
+                        } else if (category === 'Prioritas Intervensi Rendah' && (cac === 'low' || hasApoBHigh || hasLpaHigh || hasHighTgHdl)) {
+                            category = 'Prioritas Intervensi Sedang';
+                            context += ' → Dinaikkan ke Sedang karena risk modifier positif';
+                            targetLdlNum = 100;
+                        }
+                    }
+                }
+            }
+
+            // === TARGET TEXTS ===
+            let targetLdlText = `< ${targetLdlNum} mg/dL`;
+            if (targetLdlNum <= 70) targetLdlText += ' (& ↓ ≥ 50%)';
+            let targetNonHdlNum = targetLdlNum + 30;
+            let targetApoBText = '';
+            if (category.includes('Sangat Tinggi')) targetApoBText = '< 65 mg/dL';
+            else if (category.includes('Tinggi')) targetApoBText = '< 80 mg/dL';
+            else if (category.includes('Sedang')) targetApoBText = '< 100 mg/dL';
+            else targetApoBText = '< 120 mg/dL';
+
+            let actualApoBText = hasApoBHigh ? '> 130' : (apoBVal === 'borderline' ? '100–129' : 'N/A');
+
+            // === THERAPY ALGORITHM ===
+            const isTargetAchieved = (ldl <= targetLdlNum);
+            const isNonHdlAchieved = (actualNonHdl <= targetNonHdlNum);
+
+            if (category.includes('Sangat Tinggi') || category.includes('Tinggi')) {
+                if (ldl >= 190 && curStatin === 'none') {
+                    statin = 'Inisiasi Langsung Statin Intensitas Tinggi (High-Intensity Statin)';
+                    strategy = [
+                        `Severe hypercholesterolemia (LDL ≥ 190 mg/dL): mulai Atorvastatin 40–80mg atau Rosuvastatin 20–40mg tanpa menunggu perhitungan risiko absolut.`,
+                        'Evaluasi profil lipid lengkap dalam 4–12 minggu. Jika LDL ≥ 100 mg/dL pasca HIS maksimal, tambahkan Ezetimibe 10mg.',
+                        hasDMComplex ? 'DM + Komplikasi End-Organ: Pertimbangkan kombinasi statin+ezetimibe lebih awal. Target LDL < 55 mg/dL.' : '',
+                        hasLpaVeryHigh ? 'Lp(a) > 180 mg/dL: PCSK9 inhibitor direkomendasikan jika tersedia (penurunan Lp(a) ~26–30%). Pertimbangkan referral.' : '',
+                    ].filter(Boolean);
+                }
+                else if (isTargetAchieved) {
+                    if (curStatin === 'none') {
+                        statin = 'Target LDL Tercapai — Pertimbangkan Monitor atau Intervensi Gaya Hidup';
+                        strategy = ['Target LDL tercapai secara baseline tanpa medikasi.', 'Pantau profil lipid 6–12 bulan. Lanjutkan intensifikasi gaya hidup.'];
+                    } else {
+                        statin = 'Target LDL Tercapai — Pertahankan Terapi Saat Ini';
+                        strategy = [
+                            `LDL aktual (${ldl} mg/dL) memenuhi target < ${targetLdlNum} mg/dL.`,
+                            'Pertahankan regimen. Follow-up klinis dan lipid 6–12 bulan.',
+                            hasHighTgHdl ? `TG/HDL masih tinggi (${tgHdlRatio.toFixed(1)}): Evaluasi residual risk. Pertimbangkan Icosapent Ethyl (REDUCE-IT) jika TG ≥ 135 mg/dL meski statin optimal.` : '',
+                            hasLpaHigh ? 'Lp(a) tinggi: Meski LDL terkontrol, pertimbangkan PCSK9i untuk reduksi Lp(a) tambahan pada secondary prevention.' : ''
+                        ].filter(Boolean);
+                    }
+                }
+                else {
+                    if (curStatin === 'none') {
+                        statin = 'Mulai Statin Intensitas Tinggi (High-Intensity Statin)';
+                        strategy = [
+                            `Target LDL < ${targetLdlNum} mg/dL. Perlu eskalasi agresif.`,
+                            'Inisiasi Atorvastatin 40–80mg atau Rosuvastatin 20–40mg.',
+                            'Evaluasi profil lipid 4–12 minggu. Cek CK, SGOT/SGPT baseline.',
+                            hasDMComplex ? 'DM + Komplikasi: Jika LDL masih > 70 mg/dL pasca HIS, tambahkan Ezetimibe. Target 55 mg/dL.' : '',
+                            hasLpaHigh ? 'Lp(a) tinggi: Setelah HIS optimal, pertimbangkan PCSK9i untuk menurunkan LDL + Lp(a) secara simultan.' : '',
+                        ].filter(Boolean);
+                    } else if (curStatin === 'low_mod') {
+                        statin = 'Intensifikasi ke Statin Intensitas Tinggi (Eskalasi)';
+                        strategy = [
+                            'Regimen saat ini belum mencapai target. Eskalasi diperlukan.',
+                            'Tingkatkan ke Atorvastatin 40–80mg atau Rosuvastatin 20–40mg (jika toleran).',
+                            'Evaluasi ulang 4–12 minggu. Jika intoleransi, pertimbangkan Rosuvastatin (umumnya lebih toleran) atau Bempedoic Acid.',
+                        ];
+                    } else if (curStatin === 'high') {
+                        statin = 'Tambahkan Ezetimibe 10mg (Kombinasi Statin + Ezetimibe)';
+                        strategy = [
+                            `Pasien gagal mencapai target dengan HIS maksimal (LDL ${ldl} vs target ${targetLdlNum} mg/dL).`,
+                            'Tambahkan Ezetimibe 10 mg/hari. Bukti: IMPROVE-IT (menurunkan MACE 6.4%, ESC Kelas I).',
+                            isSecondary ? 'Jika LDL tetap ≥ target pasca kombinasi, PCSK9 inhibitor direkomendasikan kuat (FOURIER, ODYSSEY OUTCOMES).' : 'Evaluasi respons 4–12 minggu.',
+                            hasLpaHigh ? 'Lp(a) tinggi: PCSK9i juga menurunkan Lp(a) ~26–30%, memberikan manfaat ganda.' : '',
+                        ].filter(Boolean);
+                    } else if (curStatin === 'combo') {
+                        statin = 'Evaluasi PCSK9 Inhibitor / Konsultasi Kardiologi';
+                        strategy = [
+                            'Target belum tercapai meski kombinasi statin intensitas tinggi + ezetimibe.',
+                            'Nilai kepatuhan minum obat secara ketat (pill-count/pharmacy refill).',
+                            'Pertimbangkan PCSK9 inhibitor (Evolocumab/Alirocumab) — bukti kuat dari FOURIER (↓MACE 15%) dan ODYSSEY (↓MACE 15%).',
+                            hasDMComplex || isSecondary ? 'Prioritas PCSK9i sangat tinggi pada Secondary Prevention / DM+Komplikasi.' : '',
+                            hasLpaHigh ? 'Pertimbangkan Inklisiran (siRNA PCSK9) jika tersedia — penurunan LDL 50%+ dengan injeksi 2x/tahun.' : '',
+                        ].filter(Boolean);
+                    }
+                }
+            }
+            else if (category.includes('Sedang')) {
+                if (isTargetAchieved) {
+                    statin = curStatin === 'none' ? 'Gaya Hidup — Target LDL Sudah Tercapai' : 'Pertahankan Terapi Saat Ini';
+                    strategy = ['Nilai LDL saat ini memenuhi target populasi sedang.', 'Evaluasi berkala 6–12 bulan. Pantau faktor risiko penyerta.'];
+                } else {
+                    if (curStatin === 'none') {
+                        statin = 'Pertimbangkan Inisiasi Statin Intensitas Sedang (Shared Decision Making)';
+                        strategy = [
+                            'Kategori borderline/menengah. Terapkan shared-decision making bersama pasien.',
+                            hasPrimaryEnhancers || cac === 'low' ? 'Terdapat risk modifier yang mendukung inisiasi statin (Lp(a)/Apo B/TG/HDL tinggi/plak ringan).' : 'Fokus modifikasi gaya hidup 3–6 bulan (diet mediterania, aktivitas fisik). Reevaluasi lipid.',
+                            'Opsi: Atorvastatin 10–20mg atau Rosuvastatin 5–10mg.',
+                            hasHighTgHdl ? `TG/HDL = ${tgHdlRatio.toFixed(1)} (>3): Indikasi kuat untuk terapi + perbaikan gaya hidup (kurangi karbohidrat sederhana, alkohol).` : '',
+                        ].filter(Boolean);
+                    } else {
+                        statin = 'Optimalkan Gaya Hidup & Dosis Saat Ini';
+                        strategy = ['Evaluasi kepatuhan. Eskalasi dosis bertahap jika dibutuhkan.', 'Monitor dalam 4–12 minggu.'];
+                    }
+                }
+            }
+            else {
+                statin = 'Intervensi Gaya Hidup Murni';
+                strategy = [
+                    'Terapi farmakologi penurun lipid tidak diindikasikan secara rutin.',
+                    cac === 'zero' ? 'CAC = 0 sangat mendukung re-klasifikasi risiko rendah. Dapat tunda statin.' : '',
+                    'Diet pola mediterania, aktivitas fisik aerobik ≥ 150 menit/minggu, berhenti merokok.',
+                    'Skrining ulang lipid dan faktor risiko setiap 4–6 tahun.',
+                ].filter(Boolean);
+            }
+
+            // TG/HDL residual risk note
+            if (hasHighTgHdl && !hasSafetyIssue) {
+                if (isTargetAchieved && !hasVeryHighTgHdl) {
+                    strategy.push(`🛑 Residual Risk: LDL terkontrol namun TG/HDL masih tinggi (${tgHdlRatio.toFixed(1)}). Evaluasi sdLDL, pertimbangkan Icosapent Ethyl jika TG ≥ 135 mg/dL (REDUCE-IT) atau Fenofibrat jika TG/HDL dominan + HDL rendah (ACCORD subgrup).`);
+                } else if (hasVeryHighTgHdl) {
+                    strategy.push(`🛑 TG/HDL Sangat Tinggi (${tgHdlRatio.toFixed(1)}): Risiko sdLDL dan aterogenisitas tinggi. Pertimbangkan Icosapent Ethyl (EPA 4g/hari) bersamaan dengan statin (REDUCE-IT NNT=43).`);
+                }
+            }
+
+            // Safety override
+            if (hasSafetyIssue) {
+                statin = '🛑 TUNDA STATIN: PERINGATAN KLINIS (KONTRAINDIKASI)';
+                strategy = [
+                    '🛑 Terdeteksi red flags: Hamil/Menyusui, Penyakit Hati Aktif, atau Intoleransi Statin Berat.',
+                    '🛑 Statin kontraindikasi pada kehamilan (Kategori X). Hentikan segera jika pasien hamil.',
+                    'Pada intoleransi berat: Pertimbangkan Bempedoic Acid (CLEAR Outcomes, ↓LDL 21%, ↓MACE 13%), Ezetimibe monoterapi, atau PCSK9i.',
+                    'Rujuk ke Spesialis Kardiovaskular/Endokrin untuk manajemen kompleks.',
+                ];
+                category = '⚠️ Penyesuaian Terapi Khusus';
+                context = 'Terdeteksi Safety Red Flags';
+            }
+
+            return {
+                category, context,
+                targetLdl: targetLdlText, actualLdl: ldl,
+                targetNonHdl: `< ${targetNonHdlNum} mg/dL`, actualNonHdl,
+                targetApoB: targetApoBText, actualApoB: actualApoBText,
+                statin, strategy, reasons,
+                isContraindicated: hasSafetyIssue,
+                targetLdlNum, tgHdlRatio, hasHighTgHdl
+            };
+        }
+
+        // ── UPDATE SLIDER LABELS ──
+        function updateSliderLabels() {
+            el('age-val').textContent = ageEl.value;
+            el('sbp-val').textContent = sbpEl.value;
+            el('tc-val').textContent = tcEl.value;
+            el('hdl-val').textContent = hdlEl.value;
+            el('tg-val').textContent = tgEl.value;
+            el('ldl-val').textContent = ldlEl.value;
+        }
+
+        // ── UPDATE UI ──
+        function updateUI() {
+            updateSliderLabels();
+            updateLiveRatios();
+            const data = calculateRisk();
+
+            // Risk Card
+            el('res-category').textContent = data.category;
+            el('res-context').textContent = data.context;
+
+            // Targets
+            el('res-target-ldl').textContent = data.targetLdl;
+            el('res-actual-ldl').textContent = `Aktual: ${data.actualLdl} mg/dL`;
+            el('res-target-nonhdl').textContent = data.targetNonHdl;
+            el('res-actual-nonhdl').textContent = `Aktual: ${data.actualNonHdl} mg/dL`;
+            el('res-target-apob').textContent = data.targetApoB;
+            el('res-actual-apob').textContent = `Aktual: ${data.actualApoB}`;
+
+            // TG/HDL result context
+            const tghdlResultBox = el('tghdl-result-context');
+            const tghdlResultText = el('tghdl-result-text');
+            if (data.hasHighTgHdl) {
+                tghdlResultBox.classList.remove('hidden');
+                tghdlResultText.textContent = `TG/HDL = ${data.tgHdlRatio.toFixed(2)} (>${data.tgHdlRatio >= 5 ? '5' : '3'}): Residual risk sdLDL tinggi. Evaluasi Icosapent Ethyl atau Fenofibrat jika indikasi terpenuhi.`;
+            } else {
+                tghdlResultBox.classList.add('hidden');
+            }
+
+            // LDL Progress Bar
+            const ldlPct = Math.min((data.actualLdl / 300) * 100, 100);
+            const ldlTargetPct = Math.min((data.targetLdlNum / 300) * 100, 100);
+            el('ldl-progress-bar').style.width = ldlPct + '%';
+            el('ldl-actual-label').textContent = `LDL: ${data.actualLdl} mg/dL`;
+            el('ldl-target-label').textContent = `Target: ${data.targetLdl}`;
+
+            const isOnTarget = data.actualLdl <= data.targetLdlNum;
+            const ldlBadge = el('ldl-status-badge');
+            const ldlBar = el('ldl-progress-bar');
+            if (isOnTarget) {
+                ldlBadge.className = 'badge badge-green';
+                ldlBadge.textContent = '✓ Tercapai';
+                ldlBar.style.background = '#22C55E';
+            } else {
+                const gap = ((data.actualLdl - data.targetLdlNum) / data.targetLdlNum * 100).toFixed(0);
+                ldlBadge.className = 'badge badge-red';
+                ldlBadge.textContent = `↑ +${gap}% di atas target`;
+                ldlBar.style.background = '#EF4444';
+            }
+
+            // Reasons Pills
+            const reasonsDiv = el('res-reasons');
+            reasonsDiv.innerHTML = '';
+            data.reasons.forEach(r => {
+                const span = document.createElement('span');
+                let cls = 'modifier-active';
+                if (r.includes('CAC = 0') || r.includes('Tidak Ada Plak')) cls = 'modifier-inactive';
+                span.className = cls;
+                span.textContent = r;
+                reasonsDiv.appendChild(span);
+            });
+            if (data.reasons.length === 0) {
+                reasonsDiv.innerHTML = '<span class="modifier-inactive">Tidak ada faktor risiko spesifik terdeteksi</span>';
+            }
+
+            // Risk Card Color & Pulse
+            const riskCard = el('risk-card');
+            const pulseDot = el('risk-pulse-dot');
+            const cat = data.category.toLowerCase();
+            if (cat.includes('sangat tinggi')) {
+                riskCard.style.borderColor = 'rgba(239,68,68,0.4)';
+                riskCard.style.background = 'rgba(239,68,68,0.03)';
+                el('res-category').style.color = '#F87171';
+                pulseDot.className = 'pulse-dot pulse-red shrink-0 mt-2';
+            } else if (cat.includes('tinggi')) {
+                riskCard.style.borderColor = 'rgba(249,115,22,0.4)';
+                riskCard.style.background = 'rgba(249,115,22,0.03)';
+                el('res-category').style.color = '#FDBA74';
+                pulseDot.className = 'pulse-dot pulse-orange shrink-0 mt-2';
+            } else if (cat.includes('sedang')) {
+                riskCard.style.borderColor = 'rgba(234,179,8,0.4)';
+                riskCard.style.background = 'rgba(234,179,8,0.03)';
+                el('res-category').style.color = '#FDE047';
+                pulseDot.className = 'pulse-dot pulse-yellow shrink-0 mt-2';
+            } else if (cat.includes('rendah')) {
+                riskCard.style.borderColor = 'rgba(34,197,94,0.4)';
+                riskCard.style.background = 'rgba(34,197,94,0.03)';
+                el('res-category').style.color = '#86EFAC';
+                pulseDot.className = 'pulse-dot pulse-green shrink-0 mt-2';
+            } else {
+                riskCard.style.borderColor = 'rgba(245,158,11,0.4)';
+                riskCard.style.background = 'rgba(245,158,11,0.03)';
+                el('res-category').style.color = '#FCD34D';
+                pulseDot.className = 'pulse-dot pulse-yellow shrink-0 mt-2';
+            }
+
+            // Statin Box
+            const statinBox = el('statin-box');
+            const statinText = el('res-statin');
+            statinText.textContent = data.statin;
+            if (data.isContraindicated) {
+                statinBox.style.background = 'rgba(239,68,68,0.1)';
+                statinBox.style.border = '2px solid rgba(239,68,68,0.4)';
+                statinText.style.color = '#FCA5A5';
+            } else if (data.statin.includes('PCSK9') || data.statin.includes('Ezetimibe') || data.statin.includes('Kombinasi')) {
+                statinBox.style.background = 'rgba(239,68,68,0.06)';
+                statinBox.style.border = '2px solid rgba(239,68,68,0.25)';
+                statinText.style.color = '#FCA5A5';
+            } else if (data.statin.includes('Gaya Hidup') || data.statin.includes('Pertahankan')) {
+                statinBox.style.background = 'rgba(34,197,94,0.06)';
+                statinBox.style.border = '2px solid rgba(34,197,94,0.25)';
+                statinText.style.color = '#86EFAC';
+            } else {
+                statinBox.style.background = 'rgba(245,158,11,0.06)';
+                statinBox.style.border = '2px solid rgba(245,158,11,0.25)';
+                statinText.style.color = '#FCD34D';
+            }
+
+            // Strategy List
+            const strategyList = el('res-strategy');
+            strategyList.innerHTML = '';
+            data.strategy.forEach(step => {
+                if (!step) return;
+                const li = document.createElement('li');
+                li.className = 'flex items-start gap-2.5 py-1.5 border-b last:border-0';
+                li.style.borderColor = '#1A1D27';
+
+                const isAlert = step.includes('🛑');
+                const iconColor = isAlert ? '#F87171' : '#F59E0B';
+                const iconPath = isAlert
+                    ? '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'
+                    : '<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>';
+
+                const textColor = isAlert ? '#FCA5A5' : '#94A3B8';
+                const cleanText = step.replace('🛑', '').trim();
+
+                li.innerHTML = `<svg class="shrink-0 mt-0.5" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2">${iconPath}</svg><span class="text-[11px] leading-relaxed font-medium" style="color: ${textColor};">${cleanText}</span>`;
+                strategyList.appendChild(li);
+            });
+
+            syncPDF(data);
+            lucide.createIcons();
+        }
+
+        // ── SYNC PDF ──
+        function syncPDF(data) {
+            el('pdf-res-category').textContent = data.category;
+            el('pdf-res-context').textContent = data.context;
+            el('pdf-res-target-ldl').textContent = data.targetLdl;
+            el('pdf-actual-ldl').textContent = `Aktual: ${data.actualLdl} mg/dL`;
+            el('pdf-res-target-nonhdl').textContent = data.targetNonHdl;
+            el('pdf-actual-nonhdl').textContent = `Aktual: ${data.actualNonHdl} mg/dL`;
+            el('pdf-res-target-apob').textContent = data.targetApoB;
+            el('pdf-actual-apob').textContent = `Aktual: ${data.actualApoB}`;
+            el('pdf-res-statin').textContent = data.statin;
+
+            const gdr = genderEl.value === 'male' ? 'L' : 'P';
+            const htnTxt = htnTreatedEl.value === 'yes' ? '(Dalam Terapi HTN)' : '(Untreated)';
+            const curStatTxt = currentStatinEl.options[currentStatinEl.selectedIndex].text;
+            const dmTxt = dmEl.options[dmEl.selectedIndex].text;
+            const tgHdlRatioDisplay = (hdlEl.value && Number(hdlEl.value) > 0) ? (Number(tgEl.value) / Number(hdlEl.value)).toFixed(2) : '—';
+
+            el('pdf-params').innerHTML =
+                `Usia ${ageEl.value} thn (${gdr}) | Perokok: ${smokerEl.value === 'yes' ? 'Ya' : 'Tidak'} | DM: ${dmTxt}<br>` +
+                `TD: ${sbpEl.value} mmHg ${htnTxt}<br>` +
+                `Lipid: TC ${tcEl.value} / HDL ${hdlEl.value} / TG ${tgEl.value} / LDL ${ldlEl.value} mg/dL | TG/HDL: ${tgHdlRatioDisplay}<br>` +
+                `<strong>Status Terapi: ${curStatTxt}</strong>`;
+
+            let enhancers = [];
+            const cacTxt = cacEl.options[cacEl.selectedIndex].text;
+            if (cacEl.value !== 'unknown') enhancers.push(cacTxt);
+            if (ckdEl.value !== 'no') enhancers.push(ckdEl.options[ckdEl.selectedIndex].text);
+            if (fhEl.value === 'yes') enhancers.push('Riwayat ASCVD Prematur');
+            if (lpaEl.value !== 'no') enhancers.push(lpaEl.options[lpaEl.selectedIndex].text);
+            if (apoBEl.value !== 'no') enhancers.push(apoBEl.options[apoBEl.selectedIndex].text);
+            if (inflamEl.value === 'yes') enhancers.push('Penyakit Inflamasi Kronis');
+            if (data.hasHighTgHdl) enhancers.push(`TG/HDL Tinggi (${data.tgHdlRatio.toFixed(2)})`);
+
+            el('pdf-enhancers').textContent = enhancers.length > 0 ? enhancers.join(' • ') : 'Tidak ada modifier tambahan terdeteksi.';
+
+            const pdfSafety = el('pdf-safety-container');
+            if (data.isContraindicated) {
+                pdfSafety.style.display = 'block';
+                el('pdf-safety').textContent = 'TERDETEKSI: Hamil/Penyakit Hati Aktif/Intoleransi Statin Berat.';
+            } else {
+                pdfSafety.style.display = 'none';
+            }
+
+            el('pdf-res-reasons').textContent = data.reasons.length > 0 ? data.reasons.join(' • ') : 'Tidak ada faktor risiko spesifik.';
+
+            const today = new Date();
+            el('pdf-date').textContent = today.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+
+            const pdfStrategy = el('pdf-res-strategy');
+            pdfStrategy.innerHTML = '';
+            data.strategy.forEach(s => {
+                if (!s) return;
+                const li = document.createElement('li');
+                const isAlert = s.includes('🛑');
+                li.style.color = isAlert ? '#be123c' : '#1e293b';
+                li.style.fontWeight = isAlert ? '700' : '500';
+                li.innerHTML = `<span style="margin-right:4px; color:${isAlert ? '#e11d48' : '#94a3b8'};">•</span>${s.replace('🛑', '').trim()}`;
+                pdfStrategy.appendChild(li);
+            });
+
+            const pdfRisk = el('pdf-risk-card');
+            const cat = data.category.toLowerCase();
+            if (cat.includes('sangat tinggi')) pdfRisk.className = 'p-4 rounded-xl border-2 bg-red-50 border-red-300';
+            else if (cat.includes('tinggi')) pdfRisk.className = 'p-4 rounded-xl border-2 bg-orange-50 border-orange-300';
+            else if (cat.includes('sedang')) pdfRisk.className = 'p-4 rounded-xl border-2 bg-yellow-50 border-yellow-300';
+            else pdfRisk.className = 'p-4 rounded-xl border-2 bg-emerald-50 border-emerald-300';
+
+            const pdfStatinBox = el('pdf-statin-box');
+            if (data.isContraindicated) pdfStatinBox.className = 'border p-3 rounded-lg mb-3 bg-rose-100 border-rose-300';
+            else if (data.statin.includes('PCSK9') || data.statin.includes('Ezetimibe')) pdfStatinBox.className = 'border p-3 rounded-lg mb-3 bg-rose-50 border-rose-300';
+            else if (data.statin.includes('Gaya Hidup') || data.statin.includes('Pertahankan')) pdfStatinBox.className = 'border p-3 rounded-lg mb-3 bg-emerald-50 border-emerald-300';
+            else pdfStatinBox.className = 'border p-3 rounded-lg mb-3 bg-amber-50 border-amber-200';
+        }
+
+        // ── DOWNLOAD PDF ──
+        function downloadPDF() {
+            const overlay = el('pdf-overlay');
+            overlay.classList.remove('hidden');
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                const element = el('pdf-document-node');
+                const opt = {
+                    margin: 0,
+                    filename: `CardiologyVault_LipidPathway_${ageEl.value}thn_${new Date().getTime()}.pdf`,
+                    image: { type: 'jpeg', quality: 1 },
+                    html2canvas: { scale: 2, useCORS: true, scrollY: 0, backgroundColor: '#ffffff' },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                html2pdf().set(opt).from(element).save().then(() => {
+                    overlay.classList.add('hidden');
+                    overlay.style.display = 'none';
+                }).catch(err => {
+                    console.error('PDF error:', err);
+                    overlay.classList.add('hidden');
+                    overlay.style.display = 'none';
+                });
+            }, 800);
+        }
+
+        // ── EVENT LISTENERS ──
+        allInputs.forEach(input => {
+            if (input) {
+                input.addEventListener('change', updateUI);
+                input.addEventListener('input', updateUI);
+            }
+        });
+        el('download-btn').addEventListener('click', downloadPDF);
+        if (el('calc-btn-desktop')) el('calc-btn-desktop').addEventListener('click', () => el('result-panel').scrollIntoView({ behavior: 'smooth' }));
+
+        // Close PDF overlay on click outside
+        el('pdf-overlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+                this.style.display = 'none';
+            }
+        });
+
+        // ── INITIAL RENDER ──
+        handleDmChange();
+        updateUI();
+        lucide.createIcons();
+    </script>
+</body>
+</html>
