@@ -1,0 +1,3858 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ACS ExclusivePack™ — Paket Klinis Eksklusif Sindrom Koroner Akut</title>
+  <meta name="description" content="ACS ExclusivePack™ — Paket klinis terpadu khusus pasien serangan jantung (ACS): HEART Score, GRACE Score, STEMI Protocol, Heparin Calculator, dan Surat Rujukan. Part of CardiologyVault." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ========== CSS RESET & BASE ========== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #060b18;
+      color: #e2e8f0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    input, select, textarea, button { font-family: inherit; }
+    button { cursor: pointer; border: none; background: none; }
+
+    /* ========== DESIGN TOKENS ========== */
+    :root {
+      --bg-base: #060b18;
+      --bg-surface: #0d1526;
+      --bg-card: rgba(15, 25, 50, 0.8);
+      --bg-glass: rgba(255, 255, 255, 0.04);
+      --bg-glass-hover: rgba(255, 255, 255, 0.07);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-active: rgba(255, 255, 255, 0.15);
+
+      --red: #ef4444;
+      --red-light: #fca5a5;
+      --red-glow: rgba(239, 68, 68, 0.2);
+      --cyan: #06b6d4;
+      --cyan-light: #67e8f9;
+      --cyan-glow: rgba(6, 182, 212, 0.2);
+      --green: #10b981;
+      --green-light: #6ee7b7;
+      --green-glow: rgba(16, 185, 129, 0.2);
+      --amber: #f59e0b;
+      --amber-light: #fcd34d;
+      --amber-glow: rgba(245, 158, 11, 0.2);
+      --purple: #8b5cf6;
+      --purple-light: #c4b5fd;
+      --purple-glow: rgba(139, 92, 246, 0.2);
+
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #475569;
+
+      --radius-sm: 8px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --radius-full: 9999px;
+
+      --nav-height-mobile: 72px;
+      --sidebar-width: 240px;
+      --topbar-height: 60px;
+
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow: 0 4px 20px rgba(0,0,0,0.4);
+      --shadow-lg: 0 10px 40px rgba(0,0,0,0.5);
+    }
+
+    /* ========== SCROLLBAR ========== */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-active); border-radius: 4px; }
+
+    /* ========== LAYOUT ========== */
+    .app-wrapper {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ========== SIDEBAR (DESKTOP) ========== */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+    .sidebar-logo {
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo-mark {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--red), #b91c1c);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 20px var(--red-glow);
+    }
+    .logo-icon svg { width: 20px; height: 20px; fill: white; }
+    .logo-text { font-size: 17px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px; }
+    .logo-sub { font-size: 10px; color: var(--text-muted); font-weight: 500; letter-spacing: 1px; text-transform: uppercase; }
+
+    .sidebar-patient {
+      padding: 14px 16px;
+      margin: 12px 12px 0;
+      background: var(--bg-glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .sidebar-patient:hover { background: var(--bg-glass-hover); border-color: var(--border-active); }
+    .sidebar-patient .pt-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+    .sidebar-patient .pt-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .sidebar-patient .pt-meta { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+    .sidebar-patient .pt-edit { font-size: 10px; color: var(--cyan); margin-top: 6px; }
+
+    .sidebar-nav {
+      padding: 12px 8px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .nav-section-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 8px 12px 4px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+      margin-bottom: 2px;
+      position: relative;
+    }
+    .nav-item:hover { background: var(--bg-glass-hover); color: var(--text-primary); }
+    .nav-item.active { background: rgba(239,68,68,0.1); color: var(--red-light); }
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 20%; bottom: 20%;
+      width: 3px;
+      background: var(--red);
+      border-radius: 0 3px 3px 0;
+    }
+    .nav-item .nav-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .nav-item.active .nav-icon { background: rgba(239,68,68,0.15); }
+    .nav-item:not(.active) .nav-icon { background: var(--bg-glass); }
+    .nav-item .nav-icon svg { width: 16px; height: 16px; }
+    .nav-badge {
+      margin-left: auto;
+      background: var(--red);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: var(--radius-full);
+      min-width: 18px;
+      text-align: center;
+    }
+
+    .sidebar-workflow {
+      padding: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .sidebar-credit {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .credit-vault {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+    .credit-dev {
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    .workflow-title { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .workflow-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .wf-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .wf-step:hover { background: var(--bg-glass); color: var(--text-secondary); }
+    .wf-step.done { color: var(--green); }
+    .wf-step.active-step { color: var(--amber); }
+    .wf-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--bg-glass);
+      border: 1.5px solid var(--text-muted);
+      flex-shrink: 0;
+    }
+    .wf-step.done .wf-dot { background: var(--green); border-color: var(--green); }
+    .wf-step.active-step .wf-dot { background: var(--amber); border-color: var(--amber); animation: pulse-dot 1.5s infinite; }
+
+    @keyframes pulse-dot {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.4); }
+      50% { box-shadow: 0 0 0 4px rgba(245,158,11,0); }
+    }
+
+    /* ========== MAIN CONTENT ========== */
+    .main-content {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ========== TOP BAR ========== */
+    .topbar {
+      height: var(--topbar-height);
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .topbar-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      flex: 1;
+    }
+    .topbar-subtitle { font-size: 12px; color: var(--text-muted); font-weight: 400; }
+    .topbar-actions { display: flex; gap: 8px; }
+    .btn-icon {
+      width: 36px; height: 36px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-glass);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+      color: var(--text-secondary);
+    }
+    .btn-icon:hover { background: var(--bg-glass-hover); color: var(--text-primary); border-color: var(--border-active); }
+    .btn-icon svg { width: 16px; height: 16px; }
+
+    /* ========== PAGE CONTENT ========== */
+    .page {
+      display: none;
+      padding: 24px;
+      flex: 1;
+      animation: fadeIn 0.3s ease;
+    }
+    .page.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ========== BOTTOM NAV (MOBILE) ========== */
+    .bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: var(--nav-height-mobile);
+      background: rgba(10, 18, 35, 0.95);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      z-index: 100;
+      padding: 0 4px 8px;
+    }
+    .bottom-nav-inner {
+      display: flex;
+      height: 100%;
+      align-items: flex-end;
+    }
+    .bnav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 8px 4px;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 500;
+      transition: all 0.2s;
+      border-radius: var(--radius);
+      position: relative;
+    }
+    .bnav-item svg { width: 20px; height: 20px; }
+    .bnav-item.active { color: var(--red-light); }
+    .bnav-item.active::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 20%; right: 20%; height: 2px;
+      background: var(--red);
+      border-radius: 0 0 4px 4px;
+    }
+    .bnav-more {
+      flex: 0.6;
+    }
+
+    /* ========== CARDS ========== */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      backdrop-filter: blur(12px);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .card-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .card-icon svg { width: 18px; height: 18px; }
+    .card-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+    .card-subtitle { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+    .card-body { padding: 20px; }
+    .card-footer {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    /* ========== GRID ========== */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .gap-16 { gap: 16px; }
+
+    /* ========== FORM ELEMENTS ========== */
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 14px;
+      transition: all 0.2s;
+      outline: none;
+    }
+    .form-control:focus {
+      border-color: var(--cyan);
+      background: rgba(6,182,212,0.05);
+      box-shadow: 0 0 0 3px rgba(6,182,212,0.1);
+    }
+    select.form-control { appearance: none; cursor: pointer; }
+    .form-control::placeholder { color: var(--text-muted); }
+    .form-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+    /* ========== BUTTONS ========== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s;
+      cursor: pointer;
+      letter-spacing: 0.2px;
+    }
+    .btn svg { width: 15px; height: 15px; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--red), #b91c1c);
+      color: white;
+      box-shadow: 0 4px 15px rgba(239,68,68,0.3);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(239,68,68,0.4); }
+    .btn-secondary {
+      background: var(--bg-glass);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+    .btn-secondary:hover { background: var(--bg-glass-hover); border-color: var(--border-active); }
+    .btn-cyan {
+      background: linear-gradient(135deg, var(--cyan), #0891b2);
+      color: white;
+      box-shadow: 0 4px 15px rgba(6,182,212,0.3);
+    }
+    .btn-cyan:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(6,182,212,0.4); }
+    .btn-green {
+      background: linear-gradient(135deg, var(--green), #059669);
+      color: white;
+      box-shadow: 0 4px 15px rgba(16,185,129,0.3);
+    }
+    .btn-green:hover { transform: translateY(-1px); }
+    .btn-amber {
+      background: linear-gradient(135deg, var(--amber), #d97706);
+      color: #111;
+      box-shadow: 0 4px 15px rgba(245,158,11,0.3);
+    }
+    .btn-sm { padding: 6px 14px; font-size: 12px; }
+    .btn-lg { padding: 14px 28px; font-size: 15px; border-radius: var(--radius); }
+    .btn-full { width: 100%; }
+
+    /* ========== SCORE OPTIONS ========== */
+    .score-options {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .score-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: var(--bg-glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .score-option:hover { background: var(--bg-glass-hover); border-color: var(--border-active); }
+    .score-option.selected {
+      background: rgba(6,182,212,0.1);
+      border-color: var(--cyan);
+      color: var(--cyan-light);
+    }
+    .score-radio {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--text-muted);
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .score-option.selected .score-radio {
+      border-color: var(--cyan);
+      background: var(--cyan);
+    }
+    .score-option.selected .score-radio::after {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: white;
+    }
+    .score-label { font-size: 13px; flex: 1; }
+    .score-val {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .score-option.selected .score-val { color: var(--cyan); }
+
+    /* ========== SCORE RESULT ========== */
+    .score-result {
+      padding: 20px;
+      border-radius: var(--radius);
+      border: 1px solid;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .score-result::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+    }
+    .score-result.low { border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.05); }
+    .score-result.low::before { background: var(--green); }
+    .score-result.moderate { border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.05); }
+    .score-result.moderate::before { background: var(--amber); }
+    .score-result.high { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.05); }
+    .score-result.high::before { background: var(--red); }
+    .score-number {
+      font-size: 56px;
+      font-weight: 900;
+      line-height: 1;
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 4px;
+    }
+    .score-result.low .score-number { color: var(--green); }
+    .score-result.moderate .score-number { color: var(--amber); }
+    .score-result.high .score-number { color: var(--red); }
+    .score-risk { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .score-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+
+    /* ========== RISK BADGE ========== */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-green { background: rgba(16,185,129,0.15); color: var(--green-light); }
+    .badge-amber { background: rgba(245,158,11,0.15); color: var(--amber-light); }
+    .badge-red { background: rgba(239,68,68,0.15); color: var(--red-light); }
+    .badge-cyan { background: rgba(6,182,212,0.15); color: var(--cyan-light); }
+    .badge-purple { background: rgba(139,92,246,0.15); color: var(--purple-light); }
+
+    /* ========== CHECKLIST ========== */
+    .checklist { display: flex; flex-direction: column; gap: 6px; }
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: var(--bg-glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .check-item:hover { background: var(--bg-glass-hover); }
+    .check-item.checked { background: rgba(16,185,129,0.07); border-color: rgba(16,185,129,0.25); }
+    .check-box {
+      width: 20px; height: 20px;
+      border-radius: 6px;
+      border: 2px solid var(--border-active);
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .check-item.checked .check-box {
+      background: var(--green);
+      border-color: var(--green);
+    }
+    .check-item.checked .check-box::after {
+      content: '✓';
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .check-text { font-size: 13px; flex: 1; }
+    .check-item.checked .check-text { color: var(--text-secondary); text-decoration: line-through; }
+    .check-tag {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
+      font-weight: 600;
+    }
+
+    /* ========== TIMER ========== */
+    .timer-display {
+      text-align: center;
+      padding: 20px;
+    }
+    .timer-value {
+      font-size: 48px;
+      font-weight: 900;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 2px;
+      line-height: 1;
+    }
+    .timer-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+    .timer-actions { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
+    .timer-warning { color: var(--amber); }
+    .timer-critical { color: var(--red); animation: blink 1s infinite; }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* ========== DIVIDER ========== */
+    .divider { height: 1px; background: var(--border); margin: 20px 0; }
+    .divider-label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 16px 0;
+    }
+    .divider-label::before, .divider-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ========== TABLE ========== */
+    .table-wrap { overflow-x: auto; border-radius: var(--radius-sm); }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th {
+      background: rgba(255,255,255,0.04);
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg-glass); }
+    td strong { color: var(--text-primary); font-weight: 600; }
+
+    /* ========== STAT CARDS ========== */
+    .stat-card {
+      padding: 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-size: 24px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+    .stat-unit { font-size: 12px; color: var(--text-secondary); font-weight: 400; }
+    .stat-change { font-size: 11px; }
+    .stat-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .stat-icon svg { width: 16px; height: 16px; }
+
+    /* ========== ALERT BOX ========== */
+    .alert {
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      font-size: 13px;
+    }
+    .alert svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+    .alert-red { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.07); color: var(--red-light); }
+    .alert-amber { border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.07); color: var(--amber-light); }
+    .alert-green { border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.07); color: var(--green-light); }
+    .alert-cyan { border-color: rgba(6,182,212,0.3); background: rgba(6,182,212,0.07); color: var(--cyan-light); }
+
+    /* ========== PROGRESS ========== */
+    .progress-bar {
+      height: 6px;
+      background: var(--bg-glass);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: var(--radius-full);
+      transition: width 0.5s ease;
+    }
+
+    /* ========== GLOW EFFECTS ========== */
+    .glow-red { box-shadow: 0 0 20px var(--red-glow); }
+    .glow-cyan { box-shadow: 0 0 20px var(--cyan-glow); }
+    .glow-green { box-shadow: 0 0 20px var(--green-glow); }
+    .glow-amber { box-shadow: 0 0 20px var(--amber-glow); }
+
+    /* ========== MODAL ========== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-active);
+      border-radius: var(--radius-xl);
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .modal-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-title { font-size: 16px; font-weight: 700; }
+    .modal-body { padding: 20px 24px; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* ========== TABS ========== */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-glass);
+      padding: 4px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+    .tab {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .tab.active {
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      box-shadow: var(--shadow-sm);
+    }
+    .tab:hover:not(.active) { color: var(--text-secondary); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* ========== DOSE DISPLAY ========== */
+    .dose-card {
+      background: linear-gradient(135deg, rgba(6,182,212,0.1), rgba(6,182,212,0.03));
+      border: 1px solid rgba(6,182,212,0.25);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .dose-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .dose-value {
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--cyan-light);
+      font-family: 'JetBrains Mono', monospace;
+      line-height: 1;
+    }
+    .dose-unit { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+    .dose-range { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
+    /* ========== PRINT PREVIEW ========== */
+    .print-preview {
+      background: white;
+      color: #1a1a1a;
+      border-radius: var(--radius);
+      padding: 24px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* ========== SECTION HEADER ========== */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .section-icon {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .section-icon svg { width: 20px; height: 20px; }
+    .section-title { font-size: 20px; font-weight: 800; color: var(--text-primary); }
+    .section-subtitle { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+
+    /* ========== ECG DECORATION ========== */
+    .ecg-bg {
+      position: relative;
+      overflow: hidden;
+    }
+    .ecg-bg::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 40px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 40'%3E%3Cpolyline points='0,25 40,25 50,25 55,5 60,35 65,25 80,25 100,25 110,25 120,5 130,25 150,25 200,25 250,25 260,5 270,35 275,25 290,25 310,25 320,5 330,25 400,25' fill='none' stroke='rgba(239,68,68,0.3)' stroke-width='1.5'/%3E%3C/svg%3E");
+      background-size: 400px 40px;
+      background-repeat: repeat-x;
+      animation: ecg-scroll 3s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes ecg-scroll {
+      from { background-position: 0 0; }
+      to { background-position: -400px 0; }
+    }
+
+    /* ========== CUSTOM PAGE LAYOUTS ========== */
+    .triage-layout { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
+    .grace-layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
+    .stemi-grid, .hep-grid, .ref-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-content {
+        margin-left: 0;
+        padding-bottom: calc(var(--nav-height-mobile) + env(safe-area-inset-bottom, 0px) + 12px);
+      }
+      .bottom-nav {
+        display: flex;
+        height: calc(var(--nav-height-mobile) + env(safe-area-inset-bottom, 0px));
+        padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+      }
+      .page { padding: 16px 12px; }
+      
+      /* Grid Stacking */
+      .grid-2, .grid-3, .grid-4,
+      .triage-layout, .grace-layout, .stemi-grid, .hep-grid, .ref-layout {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .form-row, .form-row-3 { grid-template-columns: 1fr; gap: 12px; }
+      
+      /* Layout Reordering for Real-time Feedback */
+      .triage-layout, .grace-layout {
+        display: flex;
+        flex-direction: column;
+      }
+      .triage-layout > :last-child, .grace-layout > :last-child {
+        order: -1;
+        margin-bottom: 16px;
+        position: static; /* Disable sticky on mobile to avoid blocking inputs */
+      }
+      
+      .topbar { padding: 0 12px; }
+      .topbar-title { font-size: 14px; }
+      .menu-toggle { display: flex !important; }
+      .score-number { font-size: 42px; }
+      .dose-value { font-size: 24px; }
+      
+      /* Quick Tools Grid */
+      .quick-tools {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+      .quick-tool {
+        padding: 10px 6px;
+      }
+      .quick-tool-label {
+        font-size: 10px;
+      }
+      
+      /* Scrollable Tabs */
+      .tabs {
+        overflow-x: auto;
+        white-space: nowrap;
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      .tabs::-webkit-scrollbar {
+        display: none;
+      }
+      .tab {
+        flex: 0 0 auto;
+        padding: 8px 14px;
+        font-size: 11px;
+      }
+      
+      /* Touch-Friendly Options */
+      .score-option {
+        padding: 12px 14px;
+      }
+      .score-option:active {
+        transform: scale(0.98);
+        background: var(--bg-glass-hover);
+      }
+      .score-label {
+        font-size: 12.5px;
+        line-height: 1.4;
+      }
+    }
+    @media (min-width: 769px) {
+      .menu-toggle { display: none !important; }
+    }
+    @media (min-width: 1200px) {
+      .grid-2-lg { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    }
+    
+    /* Full-screen Modal on Mobile */
+    @media (max-width: 576px) {
+      .modal-overlay {
+        padding: 0;
+      }
+      .modal {
+        max-width: 100%;
+        height: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .modal-header {
+        padding: 16px 20px;
+        flex-shrink: 0;
+      }
+      .modal-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px 20px;
+      }
+      .modal-footer {
+        padding: 16px 20px;
+        background: var(--bg-surface);
+        border-top: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+    }
+
+    /* ========== MENU TOGGLE ========== */
+    .menu-toggle {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 36px; height: 36px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-glass);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      margin-right: 4px;
+    }
+    .menu-toggle svg { width: 18px; height: 18px; }
+
+    /* ========== OVERLAY ========== */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 99;
+    }
+    .sidebar-overlay.open { display: block; }
+
+    /* ========== STEMI TIMELINE ========== */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .timeline-item {
+      display: flex;
+      gap: 16px;
+      position: relative;
+    }
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 28px;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+    .timeline-item:last-child::before { display: none; }
+    .timeline-dot {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--border-active);
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--bg-surface);
+      position: relative;
+      z-index: 1;
+    }
+    .timeline-dot.done { border-color: var(--green); background: rgba(16,185,129,0.1); }
+    .timeline-dot.active { border-color: var(--amber); background: rgba(245,158,11,0.1); }
+    .timeline-dot.critical { border-color: var(--red); background: rgba(239,68,68,0.1); }
+    .timeline-dot svg { width: 14px; height: 14px; }
+    .timeline-dot.done svg { stroke: var(--green); }
+    .timeline-dot.active svg { stroke: var(--amber); }
+    .timeline-dot.critical svg { stroke: var(--red); }
+    .timeline-content { padding-bottom: 20px; flex: 1; }
+    .timeline-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px; }
+    .timeline-time { font-size: 11px; color: var(--text-muted); }
+    .timeline-desc { font-size: 12px; color: var(--text-secondary); margin-top: 4px; line-height: 1.5; }
+
+    /* ========== HEPARIN ========== */
+    .aptt-row { cursor: pointer; }
+    .aptt-row:hover td { background: rgba(6,182,212,0.05) !important; }
+    .aptt-highlight td { background: rgba(6,182,212,0.1) !important; border-left: 3px solid var(--cyan) !important; }
+
+    /* ========== REFERRAL ========== */
+    .referral-preview {
+      background: #ffffff;
+      color: #1a1a1a;
+      border: 1px solid #e5e7eb;
+      border-radius: var(--radius);
+      padding: 24px;
+      font-size: 13px;
+      line-height: 1.7;
+      box-shadow: var(--shadow);
+      font-family: 'Inter', sans-serif;
+    }
+    .referral-preview * {
+      color: inherit;
+    }
+    .referral-preview td,
+    .referral-preview th,
+    .referral-preview tr,
+    .referral-preview strong {
+      color: #1a1a1a !important;
+      border-color: #e5e7eb !important;
+    }
+    .referral-preview .ref-muted {
+      color: #666666 !important;
+    }
+    .referral-preview .ref-blue {
+      color: #1e3a8a !important;
+    }
+    .referral-preview .ref-badge-emergency {
+      background: #fee2e2 !important;
+      color: #991b1b !important;
+    }
+    .referral-preview .ref-badge-urgent {
+      background: #fef3c7 !important;
+      color: #92400e !important;
+    }
+    .referral-preview .ref-badge-elective {
+      background: #d1fae5 !important;
+      color: #065f46 !important;
+    }
+    .ref-field { color: var(--cyan-light); font-weight: 600; }
+    .priority-selector {
+      display: flex;
+      gap: 8px;
+    }
+    .priority-opt {
+      flex: 1;
+      padding: 10px 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .priority-opt:hover { border-color: var(--border-active); }
+    .priority-opt.p-emergency.selected { background: rgba(239,68,68,0.1); border-color: var(--red); color: var(--red-light); }
+    .priority-opt.p-urgent.selected { background: rgba(245,158,11,0.1); border-color: var(--amber); color: var(--amber-light); }
+    .priority-opt.p-elective.selected { background: rgba(16,185,129,0.1); border-color: var(--green); color: var(--green-light); }
+    .priority-emoji { font-size: 18px; display: block; margin-bottom: 4px; }
+
+    /* ========== DASHBOARD ========== */
+    .hero-banner {
+      background: linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(6,182,212,0.05) 100%);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-banner::before {
+      content: '';
+      position: absolute;
+      right: -20px; top: -20px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(239,68,68,0.15), transparent 70%);
+      pointer-events: none;
+    }
+    .hero-title { font-size: 22px; font-weight: 900; margin-bottom: 4px; }
+    .hero-title span { color: var(--red); }
+    .hero-subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
+    .quick-tools {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+    .quick-tool {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 8px;
+      background: var(--bg-glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .quick-tool:hover { background: var(--bg-glass-hover); border-color: var(--border-active); transform: translateY(-2px); }
+    .quick-tool-icon {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .quick-tool-icon svg { width: 20px; height: 20px; }
+    .quick-tool-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+
+    /* ========== NOTIFICATION DOT ========== */
+    .notif-dot {
+      width: 8px; height: 8px;
+      background: var(--red);
+      border-radius: 50%;
+      position: absolute;
+      top: 6px; right: 6px;
+    }
+
+    /* ========== SCROLL MARGIN ========== */
+    .scroll-mt { scroll-margin-top: 70px; }
+
+    /* ========== PRINT STYLES ========== */
+    @media print {
+      .sidebar, .topbar, .bottom-nav { display: none !important; }
+      .main-content { margin-left: 0 !important; }
+      .page { display: block !important; }
+      body { background: white !important; color: black !important; }
+      .card { border: 1px solid #ccc !important; background: white !important; }
+    }
+
+    /* ========== PULSE ========== */
+    .pulse-ring {
+      display: inline-block;
+      position: relative;
+    }
+    .pulse-ring::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 2px solid var(--red);
+      animation: pulse-ring 1.5s ease-out infinite;
+    }
+    @keyframes pulse-ring {
+      from { opacity: 1; transform: scale(1); }
+      to { opacity: 0; transform: scale(1.5); }
+    }
+  </style>
+</head>
+<body>
+<!-- SIDEBAR OVERLAY -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <a href="#" class="logo-mark">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2L4 6v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V6l-8-4z"/></svg>
+      </div>
+      <div>
+        <div class="logo-text">ACS ExclusivePack™</div>
+        <div class="logo-sub">CardiologyVault</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="sidebar-patient" id="sidebarPatientBtn" onclick="openPatientModal()">
+    <div class="pt-label">Pasien Aktif</div>
+    <div class="pt-name" id="spName">— Belum Diisi —</div>
+    <div class="pt-meta" id="spMeta">Klik untuk isi data pasien</div>
+    <div class="pt-edit">✏️ Edit Data Pasien →</div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Navigasi</div>
+    <a href="#" class="nav-item active" data-page="dashboard" onclick="showPage('dashboard', this)">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      </div>
+      Dashboard
+    </a>
+
+    <div class="nav-section-label" style="margin-top:8px;">Tools Klinis</div>
+
+    <a href="#" class="nav-item" data-page="triage" onclick="showPage('triage', this)">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </div>
+      Triage Chest Pain
+      <span class="nav-badge" id="heartBadge" style="display:none"></span>
+    </a>
+
+    <a href="#" class="nav-item" data-page="grace" onclick="showPage('grace', this)">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      GRACE Score
+      <span class="nav-badge" id="graceBadge" style="display:none"></span>
+    </a>
+
+    <a href="#" class="nav-item" data-page="stemi" onclick="showPage('stemi', this)">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </div>
+      STEMI Protocol
+    </a>
+
+    <a href="#" class="nav-item" data-page="heparin" onclick="showPage('heparin', this)">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/><path d="M10 9.5C10 8.67 9.33 8 8.5 8h-5C2.67 8 2 8.67 2 9.5S2.67 11 3.5 11h5c.83 0 1.5-.67 1.5-1.5z"/><path d="M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z"/></svg>
+      </div>
+      Heparin Calculator
+    </a>
+
+    <a href="#" class="nav-item" data-page="referral" onclick="showPage('referral', this)">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
+      Surat Rujukan
+    </a>
+  </nav>
+
+  <!-- CLINICAL WORKFLOW -->
+  <div class="sidebar-workflow">
+    <div class="workflow-title">Alur Klinis</div>
+    <div class="workflow-steps">
+      <div class="wf-step" id="wf1" onclick="showPage('triage', document.querySelector('[data-page=triage]'))">
+        <div class="wf-dot"></div>
+        <span>1. Triage & HEART Score</span>
+      </div>
+      <div class="wf-step" id="wf2" onclick="showPage('grace', document.querySelector('[data-page=grace]'))">
+        <div class="wf-dot"></div>
+        <span>2. GRACE Score</span>
+      </div>
+      <div class="wf-step" id="wf3" onclick="showPage('stemi', document.querySelector('[data-page=stemi]'))">
+        <div class="wf-dot"></div>
+        <span>3. STEMI Protocol</span>
+      </div>
+      <div class="wf-step" id="wf4" onclick="showPage('heparin', document.querySelector('[data-page=heparin]'))">
+        <div class="wf-dot"></div>
+        <span>4. Heparin Dosing</span>
+      </div>
+      <div class="wf-step" id="wf5" onclick="showPage('referral', document.querySelector('[data-page=referral]'))">
+        <div class="wf-dot"></div>
+        <span>5. Surat Rujukan</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR CREDIT -->
+  <div class="sidebar-credit">
+    <div class="credit-vault">Part of CardiologyVault</div>
+    <div class="credit-dev">Dev: Bayushi Eka Putra, MD, FIHA</div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+    <div style="flex:1">
+      <div class="topbar-title" id="topbarTitle">Dashboard</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn-icon" onclick="openPatientModal()" title="Data Pasien">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </button>
+      <button class="btn-icon" onclick="clearAll()" title="Reset Semua">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== DASHBOARD PAGE ===== -->
+  <div class="page active" id="page-dashboard">
+    <div class="hero-banner ecg-bg">
+      <div class="hero-title">Selamat Datang di <span>ACS ExclusivePack™</span></div>
+      <div class="hero-subtitle">Platform tools klinis kardiovaskular terpadu untuk penanganan efisien & akurat</div>
+      <div class="quick-tools">
+        <div class="quick-tool" onclick="showPage('triage', document.querySelector('[data-page=triage]'))">
+          <div class="quick-tool-icon" style="background:rgba(239,68,68,0.15)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <span class="quick-tool-label">HEART Score</span>
+        </div>
+        <div class="quick-tool" onclick="showPage('grace', document.querySelector('[data-page=grace]'))">
+          <div class="quick-tool-icon" style="background:rgba(139,92,246,0.15)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <span class="quick-tool-label">GRACE Score</span>
+        </div>
+        <div class="quick-tool" onclick="showPage('stemi', document.querySelector('[data-page=stemi]'))">
+          <div class="quick-tool-icon" style="background:rgba(245,158,11,0.15)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <span class="quick-tool-label">STEMI</span>
+        </div>
+        <div class="quick-tool" onclick="showPage('heparin', document.querySelector('[data-page=heparin]'))">
+          <div class="quick-tool-icon" style="background:rgba(6,182,212,0.15)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M10 9.5C10 8.67 9.33 8 8.5 8h-5C2.67 8 2 8.67 2 9.5S2.67 11 3.5 11h5c.83 0 1.5-.67 1.5-1.5z"/></svg>
+          </div>
+          <span class="quick-tool-label">Heparin</span>
+        </div>
+        <div class="quick-tool" onclick="showPage('referral', document.querySelector('[data-page=referral]'))">
+          <div class="quick-tool-icon" style="background:rgba(16,185,129,0.15)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+          </div>
+          <span class="quick-tool-label">Rujukan</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUMMARY CARDS -->
+    <div class="grid-4" style="margin-bottom:20px;" id="summaryGrid">
+      <div class="stat-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="stat-label">HEART Score</div>
+          <div class="stat-icon" style="background:rgba(239,68,68,0.1)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+        </div>
+        <div class="stat-value" id="dashHeart" style="color:var(--text-muted)">—</div>
+        <div class="stat-change" id="dashHeartRisk" style="color:var(--text-muted)">Belum dihitung</div>
+      </div>
+      <div class="stat-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="stat-label">GRACE Score</div>
+          <div class="stat-icon" style="background:rgba(139,92,246,0.1)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+          </div>
+        </div>
+        <div class="stat-value" id="dashGrace" style="color:var(--text-muted)">—</div>
+        <div class="stat-change" id="dashGraceRisk" style="color:var(--text-muted)">Belum dihitung</div>
+      </div>
+      <div class="stat-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="stat-label">D2B / Lysis</div>
+          <div class="stat-icon" style="background:rgba(245,158,11,0.1)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+        </div>
+        <div class="stat-value" id="dashTimer" style="color:var(--text-muted)">—</div>
+        <div class="stat-change" id="dashTimerLabel" style="color:var(--text-muted)">Timer belum aktif</div>
+      </div>
+      <div class="stat-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="stat-label">Dosis Heparin</div>
+          <div class="stat-icon" style="background:rgba(6,182,212,0.1)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+        </div>
+        <div class="stat-value" id="dashHepLoad" style="color:var(--text-muted);font-size:18px;">—</div>
+        <div class="stat-change" id="dashHepLabel" style="color:var(--text-muted)">Belum dihitung</div>
+      </div>
+    </div>
+
+    <!-- CLINICAL GUIDANCE -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(6,182,212,0.1)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div>
+          <div class="card-title">Panduan Alur Klinis</div>
+          <div class="card-subtitle">Ikuti langkah berikut untuk tata laksana optimal</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
+          <div style="padding:14px;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:var(--radius);cursor:pointer;" onclick="showPage('triage', document.querySelector('[data-page=triage]'))">
+            <div style="font-size:20px;margin-bottom:6px;">🫀</div>
+            <div style="font-size:13px;font-weight:700;color:var(--red-light);margin-bottom:4px;">Step 1 — Triage</div>
+            <div style="font-size:11px;color:var(--text-secondary);">HEART Score untuk stratifikasi risiko chest pain</div>
+          </div>
+          <div style="padding:14px;background:rgba(139,92,246,0.07);border:1px solid rgba(139,92,246,0.2);border-radius:var(--radius);cursor:pointer;" onclick="showPage('grace', document.querySelector('[data-page=grace]'))">
+            <div style="font-size:20px;margin-bottom:6px;">📊</div>
+            <div style="font-size:13px;font-weight:700;color:var(--purple-light);margin-bottom:4px;">Step 2 — GRACE</div>
+            <div style="font-size:11px;color:var(--text-secondary);">Hitung risiko mortalitas 6 bulan pasca ACS</div>
+          </div>
+          <div style="padding:14px;background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.2);border-radius:var(--radius);cursor:pointer;" onclick="showPage('stemi', document.querySelector('[data-page=stemi]'))">
+            <div style="font-size:20px;margin-bottom:6px;">⚡</div>
+            <div style="font-size:13px;font-weight:700;color:var(--amber-light);margin-bottom:4px;">Step 3 — STEMI</div>
+            <div style="font-size:11px;color:var(--text-secondary);">Protokol reperfusi & checklist STEMI akut</div>
+          </div>
+          <div style="padding:14px;background:rgba(6,182,212,0.07);border:1px solid rgba(6,182,212,0.2);border-radius:var(--radius);cursor:pointer;" onclick="showPage('heparin', document.querySelector('[data-page=heparin]'))">
+            <div style="font-size:20px;margin-bottom:6px;">💉</div>
+            <div style="font-size:13px;font-weight:700;color:var(--cyan-light);margin-bottom:4px;">Step 4 — Heparin</div>
+            <div style="font-size:11px;color:var(--text-secondary);">Kalkulasi dosis & monitoring aPTT heparin</div>
+          </div>
+          <div style="padding:14px;background:rgba(16,185,129,0.07);border:1px solid rgba(16,185,129,0.2);border-radius:var(--radius);cursor:pointer;" onclick="showPage('referral', document.querySelector('[data-page=referral]'))">
+            <div style="font-size:20px;margin-bottom:6px;">📋</div>
+            <div style="font-size:13px;font-weight:700;color:var(--green-light);margin-bottom:4px;">Step 5 — Rujukan</div>
+            <div style="font-size:11px;color:var(--text-secondary);">Buat surat rujukan otomatis & lengkap</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TRIAGE PAGE (HEART SCORE) ===== -->
+  <div class="page" id="page-triage">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(239,68,68,0.15)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </div>
+      <div>
+        <div class="section-title">Triage Chest Pain</div>
+        <div class="section-subtitle">HEART Score — Stratifikasi Risiko Nyeri Dada</div>
+      </div>
+    </div>
+
+    <div class="triage-layout">
+      <div>
+        <!-- H - History -->
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header">
+            <div class="card-icon" style="background:rgba(239,68,68,0.1)">
+              <span style="font-size:16px;font-weight:900;color:#ef4444">H</span>
+            </div>
+            <div>
+              <div class="card-title">History (Riwayat)</div>
+              <div class="card-subtitle">Karakteristik nyeri dada</div>
+            </div>
+            <div style="margin-left:auto;" id="hScore" class="badge badge-red">0 poin</div>
+          </div>
+          <div class="card-body">
+            <div class="score-options" id="history-options">
+              <div class="score-option" onclick="selectOption('history', 2, this)">
+                <div class="score-radio"></div>
+                <span class="score-label">Sangat mencurigakan — Nyeri khas angina, berat, menjalar</span>
+                <span class="score-val">+2</span>
+              </div>
+              <div class="score-option" onclick="selectOption('history', 1, this)">
+                <div class="score-radio"></div>
+                <span class="score-label">Cukup mencurigakan — Beberapa fitur angina</span>
+                <span class="score-val">+1</span>
+              </div>
+              <div class="score-option" onclick="selectOption('history', 0, this)">
+                <div class="score-radio"></div>
+                <span class="score-label">Tidak mencurigakan — Tidak khas angina</span>
+                <span class="score-val">+0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- E - ECG -->
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header">
+            <div class="card-icon" style="background:rgba(239,68,68,0.1)">
+              <span style="font-size:16px;font-weight:900;color:#ef4444">E</span>
+            </div>
+            <div>
+              <div class="card-title">ECG</div>
+              <div class="card-subtitle">Temuan elektrokardiogram</div>
+            </div>
+            <div style="margin-left:auto;" id="eScore" class="badge badge-red">0 poin</div>
+          </div>
+          <div class="card-body">
+            <div class="score-options" id="ecg-options">
+              <div class="score-option" onclick="selectOption('ecg', 2, this)">
+                <div class="score-radio"></div>
+                <span class="score-label">LBBB baru / perubahan iskemik signifikan / ST elevasi</span>
+                <span class="score-val">+2</span>
+              </div>
+              <div class="score-option" onclick="selectOption('ecg', 1, this)">
+                <div class="score-radio"></div>
+                <span class="score-label">Non-spesifik: LVH, repolarisasi awal, LBBB lama, paced</span>
+                <span class="score-val">+1</span>
+              </div>
+              <div class="score-option" onclick="selectOption('ecg', 0, this)">
+                <div class="score-radio"></div>
+                <span class="score-label">Normal</span>
+                <span class="score-val">+0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- A - Age -->
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header">
+            <div class="card-icon" style="background:rgba(139,92,246,0.1)">
+              <span style="font-size:16px;font-weight:900;color:#8b5cf6">A</span>
+            </div>
+            <div>
+              <div class="card-title">Age (Usia)</div>
+              <div class="card-subtitle">Usia pasien saat ini</div>
+            </div>
+            <div style="margin-left:auto;" id="aScore" class="badge badge-red">0 poin</div>
+          </div>
+          <div class="card-body">
+            <div class="score-options" id="age-options">
+              <div class="score-option" onclick="selectOption('age', 2, this)">
+                <div class="score-radio"></div>
+                <span class="score-label">≥ 65 tahun</span>
+                <span class="score-val">+2</span>
+              </div>
+              <div class="score-option" onclick="selectOption('age', 1, this)">
+                <div class="score-radio"></div>
+                <span class="score-label">45 — 64 tahun</span>
+                <span class="score-val">+1</span>
+              </div>
+              <div class="score-option" onclick="selectOption('age', 0, this)">
+                <div class="score-radio"></div>
+                <span class="score-label">< 45 tahun</span>
+                <span class="score-val">+0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- R - Risk Factors -->
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header">
+            <div class="card-icon" style="background:rgba(245,158,11,0.1)">
+              <span style="font-size:16px;font-weight:900;color:#f59e0b">R</span>
+            </div>
+            <div>
+              <div class="card-title">Risk Factors</div>
+              <div class="card-subtitle">Faktor risiko kardiovaskular</div>
+            </div>
+            <div style="margin-left:auto;" id="rScore" class="badge badge-red">0 poin</div>
+          </div>
+          <div class="card-body">
+            <div class="score-options" id="risk-options">
+              <div class="score-option" onclick="selectOption('risk', 2, this)">
+                <div class="score-radio"></div>
+                <span class="score-label">≥3 faktor risiko ATAU aterosklerosis diketahui</span>
+                <span class="score-val">+2</span>
+              </div>
+              <div class="score-option" onclick="selectOption('risk', 1, this)">
+                <div class="score-radio"></div>
+                <span class="score-label">1–2 faktor risiko (HT, DM, hiperlipidemia, obesitas, rokok)</span>
+                <span class="score-val">+1</span>
+              </div>
+              <div class="score-option" onclick="selectOption('risk', 0, this)">
+                <div class="score-radio"></div>
+                <span class="score-label">Tidak ada faktor risiko</span>
+                <span class="score-val">+0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- T - Troponin -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background:rgba(6,182,212,0.1)">
+              <span style="font-size:16px;font-weight:900;color:#06b6d4">T</span>
+            </div>
+            <div>
+              <div class="card-title">Troponin</div>
+              <div class="card-subtitle">Nilai troponin vs batas atas normal</div>
+            </div>
+            <div style="margin-left:auto;" id="tScore" class="badge badge-red">0 poin</div>
+          </div>
+          <div class="card-body">
+            <div class="score-options" id="troponin-options">
+              <div class="score-option" onclick="selectOption('troponin', 2, this)">
+                <div class="score-radio"></div>
+                <span class="score-label">Troponin > 3× batas atas normal laboratorium</span>
+                <span class="score-val">+2</span>
+              </div>
+              <div class="score-option" onclick="selectOption('troponin', 1, this)">
+                <div class="score-radio"></div>
+                <span class="score-label">Troponin 1–3× batas atas normal</span>
+                <span class="score-val">+1</span>
+              </div>
+              <div class="score-option" onclick="selectOption('troponin', 0, this)">
+                <div class="score-radio"></div>
+                <span class="score-label">Troponin ≤ batas atas normal</span>
+                <span class="score-val">+0</span>
+              </div>
+            </div>
+            <div style="margin-top:12px;">
+              <div class="form-row">
+                <div class="form-group" style="margin-bottom:0">
+                  <label class="form-label">Nilai Troponin (ng/mL)</label>
+                  <input type="number" class="form-control" id="troponinValue" placeholder="e.g. 0.08" step="0.001" oninput="updateTroponinNote()">
+                </div>
+                <div class="form-group" style="margin-bottom:0">
+                  <label class="form-label">Batas Normal Lab (ng/mL)</label>
+                  <input type="number" class="form-control" id="troponinNormal" placeholder="e.g. 0.04" step="0.001" oninput="updateTroponinNote()">
+                </div>
+              </div>
+              <div class="form-hint" id="troponinNote" style="margin-top:8px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULT PANEL -->
+      <div style="position:sticky;top:80px;align-self:start;">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Hasil HEART Score</div>
+          </div>
+          <div class="card-body">
+            <div class="score-result low" id="heartResult">
+              <div class="score-number" id="heartTotal">0</div>
+              <div class="score-risk" id="heartRisk">Risiko Rendah</div>
+              <div class="score-desc" id="heartDesc">Dapat discharge dengan follow-up</div>
+            </div>
+            <div style="margin-top:16px;">
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+                <span style="color:var(--text-muted)">Score</span>
+                <span id="heartPct" style="color:var(--text-secondary)">0 / 10</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" id="heartProgress" style="width:0%;background:var(--green)"></div>
+              </div>
+            </div>
+          </div>
+          <div class="card-body" style="padding-top:0;">
+            <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Rincian Skor</div>
+            <div style="display:flex;flex-direction:column;gap:6px;" id="heartBreakdown">
+              <div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 10px;background:var(--bg-glass);border-radius:6px;">
+                <span style="color:var(--text-secondary)">H — History</span><span id="bd-h" style="color:var(--text-primary);font-weight:700;font-family:'JetBrains Mono',monospace;">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 10px;background:var(--bg-glass);border-radius:6px;">
+                <span style="color:var(--text-secondary)">E — ECG</span><span id="bd-e" style="color:var(--text-primary);font-weight:700;font-family:'JetBrains Mono',monospace;">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 10px;background:var(--bg-glass);border-radius:6px;">
+                <span style="color:var(--text-secondary)">A — Age</span><span id="bd-a" style="color:var(--text-primary);font-weight:700;font-family:'JetBrains Mono',monospace;">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 10px;background:var(--bg-glass);border-radius:6px;">
+                <span style="color:var(--text-secondary)">R — Risk</span><span id="bd-r" style="color:var(--text-primary);font-weight:700;font-family:'JetBrains Mono',monospace;">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 10px;background:var(--bg-glass);border-radius:6px;">
+                <span style="color:var(--text-secondary)">T — Troponin</span><span id="bd-t" style="color:var(--text-primary);font-weight:700;font-family:'JetBrains Mono',monospace;">0</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-body" style="padding-top:0;" id="heartRecommendation">
+            <div class="alert alert-cyan" id="heartAlertBox">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span id="heartAlertText">Pilih semua parameter untuk mendapatkan rekomendasi</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <button class="btn btn-primary btn-full" onclick="showPage('grace', document.querySelector('[data-page=grace]'))">
+              Lanjut: GRACE Score →
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== GRACE SCORE PAGE ===== -->
+  <div class="page" id="page-grace">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(139,92,246,0.15)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div>
+        <div class="section-title">GRACE Score</div>
+        <div class="section-subtitle">Global Registry of Acute Coronary Events — Risiko 6 Bulan</div>
+      </div>
+    </div>
+
+    <div class="grace-layout">
+      <div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header">
+            <div class="card-title">Data Klinis Pasien</div>
+            <div class="card-subtitle" style="margin-left:auto;font-size:11px;color:var(--text-muted)">Semua field wajib diisi</div>
+          </div>
+          <div class="card-body">
+            <div class="form-row-3">
+              <div class="form-group">
+                <label class="form-label">Usia (tahun)</label>
+                <input type="number" class="form-control" id="graceAge" min="0" max="120" placeholder="70" oninput="calcGrace()">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Heart Rate (bpm)</label>
+                <input type="number" class="form-control" id="graceHR" min="0" max="300" placeholder="80" oninput="calcGrace()">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Sistolik BP (mmHg)</label>
+                <input type="number" class="form-control" id="graceSBP" min="0" max="300" placeholder="120" oninput="calcGrace()">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Kreatinin (mg/dL)</label>
+                <input type="number" class="form-control" id="graceCr" min="0" max="20" step="0.1" placeholder="1.0" oninput="calcGrace()">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Killip Class</label>
+                <select class="form-control" id="graceKillip" onchange="calcGrace()">
+                  <option value="">— Pilih —</option>
+                  <option value="1">Killip I — Tidak ada gagal jantung</option>
+                  <option value="2">Killip II — Ronki basah, S3</option>
+                  <option value="3">Killip III — Edema paru akut</option>
+                  <option value="4">Killip IV — Syok kardiogenik</option>
+                </select>
+              </div>
+            </div>
+            <div class="divider-label">Temuan Klinis</div>
+            <div class="score-options" style="gap:8px;">
+              <div class="score-option" id="graceArrest" onclick="toggleGraceFlag('graceArrest')">
+                <div class="score-radio"></div>
+                <span class="score-label">🫀 Henti jantung saat presentasi</span>
+                <span class="score-val">+39</span>
+              </div>
+              <div class="score-option" id="graceST" onclick="toggleGraceFlag('graceST')">
+                <div class="score-radio"></div>
+                <span class="score-label">📉 Deviasi ST pada ECG</span>
+                <span class="score-val">+28</span>
+              </div>
+              <div class="score-option" id="graceEnz" onclick="toggleGraceFlag('graceEnz')">
+                <div class="score-radio"></div>
+                <span class="score-label">🧪 Elevated cardiac enzymes</span>
+                <span class="score-val">+14</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Killip Table -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Referensi Killip Classification</div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Killip</th><th>Deskripsi</th><th>Mortalitas (est.)</th><th>GRACE pts</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td><strong>I</strong></td><td>Tidak ada S3, tidak ada ronki</td><td>~6%</td><td>+0</td></tr>
+                  <tr><td><strong>II</strong></td><td>S3 dan/atau ronki < ½ paru</td><td>~17%</td><td>+20</td></tr>
+                  <tr><td><strong>III</strong></td><td>Ronki > ½ paru (edema paru)</td><td>~38%</td><td>+39</td></tr>
+                  <tr><td><strong>IV</strong></td><td>Syok kardiogenik (TD < 90)</td><td>~67%</td><td>+59</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GRACE RESULT -->
+      <div style="position:sticky;top:80px;align-self:start;">
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header"><div class="card-title">GRACE Score Result</div></div>
+          <div class="card-body">
+            <div class="score-result low" id="graceResult">
+              <div class="score-number" id="graceTotal" style="color:var(--green)">—</div>
+              <div class="score-risk" id="graceRiskLabel">Masukkan data</div>
+              <div class="score-desc" id="graceRiskDesc">Lengkapi parameter klinis</div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header"><div class="card-title">Rincian Skor</div></div>
+          <div class="card-body" style="padding:12px;">
+            <div id="graceBreakdown" style="font-size:12px;display:flex;flex-direction:column;gap:4px;"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Rekomendasi</div></div>
+          <div class="card-body">
+            <div id="graceRecomm" class="alert alert-cyan">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span>Isi parameter untuk rekomendasi</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <button class="btn btn-amber btn-full" onclick="showPage('stemi', document.querySelector('[data-page=stemi]'))">
+              Lanjut: STEMI Protocol →
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STEMI PAGE ===== -->
+  <div class="page" id="page-stemi">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(245,158,11,0.15)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </div>
+      <div>
+        <div class="section-title">STEMI Protocol</div>
+        <div class="section-subtitle">Checklist Akut, Timer D2B/Fibrinolisis & Antiplatelet</div>
+      </div>
+    </div>
+
+    <div class="tabs" id="stemiTabs">
+      <div class="tab active" onclick="switchTab('stemi', 'checklist', this)">Checklist Akut</div>
+      <div class="tab" onclick="switchTab('stemi', 'timer', this)">⏱ D2B Timer</div>
+      <div class="tab" onclick="switchTab('stemi', 'fibrinolysis', this)">Fibrinolisis</div>
+      <div class="tab" onclick="switchTab('stemi', 'antiplatelet', this)">Antiplatelet</div>
+    </div>
+
+    <!-- CHECKLIST TAB -->
+    <div class="tab-pane active" id="stemi-tab-checklist">
+      <div class="stemi-grid">
+        <div>
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header">
+              <div class="card-icon" style="background:rgba(239,68,68,0.1)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              </div>
+              <div>
+                <div class="card-title">Tatalaksana Awal</div>
+                <div class="card-subtitle">Segera lakukan dalam 10 menit</div>
+              </div>
+              <div style="margin-left:auto;" id="chkProgress1" class="badge badge-red">0/7</div>
+            </div>
+            <div class="card-body">
+              <div class="checklist" id="checklist-initial">
+                <div class="check-item" onclick="toggleCheck(this, 'chkProgress1', 'checklist-initial')">
+                  <div class="check-box"></div>
+                  <span class="check-text">12-lead ECG dan interpretasi</span>
+                  <span class="check-tag badge badge-red">SEGERA</span>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this, 'chkProgress1', 'checklist-initial')">
+                  <div class="check-box"></div>
+                  <span class="check-text">Akses IV 2 jalur, ambil darah (darah rutin, kimia, enzim)</span>
+                  <span class="check-tag badge badge-red">SEGERA</span>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this, 'chkProgress1', 'checklist-initial')">
+                  <div class="check-box"></div>
+                  <span class="check-text">Aspirin 160–325 mg PO (loading, kunyah)</span>
+                  <span class="check-tag badge badge-amber">OBAT</span>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this, 'chkProgress1', 'checklist-initial')">
+                  <div class="check-box"></div>
+                  <span class="check-text">O₂ jika SpO₂ < 90% atau distres berat</span>
+                  <span class="check-tag badge badge-cyan">O₂</span>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this, 'chkProgress1', 'checklist-initial')">
+                  <div class="check-box"></div>
+                  <span class="check-text">Morfin sulfat 2–4 mg IV (jika masih nyeri)</span>
+                  <span class="check-tag badge badge-amber">OBAT</span>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this, 'chkProgress1', 'checklist-initial')">
+                  <div class="check-box"></div>
+                  <span class="check-text">Monitor EKG kontinu + defibrilator siap</span>
+                  <span class="check-tag badge badge-red">MONITOR</span>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this, 'chkProgress1', 'checklist-initial')">
+                  <div class="check-box"></div>
+                  <span class="check-text">Informed consent pasien/keluarga untuk reperfusi</span>
+                  <span class="check-tag badge badge-purple">ADMIN</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-icon" style="background:rgba(16,185,129,0.1)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+              <div>
+                <div class="card-title">Reperfusi & Lanjutan</div>
+                <div class="card-subtitle">Dalam 90 menit (primary PCI)</div>
+              </div>
+              <div style="margin-left:auto;" id="chkProgress2" class="badge badge-amber">0/5</div>
+            </div>
+            <div class="card-body">
+              <div class="checklist" id="checklist-reperfusion">
+                <div class="check-item" onclick="toggleCheck(this, 'chkProgress2', 'checklist-reperfusion')">
+                  <div class="check-box"></div>
+                  <span class="check-text">Aktivasi cath lab (primary PCI preferred)</span>
+                  <span class="check-tag badge badge-red">PCI</span>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this, 'chkProgress2', 'checklist-reperfusion')">
+                  <div class="check-box"></div>
+                  <span class="check-text">P2Y12 inhibitor: Ticagrelor 180 mg atau Clopidogrel 600 mg</span>
+                  <span class="check-tag badge badge-amber">OBAT</span>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this, 'chkProgress2', 'checklist-reperfusion')">
+                  <div class="check-box"></div>
+                  <span class="check-text">Antikoagulan: UFH / Bivalirudin / Enoxaparin</span>
+                  <span class="check-tag badge badge-cyan">ANTI-KC</span>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this, 'chkProgress2', 'checklist-reperfusion')">
+                  <div class="check-box"></div>
+                  <span class="check-text">Statin high-intensity (Atorvastatin 80 mg)</span>
+                  <span class="check-tag badge badge-amber">OBAT</span>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this, 'chkProgress2', 'checklist-reperfusion')">
+                  <div class="check-box"></div>
+                  <span class="check-text">Notifikasi / rujuk ke RS PCI jika tidak ada fasilitas</span>
+                  <span class="check-tag badge badge-purple">RUJUKAN</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEMI STATUS CARD -->
+        <div>
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header">
+              <div class="card-title">Identifikasi STEMI</div>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Jenis Infark</label>
+                <select class="form-control" id="stemiType">
+                  <option value="">— Pilih —</option>
+                  <option>STEMI Anterior (V1–V4)</option>
+                  <option>STEMI Inferior (II, III, aVF)</option>
+                  <option>STEMI Lateral (I, aVL, V5–V6)</option>
+                  <option>STEMI Posterior</option>
+                  <option>STEMI RV (Right Ventricular)</option>
+                  <option>STEMI Extensive Anterior</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Onset Nyeri</label>
+                  <input type="datetime-local" class="form-control" id="stemiOnset">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Waktu Tiba RS</label>
+                  <input type="datetime-local" class="form-control" id="stemiArrival" oninput="calcDoorTime()">
+                </div>
+              </div>
+              <div id="symptomToDoor" style="display:none;" class="alert alert-amber" style="margin-top:8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span id="symptomToDoorText"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- KILLIP & STATUS -->
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header"><div class="card-title">Status Hemodinamik</div></div>
+            <div class="card-body">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Killip Class</label>
+                  <select class="form-control" id="stemiKillip">
+                    <option>Killip I</option>
+                    <option>Killip II</option>
+                    <option>Killip III</option>
+                    <option>Killip IV</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">SpO₂ (%)</label>
+                  <input type="number" class="form-control" id="stemiSpo2" placeholder="98" min="0" max="100">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">TD (mmHg)</label>
+                  <input type="text" class="form-control" id="stemiTD" placeholder="120/80">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">HR (bpm)</label>
+                  <input type="number" class="form-control" id="stemiHR" placeholder="80">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress -->
+          <div class="card">
+            <div class="card-header"><div class="card-title">Progress Checklist</div></div>
+            <div class="card-body">
+              <div style="margin-bottom:12px;">
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+                  <span style="color:var(--text-secondary)">Tatalaksana Awal</span>
+                  <span id="prog1Text" style="color:var(--text-muted)">0/7</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" id="prog1Fill" style="width:0%;background:var(--red)"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+                  <span style="color:var(--text-secondary)">Reperfusi & Lanjutan</span>
+                  <span id="prog2Text" style="color:var(--text-muted)">0/5</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" id="prog2Fill" style="width:0%;background:var(--amber)"></div>
+                </div>
+              </div>
+              <div style="margin-top:16px;">
+                <button class="btn btn-cyan btn-full btn-sm" onclick="showPage('heparin', document.querySelector('[data-page=heparin]'))">
+                  Lanjut: Heparin Calculator →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIMER TAB -->
+    <div class="tab-pane" id="stemi-tab-timer">
+      <div class="stemi-grid">
+        <!-- D2B Timer -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background:rgba(239,68,68,0.1)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div>
+              <div class="card-title">Door-to-Balloon (D2B)</div>
+              <div class="card-subtitle">Target: ≤ 90 menit</div>
+            </div>
+            <div class="badge badge-red" style="margin-left:auto;">Target 90 min</div>
+          </div>
+          <div class="card-body">
+            <div class="timer-display">
+              <div class="timer-value" id="d2bDisplay" style="color:var(--green)">00:00:00</div>
+              <div class="timer-label">Door-to-Balloon Time</div>
+              <div class="timer-actions">
+                <button class="btn btn-primary btn-sm" id="d2bStartBtn" onclick="startTimer('d2b')">▶ Mulai</button>
+                <button class="btn btn-secondary btn-sm" onclick="markD2B()" id="d2bMarkBtn">🎯 Mark Balloon</button>
+                <button class="btn btn-secondary btn-sm" onclick="resetTimer('d2b')">↺ Reset</button>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div style="font-size:12px;color:var(--text-secondary);text-align:center;margin-bottom:8px;">Milestones</div>
+            <div id="d2bMilestones" style="display:flex;flex-direction:column;gap:6px;"></div>
+          </div>
+        </div>
+
+        <!-- Fibrinolysis Timer -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background:rgba(245,158,11,0.1)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div>
+              <div class="card-title">Door-to-Needle (D2N)</div>
+              <div class="card-subtitle">Target: ≤ 30 menit</div>
+            </div>
+            <div class="badge badge-amber" style="margin-left:auto;">Target 30 min</div>
+          </div>
+          <div class="card-body">
+            <div class="timer-display">
+              <div class="timer-value" id="d2nDisplay" style="color:var(--green)">00:00:00</div>
+              <div class="timer-label">Door-to-Needle Time</div>
+              <div class="timer-actions">
+                <button class="btn btn-amber btn-sm" id="d2nStartBtn" onclick="startTimer('d2n')">▶ Mulai</button>
+                <button class="btn btn-secondary btn-sm" onclick="markD2N()" id="d2nMarkBtn">💉 Mark Needle</button>
+                <button class="btn btn-secondary btn-sm" onclick="resetTimer('d2n')">↺ Reset</button>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div style="font-size:12px;color:var(--text-secondary);text-align:center;margin-bottom:8px;">Timeline</div>
+            <div class="timeline" id="d2nTimeline">
+              <div class="timeline-item">
+                <div class="timeline-dot" id="tl-door">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-title">Door (Tiba RS)</div>
+                  <div class="timeline-time" id="tl-door-time">—</div>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot" id="tl-ecg">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-title">ECG Interpretation</div>
+                  <div class="timeline-time" id="tl-ecg-time">—</div>
+                  <button class="btn btn-secondary btn-sm" style="margin-top:4px;font-size:11px;" onclick="markTimeline('ecg')">Mark</button>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot" id="tl-decision">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-title">Keputusan Reperfusi</div>
+                  <div class="timeline-time" id="tl-decision-time">—</div>
+                  <button class="btn btn-secondary btn-sm" style="margin-top:4px;font-size:11px;" onclick="markTimeline('decision')">Mark</button>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot" id="tl-needle">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-title">Needle / Drug Administration</div>
+                  <div class="timeline-time" id="tl-needle-time">—</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FIBRINOLYSIS TAB -->
+    <div class="tab-pane" id="stemi-tab-fibrinolysis">
+      <div class="stemi-grid">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background:rgba(239,68,68,0.1)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div>
+              <div class="card-title">Kontraindikasi Fibrinolisis</div>
+              <div class="card-subtitle">Periksa SEMUA sebelum memberikan fibrinolitik</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div style="font-size:11px;font-weight:700;color:var(--red-light);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">KONTRAINDIKASI ABSOLUT</div>
+            <div class="checklist" id="abs-ci" style="margin-bottom:16px;">
+              <div class="check-item" onclick="toggleCICheck(this, 'absCI')">
+                <div class="check-box"></div>
+                <span class="check-text">Riwayat stroke hemoragik kapan saja</span>
+                <span class="check-tag badge badge-red">ABS</span>
+              </div>
+              <div class="check-item" onclick="toggleCICheck(this, 'absCI')">
+                <div class="check-box"></div>
+                <span class="check-text">Stroke iskemik < 3 bulan</span>
+                <span class="check-tag badge badge-red">ABS</span>
+              </div>
+              <div class="check-item" onclick="toggleCICheck(this, 'absCI')">
+                <div class="check-box"></div>
+                <span class="check-text">Neoplasma intrakranial atau malformasi AV</span>
+                <span class="check-tag badge badge-red">ABS</span>
+              </div>
+              <div class="check-item" onclick="toggleCICheck(this, 'absCI')">
+                <div class="check-box"></div>
+                <span class="check-text">Trauma kepala berat / bedah kranial < 3 bulan</span>
+                <span class="check-tag badge badge-red">ABS</span>
+              </div>
+              <div class="check-item" onclick="toggleCICheck(this, 'absCI')">
+                <div class="check-box"></div>
+                <span class="check-text">Perdarahan aktif (bukan menstruasi)</span>
+                <span class="check-tag badge badge-red">ABS</span>
+              </div>
+              <div class="check-item" onclick="toggleCICheck(this, 'absCI')">
+                <div class="check-box"></div>
+                <span class="check-text">Curiga diseksi aorta</span>
+                <span class="check-tag badge badge-red">ABS</span>
+              </div>
+            </div>
+
+            <div style="font-size:11px;font-weight:700;color:var(--amber-light);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">KONTRAINDIKASI RELATIF</div>
+            <div class="checklist" id="rel-ci">
+              <div class="check-item" onclick="toggleCICheck(this, 'relCI')">
+                <div class="check-box"></div>
+                <span class="check-text">Hipertensi berat tidak terkontrol (>180/110 mmHg)</span>
+                <span class="check-tag badge badge-amber">REL</span>
+              </div>
+              <div class="check-item" onclick="toggleCICheck(this, 'relCI')">
+                <div class="check-box"></div>
+                <span class="check-text">CPR traumatik atau berkepanjangan (>10 menit)</span>
+                <span class="check-tag badge badge-amber">REL</span>
+              </div>
+              <div class="check-item" onclick="toggleCICheck(this, 'relCI')">
+                <div class="check-box"></div>
+                <span class="check-text">Bedah mayor < 3 minggu</span>
+                <span class="check-tag badge badge-amber">REL</span>
+              </div>
+              <div class="check-item" onclick="toggleCICheck(this, 'relCI')">
+                <div class="check-box"></div>
+                <span class="check-text">Perdarahan internal < 4 minggu</span>
+                <span class="check-tag badge badge-amber">REL</span>
+              </div>
+              <div class="check-item" onclick="toggleCICheck(this, 'relCI')">
+                <div class="check-box"></div>
+                <span class="check-text">Terapi antikoagulan aktif (INR >2)</span>
+                <span class="check-tag badge badge-amber">REL</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer" style="justify-content:space-between;">
+            <div id="ciStatus" class="badge badge-green">Aman — Lanjutkan evaluasi</div>
+            <button class="btn btn-secondary btn-sm" onclick="resetCICheck()">Reset</button>
+          </div>
+        </div>
+
+        <!-- Fibrinolytic Dosing -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Dosis Fibrinolitik</div>
+            <div class="card-subtitle" style="font-size:11px;margin-left:auto;color:var(--text-muted)">Jika PCI tidak tersedia ≤120 min</div>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Berat Badan (kg)</label>
+              <input type="number" class="form-control" id="fibrWeight" placeholder="70" oninput="calcFibr()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Agen Fibrinolitik</label>
+              <select class="form-control" id="fibrAgent" onchange="calcFibr()">
+                <option value="">— Pilih Agen —</option>
+                <option value="streptokinase">Streptokinase (SK)</option>
+                <option value="alteplase">Alteplase (tPA)</option>
+                <option value="reteplase">Reteplase (rPA)</option>
+                <option value="tenecteplase">Tenecteplase (TNK)</option>
+              </select>
+            </div>
+            <div id="fibrDoseResult" style="display:none;">
+              <div class="divider-label">Dosis yang Direkomendasikan</div>
+              <div id="fibrDoseContent"></div>
+              <div class="alert alert-amber" style="margin-top:12px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span style="font-size:12px;">Pastikan tidak ada kontraindikasi absolut sebelum pemberian. Monitor tanda perdarahan ketat.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANTIPLATELET TAB -->
+    <div class="tab-pane" id="stemi-tab-antiplatelet">
+      <div class="stemi-grid">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Antiplatelet Protocol</div></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Berat Badan Pasien (kg)</label>
+              <input type="number" class="form-control" id="antiBB" placeholder="70" oninput="calcAntiplatelet()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Strategi Reperfusi</label>
+              <select class="form-control" id="antiStrategy" onchange="calcAntiplatelet()">
+                <option value="">— Pilih —</option>
+                <option value="pci">Primary PCI</option>
+                <option value="fibrinolysis">Fibrinolisis</option>
+                <option value="conservative">Konservatif (Medis)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ada riwayat stroke / TIA?</label>
+              <select class="form-control" id="antiStroke" onchange="calcAntiplatelet()">
+                <option value="no">Tidak</option>
+                <option value="yes">Ya</option>
+              </select>
+            </div>
+            <div id="antiResult" style="display:none;"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Tabel Perbandingan P2Y12</div></div>
+          <div class="card-body" style="padding:0;">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Obat</th><th>Loading</th><th>Maintenance</th><th>Keterangan</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Ticagrelor</strong></td>
+                    <td>180 mg</td>
+                    <td>90 mg 2×/hari</td>
+                    <td><span class="badge badge-green">Preferred PCI</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Clopidogrel</strong></td>
+                    <td>600 mg (PCI)<br>300 mg (fibr.)</td>
+                    <td>75 mg/hari</td>
+                    <td><span class="badge badge-cyan">Alternatif</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Prasugrel</strong></td>
+                    <td>60 mg</td>
+                    <td>10 mg/hari</td>
+                    <td><span class="badge badge-amber">Hati-hati stroke/TIA</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Aspirin</strong></td>
+                    <td>160–325 mg</td>
+                    <td>75–100 mg/hari</td>
+                    <td><span class="badge badge-purple">Wajib semua</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== HEPARIN PAGE ===== -->
+  <div class="page" id="page-heparin">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(6,182,212,0.15)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <div>
+        <div class="section-title">Heparin Calculator</div>
+        <div class="section-subtitle">UFH Weight-Based Protocol & LMWH Dosing</div>
+      </div>
+    </div>
+
+    <div class="tabs" id="hepTabs">
+      <div class="tab active" onclick="switchTab('hep', 'ufh', this)">UFH (Heparin)</div>
+      <div class="tab" onclick="switchTab('hep', 'lmwh', this)">LMWH (Enoxaparin)</div>
+      <div class="tab" onclick="switchTab('hep', 'aptt', this)">aPTT Monitoring</div>
+    </div>
+
+    <!-- UFH TAB -->
+    <div class="tab-pane active" id="hep-tab-ufh">
+      <div class="hep-grid">
+        <div>
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header"><div class="card-title">Data Pasien</div></div>
+            <div class="card-body">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Berat Badan (kg)</label>
+                  <input type="number" class="form-control" id="hepWeight" placeholder="70" min="20" max="200" oninput="calcHeparin()">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Indikasi</label>
+                  <select class="form-control" id="hepIndication" onchange="calcHeparin()">
+                    <option value="acs">ACS (NSTEMI/UA)</option>
+                    <option value="stemi_pci">STEMI Pre-PCI</option>
+                    <option value="vte">VTE (DVT/PE)</option>
+                    <option value="af">Atrial Fibrillasi</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Protokol Loading Dose</label>
+                <select class="form-control" id="hepLoadProt" onchange="calcHeparin()">
+                  <option value="60">60 unit/kg (ACS standar)</option>
+                  <option value="70">70 unit/kg</option>
+                  <option value="80">80 unit/kg (VTE / agresif)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Protokol Maintenance Rate</label>
+                <select class="form-control" id="hepMaintProt" onchange="calcHeparin()">
+                  <option value="12">12 unit/kg/jam</option>
+                  <option value="15">15 unit/kg/jam</option>
+                  <option value="18">18 unit/kg/jam (agresif)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Konsentrasi Heparin</label>
+                <select class="form-control" id="hepConc" onchange="calcHeparin()">
+                  <option value="50">50 unit/mL (25.000 unit / 500 mL)</option>
+                  <option value="25">25 unit/mL (12.500 unit / 500 mL)</option>
+                  <option value="100">100 unit/mL (25.000 unit / 250 mL)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RESULT -->
+        <div>
+          <div id="hepResults" style="display:none;">
+            <div class="card" style="margin-bottom:16px;">
+              <div class="card-header">
+                <div class="card-icon" style="background:rgba(6,182,212,0.1)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </div>
+                <div><div class="card-title">Dosis UFH</div></div>
+              </div>
+              <div class="card-body">
+                <div class="grid-2" style="gap:12px;margin-bottom:12px;">
+                  <div class="dose-card">
+                    <div class="dose-label">Loading Dose (Bolus)</div>
+                    <div class="dose-value" id="hepLoadDose">—</div>
+                    <div class="dose-unit">unit IV bolus</div>
+                    <div class="dose-range" id="hepLoadRange"></div>
+                  </div>
+                  <div class="dose-card">
+                    <div class="dose-label">Maintenance Infusion</div>
+                    <div class="dose-value" id="hepMaintRate">—</div>
+                    <div class="dose-unit">mL/jam</div>
+                    <div class="dose-range" id="hepMaintUnits"></div>
+                  </div>
+                </div>
+                <div class="alert alert-cyan">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <span id="hepNote" style="font-size:12px;"></span>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Target aPTT</div></div>
+              <div class="card-body">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;">
+                  <div style="padding:10px;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:8px;">
+                    <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">Subterapeutik</div>
+                    <div style="font-size:14px;font-weight:700;color:var(--red-light)">&lt; 60 det</div>
+                  </div>
+                  <div style="padding:10px;background:rgba(16,185,129,0.07);border:1px solid rgba(16,185,129,0.2);border-radius:8px;">
+                    <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">Terapeutik</div>
+                    <div style="font-size:14px;font-weight:700;color:var(--green-light)">60–100 det</div>
+                  </div>
+                  <div style="padding:10px;background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.2);border-radius:8px;">
+                    <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">Supraterapeutik</div>
+                    <div style="font-size:14px;font-weight:700;color:var(--amber-light)">&gt; 100 det</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="hepPlaceholder" class="card">
+            <div class="card-body" style="text-align:center;padding:40px;">
+              <div style="font-size:40px;margin-bottom:12px;">💉</div>
+              <div style="color:var(--text-muted);font-size:14px;">Masukkan berat badan pasien untuk menghitung dosis heparin</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LMWH TAB -->
+    <div class="tab-pane" id="hep-tab-lmwh">
+      <div class="hep-grid">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Enoxaparin (LMWH)</div></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Berat Badan (kg)</label>
+                <input type="number" class="form-control" id="lmwhWeight" placeholder="70" oninput="calcLMWH()">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Indikasi</label>
+                <select class="form-control" id="lmwhIndication" onchange="calcLMWH()">
+                  <option value="therapeutic">Terapeutik (DVT/PE/ACS)</option>
+                  <option value="prophylaxis">Profilaksis VTE</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Fungsi Ginjal (eGFR)</label>
+                <input type="number" class="form-control" id="lmwhEgfr" placeholder="80" oninput="calcLMWH()">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Usia</label>
+                <input type="number" class="form-control" id="lmwhAge" placeholder="60" oninput="calcLMWH()">
+              </div>
+            </div>
+            <div id="lmwhResult" style="display:none;"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Perbandingan UFH vs LMWH</div></div>
+          <div class="card-body" style="padding:0;">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Aspek</th><th>UFH</th><th>LMWH</th></tr></thead>
+                <tbody>
+                  <tr><td>Rute</td><td>IV (infus)</td><td>SC 1-2×/hari</td></tr>
+                  <tr><td>Monitoring</td><td>aPTT tiap 6 jam</td><td>Anti-Xa (opsional)</td></tr>
+                  <tr><td>Reversal</td><td>Protamin sulfat</td><td>Protamin (parsial)</td></tr>
+                  <tr><td>Gagal ginjal</td><td><span class="badge badge-green">Aman</span></td><td><span class="badge badge-amber">Hati-hati</span></td></tr>
+                  <tr><td>Pra-PCI</td><td><span class="badge badge-green">Preferred</span></td><td><span class="badge badge-cyan">Bisa</span></td></tr>
+                  <tr><td>HIT risk</td><td>Lebih tinggi</td><td>Lebih rendah</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- aPTT TAB -->
+    <div class="tab-pane" id="hep-tab-aptt">
+      <div class="hep-grid">
+        <div class="card">
+          <div class="card-header"><div class="card-title">aPTT-based Adjustment</div></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Nilai aPTT Saat Ini (detik)</label>
+              <input type="number" class="form-control" id="apttValue" placeholder="e.g. 75" oninput="calcAPTT()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Infusion Rate Saat Ini (mL/jam)</label>
+              <input type="number" class="form-control" id="apttCurrentRate" placeholder="e.g. 15" step="0.5" oninput="calcAPTT()">
+            </div>
+            <div id="apttResult" style="display:none;"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Protokol Penyesuaian Dosis</div></div>
+          <div class="card-body" style="padding:0;">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>aPTT (detik)</th><th>Tindakan Bolus</th><th>Penyesuaian Rate</th><th>Cek Ulang</th></tr>
+                </thead>
+                <tbody id="apttTable">
+                  <tr class="aptt-row" data-range="lt40" onclick="fillAPTT(35)">
+                    <td><strong>&lt; 40</strong></td>
+                    <td>Bolus 3.000 unit</td>
+                    <td>Naikan 3 mL/jam</td>
+                    <td>6 jam</td>
+                  </tr>
+                  <tr class="aptt-row" data-range="40-59" onclick="fillAPTT(50)">
+                    <td><strong>40 — 59</strong></td>
+                    <td>Bolus 2.000 unit</td>
+                    <td>Naikan 2 mL/jam</td>
+                    <td>6 jam</td>
+                  </tr>
+                  <tr class="aptt-row" data-range="60-100" onclick="fillAPTT(80)" style="background:rgba(16,185,129,0.05);">
+                    <td><strong style="color:var(--green)">60 — 100</strong></td>
+                    <td style="color:var(--green)">Tidak perlu</td>
+                    <td style="color:var(--green)">Tidak berubah ✓</td>
+                    <td>12 jam</td>
+                  </tr>
+                  <tr class="aptt-row" data-range="101-120" onclick="fillAPTT(110)">
+                    <td><strong>101 — 120</strong></td>
+                    <td>Stop 30 menit</td>
+                    <td>Turunkan 2 mL/jam</td>
+                    <td>6 jam</td>
+                  </tr>
+                  <tr class="aptt-row" data-range="gt120" onclick="fillAPTT(130)">
+                    <td><strong>&gt; 120</strong></td>
+                    <td>Stop 60 menit</td>
+                    <td>Turunkan 3 mL/jam</td>
+                    <td>6 jam</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== REFERRAL PAGE ===== -->
+  <div class="page" id="page-referral">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(16,185,129,0.15)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      </div>
+      <div>
+        <div class="section-title">Surat Rujukan</div>
+        <div class="section-subtitle">Generator otomatis — data terintegrasi dari tools lain</div>
+      </div>
+    </div>
+
+    <div class="ref-layout">
+      <!-- FORM -->
+      <div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header"><div class="card-title">Informasi Faskes</div></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Nama Faskes Perujuk</label>
+              <input type="text" class="form-control" id="refFromFaskes" placeholder="RS / Puskesmas asal">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Dokter Perujuk</label>
+                <input type="text" class="form-control" id="refFromDr" placeholder="dr. Nama">
+              </div>
+              <div class="form-group">
+                <label class="form-label">No. SIP / NIP</label>
+                <input type="text" class="form-control" id="refFromSIP" placeholder="Opsional">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header"><div class="card-title">Tujuan Rujukan</div></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Nama RS Tujuan</label>
+              <input type="text" class="form-control" id="refToFaskes" placeholder="RS RSUD / Swasta">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Bagian / Spesialisasi</label>
+              <input type="text" class="form-control" id="refToDep" placeholder="Kardiologi / Intervensi">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Prioritas Rujukan</label>
+              <div class="priority-selector">
+                <div class="priority-opt p-emergency selected" id="prio-emergency" onclick="setPriority('emergency')">
+                  <span class="priority-emoji">🚨</span>
+                  Emergensi
+                </div>
+                <div class="priority-opt p-urgent" id="prio-urgent" onclick="setPriority('urgent')">
+                  <span class="priority-emoji">⚠️</span>
+                  Urgen
+                </div>
+                <div class="priority-opt p-elective" id="prio-elective" onclick="setPriority('elective')">
+                  <span class="priority-emoji">📅</span>
+                  Elektif
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header">
+            <div class="card-title">Ringkasan Klinis</div>
+            <button class="btn btn-secondary btn-sm" style="margin-left:auto;" onclick="autoFillSummary()">⚡ Auto-fill dari Tools</button>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Diagnosis Kerja</label>
+              <input type="text" class="form-control" id="refDx" placeholder="e.g. STEMI Anterior Akut">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Riwayat Penyakit Singkat</label>
+              <textarea class="form-control" id="refHistory" rows="3" placeholder="Anamnesis singkat..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Pemeriksaan Fisik Relevan</label>
+              <textarea class="form-control" id="refExam" rows="3" placeholder="TD, HR, SpO2, temuan klinis..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Pemeriksaan Penunjang</label>
+              <textarea class="form-control" id="refLab" rows="3" placeholder="ECG, troponin, darah rutin..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Terapi yang Telah Diberikan</label>
+              <textarea class="form-control" id="refTreatment" rows="3" placeholder="Aspirin, heparin, dll..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Alasan Rujukan</label>
+              <textarea class="form-control" id="refReason" rows="2" placeholder="Perlunya kateterisasi / PCI..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-footer" style="border-top:none;">
+            <button class="btn btn-primary" onclick="generateReferral()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Generate Surat
+            </button>
+            <button class="btn btn-green" onclick="printReferral()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              Cetak
+            </button>
+          </div>
+        </div>
+
+        <!-- PANDUAN RUJUKAN -->
+        <div class="card" style="margin-top:16px; border-left: 4px solid var(--green);">
+          <div class="card-header" style="cursor:pointer;" onclick="toggleRefGuidance()">
+            <div class="card-icon" style="background:rgba(16,185,129,0.15)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            </div>
+            <div class="card-title">Panduan & Kriteria Rujukan ACS</div>
+            <span style="margin-left:auto; font-size:12px; color:var(--text-muted);" id="refGuidanceToggleIcon">▼</span>
+          </div>
+          <div class="card-body" id="refGuidanceBody" style="display:none; padding-top:0;">
+            <div style="font-size:12px; line-height:1.6; color:var(--text-secondary); display:flex; flex-direction:column; gap:12px; margin-top:12px;">
+              <div>
+                <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">💡 Cara Menggunakan Generator Rujukan:</strong>
+                <ol style="padding-left:16px; margin:0; display:flex; flex-direction:column; gap:4px;">
+                  <li>Isi informasi Faskes Asal dan Rumah Sakit Tujuan Rujukan.</li>
+                  <li>Tentukan <strong>Prioritas Rujukan</strong> berdasarkan kestabilan klinis pasien.</li>
+                  <li>Klik tombol <strong style="color:var(--cyan);">⚡ Auto-fill dari Tools</strong> untuk menarik seluruh data pasien, skor HEART/GRACE, status STEMI, protokol Heparin, dan terapi yang telah Anda hitung di modul sebelumnya.</li>
+                  <li>Periksa kembali isi kolom <strong>Ringkasan Klinis</strong> dan tambahkan informasi penting lainnya.</li>
+                  <li>Klik <strong>Generate Surat</strong> untuk melihat hasil pratinjau, lalu klik <strong>Cetak</strong> untuk print fisik atau menyimpan sebagai file PDF rujukan.</li>
+                </ol>
+              </div>
+              <div style="border-top: 1px solid var(--border); padding-top:10px;">
+                <strong style="color:var(--text-primary); display:block; margin-bottom:6px;">🚨 Kriteria Penentuan Prioritas Rujukan:</strong>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                  <div style="padding:8px; background:rgba(239,68,68,0.06); border-radius:6px; border-left: 3px solid var(--red);">
+                    <span style="font-weight:600; color:var(--red-light); display:block; font-size:11px; margin-bottom:2px;">🚨 PRIORITAS 1: EMERGENSI</span>
+                    Kondisi mengancam nyawa. Transfer segera via ambulans dengan monitoring medis penuh. Contoh: STEMI onset &lt;12 jam (untuk primary PCI), Syok Kardiogenik, Aritmia Maligna (VT/VF), UA/NSTEMI dengan ketidakstabilan hemodinamik.
+                  </div>
+                  <div style="padding:8px; background:rgba(245,158,11,0.06); border-radius:6px; border-left: 3px solid var(--amber);">
+                    <span style="font-weight:600; color:var(--amber-light); display:block; font-size:11px; margin-bottom:2px;">⚠️ PRIORITAS 2: URGEN</span>
+                    Kondisi tidak stabil tetapi belum mengancam nyawa seketika. Rujukan dilakukan dalam &lt;24 jam. Contoh: UA/NSTEMI risiko tinggi atau sedang dengan hemodinamik stabil, Angina Refrakter tanpa komplikasi akut.
+                  </div>
+                  <div style="padding:8px; background:rgba(16,185,129,0.06); border-radius:6px; border-left: 3px solid var(--green);">
+                    <span style="font-weight:600; color:var(--green-light); display:block; font-size:11px; margin-bottom:2px;">📅 PRIORITAS 3: ELEKTIF</span>
+                    Kondisi stabil secara klinis. Rujukan terjadwal untuk investigasi lanjut atau evaluasi rawat jalan. Contoh: CCS (Chronic Coronary Syndrome) stabil, penyakit jantung katup kronis asimtomatik.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PREVIEW -->
+      <div>
+        <div class="card" style="position:sticky;top:80px;">
+          <div class="card-header">
+            <div class="card-title">Preview Surat Rujukan</div>
+            <div class="badge badge-red" style="margin-left:auto;" id="refPriorityBadge">EMERGENSI</div>
+          </div>
+          <div class="card-body" id="referralPreviewWrap">
+            <div style="text-align:center;padding:30px;color:var(--text-muted);">
+              <div style="font-size:32px;margin-bottom:8px;">📄</div>
+              <div style="font-size:13px;">Isi formulir dan klik "Generate Surat" untuk preview</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end main-content -->
+
+<!-- BOTTOM NAV (MOBILE) -->
+<nav class="bottom-nav" id="bottomNav">
+  <div class="bottom-nav-inner">
+    <div class="bnav-item active" data-page="dashboard" onclick="showPage('dashboard', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Home
+    </div>
+    <div class="bnav-item" data-page="triage" onclick="showPage('triage', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      Triage
+    </div>
+    <div class="bnav-item" data-page="grace" onclick="showPage('grace', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      GRACE
+    </div>
+    <div class="bnav-item" data-page="stemi" onclick="showPage('stemi', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      STEMI
+    </div>
+    <div class="bnav-item bnav-more" onclick="toggleMoreMenu()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+      More
+    </div>
+  </div>
+</nav>
+
+<!-- MORE MENU (MOBILE) -->
+<div class="modal-overlay" id="moreMenuOverlay" onclick="closeMoreMenu()">
+  <div class="modal" style="position:fixed;bottom:80px;left:16px;right:16px;width:auto;max-width:none;border-radius:var(--radius-lg);" onclick="event.stopPropagation()">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px;">
+      <div onclick="showPage('heparin',null);closeMoreMenu()" style="padding:16px;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:var(--radius);cursor:pointer;text-align:center;">
+        <div style="font-size:24px;margin-bottom:6px;">💉</div>
+        <div style="font-size:13px;font-weight:600;color:var(--cyan-light);">Heparin</div>
+      </div>
+      <div onclick="showPage('referral',null);closeMoreMenu()" style="padding:16px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:var(--radius);cursor:pointer;text-align:center;">
+        <div style="font-size:24px;margin-bottom:6px;">📋</div>
+        <div style="font-size:13px;font-weight:600;color:var(--green-light);">Rujukan</div>
+      </div>
+      <div onclick="openPatientModal();closeMoreMenu()" style="padding:16px;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);border-radius:var(--radius);cursor:pointer;text-align:center;">
+        <div style="font-size:24px;margin-bottom:6px;">👤</div>
+        <div style="font-size:13px;font-weight:600;color:var(--purple-light);">Pasien</div>
+      </div>
+      <div onclick="clearAll();closeMoreMenu()" style="padding:16px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:var(--radius);cursor:pointer;text-align:center;">
+        <div style="font-size:24px;margin-bottom:6px;">🔄</div>
+        <div style="font-size:13px;font-weight:600;color:var(--red-light);">Reset</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PATIENT MODAL -->
+<div class="modal-overlay" id="patientModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">👤 Data Pasien</div>
+      <button class="btn-icon" onclick="closePatientModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nama Lengkap</label>
+          <input type="text" class="form-control" id="ptName" placeholder="Nama pasien">
+        </div>
+        <div class="form-group">
+          <label class="form-label">No. RM</label>
+          <input type="text" class="form-control" id="ptRM" placeholder="Opsional">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Usia (tahun)</label>
+          <input type="number" class="form-control" id="ptAge" placeholder="60" oninput="autoFillAge()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Jenis Kelamin</label>
+          <select class="form-control" id="ptGender">
+            <option value="L">Laki-laki</option>
+            <option value="P">Perempuan</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Berat Badan (kg)</label>
+          <input type="number" class="form-control" id="ptWeight" placeholder="70" oninput="autoFillWeight()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tanggal Masuk</label>
+          <input type="date" class="form-control" id="ptAdmitDate">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Alamat</label>
+        <input type="text" class="form-control" id="ptAddress" placeholder="Opsional">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Riwayat Penyakit Relevan</label>
+        <textarea class="form-control" id="ptHistory" rows="2" placeholder="HT, DM, CAD, dll..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closePatientModal()">Batal</button>
+      <button class="btn btn-primary" onclick="savePatient()">Simpan Data</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  STATE
+// ============================================================
+const state = {
+  patient: {},
+  heart: { history: null, ecg: null, age: null, risk: null, troponin: null },
+  grace: { score: null, risk: null },
+  heparin: { loadDose: null, maintRate: null },
+  stemi: { d2bStart: null, d2nStart: null },
+  referral: { priority: 'emergency' },
+  workflow: { triage: false, grace: false, stemi: false, heparin: false, referral: false }
+};
+
+// Timers
+let d2bInterval = null, d2nInterval = null;
+let d2bRunning = false, d2nRunning = false;
+let d2bElapsed = 0, d2nElapsed = 0;
+let d2bMilestones = [];
+let tlMarks = {};
+
+// ============================================================
+//  NAVIGATION
+// ============================================================
+function showPage(pageId, clickedEl) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + pageId).classList.add('active');
+
+  // Sidebar nav active
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const sideEl = document.querySelector(`.nav-item[data-page="${pageId}"]`);
+  if (sideEl) sideEl.classList.add('active');
+
+  // Bottom nav active
+  document.querySelectorAll('.bnav-item').forEach(n => n.classList.remove('active'));
+  const bnavEl = document.querySelector(`.bnav-item[data-page="${pageId}"]`);
+  if (bnavEl) bnavEl.classList.add('active');
+
+  // Title
+  const titles = {
+    dashboard: 'Dashboard',
+    triage: 'Triage Chest Pain — HEART Score',
+    grace: 'GRACE Score',
+    stemi: 'STEMI Protocol',
+    heparin: 'Heparin Calculator',
+    referral: 'Surat Rujukan'
+  };
+  document.getElementById('topbarTitle').textContent = titles[pageId] || pageId;
+
+  // Close sidebar on mobile
+  closeSidebar();
+  window.scrollTo(0, 0);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+function toggleMoreMenu() {
+  document.getElementById('moreMenuOverlay').classList.toggle('open');
+}
+function closeMoreMenu() {
+  document.getElementById('moreMenuOverlay').classList.remove('open');
+}
+
+// ============================================================
+//  TABS
+// ============================================================
+function switchTab(prefix, tabId, el) {
+  const container = el.closest('.tabs');
+  container.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll(`[id^="${prefix}-tab-"]`).forEach(p => p.classList.remove('active'));
+  document.getElementById(`${prefix}-tab-${tabId}`).classList.add('active');
+}
+
+// ============================================================
+//  HEART SCORE
+// ============================================================
+const heartScores = { history: 0, ecg: 0, age: 0, risk: 0, troponin: 0 };
+
+function selectOption(component, val, el) {
+  const container = document.getElementById(`${component}-options`);
+  container.querySelectorAll('.score-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  heartScores[component] = val;
+
+  // Update individual badge
+  const badgeMap = { history: 'hScore', ecg: 'eScore', age: 'aScore', risk: 'rScore', troponin: 'tScore' };
+  document.getElementById(badgeMap[component]).textContent = val + ' poin';
+
+  // Update breakdown
+  const bdMap = { history: 'bd-h', ecg: 'bd-e', age: 'bd-a', risk: 'bd-r', troponin: 'bd-t' };
+  document.getElementById(bdMap[component]).textContent = val;
+
+  calcHEART();
+}
+
+function calcHEART() {
+  const total = Object.values(heartScores).reduce((a, b) => a + b, 0);
+  const el = document.getElementById('heartResult');
+  const numEl = document.getElementById('heartTotal');
+  const riskEl = document.getElementById('heartRisk');
+  const descEl = document.getElementById('heartDesc');
+  const progEl = document.getElementById('heartProgress');
+  const pctEl = document.getElementById('heartPct');
+  const alertEl = document.getElementById('heartAlertText');
+  const alertBox = document.getElementById('heartAlertBox');
+  const badge = document.getElementById('heartBadge');
+
+  numEl.textContent = total;
+  pctEl.textContent = `${total} / 10`;
+  progEl.style.width = `${total * 10}%`;
+
+  el.className = 'score-result';
+  let risk, desc, color, rec;
+
+  if (total <= 3) {
+    risk = 'Risiko Rendah'; desc = '≤1.7% risiko MACE 30 hari'; color = 'low';
+    progEl.style.background = 'var(--green)';
+    rec = '✅ Bisa dipertimbangkan discharge dengan follow-up rawat jalan. Observasi minimal, serial troponin jika masih ragu.';
+    alertBox.className = 'alert alert-green';
+    badge.style.display = 'none';
+  } else if (total <= 6) {
+    risk = 'Risiko Sedang'; desc = '≈12–16.6% risiko MACE 30 hari'; color = 'moderate';
+    progEl.style.background = 'var(--amber)';
+    rec = '⚠️ Observasi, rawat inap, serial troponin. Pertimbangkan stress test / evaluasi lanjut. Konsultasi kardiologi.';
+    alertBox.className = 'alert alert-amber';
+    badge.style.display = 'inline-flex'; badge.textContent = total;
+  } else {
+    risk = 'Risiko Tinggi'; desc = '≈50% risiko MACE 30 hari'; color = 'high';
+    progEl.style.background = 'var(--red)';
+    rec = '🚨 Rawat inap segera, angiografi koroner dalam 72 jam, konsultasi kardiologi CITO. Aktifkan protokol ACS!';
+    alertBox.className = 'alert alert-red';
+    badge.style.display = 'inline-flex'; badge.textContent = total;
+  }
+
+  el.classList.add(color);
+  riskEl.textContent = risk;
+  descEl.textContent = desc;
+  alertEl.textContent = rec;
+
+  // Dashboard update
+  document.getElementById('dashHeart').textContent = total;
+  document.getElementById('dashHeart').style.color = color === 'low' ? 'var(--green)' : color === 'moderate' ? 'var(--amber)' : 'var(--red)';
+  document.getElementById('dashHeartRisk').textContent = risk;
+  document.getElementById('dashHeartRisk').style.color = color === 'low' ? 'var(--green)' : color === 'moderate' ? 'var(--amber)' : 'var(--red)';
+
+  // Workflow
+  state.workflow.triage = true;
+  updateWorkflow();
+
+  // State
+  state.heart.score = total;
+  state.heart.risk = risk;
+  saveState();
+}
+
+function updateTroponinNote() {
+  const val = parseFloat(document.getElementById('troponinValue').value);
+  const norm = parseFloat(document.getElementById('troponinNormal').value);
+  if (isNaN(val) || isNaN(norm) || norm === 0) {
+    document.getElementById('troponinNote').textContent = '';
+    return;
+  }
+  const ratio = val / norm;
+  let note = `Rasio Troponin: ${ratio.toFixed(2)}× batas atas normal`;
+  if (ratio > 3) note += ' → Pilih "+2"';
+  else if (ratio >= 1) note += ' → Pilih "+1"';
+  else note += ' → Pilih "+0"';
+  document.getElementById('troponinNote').textContent = note;
+}
+
+// ============================================================
+//  GRACE SCORE
+// ============================================================
+const graceFlags = { graceArrest: false, graceST: false, graceEnz: false };
+
+function toggleGraceFlag(id) {
+  graceFlags[id] = !graceFlags[id];
+  const el = document.getElementById(id);
+  el.classList.toggle('selected', graceFlags[id]);
+  el.querySelector('.score-radio').style.borderColor = graceFlags[id] ? 'var(--cyan)' : '';
+  el.querySelector('.score-radio').style.background = graceFlags[id] ? 'var(--cyan)' : '';
+  calcGrace();
+}
+
+function getGracePoints(type, val) {
+  const tables = {
+    age: [[29,0],[39,8],[49,25],[59,41],[69,58],[79,75],[89,91],[999,100]],
+    hr: [[49,0],[69,3],[89,9],[109,15],[149,24],[199,38],[999,46]],
+    sbp: [[79,58],[99,53],[119,43],[139,34],[159,24],[199,10],[999,0]],
+    cr: [[0.39,1],[0.79,4],[1.19,7],[1.59,10],[1.99,13],[3.99,21],[999,28]]
+  };
+  const table = tables[type];
+  if (!table) return 0;
+  for (let [max, pts] of table) {
+    if (val <= max) return pts;
+  }
+  return table[table.length - 1][1];
+}
+
+function getKillipPoints(k) {
+  return [0, 20, 39, 59][parseInt(k) - 1] || 0;
+}
+
+function calcGrace() {
+  const age = parseFloat(document.getElementById('graceAge').value);
+  const hr = parseFloat(document.getElementById('graceHR').value);
+  const sbp = parseFloat(document.getElementById('graceSBP').value);
+  const cr = parseFloat(document.getElementById('graceCr').value);
+  const killip = document.getElementById('graceKillip').value;
+
+  if (isNaN(age) || isNaN(hr) || isNaN(sbp) || isNaN(cr) || !killip) {
+    document.getElementById('graceTotal').textContent = '—';
+    document.getElementById('graceRiskLabel').textContent = 'Masukkan semua data';
+    document.getElementById('graceBreakdown').innerHTML = '';
+    return;
+  }
+
+  const agePts = getGracePoints('age', age);
+  const hrPts = getGracePoints('hr', hr);
+  const sbpPts = getGracePoints('sbp', sbp);
+  const crPts = getGracePoints('cr', cr);
+  const killipPts = getKillipPoints(killip);
+  const arrestPts = graceFlags.graceArrest ? 39 : 0;
+  const stPts = graceFlags.graceST ? 28 : 0;
+  const enzPts = graceFlags.graceEnz ? 14 : 0;
+
+  const total = agePts + hrPts + sbpPts + crPts + killipPts + arrestPts + stPts + enzPts;
+
+  const resultEl = document.getElementById('graceResult');
+  const totalEl = document.getElementById('graceTotal');
+  const riskEl = document.getElementById('graceRiskLabel');
+  const descEl = document.getElementById('graceRiskDesc');
+  const recommEl = document.getElementById('graceRecomm');
+
+  totalEl.textContent = total;
+  resultEl.className = 'score-result';
+
+  let risk, mort, rec, alertClass;
+  if (total <= 108) {
+    risk = 'Risiko Rendah'; mort = '<1% mortalitas 6 bln'; alertClass = 'alert alert-green';
+    rec = '✅ Risiko rendah. Medical management. Stress test non-invasif dapat dilakukan sebelum discharge.';
+    resultEl.classList.add('low');
+    totalEl.style.color = 'var(--green)';
+  } else if (total <= 140) {
+    risk = 'Risiko Sedang'; mort = '1–3% mortalitas 6 bln'; alertClass = 'alert alert-amber';
+    rec = '⚠️ Risiko sedang. Angiografi koroner dalam 72 jam dianjurkan. Terapi antitrombotik agresif.';
+    resultEl.classList.add('moderate');
+    totalEl.style.color = 'var(--amber)';
+  } else {
+    risk = 'Risiko Tinggi'; mort = '>3% mortalitas 6 bln'; alertClass = 'alert alert-red';
+    rec = '🚨 Risiko tinggi! Angiografi segera (<24 jam). PCI jika lesi yang sesuai. ICU/CICU.';
+    resultEl.classList.add('high');
+    totalEl.style.color = 'var(--red)';
+  }
+
+  riskEl.textContent = risk;
+  descEl.textContent = mort;
+  recommEl.className = alertClass;
+  recommEl.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>${rec}</span>`;
+
+  // Breakdown
+  const bd = [
+    ['Usia', age, agePts], ['Heart Rate', hr, hrPts], ['Sistolik BP', sbp, sbpPts],
+    ['Kreatinin', cr, crPts], ['Killip Class', killip, killipPts],
+    ['Cardiac Arrest', graceFlags.graceArrest ? 'Ya' : 'Tidak', arrestPts],
+    ['ST Deviation', graceFlags.graceST ? 'Ya' : 'Tidak', stPts],
+    ['Elevated Enzymes', graceFlags.graceEnz ? 'Ya' : 'Tidak', enzPts]
+  ];
+  document.getElementById('graceBreakdown').innerHTML = bd.map(([label, val, pts]) =>
+    `<div style="display:flex;justify-content:space-between;padding:5px 8px;border-radius:6px;${pts > 0 ? 'background:rgba(255,255,255,0.03);' : ''}">
+      <span style="color:var(--text-secondary)">${label}</span>
+      <span style="color:var(--text-primary);font-weight:600;font-family:'JetBrains Mono',monospace;">+${pts}</span>
+    </div>`
+  ).join('');
+
+  // Dashboard update
+  document.getElementById('dashGrace').textContent = total;
+  document.getElementById('dashGrace').style.color = total <= 108 ? 'var(--green)' : total <= 140 ? 'var(--amber)' : 'var(--red)';
+  document.getElementById('dashGraceRisk').textContent = risk;
+  document.getElementById('dashGraceBadge') && (document.getElementById('dashGraceBadge').textContent = total);
+
+  state.grace.score = total; state.grace.risk = risk;
+  state.workflow.grace = true;
+  updateWorkflow();
+  document.getElementById('graceBadge').style.display = 'inline-flex';
+  document.getElementById('graceBadge').textContent = total;
+  saveState();
+}
+
+// ============================================================
+//  STEMI
+// ============================================================
+function toggleCheck(el, progressId, listId) {
+  el.classList.toggle('checked');
+  const list = document.getElementById(listId);
+  const total = list.querySelectorAll('.check-item').length;
+  const done = list.querySelectorAll('.check-item.checked').length;
+  const badge = document.getElementById(progressId);
+  badge.textContent = `${done}/${total}`;
+  badge.className = 'badge ' + (done === total ? 'badge-green' : done > 0 ? 'badge-amber' : 'badge-red');
+
+  // Update progress bars
+  const prog1 = document.getElementById('checklist-initial');
+  const prog2 = document.getElementById('checklist-reperfusion');
+  if (prog1) {
+    const d1 = prog1.querySelectorAll('.check-item.checked').length;
+    const t1 = prog1.querySelectorAll('.check-item').length;
+    document.getElementById('prog1Text').textContent = `${d1}/${t1}`;
+    document.getElementById('prog1Fill').style.width = `${(d1/t1)*100}%`;
+  }
+  if (prog2) {
+    const d2 = prog2.querySelectorAll('.check-item.checked').length;
+    const t2 = prog2.querySelectorAll('.check-item').length;
+    document.getElementById('prog2Text').textContent = `${d2}/${t2}`;
+    document.getElementById('prog2Fill').style.width = `${(d2/t2)*100}%`;
+  }
+  state.workflow.stemi = true;
+  updateWorkflow();
+}
+
+function toggleCICheck(el, type) {
+  el.classList.toggle('checked');
+  const absCount = document.getElementById('abs-ci').querySelectorAll('.check-item.checked').length;
+  const relCount = document.getElementById('rel-ci').querySelectorAll('.check-item.checked').length;
+  const statusEl = document.getElementById('ciStatus');
+  if (absCount > 0) {
+    statusEl.className = 'badge badge-red';
+    statusEl.textContent = `❌ KONTRAINDIKASI ABSOLUT (${absCount}) — FIBRINOLISIS DILARANG`;
+  } else if (relCount > 0) {
+    statusEl.className = 'badge badge-amber';
+    statusEl.textContent = `⚠️ ${relCount} Kontraindikasi Relatif — Evaluasi risiko-manfaat`;
+  } else {
+    statusEl.className = 'badge badge-green';
+    statusEl.textContent = 'Aman — Tidak ada kontraindikasi';
+  }
+}
+
+function resetCICheck() {
+  document.querySelectorAll('#abs-ci .check-item, #rel-ci .check-item').forEach(el => el.classList.remove('checked'));
+  document.getElementById('ciStatus').className = 'badge badge-green';
+  document.getElementById('ciStatus').textContent = 'Aman — Lanjutkan evaluasi';
+}
+
+function calcDoorTime() {
+  const onset = document.getElementById('stemiOnset').value;
+  const arrival = document.getElementById('stemiArrival').value;
+  if (onset && arrival) {
+    const diff = (new Date(arrival) - new Date(onset)) / 60000;
+    const h = Math.floor(diff / 60);
+    const m = Math.floor(diff % 60);
+    const el = document.getElementById('symptomToDoor');
+    const txt = document.getElementById('symptomToDoorText');
+    el.style.display = 'flex';
+    txt.textContent = `Symptom-to-Door: ${h > 0 ? h + ' jam ' : ''}${m} menit`;
+    el.className = 'alert ' + (diff > 120 ? 'alert-red' : diff > 60 ? 'alert-amber' : 'alert-green');
+  }
+}
+
+// FIBRINOLYSIS
+function calcFibr() {
+  const wt = parseFloat(document.getElementById('fibrWeight').value);
+  const agent = document.getElementById('fibrAgent').value;
+  if (!wt || !agent) { document.getElementById('fibrDoseResult').style.display = 'none'; return; }
+
+  document.getElementById('fibrDoseResult').style.display = 'block';
+  let content = '';
+
+  if (agent === 'streptokinase') {
+    content = `<div class="dose-card"><div class="dose-label">Streptokinase</div><div class="dose-value">1.500.000</div><div class="dose-unit">unit IV dalam 60 menit</div><div class="dose-range">Larutkan dalam 100–250 mL NS atau D5%</div></div>`;
+  } else if (agent === 'alteplase') {
+    const bolus = Math.min(15, wt * 0.15).toFixed(0);
+    const half = Math.min(50, wt * 0.75).toFixed(1);
+    const remaining = Math.min(35, 100 - parseFloat(bolus) - parseFloat(half)).toFixed(1);
+    content = `<div class="dose-card" style="margin-bottom:8px;"><div class="dose-label">Alteplase — Protokol Accelerated</div><div class="dose-value">${bolus} mg</div><div class="dose-unit">IV bolus (maks 15 mg)</div></div>
+    <div style="font-size:12px;color:var(--text-secondary);padding:8px;background:var(--bg-glass);border-radius:8px;line-height:1.8;">
+      • Bolus: <strong>${bolus} mg</strong> IV selama 1–2 menit<br>
+      • 30 menit: <strong>${half} mg</strong> (0.75 mg/kg, maks 50 mg)<br>
+      • 60 menit: <strong>${remaining} mg</strong> (0.5 mg/kg, maks 35 mg)<br>
+      <em>Total tidak boleh > 100 mg</em>
+    </div>`;
+  } else if (agent === 'reteplase') {
+    content = `<div class="dose-card"><div class="dose-label">Reteplase — Double Bolus</div><div class="dose-value">10 + 10</div><div class="dose-unit">unit IV (selang 30 menit)</div><div class="dose-range">Bolus pertama 10 unit, 30 menit kemudian 10 unit</div></div>`;
+  } else if (agent === 'tenecteplase') {
+    let dose;
+    if (wt < 60) dose = 30;
+    else if (wt < 70) dose = 35;
+    else if (wt < 80) dose = 40;
+    else if (wt < 90) dose = 45;
+    else dose = 50;
+    content = `<div class="dose-card"><div class="dose-label">Tenecteplase — Bolus Tunggal</div><div class="dose-value">${dose} mg</div><div class="dose-unit">IV bolus tunggal selama 5-10 detik</div><div class="dose-range">BB ${wt} kg → ${dose} mg (maks 50 mg)</div></div>`;
+  }
+  document.getElementById('fibrDoseContent').innerHTML = content;
+}
+
+// ANTIPLATELET
+function calcAntiplatelet() {
+  const wt = parseFloat(document.getElementById('antiBB').value);
+  const strategy = document.getElementById('antiStrategy').value;
+  const stroke = document.getElementById('antiStroke').value;
+  if (!strategy) { document.getElementById('antiResult').style.display = 'none'; return; }
+  document.getElementById('antiResult').style.display = 'block';
+
+  let content = '<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">';
+  content += `<div class="alert alert-cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span style="font-size:12px;">Strategi: <strong>${strategy === 'pci' ? 'Primary PCI' : strategy === 'fibrinolysis' ? 'Fibrinolisis' : 'Konservatif'}</strong></span></div>`;
+
+  const items = [];
+  items.push({ drug: 'Aspirin', dose: '160–325 mg kunyah (loading)', maint: '75–100 mg/hari', class: 'badge-purple', note: 'Wajib untuk semua strategi' });
+
+  if (strategy === 'pci') {
+    if (stroke === 'yes') {
+      items.push({ drug: 'Ticagrelor', dose: '180 mg PO (loading)', maint: '90 mg 2×/hari', class: 'badge-green', note: 'Preferred (jika tidak ada riwayat ICH)' });
+      items.push({ drug: 'Clopidogrel', dose: '600 mg PO (loading)', maint: '75 mg/hari', class: 'badge-cyan', note: 'Alternatif jika ada riwayat stroke/TIA' });
+    } else {
+      items.push({ drug: 'Ticagrelor', dose: '180 mg PO (loading)', maint: '90 mg 2×/hari', class: 'badge-green', note: '✅ Pilihan utama PCI' });
+      items.push({ drug: 'Prasugrel', dose: '60 mg PO (loading)', maint: '10 mg/hari', class: 'badge-amber', note: 'Alternatif (jika bukan riwayat stroke/TIA, usia <75, BB >60kg)' });
+    }
+  } else if (strategy === 'fibrinolysis') {
+    items.push({ drug: 'Clopidogrel', dose: '300 mg PO (loading, jika ≤75 tahun)', maint: '75 mg/hari', class: 'badge-cyan', note: 'Preferred dengan fibrinolisis' });
+  } else {
+    items.push({ drug: 'Ticagrelor', dose: '180 mg PO (loading)', maint: '90 mg 2×/hari', class: 'badge-green', note: 'Untuk ACS konservatif' });
+  }
+
+  items.forEach(item => {
+    content += `<div style="padding:10px;background:var(--bg-glass);border:1px solid var(--border);border-radius:8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <strong style="font-size:13px;">${item.drug}</strong>
+        <span class="badge ${item.class}" style="font-size:10px;">${item.class.includes('green') ? 'Pilihan Utama' : item.class.includes('cyan') ? 'Alternatif' : 'Wajib'}</span>
+      </div>
+      <div style="font-size:12px;color:var(--cyan-light)">Loading: ${item.dose}</div>
+      <div style="font-size:12px;color:var(--text-secondary)">Maintenance: ${item.maint}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">${item.note}</div>
+    </div>`;
+  });
+  content += '</div>';
+  document.getElementById('antiResult').innerHTML = content;
+}
+
+// STEMI TIMER
+function startTimer(type) {
+  if (type === 'd2b') {
+    if (d2bRunning) return;
+    d2bRunning = true;
+    document.getElementById('d2bStartBtn').textContent = '⏸ Running...';
+    document.getElementById('d2bStartBtn').disabled = true;
+    if (!state.stemi.d2bStart) state.stemi.d2bStart = Date.now() - d2bElapsed * 1000;
+    d2bInterval = setInterval(() => {
+      d2bElapsed = Math.floor((Date.now() - state.stemi.d2bStart) / 1000);
+      const el = document.getElementById('d2bDisplay');
+      el.textContent = formatTime(d2bElapsed);
+      const mins = d2bElapsed / 60;
+      el.className = 'timer-value ' + (mins > 90 ? 'timer-critical' : mins > 60 ? 'timer-warning' : '');
+      el.style.color = mins > 90 ? 'var(--red)' : mins > 60 ? 'var(--amber)' : 'var(--green)';
+      document.getElementById('dashTimer').textContent = formatTime(d2bElapsed);
+      document.getElementById('dashTimerLabel').textContent = 'D2B Timer aktif';
+    }, 1000);
+  } else {
+    if (d2nRunning) return;
+    d2nRunning = true;
+    document.getElementById('d2nStartBtn').textContent = '⏸ Running...';
+    document.getElementById('d2nStartBtn').disabled = true;
+    if (!state.stemi.d2nStart) {
+      state.stemi.d2nStart = Date.now();
+      document.getElementById('tl-door-time').textContent = new Date().toLocaleTimeString('id-ID');
+      document.getElementById('tl-door').classList.add('done');
+    }
+    d2nInterval = setInterval(() => {
+      d2nElapsed = Math.floor((Date.now() - state.stemi.d2nStart) / 1000);
+      const el = document.getElementById('d2nDisplay');
+      el.textContent = formatTime(d2nElapsed);
+      const mins = d2nElapsed / 60;
+      el.style.color = mins > 30 ? 'var(--red)' : mins > 20 ? 'var(--amber)' : 'var(--green)';
+    }, 1000);
+  }
+}
+
+function markD2B() {
+  if (!d2bRunning) return;
+  const time = formatTime(d2bElapsed);
+  const mins = Math.floor(d2bElapsed / 60);
+  const el = document.createElement('div');
+  el.className = `alert ${mins <= 90 ? 'alert-green' : 'alert-red'}`;
+  el.style.fontSize = '12px';
+  el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span>🎯 Balloon inflated @ <strong>${time}</strong> — ${mins <= 90 ? '✅ Dalam target' : '⚠️ Melebihi 90 menit'}</span>`;
+  document.getElementById('d2bMilestones').appendChild(el);
+  clearInterval(d2bInterval);
+  d2bRunning = false;
+}
+
+function markD2N() {
+  if (!d2nRunning) return;
+  const time = new Date().toLocaleTimeString('id-ID');
+  document.getElementById('tl-needle-time').textContent = time;
+  document.getElementById('tl-needle').classList.add('done');
+  const mins = d2nElapsed / 60;
+  clearInterval(d2nInterval);
+  d2nRunning = false;
+}
+
+function markTimeline(key) {
+  const time = new Date().toLocaleTimeString('id-ID');
+  document.getElementById(`tl-${key}-time`).textContent = time;
+  document.getElementById(`tl-${key}`).classList.add('active');
+}
+
+function resetTimer(type) {
+  if (type === 'd2b') {
+    clearInterval(d2bInterval); d2bRunning = false; d2bElapsed = 0;
+    state.stemi.d2bStart = null;
+    document.getElementById('d2bDisplay').textContent = '00:00:00';
+    document.getElementById('d2bDisplay').style.color = 'var(--green)';
+    document.getElementById('d2bStartBtn').textContent = '▶ Mulai';
+    document.getElementById('d2bStartBtn').disabled = false;
+    document.getElementById('d2bMilestones').innerHTML = '';
+    document.getElementById('dashTimer').textContent = '—';
+  } else {
+    clearInterval(d2nInterval); d2nRunning = false; d2nElapsed = 0;
+    state.stemi.d2nStart = null;
+    document.getElementById('d2nDisplay').textContent = '00:00:00';
+    document.getElementById('d2nDisplay').style.color = 'var(--green)';
+    document.getElementById('d2nStartBtn').textContent = '▶ Mulai';
+    document.getElementById('d2nStartBtn').disabled = false;
+    ['door','ecg','decision','needle'].forEach(k => {
+      document.getElementById(`tl-${k}`).className = 'timeline-dot';
+      document.getElementById(`tl-${k}-time`).textContent = '—';
+    });
+  }
+}
+
+function formatTime(secs) {
+  const h = Math.floor(secs / 3600).toString().padStart(2, '0');
+  const m = Math.floor((secs % 3600) / 60).toString().padStart(2, '0');
+  const s = (secs % 60).toString().padStart(2, '0');
+  return `${h}:${m}:${s}`;
+}
+
+// ============================================================
+//  HEPARIN CALCULATOR
+// ============================================================
+function calcHeparin() {
+  const wt = parseFloat(document.getElementById('hepWeight').value);
+  const loadFactor = parseFloat(document.getElementById('hepLoadProt').value);
+  const maintFactor = parseFloat(document.getElementById('hepMaintProt').value);
+  const conc = parseFloat(document.getElementById('hepConc').value);
+  const indication = document.getElementById('hepIndication').value;
+
+  if (isNaN(wt)) {
+    document.getElementById('hepResults').style.display = 'none';
+    document.getElementById('hepPlaceholder').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('hepResults').style.display = 'block';
+  document.getElementById('hepPlaceholder').style.display = 'none';
+
+  const rawLoad = wt * loadFactor;
+  const maxLoad = indication === 'acs' ? 5000 : 10000;
+  const loadDose = Math.min(rawLoad, maxLoad);
+  const maintUnits = wt * maintFactor;
+  const maxMaint = indication === 'acs' ? 1000 : 2000;
+  const finalMaintUnits = Math.min(maintUnits, maxMaint);
+  const maintRate = finalMaintUnits / conc;
+
+  document.getElementById('hepLoadDose').textContent = loadDose.toFixed(0);
+  document.getElementById('hepLoadRange').textContent = `${wt}kg × ${loadFactor} u/kg = ${rawLoad.toFixed(0)} u (kap maks ${maxLoad.toLocaleString()} u)`;
+  document.getElementById('hepMaintRate').textContent = maintRate.toFixed(1);
+  document.getElementById('hepMaintUnits').textContent = `${finalMaintUnits.toFixed(0)} unit/jam @ ${conc} u/mL`;
+
+  let note = `Dosis untuk ${indication.toUpperCase()}. Cek aPTT 6 jam setelah loading, lalu tiap 6 jam sampai terapeutik (60-100 detik), kemudian tiap 12 jam.`;
+  document.getElementById('hepNote').textContent = note;
+
+  // Dashboard
+  document.getElementById('dashHepLoad').textContent = `${loadDose.toFixed(0)} u`;
+  document.getElementById('dashHepLabel').textContent = `${maintRate.toFixed(1)} mL/jam maintenance`;
+
+  state.heparin.loadDose = loadDose;
+  state.heparin.maintRate = maintRate;
+  state.workflow.heparin = true;
+  updateWorkflow();
+  saveState();
+}
+
+function calcLMWH() {
+  const wt = parseFloat(document.getElementById('lmwhWeight').value);
+  const indication = document.getElementById('lmwhIndication').value;
+  const egfr = parseFloat(document.getElementById('lmwhEgfr').value);
+  const age = parseFloat(document.getElementById('lmwhAge').value);
+
+  if (isNaN(wt)) { document.getElementById('lmwhResult').style.display = 'none'; return; }
+  document.getElementById('lmwhResult').style.display = 'block';
+
+  const renalWarning = !isNaN(egfr) && egfr < 30;
+  const elderlyWarning = !isNaN(age) && age >= 75;
+
+  let doseText, schedule;
+  if (indication === 'therapeutic') {
+    if (renalWarning) {
+      doseText = 'Pertimbangkan UFH';
+      schedule = 'eGFR < 30: LMWH tidak direkomendasikan, gunakan UFH';
+    } else {
+      doseText = `${(wt * 1).toFixed(0)} mg`;
+      schedule = '1 mg/kg SC tiap 12 jam (Enoxaparin)';
+      if (elderlyWarning) schedule += ' — Pertimbangkan reduksi dosis pada usia ≥75 th (0.75 mg/kg)';
+    }
+  } else {
+    doseText = `${(wt * 0.5).toFixed(0)} mg`;
+    schedule = '0.5 mg/kg SC tiap 24 jam atau 40 mg SC tiap 24 jam (profilaksis standar)';
+  }
+
+  document.getElementById('lmwhResult').innerHTML = `
+    <div class="divider-label">Hasil Kalkulasi</div>
+    <div class="dose-card" style="margin-bottom:10px;">
+      <div class="dose-label">Dosis Enoxaparin (per pemberian)</div>
+      <div class="dose-value">${doseText}</div>
+      <div class="dose-unit">${schedule}</div>
+    </div>
+    ${renalWarning ? '<div class="alert alert-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg><span style="font-size:12px;">⚠️ eGFR < 30: Hindari LMWH, gunakan UFH dengan monitoring aPTT</span></div>' : ''}
+    ${elderlyWarning && !renalWarning ? '<div class="alert alert-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg><span style="font-size:12px;">⚠️ Usia ≥75 tahun: Pertimbangkan reduksi dosis 25%, pantau tanda perdarahan</span></div>' : ''}`;
+}
+
+function calcAPTT() {
+  const aptt = parseFloat(document.getElementById('apttValue').value);
+  const rate = parseFloat(document.getElementById('apttCurrentRate').value);
+  if (isNaN(aptt)) { document.getElementById('apttResult').style.display = 'none'; return; }
+  document.getElementById('apttResult').style.display = 'block';
+
+  // Highlight table row
+  document.querySelectorAll('.aptt-row').forEach(r => r.classList.remove('aptt-highlight'));
+  let row, action, rateChange, recheck, alertClass;
+  if (aptt < 40) {
+    row = 'lt40'; action = 'Bolus 3.000 unit IV'; rateChange = `Naikan ${!isNaN(rate) ? (rate + 3).toFixed(1) : '+3'} mL/jam`; recheck = '6 jam'; alertClass = 'alert-red';
+  } else if (aptt < 60) {
+    row = '40-59'; action = 'Bolus 2.000 unit IV'; rateChange = `Naikan ${!isNaN(rate) ? (rate + 2).toFixed(1) : '+2'} mL/jam`; recheck = '6 jam'; alertClass = 'alert-amber';
+  } else if (aptt <= 100) {
+    row = '60-100'; action = 'Tidak perlu'; rateChange = 'Tidak berubah ✅'; recheck = '12 jam'; alertClass = 'alert-green';
+  } else if (aptt <= 120) {
+    row = '101-120'; action = 'Stop infus 30 menit'; rateChange = `Turunkan ${!isNaN(rate) ? (rate - 2).toFixed(1) : '-2'} mL/jam`; recheck = '6 jam'; alertClass = 'alert-amber';
+  } else {
+    row = 'gt120'; action = 'Stop infus 60 menit'; rateChange = `Turunkan ${!isNaN(rate) ? (rate - 3).toFixed(1) : '-3'} mL/jam`; recheck = '6 jam'; alertClass = 'alert-red';
+  }
+
+  document.querySelector(`[data-range="${row}"]`)?.classList.add('aptt-highlight');
+  document.getElementById('apttResult').innerHTML = `
+    <div class="divider-label">Rekomendasi Penyesuaian</div>
+    <div class="alert ${alertClass}" style="margin-bottom:8px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div style="font-size:12px;">
+        <strong>aPTT: ${aptt} detik</strong><br>
+        Tindakan: ${action}<br>
+        Rate baru: ${rateChange}<br>
+        Cek ulang: ${recheck}
+      </div>
+    </div>`;
+}
+
+function fillAPTT(val) {
+  document.getElementById('apttValue').value = val;
+  calcAPTT();
+}
+
+// ============================================================
+//  REFERRAL
+// ============================================================
+let referralPriority = 'emergency';
+
+function setPriority(p) {
+  referralPriority = p;
+  ['emergency', 'urgent', 'elective'].forEach(x => {
+    document.getElementById(`prio-${x}`).classList.remove('selected');
+  });
+  document.getElementById(`prio-${p}`).classList.add('selected');
+  const labels = { emergency: 'EMERGENSI', urgent: 'URGEN', elective: 'ELEKTIF' };
+  const badge = document.getElementById('refPriorityBadge');
+  badge.textContent = labels[p];
+  badge.className = 'badge ' + (p === 'emergency' ? 'badge-red' : p === 'urgent' ? 'badge-amber' : 'badge-green');
+}
+
+function autoFillSummary() {
+  const pt = state.patient;
+  const heartScore = document.getElementById('heartTotal').textContent;
+  const graceScore = document.getElementById('graceTotal').textContent;
+  const heartRisk = document.getElementById('heartRisk').textContent;
+  const graceRisk = document.getElementById('graceRiskLabel').textContent;
+  const stemiType = document.getElementById('stemiType').value;
+  const killip = document.getElementById('stemiKillip').value;
+  const td = document.getElementById('stemiTD').value;
+  const hr = document.getElementById('stemiHR').value;
+  const spo2 = document.getElementById('stemiSpo2').value;
+
+  const hepLoad = state.heparin.loadDose;
+  const hepMaint = state.heparin.maintRate;
+
+  let dx = stemiType ? stemiType : 'ACS (NSTEMI / UA)';
+  document.getElementById('refDx').value = dx;
+
+  let history = `Pasien ${pt.name || '—'}${pt.age ? ', ' + pt.age + ' tahun' : ''}${pt.gender ? ', ' + (pt.gender === 'L' ? 'laki-laki' : 'perempuan') : ''}, datang dengan keluhan nyeri dada.`;
+  if (pt.medHistory) history += ` Riwayat: ${pt.medHistory}.`;
+  document.getElementById('refHistory').value = history;
+
+  let exam = '';
+  if (td) exam += `TD: ${td} mmHg, `;
+  if (hr) exam += `HR: ${hr} bpm, `;
+  if (spo2) exam += `SpO₂: ${spo2}%, `;
+  if (killip) exam += killip;
+  document.getElementById('refExam').value = exam.trim().replace(/,\s*$/, '');
+
+  let lab = `HEART Score: ${heartScore} (${heartRisk}). GRACE Score: ${graceScore} (${graceRisk}).`;
+  document.getElementById('refLab').value = lab;
+
+  let treatment = 'Aspirin 160 mg PO.';
+  if (hepLoad) treatment += ` UFH loading ${hepLoad.toFixed(0)} unit IV bolus, maintenance ${hepMaint?.toFixed(1) || '—'} mL/jam.`;
+  document.getElementById('refTreatment').value = treatment;
+
+  let reason = `Pasien memerlukan evaluasi lanjut dan tata laksana definitif`;
+  if (stemiType) reason += ` untuk ${stemiType}`;
+  reason += `. GRACE Score ${graceScore} (${graceRisk}) memerlukan intervensi koroner.`;
+  document.getElementById('refReason').value = reason;
+
+  state.workflow.referral = true;
+  updateWorkflow();
+}
+
+function generateReferral() {
+  const from = document.getElementById('refFromFaskes').value || '—';
+  const dr = document.getElementById('refFromDr').value || '—';
+  const sip = document.getElementById('refFromSIP').value;
+  const to = document.getElementById('refToFaskes').value || '—';
+  const dep = document.getElementById('refToDep').value || '—';
+  const dx = document.getElementById('refDx').value || '—';
+  const history = document.getElementById('refHistory').value || '—';
+  const exam = document.getElementById('refExam').value || '—';
+  const lab = document.getElementById('refLab').value || '—';
+  const treatment = document.getElementById('refTreatment').value || '—';
+  const reason = document.getElementById('refReason').value || '—';
+  const pt = state.patient;
+  const date = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  const prioLabel = referralPriority === 'emergency' ? '🚨 EMERGENSI' : referralPriority === 'urgent' ? '⚠️ URGEN' : '📅 ELEKTIF';
+
+  const preview = `
+    <div class="referral-preview" style="font-family:'Inter',sans-serif;color:#1a1a1a;line-height:1.7;font-size:13px;">
+      <div style="text-align:center;border-bottom:2px solid #333;padding-bottom:12px;margin-bottom:16px;">
+        <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;">Surat Rujukan Medis</div>
+        <div style="font-size:16px;font-weight:800;margin:4px 0;">${from}</div>
+        <div style="font-size:11px;color:#666;">${date}</div>
+        <div style="margin-top:8px;display:inline-block;background:${referralPriority === 'emergency' ? '#fee2e2' : referralPriority === 'urgent' ? '#fef3c7' : '#d1fae5'};
+          color:${referralPriority === 'emergency' ? '#991b1b' : referralPriority === 'urgent' ? '#92400e' : '#065f46'};
+          padding:4px 14px;border-radius:20px;font-weight:700;font-size:12px;">${prioLabel}</div>
+      </div>
+      <table style="width:100%;margin-bottom:14px;font-size:12px;">
+        <tr>
+          <td style="width:40%;padding:3px 0;color:#666;">Kepada Yth.</td>
+          <td style="font-weight:600;">Dokter/SpJP di ${to}</td>
+        </tr>
+        <tr>
+          <td style="color:#666;">Bagian</td>
+          <td>${dep}</td>
+        </tr>
+      </table>
+      <div style="font-size:12px;margin-bottom:14px;">
+        Dengan hormat, kami merujuk pasien:
+      </div>
+      <table style="width:100%;margin-bottom:14px;border-collapse:collapse;font-size:12px;">
+        <tr style="background:#f9fafb;"><td style="padding:5px 8px;width:35%;color:#666;border:1px solid #e5e7eb;">Nama</td><td style="padding:5px 8px;font-weight:600;border:1px solid #e5e7eb;">${pt.name || '—'}</td></tr>
+        <tr><td style="padding:5px 8px;color:#666;border:1px solid #e5e7eb;">Usia/JK</td><td style="padding:5px 8px;border:1px solid #e5e7eb;">${pt.age || '—'} tahun / ${pt.gender === 'L' ? 'Laki-laki' : pt.gender === 'P' ? 'Perempuan' : '—'}</td></tr>
+        <tr style="background:#f9fafb;"><td style="padding:5px 8px;color:#666;border:1px solid #e5e7eb;">No. RM</td><td style="padding:5px 8px;border:1px solid #e5e7eb;">${pt.rm || '—'}</td></tr>
+        <tr><td style="padding:5px 8px;color:#666;border:1px solid #e5e7eb;">Alamat</td><td style="padding:5px 8px;border:1px solid #e5e7eb;">${pt.address || '—'}</td></tr>
+      </table>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#333;margin-bottom:6px;">Diagnosis Kerja</div>
+      <div style="font-weight:700;font-size:14px;color:#1e3a8a;margin-bottom:12px;">${dx}</div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#333;margin-bottom:4px;">Anamnesis</div>
+      <div style="margin-bottom:12px;color:#374151;">${history}</div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#333;margin-bottom:4px;">Pemeriksaan Fisik</div>
+      <div style="margin-bottom:12px;color:#374151;">${exam}</div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#333;margin-bottom:4px;">Pemeriksaan Penunjang</div>
+      <div style="margin-bottom:12px;color:#374151;">${lab}</div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#333;margin-bottom:4px;">Terapi yang Telah Diberikan</div>
+      <div style="margin-bottom:12px;color:#374151;">${treatment}</div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#333;margin-bottom:4px;">Alasan Rujukan</div>
+      <div style="margin-bottom:20px;color:#374151;">${reason}</div>
+      <div style="margin-top:20px;text-align:right;">
+        <div style="font-size:12px;color:#666;">Hormat kami,</div>
+        <div style="margin-top:40px;font-weight:700;">${dr}</div>
+        ${sip ? `<div style="font-size:11px;color:#666;">SIP/NIP: ${sip}</div>` : ''}
+        <div style="font-size:11px;color:#666;">${from}</div>
+      </div>
+    </div>`;
+
+  document.getElementById('referralPreviewWrap').innerHTML = preview;
+  state.workflow.referral = true;
+  updateWorkflow();
+  
+  // Smooth scroll to preview on mobile
+  if (window.innerWidth <= 768) {
+    document.getElementById('referralPreviewWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function printReferral() {
+  generateReferral();
+  const content = document.getElementById('referralPreviewWrap').innerHTML;
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <title>Surat Rujukan</title>
+    <style>
+      body { font-family: 'Arial', sans-serif; margin: 20mm; font-size: 12pt; }
+      @page { margin: 20mm; }
+    </style></head><body>${content}</body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 500);
+}
+
+function toggleRefGuidance() {
+  const body = document.getElementById('refGuidanceBody');
+  const icon = document.getElementById('refGuidanceToggleIcon');
+  if (body.style.display === 'none') {
+    body.style.display = 'block';
+    icon.textContent = '▲';
+  } else {
+    body.style.display = 'none';
+    icon.textContent = '▼';
+  }
+}
+
+// ============================================================
+//  PATIENT MODAL
+// ============================================================
+function openPatientModal() {
+  document.getElementById('patientModal').classList.add('open');
+}
+function closePatientModal() {
+  document.getElementById('patientModal').classList.remove('open');
+}
+
+function savePatient() {
+  const name = document.getElementById('ptName').value;
+  const rm = document.getElementById('ptRM').value;
+  const age = document.getElementById('ptAge').value;
+  const gender = document.getElementById('ptGender').value;
+  const weight = document.getElementById('ptWeight').value;
+  const address = document.getElementById('ptAddress').value;
+  const history = document.getElementById('ptHistory').value;
+  const admitDate = document.getElementById('ptAdmitDate').value;
+
+  state.patient = { name, rm, age, gender, weight, address, medHistory: history, admitDate };
+
+  // Update sidebar
+  document.getElementById('spName').textContent = name || '— Belum Diisi —';
+  document.getElementById('spMeta').textContent = [
+    age ? age + ' tahun' : '',
+    gender === 'L' ? 'Laki-laki' : gender === 'P' ? 'Perempuan' : '',
+    weight ? weight + ' kg' : ''
+  ].filter(Boolean).join(' · ') || 'Klik untuk isi data pasien';
+
+  // Auto-fill age into HEART
+  autoFillAge();
+  autoFillWeight();
+
+  closePatientModal();
+  saveState();
+}
+
+function autoFillAge() {
+  const age = parseFloat(document.getElementById('ptAge').value);
+  if (!isNaN(age)) {
+    document.getElementById('graceAge').value = age;
+    calcGrace();
+  }
+}
+
+function autoFillWeight() {
+  const wt = parseFloat(document.getElementById('ptWeight').value);
+  if (!isNaN(wt)) {
+    document.getElementById('hepWeight').value = wt;
+    document.getElementById('lmwhWeight').value = wt;
+    document.getElementById('antiBB').value = wt;
+    document.getElementById('fibrWeight').value = wt;
+    calcHeparin();
+  }
+}
+
+// ============================================================
+//  WORKFLOW
+// ============================================================
+function updateWorkflow() {
+  const steps = ['triage', 'grace', 'stemi', 'heparin', 'referral'];
+  steps.forEach((s, i) => {
+    const el = document.getElementById(`wf${i + 1}`);
+    if (!el) return;
+    el.className = 'wf-step ' + (state.workflow[s] ? 'done' : '');
+  });
+}
+
+// ============================================================
+//  CLEAR ALL
+// ============================================================
+function clearAll() {
+  if (!confirm('Reset semua data? Ini akan menghapus semua input.')) return;
+  localStorage.removeItem('cardioclinic_state');
+  location.reload();
+}
+
+// ============================================================
+//  PERSIST STATE
+// ============================================================
+function saveState() {
+  try {
+    localStorage.setItem('cardioclinic_state', JSON.stringify(state));
+  } catch (e) {}
+}
+
+function loadState() {
+  try {
+    const s = localStorage.getItem('cardioclinic_state');
+    if (!s) return;
+    const saved = JSON.parse(s);
+    Object.assign(state, saved);
+
+    // Restore patient
+    if (state.patient.name) {
+      document.getElementById('ptName').value = state.patient.name || '';
+      document.getElementById('ptRM').value = state.patient.rm || '';
+      document.getElementById('ptAge').value = state.patient.age || '';
+      document.getElementById('ptGender').value = state.patient.gender || 'L';
+      document.getElementById('ptWeight').value = state.patient.weight || '';
+      document.getElementById('ptAddress').value = state.patient.address || '';
+      document.getElementById('ptHistory').value = state.patient.medHistory || '';
+
+      document.getElementById('spName').textContent = state.patient.name;
+      document.getElementById('spMeta').textContent = [
+        state.patient.age ? state.patient.age + ' tahun' : '',
+        state.patient.gender === 'L' ? 'Laki-laki' : state.patient.gender === 'P' ? 'Perempuan' : '',
+        state.patient.weight ? state.patient.weight + ' kg' : ''
+      ].filter(Boolean).join(' · ');
+    }
+
+    // Restore dashboard scores
+    if (state.heart?.score !== undefined) {
+      document.getElementById('dashHeart').textContent = state.heart.score;
+      document.getElementById('dashHeart').style.color = state.heart.score <= 3 ? 'var(--green)' : state.heart.score <= 6 ? 'var(--amber)' : 'var(--red)';
+      document.getElementById('dashHeartRisk').textContent = state.heart.risk || '';
+    }
+    if (state.grace?.score !== undefined) {
+      document.getElementById('dashGrace').textContent = state.grace.score;
+      document.getElementById('dashGrace').style.color = state.grace.score <= 108 ? 'var(--green)' : state.grace.score <= 140 ? 'var(--amber)' : 'var(--red)';
+      document.getElementById('dashGraceRisk').textContent = state.grace.risk || '';
+    }
+    if (state.heparin?.loadDose) {
+      document.getElementById('dashHepLoad').textContent = `${state.heparin.loadDose.toFixed(0)} u`;
+      document.getElementById('dashHepLabel').textContent = `${state.heparin.maintRate?.toFixed(1) || '—'} mL/jam`;
+    }
+
+    updateWorkflow();
+  } catch (e) {}
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  loadState();
+  // Set default date/time for STEMI
+  const now = new Date();
+  const localISO = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  document.getElementById('stemiArrival').value = localISO;
+  document.getElementById('ptAdmitDate').value = localISO.slice(0, 10);
+});
+</script>
+</body>
+</html>
