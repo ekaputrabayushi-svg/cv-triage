@@ -1,0 +1,1786 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VitalDose Pro - Hemodynamic & Reperfusion Suite</title>
+    
+    <!-- LITE PROTECTION SCRIPT -->
+    <script>
+    (function(){
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if(e.keyCode==123 || (e.ctrlKey&&e.shiftKey&&(e.keyCode==73||e.keyCode==74||e.keyCode==67)) || (e.ctrlKey&&(e.keyCode==85||e.keyCode==83))) {
+                e.preventDefault(); return false;
+            }
+        });
+        document.addEventListener('selectstart', e => e.preventDefault());
+        document.addEventListener('dragstart', e => e.preventDefault());
+    })();
+    </script>
+
+    <!-- Tailwind CSS & Lucide Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>window.jsPDF = window.jspdf.jsPDF;</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    
+    <!-- Google Fonts: Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: radial-gradient(circle at 50% 50%, #0d1527 0%, #030712 100%);
+            -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+            touch-action: pan-y;
+        }
+        img, svg { pointer-events: none; }
+        @media print { body { display: none !important; } }
+        
+        /* Glowing Range Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+            height: 24px;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 9999px;
+            border: none;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+        }
+        input[type=range]::-webkit-slider-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: currentColor;
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -7px;
+            border: 2px solid #070a13;
+            box-shadow: 0 0 12px currentColor;
+            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease;
+        }
+        input[type=range]:active::-webkit-slider-thumb {
+            transform: scale(1.25);
+            box-shadow: 0 0 20px currentColor;
+        }
+        
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 9999px;
+            border: none;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+        }
+        input[type=range]::-moz-range-thumb {
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: currentColor;
+            cursor: pointer;
+            border: 2px solid #070a13;
+            box-shadow: 0 0 12px currentColor;
+            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease;
+        }
+        input[type=range]:active::-moz-range-thumb {
+            transform: scale(1.25);
+            box-shadow: 0 0 20px currentColor;
+        }
+        
+        /* Disabled element styling */
+        input:disabled, button:disabled {
+            cursor: not-allowed !important;
+            opacity: 0.4;
+            transform: scale(1) !important;
+        }
+
+        .locked-overlay {
+            position: absolute; inset: 0; background: rgba(5, 8, 20, 0.75); backdrop-filter: blur(8px);
+            z-index: 20; display: flex; align-items: center; justify-content: center;
+            border-radius: 2rem; opacity: 0; pointer-events: none; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .is-locked .locked-overlay { opacity: 1; pointer-events: auto; }
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+
+        /* Prevent long press context menu on mobile */
+        button {
+            -webkit-touch-callout: none;
+        }
+        
+        /* Glow animations */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(244, 63, 94, 0.35); border-color: rgba(244, 63, 94, 0.6); }
+            50% { box-shadow: 0 0 30px rgba(244, 63, 94, 0.7); border-color: rgba(244, 63, 94, 0.9); }
+        }
+        .critical-alert-glow {
+            animation: pulse-glow 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+    </style>
+</head>
+<body class="bg-[#030712] text-gray-100 p-0 md:p-6 flex justify-center items-start md:items-center min-h-screen selection:bg-rose-500/30">
+    
+    <div class="max-w-md w-full bg-gradient-to-b from-[#0a0f1d] to-[#05070c] md:border border-white/10 md:rounded-[2.5rem] shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden relative min-h-screen md:min-h-[880px] flex flex-col pb-6">
+        
+        <!-- Header -->
+        <div class="bg-black/60 backdrop-blur-xl p-4 flex flex-col border-b border-white/5 shrink-0 z-30 relative font-sans">
+            <div class="flex items-center justify-between mb-1.5">
+                <div class="flex items-center gap-3">
+                    <!-- Zap Logo -->
+                    <div class="relative flex items-center justify-center bg-gradient-to-br from-amber-500/20 to-orange-500/5 border border-amber-500/30 p-2.5 rounded-xl shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+                        <i data-lucide="zap" class="text-amber-500 w-4.5 h-4.5 drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <h1 class="font-black text-lg tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-gray-400 leading-none">VITALDOSE PRO</h1>
+                        <span class="text-[8px] tracking-widest text-indigo-400 font-extrabold uppercase mt-1">HEMODYNAMIC SUITE</span>
+                    </div>
+                </div>
+                
+                <!-- ECG Heart Animation Monitor -->
+                <div class="flex items-center bg-black/60 px-2.5 py-1 rounded-xl border border-white/5 shadow-inner">
+                    <svg class="w-10 h-6 text-rose-500 stroke-2 fill-none drop-shadow-[0_0_4px_rgba(244,63,94,0.6)]" viewBox="0 0 100 30">
+                        <path d="M0,15 L20,15 L25,5 L30,25 L35,15 L50,15 L55,2 L60,28 L65,15 L100,15" stroke-dasharray="120" stroke-dashoffset="120" id="ecg-path">
+                            <animate attributeName="stroke-dashoffset" values="120;0;0" dur="2s" repeatCount="indefinite" />
+                        </path>
+                    </svg>
+                    <span id="clock-display" class="text-[9px] text-gray-300 font-mono font-black tracking-wider ml-1.5">--:--:--</span>
+                </div>
+            </div>
+            
+            <div class="pl-0 flex justify-between items-center mt-3 pt-2.5 border-t border-white/5">
+                <div>
+                    <p class="text-[9px] text-gray-500 leading-tight">Advanced Hemodynamic & Reperfusion Tool</p>
+                    <p class="text-[9px] text-gray-400 leading-tight mt-0.5">Developed by <b>Bayushi Eka Putra, MD, FIHA</b></p>
+                    <span class="inline-block mt-1.5 px-2 py-0.5 rounded text-[8px] font-extrabold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 leading-none tracking-widest uppercase">Part of CardiologyVault</span>
+                </div>
+                <button id="btn-lock" onclick="toggleLock()" class="text-gray-400 hover:text-white transition-all duration-300 p-2.5 bg-[#0c1220]/80 rounded-xl border border-white/5 active:scale-95 hover:bg-[#141c2f] shadow-md">
+                    <i data-lucide="unlock" id="lock-icon" class="w-4.5 h-4.5"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Top Navigation Bar (High Visibility) -->
+        <div class="bg-black/80 backdrop-blur-md border-b border-white/5 grid grid-cols-4 py-1.5 px-1.5 z-40 shrink-0 gap-1">
+            <button onclick="switchTab('titrasi')" id="tab-titrasi" class="flex flex-col items-center justify-center py-2 text-indigo-400 transition-all duration-300 active:scale-95 border-b-2 border-indigo-500 bg-gradient-to-t from-indigo-500/10 to-transparent font-bold rounded-t-xl">
+                <i data-lucide="sliders" class="w-4 h-4"></i>
+                <span class="text-[9px] font-extrabold uppercase tracking-wider mt-1">Titrasi</span>
+            </button>
+            <button onclick="switchTab('thrombo')" id="tab-thrombo" class="flex flex-col items-center justify-center py-2 text-gray-500 hover:text-gray-300 transition-all duration-300 active:scale-95 border-b-2 border-transparent hover:bg-white/5 rounded-t-xl">
+                <i data-lucide="syringe" class="w-4 h-4"></i>
+                <span class="text-[9px] font-extrabold uppercase tracking-wider mt-1">Reperfusi</span>
+            </button>
+            <button onclick="switchTab('antiaritmia')" id="tab-antiaritmia" class="flex flex-col items-center justify-center py-2 text-gray-500 hover:text-gray-300 transition-all duration-300 active:scale-95 border-b-2 border-transparent hover:bg-white/5 rounded-t-xl">
+                <i data-lucide="heart" class="w-4 h-4"></i>
+                <span class="text-[9px] font-extrabold uppercase tracking-wider mt-1">Arithmia</span>
+            </button>
+            <button onclick="switchTab('calculator')" id="tab-calculator" class="flex flex-col items-center justify-center py-2 text-gray-500 hover:text-gray-300 transition-all duration-300 active:scale-95 border-b-2 border-transparent hover:bg-white/5 rounded-t-xl">
+                <i data-lucide="calculator" class="w-4 h-4"></i>
+                <span class="text-[9px] font-extrabold uppercase tracking-wider mt-1">Kalkulator</span>
+            </button>
+        </div>
+
+        <!-- Scrollable Content Area -->
+        <div class="flex-1 overflow-y-auto relative px-4 pt-4" id="main-content-scroll">
+            
+            <!-- TAB 1: TITRASI (Vasopressor & Vasodilator) -->
+            <div id="tab-content-titrasi" class="block space-y-4 pb-4">
+                <!-- Vasopressor vs Vasodilator Mode Toggle -->
+                <div class="bg-[#0a0f1d]/85 backdrop-blur-md p-1.5 rounded-2xl border border-white/5 grid grid-cols-2 gap-1.5 shadow-inner">
+                    <button id="btn-subtab-vasopressor" onclick="switchSubTab('vasopressor')" class="py-2.5 text-[10px] uppercase font-extrabold rounded-xl transition-all duration-300 text-violet-400 bg-gradient-to-r from-violet-500/15 to-purple-500/10 border border-violet-500/30 shadow-[0_0_15px_rgba(139,92,246,0.15)]">
+                        Vasopressor / Inotropik
+                    </button>
+                    <button id="btn-subtab-vasodilator" onclick="switchSubTab('vasodilator')" class="py-2.5 text-[10px] uppercase font-bold rounded-xl transition-all duration-300 text-gray-400 hover:text-gray-200 hover:bg-white/5 border border-transparent">
+                        Vasodilator
+                    </button>
+                </div>
+
+                <!-- Drug Selector Grid -->
+                <div class="space-y-2">
+                    <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest flex items-center gap-2">
+                        <i data-lucide="activity" class="w-3.5 h-3.5 text-indigo-400 animate-pulse"></i> Pilih Agen Obat
+                    </label>
+                    <div id="drug-buttons" class="grid grid-cols-2 gap-2.5"></div>
+                </div>
+
+                <!-- Calculator Panel -->
+                <div id="calculator-panel" class="bg-[#0c1220]/45 backdrop-blur-md p-5 rounded-[2rem] border border-white/5 space-y-4.5 relative shadow-inner">
+                    <div class="locked-overlay">
+                        <div class="bg-[#0a0f1d] border border-white/5 p-5 rounded-[1.5rem] flex flex-col items-center gap-2 shadow-2xl">
+                            <div class="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center border border-rose-500/20 mb-1">
+                                <i data-lucide="lock" class="w-5 h-5 text-rose-400 animate-pulse"></i>
+                            </div>
+                            <span class="text-xs font-black text-white tracking-widest uppercase">PANEL TERKUNCI</span>
+                            <span class="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Gunakan tombol gembok di kanan atas</span>
+                        </div>
+                    </div>
+
+                    <!-- Concentration Toggle Mode: Standard vs Custom -->
+                    <div class="flex justify-between items-center bg-[#070a13] p-2.5 rounded-2xl border border-white/5">
+                        <span class="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-indigo-400"></i> Mode Konsentrasi
+                        </span>
+                        <div class="flex bg-[#0c1220] p-0.5 rounded-xl border border-white/5">
+                            <button id="btn-conc-mode-std" onclick="setConcMode('standard')" class="px-3 py-1 text-[9px] font-black rounded-lg transition-all duration-300 bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.1)]">Standar</button>
+                            <button id="btn-conc-mode-custom" onclick="setConcMode('custom')" class="px-3 py-1 text-[9px] font-bold rounded-lg transition-all duration-300 text-gray-500 hover:text-gray-300 bg-transparent border border-transparent">Kustom</button>
+                        </div>
+                    </div>
+
+                    <!-- Toggle Unit Nicardipine (mg/jam vs mcg/kg/mnt) -->
+                    <div id="unit-toggle-container" class="hidden justify-between items-center bg-[#070a13] rounded-2xl p-2 border border-white/5">
+                        <div class="flex items-center gap-1.5 text-gray-400">
+                            <i data-lucide="info" class="w-3.5 h-3.5 text-lime-400"></i>
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider">Mode Dosis</span>
+                        </div>
+                        <div class="flex items-center bg-[#0c1220] p-0.5 rounded-xl border border-white/5">
+                            <button id="btn-mode-mgjam" onclick="toggleNicardipine('nicardipine')" class="px-3 py-1 text-[9px] rounded-lg font-bold transition-all border border-transparent">mg/jam</button>
+                            <button id="btn-mode-mcgkg" onclick="toggleNicardipine('nicardipine_wt')" class="px-3 py-1 text-[9px] rounded-lg font-bold transition-all border border-transparent">mcg/kg/mnt</button>
+                        </div>
+                    </div>
+
+                    <!-- STANDARD CONCENTRATION UI -->
+                    <div id="std-concentration-ui" class="space-y-3.5">
+                        <div class="flex justify-between items-center">
+                            <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Volume & Sediaan</label>
+                            <div class="flex items-center bg-[#0c1220] p-0.5 rounded-xl border border-white/5">
+                                <button id="btn-amp-1" onclick="setAmpoules(1)" class="px-3 py-1 text-[10px] rounded-lg font-bold transition-all border border-transparent">Single Amp</button>
+                                <button id="btn-amp-2" onclick="setAmpoules(2)" class="px-3 py-1 text-[10px] rounded-lg font-bold transition-all border border-transparent">Double Amp</button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2.5">
+                            <button id="btn-vol-20" onclick="setVolume(20)" class="flex flex-col items-center justify-center py-2.5 px-1.5 rounded-xl border bg-[#0c1220]/50 border-white/5 text-gray-500 hover:text-gray-300 hover:bg-[#141c2f]/50 transition-all duration-300 active:scale-95"><span class="text-sm font-black">20</span><span class="text-[8px] uppercase tracking-wider mt-0.5">cc</span></button>
+                            <button id="btn-vol-50" onclick="setVolume(50)" class="flex flex-col items-center justify-center py-2.5 px-1.5 rounded-xl border bg-[#0c1220]/50 border-white/5 text-gray-500 hover:text-gray-300 hover:bg-[#141c2f]/50 transition-all duration-300 active:scale-95"><span class="text-sm font-black">50</span><span class="text-[8px] uppercase tracking-wider mt-0.5">cc</span></button>
+                            <button id="btn-vol-100" onclick="setVolume(100)" class="flex flex-col items-center justify-center py-2.5 px-1.5 rounded-xl border bg-[#0c1220]/50 border-white/5 text-gray-500 hover:text-gray-300 hover:bg-[#141c2f]/50 transition-all duration-300 active:scale-95"><span class="text-sm font-black">100</span><span class="text-[8px] uppercase tracking-wider mt-0.5">cc</span></button>
+                            <button id="btn-vol-500" onclick="setVolume(500)" class="flex flex-col items-center justify-center py-2.5 px-1.5 rounded-xl border bg-[#0c1220]/50 border-white/5 text-gray-500 hover:text-gray-300 hover:bg-[#141c2f]/50 transition-all duration-300 active:scale-95"><span class="text-sm font-black">500</span><span class="text-[8px] uppercase tracking-wider mt-0.5">cc</span></button>
+                        </div>
+                    </div>
+
+                    <!-- CUSTOM CONCENTRATION UI -->
+                    <div id="custom-concentration-ui" class="hidden grid grid-cols-2 gap-3 bg-[#070a13] p-3 rounded-2xl border border-white/5">
+                        <div>
+                            <label class="block text-[9px] text-gray-500 font-black uppercase tracking-wider mb-1.5">Kadar Obat (<span id="custom-mass-unit">mg</span>)</label>
+                            <input type="number" id="custom-drug-amount" value="4" min="0.1" step="0.1" oninput="updateCustomConcentration()" class="w-full bg-[#0c1220] border border-white/10 rounded-xl py-2 px-3 text-xs text-white font-black focus:outline-none focus:border-indigo-500/80 transition-all duration-200" />
+                        </div>
+                        <div>
+                            <label class="block text-[9px] text-gray-500 font-black uppercase tracking-wider mb-1.5">Volume Pelarut (cc)</label>
+                            <input type="number" id="custom-diluent-volume" value="50" min="1" step="1" oninput="updateCustomConcentration()" class="w-full bg-[#0c1220] border border-white/10 rounded-xl py-2 px-3 text-xs text-white font-black focus:outline-none focus:border-indigo-500/80 transition-all duration-200" />
+                        </div>
+                    </div>
+
+                    <!-- Concentration Display Badge -->
+                    <div class="flex justify-between items-center bg-[#070a13] rounded-2xl p-3 border border-white/5">
+                        <div class="flex items-center gap-1.5 text-gray-400">
+                            <i data-lucide="droplet" class="w-3.5 h-3.5 text-indigo-400"></i>
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider">Konsentrasi Akhir</span>
+                        </div>
+                        <span id="concentration-badge" class="text-xs font-black text-white bg-indigo-500/15 border border-indigo-500/30 px-3.5 py-1.5 rounded-xl shadow-[0_0_12px_rgba(99,102,241,0.1)]">--</span>
+                    </div>
+
+                    <!-- Weight Section -->
+                    <div id="weight-section" class="pt-4 border-t border-white/5">
+                        <div class="flex justify-between items-end mb-2.5">
+                            <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Berat Badan Pasien</label>
+                            <span class="text-xl font-black text-white" id="weight-value-container">
+                                <span id="weight-value">60</span> <span class="text-xs text-gray-500 font-extrabold">kg</span>
+                            </span>
+                        </div>
+                        
+                        <!-- Quick Weight Presets -->
+                        <div class="grid grid-cols-5 gap-1.5 mb-3.5">
+                            <button onclick="setWeightPreset(50)" class="py-1.5 rounded-lg bg-[#0c1220]/50 border border-white/5 text-[10px] font-black text-gray-400 hover:bg-[#141c2f]/80 hover:text-white active:scale-95 hover:border-white/10 transition-all duration-300">50kg</button>
+                            <button onclick="setWeightPreset(60)" class="py-1.5 rounded-lg bg-[#0c1220]/50 border border-white/5 text-[10px] font-black text-gray-400 hover:bg-[#141c2f]/80 hover:text-white active:scale-95 hover:border-white/10 transition-all duration-300">60kg</button>
+                            <button onclick="setWeightPreset(70)" class="py-1.5 rounded-lg bg-[#0c1220]/50 border border-white/5 text-[10px] font-black text-gray-400 hover:bg-[#141c2f]/80 hover:text-white active:scale-95 hover:border-white/10 transition-all duration-300">70kg</button>
+                            <button onclick="setWeightPreset(80)" class="py-1.5 rounded-lg bg-[#0c1220]/50 border border-white/5 text-[10px] font-black text-gray-400 hover:bg-[#141c2f]/80 hover:text-white active:scale-95 hover:border-white/10 transition-all duration-300">80kg</button>
+                            <button onclick="setWeightPreset(90)" class="py-1.5 rounded-lg bg-[#0c1220]/50 border border-white/5 text-[10px] font-black text-gray-400 hover:bg-[#141c2f]/80 hover:text-white active:scale-95 hover:border-white/10 transition-all duration-300">90kg</button>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <button onpointerdown="startPress(() => adjustWeight(-1))" onpointerup="stopPress()" onpointerleave="stopPress()" oncontextmenu="event.preventDefault();" class="w-11 h-11 rounded-full bg-[#0c1220]/80 border border-white/10 flex items-center justify-center text-gray-300 hover:text-white hover:border-white/20 active:scale-95 hover:bg-[#141c2f] shadow-md transition-all duration-200"><i data-lucide="minus" class="w-4 h-4"></i></button>
+                            <input type="range" id="weight-slider" min="30" max="150" step="1" oninput="updateWeightFromSlider(this.value)" class="w-full text-indigo-400 cursor-pointer" />
+                            <button onpointerdown="startPress(() => adjustWeight(1))" onpointerup="stopPress()" onpointerleave="stopPress()" oncontextmenu="event.preventDefault();" class="w-11 h-11 rounded-full bg-[#0c1220]/80 border border-white/10 flex items-center justify-center text-gray-300 hover:text-white hover:border-white/20 active:scale-95 hover:bg-[#141c2f] shadow-md transition-all duration-200"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Target Dose Section -->
+                    <div class="pt-4 border-t border-white/5">
+                        <div class="flex justify-between items-end mb-2.5">
+                            <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Dosis Target</label>
+                            <div class="text-right">
+                                <span id="dose-value" class="text-3xl font-black">0.05</span>
+                                <span id="dose-unit" class="text-[8px] font-extrabold tracking-widest text-gray-500 block uppercase mt-1">mcg/kg/menit</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button onpointerdown="startPress(() => adjustDose(-1))" onpointerup="stopPress()" onpointerleave="stopPress()" oncontextmenu="event.preventDefault();" class="w-12 h-12 rounded-full flex items-center justify-center dose-bg-color dose-text-color shadow-lg"><i data-lucide="minus" class="w-5 h-5"></i></button>
+                            <input type="range" id="dose-slider" oninput="updateDoseFromSlider(this.value)" class="w-full cursor-pointer" />
+                            <button onpointerdown="startPress(() => adjustDose(1))" onpointerup="stopPress()" onpointerleave="stopPress()" oncontextmenu="event.preventDefault();" class="w-12 h-12 rounded-full flex items-center justify-center dose-bg-color dose-text-color shadow-lg"><i data-lucide="plus" class="w-5 h-5"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Syringe Rate Outputs -->
+                <div id="rate-panel" class="bg-gradient-to-br from-[#0c1220] to-[#060a13] border border-white/5 rounded-3xl p-5 flex flex-col items-center justify-center relative transition-all duration-300 shadow-[inset_0_2px_4px_rgba(255,255,255,0.05)]">
+                    <p class="text-[10px] text-gray-400 font-extrabold mb-1 uppercase tracking-widest flex items-center gap-1.5">
+                        <i data-lucide="play" id="rate-icon" class="w-3.5 h-3.5 text-green-400"></i> Syringe Rate
+                    </p>
+                    <div class="flex items-baseline gap-1.5">
+                        <span id="rate-value" class="text-5xl font-black text-white tracking-tighter">0.0</span>
+                        <span class="text-lg text-gray-500 font-bold">cc/jam</span>
+                    </div>
+                </div>
+
+                <!-- Clinical Reference & Notes Card -->
+                <div id="clinical-notes-card" class="bg-[#0c1220]/30 border border-white/5 rounded-2xl p-4.5 space-y-2.5 shadow-sm">
+                    <h4 class="text-[10px] text-indigo-400 font-extrabold uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="bookmark" class="w-3.5 h-3.5"></i> Catatan Klinis & Keamanan
+                    </h4>
+                    <div id="clinical-notes-content" class="text-[10px] text-gray-400 leading-relaxed space-y-1">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Auto-Titration Map -->
+                <div class="bg-[#0c1220]/20 border border-white/5 p-4.5 rounded-2xl space-y-3.5">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest flex items-center gap-2">
+                            <i data-lucide="list" class="w-3.5 h-3.5 text-indigo-400"></i> Peta Auto-Titrasi
+                        </h3>
+                        <button onclick="downloadPDF()" class="flex items-center gap-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 px-3.5 py-1.5 rounded-xl text-[9px] font-bold transition-all border border-indigo-500/20 active:scale-95">
+                            <i data-lucide="download" class="w-3 h-3"></i> Ekspor PDF
+                        </button>
+                    </div>
+                    <div class="overflow-hidden rounded-xl border border-white/5 bg-[#080d1a]/85 shadow-inner">
+                        <table class="w-full text-left text-[11px]">
+                            <thead class="bg-[#0f1526]/80 text-gray-400 border-b border-white/5">
+                                <tr>
+                                    <th class="px-4 py-2.5 font-bold uppercase tracking-wider">Dosis <span id="table-dose-unit" class="text-[8px] font-normal lowercase ml-1"></span></th>
+                                    <th class="px-4 py-2.5 font-bold uppercase tracking-wider text-right">Rate (cc/jam)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="titration-table-body" class="divide-y divide-white/5"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div> <!-- Closes tab-content-titrasi correctly at the end -->
+
+            <!-- TAB 2: REPERFUSI (Fibrinolitik & Antikoagulan) -->
+            <div id="tab-content-thrombo" class="hidden space-y-4.5 pb-4">
+                <div class="space-y-2">
+                    <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest flex items-center gap-2">
+                        <i data-lucide="syringe" class="w-3.5 h-3.5 text-indigo-400"></i> Pilih Indikasi
+                    </label>
+                    <div id="thrombo-buttons" class="grid grid-cols-1 gap-2.5"></div>
+                </div>
+                
+                <div class="bg-[#0c1220]/45 backdrop-blur-md p-5 rounded-[2rem] border border-white/5 space-y-4.5 relative shadow-inner">
+                    <div class="locked-overlay">
+                        <div class="bg-[#0a0f1d] border border-white/5 p-5 rounded-[1.5rem] flex flex-col items-center gap-2 shadow-2xl">
+                            <div class="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center border border-rose-500/20 mb-1">
+                                <i data-lucide="lock" class="w-5 h-5 text-rose-400 animate-pulse"></i>
+                            </div>
+                            <span class="text-xs font-black text-white tracking-widest uppercase">PANEL TERKUNCI</span>
+                            <span class="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Gunakan tombol gembok di kanan atas</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-end mb-2">
+                        <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Berat Badan Pasien</label>
+                        <span class="text-xl font-black text-white" id="t-weight-value-container">
+                            <span id="t-weight-value">60</span> <span class="text-xs text-gray-500 font-extrabold">kg</span>
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onpointerdown="startPress(() => adjustTWeight(-1))" onpointerup="stopPress()" onpointerleave="stopPress()" oncontextmenu="event.preventDefault();" class="w-11 h-11 rounded-full bg-[#0c1220]/80 border border-white/10 flex items-center justify-center text-gray-300 hover:text-white hover:border-white/20 active:scale-95 hover:bg-[#141c2f] shadow-md transition-all duration-200"><i data-lucide="minus" class="w-4 h-4"></i></button>
+                        <input type="range" id="t-weight-slider" min="30" max="150" step="1" oninput="updateTWeightFromSlider(this.value)" class="w-full text-indigo-400 cursor-pointer" />
+                        <button onpointerdown="startPress(() => adjustTWeight(1))" onpointerup="stopPress()" onpointerleave="stopPress()" oncontextmenu="event.preventDefault();" class="w-11 h-11 rounded-full bg-[#0c1220]/80 border border-white/10 flex items-center justify-center text-gray-300 hover:text-white hover:border-white/20 active:scale-95 hover:bg-[#141c2f] shadow-md transition-all duration-200"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="mt-2 text-[10px] text-blue-400 bg-blue-500/5 px-4 py-3.5 rounded-2xl flex flex-col gap-1 border border-blue-500/15 shadow-inner">
+                        <p class="leading-relaxed font-semibold" id="t-drug-info"></p>
+                    </div>
+                </div>
+                
+                <!-- Treatment Flow Timeline and Timer -->
+                <div id="thrombo-phases" class="space-y-3.5"></div>
+            </div>
+
+            <!-- TAB 3: ANTIARITMIA -->
+            <div id="tab-content-antiaritmia" class="hidden space-y-4.5 pb-4">
+                <div class="space-y-2">
+                    <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest flex items-center gap-2">
+                        <i data-lucide="heart" class="w-3.5 h-3.5 text-indigo-400"></i> Pilih Agen Antiaritmia
+                    </label>
+                    <div id="antiaritmia-buttons" class="grid grid-cols-1 gap-2.5"></div>
+                </div>
+                
+                <div class="bg-[#0c1220]/45 backdrop-blur-md p-5 rounded-[2rem] border border-white/5 space-y-4.5 relative shadow-inner">
+                    <div class="locked-overlay">
+                        <div class="bg-[#0a0f1d] border border-white/5 p-5 rounded-[1.5rem] flex flex-col items-center gap-2 shadow-2xl">
+                            <div class="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center border border-rose-500/20 mb-1">
+                                <i data-lucide="lock" class="w-5 h-5 text-rose-400 animate-pulse"></i>
+                            </div>
+                            <span class="text-xs font-black text-white tracking-widest uppercase">PANEL TERKUNCI</span>
+                            <span class="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Gunakan tombol gembok di kanan atas</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-end mb-2">
+                        <label class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Berat Badan Pasien</label>
+                        <span class="text-xl font-black text-white" id="a-weight-value-container">
+                            <span id="a-weight-value">60</span> <span class="text-xs text-gray-500 font-extrabold">kg</span>
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onpointerdown="startPress(() => adjustAWeight(-1))" onpointerup="stopPress()" onpointerleave="stopPress()" oncontextmenu="event.preventDefault();" class="w-11 h-11 rounded-full bg-[#0c1220]/80 border border-white/10 flex items-center justify-center text-gray-300 hover:text-white hover:border-white/20 active:scale-95 hover:bg-[#141c2f] shadow-md transition-all duration-200"><i data-lucide="minus" class="w-4 h-4"></i></button>
+                        <input type="range" id="a-weight-slider" min="30" max="150" step="1" oninput="updateAWeightFromSlider(this.value)" class="w-full text-indigo-400 cursor-pointer" />
+                        <button onpointerdown="startPress(() => adjustAWeight(1))" onpointerup="stopPress()" onpointerleave="stopPress()" oncontextmenu="event.preventDefault();" class="w-11 h-11 rounded-full bg-[#0c1220]/80 border border-white/10 flex items-center justify-center text-gray-300 hover:text-white hover:border-white/20 active:scale-95 hover:bg-[#141c2f] shadow-md transition-all duration-200"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="mt-2 text-[10px] text-purple-400 bg-purple-500/5 px-4 py-3.5 rounded-2xl flex flex-col gap-1 border border-purple-500/15 shadow-inner">
+                        <p class="leading-relaxed font-semibold" id="a-drug-info"></p>
+                    </div>
+                </div>
+                
+                <!-- Treatment Flow Timeline and Timer -->
+                <div id="antiaritmia-phases" class="space-y-3.5"></div>
+            </div>
+
+            <!-- TAB 4: CLINICAL CALCULATOR SUITE -->
+            <div id="tab-content-calculator" class="hidden space-y-4.5 pb-4">
+                <!-- Sub-calc buttons with transparent border to prevent layout glitch -->
+                <div class="bg-[#0a0f1d]/85 backdrop-blur-md p-1.5 rounded-2xl border border-white/5 grid grid-cols-3 gap-1.5 shadow-inner">
+                    <button id="btn-subcalc-map" onclick="switchSubCalc('map')" class="py-2 text-[9px] uppercase font-black rounded-xl transition-all bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.1)]">MAP</button>
+                    <button id="btn-subcalc-qtc" onclick="switchSubCalc('qtc')" class="py-2 text-[9px] uppercase font-black rounded-xl transition-all text-gray-400 hover:text-gray-200 border border-transparent">QTc</button>
+                    <button id="btn-subcalc-gfr" onclick="switchSubCalc('gfr')" class="py-2 text-[9px] uppercase font-black rounded-xl transition-all text-gray-400 hover:text-gray-200 border border-transparent">CrCl/GFR</button>
+                </div>
+
+                <!-- SUB-CALC 1: MAP -->
+                <div id="calc-panel-map" class="space-y-4">
+                    <div class="bg-[#0c1220]/45 backdrop-blur-md p-5 rounded-[2rem] border border-white/5 space-y-4.5">
+                        <h4 class="text-xs font-black text-gray-200 uppercase tracking-wider flex items-center gap-2 border-b border-white/5 pb-2.5">
+                            <i data-lucide="heart-pulse" class="w-4 h-4 text-rose-500 animate-pulse"></i> Mean Arterial Pressure (MAP)
+                        </h4>
+                        <!-- Systolic BP -->
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Tekanan Darah Sistolik (SBP)</span>
+                                <span class="text-lg font-black text-rose-400"><span id="val-sbp">120</span> <span class="text-[9px] font-extrabold text-gray-500">mmHg</span></span>
+                            </div>
+                            <input type="range" id="slider-sbp" min="50" max="220" value="120" oninput="calculateMAP()" class="w-full text-rose-500 cursor-pointer" />
+                        </div>
+                        <!-- Diastolic BP -->
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Tekanan Darah Diastolik (DBP)</span>
+                                <span class="text-lg font-black text-blue-400"><span id="val-dbp">80</span> <span class="text-[9px] font-extrabold text-gray-500">mmHg</span></span>
+                            </div>
+                            <input type="range" id="slider-dbp" min="30" max="130" value="80" oninput="calculateMAP()" class="w-full text-blue-500 cursor-pointer" />
+                        </div>
+                    </div>
+
+                    <!-- Output Card -->
+                    <div class="bg-gradient-to-br from-[#0c1220] to-[#060a13] border border-white/5 rounded-3xl p-6 flex flex-col items-center justify-center relative shadow-[inset_0_2px_4px_rgba(255,255,255,0.05)]">
+                        <span class="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1.5">Hasil Perhitungan MAP</span>
+                        <div class="flex items-baseline gap-1 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                            <span id="output-map-value" class="text-5xl font-black text-white tracking-tighter">93.3</span>
+                            <span class="text-xs text-gray-500 font-bold">mmHg</span>
+                        </div>
+                        <!-- Classification Status -->
+                        <div id="output-map-status" class="mt-4 px-4 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            Normal (Perfusi Adekuat)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-CALC 2: QTc -->
+                <div id="calc-panel-qtc" class="hidden space-y-4">
+                    <div class="bg-[#0c1220]/45 backdrop-blur-md p-5 rounded-[2rem] border border-white/5 space-y-4.5">
+                        <h4 class="text-xs font-black text-gray-200 uppercase tracking-wider flex items-center gap-2 border-b border-white/5 pb-2.5">
+                            <i data-lucide="activity" class="w-4 h-4 text-purple-400 animate-pulse"></i> Corrected QT Interval (QTc - Bazett)
+                        </h4>
+                        <!-- Gender Selection -->
+                        <div class="flex justify-between items-center bg-[#070a13] p-2.5 rounded-2xl border border-white/5">
+                            <span class="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider">Jenis Kelamin</span>
+                            <div class="flex bg-[#0c1220] p-0.5 rounded-xl border border-white/5">
+                                <button id="btn-qtc-gender-m" onclick="setQTcGender('male')" class="px-3 py-1 text-[9px] font-black rounded-lg transition-all duration-300 bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.1)]">Laki-Laki</button>
+                                <button id="btn-qtc-gender-f" onclick="setQTcGender('female')" class="px-3 py-1 text-[9px] font-bold rounded-lg transition-all duration-300 text-gray-500 hover:text-gray-300 bg-transparent border border-transparent">Perempuan</button>
+                            </div>
+                        </div>
+                        <!-- QT Interval -->
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Interval QT</span>
+                                <span class="text-lg font-black text-purple-400"><span id="val-qt">400</span> <span class="text-[9px] font-extrabold text-gray-500">ms</span></span>
+                            </div>
+                            <input type="range" id="slider-qt" min="200" max="600" value="400" oninput="calculateQTc()" class="w-full text-purple-500 cursor-pointer" />
+                        </div>
+                        <!-- Heart Rate -->
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Heart Rate (HR)</span>
+                                <span class="text-lg font-black text-teal-400"><span id="val-hr">75</span> <span class="text-[9px] font-extrabold text-gray-500">bpm</span></span>
+                            </div>
+                            <input type="range" id="slider-hr" min="30" max="180" value="75" oninput="calculateQTc()" class="w-full text-teal-500 cursor-pointer" />
+                        </div>
+                    </div>
+
+                    <!-- Output Card -->
+                    <div class="bg-gradient-to-br from-[#0c1220] to-[#060a13] border border-white/5 rounded-3xl p-6 flex flex-col items-center justify-center relative shadow-[inset_0_2px_4px_rgba(255,255,255,0.05)]">
+                        <span class="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1.5">Hasil Perhitungan QTc</span>
+                        <div class="flex items-baseline gap-1 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                            <span id="output-qtc-value" class="text-5xl font-black text-white tracking-tighter">447</span>
+                            <span class="text-xs text-gray-500 font-bold">ms</span>
+                        </div>
+                        <div id="output-qtc-status" class="mt-4 px-4 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            Normal
+                        </div>
+                        <div id="output-qtc-warning" class="hidden mt-3 text-[9px] text-center text-rose-400 bg-rose-500/5 px-3 py-2 rounded-xl border border-rose-500/20 max-w-xs font-bold leading-relaxed">
+                            ⚠️ Perhatian: QTc memanjang! Hindari obat pemicu aritmia (Amiodarone dll).
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-CALC 3: CrCl/GFR -->
+                <div id="calc-panel-gfr" class="hidden space-y-4">
+                    <div class="bg-[#0c1220]/45 backdrop-blur-md p-5 rounded-[2rem] border border-white/5 space-y-4.5">
+                        <h4 class="text-xs font-black text-gray-200 uppercase tracking-wider flex items-center gap-2 border-b border-white/5 pb-2.5">
+                            <i data-lucide="sliders" class="w-4 h-4 text-indigo-400"></i> Klirens Kreatinin (CrCl / GFR)
+                        </h4>
+                        <!-- Gender Selection -->
+                        <div class="flex justify-between items-center bg-[#070a13] p-2.5 rounded-2xl border border-white/5">
+                            <span class="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider">Jenis Kelamin</span>
+                            <div class="flex bg-[#0c1220] p-0.5 rounded-xl border border-white/5">
+                                <button id="btn-gfr-gender-m" onclick="setGFRGender('male')" class="px-3 py-1 text-[9px] font-black rounded-lg transition-all duration-300 bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.1)]">Laki-Laki</button>
+                                <button id="btn-gfr-gender-f" onclick="setGFRGender('female')" class="px-3 py-1 text-[9px] font-bold rounded-lg transition-all duration-300 text-gray-500 hover:text-gray-300 bg-transparent border border-transparent">Perempuan</button>
+                            </div>
+                        </div>
+                        <!-- Age -->
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Usia</span>
+                                <span class="text-lg font-black text-amber-400"><span id="val-age">50</span> <span class="text-[9px] font-extrabold text-gray-500">Tahun</span></span>
+                            </div>
+                            <input type="range" id="slider-age" min="18" max="100" value="50" oninput="calculateGFR()" class="w-full text-amber-500 cursor-pointer" />
+                        </div>
+                        <!-- Weight -->
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Berat Badan</span>
+                                <span class="text-lg font-black text-indigo-400"><span id="val-gfr-weight">60</span> <span class="text-[9px] font-extrabold text-gray-500">kg</span></span>
+                            </div>
+                            <input type="range" id="slider-gfr-weight" min="30" max="150" value="60" oninput="calculateGFR()" class="w-full text-indigo-500 cursor-pointer" />
+                        </div>
+                        <!-- Serum Creatinine -->
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Kreatinin Serum</span>
+                                <span class="text-lg font-black text-violet-400"><span id="val-creat">1.0</span> <span class="text-[9px] font-extrabold text-gray-500">mg/dL</span></span>
+                            </div>
+                            <input type="range" id="slider-creat" min="0.3" max="8.0" step="0.1" value="1.0" oninput="calculateGFR()" class="w-full text-violet-500 cursor-pointer" />
+                        </div>
+                    </div>
+
+                    <!-- Output Card -->
+                    <div class="bg-gradient-to-br from-[#0c1220] to-[#060a13] border border-white/5 rounded-3xl p-6 flex flex-col items-center justify-center relative shadow-[inset_0_2px_4px_rgba(255,255,255,0.05)]">
+                        <span class="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1.5">Klirens Kreatinin (Cockcroft-Gault)</span>
+                        <div class="flex items-baseline gap-1 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                            <span id="output-gfr-value" class="text-5xl font-black text-white tracking-tighter">75.0</span>
+                            <span class="text-xs text-gray-500 font-bold">mL/menit</span>
+                        </div>
+                        <div id="output-gfr-status" class="mt-4 px-4 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            Fungsi Ginjal Normal / Penurunan Ringan
+                        </div>
+                        <div id="output-gfr-warning" class="hidden mt-3 text-[9px] text-center text-amber-400 bg-amber-500/5 px-3 py-2 rounded-xl border border-amber-500/20 max-w-xs font-bold leading-relaxed">
+                            ⚠️ Perhatian: Diperlukan penyesuaian dosis obat klirens ginjal!
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        function hapticPlay() { if (window.navigator && window.navigator.vibrate) { window.navigator.vibrate(15); } }
+
+        // Real-time Header Clock
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('clock-display').textContent = timeString;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        let appState = {
+            activeTab: 'titrasi',
+            activeSubTab: 'vasopressor',
+            activeSubCalc: 'map',
+            isLocked: false,
+            concMode: 'standard', // 'standard' or 'custom'
+            qtcGender: 'male',
+            gfrGender: 'male',
+            vasopressor: { 
+                selectedDrugId: "norepinephrine", 
+                weight: 60, 
+                dose: 0.05, 
+                volume: 50, 
+                ampoules: 1,
+                customAmount: 4,  // mg
+                customVolume: 50  // mL
+            },
+            vasodilator: { 
+                selectedDrugId: "nicardipine", 
+                weight: 60, 
+                dose: 5, 
+                volume: 50, 
+                ampoules: 1,
+                customAmount: 10,
+                customVolume: 50
+            },
+            thrombo: { selectedDrugId: "alteplase_stemi", weight: 60 },
+            antiaritmia: { selectedDrugId: "amiodarone", weight: 60 }
+        };
+
+        // DATABASE OBAT DENGAN STANDAR WARNA ISO 26825 & Catatan Klinis
+        const DRUGS = {
+            norepinephrine: { 
+                id: "norepinephrine", 
+                name: "Norepinephrine", 
+                baseAmount: 4, 
+                baseUnit: "mg", 
+                inputUnit: "mcg/kg/menit", 
+                weightBased: true, 
+                defaultDose: 0.05, 
+                step: 0.01, 
+                min: 0.01, 
+                max: 1.0, 
+                color: "text-violet-400", 
+                bg: "bg-violet-500/20", 
+                border: "border-violet-500", 
+                category: "vasopressor",
+                notes: "• Wajib jalur vena sentral (CVC) untuk mencegah risiko extravasasi.<br>• Pantau Tekanan Darah dan MAP ketat setiap 2-5 menit saat titrasi.<br>• Ekstravasasi dapat menyebabkan nekrosis jaringan; antidotnya adalah Phentolamine."
+            },
+            epinephrine: { 
+                id: "epinephrine", 
+                name: "Epinephrine", 
+                baseAmount: 1, 
+                baseUnit: "mg", 
+                inputUnit: "mcg/kg/menit", 
+                weightBased: true, 
+                defaultDose: 0.05, 
+                step: 0.01, 
+                min: 0.01, 
+                max: 1.0, 
+                color: "text-fuchsia-400", 
+                bg: "bg-fuchsia-500/20", 
+                border: "border-fuchsia-500", 
+                category: "vasopressor",
+                notes: "• Indikasi: Syok Kardiogenik berat, anafilaksis, atau bradikardia refrakter.<br>• Efek aritmogenik tinggi; pantau EKG terus-menerus.<br>• Dapat memicu hiperlaktatemia akibat stimulasi reseptor beta-2."
+            },
+            dopamine: { 
+                id: "dopamine", 
+                name: "Dopamine", 
+                baseAmount: 200, 
+                baseUnit: "mg", 
+                inputUnit: "mcg/kg/menit", 
+                weightBased: true, 
+                defaultDose: 5, 
+                step: 1, 
+                min: 1, 
+                max: 20, 
+                color: "text-purple-400", 
+                bg: "bg-purple-500/20", 
+                border: "border-purple-500", 
+                category: "vasopressor",
+                notes: "• Dosis < 5 mcg/kg/min (Dopaminergic), 5-10 (Inotropik/Beta), > 10 (Vasopressor/Alpha).<br>• Dapat memicu takikardia dan gangguan irama ventrikel.<br>• Jarang digunakan sebagai lini pertama karena peningkatan mortalitas dibandingkan Norepinephrine."
+            },
+            dobutamine: { 
+                id: "dobutamine", 
+                name: "Dobutamine", 
+                baseAmount: 250, 
+                baseUnit: "mg", 
+                inputUnit: "mcg/kg/menit", 
+                weightBased: true, 
+                defaultDose: 5, 
+                step: 1, 
+                min: 1, 
+                max: 20, 
+                color: "text-indigo-400", 
+                bg: "bg-indigo-500/20", 
+                border: "border-indigo-500", 
+                category: "vasopressor",
+                notes: "• Inotropik murni, stimulasi reseptor Beta-1 secara kuat.<br>• Dapat menyebabkan vasodilatasi sistemik ringan (risiko hipotensi jika pasien kurang cairan).<br>• Pantau tanda-tanda iskemia miokard karena peningkatan kebutuhan oksigen jantung."
+            },
+            vasopressin: { 
+                id: "vasopressin", 
+                name: "Vasopressin", 
+                baseAmount: 20, 
+                baseUnit: "IU", 
+                inputUnit: "IU/menit", 
+                weightBased: false, 
+                defaultDose: 0.04, 
+                step: 0.01, 
+                min: 0.01, 
+                max: 0.08, 
+                color: "text-violet-300", 
+                bg: "bg-violet-400/20", 
+                border: "border-violet-400", 
+                category: "vasopressor",
+                notes: "• Sering digunakan sebagai terapi tambahan pada syok septik refrakter.<br>• Jangan dititrasi terlalu sering (biasanya dosis konstan/flat di 0.03 - 0.04 IU/menit).<br>• Efek vasokonstriksi splanknikus tinggi; awasi perfusi organ abdomen dan ekstremitas."
+            },
+            
+            nicardipine: { 
+                id: "nicardipine", 
+                name: "Nicardipine (Perdipine)", 
+                baseAmount: 10, 
+                baseUnit: "mg", 
+                inputUnit: "mg/jam", 
+                weightBased: false, 
+                defaultDose: 5, 
+                step: 0.5, 
+                min: 0.5, 
+                max: 15, 
+                color: "text-lime-400", 
+                bg: "bg-lime-500/20", 
+                border: "border-lime-500", 
+                category: "vasodilator",
+                notes: "• Indikasi: Hipertensi emergensi.<br>• Efek vasodilatasi selektif arteri; onset cepat 5-15 menit.<br>• Hindari penurunan tekanan darah yang terlalu drastis pada kasus stroke iskemik akut."
+            },
+            nicardipine_wt: { 
+                id: "nicardipine_wt", 
+                name: "Nicardipine (Perdipine)", 
+                baseAmount: 10, 
+                baseUnit: "mg", 
+                inputUnit: "mcg/kg/menit", 
+                weightBased: true, 
+                defaultDose: 1, 
+                step: 0.5, 
+                min: 0.5, 
+                max: 5, 
+                color: "text-lime-400", 
+                bg: "bg-lime-500/20", 
+                border: "border-lime-500", 
+                category: "vasodilator", 
+                hidden: true,
+                notes: "• Nicardipine mode berbasis berat badan (mcg/kg/menit).<br>• Digunakan di beberapa ICU pediatric atau protokol stroke tertentu.<br>• Pantau hipotensi dan refleks takikardia."
+            },
+            ntg: { 
+                id: "ntg", 
+                name: "Nitroglycerin (NTG)", 
+                baseAmount: 10, 
+                baseUnit: "mg", 
+                inputUnit: "mcg/menit", 
+                weightBased: false, 
+                defaultDose: 10, 
+                step: 5, 
+                min: 5, 
+                max: 200, 
+                color: "text-emerald-400", 
+                bg: "bg-emerald-500/20", 
+                border: "border-emerald-500", 
+                category: "vasodilator",
+                notes: "• Vasodilator vena dominan; mengurangi preload jantung.<br>• Indikasi utama: ACS (Sindrom Koroner Akut), Edema Paru Akut / Gagal Jantung Kiri.<br>• Kontraindikasi mutlak pada pasien yang menggunakan inhibitor PDE-5 (Sildenafil dkk) dalam 24 jam."
+            },
+            nitroprusside: { 
+                id: "nitroprusside", 
+                name: "Nitroprusside", 
+                baseAmount: 50, 
+                baseUnit: "mg", 
+                inputUnit: "mcg/kg/menit", 
+                weightBased: true, 
+                defaultDose: 0.5, 
+                step: 0.1, 
+                min: 0.1, 
+                max: 10, 
+                color: "text-teal-400", 
+                bg: "bg-teal-500/20", 
+                border: "border-teal-500", 
+                category: "vasodilator",
+                notes: "• Vasodilator arteri & vena seimbang; onset instan.<br>• Harus terlindung dari cahaya (tutup spuit/infus set dengan aluminium foil/plastik gelap).<br>• Penggunaan jangka panjang (>48 jam) berisiko keracunan Sianida/Thiosianat, terutama pada gangguan ginjal."
+            }
+        };
+
+        const THROMBOLYTICS = {
+            alteplase_stemi: { id: "alteplase_stemi", name: "Alteplase (STEMI)", desc: "Accelerated Regimen (Max 100mg)", color: "text-rose-400", bg: "bg-rose-500/20", border: "border-rose-500" },
+            alteplase_stroke: { id: "alteplase_stroke", name: "Alteplase (Stroke Iskemik Akut)", desc: "0.9 mg/kg Regimen (Max 90mg)", color: "text-blue-400", bg: "bg-blue-500/20", border: "border-blue-500" },
+            alteplase_pe: { id: "alteplase_pe", name: "Alteplase (Emboli Paru Massif)", desc: "Flat Dose (100mg) sesuai Regimen ESC", color: "text-emerald-400", bg: "bg-emerald-500/20", border: "border-emerald-500" },
+            streptokinase: { id: "streptokinase", name: "Streptokinase (STEMI)", desc: "1.5 Juta IU dalam 60 Menit", color: "text-orange-400", bg: "bg-orange-500/20", border: "border-orange-500" },
+            streptokinase_pe: { id: "streptokinase_pe", name: "Streptokinase (Emboli Paru)", desc: "1.5 Juta IU dalam 2 Jam", color: "text-amber-400", bg: "bg-amber-500/20", border: "border-amber-500" },
+            heparin: { id: "heparin", name: "UFH / Heparin (ACS Protocol)", desc: "Max 4000U Bolus, 1000U/jam Drip", color: "text-teal-400", bg: "bg-teal-500/20", border: "border-teal-500" }
+        };
+
+        const ANTIARITMIA = {
+            amiodarone: { id: "amiodarone", name: "Amiodarone (Cordarone)", desc: "Protokol Lengkap 24 Jam (VT/VF/AF)", color: "text-purple-400", bg: "bg-purple-500/20", border: "border-purple-500" },
+            lidocaine: { id: "lidocaine", name: "Lidocaine 2%", desc: "Bolus & Drip Kontinu (1-4 mg/mnt)", color: "text-pink-400", bg: "bg-pink-500/20", border: "border-pink-500" },
+            diltiazem: { id: "diltiazem", name: "Diltiazem (Herbesser)", desc: "Bolus & Drip Rate Control", color: "text-teal-400", bg: "bg-teal-500/20", border: "border-teal-500" },
+            verapamil: { id: "verapamil", name: "Verapamil (Isoptin)", desc: "Bolus Lambat IV (2.5 - 5mg)", color: "text-lime-400", bg: "bg-lime-500/20", border: "border-lime-500" }
+        };
+
+        // Glove-Friendly Macro Stepper Logic (Long Press)
+        let pressTimer = null;
+        function startPress(actionFn) {
+            if (appState.isLocked) return;
+            actionFn(); // Execute immediately
+            pressTimer = setInterval(actionFn, 150); // Then repeat
+        }
+        function stopPress() {
+            if (pressTimer) {
+                clearInterval(pressTimer);
+                pressTimer = null;
+            }
+        }
+
+        function getActiveState() { 
+            return appState.activeSubTab === 'vasodilator' ? appState.vasodilator : appState.vasopressor; 
+        }
+
+        function checkWeightWarning(weightIdContainer, weightValue) {
+            const wSpan = document.getElementById(weightIdContainer);
+            if (!wSpan) return;
+            if (weightValue < 40 || weightValue > 120) {
+                wSpan.className = "text-xl font-black transition-colors text-orange-400";
+            } else {
+                wSpan.className = "text-xl font-black transition-colors text-gray-200";
+            }
+        }
+
+        function applyGlobalLockState() {
+            const tabs = ['#tab-content-titrasi', '#tab-content-thrombo', '#tab-content-antiaritmia'];
+            tabs.forEach(selector => {
+                const container = document.querySelector(selector);
+                if (container) {
+                    container.querySelectorAll('button:not(#btn-lock), input').forEach(el => {
+                        el.disabled = appState.isLocked;
+                    });
+                }
+            });
+        }
+
+        // TAB SWITCHER
+        function switchTab(tab) {
+            hapticPlay();
+            appState.activeTab = tab;
+            
+            // Hide all tab content
+            document.getElementById('tab-content-titrasi').classList.add('hidden');
+            document.getElementById('tab-content-thrombo').classList.add('hidden');
+            document.getElementById('tab-content-antiaritmia').classList.add('hidden');
+            document.getElementById('tab-content-calculator').classList.add('hidden');
+            
+            // Reset tab button colors and classes (Top Navigation Bar Styling)
+            const tabButtons = ['titrasi', 'thrombo', 'antiaritmia', 'calculator'];
+            tabButtons.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                btn.className = "flex flex-col items-center justify-center py-2 text-gray-400 hover:text-white transition-all duration-300 active:scale-95 border-b-2 border-transparent text-[10px] font-bold";
+            });
+
+            // Show active tab and set active color
+            document.getElementById(`tab-content-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-${tab}`).className = "flex flex-col items-center justify-center py-2 text-indigo-400 font-extrabold transition-all duration-300 active:scale-95 border-b-2 border-indigo-500 bg-indigo-500/5 text-[10px] tracking-wide shadow-[0_0_12px_rgba(99,102,241,0.05)]";
+            
+            // Sub-init
+            if (tab === 'titrasi') {
+                updateTitrationUI();
+            } else if (tab === 'thrombo') {
+                updateThromboUI();
+            } else if (tab === 'antiaritmia') {
+                updateAntiaritmiaUI();
+            } else if (tab === 'calculator') {
+                calculateMAP();
+                calculateQTc();
+                calculateGFR();
+            }
+            
+            // Scroll container to top
+            document.getElementById('main-content-scroll').scrollTop = 0;
+            
+            lucide.createIcons();
+            applyGlobalLockState(); 
+        }
+
+        // SUBTAB FOR TITRASI
+        function switchSubTab(sub) {
+            hapticPlay();
+            appState.activeSubTab = sub;
+            
+            const btnVaso = document.getElementById('btn-subtab-vasopressor');
+            const btnVado = document.getElementById('btn-subtab-vasodilator');
+            
+            if (sub === 'vasopressor') {
+                btnVaso.className = "py-2.5 text-[10px] uppercase font-black rounded-xl transition-all duration-300 text-violet-400 bg-violet-500/15 border border-violet-500/30 shadow-[0_0_10px_rgba(139,92,246,0.1)]";
+                btnVado.className = "py-2.5 text-[10px] uppercase font-bold rounded-xl transition-all duration-300 text-gray-500 hover:text-gray-300 border border-transparent";
+            } else {
+                btnVado.className = "py-2.5 text-[10px] uppercase font-black rounded-xl transition-all duration-300 text-lime-400 bg-lime-500/15 border border-lime-500/30 shadow-[0_0_10px_rgba(132,204,22,0.1)]";
+                btnVaso.className = "py-2.5 text-[10px] uppercase font-bold rounded-xl transition-all duration-300 text-gray-500 hover:text-gray-300 border border-transparent";
+            }
+            
+            renderDrugList();
+            updateTitrationUI();
+            lucide.createIcons();
+        }
+
+        // SUBTAB FOR CALCULATOR SUITE
+        function switchSubCalc(calc) {
+            hapticPlay();
+            appState.activeSubCalc = calc;
+            
+            // Hide all sub calc panels
+            document.getElementById('calc-panel-map').classList.add('hidden');
+            document.getElementById('calc-panel-qtc').classList.add('hidden');
+            document.getElementById('calc-panel-gfr').classList.add('hidden');
+            
+            // Reset colors with border border-transparent to prevent layout jumps/glitches
+            const calcs = ['map', 'qtc', 'gfr'];
+            calcs.forEach(c => {
+                const btn = document.getElementById(`btn-subcalc-${c}`);
+                btn.className = "py-2 text-[9px] uppercase font-bold rounded-xl transition-all duration-300 text-gray-400 hover:text-gray-200 border border-transparent";
+            });
+            
+            document.getElementById(`calc-panel-${calc}`).classList.remove('hidden');
+            document.getElementById(`btn-subcalc-${calc}`).className = "py-2 text-[9px] uppercase font-black rounded-xl transition-all duration-300 bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.1)]";
+            
+            lucide.createIcons();
+        }
+
+        // CONCENTRATION MODE TOGGLE
+        function setConcMode(mode) {
+            if (appState.isLocked) return;
+            hapticPlay();
+            appState.concMode = mode;
+            
+            const btnStd = document.getElementById('btn-conc-mode-std');
+            const btnCustom = document.getElementById('btn-conc-mode-custom');
+            const stdUi = document.getElementById('std-concentration-ui');
+            const customUi = document.getElementById('custom-concentration-ui');
+            
+            if (mode === 'standard') {
+                btnStd.className = "px-3 py-1 text-[9px] font-black rounded-lg transition-all duration-300 bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.1)]";
+                btnCustom.className = "px-3 py-1 text-[9px] font-bold rounded-lg transition-all duration-300 text-gray-500 hover:text-gray-300 bg-transparent border border-transparent";
+                stdUi.classList.remove('hidden');
+                customUi.classList.add('hidden');
+            } else {
+                btnCustom.className = "px-3 py-1 text-[9px] font-black rounded-lg transition-all duration-300 bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.1)]";
+                btnStd.className = "px-3 py-1 text-[9px] font-bold rounded-lg transition-all duration-300 text-gray-500 hover:text-gray-300 bg-transparent border border-transparent";
+                stdUi.classList.add('hidden');
+                customUi.classList.remove('hidden');
+                
+                // Initialize custom fields based on current selected drug
+                const st = getActiveState();
+                const drug = DRUGS[st.selectedDrugId];
+                document.getElementById('custom-drug-amount').value = drug.baseAmount * st.ampoules;
+                document.getElementById('custom-diluent-volume').value = st.volume;
+                document.getElementById('custom-mass-unit').textContent = drug.baseUnit;
+                
+                st.customAmount = drug.baseAmount * st.ampoules;
+                st.customVolume = st.volume;
+            }
+        }
+
+        function updateCustomConcentration() {
+            if (appState.isLocked) return;
+            const st = getActiveState();
+            const amt = parseFloat(document.getElementById('custom-drug-amount').value) || 0;
+            const vol = parseFloat(document.getElementById('custom-diluent-volume').value) || 1;
+            
+            st.customAmount = amt;
+            st.customVolume = vol;
+            updateTitrationUI();
+        }
+
+        function toggleLock() {
+            hapticPlay(); 
+            appState.isLocked = !appState.isLocked;
+            const panels = document.querySelectorAll('.locked-overlay');
+            const icon = document.getElementById('lock-icon');
+            const btn = document.getElementById('btn-lock');
+
+            if (appState.isLocked) {
+                panels.forEach(p => p.parentElement.classList.add('is-locked')); 
+                icon.setAttribute('data-lucide', 'lock'); 
+                btn.className = "text-rose-400 transition-all duration-300 p-2.5 bg-rose-500/10 rounded-xl border border-rose-500/30 active:scale-95 shadow-md";
+            } else {
+                panels.forEach(p => p.parentElement.classList.remove('is-locked')); 
+                icon.setAttribute('data-lucide', 'unlock'); 
+                btn.className = "text-gray-400 hover:text-white transition-all duration-300 p-2.5 bg-[#0c1220]/80 rounded-xl border border-white/5 active:scale-95 hover:bg-[#141c2f] shadow-md";
+            }
+            applyGlobalLockState();
+            lucide.createIcons();
+        }
+
+        // DRUG TITRATION UI LOGIC
+        function handleDrugChange(drugId) { 
+            if(appState.isLocked) return;
+            hapticPlay(); 
+            const st = getActiveState(); 
+            st.selectedDrugId = drugId; 
+            st.dose = DRUGS[drugId].defaultDose; 
+            
+            if (appState.concMode === 'custom') {
+                const drug = DRUGS[drugId];
+                document.getElementById('custom-drug-amount').value = drug.baseAmount * st.ampoules;
+                document.getElementById('custom-mass-unit').textContent = drug.baseUnit;
+                st.customAmount = drug.baseAmount * st.ampoules;
+            }
+            
+            renderDrugList(); 
+            updateTitrationUI(); 
+        }
+
+        function toggleNicardipine(targetId) {
+            if(appState.isLocked) return;
+            hapticPlay();
+            const st = getActiveState();
+            if(st.selectedDrugId !== targetId) {
+                st.selectedDrugId = targetId;
+                st.dose = DRUGS[targetId].defaultDose;
+                updateTitrationUI();
+            }
+        }
+
+        function setVolume(v) { if(appState.isLocked) return; hapticPlay(); getActiveState().volume = v; updateTitrationUI(); }
+        function setAmpoules(a) { if(appState.isLocked) return; hapticPlay(); getActiveState().ampoules = a; updateTitrationUI(); }
+        
+        function setWeightPreset(w) {
+            if(appState.isLocked) return;
+            hapticPlay();
+            const st = getActiveState();
+            st.weight = w;
+            updateTitrationUI();
+        }
+
+        function adjustWeight(delta) { 
+            if(appState.isLocked) return; 
+            hapticPlay(); 
+            const st = getActiveState(); 
+            const newVal = st.weight + delta; 
+            if (newVal >= 30 && newVal <= 150) { st.weight = newVal; updateTitrationUI(); } 
+        }
+        function updateWeightFromSlider(val) { 
+            if(appState.isLocked) {
+                document.getElementById("weight-slider").value = getActiveState().weight;
+                return;
+            }
+            getActiveState().weight = parseFloat(val); updateTitrationUI(); 
+        }
+        
+        function adjustDose(delta) { 
+            if(appState.isLocked) return; 
+            hapticPlay(); 
+            const st = getActiveState(); 
+            const drug = DRUGS[st.selectedDrugId]; 
+            let newVal = parseFloat((st.dose + (drug.step * delta)).toFixed(2)); 
+            if (newVal >= drug.min && newVal <= drug.max) { st.dose = newVal; updateTitrationUI(); } 
+        }
+        function updateDoseFromSlider(val) { 
+            if(appState.isLocked) {
+                document.getElementById("dose-slider").value = getActiveState().dose;
+                return;
+            }
+            getActiveState().dose = parseFloat(val); updateTitrationUI(); 
+        }
+
+        function renderDrugList() {
+            const container = document.getElementById("drug-buttons"); 
+            container.innerHTML = "";
+            const st = getActiveState();
+            
+            Object.values(DRUGS).filter(d => d.category === appState.activeSubTab && !d.hidden).forEach(drug => {
+                const isSelected = st.selectedDrugId === drug.id || (st.selectedDrugId === 'nicardipine_wt' && drug.id === 'nicardipine');
+                const btn = document.createElement("button");
+                btn.disabled = appState.isLocked; 
+                btn.className = `p-3 rounded-2xl text-left transition-all duration-300 border active:scale-95 flex flex-col justify-between h-[74px] ${isSelected ? drug.bg + ' ' + drug.border + ' shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-t-[3px]' : 'bg-[#0c1220]/60 border-white/5 hover:bg-[#141c2f]/80 hover:border-white/10'}`;
+                btn.onclick = () => handleDrugChange(drug.id);
+                btn.innerHTML = `
+                    <div class="flex items-center justify-between w-full">
+                        <span class="text-xs font-extrabold leading-tight ${isSelected ? drug.color : 'text-gray-300'}">${drug.name}</span>
+                        <span class="w-1.5 h-1.5 rounded-full ${isSelected ? 'animate-pulse' : 'bg-transparent'}" style="background-color: currentColor"></span>
+                    </div>
+                    <span class="text-[9px] font-bold ${isSelected ? 'text-white/90' : 'text-gray-500'}">${drug.baseAmount} ${drug.baseUnit}/Amp</span>
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        function updateTitrationUI() {
+            const st = getActiveState(); 
+            const drug = DRUGS[st.selectedDrugId];
+            
+            // Handle unit toggle visibility for Nicardipine
+            const toggleContainer = document.getElementById('unit-toggle-container');
+            if (st.selectedDrugId.startsWith('nicardipine')) {
+                toggleContainer.classList.remove('hidden');
+                toggleContainer.classList.add('flex');
+                if (st.selectedDrugId === 'nicardipine') {
+                    document.getElementById('btn-mode-mgjam').className = "px-3 py-1 text-[9px] rounded-lg font-black transition-all bg-lime-500/15 text-lime-400 border border-lime-500/30 shadow-[0_0_10px_rgba(132,204,22,0.1)]";
+                    document.getElementById('btn-mode-mcgkg').className = "px-3 py-1 text-[9px] rounded-lg font-bold transition-all text-gray-500 hover:text-gray-300 bg-transparent border border-transparent";
+                } else {
+                    document.getElementById('btn-mode-mcgkg').className = "px-3 py-1 text-[9px] rounded-lg font-black transition-all bg-lime-500/15 text-lime-400 border border-lime-500/30 shadow-[0_0_10px_rgba(132,204,22,0.1)]";
+                    document.getElementById('btn-mode-mgjam').className = "px-3 py-1 text-[9px] rounded-lg font-bold transition-all text-gray-500 hover:text-gray-300 bg-transparent border border-transparent";
+                }
+            } else {
+                toggleContainer.classList.add('hidden');
+                toggleContainer.classList.remove('flex');
+            }
+
+            // Calculations
+            let conc;
+            let badgeText = "";
+            
+            if (appState.concMode === 'standard') {
+                let totalBase = drug.baseAmount * st.ampoules;
+                let totalMcg = drug.inputUnit.includes("mcg") ? totalBase * 1000 : totalBase;
+                conc = totalMcg / st.volume;
+                
+                badgeText = drug.baseUnit === "IU" 
+                    ? (totalBase / st.volume).toFixed(2) + " IU/cc" 
+                    : drug.inputUnit.includes("mcg") 
+                        ? ((totalBase * 1000 / st.volume) >= 1000 ? ((totalBase * 1000 / st.volume) / 1000).toFixed(1) + " mg/cc" : Math.round(totalBase * 1000 / st.volume) + " mcg/cc") 
+                        : (totalBase / st.volume).toFixed(1) + " mg/cc";
+            } else {
+                // Custom concentration mode
+                let totalBase = st.customAmount;
+                let totalMcg = drug.inputUnit.includes("mcg") ? totalBase * 1000 : totalBase;
+                conc = totalMcg / st.customVolume;
+                
+                badgeText = drug.baseUnit === "IU" 
+                    ? (totalBase / st.customVolume).toFixed(2) + " IU/cc" 
+                    : drug.inputUnit.includes("mcg") 
+                        ? ((totalBase * 1000 / st.customVolume) >= 1000 ? ((totalBase * 1000 / st.customVolume) / 1000).toFixed(1) + " mg/cc" : Math.round(totalBase * 1000 / st.customVolume) + " mcg/cc") 
+                        : (totalBase / st.customVolume).toFixed(1) + " mg/cc";
+            }
+            
+            document.getElementById('concentration-badge').textContent = badgeText;
+            
+            // Rate = Dose -> cc/hour
+            let currentRate = drug.inputUnit.includes("/jam") 
+                ? (drug.weightBased ? (st.dose * st.weight) / conc : st.dose / conc) 
+                : (drug.weightBased ? (st.dose * st.weight * 60) / conc : (st.dose * 60) / conc);
+            
+            // Update UI components
+            document.getElementById("btn-amp-1").className = `px-3 py-1 text-[10px] rounded-lg font-bold transition-all ${st.ampoules === 1 ? drug.bg + ' ' + drug.color + ' border border-' + drug.color.split('-')[1] + '-500/30 shadow-[0_0_10px_rgba(99,102,241,0.1)]' : 'text-gray-500 bg-transparent border border-transparent hover:text-gray-300'}`;
+            document.getElementById("btn-amp-2").className = `px-3 py-1 text-[10px] rounded-lg font-bold transition-all ${st.ampoules === 2 ? drug.bg + ' ' + drug.color + ' border border-' + drug.color.split('-')[1] + '-500/30 shadow-[0_0_10px_rgba(99,102,241,0.1)]' : 'text-gray-500 bg-transparent border border-transparent hover:text-gray-300'}`;
+            
+            [20, 50, 100, 500].forEach(v => { 
+                document.getElementById(`btn-vol-${v}`).className = `flex flex-col items-center justify-center py-2.5 px-1.5 rounded-xl border transition-all duration-300 active:scale-95 ${st.volume === v ? drug.bg + ' border-' + drug.color.split('-')[1] + '-500/60 border-t-[3px] ' + drug.color + ' shadow-[0_0_12px_rgba(99,102,241,0.1)]' : 'bg-[#0c1220]/50 border-white/5 text-gray-500 hover:text-gray-300 hover:bg-[#141c2f]/50'}`; 
+            });
+            
+            document.getElementById("weight-section").style.display = drug.weightBased ? "block" : "none";
+            document.getElementById("weight-value").textContent = st.weight; 
+            document.getElementById("weight-slider").value = st.weight;
+            checkWeightWarning('weight-value-container', st.weight);
+            
+            const decimals = drug.step < 0.1 ? 2 : drug.step < 1 ? 1 : 0;
+            document.getElementById("dose-value").textContent = st.dose.toFixed(decimals); 
+            document.getElementById("dose-unit").textContent = drug.inputUnit;
+            
+            const slider = document.getElementById("dose-slider"); 
+            slider.min = drug.min; 
+            slider.max = drug.max; 
+            slider.step = drug.step; 
+            slider.value = st.dose;
+            
+            document.getElementById("dose-value").className = `text-4xl font-black drop-shadow-md ${drug.color}`;
+            slider.className = `w-full cursor-pointer ${drug.color}`;
+            
+            document.querySelectorAll(".dose-bg-color").forEach(el => { 
+                el.className = `w-12 h-12 rounded-full flex items-center justify-center active:scale-90 hover:scale-105 transition-all duration-300 shrink-0 dose-bg-color dose-text-color shadow-lg ${drug.bg} ${drug.color} border border-${drug.color.split('-')[1]}-500/30 shadow-[0_0_15px_rgba(99,102,241,0.1)]`; 
+            });
+            
+            // Populating Clinical Guidelines Note Card
+            document.getElementById("clinical-notes-content").innerHTML = drug.notes || "Belum ada catatan klinis spesifik untuk obat ini.";
+            
+            // High Dose warnings
+            const severity = (st.dose - drug.min) / (drug.max - drug.min);
+            const ratePanel = document.getElementById("rate-panel");
+            const rateValue = document.getElementById("rate-value");
+            const rateIcon = document.getElementById("rate-icon");
+            
+            ratePanel.className = "bg-gradient-to-br from-[#0c1220] to-[#060a13] border border-white/5 rounded-3xl p-5 flex flex-col items-center justify-center relative transition-all duration-300 shadow-[inset_0_2px_4px_rgba(255,255,255,0.05)]";
+            if (severity > 0.8) {
+                ratePanel.classList.add("critical-alert-glow", "border-rose-500/40");
+                rateValue.className = "text-5xl font-black tracking-tighter text-rose-400 drop-shadow-[0_0_10px_rgba(244,63,94,0.4)]";
+                rateIcon.className = "w-4 h-4 text-rose-400 animate-bounce";
+            } else if (severity > 0.5) {
+                ratePanel.classList.add("shadow-[0_0_20px_rgba(245,158,11,0.15)]", "border-amber-500/30");
+                rateValue.className = "text-5xl font-black tracking-tighter text-amber-400 drop-shadow-[0_0_10px_rgba(245,158,11,0.3)]";
+                rateIcon.className = "w-4 h-4 text-amber-400 animate-pulse";
+            } else {
+                rateValue.className = "text-5xl font-black text-emerald-400 tracking-tighter drop-shadow-[0_0_10px_rgba(52,211,153,0.3)]";
+                rateIcon.className = "w-4 h-4 text-emerald-400";
+            }
+            
+            rateValue.textContent = currentRate.toFixed(1);
+            
+            // Rendering Auto-Titration Map
+            const tbody = document.getElementById("titration-table-body"); 
+            document.getElementById("table-dose-unit").textContent = `(${drug.inputUnit})`; 
+            let html = "";
+            for (let i = 4; i >= -4; i--) {
+                let iterDose = parseFloat((st.dose + (i * drug.step)).toFixed(decimals));
+                if (iterDose >= drug.min && iterDose <= drug.max) {
+                    let iterRate = drug.inputUnit.includes("/jam") 
+                        ? (drug.weightBased ? (iterDose * st.weight) / conc : iterDose / conc) 
+                        : (drug.weightBased ? (iterDose * st.weight * 60) / conc : (iterDose * 60) / conc);
+                    let isTarget = i === 0;
+                    
+                    html += `
+                        <tr class="${isTarget ? 'bg-indigo-500/15 font-black border-l-[4px] border-indigo-500 text-indigo-300' : 'text-gray-400 hover:text-gray-200 border-l-[4px] border-transparent'} transition-colors duration-200">
+                            <td class="px-4 py-2.5 ${isTarget ? 'text-indigo-300 font-extrabold' : ''} text-xs flex items-center">
+                                <span class="inline-block w-1.5 h-1.5 rounded-full mr-2 ${isTarget ? 'bg-indigo-500 animate-ping' : 'bg-transparent'}"></span>
+                                ${iterDose.toFixed(decimals)} ${isTarget ? ' (TARGET)' : ''}
+                            </td>
+                            <td class="px-4 py-2.5 text-right ${isTarget ? 'text-white font-black text-sm' : ''} text-xs">${iterRate.toFixed(1)} <span class="text-[9px] text-gray-500 font-normal">cc/jm</span></td>
+                        </tr>
+                    `;
+                }
+            } 
+            tbody.innerHTML = html;
+
+            applyGlobalLockState(); 
+        }
+
+        // EMERGENCY TIMER CONTROLLER
+        let timerIntervals = {};
+        function toggleEmergencyTimer(timerId, durationSeconds) {
+            hapticPlay();
+            const btn = document.getElementById(`btn-timer-${timerId}`);
+            const display = document.getElementById(`display-timer-${timerId}`);
+            
+            // If running, pause/stop it
+            if (timerIntervals[timerId]) {
+                clearInterval(timerIntervals[timerId].interval);
+                delete timerIntervals[timerId];
+                btn.innerHTML = `<i data-lucide="play" class="w-3.5 h-3.5 mr-1"></i> Mulai`;
+                btn.className = "flex items-center bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-3 py-1.5 rounded-lg text-[10px] font-black active:scale-95 hover:bg-indigo-500/20 transition-all duration-200";
+                lucide.createIcons();
+                return;
+            }
+            
+            let timeLeft = durationSeconds;
+            // Parse custom input time if present
+            const customTimerInput = document.getElementById(`input-timer-${timerId}`);
+            if (customTimerInput) {
+                timeLeft = parseInt(customTimerInput.value) * 60 || durationSeconds;
+            }
+            
+            btn.innerHTML = `<i data-lucide="square" class="w-3.5 h-3.5 mr-1"></i> Stop`;
+            btn.className = "flex items-center bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-lg text-[10px] font-black active:scale-95 hover:bg-rose-500/30 transition-all duration-200";
+            lucide.createIcons();
+            
+            function updateDisplay() {
+                const h = Math.floor(timeLeft / 3600);
+                const m = Math.floor((timeLeft % 3600) / 60);
+                const s = timeLeft % 60;
+                display.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+            }
+            
+            updateDisplay();
+            
+            timerIntervals[timerId] = {
+                timeLeft: timeLeft,
+                interval: setInterval(() => {
+                    timeLeft--;
+                    if (timeLeft <= 0) {
+                        clearInterval(timerIntervals[timerId].interval);
+                        delete timerIntervals[timerId];
+                        display.textContent = "00:00:00";
+                        display.className = "font-mono font-bold text-rose-500 animate-pulse text-lg";
+                        btn.innerHTML = `<i data-lucide="rotate-ccw" class="w-3.5 h-3.5 mr-1"></i> Ulang`;
+                        btn.className = "flex items-center bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-lg text-[10px] font-black active:scale-95 hover:bg-amber-500/30 transition-all duration-200";
+                        lucide.createIcons();
+                        triggerBeepAlert();
+                    } else {
+                        updateDisplay();
+                    }
+                }, 1000)
+            };
+        }
+
+        function triggerBeepAlert() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
+                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.start();
+                setTimeout(() => {
+                    oscillator.stop();
+                    audioCtx.close();
+                }, 1200);
+            } catch (e) {
+                console.error("Audio error: ", e);
+            }
+        }
+
+        function renderPhaseCard(title, time, icon, doseText, rateText, colorClass, highlight, timerId, defaultMinutes) {
+            const colorName = colorClass.split('-')[1];
+            const hasTimer = defaultMinutes > 0;
+            const timerHtml = hasTimer ? `
+                <div class="mt-3.5 pt-3 border-t border-white/5 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span id="display-timer-${timerId}" class="font-mono text-gray-300 font-black text-sm bg-black/60 px-2.5 py-1 rounded-lg border border-white/5 shadow-inner">00:00:00</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="input-timer-${timerId}" value="${defaultMinutes}" min="1" max="1440" class="w-12 bg-black/60 border border-white/10 rounded-lg px-2 py-1 text-xs text-center text-white font-extrabold focus:outline-none focus:border-indigo-500" />
+                        <span class="text-[9px] text-gray-500 font-extrabold">mnt</span>
+                        <button id="btn-timer-${timerId}" onclick="toggleEmergencyTimer('${timerId}', ${defaultMinutes * 60})" class="flex items-center bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-3 py-1.5 rounded-lg text-[10px] font-black active:scale-95 hover:bg-indigo-500/20 transition-all duration-200">
+                            <i data-lucide="play" class="w-3 h-3 mr-0.5"></i> Mulai
+                        </button>
+                    </div>
+                </div>
+            ` : '';
+
+            return `
+                <div class="border ${highlight ? 'border-' + colorName + '-500/60 bg-' + colorName + '-500/10 shadow-[0_0_20px_rgba(244,63,94,0.08)] border-l-[5px]' : 'border-white/5 bg-[#0a0f1d]/60 hover:border-white/10 hover:bg-[#101726]/60'} rounded-2xl p-4.5 shadow-sm relative overflow-hidden transition-all duration-300">
+                    <div class="absolute top-0 right-0 p-2 opacity-5"><i data-lucide="${icon}" class="w-16 h-16 text-white"></i></div>
+                    <div class="flex items-center gap-2.5 mb-2.5">
+                        <div class="w-7 h-7 rounded-full bg-black/40 flex items-center justify-center border border-white/5"><i data-lucide="${icon}" class="w-3.5 h-3.5 ${colorClass}"></i></div>
+                        <h4 class="font-extrabold text-gray-200 text-xs tracking-wide">${title}</h4>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-[9px] text-gray-500 uppercase font-extrabold tracking-widest">Volume/Dosis</p>
+                            <p class="text-xl font-black ${colorClass}">${doseText}</p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] text-gray-500 uppercase font-extrabold tracking-widest">Syringe Rate</p>
+                            <p class="text-xl font-black text-white">${rateText}</p>
+                        </div>
+                    </div>
+                    <div class="mt-3.5 bg-black/50 rounded-lg py-1 px-2.5 flex items-center gap-1.5 w-max border border-white/5 shadow-inner">
+                        <i data-lucide="clock" class="w-3 h-3 text-gray-400"></i>
+                        <span class="text-[9px] font-extrabold text-gray-300">${time}</span>
+                    </div>
+                    ${timerHtml}
+                </div>
+            `;
+        }
+
+        // THROMBOLYTICS SECTION
+        function selectThrombo(id) { if(appState.isLocked) return; hapticPlay(); appState.thrombo.selectedDrugId = id; renderThromboList(); updateThromboUI(); }
+        
+        function adjustTWeight(delta) { 
+            if(appState.isLocked) return; 
+            hapticPlay(); 
+            const newVal = appState.thrombo.weight + delta; 
+            if (newVal >= 30 && newVal <= 150) { appState.thrombo.weight = newVal; updateThromboUI(); } 
+        }
+        function updateTWeightFromSlider(val) { 
+            if(appState.isLocked) {
+                document.getElementById("t-weight-slider").value = appState.thrombo.weight;
+                return;
+            }
+            appState.thrombo.weight = parseFloat(val); updateThromboUI(); 
+        }
+
+        function renderThromboList() {
+            const container = document.getElementById("thrombo-buttons"); container.innerHTML = "";
+            Object.values(THROMBOLYTICS).forEach(drug => {
+                const isSelected = appState.thrombo.selectedDrugId === drug.id;
+                const btn = document.createElement("button"); 
+                btn.disabled = appState.isLocked;
+                btn.className = `p-3 rounded-2xl text-left transition-all duration-300 border active:scale-95 flex flex-col justify-between ${isSelected ? drug.bg + ' ' + drug.border + ' shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-t-[3px]' : 'bg-[#0c1220]/60 border-white/5 hover:bg-[#141c2f]/80 hover:border-white/10'}`;
+                btn.onclick = () => selectThrombo(drug.id); 
+                btn.innerHTML = `
+                    <div class="flex items-center justify-between w-full">
+                        <span class="block text-xs font-extrabold ${isSelected ? drug.color : 'text-white'}">${drug.name}</span>
+                        <span class="w-1.5 h-1.5 rounded-full ${isSelected ? 'animate-pulse' : 'bg-transparent'}" style="background-color: currentColor"></span>
+                    </div>
+                    <span class="block text-[9px] mt-1 leading-tight ${isSelected ? 'text-gray-300' : 'text-gray-500'}">${drug.desc}</span>
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        function updateThromboUI() {
+            const w = appState.thrombo.weight; const drugId = appState.thrombo.selectedDrugId;
+            document.getElementById("t-weight-value").textContent = w; 
+            document.getElementById("t-weight-slider").value = w;
+            checkWeightWarning('t-weight-value-container', w);
+
+            const container = document.getElementById("thrombo-phases"); let html = ""; const infoText = document.getElementById("t-drug-info");
+            
+            if (drugId === "alteplase_stemi") {
+                infoText.innerHTML = "Siapkan Alteplase konsentrasi <b>1 mg/cc</b>.<br><span class='text-gray-300 block mt-1'><b>Bolus:</b> 15 mg (IV). <b>Infus:</b> 0.75 mg/kg (Maks 50 mg) dlm 30', lanjut 0.5 mg/kg (Maks 35 mg) dlm 60'.</span>";
+                html += renderPhaseCard("Dosis Bolus IV", "1 - 2 Menit", "syringe", "15 cc", "Bolus Manual", "text-rose-400", true, "alt_stemi_b", 2);
+                let dose1 = Math.min(0.75 * w, 50); html += renderPhaseCard("Infus Kontinu Awal", "Selama 30 Menit", "play", `${dose1.toFixed(1)} cc`, `${(dose1 * 2).toFixed(1)} cc/jam`, "text-rose-400", false, "alt_stemi_d1", 30);
+                let dose2 = Math.min(0.5 * w, 35); html += renderPhaseCard("Infus Kontinu Lanjutan", "Selama 60 Menit", "skip-forward", `${dose2.toFixed(1)} cc`, `${dose2.toFixed(1)} cc/jam`, "text-rose-400", false, "alt_stemi_d2", 60);
+            } else if (drugId === "alteplase_stroke") {
+                let totalDose = Math.min(0.9 * w, 90); let bolus = totalDose * 0.1; let drip = totalDose * 0.9;
+                infoText.innerHTML = `Siapkan Alteplase konsentrasi <b>1 mg/cc</b>. Target total 0.9 mg/kgBB.<br><span class='text-gray-300 block mt-1'><b>Bolus:</b> ${bolus.toFixed(1)} mg. <b>Infus:</b> ${drip.toFixed(1)} mg dlm 60'.</span>`;
+                html += renderPhaseCard("Dosis Bolus IV", "Selama 1 Menit", "syringe", `${bolus.toFixed(1)} cc`, "Bolus Manual", "text-blue-400", true, "alt_stroke_b", 1);
+                html += renderPhaseCard("Infus Kontinu", "Selama 60 Menit", "play", `${drip.toFixed(1)} cc`, `${drip.toFixed(1)} cc/jam`, "text-blue-400", false, "alt_stroke_d", 60);
+            } else if (drugId === "alteplase_pe") {
+                let totalDose = 100; let bolus = 10; let drip = 90;
+                infoText.innerHTML = `Target total <b class='text-emerald-400'>100 mg (Flat Dose)</b>.<br><span class='text-gray-300 block mt-1'><b>Bolus:</b> ${bolus} mg IV. <b>Infus:</b> ${drip} mg dlm 2 Jam.<br>(Pertimbangkan <span class='italic text-gray-400'>weight-based 1.5 mg/kg</span> jika BB < 65 kg).</span>`;
+                html += renderPhaseCard("Dosis Bolus IV", "1-2 Menit", "syringe", `${bolus} cc`, "Bolus Manual", "text-emerald-400", true, "alt_pe_b", 2);
+                html += renderPhaseCard("Infus Kontinu", "Selama 2 Jam", "play", `${drip} cc`, `${(drip/2).toFixed(1)} cc/jam`, "text-emerald-400", false, "alt_pe_d", 120);
+            } else if (drugId === "streptokinase") {
+                infoText.innerHTML = "Larutkan 1.5 Juta IU dlm 100 cc NaCl 0.9%. Habis dlm 60 Menit.";
+                html += renderPhaseCard("Infus Kontinu", "Selama 60 Menit", "droplets", "100 cc", "100 cc/jam", "text-orange-400", true, "stk_stemi", 60);
+            } else if (drugId === "streptokinase_pe") {
+                infoText.innerHTML = "Larutkan 1.5 Juta IU dlm 100 cc NaCl 0.9%. Habis dlm 2 Jam.";
+                html += renderPhaseCard("Infus Kontinu", "Selama 2 Jam", "droplets", "100 cc", "50 cc/jam", "text-amber-400", true, "stk_pe", 120);
+            } else if (drugId === "heparin") {
+                let bolus = Math.min(60 * w, 4000); let drip = Math.min(12 * w, 1000); let hepConc = 50; let dripRate = drip / hepConc;
+                infoText.innerHTML = `Asumsi Konsentrasi RS: <b class='text-teal-400'>25.000 IU dlm 500 cc (50 U/cc)</b>.<br><span class='text-gray-300 block mt-1'><b>Bolus (60 U/kg):</b> Maks 4000 U. <b>Infus (12 U/kg/jam):</b> Maks 1000 U/jam. Cek aPTT rutin.</span>`;
+                html += renderPhaseCard("Dosis Bolus IV", "Langsung", "syringe", `${bolus.toFixed(0)} U`, "Bolus Manual", "text-teal-400", true, "hep_b", 1);
+                html += renderPhaseCard("Infus Kontinu", "Sesuai Target aPTT", "play", `${drip.toFixed(0)} U/jam`, `${dripRate.toFixed(1)} cc/jam`, "text-teal-400", false, "hep_d", 60);
+            } 
+            container.innerHTML = html; lucide.createIcons();
+            applyGlobalLockState();
+        }
+
+        // ANTIARITHMIA SECTION
+        function selectAntiaritmia(id) { if(appState.isLocked) return; hapticPlay(); appState.antiaritmia.selectedDrugId = id; renderAntiaritmiaList(); updateAntiaritmiaUI(); }
+        
+        function adjustAWeight(delta) { 
+            if(appState.isLocked) return; 
+            hapticPlay(); 
+            const newVal = appState.antiaritmia.weight + delta; 
+            if (newVal >= 30 && newVal <= 150) { appState.antiaritmia.weight = newVal; updateAntiaritmiaUI(); } 
+        }
+        function updateAWeightFromSlider(val) { 
+            if(appState.isLocked) {
+                document.getElementById("a-weight-slider").value = appState.antiaritmia.weight;
+                return;
+            }
+            appState.antiaritmia.weight = parseFloat(val); updateAntiaritmiaUI(); 
+        }
+
+        function renderAntiaritmiaList() {
+            const container = document.getElementById("antiaritmia-buttons"); container.innerHTML = "";
+            Object.values(ANTIARITMIA).forEach(drug => {
+                const isSelected = appState.antiaritmia.selectedDrugId === drug.id;
+                const btn = document.createElement("button"); 
+                btn.disabled = appState.isLocked; 
+                btn.className = `p-3 rounded-2xl text-left transition-all duration-300 border active:scale-95 flex flex-col justify-between ${isSelected ? drug.bg + ' ' + drug.border + ' shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-t-[3px]' : 'bg-[#0c1220]/60 border-white/5 hover:bg-[#141c2f]/80 hover:border-white/10'}`;
+                btn.onclick = () => selectAntiaritmia(drug.id); 
+                btn.innerHTML = `
+                    <div class="flex items-center justify-between w-full">
+                        <span class="block text-xs font-extrabold ${isSelected ? drug.color : 'text-white'}">${drug.name}</span>
+                        <span class="w-1.5 h-1.5 rounded-full ${isSelected ? 'animate-pulse' : 'bg-transparent'}" style="background-color: currentColor"></span>
+                    </div>
+                    <span class="block text-[9px] mt-1 leading-tight ${isSelected ? 'text-gray-300' : 'text-gray-500'}">${drug.desc}</span>
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        function updateAntiaritmiaUI() {
+            const w = appState.antiaritmia.weight; const drugId = appState.antiaritmia.selectedDrugId;
+            document.getElementById("a-weight-value").textContent = w; 
+            document.getElementById("a-weight-slider").value = w;
+            checkWeightWarning('a-weight-value-container', w);
+
+            const container = document.getElementById("antiaritmia-phases"); let html = ""; const infoText = document.getElementById("a-drug-info");
+            
+            if (drugId === "amiodarone") {
+                let amioConc = 900 / 50; let rate1 = 60 / amioConc; let rate2 = 30 / amioConc;
+                infoText.innerHTML = "Oplos <b>900 mg</b> (6 Amp) dlm <b>50 cc D5%</b> (18 mg/cc). <b class='text-yellow-400'>Wajib pelarut D5%, JANGAN NaCl 0.9%</b>.<br><span class='text-rose-400 block mt-1 font-bold text-[9px]'>Kontraindikasi: Syok Kardiogenik, AV Block derajat 2-3.</span>";
+                html += renderPhaseCard("Dosis Bolus", "10-15 Menit", "syringe", "150 mg", "Infus Bebas (D5%)", "text-purple-400", true, "amio_b", 15);
+                html += renderPhaseCard("Infus Awal (1 mg/menit)", "Selama 6 Jam", "play", "360 mg", `${rate1.toFixed(1)} cc/jam`, "text-purple-400", false, "amio_d1", 360);
+                html += renderPhaseCard("Infus Lanjut (0.5 mg/menit)", "Selama 18 Jam", "skip-forward", "540 mg", `${rate2.toFixed(1)} cc/jam`, "text-purple-400", false, "amio_d2", 1080);
+            } else if (drugId === "lidocaine") {
+                let bolus = 1 * w; let lidocaineConc = 1000 / 50; let rateMin = 60 / lidocaineConc; let rateMax = 240 / lidocaineConc;
+                infoText.innerHTML = "Oplos 1000 mg Lidocaine dlm 50 cc. (20 mg/cc).";
+                html += renderPhaseCard("Dosis Bolus (1 mg/kg)", "2-3 Menit", "syringe", `${bolus.toFixed(0)} mg`, "Bolus Manual", "text-pink-400", true, "lido_b", 3);
+                html += renderPhaseCard("Infus Kontinu (1-4 mg/mnt)", "Pemeliharaan", "play", "1 - 4 mg/mnt", `${rateMin.toFixed(0)} - ${rateMax.toFixed(0)} cc/jam`, "text-pink-400", false, "lido_d", 60);
+            } else if (drugId === "diltiazem") {
+                let bolus1 = 0.25 * w; let bolus2 = 0.35 * w;
+                infoText.innerHTML = "Oplos 50 mg dlm 50 cc. (1 mg/cc). Maks 15 mg/jam dlm 24 jam.<br><span class='text-rose-400 block mt-1 font-bold text-[9px]'>Kontraindikasi: WPW syndrome, HFrEF/Syok, AV Block 2-3.</span>";
+                html += renderPhaseCard("Bolus Awal (0.25 mg/kg)", "2 Menit", "syringe", `${bolus1.toFixed(1)} mg`, "Bolus Manual", "text-teal-400", true, "dil_b1", 2);
+                html += renderPhaseCard("Bolus Ekstra (0.35 mg/kg)", "Tunggu 15 mnt, jika target gagal", "syringe", `${bolus2.toFixed(1)} mg`, "Bolus Manual", "text-teal-400", false, "dil_b2", 15);
+                html += renderPhaseCard("Infus Kontinu (5-15 mg/jam)", "Pemeliharaan", "play", "5 - 15 mg/jam", "5 - 15 cc/jam", "text-teal-400", false, "dil_d", 60);
+            } else if (drugId === "verapamil") {
+                infoText.innerHTML = "<b>Kontraindikasi:</b> WPW syndrome, HFrEF, atau kombinasi Beta-Blocker IV. Awas bradikardi/hipotensi berat!";
+                html += renderPhaseCard("Bolus Awal", "2-3 Menit", "syringe", "2.5 - 5 mg", "Bolus Manual", "text-lime-400", true, "vera_b1", 3);
+                html += renderPhaseCard("Dosis Ulangan", "Tunggu 15-30 Menit", "syringe", "5 - 10 mg", "Bolus Manual", "text-lime-400", false, "vera_b2", 20);
+            } 
+            container.innerHTML = html; lucide.createIcons();
+            applyGlobalLockState();
+        }
+
+        // CARDIOLOGY CALCULATORS LOGIC
+        function calculateMAP() {
+            const sbp = parseInt(document.getElementById('slider-sbp').value);
+            const dbp = parseInt(document.getElementById('slider-dbp').value);
+            
+            document.getElementById('val-sbp').textContent = sbp;
+            document.getElementById('val-dbp').textContent = dbp;
+            
+            const map = (sbp + 2 * dbp) / 3;
+            document.getElementById('output-map-value').textContent = map.toFixed(1);
+            
+            const status = document.getElementById('output-map-status');
+            if (map < 65) {
+                status.textContent = "⚠️ Hipoperfusi (Target >= 65 mmHg)";
+                status.className = "mt-4 px-4 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-rose-500/10 text-rose-400 border border-rose-500/20 animate-pulse";
+            } else {
+                status.textContent = "✅ Perfusi Adekuat";
+                status.className = "mt-4 px-4 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+            }
+        }
+
+        function setQTcGender(g) {
+            hapticPlay();
+            appState.qtcGender = g;
+            
+            const btnM = document.getElementById('btn-qtc-gender-m');
+            const btnF = document.getElementById('btn-qtc-gender-f');
+            
+            if (g === 'male') {
+                btnM.className = "px-3 py-1 text-[9px] font-black rounded-lg transition-all duration-300 bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.1)]";
+                btnF.className = "px-3 py-1 text-[9px] font-bold rounded-lg transition-all duration-300 text-gray-500 hover:text-gray-300 bg-transparent border border-transparent";
+            } else {
+                btnF.className = "px-3 py-1 text-[9px] font-black rounded-lg transition-all duration-300 bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.1)]";
+                btnM.className = "px-3 py-1 text-[9px] font-bold rounded-lg transition-all duration-300 text-gray-500 hover:text-gray-300 bg-transparent border border-transparent";
+            }
+            calculateQTc();
+        }
+
+        function calculateQTc() {
+            const qt = parseInt(document.getElementById('slider-qt').value);
+            const hr = parseInt(document.getElementById('slider-hr').value);
+            
+            document.getElementById('val-qt').textContent = qt;
+            document.getElementById('val-hr').textContent = hr;
+            
+            // Bazett: QTc = QT / sqrt(60 / HR)
+            const qtc = qt / Math.sqrt(60 / hr);
+            document.getElementById('output-qtc-value').textContent = Math.round(qtc);
+            
+            const status = document.getElementById('output-qtc-status');
+            const warning = document.getElementById('output-qtc-warning');
+            
+            const limit = appState.qtcGender === 'male' ? 450 : 460;
+            const borderline = appState.qtcGender === 'male' ? 470 : 480;
+            
+            if (qtc > borderline) {
+                status.textContent = "⚠️ QTc Memanjang (Kritis)";
+                status.className = "mt-4 px-4 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-rose-500/10 text-rose-400 border border-rose-500/20 animate-pulse";
+                warning.classList.remove('hidden');
+            } else if (qtc >= limit) {
+                status.textContent = "⚠️ Borderline";
+                status.className = "mt-4 px-4 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/20";
+                warning.classList.add('hidden');
+            } else {
+                status.textContent = "✅ Normal";
+                status.className = "mt-4 px-4 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                warning.classList.add('hidden');
+            }
+        }
+
+        function setGFRGender(g) {
+            hapticPlay();
+            appState.gfrGender = g;
+            
+            const btnM = document.getElementById('btn-gfr-gender-m');
+            const btnF = document.getElementById('btn-gfr-gender-f');
+            
+            if (g === 'male') {
+                btnM.className = "px-3 py-1 text-[9px] font-black rounded-lg transition-all duration-300 bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.1)]";
+                btnF.className = "px-3 py-1 text-[9px] font-bold rounded-lg transition-all duration-300 text-gray-500 hover:text-gray-300 bg-transparent border border-transparent";
+            } else {
+                btnF.className = "px-3 py-1 text-[9px] font-black rounded-lg transition-all duration-300 bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.1)]";
+                btnM.className = "px-3 py-1 text-[9px] font-bold rounded-lg transition-all duration-300 text-gray-500 hover:text-gray-300 bg-transparent border border-transparent";
+            }
+            calculateGFR();
+        }
+
+        function calculateGFR() {
+            const age = parseInt(document.getElementById('slider-age').value);
+            const w = parseInt(document.getElementById('slider-gfr-weight').value);
+            const creat = parseFloat(document.getElementById('slider-creat').value);
+            
+            document.getElementById('val-age').textContent = age;
+            document.getElementById('val-gfr-weight').textContent = w;
+            document.getElementById('val-creat').textContent = creat.toFixed(1);
+            
+            // Cockcroft-Gault
+            let gfr = ((140 - age) * w) / (72 * creat);
+            if (appState.gfrGender === 'female') {
+                gfr *= 0.85;
+            }
+            
+            document.getElementById('output-gfr-value').textContent = gfr.toFixed(1);
+            
+            const status = document.getElementById('output-gfr-status');
+            const warning = document.getElementById('output-gfr-warning');
+            
+            if (gfr >= 90) {
+                status.textContent = "Stadium 1 (Fungsi Ginjal Normal)";
+                status.className = "mt-4 px-4 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                warning.classList.add('hidden');
+            } else if (gfr >= 60) {
+                status.textContent = "Stadium 2 (Penurunan Ringan)";
+                status.className = "mt-4 px-4 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                warning.classList.add('hidden');
+            } else if (gfr >= 45) {
+                status.textContent = "Stadium 3a (Penurunan Sedang)";
+                status.className = "mt-4 px-4 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/20";
+                warning.classList.remove('hidden');
+                warning.textContent = "⚠️ GFR Sedang: Sesuaikan obat bersihan ginjal.";
+            } else if (gfr >= 30) {
+                status.textContent = "Stadium 3b (Sedang - Berat)";
+                status.className = "mt-4 px-4 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-orange-500/10 text-orange-400 border border-orange-500/20";
+                warning.classList.remove('hidden');
+                warning.textContent = "⚠️ GFR Sedang-Berat: Kurangi dosis obat bersihan ginjal!";
+            } else if (gfr >= 15) {
+                status.textContent = "Stadium 4 (Penurunan Berat)";
+                status.className = "mt-4 px-4 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-rose-500/10 text-rose-400 border border-rose-500/20 animate-pulse";
+                warning.classList.remove('hidden');
+                warning.textContent = "⚠️ GFR Sangat Rendah: Kontraindikasi obat toksik ginjal!";
+            } else {
+                status.textContent = "Stadium 5 (Gagal Ginjal)";
+                status.className = "mt-4 px-4 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-rose-500/20 text-rose-300 border border-rose-500/30 animate-pulse";
+                warning.classList.remove('hidden');
+                warning.textContent = "❌ Gagal Ginjal: Konsultasi nefrologi & evaluasi hemodialisis.";
+            }
+        }
+
+        // PDF GENERATION LOGIC
+        function downloadPDF() {
+            hapticPlay(); 
+            if (appState.activeTab !== 'titrasi') {
+                showToast("Fitur cetak PDF hanya tersedia untuk Mode Titrasi.");
+                return;
+            }
+
+            if (!window.jsPDF) { showToast("Modul PDF sedang dimuat..."); return; }
+            try {
+                const doc = new window.jsPDF(); 
+                const st = getActiveState(); 
+                const drug = DRUGS[st.selectedDrugId];
+                let y = 18;
+                
+                doc.setFontSize(22); doc.setFont(undefined, 'bold'); doc.setTextColor(20, 20, 20); doc.text("VITALDOSE PRO", 14, y);
+                doc.setFontSize(10); doc.setFont(undefined, 'normal'); doc.setTextColor(100, 100, 100); y += 6; doc.text("Advanced Hemodynamic & Reperfusion Suite", 14, y);
+                y += 5; doc.setFontSize(9); doc.text("Developed by Bayushi Eka Putra, MD, FIHA", 14, y);
+                y += 5; doc.setFont(undefined, 'bold'); doc.setTextColor(99, 102, 241); doc.text("PART OF CARDIOLOGYVAULT", 14, y);
+                y += 6; doc.setDrawColor(220, 220, 220); doc.line(14, y, 196, y);
+                y += 12; doc.setFontSize(14); doc.setTextColor(40, 40, 40); doc.setFont(undefined, 'bold'); doc.text(`Protokol Titrasi: ${drug.name}`, 14, y);
+                y += 6; doc.setFontSize(9); doc.setFont(undefined, 'normal'); doc.setTextColor(120, 120, 120);
+                
+                const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                doc.text(`Waktu Cetak: ${dateStr}`, 14, y);
+                y += 6; doc.setDrawColor(200, 200, 200); doc.setFillColor(248, 250, 252); doc.rect(14, y, 182, 26, 'FD');
+                
+                doc.setFontSize(10); doc.setTextColor(40, 40, 40); let boxY = y + 7;
+                const weightText = drug.weightBased ? `${st.weight} kg` : "Standard BB";
+                doc.text(`Berat Badan: ${weightText}`, 18, boxY);
+                
+                if (appState.concMode === 'standard') {
+                    doc.text(`Sediaan Obat: ${drug.baseAmount * st.ampoules} ${drug.baseUnit} (${st.ampoules} Amp)`, 18, boxY + 7);
+                    doc.text(`Volume Pelarut: ${st.volume} cc`, 18, boxY + 14);
+                } else {
+                    doc.text(`Sediaan Obat: ${st.customAmount} ${drug.baseUnit} (Kustom)`, 18, boxY + 7);
+                    doc.text(`Volume Pelarut: ${st.customVolume} cc (Kustom)`, 18, boxY + 14);
+                }
+                
+                doc.setFont(undefined, 'bold'); doc.setTextColor(225, 29, 72);
+                
+                const decimals = drug.step < 0.1 ? 2 : drug.step < 1 ? 1 : 0;
+
+                doc.text("DOSIS TARGET:", 192, boxY, { align: 'right' }); 
+                doc.text(`${st.dose.toFixed(decimals)} ${drug.inputUnit}`, 192, boxY + 7, { align: 'right' });
+                
+                let conc;
+                if (appState.concMode === 'standard') {
+                    let totalBase = drug.baseAmount * st.ampoules;
+                    let totalMcg = drug.inputUnit.includes("mcg") ? totalBase * 1000 : totalBase;
+                    conc = totalMcg / st.volume;
+                } else {
+                    let totalBase = st.customAmount;
+                    let totalMcg = drug.inputUnit.includes("mcg") ? totalBase * 1000 : totalBase;
+                    conc = totalMcg / st.customVolume;
+                }
+                
+                let currentRate = drug.inputUnit.includes("/jam") 
+                    ? (drug.weightBased ? (st.dose * st.weight) / conc : st.dose / conc) 
+                    : (drug.weightBased ? (st.dose * st.weight * 60) / conc : (st.dose * 60) / conc);
+                
+                doc.text(`Rate: ${currentRate.toFixed(1)} cc/jam`, 192, boxY + 14, { align: 'right' });
+                doc.setFont(undefined, 'normal'); y += 34;
+                
+                const tableData = [];
+                for (let i = 15; i >= -15; i--) {
+                    let iterDose = parseFloat((st.dose + (i * drug.step)).toFixed(decimals));
+                    if (iterDose >= drug.min && iterDose <= drug.max) {
+                        let iterRate = drug.inputUnit.includes("/jam") 
+                            ? (drug.weightBased ? (iterDose * st.weight) / conc : iterDose / conc) 
+                            : (drug.weightBased ? (iterDose * st.weight * 60) / conc : (iterDose * 60) / conc);
+                        let isTarget = (i === 0); 
+                        let doseStr = iterDose.toFixed(decimals) + ` ${drug.inputUnit}`; 
+                        if(isTarget) doseStr += "  (TARGET)";
+                        tableData.push([doseStr, iterRate.toFixed(1) + " cc/jam"]);
+                    }
+                }
+                
+                doc.autoTable({
+                    startY: y, head: [['Dosis', 'Syringe Rate']], body: tableData, theme: 'grid',
+                    headStyles: { fillColor: [15, 23, 42], textColor: 255, fontStyle: 'bold', halign: 'center' },
+                    columnStyles: { 0: { halign: 'left' }, 1: { halign: 'right', fontStyle: 'bold' } },
+                    didParseCell: function(data) { 
+                        if (data.row.raw && data.row.raw[0] && data.row.raw[0].includes("(TARGET)")) { 
+                            data.cell.styles.fillColor = [224, 231, 255]; 
+                            data.cell.styles.textColor = [67, 56, 202]; 
+                            data.cell.styles.fontStyle = 'bold'; 
+                        } 
+                    }
+                });
+                
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) { 
+                    doc.setPage(i); 
+                    doc.setFontSize(8); 
+                    doc.setTextColor(150, 150, 150); 
+                    doc.text("DISCLAIMER KLINIS: Panduan ini adalah alat bantu taktis darurat. Keputusan klinis ada pada dokter.", 14, doc.internal.pageSize.height - 15); 
+                    doc.text("Developed by Bayushi Eka Putra, MD, FIHA | CardiologyVault", 14, doc.internal.pageSize.height - 10); 
+                    doc.text(`Hal ${i}/${pageCount}`, doc.internal.pageSize.width - 25, doc.internal.pageSize.height - 10); 
+                }
+                
+                const filename = `Titrasi_${drug.name.replace(/[^a-zA-Z0-9]/g, '_')}_${st.weight}kg.pdf`;
+                doc.save(filename);
+                showToast("PDF Berhasil diunduh.");
+            } catch (err) { console.error(err); showToast("Gagal merender PDF."); }
+        }
+
+        function showToast(message) {
+            const box = document.createElement('div');
+            box.className = "fixed top-4 left-1/2 transform -translate-x-1/2 bg-rose-600 text-white px-4 py-2.5 rounded-xl z-[200] shadow-lg font-bold text-xs transition-opacity duration-300 border border-rose-500/20";
+            box.innerText = message; document.body.appendChild(box);
+            setTimeout(() => { box.style.opacity = '0'; setTimeout(() => box.remove(), 300); }, 3000);
+        }
+
+        function init() { 
+            renderDrugList(); 
+            renderThromboList(); 
+            renderAntiaritmiaList(); 
+            updateTitrationUI(); 
+            updateThromboUI(); 
+            updateAntiaritmiaUI(); 
+            lucide.createIcons(); 
+        }
+
+        document.addEventListener("DOMContentLoaded", init);
+    </script>
+</body>
+</html>
