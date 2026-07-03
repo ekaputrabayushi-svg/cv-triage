@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>LexMedica – Hukum Kedokteran Interaktif</title>
+<meta name="description" content="Panduan hukum kedokteran interaktif untuk dokter IGD dan praktik klinis. Pelajari pasal-pasal hukum untuk berbagai situasi klinis.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #070308;
+    --bg-secondary: #0d0611;
+    --bg-card: #130a1a;
+    --bg-card-hover: #1b0e25;
+    --bg-glass: rgba(13, 6, 17, 0.88);
+    --accent-blue: #e11d48;         /* Crimson/Rose */
+    --accent-blue-light: #fb7185;   /* Light Rose */
+    --accent-cyan: #be123c;         /* Ruby Red */
+    --accent-emerald: #10b981;      /* Emerald Green */
+    --accent-amber: #f59e0b;        /* Amber/Gold */
+    --accent-red: #f43f5e;          /* Light Red */
+    --accent-purple: #8b5cf6;       /* Violet */
+    --accent-orange: #f97316;       /* Coral Orange */
+    --text-primary: #f1f5f9;
+    --text-secondary: #e2e8f0;
+    --text-muted: #887a94;
+    --border-subtle: rgba(225, 29, 72, 0.08);
+    --border-accent: rgba(225, 29, 72, 0.3);
+    --shadow-glow: 0 0 30px rgba(225, 29, 72, 0.16);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  .bg-orbs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .bg-orbs::before {
+    content: '';
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(225, 29, 72, 0.07) 0%, transparent 70%);
+    top: -200px; left: -200px;
+    border-radius: 50%;
+    animation: floatOrb 20s ease-in-out infinite;
+  }
+  .bg-orbs::after {
+    content: '';
+    position: absolute;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.05) 0%, transparent 70%);
+    bottom: -150px; right: -150px;
+    border-radius: 50%;
+    animation: floatOrb 25s ease-in-out infinite reverse;
+  }
+  @keyframes floatOrb {
+    0%, 100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(30px, 30px) scale(1.1); }
+  }
+  #app {
+    position: relative; z-index: 1;
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .header {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 16px 20px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-inner { display: flex; align-items: center; gap: 12px; }
+  .logo-mark {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(225, 29, 72, 0.35);
+  }
+  .header-text { flex: 1; }
+  .header-text h1 {
+    font-size: 16px; font-weight: 700;
+    background: linear-gradient(135deg, #fff, var(--accent-blue-light));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.3px;
+  }
+  .header-text p { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+  .header-badge {
+    background: linear-gradient(135deg, rgba(225, 29, 72, 0.15), rgba(190, 18, 60, 0.1));
+    border: 1px solid rgba(59,130,246,0.25);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 10px; font-weight: 600;
+    color: var(--accent-blue-light);
+    letter-spacing: 0.5px;
+  }
+  .main { flex: 1; padding: 16px; overflow-y: auto; }
+  .page { display: none; }
+  .page.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .search-wrap { position: relative; margin-bottom: 16px; }
+  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 15px; pointer-events: none; }
+  .search-input {
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 11px 12px 11px 38px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: var(--transition);
+    outline: none;
+  }
+  .search-input::placeholder { color: var(--text-muted); }
+  .search-input:focus { border-color: var(--border-accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
+  .section-label { font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; margin-top: 4px; }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .chip { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border-subtle); background: var(--bg-card); color: var(--text-secondary); font-size: 11px; font-weight: 500; cursor: pointer; transition: var(--transition); }
+  .chip.active, .chip:hover { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.3); color: var(--accent-blue-light); }
+  .card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; cursor: pointer; transition: var(--transition); position: relative; overflow: hidden; }
+  .card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 3px 0 0 3px; transition: var(--transition); }
+  .card:hover { background: var(--bg-card-hover); border-color: var(--border-accent); transform: translateY(-1px); box-shadow: var(--shadow-glow); }
+  .card.blue::before { background: var(--accent-blue); }
+  .card.emerald::before { background: var(--accent-emerald); }
+  .card.amber::before { background: var(--accent-amber); }
+  .card.red::before { background: var(--accent-red); }
+  .card.purple::before { background: var(--accent-purple); }
+  .card.cyan::before { background: var(--accent-cyan); }
+  .card.orange::before { background: var(--accent-orange); }
+  .card-header { display: flex; align-items: flex-start; gap: 12px; }
+  .card-icon { width: 38px; height: 38px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .card-icon.blue { background: rgba(59,130,246,0.12); }
+  .card-icon.emerald { background: rgba(16,185,129,0.12); }
+  .card-icon.amber { background: rgba(245,158,11,0.12); }
+  .card-icon.red { background: rgba(239,68,68,0.12); }
+  .card-icon.purple { background: rgba(139,92,246,0.12); }
+  .card-icon.cyan { background: rgba(6,182,212,0.12); }
+  .card-icon.orange { background: rgba(249,115,22,0.12); }
+  .card-content { flex: 1; min-width: 0; }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+  .card-sub { font-size: 11px; color: var(--text-muted); }
+  .card-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+  .card-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+  .tag { padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 500; background: rgba(148,163,184,0.08); color: var(--text-muted); }
+  .tag.blue { background: rgba(59,130,246,0.12); color: var(--accent-blue-light); }
+  .tag.emerald { background: rgba(16,185,129,0.12); color: var(--accent-emerald); }
+  .tag.amber { background: rgba(245,158,11,0.12); color: var(--accent-amber); }
+  .tag.red { background: rgba(239,68,68,0.12); color: var(--accent-red); }
+  .card-arrow { color: var(--text-muted); font-size: 16px; transition: var(--transition); flex-shrink: 0; }
+  .card:hover .card-arrow { color: var(--accent-blue-light); transform: translateX(3px); }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 200; display: none; align-items: flex-end; justify-content: center; }
+  .modal-overlay.show { display: flex; animation: fadeInOverlay 0.2s ease; }
+  @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
+  .modal-sheet { background: var(--bg-secondary); border-radius: var(--radius-xl) var(--radius-xl) 0 0; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1); border-top: 1px solid var(--border-subtle); -webkit-overflow-scrolling: touch; }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .sheet-handle { display: flex; justify-content: center; padding: 12px; }
+  .handle-bar { width: 36px; height: 4px; background: rgba(148,163,184,0.2); border-radius: 2px; }
+  .sheet-header { padding: 0 20px 16px; display: flex; align-items: flex-start; gap: 14px; }
+  .sheet-icon { width: 48px; height: 48px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+  .sheet-title-wrap { flex: 1; }
+  .sheet-title { font-size: 17px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+  .sheet-subtitle { font-size: 12px; color: var(--text-muted); }
+  .sheet-close { width: 32px; height: 32px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); font-size: 16px; flex-shrink: 0; transition: var(--transition); }
+  .sheet-close:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+  .sheet-body { padding: 0 20px 32px; }
+  .law-section { margin-bottom: 20px; }
+  .law-section-title { font-size: 12px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .law-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border-subtle); }
+  .law-block { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px; margin-bottom: 10px; transition: var(--transition); }
+  .law-block:hover { border-color: var(--border-accent); }
+  .law-pasal { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .pasal-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px; }
+  .pasal-badge.blue { background: rgba(59,130,246,0.15); color: var(--accent-blue-light); }
+  .pasal-badge.emerald { background: rgba(16,185,129,0.15); color: var(--accent-emerald); }
+  .pasal-badge.amber { background: rgba(245,158,11,0.15); color: var(--accent-amber); }
+  .pasal-badge.red { background: rgba(239,68,68,0.15); color: var(--accent-red); }
+  .pasal-badge.purple { background: rgba(139,92,246,0.15); color: var(--accent-purple); }
+  .pasal-badge.cyan { background: rgba(6,182,212,0.15); color: var(--accent-cyan); }
+  .pasal-badge.orange { background: rgba(249,115,22,0.15); color: var(--accent-orange); }
+  .pasal-source { font-size: 11px; color: var(--text-muted); }
+  .law-text { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+  .law-text strong { color: var(--text-primary); font-weight: 600; }
+  .sanction-box { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.15); border-radius: var(--radius-sm); padding: 10px 12px; margin-top: 10px; }
+  .sanction-label { font-size: 10px; font-weight: 700; color: var(--accent-red); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .sanction-text { font-size: 12px; color: #fca5a5; line-height: 1.5; }
+  .tip-box { background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.15); border-radius: var(--radius-sm); padding: 10px 12px; margin-top: 8px; display: flex; gap: 8px; align-items: flex-start; }
+  .tip-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+  .tip-text { font-size: 12px; color: #6ee7b7; line-height: 1.5; }
+  .scenario-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 12px; cursor: pointer; transition: var(--transition); }
+  .scenario-card:hover { border-color: var(--border-accent); transform: translateY(-1px); box-shadow: var(--shadow-glow); }
+  .scenario-banner { height: 6px; }
+  .scenario-body { padding: 14px; }
+  .scenario-label { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 6px; }
+  .scenario-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+  .scenario-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+  .scenario-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-subtle); }
+  .scenario-laws { font-size: 11px; color: var(--text-muted); }
+  .scenario-btn { background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(6,182,212,0.15)); border: 1px solid rgba(59,130,246,0.25); border-radius: var(--radius-sm); padding: 5px 12px; font-size: 11px; font-weight: 600; color: var(--accent-blue-light); cursor: pointer; font-family: 'Inter', sans-serif; transition: var(--transition); }
+  .scenario-btn:hover { background: linear-gradient(135deg, rgba(59,130,246,0.3), rgba(6,182,212,0.25)); }
+  .quiz-progress { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 14px; margin-bottom: 16px; }
+  .quiz-progress-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+  .progress-bar { height: 4px; background: var(--bg-secondary); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)); border-radius: 2px; transition: width 0.5s ease; }
+  .quiz-score-row { display: flex; gap: 8px; margin-top: 10px; }
+  .score-chip { flex: 1; padding: 6px; background: var(--bg-secondary); border-radius: var(--radius-sm); text-align: center; }
+  .score-num { font-size: 16px; font-weight: 700; }
+  .score-lbl { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .score-num.green { color: var(--accent-emerald); }
+  .score-num.red { color: var(--accent-red); }
+  .score-num.blue { color: var(--accent-blue-light); }
+  .quiz-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 18px; margin-bottom: 16px; }
+  .quiz-num { font-size: 10px; font-weight: 700; color: var(--accent-blue-light); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; }
+  .quiz-question { font-size: 14px; font-weight: 600; color: var(--text-primary); line-height: 1.6; margin-bottom: 16px; }
+  .quiz-scenario { background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.12); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px; font-style: italic; }
+  .quiz-options { display: flex; flex-direction: column; gap: 8px; }
+  .quiz-option { padding: 12px 14px; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-secondary); background: var(--bg-secondary); }
+  .quiz-option:hover:not(.disabled) { border-color: rgba(59,130,246,0.3); color: var(--text-primary); background: rgba(59,130,246,0.05); }
+  .quiz-option.selected { border-color: var(--accent-blue); color: var(--accent-blue-light); background: rgba(59,130,246,0.1); }
+  .quiz-option.correct { border-color: var(--accent-emerald); color: var(--accent-emerald); background: rgba(16,185,129,0.08); }
+  .quiz-option.wrong { border-color: var(--accent-red); color: var(--accent-red); background: rgba(239,68,68,0.08); }
+  .quiz-option.disabled { cursor: default; }
+  .option-letter { width: 22px; height: 22px; border-radius: 50%; background: var(--bg-card); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .quiz-explanation { background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.15); border-radius: var(--radius-sm); padding: 12px; margin-top: 14px; }
+  .quiz-explanation-title { font-size: 10px; font-weight: 700; color: var(--accent-purple); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 6px; }
+  .quiz-explanation-text { font-size: 12px; color: #c4b5fd; line-height: 1.6; }
+  .quiz-nav { display: flex; gap: 8px; margin-top: 8px; }
+  .btn { flex: 1; padding: 12px; border-radius: var(--radius-md); border: none; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: var(--transition); }
+  .btn-primary { background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan)); color: white; box-shadow: 0 4px 15px rgba(59,130,246,0.3); }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,0.4); }
+  .btn-secondary { background: var(--bg-card); border: 1px solid var(--border-subtle); color: var(--text-secondary); }
+  .btn-secondary:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+  .ref-accordion { margin-bottom: 8px; }
+  .ref-header { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: var(--transition); }
+  .ref-header:hover { background: var(--bg-card-hover); }
+  .ref-header.open { border-radius: var(--radius-md) var(--radius-md) 0 0; border-bottom-color: transparent; border-color: var(--border-accent); }
+  .ref-icon { font-size: 20px; }
+  .ref-info { flex: 1; }
+  .ref-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .ref-full { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+  .ref-chevron { color: var(--text-muted); transition: var(--transition); font-size: 14px; }
+  .ref-header.open .ref-chevron { transform: rotate(180deg); }
+  .ref-body { display: none; background: var(--bg-card); border: 1px solid var(--border-accent); border-top: none; border-radius: 0 0 var(--radius-md) var(--radius-md); padding: 14px; }
+  .ref-body.open { display: block; }
+  .pasal-item { padding: 10px 0; border-bottom: 1px solid var(--border-subtle); }
+  .pasal-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .pasal-num { font-size: 11px; font-weight: 700; color: var(--accent-blue-light); margin-bottom: 4px; font-family: 'Fira Code', monospace; }
+  .pasal-text { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 14px; text-align: center; }
+  .stat-num { font-size: 26px; font-weight: 800; background: linear-gradient(135deg, var(--accent-blue-light), var(--accent-cyan)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
+  .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .hero-banner { background: linear-gradient(135deg, rgba(225,29,72,0.12), rgba(124,58,237,0.08), rgba(244,63,94,0.06)); border: 1px solid rgba(225,29,72,0.18); border-radius: var(--radius-xl); padding: 20px; margin-bottom: 16px; position: relative; overflow: hidden; }
+  .hero-banner::after { content: '❤️'; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 52px; opacity: 0.12; }
+  .hero-banner h2 { font-size: 17px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; line-height: 1.3; }
+  .hero-banner p { font-size: 12px; color: var(--text-muted); line-height: 1.5; max-width: 240px; }
+  .empty-state { text-align: center; padding: 40px 20px; }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+  .empty-text { font-size: 13px; color: var(--text-muted); }
+  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 10px 16px; font-size: 12px; color: var(--text-secondary); z-index: 300; opacity: 0; transition: all 0.3s ease; white-space: nowrap; box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .bottom-nav { position: sticky; bottom: 0; background: var(--bg-glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid var(--border-subtle); display: flex; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+  .bottom-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 4px; cursor: pointer; transition: var(--transition); border: none; background: transparent; color: var(--text-muted); font-family: 'Inter', sans-serif; }
+  .bottom-nav-item.active { color: var(--accent-blue-light); }
+  .bnav-icon { font-size: 20px; line-height: 1; margin-bottom: 3px; }
+  .bnav-label { font-size: 9px; font-weight: 500; letter-spacing: 0.2px; }
+  .bnav-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--accent-blue-light); margin-top: 3px; opacity: 0; transition: var(--transition); }
+  .bottom-nav-item.active .bnav-dot { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="bg-orbs"></div>
+<div id="app">
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo-mark" style="background: linear-gradient(135deg, #e11d48, #be123c); box-shadow: 0 4px 15px rgba(225, 29, 72, 0.4); font-size: 18px;">❤️</div>
+      <div class="header-text">
+        <h1 style="background: linear-gradient(135deg, #fff, #fb7185); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">LexMedica</h1>
+        <p style="color: #fb7185; font-size: 9px; font-weight: 500; letter-spacing: 0.3px; margin-top: 1px;">Part of CardiologyVault</p>
+      </div>
+      <div class="header-badge" style="color: #fb7185; border-color: rgba(225, 29, 72, 0.4); background: rgba(225, 29, 72, 0.1);">IGD &amp; Klinis</div>
+    </div>
+  </header>
+  <main class="main">
+    <div class="page active" id="page-home">
+      <div class="hero-banner">
+        <h2>Lindungi Diri &amp; Pasien dengan Hukum</h2>
+        <p>Panduan hukum kedokteran berbasis skenario klinis nyata untuk dokter IGD &amp; praktik klinis.</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-num">55</div><div class="stat-label">Pasal Kunci</div></div>
+        <div class="stat-card"><div class="stat-num">9</div><div class="stat-label">UU / Regulasi</div></div>
+        <div class="stat-card"><div class="stat-num">14</div><div class="stat-label">Topik Hukum</div></div>
+        <div class="stat-card"><div class="stat-num">12</div><div class="stat-label">Soal Quiz</div></div>
+      </div>
+      <div class="section-label">Topik Utama</div>
+      <div id="home-cards"></div>
+    </div>
+    <div class="page" id="page-topik">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" id="topik-search" placeholder="Cari topik atau pasal…" oninput="filterTopik()">
+      </div>
+      <div class="chip-row" id="topik-chips"></div>
+      <div id="topik-list"></div>
+    </div>
+    <div class="page" id="page-skenario">
+      <div class="section-label">Situasi Klinis Nyata</div>
+      <div id="skenario-list"></div>
+    </div>
+    <div class="page" id="page-quiz">
+      <div class="quiz-progress" id="quiz-progress-section">
+        <div class="quiz-progress-label">
+          <span id="quiz-prog-text">Soal 1 dari 10</span>
+          <span id="quiz-prog-pct">0%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="quiz-bar" style="width:0%"></div></div>
+        <div class="quiz-score-row">
+          <div class="score-chip"><div class="score-num green" id="quiz-correct">0</div><div class="score-lbl">Benar</div></div>
+          <div class="score-chip"><div class="score-num red" id="quiz-wrong">0</div><div class="score-lbl">Salah</div></div>
+          <div class="score-chip"><div class="score-num blue" id="quiz-remain">10</div><div class="score-lbl">Sisa</div></div>
+        </div>
+      </div>
+      <div id="quiz-area"></div>
+      <div class="quiz-nav" id="quiz-nav">
+        <button class="btn btn-secondary" onclick="restartQuiz()">Ulang</button>
+        <button class="btn btn-primary" id="quiz-next-btn" onclick="nextQuestion()">Berikutnya</button>
+      </div>
+    </div>
+    <div class="page" id="page-ref">
+      <div class="section-label">Dasar Hukum Lengkap</div>
+      <div id="ref-list"></div>
+    </div>
+  </main>
+  <nav class="bottom-nav">
+    <button class="bottom-nav-item active" id="bnav-home" onclick="switchTab('home')">
+      <div class="bnav-icon">🏠</div><div class="bnav-label">Beranda</div><div class="bnav-dot"></div>
+    </button>
+    <button class="bottom-nav-item" id="bnav-topik" onclick="switchTab('topik')">
+      <div class="bnav-icon">📚</div><div class="bnav-label">Topik</div><div class="bnav-dot"></div>
+    </button>
+    <button class="bottom-nav-item" id="bnav-skenario" onclick="switchTab('skenario')">
+      <div class="bnav-icon">🏥</div><div class="bnav-label">Skenario</div><div class="bnav-dot"></div>
+    </button>
+    <button class="bottom-nav-item" id="bnav-quiz" onclick="switchTab('quiz')">
+      <div class="bnav-icon">🎯</div><div class="bnav-label">Quiz</div><div class="bnav-dot"></div>
+    </button>
+    <button class="bottom-nav-item" id="bnav-ref" onclick="switchTab('ref')">
+      <div class="bnav-icon">📖</div><div class="bnav-label">Referensi</div><div class="bnav-dot"></div>
+    </button>
+  </nav>
+</div>
+
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal-sheet" id="modal-sheet">
+    <div class="sheet-handle"><div class="handle-bar"></div></div>
+    <div class="sheet-header">
+      <div class="sheet-icon" id="modal-icon"></div>
+      <div class="sheet-title-wrap">
+        <div class="sheet-title" id="modal-title"></div>
+        <div class="sheet-subtitle" id="modal-subtitle"></div>
+      </div>
+      <button class="sheet-close" onclick="closeModal()">x</button>
+    </div>
+    <div class="sheet-body" id="modal-body"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var TOPICS = [
+  { id:'t1', icon:'📋', color:'blue', title:'Informed Consent', sub:'Persetujuan Tindakan Kedokteran', category:'Dasar', tags:['Wajib','Semua Pasien'],
+    laws:[
+      { pasal:'Pasal 45 ayat (1)', source:'UU No. 29/2004 – Praktik Kedokteran', color:'blue', text:'Setiap tindakan kedokteran yang akan dilakukan terhadap pasien harus mendapat <strong>persetujuan</strong>.' },
+      { pasal:'Pasal 45 ayat (3)', source:'UU No. 29/2004', color:'blue', text:'Persetujuan dinyatakan <strong>tertulis</strong> bila mengandung risiko tinggi, tindakan invasif, anestesi, atau pembedahan.' },
+      { pasal:'Pasal 45 ayat (4)', source:'UU No. 29/2004 – Praktik Kedokteran', color:'blue', text:'Dalam keadaan <strong>gawat darurat</strong>, untuk menyelamatkan jiwa pasien dan mencegah kecacatan <strong>tidak diperlukan persetujuan</strong>.', tip:'IGD: Jika pasien tidak sadar dan kondisi mengancam jiwa, dokter BOLEH bertindak tanpa informed consent!' },
+      { pasal:'Pasal 37', source:'UU No. 17/2023 – Kesehatan', color:'cyan', text:'Pasien berhak mendapatkan informasi jelas mengenai diagnosis, tata cara tindakan, tujuan, alternatif, risiko, dan komplikasi.' },
+      { pasal:'Pasal 3', source:'Permenkes No. 290/2008 – Persetujuan Tindakan Kedokteran', color:'purple', text:'Jika pasien tidak kompeten (anak di bawah umur, tidak sadar, gangguan jiwa), persetujuan diberikan oleh <strong>keluarga terdekat atau wali</strong>.', sanction:'Pelanggaran: dapat digugat atas dasar wanprestasi atau PMH – Pasal 1365 KUHPerdata.' }
+    ]
+  },
+  { id:'t2', icon:'🔐', color:'purple', title:'Rahasia Kedokteran', sub:'Kerahasiaan Data dan Rekam Medis Pasien', category:'Dasar', tags:['Privasi','PDPA'],
+    laws:[
+      { pasal:'Pasal 48 ayat (1)', source:'UU No. 29/2004', color:'purple', text:'Setiap dokter wajib <strong>menyimpan rahasia kedokteran</strong>.' },
+      { pasal:'Pasal 48 ayat (2)', source:'UU No. 29/2004', color:'purple', text:'Rahasia kedokteran dapat dibuka hanya untuk: kepentingan kesehatan pasien, permintaan aparatur penegak hukum secara tertulis, permintaan pasien sendiri, atau ketentuan perundang-undangan.', tip:'Polisi membutuhkan SURAT RESMI untuk meminta rekam medis. Permintaan lisan polisi tidak cukup!' },
+      { pasal:'Pasal 322', source:'KUHP', color:'red', text:'Membuka rahasia yang wajib disimpan karena jabatan, dipidana penjara paling lama <strong>9 bulan</strong> atau denda.', sanction:'Sanksi pidana bagi dokter yang bocorkan rahasia pasien tanpa dasar hukum.' },
+      { pasal:'Pasal 73', source:'UU No. 17/2023', color:'cyan', text:'Rekam medis <strong>wajib dibuat</strong> segera setelah pasien mendapat pelayanan. Dokter yang tidak membuat rekam medis dikenai sanksi administratif.', sanction:'Sanksi: teguran lisan, tertulis, hingga pencabutan izin praktik.' }
+    ]
+  },
+  { id:'t3', icon:'⚡', color:'red', title:'Gawat Darurat (IGD)', sub:'Kewajiban Penanganan Pasien Emergency', category:'IGD', tags:['URGENT','Wajib IGD'],
+    laws:[
+      { pasal:'Pasal 32 ayat (1)', source:'UU No. 44/2009 – Rumah Sakit', color:'red', text:'Fasilitas pelayanan kesehatan baik pemerintah maupun swasta <strong>wajib memberikan pelayanan</strong> bagi penyelamatan jiwa pasien dan pencegahan kecacatan terlebih dahulu.' },
+      { pasal:'Pasal 32 ayat (2)', source:'UU No. 44/2009', color:'red', text:'Fasilitas pelayanan kesehatan dilarang <strong>menolak pasien</strong> dan/atau meminta uang muka dalam keadaan darurat.', sanction:'RS yang menolak pasien gawat darurat dapat dikenai sanksi administratif hingga pidana.' },
+      { pasal:'Pasal 190 ayat (1)', source:'UU No. 36/2009 – Kesehatan', color:'amber', text:'Pimpinan fasilitas dan tenaga kesehatan yang melakukan penolakan pasien gawat darurat dipidana penjara paling lama <strong>2 tahun</strong> dan/atau denda Rp200 juta.', sanction:'Sanksi pidana bagi yang menolak pasien darurat!' },
+      { pasal:'Pasal 45 ayat (4)', source:'UU No. 29/2004', color:'blue', text:'Dalam keadaan gawat darurat, tindakan medis tidak memerlukan persetujuan untuk menyelamatkan jiwa.', tip:'Tindakan darurat tanpa consent legal secara hukum. Dokumentasikan alasannya!' }
+    ]
+  },
+  { id:'t13', icon:'🛡️', color:'red', title:'Proteksi Tenaga Medis', sub:'Perlindungan Hukum & Keamanan Kerja Petugas Medis', category:'IGD', tags:['Keamanan','Hak Nakes','Kritis'],
+    laws:[
+      { pasal:'Pasal 273', source:'UU No. 17/2023 – Kesehatan', color:'red', text:'Tenaga Medis dan Tenaga Kesehatan dalam menjalankan praktik berhak memperoleh <strong>Pelindungan Hukum</strong> sepanjang melaksanakan tugas sesuai dengan standar profesi, standar pelayanan profesi, dan standar prosedur operasional.', tip:'Dokter dilindungi hukum jika penanganan klinis dilakukan sesuai standar medis (SPO) yang berlaku.' },
+      { pasal:'Pasal 282 (1a)', source:'UU No. 17/2023', color:'red', text:'Tenaga Medis dan Tenaga Kesehatan dalam menjalankan tugasnya berhak mendapatkan pelindungan atas keselamatan, kesehatan kerja, dan <strong>keamanan</strong>.', tip:'Rumah Sakit wajib menyediakan pengamanan fisik (sekuriti) untuk melindungi dokter/nakes dari amuk massa.' },
+      { pasal:'Pasal 439', source:'UU No. 17/2023 – Kesehatan', color:'red', text:'Setiap orang yang melakukan kekerasan atau ancaman kekerasan menghalangi Tenaga Medis/Kesehatan yang melaksanakan praktik dipidana dengan pidana penjara paling lama <strong>2 tahun</strong> atau denda paling banyak Rp200.000.000.', sanction:'Sanksi berat bagi pelaku persekusi/kekerasan di IGD: kurungan penjara hingga 2 tahun!' },
+      { pasal:'Pasal 50', source:'UU No. 29/2004 – Praktik Kedokteran', color:'cyan', text:'Dokter dalam melaksanakan praktik kedokteran berhak memperoleh perlindungan hukum sepanjang melaksanakan tugas sesuai dengan standar profesi dan standar prosedur operasional.', tip:'Aspek perlindungan hukum tertulis ganda (UU Praktik Kedokteran dan UU Kesehatan 2023).' },
+      { pasal:'Pasal 351', source:'KUHP', color:'amber', text:'Penganiayaan diancam dengan pidana penjara paling lama <strong>2 tahun 8 bulan</strong>. Jika mengakibatkan luka berat diancam pidana penjara max 5 tahun.', sanction:'Penganiayaan fisik terhadap nakes saat bertugas adalah tindak pidana murni yang dapat langsung dilaporkan polisi.' }
+    ]
+  },
+  { id:'t14', icon:'📹', color:'orange', title:'Perekaman Tanpa Izin', sub:'Privasi Medis & Larangan Mengambil Video', category:'Administrasi', tags:['Privasi','UU ITE'],
+    laws:[
+      { pasal:'Pasal 32 (1g)', source:'UU No. 44/2009 – Rumah Sakit', color:'orange', text:'Pasien berhak mendapatkan privasi dan kerahasiaan penyakit yang diderita termasuk data-data medisnya.', tip:'Perekaman video di ruang pelayanan medis melanggar privasi pasien lain yang sedang diperiksa!' },
+      { pasal:'Pasal 48', source:'UU No. 29/2004', color:'purple', text:'Setiap dokter wajib menyimpan rahasia kedokteran yang mencakup data klinis and proses pelayanan medis.', sanction:'Merekam dan menyebarkan proses penanganan medis secara publik dapat membocorkan rahasia kedokteran.' },
+      { pasal:'Pasal 31 ayat (1)', source:'UU ITE (UU No. 1/2024)', color:'amber', text:'Setiap Orang dengan sengaja dan tanpa hak melakukan intersepsi atau penyadapan/perekaman transmisi Informasi Elektronik atau Dokumen Elektronik dalam suatu sistem elektronik milik Orang lain.', sanction:'Penyadapan/perekaman diam-diam tanpa hak dapat dijerat pidana UU ITE.' },
+      { pasal:'Aturan Faskes', source:'Permenkes & SOP Rumah Sakit', color:'cyan', text:'Rumah sakit berhak melarang dan menertibkan pengambilan foto, video, atau audio di area pelayanan medis guna melindungi hak privasi nakes dan pasien lainnya.', tip:'Dokter berhak meminta penghentian perekaman dengan sopan namun tegas demi hukum.' }
+    ]
+  },
+  { id:'t4', icon:'📝', color:'emerald', title:'Rekam Medis', sub:'Kewajiban dan Hak atas Dokumentasi Klinis', category:'Administrasi', tags:['Dokumentasi','Wajib'],
+    laws:[
+      { pasal:'Pasal 46 ayat (1)', source:'UU No. 29/2004', color:'emerald', text:'Setiap dokter <strong>wajib membuat rekam medis</strong>.', sanction:'Sanksi: Peringatan tertulis, pencabutan rekomendasi izin praktik, hingga pencabutan SIP.' },
+      { pasal:'Pasal 46 ayat (3)', source:'UU No. 29/2004', color:'emerald', text:'Rekam medis harus dibuat <strong>segera dan dilengkapi</strong> setelah pasien menerima pelayanan. Dokter membubuhkan nama, waktu, dan tanda tangan.' },
+      { pasal:'Pasal 5 ayat (2)', source:'Permenkes No. 269/2008 – Rekam Medis', color:'emerald', text:'Rekam medis rawat inap memuat: identitas, anamnesis, pemeriksaan fisik, diagnosis, rencana terapi, tindakan, catatan observasi, dan ringkasan pulang.', tip:'Rekam medis yang tidak lengkap melemahkan posisi hukum dokter jika ada gugatan!' },
+      { pasal:'Pasal 8', source:'Permenkes No. 269/2008', color:'emerald', text:'Rekam medis rawat inap wajib disimpan sekurang-kurangnya <strong>5 (lima) tahun</strong> terhitung dari tanggal terakhir pasien berobat.' }
+    ]
+  },
+  { id:'t5', icon:'⚖️', color:'amber', title:'Malpraktik Medis', sub:'Standar Profesi dan Pertanggungjawaban Hukum', category:'Pidana', tags:['Pidana','Perdata','Kritis'],
+    laws:[
+      { pasal:'Pasal 51', source:'UU No. 29/2004', color:'amber', text:'Dokter wajib: memberikan pelayanan sesuai standar profesi dan SPO; merujuk pasien jika tidak mampu; merahasiakan segala sesuatu tentang pasien.' },
+      { pasal:'Pasal 359', source:'KUHP', color:'amber', text:'Barangsiapa karena <strong>kelalaiannya</strong> menyebabkan orang lain mati, dipidana penjara paling lama 5 tahun.', sanction:'Malpraktik pidana: harus terbukti ada KELALAIAN (culpa). Dokter sesuai standar tidak dapat dipidana!' },
+      { pasal:'Pasal 360', source:'KUHP', color:'amber', text:'Kelalaian menyebabkan luka berat: pidana penjara max 5 tahun. Jika luka biasa: max 9 bulan.', sanction:'Unsur pidana: (1) Ada kelalaian, (2) Ada akibat luka/mati, (3) Ada hubungan kausal.' },
+      { pasal:'Pasal 1365', source:'KUH Perdata', color:'emerald', text:'Perbuatan yang melanggar hukum dan membawa kerugian kepada orang lain mewajibkan pelaku <strong>mengganti kerugian (PMH)</strong>.', tip:'Gugatan perdata: pasien harus buktikan 4D – Duty, Dereliction, Damage, Direct causation.' },
+      { pasal:'Pasal 66', source:'UU No. 29/2004', color:'amber', text:'Pengaduan atas tindakan dokter diajukan secara tertulis kepada <strong>MKDKI (Majelis Kehormatan Disiplin Kedokteran Indonesia)</strong>.', tip:'MKDKI menilai pelanggaran DISIPLIN PROFESI – berbeda dari proses pidana/perdata!' }
+    ]
+  },
+  { id:'t6', icon:'🏥', color:'cyan', title:'Kewajiban Dokter & RS', sub:'Standar Layanan dan Hak Pasien', category:'Dasar', tags:['Hak Pasien','Standar'],
+    laws:[
+      { pasal:'Pasal 50', source:'UU No. 29/2004', color:'cyan', text:'Dokter berhak: perlindungan hukum; memberikan pelayanan sesuai standar; mendapat informasi jujur dari pasien; menerima imbalan jasa.' },
+      { pasal:'Pasal 52', source:'UU No. 29/2004', color:'cyan', text:'Pasien berhak: penjelasan lengkap; second opinion; pelayanan sesuai kebutuhan medis; menolak tindakan; mendapat isi rekam medis.' },
+      { pasal:'Pasal 29 ayat (1b)', source:'UU No. 44/2009', color:'blue', text:'RS wajib memberikan pelayanan aman, bermutu, <strong>antidiskriminasi</strong>, dan efektif dengan mengutamakan kepentingan pasien.' },
+      { pasal:'Pasal 43', source:'UU No. 44/2009', color:'blue', text:'RS wajib menerapkan <strong>Standar Keselamatan Pasien</strong> melalui pelaporan insiden, analisis, dan pemecahan masalah.', tip:'Setiap insiden (KTD, KNC) WAJIB dilaporkan ke sistem pelaporan RS dan KNKP.' }
+    ]
+  },
+  { id:'t7', icon:'🔪', color:'red', title:'Visum et Repertum', sub:'Pembuatan VeR dan Korban Kekerasan', category:'Forensik', tags:['Forensik','Pidana'],
+    laws:[
+      { pasal:'Pasal 133', source:'KUHAP (UU No. 8/1981)', color:'red', text:'Penyidik untuk kepentingan peradilan berwenang mengajukan permintaan keterangan ahli kepada <strong>dokter atau ahli kedokteran kehakiman</strong>.', tip:'VeR hanya dibuat atas permintaan TERTULIS penyidik (polisi). Dokter IGD tidak boleh membuat VeR atas inisiatif sendiri!' },
+      { pasal:'Pasal 179', source:'KUHAP', color:'red', text:'Setiap dokter yang diminta pendapatnya <strong>wajib memberikan keterangan ahli</strong> demi keadilan.', sanction:'Dokter yang menolak memberikan VeR tanpa alasan sah dapat dikenai sanksi.' },
+      { pasal:'Pasal 264', source:'KUHP', color:'amber', text:'Pemalsuan surat keterangan dokter (termasuk VeR) dipidana penjara paling lama <strong>8 tahun</strong>.', sanction:'PERINGATAN: Jangan pernah membuat VeR atau surat keterangan palsu!' }
+    ]
+  },
+  { id:'t8', icon:'👶', color:'orange', title:'Pasien Anak & Wali', sub:'Consent untuk Pasien di Bawah Umur', category:'Khusus', tags:['Anak','Wali'],
+    laws:[
+      { pasal:'Pasal 45 ayat (5)', source:'UU No. 29/2004', color:'orange', text:'Untuk pasien anak di bawah 18 tahun atau tidak kompeten, persetujuan diberikan oleh <strong>orang tua, wali, atau keluarga terdekat</strong>.' },
+      { pasal:'Pasal 77A', source:'UU No. 35/2014 – Perlindungan Anak', color:'orange', text:'Setiap orang yang menelantarkan kesehatan anak dapat dipidana.', tip:'Anak dengan tanda kekerasan: dokter WAJIB melaporkan ke pihak berwenang (KPAI, Polisi). Kewajiban hukum, bukan pilihan!' },
+      { pasal:'Pasal 4', source:'Permenkes No. 290/2008', color:'purple', text:'Pasien anak ≥12 tahun yang mampu memberikan persetujuan, pendapatnya wajib dipertimbangkan meski keputusan akhir ada pada orang tua/wali.' }
+    ]
+  },
+  { id:'t9', icon:'💊', color:'emerald', title:'Peresepan & Narkotika', sub:'Obat-obat Khusus dan Kewajiban Peresepan', category:'Farmasi', tags:['Obat','Narkotika'],
+    laws:[
+      { pasal:'Pasal 43', source:'UU No. 35/2009 – Narkotika', color:'emerald', text:'Dokter yang memiliki izin dapat memberikan narkotika Golongan II dan III untuk pengobatan atas kebutuhan medis.' },
+      { pasal:'Pasal 7', source:'UU No. 35/2009', color:'emerald', text:'Narkotika hanya dapat digunakan untuk kepentingan pelayanan kesehatan dan/atau ilmu pengetahuan.', tip:'Morfin, pethidin, fentanil di ICU/paliatif: LEGAL asal ada indikasi medis yang terdokumentasi.' },
+      { pasal:'Pasal 116', source:'UU No. 35/2009', color:'red', text:'Memberikan narkotika Golongan I tanpa hak kepada orang lain dipidana penjara paling singkat <strong>5 tahun</strong>.', sanction:'LARANGAN KERAS: Memberikan narkotika tanpa indikasi medis = tindak pidana berat!' }
+    ]
+  },
+  { id:'t10', icon:'🧠', color:'purple', title:'Pasien Jiwa & Kompetensi', sub:'Penanganan Pasien dengan Gangguan Mental', category:'Khusus', tags:['Jiwa','Kompetensi'],
+    laws:[
+      { pasal:'Pasal 70', source:'UU No. 18/2014 – Kesehatan Jiwa', color:'purple', text:'ODMK dan ODGJ berhak mendapatkan pelayanan kesehatan jiwa yang mudah diakses.' },
+      { pasal:'Pasal 86', source:'UU No. 18/2014', color:'purple', text:'Rawat inap paksa (involuntary) dapat dilakukan jika: membahayakan diri sendiri atau orang lain, tidak mampu penuhi kebutuhan dasar, atas permintaan keluarga.', tip:'Restrain fisik pada ODGJ harus didokumentasikan, ada indikasi medis, dan dipantau ketat.' },
+      { pasal:'Pasal 83', source:'UU No. 18/2014', color:'purple', text:'Pengikatan fisik dan pengucilan hanya dalam keadaan darurat untuk cegah cedera. <strong>Tidak boleh sebagai hukuman</strong>.', sanction:'Penyalahgunaan restrain ODGJ = pelanggaran HAM dan dapat dipidana.' }
+    ]
+  },
+  { id:'t11', icon:'🚨', color:'red', title:'Pelaporan Wajib', sub:'Kewajiban Lapor Dokter ke Pihak Berwenang', category:'IGD', tags:['Wajib Lapor','Forensik'],
+    laws:[
+      { pasal:'Pasal 108', source:'UU No. 36/2009', color:'red', text:'Tenaga kesehatan berkewajiban melaporkan penyakit yang dapat menimbulkan wabah dalam waktu <strong>24 jam</strong>.', tip:'Penyakit wajib lapor: DBD, campak, kolera, meningitis, rabies, COVID-19, dll.' },
+      { pasal:'Pasal 50', source:'UU No. 35/2014 – Perlindungan Anak', color:'orange', text:'Tenaga kesehatan berkewajiban <strong>melaporkan kepada pihak berwajib</strong> jika menemukan anak yang mengalami kekerasan atau penelantaran.', sanction:'Dokter yang menyembunyikan kekerasan anak dapat dikenai sanksi administratif dan pidana!' },
+      { pasal:'Pasal 15', source:'UU No. 23/2004 – KDRT', color:'red', text:'Tenaga kesehatan berkewajiban <strong>memberikan laporan kepada pihak berwajib</strong> atas kasus KDRT yang diperiksa.', tip:'Pasien KDRT: dokter WAJIB lapor ke polisi meski pasien tidak minta. Ini imunitas hukum untuk dokter!' }
+    ]
+  },
+  { id:'t12', icon:'🏛️', color:'blue', title:'Izin Praktik (SIP/STR)', sub:'Legalitas dan Kewenangan Praktik Dokter', category:'Administrasi', tags:['SIP','STR','Lisensi'],
+    laws:[
+      { pasal:'Pasal 29 ayat (1)', source:'UU No. 29/2004', color:'blue', text:'Setiap dokter yang melakukan praktik di Indonesia <strong>wajib memiliki STR</strong>.', sanction:'Sanksi: Pidana penjara max 3 tahun atau denda max Rp100 juta (Pasal 75).' },
+      { pasal:'Pasal 36', source:'UU No. 29/2004', color:'blue', text:'Setiap dokter wajib memiliki <strong>SIP</strong> yang dikeluarkan oleh pemerintah kabupaten/kota.', sanction:'Sanksi: Pidana penjara max 3 tahun atau denda max Rp100 juta (Pasal 76).' },
+      { pasal:'Pasal 37 ayat (2)', source:'UU No. 29/2004', color:'blue', text:'SIP diberikan untuk paling banyak <strong>3 (tiga) tempat</strong>. SIP berlaku 5 tahun dan harus diperpanjang.', tip:'Praktik tanpa SIP valid = melanggar hukum meski sudah punya STR!' }
+    ]
+  }
+];
+
+var SCENARIOS = [
+  { id:'s1', color:'red', gradient:'linear-gradient(90deg,#ef4444,#f97316)', label:'Kritis IGD', labelColor:'#ef4444',
+    title:'Pasien Tidak Sadar Datang Sendiri', desc:'Pasien laki-laki 55 tahun tidak sadar, ditemukan warga. Tidak ada keluarga. Tim IGD perlu tindakan cito operasi segera.',
+    laws:'5 Pasal Terkait',
+    detail:{ situation:'Pasien tidak sadar, tidak ada keluarga, perlu operasi cito. Siapa yang beri consent? Apakah dokter bisa langsung bertindak?',
+      answer:[
+        { title:'Tindakan Darurat Tanpa Consent Legal', text:'<strong>Pasal 45 ayat (4) UU 29/2004</strong>: dalam keadaan gawat darurat untuk menyelamatkan jiwa, dokter DIIZINKAN bertindak tanpa informed consent.', color:'emerald' },
+        { title:'Dokumentasi Wajib', text:'Catat alasan tindakan darurat tanpa consent dalam rekam medis sesuai <strong>Pasal 46 UU 29/2004</strong> dan <strong>Permenkes 290/2008</strong>.', color:'blue' },
+        { title:'Kewajiban RS', text:'<strong>Pasal 32 UU 44/2009</strong>: RS wajib beri pelayanan darurat. TIDAK BOLEH menolak dengan alasan tidak ada keluarga atau tidak bisa bayar.', color:'red' },
+        { title:'Mencari Keluarga', text:'Segera upayakan mencari identitas dan keluarga pasien. Jika ditemukan, sampaikan informasi kondisi sesuai <strong>Pasal 37 UU 17/2023</strong>.', color:'amber' },
+        { title:'Perlindungan Hukum Dokter', text:'Dokter yang bertindak sesuai standar dalam situasi darurat dilindungi oleh <strong>Pasal 50 UU 29/2004</strong>. Kuncinya: sesuai standar dan terdokumentasi!', color:'purple' }
+      ]
+    }
+  },
+  { id:'s2', color:'amber', gradient:'linear-gradient(90deg,#f59e0b,#f97316)', label:'Konflik Keluarga', labelColor:'#f59e0b',
+    title:'Keluarga Menolak Transfusi Darah', desc:'Pasien anak 8 tahun, anemia berat (Hb 4 g/dL). Orang tua menolak transfusi karena alasan agama. Kondisi anak kritis.',
+    laws:'4 Pasal Terkait',
+    detail:{ situation:'Anak kritis, orang tua menolak transfusi atas dasar agama. Bisakah dokter tetap transfusi? Apa risiko hukumnya?',
+      answer:[
+        { title:'Prioritas Jiwa Anak', text:'<strong>Pasal 45 ayat (4) UU 29/2004</strong>: darurat mengancam jiwa mendahulukan tindakan. Kepentingan jiwa anak melebihi keputusan orang tua.', color:'red' },
+        { title:'Perlindungan Anak', text:'<strong>UU No. 35/2014 tentang Perlindungan Anak</strong>: menelantarkan kesehatan anak adalah pelanggaran. Dokter justru bisa melaporkan jika terjadi penelantaran medis.', color:'orange' },
+        { title:'Dokumentasi Ketat', text:'Catat semua diskusi dengan orang tua, penolakan mereka, dan alasan klinis mengapa transfusi tetap dilakukan. Ini bukti perlindungan hukum dokter.', color:'blue' },
+        { title:'Eskalasi Segera', text:'Hubungi Komite Medis RS dan bagian hukum RS. Jika perlu, ajukan ke pengadilan untuk izin pengobatan anak. Jangan hadapi kasus ini sendirian!', color:'purple' }
+      ]
+    }
+  },
+  { id:'s3', color:'blue', gradient:'linear-gradient(90deg,#3b82f6,#06b6d4)', label:'Diminta Polisi', labelColor:'#3b82f6',
+    title:'Polisi Minta Rekam Medis Pasien', desc:'Polisi datang ke IGD, meminta rekam medis pasien tersangka kecelakaan. Hanya membawa kartu identitas tanpa surat resmi.',
+    laws:'3 Pasal Terkait',
+    detail:{ situation:'Polisi minta rekam medis pasien yang dirawat, tapi hanya bawa ID card tanpa surat penyidik resmi. Bolehkah diberikan?',
+      answer:[
+        { title:'JANGAN Berikan Tanpa Surat Resmi', text:'<strong>Pasal 48 ayat (2) UU 29/2004</strong>: rahasia kedokteran hanya bisa dibuka untuk peradilan dengan permintaan <strong>tertulis dari penyidik</strong>. ID card saja TIDAK CUKUP!', color:'red' },
+        { title:'Syarat Pembukaan Rekam Medis', text:'Harus ada: (1) Surat permintaan tertulis dari Penyidik/Kapolres, (2) Identifikasi jelas kasusnya, (3) Prosedur melalui manajemen RS/bidang hukum RS.', color:'blue' },
+        { title:'Sanksi Membuka Tanpa Izin', text:'<strong>Pasal 322 KUHP</strong>: membuka rahasia jabatan tanpa dasar hukum = pidana penjara max 9 bulan. Dokter bisa dipidana!', color:'amber' },
+        { title:'Prosedur yang Benar', text:'Minta polisi kembali dengan surat resmi dari penyidik. Koordinasikan dengan bagian hukum RS. Jangan bertindak sendirian!', color:'emerald' }
+      ]
+    }
+  },
+  { id:'s4', color:'purple', gradient:'linear-gradient(90deg,#8b5cf6,#3b82f6)', label:'Psikiatri Darurat', labelColor:'#8b5cf6',
+    title:'Pasien ODGJ Agresif di IGD', desc:'Pasien ODGJ laki-laki 30 tahun dibawa keluarga. Agresif, memukul petugas, menolak periksa. Tim IGD ingin melakukan restrain.',
+    laws:'4 Pasal Terkait',
+    detail:{ situation:'Pasien ODGJ agresif, membahayakan diri dan orang lain, menolak tindakan. Bagaimana legalitas restrain fisik?',
+      answer:[
+        { title:'Restrain Darurat Diizinkan', text:'<strong>Pasal 83 UU 18/2014 Kesehatan Jiwa</strong>: pengikatan fisik diizinkan dalam keadaan darurat untuk mencegah cedera pada pasien atau orang lain. Bukan hukuman!', color:'purple' },
+        { title:'Syarat Ketat Restrain', text:'Restrain harus: ada indikasi medis jelas, cara tidak menyakiti, dipantau berkala, dan dicatat lengkap dalam rekam medis termasuk waktu mulai dan evaluasi.', color:'blue' },
+        { title:'Rawat Inap Paksa', text:'<strong>Pasal 86 UU 18/2014</strong>: rawat inap involunter bisa dilakukan jika membahayakan diri/orang lain. Keluarga harus dilibatkan. Perlu evaluasi psikiater.', color:'purple' },
+        { title:'HAM Pasien Tetap Terjaga', text:'Restrain berlebihan atau sebagai hukuman = pelanggaran HAM dan bisa dipidana. Dokumentasikan setiap langkah!', color:'red' }
+      ]
+    }
+  },
+  { id:'s5', color:'emerald', gradient:'linear-gradient(90deg,#10b981,#06b6d4)', label:'Kasus Kematian', labelColor:'#10b981',
+    title:'Pasien Meninggal Setelah Tindakan IGD', desc:'Pasien henti jantung. Resusitasi 45 menit tidak berhasil. Keluarga marah dan mengancam lapor polisi atas dugaan malpraktik.',
+    laws:'5 Pasal Terkait',
+    detail:{ situation:'Pasien meninggal setelah resusitasi. Keluarga mengancam gugat dokter atas dasar malpraktik. Bagaimana perlindungan hukum dokter?',
+      answer:[
+        { title:'Perlindungan Standar Profesi', text:'<strong>Pasal 50 UU 29/2004</strong>: dokter berhak memperoleh <strong>perlindungan hukum</strong> dalam melaksanakan tugas sesuai standar profesi. Dokter yang sesuai standar TIDAK dapat dipidana!', color:'emerald' },
+        { title:'Kunci: Dokumentasi Lengkap', text:'Rekam medis yang mencatat: waktu kedatangan, kondisi awal, tindakan resusitasi (ACLS protocol), durasi, keputusan menghentikan = bukti hukum terkuat.', color:'blue' },
+        { title:'Unsur Malpraktik Harus Terbukti', text:'<strong>Pasal 359 KUHP</strong>: perlu bukti kelalaian. Kematian karena kondisi klinis berat bukan otomatis malpraktik. Keluarga harus buktikan: ada kelalaian + hubungan kausal.', color:'amber' },
+        { title:'Jalur MKDKI Dulu', text:'<strong>Pasal 66 UU 29/2004</strong>: pengaduan atas tindakan dokter harus ke <strong>MKDKI dulu</strong>. MKDKI menilai pelanggaran disiplin, bukan pidana. Berbeda jalur!', color:'purple' },
+        { title:'Komunikasi Empati', text:'Komunikasikan dengan empati: jelaskan kronologi, kondisi pasien saat datang, upaya yang dilakukan. Minta bantuan Komite Medis atau mediasi RS.', color:'cyan' }
+      ]
+    }
+  },
+  { id:'s6', color:'orange', gradient:'linear-gradient(90deg,#f97316,#ef4444)', label:'Kekerasan/Trauma', labelColor:'#f97316',
+    title:'Korban Kekerasan Dalam Rumah Tangga', desc:'Wanita 35 tahun, luka memar multipel, mengaku jatuh sendiri. Pola luka mencurigakan kekerasan. Suami menemaninya.',
+    laws:'4 Pasal Terkait',
+    detail:{ situation:'Tanda-tanda KDRT tapi pasien tidak mau melapor. Apa kewajiban hukum dokter? Apakah dokter bisa lapor tanpa izin pasien?',
+      answer:[
+        { title:'Wajib Lapor Dokter!', text:'<strong>Pasal 15 UU 23/2004 KDRT</strong>: tenaga kesehatan yang memeriksa korban KDRT <strong>WAJIB memberikan laporan kepada pihak berwajib</strong>. Ini kewajiban, bukan pilihan!', color:'red' },
+        { title:'Dokumentasi Luka', text:'Dokumentasikan semua luka: ukuran, warna, pola, lokasi. Foto jika memungkinkan. Ini bagian dari VeR jika diminta penyidik nantinya.', color:'blue' },
+        { title:'Tidak Melanggar Rahasia Dokter', text:'<strong>Pasal 48 ayat (2) UU 29/2004</strong>: dokter yang melapor KDRT tidak melanggar kerahasiaan karena ada landasan UU KDRT yang membolehkan.', color:'emerald' },
+        { title:'Wawancara Privat', text:'Pisahkan pasien dari pendamping (suami). Wawancara secara privat. Berikan informasi layanan KDRT (P2TP2A, hotline). Hormati keputusan pasien namun tetap lapor!', color:'purple' }
+      ]
+    }
+  },
+  { id:'s7', color:'red', gradient:'linear-gradient(90deg,#ef4444,#8b5cf6)', label:'Kekerasan Nakes', labelColor:'#ef4444',
+    title:'Keluarga Pasien Mengamuk di IGD', desc:'Keluarga pasien marah karena antrean triage, berteriak mengancam dokter, dan memukul perawat karena dinilai lambat melayani.',
+    laws:'4 Pasal Terkait',
+    detail:{ situation:'Pasien dengan triase hijau tidak sabar, keluarganya berteriak mengancam dokter dan memukul perawat. Bagaimana perlindungan hukum nakes?',
+      answer:[
+        { title:'Hak Atas Keamanan Kerja', text:'Berdasarkan <strong>Pasal 282 ayat (1) UU 17/2023</strong>, nakes berhak mendapatkan perlindungan atas keamanan selama bertugas. RS wajib menyediakan sistem keamanan yang memadai.', color:'red' },
+        { title:'Pidana Menghalangi Tugas Medis', text:'<strong>Pasal 439 UU 17/2023</strong>: Pelaku kekerasan/ancaman kekerasan yang menghalangi nakes saat bertugas dapat dipidana penjara max 2 tahun atau denda max Rp200 juta.', color:'red' },
+        { title:'Delik Penganiayaan Fisik', text:'Pemukulan terhadap nakes masuk delik pidana umum <strong>Pasal 351 KUHP</strong> (Penganiayaan) dengan ancaman penjara 2 tahun 8 bulan.', color:'amber' },
+        { title:'Langkah Aman Dokter/Nakes', text:'Eskalasi ke sekuriti RS untuk mengamankan pelaku. Aktifkan tombol darurat (panic button) jika ada. Laporkan ke manajemen RS dan buat laporan polisi. Jangan membalas dengan kekerasan!', color:'purple' }
+      ]
+    }
+  },
+  { id:'s8', color:'orange', gradient:'linear-gradient(90deg,#f97316,#3b82f6)', label:'Pelanggaran Privasi', labelColor:'#f97316',
+    title:'Pasien Merekam Video Tanpa Izin', desc:'Keluarga pasien menyalakan kamera HP, melakukan rekaman video/live streaming saat dokter sedang melakukan penanganan medis di IGD.',
+    laws:'4 Pasal Terkait',
+    detail:{ situation:'Keluarga pasien merekam video proses penanganan medis secara live tanpa izin dokter. Bagaimana aspek hukum larangan merekam di RS?',
+      answer:[
+        { title:'Pelanggaran Privasi Pasien & Nakes', text:'<strong>Pasal 32 UU 44/2009</strong> menjamin privasi pasien. Perekaman di IGD berisiko mengekspos pasien lain yang sedang ditangani, melanggar hak privasi mereka.', color:'orange' },
+        { title:'Kebijakan Faskes (RS)', text:'RS memiliki otoritas (house rules) untuk melarang perekaman di area pelayanan klinis. Kemenkes dan Asosiasi Rumah Sakit mendukung pelarangan ini demi melindungi rahasia medis.', color:'cyan' },
+        { title:'Ancaman UU ITE', text:'Merekam secara ilegal atau menyebarkan video pelayanan kesehatan tanpa sensor dengan narasi provokatif dapat dijerat pasal pencemaran nama baik atau penyebaran data pribadi (UU ITE).', color:'amber' },
+        { title:'Tindakan Tepat Dokter', text:'Hentikan tindakan sejenak dengan aman, tegur perekam secara sopan tapi tegas: "Mohon maaf, demi privasi pasien lain dan regulasi RS, pengambilan video di area tindakan ini dilarang. Harap HP-nya diturunkan."', color:'blue' }
+      ]
+    }
+  }
+];
+
+var QUIZ_QUESTIONS = [
+  { q:'Seorang dokter IGD mendapat pasien tidak sadar, perlu operasi cito, tidak ada keluarga. Apa dasar hukum yang membolehkan dokter bertindak tanpa informed consent?', scenario:'Pasien koma post-KLL, GCS 3, perlu trepanasi segera. Tidak ada keluarga yang bisa dihubungi.', options:['Pasal 45 ayat (4) UU No. 29/2004 – pengecualian gawat darurat','Pasal 48 UU No. 29/2004 – kerahasiaan dokter','Pasal 32 UU No. 44/2009 – kewajiban RS','Pasal 1365 KUHPerdata – perbuatan melawan hukum'], answer:0, explanation:'Pasal 45 ayat (4) UU 29/2004 secara eksplisit menyatakan bahwa dalam keadaan gawat darurat untuk menyelamatkan jiwa, tindakan tidak memerlukan persetujuan. Ini adalah pengecualian khusus untuk situasi IGD.' },
+  { q:'Polisi meminta rekam medis pasien tersangka kriminal, hanya membawa kartu identitas tanpa surat penyidik resmi. Tindakan dokter yang benar adalah...', scenario:'Polisi datang saat shift malam, terlihat terburu-buru, meminta rekam medis tersangka narkoba.', options:['Memberikan rekam medis karena polisi punya kewenangan','Menolak dan meminta surat permintaan tertulis resmi dari penyidik','Memberikan fotokopi saja untuk mempermudah penyidikan','Langsung hubungi direktur RS tanpa berbuat apa-apa'], answer:1, explanation:'Berdasarkan Pasal 48 ayat (2) UU 29/2004, rahasia kedokteran hanya dapat dibuka jika ada permintaan TERTULIS dari penyidik yang berwenang. Memberi rekam medis tanpa dasar hukum yang benar bisa melanggar Pasal 322 KUHP.' },
+  { q:'Berapa lama rekam medis pasien rawat inap wajib disimpan oleh rumah sakit menurut Permenkes 269/2008?', scenario:'RS sedang evaluasi kapasitas penyimpanan dan mempertimbangkan pemusnahan berkas lama.', options:['2 tahun sejak pasien berobat terakhir','3 tahun sejak pasien berobat terakhir','5 tahun sejak pasien berobat terakhir','10 tahun sejak pasien berobat terakhir'], answer:2, explanation:'Pasal 8 Permenkes No. 269/2008 menetapkan bahwa rekam medis rawat inap wajib disimpan minimal 5 tahun sejak tanggal terakhir pasien berobat. Setelah 5 tahun, rekam medis dapat dimusnahkan sesuai prosedur.' },
+  { q:'Dokter yang melakukan praktik kedokteran tanpa STR yang valid dapat dikenai sanksi pidana berupa...', scenario:'Seorang dokter berpraktik menggunakan STR yang sudah kadaluarsa karena lupa perpanjang.', options:['Teguran tertulis dari IDI','Denda administratif Rp10 juta','Penjara max 3 tahun atau denda max Rp100 juta','Pencabutan izin praktik permanen'], answer:2, explanation:'Pasal 75 UU 29/2004 menetapkan bahwa praktik tanpa STR yang sah diancam pidana penjara paling lama 3 tahun atau denda paling banyak Rp100.000.000. Ini sanksi pidana, bukan sekadar administratif!' },
+  { q:'Seorang pasien anak 8 tahun dalam kondisi kritis perlu transfusi darah. Orang tua menolak dengan alasan agama. Langkah hukum yang tepat adalah...', scenario:'Hb anak 4 g/dL, anemia berat, penurunan kesadaran, orang tua menolak transfusi.', options:['Menghormati keputusan orang tua dan tidak transfusi','Langsung transfusi karena darurat, dokumentasikan alasannya','Minta pasien sendiri yang memutuskan meski baru 8 tahun','Hentikan penanganan dan rujuk ke RS lain'], answer:1, explanation:'Dalam situasi darurat mengancam jiwa anak, Pasal 45 ayat (4) UU 29/2004 membolehkan tindakan tanpa consent. UU Perlindungan Anak juga mengharuskan prioritas kepentingan terbaik anak. Dokter harus mendokumentasikan alasan medis dan penolakan orang tua.' },
+  { q:'Visum et Repertum (VeR) hanya dapat dibuat atas permintaan...', scenario:'Keluarga korban kekerasan meminta dokter IGD membuatkan VeR untuk keperluan laporan ke polisi.', options:['Keluarga korban yang meminta langsung ke dokter IGD','Penyidik (polisi) secara tertulis kepada dokter','Pasien sendiri atas kemauannya','Pengacara pasien untuk keperluan litigasi'], answer:1, explanation:'Pasal 133 KUHAP menyatakan bahwa VeR dibuat atas permintaan penyidik (polisi) secara tertulis kepada dokter. Dokter tidak boleh membuat VeR atas permintaan keluarga atau pasien secara langsung. Arahkan keluarga untuk membuat laporan polisi dulu.' },
+  { q:'Pasien ODGJ agresif perlu dilakukan restrain fisik di IGD. Berdasarkan UU 18/2014, restrain diizinkan jika...', scenario:'Pasien skizofrenia akut, mencoba melarikan diri, memukul perawat, potensi cedera serius.', options:['Keluarga meminta restrain karena lelah mengurus pasien','Darurat untuk mencegah cedera pada pasien atau orang lain','Pasien sulit kooperatif untuk pemeriksaan fisik biasa','Dokter IGD tidak punya cukup waktu untuk komunikasi'], answer:1, explanation:'Pasal 83 UU 18/2014 membolehkan pengikatan fisik hanya dalam keadaan darurat untuk mencegah cedera pada pasien atau orang lain. Restrain bukan sebagai hukuman atau kenyamanan petugas. Harus didokumentasikan dan dipantau berkala.' },
+  { q:'Dokter IGD menemukan wanita dengan pola luka mencurigakan KDRT. Pasien tidak mau melapor. Kewajiban dokter menurut UU 23/2004 adalah...', scenario:'Wanita 30 tahun, luka memar multiple, mengaku jatuh sendiri. Suami mendampingi. Pola luka tidak sesuai mekanisme yang diceritakan.', options:['Menghormati privasi pasien dan tidak melaporkan','Melaporkan kepada pihak berwajib meski pasien tidak minta','Hanya mendokumentasikan luka tanpa tindakan lain','Menunggu pasien memutuskan sendiri tanpa desakan'], answer:1, explanation:'Pasal 15 UU 23/2004 KDRT mewajibkan tenaga kesehatan MELAPORKAN kepada pihak berwajib. Ini kewajiban hukum, bukan pilihan. Pelaporan ini tidak melanggar kerahasiaan dokter karena ada landasan hukum yang membolehkan (Pasal 48 ayat (2) UU 29/2004).' },
+  { q:'Seorang dokter IGD dituduh malpraktik setelah pasien meninggal. Untuk membuktikan dokter tidak melakukan malpraktik pidana, yang paling penting adalah...', scenario:'Pasien ACS, meninggal 2 jam setelah masuk IGD meski sudah ditangani. Keluarga mengancam lapor polisi.', options:['Membayar kompensasi kepada keluarga sebagai itikad baik','Memiliki rekam medis lengkap yang mencatat tindakan sesuai standar','Meminta saksi-saksi dari sesama petugas IGD','Mendapat dukungan dari IDI tanpa rekam medis'], answer:1, explanation:'Unsur malpraktik pidana (Pasal 359 KUHP) harus dibuktikan: ada kelalaian + akibat (kematian) + hubungan kausal. Rekam medis yang lengkap dengan tindakan sesuai protokol ACLS adalah bukti terkuat bahwa dokter telah bekerja sesuai standar.' },
+  { q:'Pengaduan atas pelanggaran yang dilakukan dokter dalam praktik klinis pertama kali harus ditujukan ke...', scenario:'Pasien merasa dokter memberikan diagnosis yang salah dan berdampak buruk pada kesehatannya.', options:['Langsung ke pengadilan pidana','Majelis Kehormatan Disiplin Kedokteran Indonesia (MKDKI)','Dinas Kesehatan Kabupaten/Kota','Ikatan Dokter Indonesia (IDI)'], answer:1, explanation:'Pasal 66 UU 29/2004 menyatakan pengaduan atas pelanggaran dokter diajukan secara tertulis kepada MKDKI. MKDKI berwenang menilai pelanggaran disiplin profesi. Jalur ini berbeda dari jalur pidana (polisi/kejaksaan) atau perdata (pengadilan).' },
+  { q:'Seorang keluarga pasien mengamuk dan memukul perawat di IGD karena tidak sabar mengantre triage. Sanksi pidana khusus bagi pelaku yang menghalangi nakes bertugas menurut UU 17/2023 adalah...', scenario:'Keluarga pasien melakukan kekerasan fisik terhadap petugas triage IGD.', options:['Dipidana kurungan paling lama 3 bulan atau denda Rp5 juta','Dipidana penjara paling lama 2 tahun atau denda paling banyak Rp200 juta','Dikenai sanksi pencabutan BPJS seumur hidup','Hanya diwajibkan meminta maaf secara tertulis di koran nasional'], answer:1, explanation:'Pasal 439 UU No. 17 Tahun 2023 menetapkan pidana penjara paling lama 2 tahun atau denda paling banyak Rp200.000.000 bagi setiap orang yang melakukan kekerasan atau ancaman kekerasan menghalangi tenaga medis menjalankan praktiknya.' },
+  { q:'Mengapa perekaman video/audio proses pelayanan medis di IGD atau ruang periksa oleh pasien/keluarga tanpa izin dilarang secara hukum?', scenario:'Seorang keluarga pasien menyalakan live streaming facebook saat dokter menjahit luka pasien.', options:['Karena dapat membocorkan rahasia kedokteran dan melanggar hak privasi pasien lain','Karena dokter berhak mendapatkan royalti atas video tindakan medis tersebut','Karena mengganggu sinyal alat pacu jantung elektronik di IGD','Karena dilarang oleh Undang-Undang Hak Cipta atas nama dokter'], answer:0, explanation:'Perekaman tanpa izin dilarang karena berisiko membocorkan rahasia kedokteran (Pasal 48 UU 29/2004) dan melanggar hak privasi pasien lain yang berada di area pelayanan medis yang sama (Pasal 32 UU 44/2009).' }
+];
+
+var REFERENCES = [
+  { icon:'⚕️', name:'UU 29/2004', full:'UU No. 29 Tahun 2004 tentang Praktik Kedokteran', color:'blue',
+    pasals:[
+      { num:'Pasal 29', text:'Wajib memiliki STR (Surat Tanda Registrasi)' },
+      { num:'Pasal 36', text:'Wajib memiliki SIP (Surat Izin Praktik), max 3 tempat' },
+      { num:'Pasal 45 (1)', text:'Setiap tindakan medis wajib mendapat persetujuan pasien' },
+      { num:'Pasal 45 (4)', text:'Pengecualian gawat darurat: tindakan tanpa consent untuk selamatkan jiwa' },
+      { num:'Pasal 46', text:'Wajib membuat rekam medis' },
+      { num:'Pasal 47', text:'Rekam medis milik RS/dokter, isinya milik pasien' },
+      { num:'Pasal 48', text:'Wajib menyimpan rahasia kedokteran' },
+      { num:'Pasal 50', text:'Hak dokter atas perlindungan hukum jika sesuai standar' },
+      { num:'Pasal 51', text:'Kewajiban dokter: standar profesi, SPO, merujuk' },
+      { num:'Pasal 52', text:'Hak pasien: informasi, second opinion, menolak tindakan' },
+      { num:'Pasal 66', text:'Pengaduan ke MKDKI atas pelanggaran dokter' },
+      { num:'Pasal 75', text:'Sanksi pidana praktik tanpa STR: 3 tahun / Rp100 juta' },
+      { num:'Pasal 76', text:'Sanksi pidana praktik tanpa SIP: 3 tahun / Rp100 juta' }
+    ]
+  },
+  { icon:'🏥', name:'UU 44/2009', full:'UU No. 44 Tahun 2009 tentang Rumah Sakit', color:'cyan',
+    pasals:[
+      { num:'Pasal 29 (1b)', text:'RS wajib beri pelayanan aman, bermutu, antidiskriminasi' },
+      { num:'Pasal 32 (1)', text:'Wajib layani pasien gawat darurat' },
+      { num:'Pasal 32 (2)', text:'Dilarang tolak pasien atau minta uang muka saat darurat' },
+      { num:'Pasal 43', text:'Wajib terapkan standar keselamatan pasien' }
+    ]
+  },
+  { icon:'🌿', name:'UU 17/2023', full:'UU No. 17 Tahun 2023 tentang Kesehatan', color:'emerald',
+    pasals:[
+      { num:'Pasal 37', text:'Hak pasien mendapat informasi jelas tentang diagnosis dan tindakan' },
+      { num:'Pasal 73', text:'Rekam medis wajib dibuat, sanksi administratif jika tidak' },
+      { num:'Pasal 193', text:'Pidana bagi yang membiarkan pasien gawat darurat tanpa pertolongan' },
+      { num:'Pasal 273', text:'Hak Tenaga Medis/Kesehatan mendapat pelindungan hukum sepanjang bekerja sesuai standar' },
+      { num:'Pasal 282', text:'Hak Tenaga Medis/Kesehatan mendapat pelindungan atas keselamatan, kesehatan, dan keamanan kerja' },
+      { num:'Pasal 439', text:'Sanksi pidana penjara max 2 tahun atau denda max Rp200 juta bagi pelaku kekerasan terhadap nakes' }
+    ]
+  },
+  { icon:'⚖️', name:'KUHP', full:'Kitab Undang-Undang Hukum Pidana', color:'amber',
+    pasals:[
+      { num:'Pasal 322', text:'Membuka rahasia jabatan: pidana 9 bulan atau denda' },
+      { num:'Pasal 359', text:'Kelalaian menyebabkan kematian: pidana max 5 tahun' },
+      { num:'Pasal 360', text:'Kelalaian menyebabkan luka berat: pidana max 5 tahun' },
+      { num:'Pasal 264', text:'Pemalsuan surat keterangan dokter/VeR: pidana 8 tahun' }
+    ]
+  },
+  { icon:'🏛️', name:'KUHAP', full:'Kitab Undang-Undang Hukum Acara Pidana (UU 8/1981)', color:'purple',
+    pasals:[
+      { num:'Pasal 133', text:'Penyidik berwenang minta keterangan ahli (dokter) untuk peradilan' },
+      { num:'Pasal 134', text:'Pembedahan mayat untuk pembuktian: keluarga diberitahu dulu' },
+      { num:'Pasal 179', text:'Dokter WAJIB memberikan keterangan ahli (VeR) demi keadilan' }
+    ]
+  },
+  { icon:'📜', name:'KUH Perdata', full:'Kitab Undang-Undang Hukum Perdata', color:'orange',
+    pasals:[
+      { num:'Pasal 1365', text:'PMH: wajib ganti rugi atas kerugian yang ditimbulkan' },
+      { num:'Pasal 1366', text:'Kelalaian (negligence): wajib ganti rugi atas kerugian akibat kurang hati-hati' }
+    ]
+  },
+  { icon:'💊', name:'UU 35/2009', full:'UU No. 35 Tahun 2009 tentang Narkotika', color:'emerald',
+    pasals:[
+      { num:'Pasal 7', text:'Narkotika hanya untuk pelayanan kesehatan dan ilmu pengetahuan' },
+      { num:'Pasal 43', text:'Dokter boleh meresepkan narkotika Gol II dan III untuk pengobatan' },
+      { num:'Pasal 116', text:'Memberikan narkotika tanpa hak = pidana min 5 tahun' }
+    ]
+  },
+  { icon:'🧠', name:'UU 18/2014', full:'UU No. 18 Tahun 2014 tentang Kesehatan Jiwa', color:'purple',
+    pasals:[
+      { num:'Pasal 70', text:'ODMK/ODGJ berhak mendapat layanan kesehatan jiwa' },
+      { num:'Pasal 83', text:'Restrain fisik hanya boleh untuk cegah cedera, bukan hukuman' },
+      { num:'Pasal 86', text:'Rawat inap paksa (involuntary) diizinkan jika membahayakan' }
+    ]
+  },
+  { icon:'💻', name:'UU ITE', full:'UU No. 11/2008 jo UU No. 19/2016 jo UU No. 1/2024 tentang ITE', color:'amber',
+    pasals:[
+      { num:'Pasal 27', text:'Melarang penyebaran informasi bermuatan pencemaran nama baik, intimidasi, atau ancaman' },
+      { num:'Pasal 31', text:'Melarang penyadapan, intersepsi, atau perekaman transmisi elektronik milik orang lain secara ilegal' }
+    ]
+  }
+];
+
+var currentTab = 'home';
+var activeCategory = 'Semua';
+var quizIndex = 0;
+var quizCorrect = 0;
+var quizWrong = 0;
+var quizAnswered = false;
+var QUIZ_SET = shuffleArray(QUIZ_QUESTIONS.slice()).slice(0,10);
+
+function shuffleArray(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.bottom-nav-item').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('page-' + tab).classList.add('active');
+  document.getElementById('bnav-' + tab).classList.add('active');
+  currentTab = tab;
+}
+
+function renderHome() {
+  var container = document.getElementById('home-cards');
+  container.innerHTML = TOPICS.slice(0,6).map(function(t) {
+    return '<div class="card ' + t.color + '" onclick="openTopic(\'' + t.id + '\')">' +
+      '<div class="card-header">' +
+      '<div class="card-icon ' + t.color + '">' + t.icon + '</div>' +
+      '<div class="card-content"><div class="card-title">' + t.title + '</div><div class="card-sub">' + t.sub + '</div></div>' +
+      '<div class="card-arrow">&#x203A;</div></div>' +
+      '<div class="card-meta"><div class="card-tags">' +
+      t.tags.map(function(tag) { return '<span class="tag">' + tag + '</span>'; }).join('') +
+      '<span class="tag blue">' + t.laws.length + ' Pasal</span>' +
+      '</div></div></div>';
+  }).join('');
+}
+
+var CATEGORIES = ['Semua','Dasar','IGD','Administrasi','Pidana','Forensik','Khusus','Farmasi'];
+function renderTopikPage() {
+  var chips = document.getElementById('topik-chips');
+  chips.innerHTML = CATEGORIES.map(function(c) {
+    return '<div class="chip ' + (c === activeCategory ? 'active' : '') + '" onclick="filterCategory(\'' + c + '\')">' + c + '</div>';
+  }).join('');
+  renderTopikList();
+}
+
+function filterCategory(cat) { activeCategory = cat; renderTopikPage(); }
+function filterTopik() { renderTopikList(); }
+
+function renderTopikList() {
+  var q = document.getElementById('topik-search').value.toLowerCase();
+  var list = document.getElementById('topik-list');
+  var filtered = TOPICS.filter(function(t) {
+    var matchCat = activeCategory === 'Semua' || t.category === activeCategory;
+    var matchQ = !q || t.title.toLowerCase().indexOf(q) !== -1 || t.sub.toLowerCase().indexOf(q) !== -1 || t.tags.some(function(tag) { return tag.toLowerCase().indexOf(q) !== -1; });
+    return matchCat && matchQ;
+  });
+  if (!filtered.length) { list.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Tidak ditemukan topik yang sesuai.</div></div>'; return; }
+  list.innerHTML = filtered.map(function(t) {
+    return '<div class="card ' + t.color + '" onclick="openTopic(\'' + t.id + '\')">' +
+      '<div class="card-header"><div class="card-icon ' + t.color + '">' + t.icon + '</div>' +
+      '<div class="card-content"><div class="card-title">' + t.title + '</div><div class="card-sub">' + t.sub + '</div></div>' +
+      '<div class="card-arrow">&#x203A;</div></div>' +
+      '<div class="card-meta"><div class="card-tags"><span class="tag">' + t.category + '</span>' +
+      t.tags.slice(0,2).map(function(tag) { return '<span class="tag">' + tag + '</span>'; }).join('') +
+      '<span class="tag blue">' + t.laws.length + ' Pasal</span>' +
+      '</div></div></div>';
+  }).join('');
+}
+
+function renderSkenario() {
+  var list = document.getElementById('skenario-list');
+  list.innerHTML = SCENARIOS.map(function(s) {
+    return '<div class="scenario-card" onclick="openScenario(\'' + s.id + '\')">' +
+      '<div class="scenario-banner" style="background:' + s.gradient + '"></div>' +
+      '<div class="scenario-body"><div class="scenario-label" style="color:' + s.labelColor + '">' + s.label + '</div>' +
+      '<div class="scenario-title">' + s.title + '</div><div class="scenario-desc">' + s.desc + '</div>' +
+      '<div class="scenario-footer"><div class="scenario-laws">📌 ' + s.laws + '</div>' +
+      '<button class="scenario-btn">Analisis ›</button></div></div></div>';
+  }).join('');
+}
+
+function openTopic(id) {
+  var t = TOPICS.find(function(x) { return x.id === id; });
+  if (!t) return;
+  var mi = document.getElementById('modal-icon');
+  mi.innerHTML = t.icon;
+  mi.className = 'sheet-icon card-icon ' + t.color;
+  mi.style.background = '';
+  document.getElementById('modal-title').textContent = t.title;
+  document.getElementById('modal-subtitle').innerHTML = t.sub;
+  document.getElementById('modal-body').innerHTML = '<div class="law-section">' +
+    '<div class="law-section-title">📜 Pasal-Pasal Terkait</div>' +
+    t.laws.map(function(law) {
+      return '<div class="law-block"><div class="law-pasal"><span class="pasal-badge ' + law.color + '">' + law.pasal + '</span><span class="pasal-source">' + law.source + '</span></div>' +
+        '<div class="law-text">' + law.text + '</div>' +
+        (law.sanction ? '<div class="sanction-box"><div class="sanction-label">⚠️ Sanksi</div><div class="sanction-text">' + law.sanction + '</div></div>' : '') +
+        (law.tip ? '<div class="tip-box"><div class="tip-icon">💡</div><div class="tip-text">' + law.tip + '</div></div>' : '') +
+        '</div>';
+    }).join('') + '</div>';
+  document.getElementById('modal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function openScenario(id) {
+  var s = SCENARIOS.find(function(x) { return x.id === id; });
+  if (!s) return;
+  var mi = document.getElementById('modal-icon');
+  mi.innerHTML = s.label.split(' ')[0];
+  mi.style.background = s.gradient;
+  mi.className = 'sheet-icon';
+  document.getElementById('modal-title').textContent = s.title;
+  document.getElementById('modal-subtitle').textContent = 'Analisis Hukum Skenario Klinis';
+  document.getElementById('modal-body').innerHTML =
+    '<div class="law-section"><div class="law-section-title">📋 Situasi Klinis</div>' +
+    '<div class="quiz-scenario">' + s.detail.situation + '</div></div>' +
+    '<div class="law-section"><div class="law-section-title">⚖️ Analisis Hukum</div>' +
+    s.detail.answer.map(function(a) {
+      return '<div class="law-block" style="border-left:3px solid var(--accent-' + a.color + ')">' +
+        '<div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:6px">' + a.title + '</div>' +
+        '<div class="law-text">' + a.text + '</div></div>';
+    }).join('') + '</div>';
+  document.getElementById('modal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(event) {
+  if (event && event.target !== document.getElementById('modal')) return;
+  document.getElementById('modal').classList.remove('show');
+  document.getElementById('modal-icon').style.background = '';
+  document.body.style.overflow = '';
+}
+
+function renderQuiz() {
+  updateQuizProgress();
+  var area = document.getElementById('quiz-area');
+  var nextBtn = document.getElementById('quiz-next-btn');
+  if (quizIndex >= QUIZ_SET.length) {
+    var pct = Math.round((quizCorrect / QUIZ_SET.length) * 100);
+    var grade, gradeColor, gradeEmoji;
+    if (pct >= 80) { grade = 'Lulus! Kompeten'; gradeColor = '#10b981'; gradeEmoji = '🏆'; }
+    else if (pct >= 60) { grade = 'Cukup Baik'; gradeColor = '#f59e0b'; gradeEmoji = '📈'; }
+    else { grade = 'Perlu Belajar Lagi'; gradeColor = '#ef4444'; gradeEmoji = '📚'; }
+    area.innerHTML = '<div class="quiz-card" style="text-align:center;padding:28px 18px">' +
+      '<div style="font-size:52px;margin-bottom:12px">' + gradeEmoji + '</div>' +
+      '<div style="font-size:28px;font-weight:800;background:linear-gradient(135deg,var(--accent-blue-light),var(--accent-cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px">' + pct + '%</div>' +
+      '<div style="font-size:15px;font-weight:600;color:' + gradeColor + ';margin-bottom:8px">' + grade + '</div>' +
+      '<div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Kamu menjawab benar ' + quizCorrect + ' dari ' + QUIZ_SET.length + ' soal.</div>' +
+      '<div style="background:var(--bg-secondary);border-radius:var(--radius-md);padding:12px;font-size:12px;color:var(--text-secondary);line-height:1.6">' +
+      (pct < 70 ? '💡 Fokus ulang pada topik IGD, Informed Consent, dan Malpraktik. Gunakan fitur Topik dan Skenario untuk belajar lebih dalam.' : '✅ Bagus! Kamu sudah cukup memahami hukum kedokteran dasar. Terus perbarui pengetahuanmu dengan regulasi terbaru.') +
+      '</div></div>';
+    nextBtn.textContent = 'Main Lagi';
+    nextBtn.onclick = restartQuiz;
+    return;
+  }
+  var q = QUIZ_SET[quizIndex];
+  quizAnswered = false;
+  area.innerHTML = '<div class="quiz-card"><div class="quiz-num">Soal ' + (quizIndex+1) + ' dari ' + QUIZ_SET.length + '</div>' +
+    '<div class="quiz-question">' + q.q + '</div>' +
+    (q.scenario ? '<div class="quiz-scenario">' + q.scenario + '</div>' : '') +
+    '<div class="quiz-options" id="quiz-options">' +
+    q.options.map(function(opt, i) {
+      return '<div class="quiz-option" id="opt-' + i + '" onclick="selectOption(' + i + ')">' +
+        '<div class="option-letter">' + String.fromCharCode(65+i) + '</div><span>' + opt + '</span></div>';
+    }).join('') + '</div></div>';
+  nextBtn.textContent = 'Berikutnya';
+  nextBtn.onclick = nextQuestion;
+  nextBtn.disabled = true;
+  nextBtn.style.opacity = '0.5';
+}
+
+function selectOption(idx) {
+  if (quizAnswered) return;
+  quizAnswered = true;
+  var q = QUIZ_SET[quizIndex];
+  var opts = document.querySelectorAll('.quiz-option');
+  opts.forEach(function(o) { o.classList.add('disabled'); });
+  if (idx === q.answer) { opts[idx].classList.add('correct'); quizCorrect++; showToast('✅ Benar! +1'); }
+  else { opts[idx].classList.add('wrong'); opts[q.answer].classList.add('correct'); quizWrong++; showToast('❌ Kurang tepat'); }
+  var area = document.getElementById('quiz-area').querySelector('.quiz-card');
+  var expDiv = document.createElement('div');
+  expDiv.className = 'quiz-explanation';
+  expDiv.innerHTML = '<div class="quiz-explanation-title">💡 Penjelasan</div><div class="quiz-explanation-text">' + q.explanation + '</div>';
+  area.appendChild(expDiv);
+  updateQuizProgress();
+  var nextBtn = document.getElementById('quiz-next-btn');
+  nextBtn.disabled = false;
+  nextBtn.style.opacity = '1';
+}
+
+function nextQuestion() {
+  if (!quizAnswered && quizIndex < QUIZ_SET.length) { showToast('⚠️ Pilih jawaban dulu!'); return; }
+  quizIndex++;
+  renderQuiz();
+}
+
+function restartQuiz() {
+  quizIndex = 0; quizCorrect = 0; quizWrong = 0; quizAnswered = false;
+  QUIZ_SET = shuffleArray(QUIZ_QUESTIONS.slice()).slice(0,10);
+  renderQuiz();
+}
+
+function updateQuizProgress() {
+  var answered = quizIndex;
+  var pct = Math.round((answered / QUIZ_SET.length) * 100);
+  document.getElementById('quiz-prog-text').textContent = 'Soal ' + Math.min(quizIndex+1, QUIZ_SET.length) + ' dari ' + QUIZ_SET.length;
+  document.getElementById('quiz-prog-pct').textContent = pct + '%';
+  document.getElementById('quiz-bar').style.width = pct + '%';
+  document.getElementById('quiz-correct').textContent = quizCorrect;
+  document.getElementById('quiz-wrong').textContent = quizWrong;
+  document.getElementById('quiz-remain').textContent = Math.max(0, QUIZ_SET.length - quizIndex);
+}
+
+function renderReference() {
+  var list = document.getElementById('ref-list');
+  list.innerHTML = REFERENCES.map(function(ref, i) {
+    return '<div class="ref-accordion"><div class="ref-header" id="ref-h-' + i + '" onclick="toggleRef(' + i + ')">' +
+      '<div class="ref-icon">' + ref.icon + '</div>' +
+      '<div class="ref-info"><div class="ref-name">' + ref.name + '</div><div class="ref-full">' + ref.full + '</div></div>' +
+      '<div class="ref-chevron">▾</div></div>' +
+      '<div class="ref-body" id="ref-b-' + i + '">' +
+      ref.pasals.map(function(p) {
+        return '<div class="pasal-item"><div class="pasal-num">' + p.num + '</div><div class="pasal-text">' + p.text + '</div></div>';
+      }).join('') + '</div></div>';
+  }).join('');
+}
+
+function toggleRef(i) {
+  var header = document.getElementById('ref-h-' + i);
+  var body = document.getElementById('ref-b-' + i);
+  var isOpen = header.classList.contains('open');
+  document.querySelectorAll('.ref-header').forEach(function(h) { h.classList.remove('open'); });
+  document.querySelectorAll('.ref-body').forEach(function(b) { b.classList.remove('open'); });
+  if (!isOpen) { header.classList.add('open'); body.classList.add('open'); }
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2200);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  renderHome();
+  renderTopikPage();
+  renderSkenario();
+  renderQuiz();
+  renderReference();
+});
+</script>
+</body>
+</html>
