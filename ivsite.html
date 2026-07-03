@@ -1,0 +1,3090 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Critical IV Admixture & Stability Calculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Theme Variables */
+        :root {
+            /* Default: Mint Teal Theme */
+            --bg-main: #050a0f;
+            --bg-card: rgba(11, 22, 34, 0.75);
+            --bg-card-hover: rgba(18, 33, 50, 0.85);
+            --border-color: rgba(255, 255, 255, 0.06);
+            --border-color-active: rgba(13, 148, 136, 0.4);
+            
+            --color-text-primary: #f8fafc;
+            --color-text-secondary: #cbd5e1;
+            --color-text-muted: #64748b;
+            
+            --color-primary: #0d9488; /* Teal 600 */
+            --color-primary-dark: #0f766e; /* Teal 700 */
+            --color-primary-glow: rgba(13, 148, 136, 0.15);
+            
+            --color-success: #10b981;
+            --color-success-bg: rgba(16, 185, 129, 0.08);
+            --color-success-border: rgba(16, 185, 129, 0.2);
+            --color-success-glow: rgba(16, 185, 129, 0.2);
+            --color-success-text: #a7f3d0;
+            
+            --color-danger: #ef4444;
+            --color-danger-bg: rgba(239, 68, 68, 0.08);
+            --color-danger-border: rgba(239, 68, 68, 0.2);
+            --color-danger-glow: rgba(239, 68, 68, 0.2);
+            --color-danger-text: #fca5a5;
+            
+            --color-warning: #f59e0b;
+            --color-warning-bg: rgba(245, 158, 11, 0.08);
+            --color-warning-border: rgba(245, 158, 11, 0.2);
+            --color-warning-glow: rgba(245, 158, 11, 0.2);
+            --color-warning-text: #fde68a;
+            
+            --color-info: #06b6d4; /* Cyan */
+            --color-info-bg: rgba(6, 182, 212, 0.08);
+            --color-info-border: rgba(6, 182, 212, 0.2);
+            --color-info-text: #c7d2fe;
+
+            --bg-detail-item: rgba(0, 0, 0, 0.2);
+            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Midnight Blue Theme */
+        body.theme-blue {
+            --bg-main: #090d16;
+            --bg-card: rgba(17, 25, 40, 0.75);
+            --bg-card-hover: rgba(26, 37, 58, 0.85);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-color-active: rgba(59, 130, 246, 0.4);
+            --color-primary: #3b82f6;
+            --color-primary-dark: #1d4ed8;
+            --color-primary-glow: rgba(59, 130, 246, 0.15);
+            --color-info: #6366f1;
+            --color-info-bg: rgba(99, 102, 241, 0.08);
+            --color-info-border: rgba(99, 102, 241, 0.2);
+            --color-info-text: #c7d2fe;
+            --bg-detail-item: rgba(0, 0, 0, 0.2);
+        }
+
+        /* Amethyst Purple Theme */
+        body.theme-purple {
+            --bg-main: #0a0714;
+            --bg-card: rgba(20, 15, 36, 0.75);
+            --bg-card-hover: rgba(30, 23, 54, 0.85);
+            --border-color: rgba(255, 255, 255, 0.06);
+            --border-color-active: rgba(139, 92, 246, 0.4);
+            --color-primary: #8b5cf6;
+            --color-primary-dark: #6d28d9;
+            --color-primary-glow: rgba(139, 92, 246, 0.15);
+            --color-info: #ec4899;
+            --color-info-bg: rgba(236, 72, 153, 0.08);
+            --color-info-border: rgba(236, 72, 153, 0.2);
+            --color-info-text: #fbcfe8;
+            --bg-detail-item: rgba(0, 0, 0, 0.2);
+        }
+
+        /* Nordic Light Theme */
+        body.theme-light {
+            --bg-main: #f1f5f9;
+            --bg-card: rgba(255, 255, 255, 0.8);
+            --bg-card-hover: rgba(248, 250, 252, 0.95);
+            --border-color: rgba(0, 0, 0, 0.08);
+            --border-color-active: rgba(37, 99, 235, 0.4);
+            
+            --color-text-primary: #0f172a;
+            --color-text-secondary: #334155;
+            --color-text-muted: #64748b;
+            
+            --color-primary: #2563eb;
+            --color-primary-dark: #1d4ed8;
+            --color-primary-glow: rgba(37, 99, 235, 0.1);
+            
+            --color-success: #059669;
+            --color-success-bg: rgba(5, 150, 105, 0.06);
+            --color-success-border: rgba(5, 150, 105, 0.15);
+            --color-success-glow: rgba(5, 150, 105, 0.08);
+            --color-success-text: #065f46;
+            
+            --color-danger: #dc2626;
+            --color-danger-bg: rgba(220, 38, 38, 0.06);
+            --color-danger-border: rgba(220, 38, 38, 0.15);
+            --color-danger-glow: rgba(220, 38, 38, 0.08);
+            --color-danger-text: #991b1b;
+            
+            --color-warning: #d97706;
+            --color-warning-bg: rgba(217, 119, 6, 0.06);
+            --color-warning-border: rgba(217, 119, 6, 0.15);
+            --color-warning-glow: rgba(217, 119, 6, 0.08);
+            --color-warning-text: #92400e;
+            
+            --color-info: #4f46e5;
+            --color-info-bg: rgba(79, 70, 229, 0.06);
+            --color-info-border: rgba(79, 70, 229, 0.15);
+            --color-info-text: #3730a3;
+
+            --bg-detail-item: rgba(0, 0, 0, 0.03);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-main);
+            color: var(--color-text-primary);
+            min-height: 100vh;
+            padding-bottom: 80px; /* Space for bottom nav on mobile */
+            line-height: 1.5;
+            overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Container */
+        .app-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        /* Header */
+        header {
+            position: relative;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 24px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            backdrop-filter: blur(12px);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            left: -50px;
+            width: 120px;
+            height: 120px;
+            background: var(--color-primary-glow);
+            border-radius: 50px;
+            filter: blur(40px);
+            z-index: 0;
+        }
+
+        .header-main {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+            z-index: 1;
+        }
+
+        .header-icon {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+            color: white;
+            padding: 12px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px var(--color-primary-glow);
+            flex-shrink: 0;
+            transition: background 0.3s ease;
+        }
+
+        .header-text {
+            flex: 1;
+        }
+
+        .header-title-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            background: linear-gradient(to right, var(--color-text-primary), var(--color-text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-badge {
+            font-size: 9px;
+            font-weight: 700;
+            background: var(--color-primary-glow);
+            color: var(--color-primary);
+            padding: 2px 8px;
+            border-radius: 99px;
+            border: 1px solid var(--color-primary-dark);
+            text-transform: uppercase;
+        }
+
+        .header-subtitle {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        .header-author {
+            font-size: 11px;
+            color: var(--color-primary);
+            font-weight: 700;
+            font-style: italic;
+            margin-top: 1px;
+        }
+
+        /* Theme Switcher */
+        .theme-switcher {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.15);
+            padding: 6px 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            align-self: flex-start;
+            z-index: 1;
+        }
+
+        body.theme-light .theme-switcher {
+            background: rgba(0, 0, 0, 0.03);
+        }
+
+        .theme-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--color-text-muted);
+            letter-spacing: 0.05em;
+        }
+
+        .theme-buttons {
+            display: flex;
+            gap: 6px;
+        }
+
+        .theme-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .theme-dot:hover {
+            transform: scale(1.15);
+        }
+
+        .theme-dot.active {
+            border-color: var(--color-text-primary);
+            transform: scale(1.1);
+        }
+
+        .dot-teal { background: #0d9488; }
+        .dot-blue { background: #3b82f6; }
+        .dot-purple { background: #8b5cf6; }
+        .dot-light { background: #cbd5e1; border: 1px solid #94a3b8; }
+
+        /* Disclaimer Banner */
+        .disclaimer-banner {
+            background: var(--color-warning-bg);
+            border: 1px solid var(--color-warning-border);
+            padding: 12px 16px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .disclaimer-icon {
+            color: var(--color-warning);
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .disclaimer-text {
+            font-size: 11px;
+            color: var(--color-warning-text);
+            line-height: 1.5;
+        }
+
+        .disclaimer-text strong {
+            color: var(--color-warning);
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 6px;
+            border-radius: 16px;
+            display: flex;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-sm);
+            backdrop-filter: blur(12px);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--color-text-muted);
+            padding: 10px 8px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn svg {
+            width: 20px;
+            height: 20px;
+            stroke-width: 2;
+        }
+
+        .tab-btn.active {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--color-text-primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        body.theme-light .tab-btn.active {
+            background: rgba(0, 0, 0, 0.04);
+        }
+
+        .tab-btn.active svg {
+            color: var(--color-primary);
+        }
+
+        /* Tab Content */
+        .tab-panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Card Base */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-md);
+            backdrop-filter: blur(12px);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--color-text-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .card-title svg {
+            color: var(--color-primary);
+        }
+
+        /* Y-Site Checker Panel */
+        .y-selector-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .y-slot {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        body.theme-light .y-slot {
+            background: rgba(0, 0, 0, 0.01);
+            border-color: rgba(0, 0, 0, 0.12);
+        }
+
+        .y-slot:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--border-color-active);
+        }
+
+        body.theme-light .y-slot:hover {
+            background: rgba(0, 0, 0, 0.03);
+        }
+
+        .y-slot.selected {
+            background: var(--color-primary-glow);
+            border: 1px solid var(--border-color-active);
+        }
+
+        .slot-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--color-text-muted);
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .slot-value {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--color-text-secondary);
+        }
+
+        .y-slot.selected .slot-value {
+            color: var(--color-text-primary);
+        }
+
+        .slot-brand {
+            font-size: 11px;
+            color: var(--color-text-muted);
+            margin-top: 2px;
+            font-weight: 500;
+        }
+
+        .swap-btn-wrapper {
+            display: flex;
+            justify-content: center;
+        }
+
+        .swap-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        body.theme-light .swap-btn {
+            background: rgba(0, 0, 0, 0.02);
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        .swap-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--color-text-primary);
+            transform: rotate(180deg);
+        }
+
+        body.theme-light .swap-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .y-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--color-text-primary);
+            padding: 12px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        body.theme-light .btn {
+            background: rgba(0, 0, 0, 0.02);
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        body.theme-light .btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            border: 1px solid transparent;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--color-primary-dark);
+        }
+
+        /* Verdict Card */
+        .verdict-card {
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+            border: 1px solid transparent;
+            position: relative;
+            overflow: hidden;
+            animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .verdict-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .verdict-icon {
+            padding: 8px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .verdict-badge {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 4px 10px;
+            border-radius: 8px;
+        }
+
+        .verdict-title {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+        }
+
+        .verdict-desc {
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+            color: var(--color-text-secondary);
+        }
+
+        /* Verdict Details Grid */
+        .verdict-details-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding-top: 16px;
+        }
+
+        body.theme-light .verdict-details-grid {
+            border-top-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .detail-item {
+            background: var(--bg-detail-item);
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        body.theme-light .detail-item {
+            border-color: rgba(0, 0, 0, 0.02);
+        }
+
+        .detail-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--color-text-muted);
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .detail-value.highlight {
+            color: var(--color-primary);
+        }
+
+        /* Status Colors */
+        .status-compatible {
+            background: var(--color-success-bg);
+            border-color: var(--color-success-border);
+            box-shadow: 0 0 25px var(--color-success-glow);
+        }
+        .status-compatible .verdict-icon {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--color-success);
+        }
+        .status-compatible .verdict-badge {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--color-success);
+        }
+        .status-compatible .verdict-title {
+            color: var(--color-success-text);
+        }
+
+        .status-incompatible {
+            background: var(--color-danger-bg);
+            border-color: var(--color-danger-border);
+            box-shadow: 0 0 25px var(--color-danger-glow);
+        }
+        .status-incompatible .verdict-icon {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--color-danger);
+        }
+        .status-incompatible .verdict-badge {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--color-danger);
+        }
+        .status-incompatible .verdict-title {
+            color: var(--color-danger-text);
+        }
+
+        .status-conditional {
+            background: var(--color-warning-bg);
+            border-color: var(--color-warning-border);
+            box-shadow: 0 0 25px var(--color-warning-glow);
+        }
+        .status-conditional .verdict-icon {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--color-warning);
+        }
+        .status-conditional .verdict-badge {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--color-warning);
+        }
+        .status-conditional .verdict-title {
+            color: var(--color-warning-text);
+        }
+
+        .status-not-recommended {
+            background: var(--color-info-bg);
+            border-color: var(--color-info-border);
+            box-shadow: 0 0 25px var(--color-info-border);
+        }
+        .status-not-recommended .verdict-icon {
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--color-info);
+        }
+        .status-not-recommended .verdict-badge {
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--color-info);
+        }
+        .status-not-recommended .verdict-title {
+            color: var(--color-info-text);
+        }
+
+        /* Drug Profiles Side-by-Side */
+        .profiles-wrapper {
+            display: none;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .profile-card {
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 14px;
+        }
+
+        body.theme-light .profile-card {
+            background: rgba(0, 0, 0, 0.01);
+        }
+
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        .profile-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--color-text-primary);
+        }
+
+        .profile-brand {
+            font-size: 11px;
+            color: var(--color-text-muted);
+            margin-top: 1px;
+        }
+
+        .profile-cat {
+            font-size: 9px;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--color-text-secondary);
+            padding: 2px 6px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        body.theme-light .profile-cat {
+            background: rgba(0, 0, 0, 0.06);
+        }
+
+        .profile-detail-row {
+            margin-top: 8px;
+            font-size: 12px;
+        }
+
+        .profile-detail-label {
+            font-weight: 700;
+            color: var(--color-text-muted);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .profile-detail-val {
+            color: var(--color-text-secondary);
+            margin-top: 1px;
+            line-height: 1.4;
+        }
+
+        /* Lumen Coordinator Panel */
+        .lumen-coordinator-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        /* Carrier Fluid Box */
+        .carrier-selector-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .carrier-btn-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .carrier-option-btn {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            color: var(--color-text-secondary);
+            padding: 10px 4px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        body.theme-light .carrier-option-btn {
+            background: rgba(0, 0, 0, 0.02);
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        .carrier-option-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        body.theme-light .carrier-option-btn:hover {
+            background: rgba(0, 0, 0, 0.04);
+        }
+
+        .carrier-option-btn.active {
+            background: var(--color-primary-glow);
+            border-color: var(--color-primary);
+            color: var(--color-text-primary);
+            font-weight: 700;
+        }
+
+        /* Multi Drug Selection List */
+        .multi-drug-list {
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.15);
+            padding: 8px;
+        }
+
+        body.theme-light .multi-drug-list {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .multi-drug-group-title {
+            font-size: 9px;
+            font-weight: 800;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 6px 4px 2px 4px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            margin-bottom: 4px;
+        }
+
+        body.theme-light .multi-drug-group-title {
+            border-bottom-color: rgba(0, 0, 0, 0.04);
+        }
+
+        .multi-drug-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .multi-drug-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        body.theme-light .multi-drug-item:hover {
+            background: rgba(0, 0, 0, 0.03);
+        }
+
+        .multi-drug-checkbox {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            border: 1px solid var(--color-text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .multi-drug-item.selected .multi-drug-checkbox {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+        }
+
+        .multi-drug-checkbox svg {
+            display: none;
+            color: white;
+            width: 12px;
+            height: 12px;
+        }
+
+        .multi-drug-item.selected .multi-drug-checkbox svg {
+            display: block;
+        }
+
+        .multi-drug-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+        }
+
+        .multi-drug-item.selected .multi-drug-name {
+            font-weight: 700;
+            color: var(--color-text-primary);
+        }
+
+        /* CVC Map */
+        .cvc-visualization {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 16px;
+        }
+
+        body.theme-light .cvc-visualization {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .cvc-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .cvc-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--color-text-secondary);
+        }
+
+        .cvc-recommendation-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .lumen-list-vertical {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .lumen-card {
+            border-radius: 12px;
+            border-left: 5px solid transparent;
+            background: rgba(255, 255, 255, 0.02);
+            border-top: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px;
+        }
+
+        body.theme-light .lumen-card {
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        .lumen-card.distal { border-left-color: #3b82f6; }
+        .lumen-card.medial { border-left-color: #f59e0b; }
+        .lumen-card.proximal { border-left-color: #ef4444; }
+
+        .lumen-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .lumen-name {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .lumen-card.distal .lumen-name { color: #3b82f6; }
+        .lumen-card.medial .lumen-name { color: #d97706; }
+        .lumen-card.proximal .lumen-name { color: #ef4444; }
+
+        .lumen-tag {
+            font-size: 9px;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1px 6px;
+            border-radius: 4px;
+            color: var(--color-text-muted);
+        }
+
+        body.theme-light .lumen-tag {
+            background: rgba(0, 0, 0, 0.04);
+        }
+
+        .lumen-drugs {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            margin-bottom: 6px;
+            min-height: 20px;
+        }
+
+        .lumen-drugs:empty::after {
+            content: "Kosong (Jalur Standby / Flush Saline)";
+            color: var(--color-text-muted);
+            font-weight: 400;
+            font-style: italic;
+            font-size: 12px;
+        }
+
+        .lumen-instructions {
+            background: rgba(0, 0, 0, 0.15);
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            color: var(--color-text-secondary);
+        }
+
+        body.theme-light .lumen-instructions {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .lumen-instructions p {
+            margin-bottom: 2px;
+        }
+        .lumen-instructions p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Alerts Area */
+        .alerts-area {
+            margin-top: 16px;
+        }
+
+        .alert-item {
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px solid rgba(239, 68, 68, 0.15);
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            font-size: 12px;
+            color: var(--color-danger-text);
+        }
+
+        .alert-item.warning {
+            background: rgba(245, 158, 11, 0.05);
+            border: 1px solid rgba(245, 158, 11, 0.15);
+            color: var(--color-warning-text);
+        }
+
+        .alert-item svg {
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* Drug Library Panel */
+        .library-search-wrapper {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .library-search-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border-color);
+            color: var(--color-text-primary);
+            padding: 12px 16px 12px 40px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-family: var(--font-sans);
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        body.theme-light .library-search-input {
+            background: white;
+            color: #0f172a;
+        }
+
+        .library-search-input:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 10px var(--color-primary-glow);
+        }
+
+        .library-search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-text-muted);
+        }
+
+        .library-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .library-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        body.theme-light .library-item {
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        .library-item:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-color-active);
+        }
+
+        .library-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .library-item-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--color-text-primary);
+        }
+
+        .library-item-brand {
+            font-size: 11px;
+            color: var(--color-text-muted);
+            margin-top: 1px;
+        }
+
+        .library-item-tag {
+            font-size: 9px;
+            font-weight: 700;
+            background: var(--color-primary-glow);
+            color: var(--color-primary);
+            padding: 2px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .library-item-details {
+            display: none;
+            margin-top: 12px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+            animation: slideDown 0.2s ease;
+        }
+
+        .library-item.expanded .library-item-details {
+            display: block;
+        }
+
+        .library-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(5, 7, 12, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: #0f172a;
+            border-top: 1px solid var(--border-color);
+            border-radius: 24px 24px 0 0;
+            width: 100%;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.32, 0.94, 0.6, 1);
+        }
+
+        body.theme-light .modal-content {
+            background: #f8fafc;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--color-text-primary);
+        }
+
+        .modal-close-btn {
+            background: transparent;
+            border: none;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-search-wrapper {
+            padding: 12px 16px;
+            position: relative;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        body.theme-light .modal-search-wrapper {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .modal-search-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            color: var(--color-text-primary);
+            padding: 10px 12px 10px 36px;
+            border-radius: 12px;
+            font-size: 14px;
+            outline: none;
+            font-family: var(--font-sans);
+        }
+
+        body.theme-light .modal-search-input {
+            background: white;
+            color: #0f172a;
+        }
+
+        .modal-search-input:focus {
+            border-color: var(--color-primary);
+        }
+
+        .modal-search-icon {
+            position: absolute;
+            left: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-text-muted);
+        }
+
+        .modal-drug-list {
+            overflow-y: auto;
+            flex: 1;
+            padding: 8px 16px 24px 16px;
+        }
+
+        .modal-group-title {
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 12px 0 6px 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 3px;
+        }
+
+        .modal-drug-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 4px;
+            transition: background 0.2s ease;
+        }
+
+        .modal-drug-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        body.theme-light .modal-drug-item:hover {
+            background: rgba(0, 0, 0, 0.03);
+        }
+
+        .modal-drug-name-col {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-drug-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .modal-drug-brand {
+            font-size: 11px;
+            color: var(--color-text-muted);
+            margin-top: 1px;
+        }
+
+        .modal-drug-badge {
+            font-size: 9px;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--color-text-secondary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        body.theme-light .modal-drug-badge {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        /* Footer Info */
+        .footer-info {
+            text-align: center;
+            padding: 20px;
+            font-size: 11px;
+            color: var(--color-text-muted);
+            line-height: 1.5;
+        }
+
+        /* Responsive Breakpoints */
+        @media (min-width: 768px) {
+            body {
+                padding-bottom: 24px;
+            }
+
+            .app-container {
+                padding: 24px;
+            }
+
+            header {
+                padding: 24px;
+                border-radius: 28px;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .header-main {
+                width: auto;
+            }
+
+            .header-title {
+                font-size: 24px;
+            }
+
+            .header-subtitle {
+                font-size: 14px;
+            }
+
+            .header-author {
+                font-size: 11px;
+            }
+
+            .theme-switcher {
+                align-self: center;
+            }
+
+            .nav-tabs {
+                border-radius: 18px;
+                padding: 8px;
+                gap: 8px;
+            }
+
+            .tab-btn {
+                padding: 12px 16px;
+                font-size: 14px;
+                flex-direction: row;
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .y-selector-grid {
+                grid-template-columns: 1fr auto 1fr;
+                gap: 16px;
+            }
+
+            .swap-btn-wrapper {
+                margin-top: 16px;
+            }
+
+            .verdict-details-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .profiles-wrapper {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .lumen-coordinator-grid {
+                grid-template-columns: 1fr 1.5fr;
+            }
+
+            .cvc-visualization {
+                padding: 20px;
+            }
+
+            .library-list {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+
+            .library-detail-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            /* Modal on Desktop */
+            .modal-overlay {
+                align-items: center;
+            }
+
+            .modal-content {
+                width: 480px;
+                border-radius: 24px;
+                max-height: 70vh;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+                border: 1px solid var(--border-color);
+                transform: translateY(20px);
+            }
+
+            .modal-overlay.active .modal-content {
+                transform: translateY(0);
+            }
+        }
+
+        /* Floating sticky nav on mobile */
+        @media (max-width: 767px) {
+            .nav-tabs {
+                position: fixed;
+                bottom: 12px;
+                left: 12px;
+                right: 12px;
+                margin-bottom: 0;
+                z-index: 90;
+                background: var(--bg-card);
+                border: 1px solid var(--border-color);
+            }
+        }
+    </style>
+</head>
+<body class="theme-teal">
+
+    <div class="app-container">
+        
+        <!-- Header -->
+        <header>
+            <div class="header-main">
+                <div class="header-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                </div>
+                <div class="header-text">
+                    <div class="header-title-row">
+                        <h1 class="header-title">Critical IV Admixture & Stability Calculator</h1>
+                        <span class="header-badge">PRO v2.2</span>
+                    </div>
+                    <p class="header-subtitle">Kalkulator Kompatibilitas Jalur Infus & Stabilitas Sediaan</p>
+                    <p class="header-author">Developed by: dr. Bayushi Eka Putra, MD, FIHA</p>
+                </div>
+            </div>
+
+            <!-- Theme Switcher -->
+            <div class="theme-switcher">
+                <span class="theme-label">Tema:</span>
+                <div class="theme-buttons">
+                    <div id="dot-teal" class="theme-dot dot-teal active" onclick="setTheme('teal')" title="Mint Teal"></div>
+                    <div id="dot-blue" class="theme-dot dot-blue" onclick="setTheme('blue')" title="Midnight Blue"></div>
+                    <div id="dot-purple" class="theme-dot dot-purple" onclick="setTheme('purple')" title="Amethyst Purple"></div>
+                    <div id="dot-light" class="theme-dot dot-light" onclick="setTheme('light')" title="Nordic Light"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Disclaimer Banner -->
+        <div class="disclaimer-banner">
+            <svg class="disclaimer-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div class="disclaimer-text">
+                <strong>DISCLAIMER REFERENSI MEDIS:</strong> Instrumen ini hanya sebagai alat bantu pengambilan keputusan klinis. Verifikasi ulang pada <em>drug insert</em> resmi wajib dilakukan sebelum pemberian terapi. Pembuat aplikasi tidak bertanggung jawab atas keputusan klinis mandiri yang diambil di lapangan.
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('y-site')">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+                <span>Y-Site Checker</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('lumen')">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M9 22V12h6v10M2 12h20"/></svg>
+                <span>Koordinator Lumen</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('library')">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5v-15z"/></svg>
+                <span>Kamus Obat</span>
+            </button>
+        </div>
+
+        <!-- TAB 1: Y-Site Checker Panel -->
+        <div id="panel-y-site" class="tab-panel active">
+            <div class="card">
+                <h2 class="card-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    Pilih 2 Sediaan IV Kritis
+                </h2>
+                
+                <div class="y-selector-grid">
+                    <div id="slot-a" class="y-slot" onclick="openDrugSelector('A')">
+                        <div class="slot-label">Sediaan IV Pertama (A)</div>
+                        <div id="slot-a-value" class="slot-value">-- Sentuh untuk memilih --</div>
+                        <div id="slot-a-brand" class="slot-brand"></div>
+                    </div>
+                    
+                    <div class="swap-btn-wrapper">
+                        <button class="swap-btn" onclick="swapDrugs()" title="Tukar Posisi Obat">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg>
+                        </button>
+                    </div>
+                    
+                    <div id="slot-b" class="y-slot" onclick="openDrugSelector('B')">
+                        <div class="slot-label">Sediaan IV Kedua (B)</div>
+                        <div id="slot-b-value" class="slot-value">-- Sentuh untuk memilih --</div>
+                        <div id="slot-b-brand" class="slot-brand"></div>
+                    </div>
+                </div>
+
+                <div class="y-actions">
+                    <button class="btn" onclick="resetYSite()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                        Reset Pilihan
+                    </button>
+                    <button class="btn btn-primary" onclick="quickSelectDemo()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5L20 7"/></svg>
+                        Simulasi ICU
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dynamic Verdict Card -->
+            <div id="verdict-card" class="verdict-card">
+                <div class="verdict-header">
+                    <div class="verdict-icon" id="verdict-icon-container">
+                        <!-- Icon injected by JS -->
+                    </div>
+                    <div>
+                        <span id="verdict-badge" class="verdict-badge">Kompatibel</span>
+                        <h3 id="verdict-title" class="verdict-title">KOMPATIBEL (AMAN)</h3>
+                    </div>
+                </div>
+                
+                <p id="verdict-desc" class="verdict-desc">
+                    Kedua obat aman dijalankan bersama pada satu jalur infus Y-site.
+                </p>
+                
+                <div class="verdict-details-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Cairan Pelarut Bersama Optimal</div>
+                        <div id="verdict-diluent" class="detail-value highlight">Dextrose 5% (D5W)</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Batas Jam Stabilitas (Suhu Ruang)</div>
+                        <div id="verdict-stability" class="detail-value highlight">24 Jam</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Perbandingan pH Sediaan</div>
+                        <div id="verdict-ph" class="detail-value">pH 3.5 vs pH 4.0 (Asam)</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Rekomendasi Tindakan</div>
+                        <div id="verdict-action" class="detail-value">Aman diinfuskan bersama. Monitor laju tetesan.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Side by Side Profiles -->
+            <div id="profiles-container" class="profiles-wrapper">
+                <div class="profile-card" id="profile-card-a">
+                    <!-- Injected by JS -->
+                </div>
+                <div class="profile-card" id="profile-card-b">
+                    <!-- Injected by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: Lumen Coordinator Panel -->
+        <div id="panel-lumen" class="tab-panel">
+            <div class="lumen-coordinator-grid">
+                
+                <!-- Setup Card -->
+                <div class="card">
+                    <h2 class="card-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        Pengaturan Protokol
+                    </h2>
+
+                    <div class="carrier-selector-box" style="margin-bottom: 16px;">
+                        <label class="slot-label">Cairan Dasar (Carrier / Main Line)</label>
+                        <div class="carrier-btn-grid">
+                            <button id="carrier-ns" class="carrier-option-btn active" onclick="selectCarrierFluid('ns')">NS (NaCl 0.9%)</button>
+                            <button id="carrier-d5w" class="carrier-option-btn" onclick="selectCarrierFluid('d5w')">D5W (Dextrose 5%)</button>
+                            <button id="carrier-lr" class="carrier-option-btn" onclick="selectCarrierFluid('lr')">LR / Ringer Laktat</button>
+                        </div>
+                    </div>
+
+                    <div class="carrier-selector-box">
+                        <label class="slot-label">Pilih Semua Obat yang Diberikan</label>
+                        <div id="multi-drug-list" class="multi-drug-list">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CVC Map Card -->
+                <div class="cvc-visualization">
+                    <div class="cvc-header">
+                        <span class="cvc-title">Peta Alokasi Lumen CVC (Central Venous Catheter)</span>
+                        <div id="cvc-rec-badge" class="cvc-recommendation-badge" style="background: rgba(16, 185, 129, 0.15); color: #60a5fa; border: 1px solid rgba(16, 185, 129, 0.2);">
+                            STANDBY
+                        </div>
+                    </div>
+
+                    <div class="lumen-list-vertical">
+                        <!-- Lumen Distal -->
+                        <div class="lumen-card distal">
+                            <div class="lumen-header">
+                                <span class="lumen-name">Lumen Distal (Ujung Kateter - Biru / 16G)</span>
+                                <span class="lumen-tag">Prioritas Vasoaktif</span>
+                            </div>
+                            <div id="lumen-distal-drugs" class="lumen-drugs"></div>
+                            <div class="lumen-instructions">
+                                <p><strong>Fungsi Utama:</strong> Monitor CVP & Obat Vasoaktif/Vasopresor Kontinu.</p>
+                                <p>• Aliran tercepat langsung menuju vena cava superior untuk respon hemodinamik instan.</p>
+                            </div>
+                        </div>
+
+                        <!-- Lumen Medial -->
+                        <div class="lumen-card medial">
+                            <div class="lumen-header">
+                                <span class="lumen-name">Lumen Medial (Tengah - Kuning / 18G)</span>
+                                <span class="lumen-tag">Dedicated Line</span>
+                            </div>
+                            <div id="lumen-medial-drugs" class="lumen-drugs"></div>
+                            <div id="lumen-medial-inst" class="lumen-instructions">
+                                <p><strong>Fungsi Utama:</strong> Nutrisi Parenteral (TPN) atau Amiodarone Kontinu.</p>
+                                <p>• Dianjurkan sebagai jalur steril tunggal (dedicated) jika menggunakan TPN lipid.</p>
+                            </div>
+                        </div>
+
+                        <!-- Lumen Proksimal -->
+                        <div class="lumen-card proximal">
+                            <div class="lumen-header">
+                                <span class="lumen-name">Lumen Proksimal (Pangkal - Merah / 18G)</span>
+                                <span class="lumen-tag">Maintenance & Intermittent</span>
+                            </div>
+                            <div id="lumen-proximal-drugs" class="lumen-drugs"></div>
+                            <div class="lumen-instructions">
+                                <p><strong>Fungsi Utama:</strong> Pengambilan sampel darah, obat intermiten, atau bolus cairan.</p>
+                                <p>• Meminimalkan risiko efek balik obat kontinu ke lumen lain saat dilakukan flush.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alerts Area -->
+                    <div id="cvc-alerts-area" class="alerts-area">
+                        <!-- Alert items injected by JS -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- TAB 3: Drug Library Panel -->
+        <div id="panel-library" class="tab-panel">
+            <div class="card">
+                <div class="library-search-wrapper">
+                    <svg class="library-search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="library-search" class="library-search-input" placeholder="Cari sediaan obat (misal: Vascon, Cordarone)..." oninput="searchLibrary()">
+                </div>
+
+                <div id="library-list" class="library-list">
+                    <!-- Injected by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Info -->
+        <div class="footer-info">
+            <p>© 2026 dr. Bayushi Eka Putra, MD, FIHA. All Rights Reserved.</p>
+            <p>Sistem Pendukung Keputusan Klinis (CDSS) - Versi 2.2 Pro. Dioptimalkan untuk perangkat mobile ICU/CVCU.</p>
+        </div>
+
+    </div>
+
+    <!-- Drug Selection Modal Overlay -->
+    <div id="drug-modal" class="modal-overlay" onclick="handleModalOverlayClick(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title" class="modal-title">Pilih Sediaan IV</h3>
+                <button onclick="closeModal()" class="modal-close-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-search-wrapper">
+                <svg class="modal-search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="modal-search-input" class="modal-search-input" placeholder="Cari berdasarkan nama generik atau merk..." oninput="filterModalDrugs()">
+            </div>
+            <div id="modal-drug-list" class="modal-drug-list">
+                <!-- Injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Engine -->
+    <script>
+        // Comprehensive Database of 35 Critical ICU/CVCU Drugs
+        const DRUGS = [
+            {
+                id: 'norepinephrine',
+                name: 'Norepinephrine',
+                brand: 'Vascon, Raivas, Levosol, Levophed',
+                category: 'Vasoaktif / Vasopresor',
+                pH: '3.0 - 4.5',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil, namun D5W lebih direkomendasikan untuk mencegah oksidasi.' },
+                diluentD5: { status: 'Sangat Direkomendasikan', stability: '24 Jam', note: 'Mencegah oksidasi zat aktif, menjaga potensi optimal.' },
+                diluentRL: { status: 'Tidak Direkomendasikan', stability: '24 Jam', note: 'Kurang stabil dibanding D5W, hindari jika ada pilihan lain.' },
+                preferredDiluent: 'Dextrose 5% (D5W)',
+                stabilityNote: '24 Jam pada suhu ruang (20-25°C). Lindungi dari cahaya untuk penyimpanan jangka panjang.',
+                pearls: 'Pantau ketat patensi jalur infus untuk mencegah ekstravasasi. Jika terjadi ekstravasasi, segera berikan phentolamine.'
+            },
+            {
+                id: 'epinephrine',
+                name: 'Epinephrine',
+                brand: 'Adrenalin',
+                category: 'Vasoaktif / Vasopresor',
+                pH: '2.5 - 5.0',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Dapat digunakan, stabil.' },
+                diluentD5: { status: 'Sangat Direkomendasikan', stability: '24 Jam', note: 'D5W mencegah oksidasi obat.' },
+                diluentRL: { status: 'Tidak Direkomendasikan', stability: '24 Jam', note: 'Kurang stabil dibanding D5W.' },
+                preferredDiluent: 'Dextrose 5% (D5W)',
+                stabilityNote: '24 Jam pada suhu ruang. Jangan gunakan jika larutan berubah warna menjadi pink/cokelat.',
+                pearls: 'Sensitif terhadap cahaya dan udara. Hindari pencampuran dengan larutan alkali.'
+            },
+            {
+                id: 'dobutamine',
+                name: 'Dobutamine',
+                brand: 'Doburan, Inotrop, Cardiject',
+                category: 'Vasoaktif / Inotropik',
+                pH: '2.5 - 5.5',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentD5: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentRL: { status: 'Kompatibel', stability: '24 Jam', note: 'Dapat digunakan.' },
+                preferredDiluent: 'Dextrose 5% (D5W) atau NaCl 0.9% (NS)',
+                stabilityNote: '24 Jam pada suhu ruang. Larutan dapat berubah warna menjadi pink muda karena oksidasi ringan, tetapi tidak mengurangi potensi obat dalam batas 24 jam.',
+                pearls: 'Inkompatibel dengan larutan alkalis seperti Sodium Bicarbonate.'
+            },
+            {
+                id: 'dopamine',
+                name: 'Dopamine',
+                brand: 'Dopac, Cetadop',
+                category: 'Vasoaktif / Inotropik',
+                pH: '3.0 - 5.0',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentD5: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentRL: { status: 'Kompatibel', stability: '24 Jam', note: 'Dapat digunakan.' },
+                preferredDiluent: 'Dextrose 5% (D5W) atau NaCl 0.9% (NS)',
+                stabilityNote: '24 Jam pada suhu ruang.',
+                pearls: 'Jangan dicampur dengan Sodium Bicarbonate atau larutan alkali lainnya.'
+            },
+            {
+                id: 'vasopressin',
+                name: 'Vasopressin',
+                brand: 'Spitres, Vasostrict',
+                category: 'Vasoaktif / Vasopresor',
+                pH: '2.5 - 4.5',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentD5: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentRL: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                preferredDiluent: 'NaCl 0.9% (NS) atau Dextrose 5% (D5W)',
+                stabilityNote: '24 Jam pada suhu ruang.',
+                pearls: 'Hormon antidiuretik sintetik, stabil dan kompatibel dengan vasopresor lain seperti Norepinephrine.'
+            },
+            {
+                id: 'nitroglycerin',
+                name: 'Nitroglycerin (NTG)',
+                brand: 'Dinitra, Glyceril Trinitrate, Laserdia',
+                category: 'Vasoaktif / Vasodilator',
+                pH: '3.0 - 6.5',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentD5: { status: 'Sangat Direkomendasikan', stability: '24 Jam', note: 'Stabil dan disukai.' },
+                diluentRL: { status: 'Kompatibel', stability: '24 Jam', note: 'Dapat digunakan.' },
+                preferredDiluent: 'Dextrose 5% (D5W) atau NaCl 0.9% (NS)',
+                stabilityNote: '24 Jam pada suhu ruang.',
+                pearls: '🚨 ADSORPSI PVC: Obat terserap kuat oleh plastik PVC (hingga 80%). Wajib menggunakan botol kaca/polyolefin dan selang infus khusus non-PVC (LDPE/glass).'
+            },
+            {
+                id: 'nitroprusside',
+                name: 'Sodium Nitroprusside',
+                brand: 'Laserdia, Nitroprusside',
+                category: 'Vasoaktif / Vasodilator',
+                pH: '3.5 - 6.0',
+                diluentNS: { status: 'Tidak Direkomendasikan', stability: '24 Jam', note: 'D5W jauh lebih stabil.' },
+                diluentD5: { status: 'Sangat Direkomendasikan', stability: '24 Jam', note: 'Pelarut standar wajib.' },
+                diluentRL: { status: 'Tidak Direkomendasikan', stability: '24 Jam', note: 'Kurang stabil.' },
+                preferredDiluent: 'Dextrose 5% (D5W) SAJA',
+                stabilityNote: '24 Jam pada suhu ruang. Sangat tidak stabil terhadap cahaya.',
+                pearls: '🚨 SENSITIF CAHAYA: Botol dan selang infus wajib dibungkus aluminium foil / amber bag hitam. Jika larutan berubah warna menjadi biru/hijau/merah tua, berarti terdegradasi menjadi sianida (buang!).'
+            },
+            {
+                id: 'nicardipine',
+                name: 'Nicardipine',
+                brand: 'Perdipine, Tensilo, Dipine',
+                category: 'Vasoaktif / Antihipertensi',
+                pH: '3.5 - 5.5',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Dapat digunakan.' },
+                diluentD5: { status: 'Sangat Direkomendasikan', stability: '24 Jam', note: 'Lebih stabil dalam kondisi asam.' },
+                diluentRL: { status: 'Tidak Direkomendasikan', stability: '24 Jam', note: 'Kurang stabil.' },
+                preferredDiluent: 'Dextrose 5% (D5W)',
+                stabilityNote: '24 Jam pada suhu ruang.',
+                pearls: 'Dapat menyebabkan iritasi vena lokal (phlebitis) jika diberikan via vena perifer pada konsentrasi pekat (>0.1 mg/mL). Gunakan CVC jika memungkinkan.'
+            },
+            {
+                id: 'diltiazem',
+                name: 'Diltiazem',
+                brand: 'Herbesser, Dilmen',
+                category: 'Vasoaktif / Antihipertensi',
+                pH: '3.7 - 4.8',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentD5: { status: 'Sangat Direkomendasikan', stability: '24 Jam', note: 'Sangat stabil.' },
+                diluentRL: { status: 'Tidak Direkomendasikan', stability: '24 Jam', note: 'Kurang stabil.' },
+                preferredDiluent: 'Dextrose 5% (D5W) atau NaCl 0.9% (NS)',
+                stabilityNote: '24 Jam pada suhu ruang (2-8°C jika disimpan belum dioplos).',
+                pearls: 'Calcium Channel Blocker. Sering digunakan untuk AF rapid ventricular response. Monitor HR dan BP ketat.'
+            },
+            {
+                id: 'milrinone',
+                name: 'Milrinone',
+                brand: 'Primacor',
+                category: 'Vasoaktif / Inodilator',
+                pH: '3.2 - 4.0',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentD5: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentRL: { status: 'Kompatibel', stability: '24 Jam', note: 'Dapat digunakan.' },
+                preferredDiluent: 'NaCl 0.9% (NS) atau Dextrose 5% (D5W)',
+                stabilityNote: '24 Jam pada suhu ruang.',
+                pearls: 'Inodilator (Inotropik + Vasodilator). Sangat inkompatibel dengan Furosemide (mengendap seketika).'
+            },
+            {
+                id: 'amiodarone',
+                name: 'Amiodarone',
+                brand: 'Cordarone, Tiaryt',
+                category: 'Antiaritmia',
+                pH: '3.5 - 4.5',
+                diluentNS: { status: 'DILARANG', stability: '0 Jam', note: 'TIDAK STABIL. Mengkristal/presipitasi pada konsentrasi normal infus kontinu (>2 mg/mL).' },
+                diluentD5: { status: 'WAJIB (100%)', stability: '24 Jam', note: 'Satu-satunya pelarut yang stabil untuk infus kontinu.' },
+                diluentRL: { status: 'DILARANG', stability: '0 Jam', note: 'Memicu presipitasi.' },
+                preferredDiluent: 'Dextrose 5% (D5W) SAJA',
+                stabilityNote: '24 Jam dalam wadah non-PVC (glass atau polyolefin). Jika menggunakan PVC, absorbsi obat terjadi (tidak disarankan untuk infus >2 jam).',
+                pearls: 'Amiodarone cenderung menempel pada PVC. Gunakan selang infus inline filter 0.22 micron.'
+            },
+            {
+                id: 'lidocaine',
+                name: 'Lidocaine',
+                brand: 'Lidocain Otsu, Lignocaine',
+                category: 'Antiaritmia',
+                pH: '5.0 - 7.0',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Sangat stabil.' },
+                diluentD5: { status: 'Kompatibel', stability: '24 Jam', note: 'Sangat stabil.' },
+                diluentRL: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                preferredDiluent: 'NaCl 0.9% (NS) atau Dextrose 5% (D5W)',
+                stabilityNote: '24 Jam pada suhu ruang.',
+                pearls: 'Digunakan sebagai antiaritmia kelas Ib (terutama VT/VF refrakter). Kompatibilitas Y-site sangat luas.'
+            },
+            {
+                id: 'insulin',
+                name: 'Insulin Regular',
+                brand: 'Actrapid, Humulin R, Novorapid',
+                category: 'Antidiabetik',
+                pH: '7.0 - 7.8',
+                diluentNS: { status: 'Sangat Direkomendasikan', stability: '24 Jam', note: 'Meminimalkan fluktuasi glukosa dari cairan pembawa.' },
+                diluentD5: { status: 'Kompatibel', stability: '24 Jam', note: 'Dapat digunakan, namun menambah beban glukosa.' },
+                diluentRL: { status: 'Kompatibel', stability: '24 Jam', note: 'Dapat digunakan.' },
+                preferredDiluent: 'NaCl 0.9% (NS)',
+                stabilityNote: '24 Jam pada suhu ruang. Insulin teradsorpsi kuat ke dinding tabung plastik/PVC.',
+                pearls: 'Disarankan melakukan priming selang infus dengan membuang 20 mL larutan insulin sebelum disambungkan ke pasien untuk menjamin dosis awal yang tepat.'
+            },
+            {
+                id: 'furosemide',
+                name: 'Furosemide',
+                brand: 'Lasix, Uresix',
+                category: 'Diuretik',
+                pH: '8.0 - 9.3',
+                diluentNS: { status: 'Sangat Direkomendasikan', stability: '24 Jam', note: 'Sangat stabil pada pH basa.' },
+                diluentD5: { status: 'Tidak Direkomendasikan', stability: '12 Jam', note: 'D5W yang bersifat asam (pH < 5.5) dapat menyebabkan kristalisasi jika disimpan lama.' },
+                diluentRL: { status: 'Kompatibel', stability: '24 Jam', note: 'Dapat digunakan.' },
+                preferredDiluent: 'NaCl 0.9% (NS)',
+                stabilityNote: '24 Jam pada suhu ruang. Jangan disimpan di kulkas (dapat memicu pengendapan).',
+                pearls: 'Furosemide sangat sensitif terhadap cahaya. Jangan campur dengan obat asam di Y-site.'
+            },
+            {
+                id: 'heparin',
+                name: 'Heparin',
+                brand: 'Inviclot, Heparin Mulia',
+                category: 'Antikoagulan',
+                pH: '5.0 - 8.0',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentD5: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentRL: { status: 'Kompatibel', stability: '24 Jam', note: 'Dapat digunakan.' },
+                preferredDiluent: 'NaCl 0.9% (NS) atau Dextrose 5% (D5W)',
+                stabilityNote: '24 Jam pada suhu ruang.',
+                pearls: 'Inkompatibel langsung dengan Amiodarone (membentuk garam kompleks tak larut).'
+            },
+            {
+                id: 'pantoprazole',
+                name: 'Pantoprazole',
+                brand: 'Pumpitor, Pantopump, Panloc',
+                category: 'Proton Pump Inhibitor',
+                pH: '9.0 - 10.0',
+                diluentNS: { status: 'Sangat Direkomendasikan', stability: '12 Jam', note: 'Paling stabil.' },
+                diluentD5: { status: 'DILARANG', stability: '2 Jam', note: 'Sangat tidak stabil, cepat rusak/terdegradasi dalam D5W.' },
+                diluentRL: { status: 'Tidak Direkomendasikan', stability: '12 Jam', note: 'Kurang stabil.' },
+                preferredDiluent: 'NaCl 0.9% (NS) SAJA',
+                stabilityNote: '12 Jam pada suhu ruang setelah diencerkan dalam NS.',
+                pearls: 'Sangat basa. Inkompatibel dengan hampir semua obat asam di Y-site.'
+            },
+            {
+                id: 'midazolam',
+                name: 'Midazolam',
+                brand: 'Miloz, Sedacum, Fortanest',
+                category: 'Sedatif / Analgesik',
+                pH: '3.0 - 3.6',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentD5: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentRL: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                preferredDiluent: 'NaCl 0.9% (NS) atau Dextrose 5% (D5W)',
+                stabilityNote: '24 Jam pada suhu ruang.',
+                pearls: 'Mengendap seketika jika dicampur dengan obat yang sangat alkalis (seperti Furosemide).'
+            },
+            {
+                id: 'fentanyl',
+                name: 'Fentanyl',
+                brand: 'Fentanyl, Fentanyl Otsu',
+                category: 'Sedatif / Analgesik',
+                pH: '4.0 - 7.5',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Sangat stabil.' },
+                diluentD5: { status: 'Kompatibel', stability: '24 Jam', note: 'Sangat stabil.' },
+                diluentRL: { status: 'Kompatibel', stability: '24 Jam', note: 'Dapat digunakan.' },
+                preferredDiluent: 'NaCl 0.9% (NS) atau Dextrose 5% (D5W)',
+                stabilityNote: '24 Jam pada suhu ruang.',
+                pearls: 'Opioid kuat, kompatibel dengan sebagian besar obat vasoaktif kontinu di CVC.'
+            },
+            {
+                id: 'propofol',
+                name: 'Propofol',
+                brand: 'Fresofol, Recofol, Propofol Lipuro',
+                category: 'Sedatif / Analgesik',
+                pH: '7.0 - 8.5',
+                diluentNS: { status: 'KONTRAINDIKASI', stability: '0 Jam', note: 'Memicu pemisahan emulsi lipid (cracking).' },
+                diluentD5: { status: 'Kompatibel Terbatas', stability: '6 Jam', note: 'Hanya boleh diencerkan dengan D5W (maksimal 1:5).' },
+                diluentRL: { status: 'KONTRAINDIKASI', stability: '0 Jam', note: 'Memicu cracking.' },
+                preferredDiluent: 'Murni (Tanpa Pengenceran)',
+                stabilityNote: '12 Jam jika murni (karena risiko kontaminasi mikroba pada emulsi lipid). 6 jam jika diencerkan dalam D5W.',
+                pearls: 'Merupakan emulsi minyak dalam air. Kerusakan emulsi (terlihat minyak mengapung) dapat memicu emboli lemak fatal.'
+            },
+            {
+                id: 'dexmedetomidine',
+                name: 'Dexmedetomidine',
+                brand: 'Precedex',
+                category: 'Sedatif / Analgesik',
+                pH: '4.5 - 7.0',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Sangat stabil.' },
+                diluentD5: { status: 'Kompatibel', stability: '24 Jam', note: 'Sangat stabil.' },
+                diluentRL: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                preferredDiluent: 'NaCl 0.9% (NS) atau Dextrose 5% (D5W)',
+                stabilityNote: '24 Jam pada suhu ruang.',
+                pearls: 'Sedatif tanpa depresi napas. Kompatibilitas Y-site sangat luas.'
+            },
+            {
+                id: 'ketamine',
+                name: 'Ketamine',
+                brand: 'Ketaject, Ivanes',
+                category: 'Sedatif / Analgesik',
+                pH: '3.5 - 5.5',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentD5: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentRL: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                preferredDiluent: 'NaCl 0.9% (NS) atau Dextrose 5% (D5W)',
+                stabilityNote: '24 Jam pada suhu ruang.',
+                pearls: 'Sedatif disosiatif dengan efek bronkodilator. Berguna untuk asma berat atau induksi hipotensi.'
+            },
+            {
+                id: 'morphine',
+                name: 'Morphine',
+                brand: 'Morphine Sulfate, Morfina',
+                category: 'Sedatif / Analgesik',
+                pH: '2.5 - 6.0',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentD5: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentRL: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                preferredDiluent: 'NaCl 0.9% (NS) atau Dextrose 5% (D5W)',
+                stabilityNote: '24 Jam pada suhu ruang.',
+                pearls: 'Analgesik opioid kuat. Dapat memicu pelepasan histamin (risiko hipotensi/gatal).'
+            },
+            {
+                id: 'atracurium',
+                name: 'Atracurium',
+                brand: 'Notrixum, Tramus, Atracurium Otsu',
+                category: 'Muscle Relaxant',
+                pH: '3.2 - 3.7',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentD5: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentRL: { status: 'Tidak Direkomendasikan', stability: '8 Jam', note: 'Kurang stabil.' },
+                preferredDiluent: 'NaCl 0.9% (NS) atau Dextrose 5% (D5W)',
+                stabilityNote: '24 Jam pada suhu ruang (NS/D5W). Simpan vial belum dioplos di kulkas (2-8°C).',
+                pearls: 'Neuromuscular Blocker (NMB). Terdegradasi oleh suhu tubuh/pH (eliminasi Hofmann). Inkompatibel dengan larutan alkali.'
+            },
+            {
+                id: 'vecuronium',
+                name: 'Vecuronium',
+                brand: 'Ecron, Vecuron',
+                category: 'Muscle Relaxant',
+                pH: '4.0',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentD5: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentRL: { status: 'Kompatibel', stability: '24 Jam', note: 'Dapat digunakan.' },
+                preferredDiluent: 'NaCl 0.9% (NS) atau Dextrose 5% (D5W)',
+                stabilityNote: '24 Jam pada suhu ruang setelah dilarutkan.',
+                pearls: 'NMB non-depolarisasi jangka medium. Vial berupa bubuk kering, harus direkonstitusi dengan WFI sebelum diencerkan.'
+            },
+            {
+                id: 'ceftriaxone',
+                name: 'Ceftriaxone',
+                brand: 'Rocephin, Broadced, Terpacef',
+                category: 'Antibiotik',
+                pH: '6.0 - 8.0',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Sangat stabil.' },
+                diluentD5: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentRL: { status: 'KONTRAINDIKASI MUTLAK', stability: '0 Jam', note: 'FATAL. Kalsium dalam RL memicu terbentuknya kristal kalsium-ceftriaxone.' },
+                preferredDiluent: 'NaCl 0.9% (NS) atau D5W',
+                stabilityNote: '24 Jam pada suhu ruang, 72 jam di kulkas.',
+                pearls: 'Dilarang keras dicampur dengan kalsium atau cairan mengandung kalsium (seperti RL) baik di Y-site maupun selang infus utama.'
+            },
+            {
+                id: 'meropenem',
+                name: 'Meropenem',
+                brand: 'Meronem, Ronem, Tripenem',
+                category: 'Antibiotik',
+                pH: '7.3 - 8.3',
+                diluentNS: { status: 'Sangat Direkomendasikan', stability: '4 Jam', note: 'Satu-satunya pelarut untuk Extended Infusion (infus 3 jam).' },
+                diluentD5: { status: 'Kurang Direkomendasikan', stability: '2 Jam', note: 'Sangat tidak stabil, cepat terdegradasi dalam D5W.' },
+                diluentRL: { status: 'Kompatibel', stability: '4 Jam', note: 'Dapat digunakan.' },
+                preferredDiluent: 'NaCl 0.9% (NS)',
+                stabilityNote: '4 Jam dalam NS, 2 jam dalam D5W pada suhu ruang. Jika disimpan di kulkas (NS) bisa sampai 24 jam.',
+                pearls: 'Extended infusion (3 jam) disukai di ICU untuk mencapai target farmakokinetik obat. Wajib gunakan pelarut NS.'
+            },
+            {
+                id: 'piptazo',
+                name: 'Piperacillin / Tazobactam',
+                brand: 'Tazocin, Piptaz, Pybactum',
+                category: 'Antibiotik',
+                pH: '5.0 - 7.0',
+                diluentNS: { status: 'Sangat Direkomendasikan', stability: '24 Jam', note: 'Paling stabil.' },
+                diluentD5: { status: 'Kompatibel', stability: '24 Jam', note: 'Dapat digunakan.' },
+                diluentRL: { status: 'Tidak Direkomendasikan', stability: '24 Jam', note: 'Kandungan kalsium minimal pada LR dapat memicu interaksi jangka panjang.' },
+                preferredDiluent: 'NaCl 0.9% (NS)',
+                stabilityNote: '24 Jam pada suhu ruang, 48 jam di kulkas.',
+                pearls: 'Antibiotik beta-laktam spektrum luas. Inkompatibel fisik dengan Vancomycin di Y-site.'
+            },
+            {
+                id: 'vancomycin',
+                name: 'Vancomycin',
+                brand: 'Vancocin, Vancep',
+                category: 'Antibiotik',
+                pH: '2.5 - 4.5',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentD5: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentRL: { status: 'Kompatibel', stability: '24 Jam', note: 'Dapat digunakan.' },
+                preferredDiluent: 'NaCl 0.9% (NS) atau Dextrose 5% (D5W)',
+                stabilityNote: '24 Jam pada suhu ruang.',
+                pearls: '🚨 SANGAT ASAM & IRITATIF: Dapat memicu phlebitis berat dan Red Man Syndrome jika diinfus terlalu cepat (<60 menit). Sangat rentan presipitasi dengan Heparin dan Pip-Tazo.'
+            },
+            {
+                id: 'ciprofloxacin',
+                name: 'Ciprofloxacin',
+                brand: 'Cravit IV, Cipro, Quinobi',
+                category: 'Antibiotik',
+                pH: '3.5 - 4.6',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentD5: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentRL: { status: 'Kompatibel', stability: '24 Jam', note: 'Dapat digunakan.' },
+                preferredDiluent: 'NaCl 0.9% (NS) atau Dextrose 5% (D5W)',
+                stabilityNote: '24 Jam pada suhu ruang. Biasanya tersedia dalam sediaan kantong siap pakai (pre-mixed).',
+                pearls: 'Fluoroquinolone. Sangat tidak kompatibel dengan sediaan alkalis (seperti Sodium Bicarbonate).'
+            },
+            {
+                id: 'kcl',
+                name: 'KCl (Potassium Chloride)',
+                brand: 'KCL Otsu',
+                category: 'Elektrolit',
+                pH: '4.0 - 8.0',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentD5: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentRL: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                preferredDiluent: 'NaCl 0.9% (NS), Dextrose 5% (D5W), atau RL',
+                stabilityNote: '24 Jam pada suhu ruang.',
+                pearls: '🚨 OBAT HIGH-ALERT. DILARANG KERAS BOLUS DIRECT. Harus diencerkan dan diinfus perlahan. Kecepatan maksimal biasanya 10-20 mEq/jam dengan monitoring EKG kontinu.'
+            },
+            {
+                id: 'magnesium',
+                name: 'Magnesium Sulfate (MgSO4)',
+                brand: 'Magnesium Sulfat 20% / 40%',
+                category: 'Elektrolit',
+                pH: '5.5 - 7.0',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentD5: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentRL: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                preferredDiluent: 'NaCl 0.9% (NS) atau Dextrose 5% (D5W)',
+                stabilityNote: '24 Jam pada suhu ruang.',
+                pearls: 'Digunakan untuk torsades de pointes, eklamsia, dan asma berat. Monitor reflex patella dan pernapasan.'
+            },
+            {
+                id: 'calcium',
+                name: 'Calcium Gluconate 10%',
+                brand: 'Kalsium Glukonat 10%',
+                category: 'Elektrolit',
+                pH: '6.0 - 8.2',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentD5: { status: 'Kompatibel', stability: '24 Jam', note: 'Stabil.' },
+                diluentRL: { status: 'Kompatibel', stability: '24 Jam', note: 'Dapat digunakan.' },
+                preferredDiluent: 'NaCl 0.9% (NS) atau Dextrose 5% (D5W)',
+                stabilityNote: '24 Jam pada suhu ruang.',
+                pearls: 'Sangat inkompatibel dengan Ceftriaxone (fatal) dan Sodium Bicarbonate (membentuk kapur).'
+            },
+            {
+                id: 'bicarbonate',
+                name: 'Sodium Bicarbonate 8.4%',
+                brand: 'Meylon 8.4%',
+                category: 'Alkalinizing Agent',
+                pH: '7.0 - 8.5',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Dapat digunakan.' },
+                diluentD5: { status: 'Sangat Direkomendasikan', stability: '24 Jam', note: 'Pelarut pengenceran standar.' },
+                diluentRL: { status: 'KONTRAINDIKASI', stability: '0 Jam', note: 'Dapat membentuk endapan kalsium karbonat.' },
+                preferredDiluent: 'Dextrose 5% (D5W) atau Murni',
+                stabilityNote: '24 Jam pada suhu ruang.',
+                pearls: 'Sering diberikan secara bolus murni tanpa pengenceran. Bersifat basa kuat, menginaktivasi katekolamin.'
+            },
+            {
+                id: 'phenytoin',
+                name: 'Phenytoin',
+                brand: 'Dilantin, Decatona',
+                category: 'Antikonvulsan',
+                pH: '12.0',
+                diluentNS: { status: 'WAJIB (100%)', stability: '4 Jam', note: 'Hanya stabil pada pelarut saline dengan pengenceran segera.' },
+                diluentD5: { status: 'KONTRAINDIKASI', stability: '0 Jam', note: 'Langsung mengkristal seketika karena pH asam D5W.' },
+                diluentRL: { status: 'KONTRAINDIKASI', stability: '0 Jam', note: 'Langsung mengkristal.' },
+                preferredDiluent: 'NaCl 0.9% (NS) SAJA',
+                stabilityNote: 'Maksimal 4 Jam setelah dioplos. Harus segera diberikan. Gunakan filter 0.22 micron.',
+                pearls: 'Phenytoin adalah obat dengan pH sangat ekstrim. Wajib menggunakan JALUR TUNGGAL (Dedicated Line). Lakukan flush dengan 20 mL NS sebelum dan sesudah pemberian.'
+            },
+            {
+                id: 'albumin',
+                name: 'Albumin 20%',
+                brand: 'Plasbumin, Albapure, Octalbin',
+                category: 'Koloid / Plasma Expander',
+                pH: '6.4 - 7.4',
+                diluentNS: { status: 'Kompatibel', stability: '24 Jam', note: 'Bisa dicampur.' },
+                diluentD5: { status: 'Kompatibel', stability: '24 Jam', note: 'Bisa dicampur.' },
+                diluentRL: { status: 'Kompatibel', stability: '24 Jam', note: 'Bisa dicampur.' },
+                preferredDiluent: 'Murni (Tanpa Pengenceran)',
+                stabilityNote: '4 Jam setelah vial dibuka (tidak mengandung pengawet, risiko kontaminasi mikroba tinggi).',
+                pearls: 'Larutan koloid pekat. Jangan dicampur dengan sediaan asam tinggi (seperti Vancomycin) atau Midazolam.'
+            }
+        ];
+
+        // State Variables
+        let selectedDrugA = null;
+        let selectedDrugB = null;
+        let activeSlot = null; // 'A' or 'B'
+        let currentCarrierFluid = 'ns';
+        let selectedLumenDrugs = [];
+
+        // App Initialization
+        window.addEventListener('DOMContentLoaded', () => {
+            // Load saved theme
+            const savedTheme = localStorage.getItem('iv-calc-theme') || 'teal';
+            setTheme(savedTheme);
+            
+            renderMultiDrugList();
+            renderLibraryList();
+            updateLumenMapping();
+        });
+
+        // Theme Switcher
+        function setTheme(themeName) {
+            // Remove old theme classes
+            document.body.classList.remove('theme-teal', 'theme-blue', 'theme-purple', 'theme-light');
+            
+            // Add new theme class
+            document.body.classList.add(`theme-${themeName}`);
+            
+            // Update active dot
+            document.querySelectorAll('.theme-dot').forEach(dot => dot.classList.remove('active'));
+            document.getElementById(`dot-${themeName}`).classList.add('active');
+            
+            // Save preference
+            localStorage.setItem('iv-calc-theme', themeName);
+        }
+
+        // Tab Navigation
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+            
+            // Find clicked button and activate panel
+            const eventBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => 
+                btn.getAttribute('onclick').includes(tabId)
+            );
+            if (eventBtn) eventBtn.classList.add('active');
+            
+            const panel = document.getElementById(`panel-${tabId}`);
+            if (panel) panel.classList.add('active');
+        }
+
+        // --- Y-SITE CHECKER ENGINE ---
+
+        function openDrugSelector(slot) {
+            activeSlot = slot;
+            const modal = document.getElementById('drug-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const searchInput = document.getElementById('modal-search-input');
+            
+            modalTitle.innerText = `Pilih Sediaan IV - Slot ${slot}`;
+            searchInput.value = '';
+            modal.classList.add('active');
+            
+            renderModalDrugs(DRUGS);
+            searchInput.focus();
+        }
+
+        function closeModal() {
+            document.getElementById('drug-modal').classList.remove('active');
+            activeSlot = null;
+        }
+
+        function handleModalOverlayClick(e) {
+            if (e.target.id === 'drug-modal') {
+                closeModal();
+            }
+        }
+
+        function renderModalDrugs(drugList) {
+            const container = document.getElementById('modal-drug-list');
+            container.innerHTML = '';
+            
+            // Group by category
+            const categories = [...new Set(drugList.map(d => d.category))];
+            
+            categories.forEach(cat => {
+                const catDrugs = drugList.filter(d => d.category === cat);
+                if (catDrugs.length === 0) return;
+                
+                const groupTitle = document.createElement('div');
+                groupTitle.className = 'modal-group-title';
+                groupTitle.innerText = cat;
+                container.appendChild(groupTitle);
+                
+                catDrugs.forEach(drug => {
+                    const item = document.createElement('div');
+                    item.className = 'modal-drug-item';
+                    item.onclick = () => selectDrug(drug.id);
+                    
+                    item.innerHTML = `
+                        <div class="modal-drug-name-col">
+                            <span class="modal-drug-name">${drug.name}</span>
+                            <span class="modal-drug-brand">${drug.brand}</span>
+                        </div>
+                        <span class="modal-drug-badge">${drug.pH}</span>
+                    `;
+                    container.appendChild(item);
+                });
+            });
+
+            if (container.children.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--color-text-muted); font-size:13px;">Tidak ada obat yang cocok.</div>`;
+            }
+        }
+
+        function filterModalDrugs() {
+            const query = document.getElementById('modal-search-input').value.toLowerCase();
+            const filtered = DRUGS.filter(d => 
+                d.name.toLowerCase().includes(query) || 
+                d.brand.toLowerCase().includes(query) ||
+                d.category.toLowerCase().includes(query)
+            );
+            renderModalDrugs(filtered);
+        }
+
+        function selectDrug(drugId) {
+            const drug = DRUGS.find(d => d.id === drugId);
+            
+            if (activeSlot === 'A') {
+                selectedDrugA = drug;
+                document.getElementById('slot-a-value').innerText = drug.name;
+                document.getElementById('slot-a-brand').innerText = drug.brand;
+                document.getElementById('slot-a').classList.add('selected');
+            } else if (activeSlot === 'B') {
+                selectedDrugB = drug;
+                document.getElementById('slot-b-value').innerText = drug.name;
+                document.getElementById('slot-b-brand').innerText = drug.brand;
+                document.getElementById('slot-b').classList.add('selected');
+            }
+            
+            closeModal();
+            calculateYSiteCompatibility();
+        }
+
+        function swapDrugs() {
+            const temp = selectedDrugA;
+            selectedDrugA = selectedDrugB;
+            selectedDrugB = temp;
+            
+            if (selectedDrugA) {
+                document.getElementById('slot-a-value').innerText = selectedDrugA.name;
+                document.getElementById('slot-a-brand').innerText = selectedDrugA.brand;
+                document.getElementById('slot-a').classList.add('selected');
+            } else {
+                document.getElementById('slot-a-value').innerText = '-- Sentuh untuk memilih --';
+                document.getElementById('slot-a-brand').innerText = '';
+                document.getElementById('slot-a').classList.remove('selected');
+            }
+            
+            if (selectedDrugB) {
+                document.getElementById('slot-b-value').innerText = selectedDrugB.name;
+                document.getElementById('slot-b-brand').innerText = selectedDrugB.brand;
+                document.getElementById('slot-b').classList.add('selected');
+            } else {
+                document.getElementById('slot-b-value').innerText = '-- Sentuh untuk memilih --';
+                document.getElementById('slot-b-brand').innerText = '';
+                document.getElementById('slot-b').classList.remove('selected');
+            }
+            
+            calculateYSiteCompatibility();
+        }
+
+        function resetYSite() {
+            selectedDrugA = null;
+            selectedDrugB = null;
+            
+            document.getElementById('slot-a-value').innerText = '-- Sentuh untuk memilih --';
+            document.getElementById('slot-a-brand').innerText = '';
+            document.getElementById('slot-a').classList.remove('selected');
+            
+            document.getElementById('slot-b-value').innerText = '-- Sentuh untuk memilih --';
+            document.getElementById('slot-b-brand').innerText = '';
+            document.getElementById('slot-b').classList.remove('selected');
+            
+            document.getElementById('verdict-card').style.display = 'none';
+            document.getElementById('profiles-container').style.display = 'none';
+        }
+
+        function quickSelectDemo() {
+            selectedDrugA = DRUGS.find(d => d.id === 'norepinephrine');
+            selectedDrugB = DRUGS.find(d => d.id === 'amiodarone');
+            
+            document.getElementById('slot-a-value').innerText = selectedDrugA.name;
+            document.getElementById('slot-a-brand').innerText = selectedDrugA.brand;
+            document.getElementById('slot-a').classList.add('selected');
+            
+            document.getElementById('slot-b-value').innerText = selectedDrugB.name;
+            document.getElementById('slot-b-brand').innerText = selectedDrugB.brand;
+            document.getElementById('slot-b').classList.add('selected');
+            
+            calculateYSiteCompatibility();
+        }
+
+        // Core CDSS Engine: Y-Site Compatibility & Stability Calculation
+        function calculateYSiteCompatibility() {
+            if (!selectedDrugA || !selectedDrugB) {
+                document.getElementById('verdict-card').style.display = 'none';
+                document.getElementById('profiles-container').style.display = 'none';
+                return;
+            }
+            
+            const a = selectedDrugA;
+            const b = selectedDrugB;
+            
+            let status = 'compatible';
+            let statusText = 'KOMPATIBEL (AMAN)';
+            let desc = 'Kedua obat aman dijalankan bersama pada satu jalur Y-site.';
+            let diluent = 'NS (NaCl 0.9%) atau D5W (Dextrose 5%)';
+            let stability = '24 Jam';
+            let action = 'Dapat diinfuskan pada jalur yang sama (Y-site). Lakukan pembilasan rutin jika infus dihentikan.';
+            
+            // --- 1. DETECT CRITICAL INCOMPATIBILITIES ---
+            
+            // Phenytoin Check (Always Dedicated Line)
+            if (a.id === 'phenytoin' || b.id === 'phenytoin') {
+                const other = a.id === 'phenytoin' ? b : a;
+                status = 'incompatible';
+                statusText = 'INKOMPATIBEL MUTLAK';
+                desc = `<strong>Phenytoin (pH ${a.id === 'phenytoin' ? a.pH : b.pH})</strong> sangat alkalis ekstrim dan tidak stabil. Pencampuran di Y-site dengan <strong>${other.name}</strong> akan memicu kristalisasi instan dalam selang infus.`;
+                diluent = 'TIDAK SEJALUR (Phenytoin wajib NS murni, obat lain di pelarut masing-masing)';
+                stability = '0 Jam (Kristalisasi Instan)';
+                action = 'Wajib gunakan jalur CVC terpisah atau pembilasan dengan minimal 20 mL NS sebelum/sesudah pemberian jika terpaksa satu jalur.';
+            }
+            // Propofol Emulsion Check
+            else if (a.id === 'propofol' || b.id === 'propofol') {
+                const other = a.id === 'propofol' ? b : a;
+                // Propofol is compatible with: norepinephrine, epinephrine, dobutamine, dopamine, fentanyl, midazolam, insulin, heparin, dexmedetomidine, ketamine, morphine, atracurium
+                const compatibleWithPropofol = ['norepinephrine', 'epinephrine', 'dobutamine', 'dopamine', 'fentanyl', 'midazolam', 'insulin', 'heparin', 'dexmedetomidine', 'ketamine', 'morphine', 'atracurium'];
+                
+                if (compatibleWithPropofol.includes(other.id)) {
+                    status = 'compatible';
+                    statusText = 'KOMPATIBEL';
+                    desc = `Propofol (emulsi lipid) dan ${other.name} terbukti kompatibel secara fisika-kimia pada Y-site dalam jangka pendek.`;
+                    diluent = 'Murni (Propofol) / Pelarut Standar (Obat Kedua)';
+                    stability = '12 Jam (Dibatasi oleh potensi kontaminasi lipid Propofol)';
+                    action = 'Aman diinfuskan bersama. Monitor secara visual secara berkala untuk memastikan tidak terjadi pemisahan emulsi (cracking).';
+                } else {
+                    status = 'incompatible';
+                    statusText = 'INKOMPATIBEL (RISIKO CRACKING)';
+                    desc = `Propofol adalah emulsi lipid yang tidak stabil jika dicampur dengan <strong>${other.name}</strong>. Hal ini dapat memicu <em>cracking emulsi</em> (minyak memisah), membentuk droplet lemak besar yang berisiko emboli paru.`;
+                    diluent = 'TIDAK SEJALUR';
+                    stability = '0 Jam';
+                    action = 'Gunakan jalur terpisah. Jangan dicampur.';
+                }
+            }
+            // Ceftriaxone + Calcium Gluconate (FATAL)
+            else if ((a.id === 'ceftriaxone' && b.id === 'calcium') || (a.id === 'calcium' && b.id === 'ceftriaxone')) {
+                status = 'incompatible';
+                statusText = 'INKOMPATIBEL FATAL';
+                desc = '<strong>Kalsium + Ceftriaxone</strong> membentuk garam kalsium-ceftriaxone yang tidak larut. Reaksi ini terbukti <strong>FATAL</strong> karena dapat mengendap di organ vital seperti paru-paru dan ginjal (terutama pada neonatus, namun juga dihindari pada dewasa).';
+                diluent = 'TIDAK SEJALUR';
+                stability = '0 Jam (Reaksi Fatal)';
+                action = 'Dilarang keras dicampur! Wajib gunakan lumen CVC atau pembuluh darah perifer yang berbeda.';
+            }
+            // Vancomycin Incompatibilities (Highly acidic)
+            else if (a.id === 'vancomycin' || b.id === 'vancomycin') {
+                const other = a.id === 'vancomycin' ? b : a;
+                const vancoIncomps = ['heparin', 'ceftriaxone', 'piptazo', 'furosemide', 'bicarbonate', 'phenytoin', 'albumin'];
+                
+                if (vancoIncomps.includes(other.id)) {
+                    status = 'incompatible';
+                    statusText = 'INKOMPATIBEL (PRESIPITASI)';
+                    desc = `<strong>Vancomycin (pH ${a.id === 'vancomycin' ? a.pH : b.pH})</strong> adalah antibiotik glikopeptida asam yang sangat sensitif. Pencampuran di Y-site dengan <strong>${other.name}</strong> memicu presipitasi fisik instan (endapan keruh).`;
+                    diluent = 'TIDAK SEJALUR';
+                    stability = '0 Jam';
+                    action = 'Jangan digabung di Y-site. Gunakan jalur terpisah. Bilas dengan 20cc NS jika terpaksa menggunakan jalur yang sama bergantian.';
+                }
+            }
+            // Piperacillin/Tazobactam vs Amiodarone or Vancomycin
+            else if ((a.id === 'piptazo' && (b.id === 'amiodarone' || b.id === 'vancomycin')) || ((a.id === 'amiodarone' || a.id === 'vancomycin') && b.id === 'piptazo')) {
+                const other = a.id === 'piptazo' ? b : a;
+                status = 'incompatible';
+                statusText = 'INKOMPATIBEL (PRESIPITASI)';
+                desc = `<strong>Piperacillin/Tazobactam</strong> dan <strong>${other.name}</strong> tidak kompatibel secara fisik dan akan membentuk presipitat putih/keruh di dalam selang secara instan.`;
+                diluent = 'TIDAK SEJALUR';
+                stability = '0 Jam';
+                action = 'Wajib gunakan jalur CVC terpisah atau vena perifer lain.';
+            }
+            // Furosemide (Very Alkaline, pH 8-9) vs Acidic Drugs
+            else if (a.id === 'furosemide' || b.id === 'furosemide') {
+                const other = a.id === 'furosemide' ? b : a;
+                const acidDrugs = ['norepinephrine', 'epinephrine', 'dobutamine', 'dopamine', 'amiodarone', 'midazolam', 'nicardipine', 'diltiazem', 'milrinone', 'morphine', 'atracurium', 'vecuronium', 'vancomycin', 'ciprofloxacin'];
+                
+                if (acidDrugs.includes(other.id)) {
+                    status = 'incompatible';
+                    statusText = 'INKOMPATIBEL (PRESIPITASI pH)';
+                    desc = `Furosemide bersifat sangat basa (pH ${a.id === 'furosemide' ? a.pH : b.pH}) agar tetap larut. Ketika bertemu dengan <strong>${other.name} (pH ${other.pH})</strong> yang bersifat asam, pH campuran akan turun di bawah 5.5, menyebabkan Furosemide mengkristal seketika.`;
+                    diluent = 'TIDAK SEJALUR';
+                    stability = '0 Jam (Kristalisasi)';
+                    action = 'Gunakan jalur infus terpisah. Jangan dicampur dalam satu lumen.';
+                }
+            }
+            // Sodium Bicarbonate (Alkaline) vs Catecholamines & others
+            else if (a.id === 'bicarbonate' || b.id === 'bicarbonate') {
+                const other = a.id === 'bicarbonate' ? b : a;
+                const catecholamines = ['norepinephrine', 'epinephrine', 'dobutamine', 'dopamine'];
+                const bicarbIncomps = ['calcium', 'midazolam', 'amiodarone', 'diltiazem', 'atracurium', 'vecuronium', 'vancomycin', 'ciprofloxacin', 'magnesium'];
+                
+                if (catecholamines.includes(other.id)) {
+                    status = 'incompatible';
+                    statusText = 'INKOMPATIBEL (INAKTIVASI)';
+                    desc = `Sodium Bicarbonate bersifat alkalis kuat dan akan mempercepat oksidasi serta <strong>inaktivasi kimiawi</strong> dari <strong>${other.name}</strong>. Obat kehilangan efektivitas klinisnya secara instan meskipun tidak terlihat endapan fisik.`;
+                    diluent = 'TIDAK SEJALUR';
+                    stability = '0 Jam (Inaktivasi Instan)';
+                    action = 'Dilarang keras dijalankan satu jalur Y-site. Gunakan lumen CVC terpisah.';
+                } else if (bicarbIncomps.includes(other.id)) {
+                    status = 'incompatible';
+                    statusText = 'INKOMPATIBEL (PRESIPITASI)';
+                    desc = `Sifat alkalis Sodium Bicarbonate memicu reaksi pengendapan fisik (kristal) jika bertemu dengan <strong>${other.name}</strong>.`;
+                    diluent = 'TIDAK SEJALUR';
+                    stability = '0 Jam';
+                    action = 'Gunakan jalur terpisah.';
+                }
+            }
+            // Amiodarone vs Heparin (Immediate white precipitate)
+            else if ((a.id === 'amiodarone' && b.id === 'heparin') || (a.id === 'heparin' && b.id === 'amiodarone')) {
+                status = 'incompatible';
+                statusText = 'INKOMPATIBEL (PRESIPITASI SEKETIKA)';
+                desc = 'Amiodarone bereaksi langsung dengan Heparin bermuatan negatif membentuk kompleks garam yang tidak larut, terlihat sebagai <strong>presipitasi putih keruh seketika</strong> dalam selang.';
+                diluent = 'TIDAK SEJALUR';
+                stability = '0 Jam';
+                action = 'Dilarang keras dijalankan dalam satu jalur infus.';
+            }
+            // Amiodarone vs Ceftriaxone
+            else if ((a.id === 'amiodarone' && b.id === 'ceftriaxone') || (a.id === 'ceftriaxone' && b.id === 'amiodarone')) {
+                status = 'incompatible';
+                statusText = 'INKOMPATIBEL (PRESIPITASI)';
+                desc = 'Amiodarone dan Ceftriaxone mengalami reaksi pengendapan fisik akibat ketidakcocokan pH larutan campuran.';
+                diluent = 'TIDAK SEJALUR';
+                stability = '0 Jam';
+                action = 'Gunakan jalur terpisah.';
+            }
+            // Ciprofloxacin vs Heparin or Albumin
+            else if ((a.id === 'ciprofloxacin' && (b.id === 'heparin' || b.id === 'albumin')) || ((a.id === 'heparin' || a.id === 'albumin') && b.id === 'ciprofloxacin')) {
+                status = 'incompatible';
+                statusText = 'INKOMPATIBEL (PRESIPITASI)';
+                desc = `Ciprofloxacin bersifat asam dan bermuatan tertentu yang akan langsung mengendap jika bercampur dengan <strong>${a.id === 'ciprofloxacin' ? b.name : a.name}</strong>.`;
+                diluent = 'TIDAK SEJALUR';
+                stability = '0 Jam';
+                action = 'Gunakan jalur terpisah.';
+            }
+            // Albumin vs Midazolam
+            else if ((a.id === 'albumin' && b.id === 'midazolam') || (a.id === 'midazolam' && b.id === 'albumin')) {
+                status = 'incompatible';
+                statusText = 'INKOMPATIBEL';
+                desc = 'Albumin (protein koloid) mengadsorpsi dan mengendapkan Midazolam secara fisik di Y-site.';
+                diluent = 'TIDAK SEJALUR';
+                stability = '0 Jam';
+                action = 'Gunakan jalur terpisah.';
+            }
+            // Pantoprazole vs Acidic Drugs
+            else if (a.id === 'pantoprazole' || b.id === 'pantoprazole') {
+                const other = a.id === 'pantoprazole' ? b : a;
+                const acidic = ['norepinephrine', 'epinephrine', 'dobutamine', 'dopamine', 'amiodarone', 'midazolam', 'fentanyl', 'morphine', 'nicardipine', 'diltiazem'];
+                if (acidic.includes(other.id)) {
+                    status = 'incompatible';
+                    statusText = 'INKOMPATIBEL (SANGAT BASA)';
+                    desc = `Pantoprazole (pH ${a.id === 'pantoprazole' ? a.pH : b.pH}) adalah PPI alkalis kuat. Pengenceran dengan atau kontak di Y-site dengan obat bersifat asam seperti <strong>${other.name}</strong> akan merusak stabilitas kimiawi Pantoprazole secara instan (terjadi perubahan warna dan presipitasi).`;
+                    diluent = 'TIDAK SEJALUR';
+                    stability = '0 Jam';
+                    action = 'Wajib gunakan jalur terpisah. Lakukan flush NS sebelum dan sesudah jika terpaksa menggunakan jalur yang sama secara bergantian.';
+                }
+            }
+            // Vasoactive Kontinu vs Intermittent Antibiotic (Hemodynamic Risk)
+            else if (
+                ((a.category.includes('Vasoaktif') && a.id !== 'nicardipine' && a.id !== 'diltiazem') && b.category === 'Antibiotik') ||
+                (a.category === 'Antibiotik' && (b.category.includes('Vasoaktif') && b.id !== 'nicardipine' && b.id !== 'diltiazem'))
+            ) {
+                const vaso = a.category.includes('Vasoaktif') ? a : b;
+                const antibio = a.category === 'Antibiotik' ? a : b;
+                status = 'not-recommended';
+                statusText = 'TIDAK DIREKOMENDASIKAN (RISIKO HEMODINAMIK)';
+                desc = `Secara kimiawi mungkin kompatibel. Namun, menggabungkan <strong>${vaso.name} (kontinu dosis mikro)</strong> dengan <strong>${antibio.name} (intermiten volume besar)</strong> dalam satu jalur Y-site sangat berbahaya secara klinis. Laju antibiotik yang cepat akan mendorong sisa vasopresor di selang (bolus tidak sengaja), memicu lonjakan tekanan darah ekstrem, diikuti penurunan drastis setelah antibiotik selesai.`;
+                diluent = 'Gunakan Jalur Terpisah';
+                stability = 'Dibatasi oleh sediaan masing-masing';
+                action = 'Prioritaskan CVC lumen terpisah atau pasang akses vena perifer tambahan untuk antibiotik intermiten. Jika sangat terpaksa, stop sementara vasopresor (jika hemodinamik stabil/dependensi rendah), lakukan flush NS 20 mL, berikan antibiotik, flush NS 20 mL, lalu mulai kembali vasopresor.';
+            }
+
+            // --- 2. SOLVENT RESOLUTION (CALCULATE OPTIMAL DILUENT) ---
+            if (status === 'compatible') {
+                // If either requires D5W only
+                if (a.id === 'amiodarone' || b.id === 'amiodarone' || a.id === 'nitroprusside' || b.id === 'nitroprusside') {
+                    diluent = 'Dextrose 5% (D5W) SAJA';
+                }
+                // If either requires NS only (e.g. Meropenem, Pantoprazole, Phenytoin)
+                else if (a.id === 'meropenem' || b.id === 'meropenem' || a.id === 'pantoprazole' || b.id === 'pantoprazole' || a.id === 'phenytoin' || b.id === 'phenytoin') {
+                    diluent = 'NaCl 0.9% (NS) SAJA';
+                }
+                // Standard resolving
+                else if (a.preferredDiluent.includes('D5W') && b.preferredDiluent.includes('D5W')) {
+                    diluent = 'Dextrose 5% (D5W) (Preferred)';
+                } else if (a.preferredDiluent.includes('NS') && b.preferredDiluent.includes('NS')) {
+                    diluent = 'NaCl 0.9% (NS) (Preferred)';
+                } else {
+                    diluent = 'NaCl 0.9% (NS) atau Dextrose 5% (D5W)';
+                }
+            }
+
+            // --- 3. STABILITY RESOLUTION (CALCULATE STABILITY LIMIT) ---
+            if (status === 'compatible' || status === 'not-recommended') {
+                const extractHours = (note) => {
+                    const match = note.match(/(\d+)\s*Jam/);
+                    return match ? parseInt(match[1]) : 24;
+                };
+                
+                let hoursA = extractHours(a.stabilityNote);
+                let hoursB = extractHours(b.stabilityNote);
+                
+                // Adjust for specific solvent constraints
+                if (diluent.includes('D5W') && a.id === 'meropenem') hoursA = 2; // Meropenem unstable in D5W
+                if (diluent.includes('D5W') && b.id === 'meropenem') hoursB = 2;
+                
+                const minHours = Math.min(hoursA, hoursB);
+                stability = `${minHours} Jam`;
+            }
+
+            // --- 4. RENDER VERDICT CARD ---
+            const card = document.getElementById('verdict-card');
+            card.className = `verdict-card status-${status}`;
+            
+            // Set Icon
+            const iconContainer = document.getElementById('verdict-icon-container');
+            if (status === 'compatible') {
+                iconContainer.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 11 2 2 4-4"/></svg>`;
+            } else if (status === 'incompatible') {
+                iconContainer.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`;
+            } else if (status === 'conditional') {
+                iconContainer.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+            } else {
+                iconContainer.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+            }
+
+            document.getElementById('verdict-badge').innerText = status === 'not-recommended' ? 'Peringatan Hemodinamik' : statusText;
+            document.getElementById('verdict-title').innerText = statusText;
+            document.getElementById('verdict-desc').innerHTML = desc;
+            document.getElementById('verdict-diluent').innerText = diluent;
+            document.getElementById('verdict-stability').innerText = stability;
+            document.getElementById('verdict-ph').innerText = `pH ${a.name} (${a.pH}) vs pH ${b.name} (${b.pH})`;
+            document.getElementById('verdict-action').innerText = action;
+            
+            card.style.display = 'block';
+
+            // --- 5. RENDER SIDE-BY-SIDE PROFILES ---
+            const profilesWrapper = document.getElementById('profiles-container');
+            profilesWrapper.innerHTML = `
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <div>
+                            <div class="profile-name">${a.name}</div>
+                            <div class="profile-brand">Merk: ${a.brand}</div>
+                        </div>
+                        <span class="profile-cat">${a.category}</span>
+                    </div>
+                    <div class="profile-detail-row">
+                        <div class="profile-detail-label">Pelarut & Stabilitas Reconstitute</div>
+                        <div class="profile-detail-val">
+                            • <strong>NS:</strong> ${a.diluentNS.status} (${a.diluentNS.stability})<br>
+                            • <strong>D5W:</strong> ${a.diluentD5.status} (${a.diluentD5.stability})<br>
+                            • <strong>RL:</strong> ${a.diluentRL.status} (${a.diluentRL.stability})
+                        </div>
+                    </div>
+                    <div class="profile-detail-row">
+                        <div class="profile-detail-label">Stabilitas & Penyimpanan</div>
+                        <div class="profile-detail-val">${a.stabilityNote}</div>
+                    </div>
+                    <div class="profile-detail-row">
+                        <div class="profile-detail-label">Clinical Pearls</div>
+                        <div class="profile-detail-val">${a.pearls}</div>
+                    </div>
+                </div>
+                
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <div>
+                            <div class="profile-name">${b.name}</div>
+                            <div class="profile-brand">Merk: ${b.brand}</div>
+                        </div>
+                        <span class="profile-cat">${b.category}</span>
+                    </div>
+                    <div class="profile-detail-row">
+                        <div class="profile-detail-label">Pelarut & Stabilitas Reconstitute</div>
+                        <div class="profile-detail-val">
+                            • <strong>NS:</strong> ${b.diluentNS.status} (${b.diluentNS.stability})<br>
+                            • <strong>D5W:</strong> ${b.diluentD5.status} (${b.diluentD5.stability})<br>
+                            • <strong>RL:</strong> ${b.diluentRL.status} (${b.diluentRL.stability})
+                        </div>
+                    </div>
+                    <div class="profile-detail-row">
+                        <div class="profile-detail-label">Stabilitas & Penyimpanan</div>
+                        <div class="profile-detail-val">${b.stabilityNote}</div>
+                    </div>
+                    <div class="profile-detail-row">
+                        <div class="profile-detail-label">Clinical Pearls</div>
+                        <div class="profile-detail-val">${b.pearls}</div>
+                    </div>
+                </div>
+            `;
+            profilesWrapper.style.display = 'grid';
+        }
+
+        // --- TAB 2: CVC LUMEN COORDINATOR ENGINE ---
+
+        function renderMultiDrugList() {
+            const container = document.getElementById('multi-drug-list');
+            container.innerHTML = '';
+            
+            // Group by category
+            const categories = [...new Set(DRUGS.map(d => d.category))];
+            
+            categories.forEach(cat => {
+                const groupTitle = document.createElement('div');
+                groupTitle.className = 'multi-drug-group-title';
+                groupTitle.innerText = cat;
+                container.appendChild(groupTitle);
+                
+                DRUGS.filter(d => d.category === cat).forEach(drug => {
+                    const item = document.createElement('div');
+                    item.className = 'multi-drug-item';
+                    item.id = `multi-drug-${drug.id}`;
+                    item.onclick = () => toggleLumenDrug(drug.id);
+                    
+                    item.innerHTML = `
+                        <div class="multi-drug-checkbox">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </div>
+                        <span class="multi-drug-name">${drug.name}</span>
+                    `;
+                    container.appendChild(item);
+                });
+            });
+        }
+
+        function toggleLumenDrug(drugId) {
+            const index = selectedLumenDrugs.indexOf(drugId);
+            const element = document.getElementById(`multi-drug-${drugId}`);
+            
+            if (index === -1) {
+                selectedLumenDrugs.push(drugId);
+                element.classList.add('selected');
+            } else {
+                selectedLumenDrugs.splice(index, 1);
+                element.classList.remove('selected');
+            }
+            
+            updateLumenMapping();
+        }
+
+        function selectCarrierFluid(fluidId) {
+            currentCarrierFluid = fluidId;
+            document.querySelectorAll('.carrier-option-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`carrier-${fluidId}`).classList.add('active');
+            updateLumenMapping();
+        }
+
+        // Smart Balancer & CVC Allocator Algorithm
+        function updateLumenMapping() {
+            const distal = [];
+            const medial = [];
+            const proximal = [];
+            const alerts = [];
+            
+            const active = selectedLumenDrugs.map(id => DRUGS.find(d => d.id === id));
+
+            // 1. Core Sorting Logic
+            active.forEach(d => {
+                // TPN or Amiodarone or Propofol or Albumin -> Medial (Dedicated/Protected)
+                if (d.category.includes('Nutrisi') || d.id === 'amiodarone' || d.id === 'propofol' || d.id === 'albumin') {
+                    medial.push(d);
+                }
+                // Vasoactive Infusions -> Distal (Vasoactive Priority)
+                else if (d.category.includes('Vasoaktif')) {
+                    distal.push(d);
+                }
+                // Everything else (Intermittent antibiotics, electrolytes, etc.) -> Proximal
+                else {
+                    proximal.push(d);
+                }
+            });
+
+            // 2. Smart Balancing / Bottleneck Prevention
+            // If distal is empty but medial has multiple, move one to distal for balancing (except TPN/Albumin)
+            if (distal.length === 0 && medial.length > 1) {
+                const nonTPNIndex = medial.findIndex(d => d.category !== 'Nutrisi Parenteral' && d.id !== 'albumin');
+                if (nonTPNIndex !== -1) {
+                    distal.push(medial.splice(nonTPNIndex, 1)[0]);
+                }
+            }
+            // If proximal is overloaded and distal is empty, move one to distal
+            if (distal.length === 0 && proximal.length > 2) {
+                distal.push(proximal.shift());
+            }
+
+            // 3. CVC Access Recommendation Badge
+            const recBadge = document.getElementById('cvc-rec-badge');
+            const hasVasoactive = active.some(d => d.category.includes('Vasoaktif'));
+            const hasAmiodaroneOrTPN = active.some(d => d.id === 'amiodarone' || d.category.includes('Nutrisi'));
+            const totalInfusions = active.length;
+
+            if (totalInfusions === 0) {
+                recBadge.innerText = 'STANDBY';
+                recBadge.style.background = 'rgba(255, 255, 255, 0.05)';
+                recBadge.style.color = 'var(--color-text-muted)';
+                recBadge.style.borderColor = 'var(--border-color)';
+            } else if (hasVasoactive || hasAmiodaroneOrTPN || totalInfusions >= 3) {
+                recBadge.innerText = 'CVC (Triple Lumen Wajib)';
+                recBadge.style.background = 'rgba(239, 68, 68, 0.15)';
+                recBadge.style.color = '#f87171';
+                recBadge.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+            } else {
+                recBadge.innerText = 'Akses Vena Perifer';
+                recBadge.style.background = 'rgba(16, 185, 129, 0.15)';
+                recBadge.style.color = '#34d399';
+                recBadge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+            }
+
+            // 4. Render Allocation
+            document.getElementById('lumen-distal-drugs').innerHTML = distal.map(d => d.name).join(', ');
+            document.getElementById('lumen-medial-drugs').innerHTML = medial.map(d => d.name).join(', ');
+            document.getElementById('lumen-proximal-drugs').innerHTML = proximal.map(d => d.name).join(', ');
+
+            // Medial lumen instructions (special case for TPN/Propofol)
+            const medialInst = document.getElementById('lumen-medial-inst');
+            const hasTPN = active.some(d => d.category.includes('Nutrisi'));
+            if (hasTPN) {
+                medialInst.innerHTML = `
+                    <p style="color: #f87171; font-weight: 700;">🚨 JALUR STERIL TPN: Jalur ini tertutup untuk obat lain guna mencegah kontaminasi bakteri & inkompatibilitas.</p>
+                `;
+            } else {
+                medialInst.innerHTML = `
+                    <p><strong>Fungsi Utama:</strong> Nutrisi Parenteral (TPN) atau Amiodarone Kontinu.</p>
+                    <p>• Dianjurkan sebagai jalur steril tunggal (dedicated) jika menggunakan TPN lipid.</p>
+                `;
+            }
+
+            // 5. Admixture & Carrier Clash Detection
+            
+            // Carrier clashes
+            active.forEach(d => {
+                if (currentCarrierFluid === 'lr' && d.id === 'ceftriaxone') {
+                    alerts.push({
+                        type: 'danger',
+                        text: `<strong>FATAL:</strong> Ceftriaxone bentrok dengan Ringer Laktat (LR). Kalsium dalam LR memicu pembentukan endapan kalsium-ceftriaxone di paru dan ginjal.`
+                    });
+                }
+                if (currentCarrierFluid === 'ns' && d.id === 'amiodarone') {
+                    alerts.push({
+                        type: 'warning',
+                        text: `<strong>Peringatan:</strong> Amiodarone tidak stabil dalam Saline (NS) untuk infus kontinu. Sangat berisiko memicu presipitasi fisik.`
+                    });
+                }
+                if (currentCarrierFluid !== 'ns' && d.id === 'phenytoin') {
+                    alerts.push({
+                        type: 'danger',
+                        text: `<strong>FATAL:</strong> Phenytoin wajib menggunakan cairan dasar NS. Cairan asam/mengandung dextros (D5W/LR) memicu kristalisasi instan.`
+                    });
+                }
+                if (currentCarrierFluid !== 'ns' && d.id === 'pantoprazole') {
+                    alerts.push({
+                        type: 'danger',
+                        text: `<strong>FATAL:</strong> Pantoprazole wajib menggunakan cairan dasar NS. Cairan asam (D5W) menyebabkan kerusakan kimiawi instan.`
+                    });
+                }
+                if (currentCarrierFluid !== 'ns' && d.id === 'meropenem') {
+                    alerts.push({
+                        type: 'warning',
+                        text: `<strong>Stabilitas Terbatas:</strong> Meropenem dalam D5W/LR hanya stabil 2 jam pada suhu ruang. Gunakan NS agar stabil hingga 4-6 jam.`
+                    });
+                }
+            });
+
+            // Y-Site clashes within the same lumen
+            const checkLumenClashes = (lumenDrugs, lumenName) => {
+                for (let i = 0; i < lumenDrugs.length; i++) {
+                    for (let j = i + 1; j < lumenDrugs.length; j++) {
+                        const d1 = lumenDrugs[i];
+                        const d2 = lumenDrugs[j];
+                        
+                        // Check incompatibility
+                        if (isPairIncompatible(d1.id, d2.id)) {
+                            alerts.push({
+                                type: 'danger',
+                                text: `<strong>Bentrok di ${lumenName}:</strong> ${d1.name} dan ${d2.name} inkompatibel di Y-site. Jalankan pada lumen terpisah!`
+                            });
+                        }
+                    }
+                }
+            };
+
+            checkLumenClashes(distal, 'Lumen Distal');
+            checkLumenClashes(medial, 'Lumen Medial');
+            checkLumenClashes(proximal, 'Lumen Proksimal');
+
+            // High Alert warnings (KCl, Phenytoin)
+            if (active.some(d => d.id === 'kcl')) {
+                alerts.push({
+                    type: 'warning',
+                    text: `<strong>High-Alert KCl:</strong> KCl dilarang keras dibolus. Jika lumen proksimal penuh, hentikan sementara KCl, lakukan flush, berikan obat intermiten, flush, lalu jalankan kembali KCl.`
+                });
+            }
+
+            // Overload warnings
+            if (medial.length > 1 && medial.some(d => d.category.includes('Nutrisi'))) {
+                alerts.push({
+                    type: 'warning',
+                    text: `<strong>Keterbatasan Lumen:</strong> TPN Medial wajib steril tunggal, namun ada obat lain dialokasikan ke Medial. Pertimbangkan pasang jalur perifer tambahan.`
+                });
+            }
+
+            // Render Alerts
+            const alertsArea = document.getElementById('cvc-alerts-area');
+            alertsArea.innerHTML = '';
+            
+            if (alerts.length > 0) {
+                alerts.forEach(alert => {
+                    const item = document.createElement('div');
+                    item.className = `alert-item ${alert.type === 'warning' ? 'warning' : ''}`;
+                    item.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span>${alert.text}</span>
+                    `;
+                    alertsArea.appendChild(item);
+                });
+            }
+        }
+
+        // --- TAB 3: DRUG LIBRARY ENGINE ---
+
+        function renderLibraryList() {
+            const container = document.getElementById('library-list');
+            container.innerHTML = '';
+            
+            DRUGS.forEach(drug => {
+                const item = document.createElement('div');
+                item.className = 'library-item';
+                item.id = `lib-item-${drug.id}`;
+                item.onclick = () => toggleLibraryDetails(drug.id);
+                
+                item.innerHTML = `
+                    <div class="library-item-header">
+                        <div>
+                            <div class="library-item-name">${drug.name}</div>
+                            <div class="library-item-brand">${drug.brand}</div>
+                        </div>
+                        <span class="library-item-tag">${drug.category}</span>
+                    </div>
+                    
+                    <div class="library-item-details">
+                        <div class="library-detail-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">Pelarut Pengenceran Utama</div>
+                                <div class="detail-value" style="color:var(--color-primary);">${drug.preferredDiluent}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Stabilitas & Penyimpanan</div>
+                                <div class="detail-value">${drug.stabilityNote}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Sifat Larutan & pH</div>
+                                <div class="detail-value">pH ${drug.pH}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Stabilitas Pelarut</div>
+                                <div class="detail-value" style="font-size:11px; line-height:1.4;">
+                                    • NS: ${drug.diluentNS.status} (${drug.diluentNS.stability})<br>
+                                    • D5W: ${drug.diluentD5.status} (${drug.diluentD5.stability})<br>
+                                    • RL: ${drug.diluentRL.status} (${drug.diluentRL.stability})
+                                </div>
+                            </div>
+                        </div>
+                        <div class="detail-item" style="margin-top:8px;">
+                            <div class="detail-label">Clinical Pearls (Catatan Farmakologis)</div>
+                            <div class="detail-value" style="font-weight:500; font-size:12px; line-height:1.5; color:var(--color-text-secondary);">${drug.pearls}</div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function toggleLibraryDetails(drugId) {
+            const item = document.getElementById(`lib-item-${drugId}`);
+            const wasExpanded = item.classList.contains('expanded');
+            
+            // Collapse all
+            document.querySelectorAll('.library-item').forEach(el => el.classList.remove('expanded'));
+            
+            // Toggle clicked
+            if (!wasExpanded) {
+                item.classList.add('expanded');
+                // Scroll to item smoothly
+                item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        // Search through reference library
+        function searchLibrary() {
+            const query = document.getElementById('library-search').value.toLowerCase();
+            
+            DRUGS.forEach(drug => {
+                const item = document.getElementById(`lib-item-${drug.id}`);
+                const matches = drug.name.toLowerCase().includes(query) || 
+                                drug.brand.toLowerCase().includes(query) || 
+                                drug.category.toLowerCase().includes(query);
+                
+                if (matches) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                    item.classList.remove('expanded');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
