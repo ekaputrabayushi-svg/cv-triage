@@ -1,0 +1,1846 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cairan Klinis - Selektor, Komparator & Visualisator</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* CSS Reset & Variables (Terang, Hangat & Futuristik) */
+        :root {
+            --bg-light: #faf9f5;
+            --bg-card: rgba(255, 255, 255, 0.85);
+            --bg-card-hover: rgba(255, 255, 255, 0.95);
+            --border-color: rgba(139, 92, 26, 0.1);
+            --border-active: rgba(14, 165, 233, 0.4);
+            
+            /* Medical Neon Accents (Terang & Segar) */
+            --accent-cyan: #0284c7;      /* Kristaloid - Sky/Ocean Blue */
+            --accent-rose: #e11d48;      /* Koloid - Coral Rose */
+            --accent-green: #10b981;     /* Normal/Sukses - Emerald */
+            --accent-yellow: #d97706;    /* Warning/Peringatan - Amber/Orange */
+            --accent-purple: #7c3aed;    /* Studi Kasus - Lavender/Purple */
+            
+            /* Text Colors (Kontras Tinggi & Hangat) */
+            --text-primary: #2d251e;     /* Cokelat Arang Tua */
+            --text-secondary: #5c5249;   /* Abu-abu Hangat */
+            --text-muted: #8c7e74;       /* Muted Brownish Gray */
+            
+            /* Font Families */
+            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            
+            --transition-speed: 0.3s;
+            --shadow-soft: 0 10px 30px rgba(139, 92, 26, 0.05);
+            --shadow-glow: 0 8px 25px rgba(2, 132, 199, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            line-height: 1.6;
+            padding-bottom: 100px; /* Safe area for bottom navigation */
+            min-height: 100vh;
+            overflow-x: hidden;
+            /* Background gradien futuristik dan hangat */
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(14, 165, 233, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(225, 29, 72, 0.04) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(217, 119, 6, 0.03) 0%, transparent 60%);
+            background-attachment: fixed;
+        }
+
+        /* Typography */
+        h1, h2, h3, h4 {
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+        }
+
+        p {
+            color: var(--text-secondary);
+        }
+
+        /* Glassmorphism Card Style (Terang & Lembut) */
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-soft);
+            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(139, 92, 26, 0.2);
+            box-shadow: 0 14px 40px rgba(139, 92, 26, 0.08);
+            transform: translateY(-2px);
+        }
+
+        /* Header Style */
+        header {
+            padding: 28px 20px 20px 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 24px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(255,255,255,0));
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            fill: rgba(2, 132, 199, 0.1);
+            stroke: var(--accent-cyan);
+            stroke-width: 2;
+        }
+
+        header h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-rose) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-top: 4px;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        /* Tab Contents */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Forms & Inputs */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
+
+        select, input[type="number"], input[type="range"] {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1.5px solid var(--border-color);
+            border-radius: 16px;
+            padding: 14px 18px;
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            font-weight: 500;
+            outline: none;
+            transition: all var(--transition-speed);
+            appearance: none;
+            -webkit-appearance: none;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        select:focus, input[type="number"]:focus {
+            border-color: var(--accent-cyan);
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.1);
+        }
+
+        .select-wrapper::after {
+            content: '▼';
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        /* Custom buttons */
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            border: none;
+            font-family: var(--font-sans);
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+            margin-top: 12px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), #0284c7);
+            color: #ffffff;
+            box-shadow: 0 8px 20px rgba(2, 132, 199, 0.2);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 12px 25px rgba(2, 132, 199, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: rgba(139, 92, 26, 0.05);
+            color: var(--text-primary);
+            border: 1.5px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(139, 92, 26, 0.08);
+        }
+
+        /* Results / Decision Output styles */
+        .output-card {
+            border-left: 5px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.5);
+            padding: 18px;
+            border-radius: 16px;
+            margin-top: 16px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.01);
+        }
+
+        .output-card.primary {
+            border-left-color: var(--accent-cyan);
+            background: rgba(2, 132, 199, 0.04);
+        }
+
+        .output-card.alternative {
+            border-left-color: var(--accent-yellow);
+            background: rgba(217, 119, 6, 0.04);
+        }
+
+        .output-card.contraindication {
+            border-left-color: var(--accent-rose);
+            background: rgba(225, 29, 72, 0.04);
+        }
+
+        .output-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            letter-spacing: 0.03em;
+        }
+
+        .badge-cyan { background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1.5px solid rgba(2, 132, 199, 0.2); }
+        .badge-yellow { background: rgba(217, 119, 6, 0.1); color: #d97706; border: 1.5px solid rgba(217, 119, 6, 0.2); }
+        .badge-rose { background: rgba(225, 29, 72, 0.1); color: #e11d48; border: 1.5px solid rgba(225, 29, 72, 0.2); }
+        .badge-purple { background: rgba(124, 58, 237, 0.1); color: #7c3aed; border: 1.5px solid rgba(124, 58, 237, 0.2); }
+
+        .output-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+
+        .output-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .bullet-list {
+            margin-left: 20px;
+            margin-top: 6px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .bullet-list li {
+            margin-bottom: 5px;
+        }
+
+        /* Compartment Visualizer Graphics */
+        .visualizer-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin: 24px 0;
+            height: 270px;
+            align-items: end;
+        }
+
+        .compartment-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            justify-content: flex-end;
+            position: relative;
+        }
+
+        .compartment-label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--text-secondary);
+            margin-top: 10px;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .compartment-sub {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .fluid-cylinder {
+            width: 100%;
+            height: 190px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 2px solid rgba(139, 92, 26, 0.15);
+            border-radius: 16px 16px 8px 8px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.03);
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .fluid-level {
+            width: 100%;
+            height: 40%; /* Initial level */
+            background: linear-gradient(to top, rgba(2, 132, 199, 0.35), rgba(2, 132, 199, 0.15));
+            transition: height 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .fluid-level.colloid {
+            background: linear-gradient(to top, rgba(225, 29, 72, 0.35), rgba(225, 29, 72, 0.15));
+        }
+
+        .fluid-level.hypertonic {
+            background: linear-gradient(to top, rgba(124, 58, 237, 0.35), rgba(124, 58, 237, 0.15));
+        }
+
+        /* Animated wave effect */
+        .fluid-level::before {
+            content: "";
+            position: absolute;
+            width: 220%;
+            height: 15px;
+            top: -7px;
+            left: -60%;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 42%;
+            animation: wave 5s infinite linear;
+        }
+
+        @keyframes wave {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .volume-tag {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 2px 6px;
+            border-radius: 6px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .volume-delta {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 700;
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .volume-delta.show {
+            opacity: 1;
+            transform: translate(-50%, -6px);
+        }
+
+        .delta-plus { color: #047857; }
+        .delta-minus { color: var(--accent-rose); }
+
+        .slider-container {
+            margin: 20px 0 10px 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .slider-val {
+            font-family: var(--font-mono);
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        /* Comparator Tool styles */
+        .comp-select-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .comp-card-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .comp-fluid-header {
+            font-weight: 800;
+            text-align: center;
+            font-size: 1rem;
+            padding: 10px;
+            border-bottom: 1.5px solid var(--border-color);
+            margin-bottom: 14px;
+        }
+
+        .comp-fluid-header.left { color: var(--accent-cyan); }
+        .comp-fluid-header.right { color: var(--accent-rose); }
+
+        .comp-row {
+            margin-bottom: 14px;
+        }
+
+        .comp-label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            letter-spacing: 0.05em;
+        }
+
+        .comp-value {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            min-height: 22px;
+            line-height: 1.4;
+        }
+
+        /* Interactive Study Cases */
+        .case-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            border-bottom: 1.5px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .case-badge {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--accent-purple);
+        }
+
+        .case-score {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 700;
+        }
+
+        .case-title {
+            font-size: 1.25rem;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .case-description {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin-bottom: 18px;
+        }
+
+        .lab-box {
+            background: rgba(139, 92, 26, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 18px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .lab-item {
+            font-size: 0.85rem;
+        }
+
+        .lab-name { color: var(--text-muted); font-weight: 700; }
+        .lab-val { font-family: var(--font-mono); font-weight: 700; color: var(--text-primary); }
+
+        .choice-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .choice-btn {
+            background: rgba(255,255,255,0.9);
+            border: 1.5px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px 18px;
+            text-align: left;
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            box-shadow: 0 2px 4px rgba(139, 92, 26, 0.02);
+        }
+
+        .choice-btn:hover {
+            background: #ffffff;
+            border-color: rgba(139, 92, 26, 0.25);
+            box-shadow: 0 4px 10px rgba(139, 92, 26, 0.05);
+        }
+
+        .choice-btn.selected-correct {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: var(--accent-green);
+            color: #065f46;
+        }
+
+        .choice-btn.selected-incorrect {
+            background: rgba(225, 29, 72, 0.08);
+            border-color: var(--accent-rose);
+            color: #9f1239;
+        }
+
+        .case-feedback {
+            display: none;
+            margin-top: 24px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        /* Vital Sign simulation bar */
+        .vital-box {
+            display: flex;
+            gap: 10px;
+            margin: 16px 0;
+        }
+
+        .vital-indicator {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.01);
+        }
+
+        .vital-title {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+        }
+
+        .vital-value {
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-top: 2px;
+            transition: color 0.5s ease;
+        }
+
+        /* Navigation Bottom Bar (Gaya Floating Modern & Terang) */
+        .nav-bar {
+            position: fixed;
+            bottom: 16px;
+            left: 16px;
+            right: 16px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1.5px solid rgba(139, 92, 26, 0.12);
+            border-radius: 24px;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(139, 92, 26, 0.08);
+            max-width: 568px;
+            margin: 0 auto;
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-family: var(--font-sans);
+            font-size: 0.75rem;
+            font-weight: 700;
+            gap: 4px;
+            width: 25%;
+            transition: all var(--transition-speed);
+            padding: 4px 0;
+            position: relative;
+        }
+
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            transition: transform var(--transition-speed) cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .nav-item.active {
+            color: var(--accent-cyan);
+        }
+
+        .nav-item.active svg {
+            transform: translateY(-2px) scale(1.1);
+            stroke: var(--accent-cyan);
+        }
+
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 16px;
+            height: 3px;
+            background-color: var(--accent-cyan);
+            border-radius: 2px;
+        }
+
+        /* Tooltip or Modal info box */
+        .info-header-btn {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1.5px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            position: absolute;
+            right: 20px;
+            top: 24px;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-soft);
+            transition: all var(--transition-speed);
+        }
+
+        .info-header-btn:hover {
+            border-color: rgba(139, 92, 26, 0.3);
+            background: #ffffff;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(45, 37, 30, 0.35);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            max-width: 500px;
+            width: 100%;
+            padding: 28px;
+            position: relative;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 50px rgba(45, 37, 30, 0.15);
+        }
+
+        .modal-close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 1.6rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: color var(--transition-speed);
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        /* Responsive changes */
+        @media (max-width: 480px) {
+            header h1 {
+                font-size: 1.4rem;
+            }
+            .glass-card {
+                padding: 18px;
+                border-radius: 20px;
+            }
+            .fluid-cylinder {
+                height: 160px;
+            }
+            .visualizer-grid {
+                height: 230px;
+            }
+            .nav-bar {
+                bottom: 10px;
+                left: 10px;
+                right: 10px;
+                border-radius: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <button class="info-header-btn" onclick="openModal()" aria-label="Info Fisiologi">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+    </button>
+
+    <header>
+        <div class="logo-container">
+            <svg class="logo-icon" viewBox="0 0 24 24">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+            </svg>
+            <h1>Cairan Klinis</h1>
+        </div>
+        <p>Selektor, Komparator & Visualisator Fisiologis</p>
+    </header>
+
+    <main class="container">
+        
+        <!-- ==================== TAB SELEKTOR ==================== -->
+        <section id="tab-selektor" class="tab-content active">
+            <div class="glass-card">
+                <h2 style="font-size: 1.15rem; margin-bottom: 12px; color: var(--accent-cyan); display:flex; align-items:center; gap:8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    Selektor Keputusan Cairan
+                </h2>
+                <p style="font-size:0.85rem; margin-bottom:18px;">Masukkan data pasien untuk menganalisis cairan resusitasi atau rumatan yang paling tepat secara fisiologis.</p>
+                
+                <div class="form-group">
+                    <label for="klinis-select">Kondisi Klinis Utama</label>
+                    <div class="select-wrapper">
+                        <select id="klinis-select">
+                            <option value="dehidrasi">Dehidrasi Berat Umum (Gastroenteritis/Muntah)</option>
+                            <option value="sepsis">Syok Sepsis / SIRS</option>
+                            <option value="tbi">Cedera Otak Traumatis (TBI) Berat / Edema Serebral</option>
+                            <option value="burn">Luka Bakar Fase Akut (Resusitasi Parkland)</option>
+                            <option value="hemoragik">Syok Hemoragik (Perdarahan Masif)</option>
+                            <option value="dka">Ketoasidosis Diabetikum (DKA) / HHS</option>
+                            <option value="sirosis">Sirosis Hati dengan Asites (Pasca-Parasentesis)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="natrium-select">Natrium Serum (Opsional)</label>
+                    <div class="select-wrapper">
+                        <select id="natrium-select">
+                            <option value="normal">Normal (135 - 145 mEq/L)</option>
+                            <option value="hipo">Hiponatremia (&lt; 135 mEq/L)</option>
+                            <option value="hiper">Hipernatremia (&gt; 145 mEq/L)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="klorida-select">Klorida Serum (Opsional)</label>
+                    <div class="select-wrapper">
+                        <select id="klorida-select">
+                            <option value="normal">Normal (98 - 107 mEq/L)</option>
+                            <option value="hiper">Hiperkloremia (&gt; 107 mEq/L)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="albumin-select">Albumin Serum (Opsional)</label>
+                    <div class="select-wrapper">
+                        <select id="albumin-select">
+                            <option value="normal">Normal (&gt; 3.0 g/dL)</option>
+                            <option value="hipo">Hipoalbuminemia Berat (&lt; 2.0 g/dL)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="analisisCairan()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    Analisis Pilihan Cairan
+                </button>
+            </div>
+
+            <!-- Area Hasil Seleksi (Hidden default) -->
+            <div id="seleksi-hasil" class="glass-card" style="display: none;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 12px;">Rekomendasi Terapi Cairan</h3>
+                
+                <!-- Utama -->
+                <div id="hasil-utama" class="output-card primary">
+                    <span class="output-badge badge-cyan">Pilihan Utama</span>
+                    <div class="output-title" id="utama-title">Ringer Laktat (RL)</div>
+                    <div class="output-text" id="utama-desc">Mekanisme laktat menjadi bikarbonat di hati bertindak sebagai buffer asidosis.</div>
+                </div>
+
+                <!-- Alternatif -->
+                <div id="hasil-alternatif" class="output-card alternative">
+                    <span class="output-badge badge-yellow">Alternatif</span>
+                    <div class="output-title" id="alternatif-title">Ringer Asetat (RA)</div>
+                    <div class="output-text" id="alternatif-desc">Bagus untuk metabolisme di otot tanpa membebani hati.</div>
+                </div>
+
+                <!-- Kontraindikasi -->
+                <div id="hasil-kontraindikasi" class="output-card contraindication">
+                    <span class="output-badge badge-rose">KONTRAINDIKASI UTAMA</span>
+                    <div class="output-title" id="kontra-title">NaCl 0.9% (Normal Saline)</div>
+                    <div class="output-text" id="kontra-desc">Bahaya asidosis metabolik hiperkloremik jika diberikan dalam jumlah besar.</div>
+                </div>
+
+                <!-- Penalaran Fisiologis -->
+                <div style="margin-top:18px; padding-top:14px; border-top: 1.5px solid var(--border-color);">
+                    <h4 style="font-size: 0.9rem; margin-bottom: 6px; color: var(--text-secondary);">Rasional Fisiologis:</h4>
+                    <p style="font-size:0.88rem; line-height: 1.5;" id="penalaran-text">Analisis fisiologis klinis akan ditampilkan di sini.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB KOMPARATOR ==================== -->
+        <section id="tab-komparator" class="tab-content">
+            <div class="glass-card">
+                <h2 style="font-size: 1.15rem; margin-bottom: 12px; color: var(--accent-rose); display:flex; align-items:center; gap:8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"></path><path d="M4 20L21 3"></path><path d="M21 16v5h-5"></path><path d="M15 15l6 6"></path><path d="M4 4l5 5"></path></svg>
+                    Komparator Cairan Head-to-Head
+                </h2>
+                <p style="font-size:0.85rem; margin-bottom:18px;">Bandingkan karakteristik fisikokimia dan klinis antara dua cairan secara berdampingan.</p>
+                
+                <div class="comp-select-grid">
+                    <div>
+                        <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); display:block; margin-bottom:6px;">CAIRAN A (Kiri)</label>
+                        <div class="select-wrapper">
+                            <select id="comp-fluid-1" onchange="updateComparator()">
+                                <option value="rl">Ringer Laktat (RL)</option>
+                                <option value="ns" selected>NaCl 0.9% (Normal Saline)</option>
+                                <option value="ra">Ringer Asetat (RA)</option>
+                                <option value="d5w">Dextrose 5% (D5W)</option>
+                                <option value="alb5">Albumin 5%</option>
+                                <option value="alb25">Albumin 20-25%</option>
+                                <option value="hes">HES (Hydroxyethyl Starch)</option>
+                                <option value="gel">Gelatin</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); display:block; margin-bottom:6px;">CAIRAN B (Kanan)</label>
+                        <div class="select-wrapper">
+                            <select id="comp-fluid-2" onchange="updateComparator()">
+                                <option value="rl" selected>Ringer Laktat (RL)</option>
+                                <option value="ns">NaCl 0.9% (Normal Saline)</option>
+                                <option value="ra">Ringer Asetat (RA)</option>
+                                <option value="d5w">Dextrose 5% (D5W)</option>
+                                <option value="alb5">Albumin 5%</option>
+                                <option value="alb25">Albumin 20-25%</option>
+                                <option value="hes">HES (Hydroxyethyl Starch)</option>
+                                <option value="gel">Gelatin</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Banding Card Grid -->
+            <div class="glass-card">
+                <div class="comp-card-grid">
+                    <!-- Kolom Kiri -->
+                    <div style="border-right: 1.5px solid var(--border-color); padding-right:16px;">
+                        <div class="comp-fluid-header left" id="comp-f1-name">NaCl 0.9%</div>
+                        
+                        <div class="comp-row">
+                            <div class="comp-label">Kategori</div>
+                            <div class="comp-value" id="comp-f1-cat">Kristaloid Isotonis</div>
+                        </div>
+
+                        <div class="comp-row">
+                            <div class="comp-label">Osmolaritas & pH</div>
+                            <div class="comp-value" id="comp-f1-osm">308 mOsm/L | pH ~5.5</div>
+                        </div>
+
+                        <div class="comp-row">
+                            <div class="comp-label">Komposisi (mEq/L)</div>
+                            <div class="comp-value" id="comp-f1-comp">Na: 154, Cl: 154<br>Elektrolit lain: 0<br>Buffer: Tidak ada</div>
+                        </div>
+
+                        <div class="comp-row">
+                            <div class="comp-label">Retensi Intravaskular</div>
+                            <div class="comp-value" id="comp-f1-ret">~20-25% setelah 1 jam (80% lari ke ruang interstisial)</div>
+                        </div>
+
+                        <div class="comp-row">
+                            <div class="comp-label">Indikasi Utama</div>
+                            <div class="comp-value" id="comp-f1-ind">Hipovolemia ringan, hipokloremia alkalosis, pelarut obat.</div>
+                        </div>
+
+                        <div class="comp-row">
+                            <div class="comp-label">Risiko & Kontraindikasi</div>
+                            <div class="comp-value" id="comp-f1-risk">Asidosis metabolik hiperkloremik, kelebihan volume cairan, edema paru.</div>
+                        </div>
+                    </div>
+
+                    <!-- Kolom Kanan -->
+                    <div style="padding-left:16px;">
+                        <div class="comp-fluid-header right" id="comp-f2-name">Ringer Laktat</div>
+                        
+                        <div class="comp-row">
+                            <div class="comp-label">Kategori</div>
+                            <div class="comp-value" id="comp-f2-cat">Kristaloid Isotonis (Balanced)</div>
+                        </div>
+
+                        <div class="comp-row">
+                            <div class="comp-label">Osmolaritas & pH</div>
+                            <div class="comp-value" id="comp-f2-osm">273 mOsm/L | pH ~6.5</div>
+                        </div>
+
+                        <div class="comp-row">
+                            <div class="comp-label">Komposisi (mEq/L)</div>
+                            <div class="comp-value" id="comp-f2-comp">Na: 130, Cl: 109, K: 4, Ca: 3<br>Buffer: Laktat 28</div>
+                        </div>
+
+                        <div class="comp-row">
+                            <div class="comp-label">Retensi Intravaskular</div>
+                            <div class="comp-value" id="comp-f2-ret">~20-25% setelah 1 jam (80% lari ke ruang interstisial)</div>
+                        </div>
+
+                        <div class="comp-row">
+                            <div class="comp-label">Indikasi Utama</div>
+                            <div class="comp-value" id="comp-f2-ind">Resusitasi trauma luka bakar, syok sepsis, dehidrasi berat.</div>
+                        </div>
+
+                        <div class="comp-row">
+                            <div class="comp-label">Risiko & Kontraindikasi</div>
+                            <div class="comp-value" id="comp-f2-risk">Kontraindikasi dicampur darah (Ca memicu bekuan), hindari pada hepatopati berat.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB VISUALISATOR ==================== -->
+        <section id="tab-visualisator" class="tab-content">
+            <div class="glass-card">
+                <h2 style="font-size: 1.15rem; margin-bottom: 8px; color: var(--accent-cyan); display:flex; align-items:center; gap:8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+                    Visualisator Distribusi Cairan
+                </h2>
+                <p style="font-size:0.85rem; margin-bottom:18px;">Infuskan cairan ke tubuh (berat standar 70 kg) dan amati perpindahan cairan antar kompartemen secara real-time.</p>
+                
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="vis-fluid-select">Pilih Cairan</label>
+                    <div class="select-wrapper">
+                        <select id="vis-fluid-select" onchange="runVisualizer()">
+                            <option value="d5w">Dextrose 5% (D5W) - Air Bebas</option>
+                            <option value="ns" selected>NaCl 0.9% (Normal Saline) - Isotonis</option>
+                            <option value="rl">Ringer Laktat (RL) - Balanced Isotonis</option>
+                            <option value="hyper">NaCl 3% - Hipertonis</option>
+                            <option value="alb5">Albumin 5% - Iso-onkotik</option>
+                            <option value="alb25">Albumin 20-25% (Pekat) - Hiper-onkotik</option>
+                            <option value="halfns">NaCl 0.45% - Hipotonis</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Volume Infusi:</span>
+                        <span class="slider-val" id="vis-volume-val">1000 mL</span>
+                    </div>
+                    <input type="range" id="vis-volume-slider" min="100" max="2000" step="100" value="1000" oninput="document.getElementById('vis-volume-val').innerText = this.value + ' mL'; runVisualizer();">
+                </div>
+            </div>
+
+            <!-- Kompartemen Visual -->
+            <div class="glass-card" style="padding-bottom:16px;">
+                <div class="visualizer-grid">
+                    <!-- Intraselular (ICF) -->
+                    <div class="compartment-col">
+                        <div class="volume-delta" id="delta-icf">+0 mL</div>
+                        <div class="fluid-cylinder">
+                            <div class="volume-tag" id="tag-icf">28.0 L</div>
+                            <div class="fluid-level" id="level-icf" style="height: 60%;"></div>
+                        </div>
+                        <div class="compartment-label">Intraselular<br><span class="compartment-sub">Sel Tubuh (ICF)</span></div>
+                    </div>
+
+                    <!-- Interstisial (ISF) -->
+                    <div class="compartment-col">
+                        <div class="volume-delta" id="delta-isf">+0 mL</div>
+                        <div class="fluid-cylinder">
+                            <div class="volume-tag" id="tag-isf">10.5 L</div>
+                            <div class="fluid-level" id="level-isf" style="height: 40%;"></div>
+                        </div>
+                        <div class="compartment-label">Interstisial<br><span class="compartment-sub">Celah Jaringan (ISF)</span></div>
+                    </div>
+
+                    <!-- Intravaskular (IV) -->
+                    <div class="compartment-col">
+                        <div class="volume-delta" id="delta-iv">+0 mL</div>
+                        <div class="fluid-cylinder">
+                            <div class="volume-tag" id="tag-iv">3.5 L</div>
+                            <div class="fluid-level" id="level-iv" style="height: 35%;"></div>
+                        </div>
+                        <div class="compartment-label">Intravaskular<br><span class="compartment-sub">Pembuluh Darah (IV)</span></div>
+                    </div>
+                </div>
+
+                <div class="output-card primary" style="margin-top:24px;">
+                    <div class="output-badge badge-cyan" id="vis-badge-type">Isotonis</div>
+                    <div class="output-title" id="vis-fluid-title">NaCl 0.9% (Normal Saline)</div>
+                    <div class="output-text" id="vis-explanation">Mengisi cairan ekstraseluler (Intravaskular dan Interstisial) dengan proporsi 1:3. Tidak ada perpindahan dari/ke intraseluler karena konsentrasi natrium yang isotonis dengan plasma.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB KASUS ==================== -->
+        <section id="tab-kasus" class="tab-content">
+            <div class="glass-card" id="quiz-container">
+                <div class="case-header">
+                    <span class="case-badge" id="case-num">KASUS 1 DARI 4</span>
+                    <span class="case-score" id="case-score-val">Skor: 0</span>
+                </div>
+                
+                <h3 class="case-title" id="quiz-title">Pasien Cedera Kepala Berat</h3>
+                
+                <!-- Vital Signs Box -->
+                <div class="vital-box">
+                    <div class="vital-indicator">
+                        <div class="vital-title">Tensi</div>
+                        <div class="vital-value" id="v-bp">90/60</div>
+                    </div>
+                    <div class="vital-indicator">
+                        <div class="vital-title">Nadi</div>
+                        <div class="vital-value" id="v-hr">112x/m</div>
+                    </div>
+                    <div class="vital-indicator">
+                        <div class="vital-title">GCS</div>
+                        <div class="vital-value" id="v-gcs">7 (Sopor)</div>
+                    </div>
+                    <div class="vital-indicator">
+                        <div class="vital-title">TIK</div>
+                        <div class="vital-value" id="v-icp">18 mmHg</div>
+                    </div>
+                </div>
+
+                <p class="case-description" id="quiz-desc">
+                    Laki-laki 24 tahun korban kecelakaan sepeda motor dibawa ke IGD. Mengalami trauma kepala tertutup. Pasien tidak sadar, teraba dingin, nadi cepat halus. Anda harus meresusitasi cairan untuk menstabilkan tekanan darah arterial rata-rata (MAP) tanpa memperburuk edema serebral (peningkatan TIK).
+                </p>
+
+                <!-- Lab values box -->
+                <div class="lab-box" id="quiz-lab">
+                    <div class="lab-item"><span class="lab-name">Natrium:</span> <span class="lab-val">138 mEq/L</span></div>
+                    <div class="lab-item"><span class="lab-name">Albumin:</span> <span class="lab-val">3.8 g/dL</span></div>
+                    <div class="lab-item"><span class="lab-name">Hb:</span> <span class="lab-val">12.5 g/dL</span></div>
+                    <div class="lab-item"><span class="lab-name">Laktat:</span> <span class="lab-val">2.8 mmol/L</span></div>
+                </div>
+
+                <div style="font-size:0.75rem; font-weight:700; color:var(--text-secondary); margin-bottom:10px; text-transform:uppercase;">Pilih Cairan Resusitasi Terbaik:</div>
+                <div class="choice-list" id="choices-box">
+                    <!-- JS generated choices -->
+                </div>
+
+                <!-- Feedback area -->
+                <div class="case-feedback" id="quiz-feedback-box">
+                    <div class="output-card" id="feedback-card">
+                        <span class="output-badge" id="feedback-badge">Benar</span>
+                        <div class="output-title" id="feedback-title">Rasional Keputusan:</div>
+                        <div class="output-text" id="feedback-text">Penjelasan klinis di sini.</div>
+                    </div>
+                    <button class="btn btn-secondary" id="next-btn" onclick="nextCase()">
+                        Kasus Berikutnya
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quiz End Screen -->
+            <div class="glass-card" id="quiz-end-screen" style="display: none; text-align: center; padding: 40px 20px;">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--accent-purple)" stroke-width="1.8" style="margin-bottom: 16px;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9 12l2 2 4-4"></path>
+                </svg>
+                <h3 style="font-size: 1.5rem; margin-bottom: 8px;">Evaluasi Selesai!</h3>
+                <p style="margin-bottom: 24px; color: var(--text-secondary);">Anda telah menyelesaikan simulasi penalaran cairan tubuh.</p>
+                <div style="font-size: 3.5rem; font-weight: 800; color: var(--accent-cyan); font-family: var(--font-mono); margin-bottom: 24px;" id="final-score">80/100</div>
+                <button class="btn btn-primary" onclick="restartQuiz()">Ulangi Kuis Simulasi</button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="nav-bar">
+        <button class="nav-item active" onclick="switchTab('selektor', this)">
+            <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polygon points="12 8 8 12 12 16 16 12 12 8"></polygon>
+            </svg>
+            <span>Selektor</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('komparator', this)">
+            <svg viewBox="0 0 24 24">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            <span>Komparator</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('visualisator', this)">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+            <span>Visualisator</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('kasus', this)">
+            <svg viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            <span>Studi Kasus</span>
+        </button>
+    </nav>
+
+    <!-- Modal Info Fisiologi -->
+    <div id="info-modal" class="modal" onclick="closeModalOnOuter(event)">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <h3 style="margin-bottom: 14px; color: var(--accent-cyan); display: flex; align-items: center; gap: 8px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                Dasar Fisiologi Cairan Tubuh
+            </h3>
+            
+            <h4 style="margin-top: 14px; margin-bottom: 4px; color: var(--text-primary);">1. Pembagian Kompartemen</h4>
+            <p style="font-size: 0.85rem; margin-bottom: 8px;">
+                Tubuh manusia dewasa (70 kg) memiliki ~42 Liter air (Total Body Water / TBW):
+            </p>
+            <ul class="bullet-list" style="margin-bottom: 12px;">
+                <li><strong>Intraselular (ICF - 28 L / 67%):</strong> Cairan di dalam sel. Tidak disentuh langsung oleh infus kristaloid isotonis.</li>
+                <li><strong>Interstisial (ISF - 10.5 L / 25%):</strong> Cairan di sela sel. Menjadi "penampung" utama (75%) dari cairan kristaloid isotonik yang diinfus.</li>
+                <li><strong>Intravaskular (IV - 3.5 L / 8%):</strong> Volume plasma di dalam pembuluh darah. Sasaran utama resusitasi syok.</li>
+            </ul>
+
+            <h4 style="margin-top: 14px; margin-bottom: 4px; color: var(--text-primary);">2. Kristaloid vs Koloid</h4>
+            <p style="font-size: 0.85rem; margin-bottom: 8px;">
+                <strong>Kristaloid:</strong> Mengandung air dan elektrolit berukuran kecil yang mudah keluar menembus membran kapiler ke interstisial. Hanya 20-25% volume kristaloid yang bertahan di intravaskular setelah 1 jam.
+            </p>
+            <p style="font-size: 0.85rem; margin-bottom: 12px;">
+                <strong>Koloid:</strong> Mengandung makromolekul (albumin atau zat sintetik seperti gelatin) yang tidak mudah keluar dari pembuluh darah. Bertahan hampir seluruhnya di pembuluh darah, mempertahankan atau meningkatkan tekanan onkotik plasma.
+            </p>
+
+            <h4 style="margin-top: 14px; margin-bottom: 4px; color: var(--accent-yellow);">3. Bahaya Klinis Cairan</h4>
+            <ul class="bullet-list">
+                <li><strong>Normal Saline (NaCl 0.9%):</strong> Kadar klorida yang tinggi (154 mEq/L) jauh di atas plasma fisiologis (100 mEq/L), memicu *asidosis metabolik hiperkloremik* dan vasokonstriksi ginjal.</li>
+                <li><strong>Ringer Laktat (RL):</strong> Memiliki pH relatif asam tapi efek fisiologisnya membasahi (alkalinisasi) karena laktat dirubah jadi bikarbonat di hati. Mengandung kalsium, kontraindikasi jika dicampur dengan transfusi darah PRBC.</li>
+                <li><strong>Koloid Sintetis (HES):</strong> Meningkatkan mortalitas dan risiko Cedera Ginjal Akut (AKI) pada pasien sepsis di ICU. Penggunaannya sangat dibatasi.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- JavaScript logic -->
+    <script>
+        /* Database & State */
+        const fluidData = {
+            rl: {
+                name: "Ringer Laktat (RL)",
+                cat: "Kristaloid Isotonis (Balanced)",
+                osm: "273 mOsm/L | pH 6.5",
+                comp: "Na⁺: 130, Cl⁻: 109, K⁺: 4, Ca²⁺: 3, Laktat⁻: 28 mEq/L",
+                ret: "20-25% di intravaskular setelah 1 jam (800 mL lari ke interstisial).",
+                ind: "Resusitasi trauma luka bakar, syok hipovolemik, dehidrasi berat.",
+                risk: "Kontraindikasi dicampur darah (kalsium mengikat sitrat darah), hindari pada gangguan hati berat (metabolisme laktat terhambat)."
+            },
+            ns: {
+                name: "NaCl 0.9% (Normal Saline)",
+                cat: "Kristaloid Isotonis",
+                osm: "308 mOsm/L | pH ~5.5",
+                comp: "Na⁺: 154, Cl⁻: 154 mEq/L (Tanpa kalium, kalsium, atau buffer)",
+                ret: "20-25% di intravaskular setelah 1 jam (klorida tinggi membatasi perfusi ginjal).",
+                ind: "Resusitasi syok ringan, hiponatremia, alkalosis metabolik hipokloremik (karena Cl tinggi).",
+                risk: "Risiko asidosis metabolik hiperkloremik jika volume besar, memicu vasokonstriksi arteri renalis."
+            },
+            ra: {
+                name: "Ringer Asetat (RA)",
+                cat: "Kristaloid Isotonis (Balanced)",
+                osm: "270 mOsm/L | pH ~6.0",
+                comp: "Na⁺: 130, Cl⁻: 110, K⁺: 4, Ca²⁺: 3, Asetat⁻: 27 mEq/L",
+                ret: "20-25% di intravaskular setelah 1 jam.",
+                ind: "Resusitasi syok sepsis, perioperatif, pasien dengan kegagalan fungsi hati (asetat dimetabolisme cepat di otot).",
+                risk: "Kontraindikasi pada transfusi darah karena mengandung kalsium."
+            },
+            d5w: {
+                name: "Dextrose 5% (D5W)",
+                cat: "Kristaloid Hipotonis (Fisiologis)",
+                osm: "252 mOsm/L | pH ~4.5",
+                comp: "Glukosa: 50 g/L. Bebas elektrolit.",
+                ret: "Hanya ~8% menetap di intravaskular. Menyebar ke seluruh tubuh (67% ke intraseluler).",
+                ind: "Hipernatremia berat, hidrasi seluler, pelarut obat tertentu (seperti amiodaron).",
+                risk: "Kontraindikasi untuk resusitasi syok, kontraindikasi pada cedera otak (memicu edema serebral)."
+            },
+            alb5: {
+                name: "Albumin 5%",
+                cat: "Koloid Alami (Iso-onkotik)",
+                osm: "300 mOsm/L | pH ~6.9",
+                comp: "Albumin manusia: 50 g/L, Na⁺: 130-160 mEq/L.",
+                ret: "100% menetap di intravaskular (1 L ekspansi = 1 L plasma) selama 12-24 jam.",
+                ind: "Resusitasi syok pada luka bakar fase lanjut, syok sepsis berat (setelah kegagalan kristaloid).",
+                risk: "Sangat mahal, kontraindikasi pada trauma kepala berat (meningkatkan mortalitas akibat TIK)."
+            },
+            alb25: {
+                name: "Albumin 20-25%",
+                cat: "Koloid Alami (Hiper-onkotik)",
+                osm: "310 mOsm/L | pH ~6.9",
+                comp: "Albumin manusia: 200-250 g/L. Kaya protein.",
+                ret: "Ekspansi intravaskular 4-5 kali lipat volume yang diberikan dengan menarik air interstisial.",
+                ind: "Sirosis dengan asites berat (pasca parasentesis besar), sindrom hepatorenal, hipoalbuminemia berat.",
+                risk: "Kontraindikasi pada dehidrasi intraselular tanpa kristaloid, risiko kelebihan beban sirkulasi (edema paru)."
+            },
+            hes: {
+                name: "HES (Hydroxyethyl Starch)",
+                cat: "Koloid Sintetis (Polimer Kanji)",
+                osm: "300 mOsm/L | pH ~5.5",
+                comp: "Polimer kanji dalam cairan pembawa (NaCl atau Balanced).",
+                ret: "Hampir 100% di intravaskular selama 4-8 jam.",
+                ind: "Sangat dibatasi. Dulu digunakan untuk resusitasi cepat hypovolemia trauma.",
+                risk: "Black Box Warning: Sangat nephrotoxic (menyebabkan AKI yang butuh hemodialisis), mengganggu koagulasi darah, meningkatkan mortalitas."
+            },
+            gel: {
+                name: "Gelatin 4%",
+                cat: "Koloid Sintetis (Peptida Kolagen)",
+                osm: "290 mOsm/L | pH ~7.0",
+                comp: "Peptida gelatin dimodifikasi, Na⁺: 154, Cl⁻: 120 mEq/L.",
+                ret: "Bertahan ~70-80% di intravaskular selama 2-4 jam.",
+                ind: "Resusitasi volume plasma perioperatif.",
+                risk: "Risiko tinggi reaksi anafilaksis (tertinggi di antara koloid), gangguan ringan hemostasis."
+            }
+        };
+
+        const cases = [
+            {
+                title: "Pasien Cedera Kepala Berat (TBI)",
+                desc: "Laki-laki 24 tahun korban KLL sepeda motor dibawa ke IGD. Mengalami trauma kepala tertutup. Pasien tidak sadar, teraba dingin, nadi cepat halus. Anda harus meresusitasi cairan untuk menstabilkan MAP tanpa memperburuk edema serebral (bahaya peningkatan TIK).",
+                vitals: { bp: "85/55", hr: "118x/m", gcs: "7", icp: "18 mmHg" },
+                lab: { na: "139 mEq/L", alb: "3.7 g/dL", hb: "11.2 g/dL", lac: "3.1 mmol/L" },
+                choices: [
+                    { text: "Ringer Laktat (RL)", isCorrect: false, score: 60, feedback: "RL bersifat sedikit hipotonis secara in-vivo (osmolaritas 273). Pemberian volume besar berisiko menurunkan natrium serum dan memperberat edema serebral / menaikkan TIK." },
+                    { text: "NaCl 0.9% (Normal Saline)", isCorrect: true, score: 100, feedback: "Tepat! NaCl 0.9% bersifat isotonik/sedikit hipertonik terhadap otak (osmolaritas 308). Cairan ini direkomendasikan pada cedera otak traumatis untuk mencegah edema serebral, karena kadar Na⁺ yang relatif tinggi menahan air tidak masuk ke parenkim otak." },
+                    { text: "Albumin 5% / 20%", isCorrect: false, score: 20, feedback: "Salah! Penelitian klinis besar (SAFE study) menunjukkan bahwa penggunaan Albumin pada Cedera Otak Traumatis (TBI) berat dikaitkan dengan peningkatan tekanan intrakranial dan mortalitas yang signifikan." },
+                    { text: "Dextrose 5% (D5W)", isCorrect: false, score: 0, feedback: "Sangat Bahaya! D5W setelah masuk tubuh akan dimetabolisme gulanya menyisakan air murni yang hipotonis. Air bebas ini akan langsung masuk ke intraseluler otak, memperburuk edema serebral secara fatal dan memicu herniasi otak!" }
+                ],
+                effect: { bp: "110/70", hr: "88x/m", gcs: "7", icp: "15 mmHg" }
+            },
+            {
+                title: "Syok Sepsis dengan Asidosis Hiperkloremik",
+                desc: "Wanita 68 tahun dengan pneumonia komunitas masuk ICU dengan syok sepsis. Pasien telah menerima 3 Liter NaCl 0.9% dalam 4 jam terakhir di Puskesmas. Urin output menurun, kesadaran menurun, napas cepat dalam.",
+                vitals: { bp: "82/48", hr: "125x/m", gcs: "12", icp: "10 mmHg" },
+                lab: { na: "141 mEq/L", alb: "2.4 g/dL", hb: "10.0 g/dL", lac: "4.2 mmol/L" },
+                choices: [
+                    { text: "NaCl 0.9% (Lanjutkan resusitasi)", isCorrect: false, score: 20, feedback: "Kurang Tepat. Pasien sudah mendapat 3 Liter NaCl 0.9%. Klorida serumnya mungkin sudah sangat tinggi. Melanjutkan NaCl 0.9% akan memperburuk asidosis metabolik hiperkloremik dan memperparah disfungsi ginjal (AKI)." },
+                    { text: "Ringer Asetat (RA) atau RL", isCorrect: true, score: 100, feedback: "Sangat Tepat! Gunakan balanced crystalloid seperti Ringer Asetat atau RL. Cairan seimbang ini memiliki kadar klorida mendekati fisiologis (109-110 mEq/L) dan buffer (asetat/laktat) untuk membantu mengoreksi asidosis tanpa risiko asidosis hiperkloremik." },
+                    { text: "HES 6% (Hydroxyethyl Starch)", isCorrect: false, score: 0, feedback: "Berbahaya! Koloid sintetis seperti HES dikontraindikasikan secara mutlak pada sepsis karena terbukti meningkatkan kejadian gagal ginjal akut (AKI) baru, terapi pengganti ginjal (dialisis), dan mortalitas pasien kritis." },
+                    { text: "Dextrose 5% (D5W)", isCorrect: false, score: 10, feedback: "Salah. D5W tidak memiliki kemampuan ekspansi intravaskular yang memadai untuk mengatasi syok sepsis (hanya 8% menetap di pembuluh darah). Pasien membutuhkan resusitasi volume, bukan air bebas." }
+                ],
+                effect: { bp: "100/60", hr: "96x/m", gcs: "14", icp: "10 mmHg" }
+            },
+            {
+                title: "Resusitasi Luka Bakar Akut",
+                desc: "Pria 30 tahun tersiram bensin menyala di seluruh dada dan tangannya (Luas luka bakar ~36%). Berat badan 70 kg. Pasien baru tiba 2 jam pasca trauma di IGD dengan luka bakar grade II-III. Tekanan darah mulai menurun.",
+                vitals: { bp: "95/60", hr: "110x/m", gcs: "15", icp: "10 mmHg" },
+                lab: { na: "136 mEq/L", alb: "3.5 g/dL", hb: "15.2 g/dL (Hemokonsentrasi)", lac: "2.5 mmol/L" },
+                choices: [
+                    { text: "Albumin 25% Segera", isCorrect: false, score: 30, feedback: "Tidak tepat di fase awal! Pada luka bakar fase akut (<24 jam pertama), integritas kapiler rusak parah (permeabilitas meningkat). Protein koloid yang dimasukkan akan bocor ke ruang interstisial, menarik air dan memperburuk edema jaringan." },
+                    { text: "Ringer Laktat (Formula Parkland)", isCorrect: true, score: 100, feedback: "Tepat! RL adalah cairan pilihan utama resusitasi luka bakar fase akut (24 jam pertama). Volume besar dibutuhkan (Formula Parkland: 4ml x BB x %luka) untuk mengimbangi penguapan dan perpindahan cairan massif ke interstisial tanpa memicu asidosis klorida." },
+                    { text: "NaCl 0.9% (Normal Saline)", isCorrect: false, score: 60, feedback: "RL lebih baik daripada NaCl 0.9%. Karena volume cairan yang diinfus sangat besar pada luka bakar, penggunaan NaCl 0.9% akan menyebabkan asidosis metabolik hiperkloremik berat yang membahayakan fungsi ginjal pasien." },
+                    { text: "Dextrose 5% (D5W)", isCorrect: false, score: 10, feedback: "Salah! D5W menyebar dengan cepat ke kompartemen intraseluler. Resusitasi luka bakar membutuhkan pemulihan volume intravaskular yang hilang akibat kebocoran kapiler ekstraseluler." }
+                ],
+                effect: { bp: "115/75", hr: "82x/m", gcs: "15", icp: "10 mmHg" }
+            },
+            {
+                title: "Sirosis Hati dengan Asites Pasca-Parasentesis",
+                desc: "Laki-laki 55 tahun dengan Sirosis Hati Dekompensata baru menjalani parasentesis terapeutik (penyedotan asites) sebanyak 6 Liter di bangsal. Anda perlu memberikan ekspansi plasma untuk mencegah disfungsi sirkulasi pasca parasentesis (PICD).",
+                vitals: { bp: "100/65", hr: "94x/m", gcs: "15", icp: "11 mmHg" },
+                lab: { na: "132 mEq/L (Hiponatremia)", alb: "1.9 g/dL (Hipoalbumin)", hb: "11.0 g/dL", lac: "1.8 mmol/L" },
+                choices: [
+                    { text: "NaCl 0.9% 2 Liter cepat", isCorrect: false, score: 40, feedback: "Kurang Tepat. Pemberian natrium kristaloid dalam jumlah besar akan mempercepat akumulasi kembali cairan asites karena retensi natrium ginjal bawaan pada sirosis, serta tidak menaikkan albumin plasma." },
+                    { text: "Albumin 20% atau 25%", isCorrect: true, score: 100, feedback: "Sangat Tepat! Rekomendasi konsensus internasional adalah pemberian 6-8 gram Albumin per Liter cairan asites yang dikeluarkan jika volume parasentesis >5 L. Albumin pekat (20-25%) menarik cairan interstisial dari celah jaringan masuk ke dalam pembuluh darah dan menstabilkan hemodinamik tanpa menambah kelebihan garam." },
+                    { text: "Dextrose 5% (D5W)", isCorrect: false, score: 20, feedback: "Bahaya hiponatremia! Pasien sirosis sering mengalami hiponatremia dilusional. Memberikan D5W (air bebas) akan memperparah hiponatremia secara dramatis yang bisa memicu ensefalopati." },
+                    { text: "HES 6% (Hydroxyethyl Starch)", isCorrect: false, score: 10, feedback: "Salah. HES tidak direkomendasikan dan berbahaya pada pasien sirosis dengan disfungsi ginjal (sindrom hepatorenal) karena risiko nefrotoksisitas." }
+                ],
+                effect: { bp: "110/70", hr: "80x/m", gcs: "15", icp: "11 mmHg" }
+            }
+        ];
+
+        let activeTab = 'selektor';
+        let currentCaseIdx = 0;
+        let score = 0;
+
+        /* Tab Switcher */
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            el.classList.add('active');
+            activeTab = tabId;
+
+            // Trigger specific tab init logic
+            if (tabId === 'visualisator') {
+                runVisualizer();
+            } else if (tabId === 'komparator') {
+                updateComparator();
+            } else if (tabId === 'kasus') {
+                initCase();
+            }
+        }
+
+        /* Modal control */
+        function openModal() {
+            document.getElementById('info-modal').classList.add('show');
+        }
+        function closeModal() {
+            document.getElementById('info-modal').classList.remove('show');
+        }
+        function closeModalOnOuter(e) {
+            if (e.target.id === 'info-modal') {
+                closeModal();
+            }
+        }
+
+        /* Decision Selector Logic */
+        function analisisCairan() {
+            const klinis = document.getElementById('klinis-select').value;
+            const natrium = document.getElementById('natrium-select').value;
+            const klorida = document.getElementById('klorida-select').value;
+            const albumin = document.getElementById('albumin-select').value;
+
+            let utama = "";
+            let utamaDesc = "";
+            let alternatif = "";
+            let alternatifDesc = "";
+            let kontra = "";
+            let kontraDesc = "";
+            let penalaran = "";
+
+            if (klinis === 'sepsis') {
+                utama = "Ringer Asetat (RA) / Ringer Laktat (RL)";
+                utamaDesc = "Cairan kristaloid seimbang (balanced) menurunkan risiko cedera ginjal akut (AKI) dan asidosis dibanding saline.";
+                alternatif = "NaCl 0.9% (Normal Saline)";
+                alternatifDesc = "Gunakan hanya sebagai alternatif awal jika balanced crystalloids tidak tersedia.";
+                kontra = "HES (Hydroxyethyl Starch) & Koloid Sintetis";
+                kontraDesc = "Secara klinis terbukti meningkatkan risiko kematian dan kebutuhan cuci darah (renal replacement therapy) pada pasien sepsis.";
+                penalaran = "Pada syok sepsis, terjadi vasodilatasi sistemik hebat dan kebocoran kapiler. Pemberian balanced crystalloid adalah lini pertama (30 mL/kg dalam 3 jam pertama). Hindari HES karena toksik bagi tubulus ginjal yang sedang rentan akibat sepsis.";
+            } else if (klinis === 'tbi') {
+                utama = "NaCl 0.9% (Normal Saline)";
+                utamaDesc = "Osmolaritas in-vivo yang relatif tinggi (308 mOsm/L) membantu mencegah perpindahan air ke parenkim otak yang cedera.";
+                alternatif = "NaCl 3% (Saline Hipertonik)";
+                alternatifDesc = "Digunakan jika terdapat tanda klinis herniasi otak atau peningkatan TIK yang tidak terkontrol.";
+                kontra = "Dextrose 5% (D5W) & Cairan Hipotonis (seperti RL volume besar)";
+                kontraDesc = "D5W segera dimetabolisme menjadi air bebas hipotonis yang dengan cepat masuk ke intraseluler otak, memperparah edema serebral.";
+                penalaran = "Pasien cedera otak traumatis (TBI) sangat sensitif terhadap tonisitas cairan. Cairan hipotonis (termasuk RL yang memiliki osmolaritas in-vivo sedikit hipotonik ~273 mOsm/L) akan memicu pembengkakan sel otak. Albumin juga dikaitkan dengan peningkatan kematian pada trauma kepala (penelitian SAFE TBI).";
+            } else if (klinis === 'burn') {
+                utama = "Ringer Laktat (RL)";
+                utamaDesc = "Mengikuti Formula Parkland. Klorida yang mendekati fisiologis mencegah asidosis metabolik hiperkloremik saat diinfus volume besar.";
+                alternatif = "Ringer Asetat (RA)";
+                alternatifDesc = "Dapat digunakan sebagai alternatif balanced crystalloid dengan profil serupa.";
+                kontra = "Albumin / Koloid pada 24 Jam Pertama";
+                kontraDesc = "Kebocoran kapiler masif di awal luka bakar membuat albumin ikut bocor ke interstitial, justru memperparah edema jaringan.";
+                penalaran = "Luka bakar menyebabkan hilangnya cairan plasma secara masif melalui area luka dan penguapan. Formula Parkland memandu resusitasi dengan RL. Koloid (seperti Albumin) baru ditambahkan setelah 24 jam ketika integritas kapiler telah pulih sebagian.";
+            } else if (klinis === 'hemoragik') {
+                utama = "Darah Lengkap / Transfusi Komponen (PRBC + FFP + TC)";
+                utamaDesc = "Syok hemoragik adalah kehilangan darah utuh, sehingga penggantian terbaik adalah darah dan komponennya (rasio 1:1:1).";
+                alternatif = "Ringer Asetat (RA) / RL (Sambil menunggu darah)";
+                alternatifDesc = "Batasi kristaloid awal hanya 1-2 Liter untuk menghindari hemodilusi dan koagulopati.";
+                kontra = "RL yang dicampur langsung dengan transfusi darah";
+                kontraDesc = "Kalsium dalam RL akan mengikat antikoagulan sitrat dalam kantong darah, memicu mikrokoagulasi dalam jalur infus.";
+                penalaran = "Pada perdarahan masif, resusitasi cairan kristaloid berlebih akan mengencerkan faktor pembekuan (hemodilusi) dan menyebabkan hipotermia serta asidosis (Trias Kematian Trauma). Jika kristaloid digunakan sementara menunggu darah, pilih yang bebas Ca jika diinfus di jalur yang sama, atau bilas dengan NaCl 0.9% sebelum transfusi.";
+            } else if (klinis === 'dka') {
+                utama = "NaCl 0.9% (Normal Saline) awal";
+                utamaDesc = "Digunakan untuk ekspansi volume cairan ekstraseluler awal dan koreksi dehidrasi berat.";
+                alternatif = "NaCl 0.45% (Half-Normal Saline)";
+                alternatifDesc = "Digunakan jika kadar natrium serum normal atau meningkat setelah rehidrasi awal.";
+                kontra = "Pemberian insulin tanpa rehidrasi cairan awal";
+                kontraDesc = "Insulin memasukkan glukosa dan air ke dalam sel, memperparah kolaps intravaskular jika volume darah belum terisi.";
+                penalaran = "Tujuan utama pada DKA/HHS adalah mengembalikan volume intravaskular dan menurunkan osmolaritas serum perlahan. Jika glukosa darah turun hingga <250 mg/dL, cairan harus diganti ke Dextrose 5% + NaCl 0.45% untuk mencegah hipoglikemia dan edema otak akibat penurunan osmolaritas yang terlalu cepat.";
+            } else if (klinis === 'sirosis') {
+                utama = "Albumin Pekat 20% - 25%";
+                utamaDesc = "Diberikan 6-8 gram per liter asites yang disedot untuk menjaga tekanan onkotik intravaskular.";
+                alternatif = "Albumin 5%";
+                alternatifDesc = "Memerlukan volume lebih besar untuk mencapai dosis protein yang sama.";
+                kontra = "NaCl 0.9% volume besar tanpa albumin";
+                kontraDesc = "Menyebabkan penumpukan natrium sistemik yang dengan cepat diubah menjadi cairan asites baru akibat kegagalan ginjal retensi garam.";
+                penalaran = "Pada sirosis hati, terjadi vasodilatasi arteri splanknikus dan hipoalbuminemia berat. Parasentesis volume besar (>5L) memicu disfungsi sirkulasi berat. Albumin pekat menarik air dari interstitium kembali ke pembuluh darah untuk menjaga tekanan darah dan perfusi ginjal.";
+            } else {
+                // Dehidrasi umum
+                utama = "Ringer Laktat (RL)";
+                utamaDesc = "Isotonis dan mendekati fisiologis tubuh, sangat baik untuk rehidrasi ekstraseluler.";
+                alternatif = "NaCl 0.9% (Normal Saline)";
+                alternatifDesc = "Cocok jika terdapat alkalosis akibat muntah hebat (kehilangan klorida lambung).";
+                kontra = "Dextrose 5% (D5W) untuk resusitasi syok";
+                kontraDesc = "Hanya 8% menetap di intravaskular, tidak efektif menstabilkan tekanan darah.";
+                penalaran = "Gastroenteritis menyebabkan hilangnya air dan elektrolit ekstraseluler secara isotonik. RL adalah pilihan rasional karena mengandung kalsium dan kalium serta buffer laktat untuk mengatasi asidosis metabolik akibat hilangnya bikarbonat usus.";
+            }
+
+            // Faktor Modifikasi Laboratorium
+            if (natrium === 'hipo' && klinis === 'dehidrasi') {
+                utama = "NaCl 0.9% (Normal Saline)";
+                utamaDesc = "Kadar natrium 154 mEq/L membantu menaikkan natrium serum pasien hiponatremia secara aman.";
+            } else if (natrium === 'hiper') {
+                alternatif = "NaCl 0.45% atau Dextrose 5% (D5W)";
+                alternatifDesc = "Memberikan air bebas untuk mengencerkan kelebihan kadar natrium plasma.";
+            }
+
+            if (klorida === 'hiper' && utama.includes('NaCl 0.9%')) {
+                utama = "Ringer Asetat (RA) / Ringer Laktat (RL)";
+                utamaDesc = "Kadar klorida yang lebih rendah mencegah asidosis hiperkloremik bertambah buruk.";
+            }
+
+            if (albumin === 'hipo' && klinis === 'sepsis') {
+                alternatif = "Albumin 5%";
+                alternatifDesc = "Dapat dipertimbangkan untuk resusitasi syok sepsis lanjutan jika pasien membutuhkan kristaloid volume sangat besar.";
+            }
+
+            // Render Output
+            document.getElementById('utama-title').innerText = utama;
+            document.getElementById('utama-desc').innerText = utamaDesc;
+            document.getElementById('alternatif-title').innerText = alternatif;
+            document.getElementById('alternatif-desc').innerText = alternatifDesc;
+            document.getElementById('kontra-title').innerText = kontra;
+            document.getElementById('kontra-desc').innerText = kontraDesc;
+            document.getElementById('penalaran-text').innerText = penalaran;
+
+            document.getElementById('seleksi-hasil').style.display = 'block';
+            document.getElementById('seleksi-hasil').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        /* Comparator Tool Logic */
+        function updateComparator() {
+            const f1 = document.getElementById('comp-fluid-1').value;
+            const f2 = document.getElementById('comp-fluid-2').value;
+
+            const data1 = fluidData[f1];
+            const data2 = fluidData[f2];
+
+            // Render Left Column
+            document.getElementById('comp-f1-name').innerText = data1.name;
+            document.getElementById('comp-f1-cat').innerText = data1.cat;
+            document.getElementById('comp-f1-osm').innerText = data1.osm;
+            document.getElementById('comp-f1-comp').innerHTML = data1.comp.replace(/, /g, '<br>');
+            document.getElementById('comp-f1-ret').innerText = data1.ret;
+            document.getElementById('comp-f1-ind').innerText = data1.ind;
+            document.getElementById('comp-f1-risk').innerText = data1.risk;
+
+            // Render Right Column
+            document.getElementById('comp-f2-name').innerText = data2.name;
+            document.getElementById('comp-f2-cat').innerText = data2.cat;
+            document.getElementById('comp-f2-osm').innerText = data2.osm;
+            document.getElementById('comp-f2-comp').innerHTML = data2.comp.replace(/, /g, '<br>');
+            document.getElementById('comp-f2-ret').innerText = data2.ret;
+            document.getElementById('comp-f2-ind').innerText = data2.ind;
+            document.getElementById('comp-f2-risk').innerText = data2.risk;
+        }
+
+        /* Fluid Compartment Visualizer Logic */
+        function runVisualizer() {
+            const fluid = document.getElementById('vis-fluid-select').value;
+            const volume = parseInt(document.getElementById('vis-volume-slider').value);
+
+            // Baseline values (Litres)
+            // standard 70kg patient
+            const baseICF = 28000;
+            const baseISF = 10500;
+            const baseIV = 3500;
+
+            let deltaICF = 0;
+            let deltaISF = 0;
+            let deltaIV = 0;
+
+            let typeBadge = "Isotonis";
+            let badgeClass = "badge-cyan";
+            let explanation = "";
+            let fluidTitle = "";
+            let levelClass = "";
+
+            switch (fluid) {
+                case 'd5w':
+                    // Free water distributes: 2/3 to ICF, 1/3 to ECF (ISF 75%, IV 25%)
+                    deltaICF = Math.round((2/3) * volume);
+                    deltaISF = Math.round((1/3) * volume * 0.75);
+                    deltaIV = Math.round((1/3) * volume * 0.25);
+                    typeBadge = "Hipotonis Fisiologis";
+                    badgeClass = "badge-rose";
+                    fluidTitle = "Dextrose 5% (D5W)";
+                    levelClass = "colloid";
+                    explanation = "Dextrose segera diserap dan dimetabolisme sel, menyisakan air bebas murni. Air bebas ini didistribusikan ke seluruh tubuh sesuai persentase air normal (2/3 masuk ke dalam sel/ICF). Hanya 8% yang tinggal di intravaskular, menjadikannya pilihan buruk untuk resusitasi syok.";
+                    break;
+                case 'ns':
+                    // Isotonic saline stays in ECF (ISF 75%, IV 25%)
+                    deltaICF = 0;
+                    deltaISF = Math.round(volume * 0.75);
+                    deltaIV = Math.round(volume * 0.25);
+                    typeBadge = "Isotonis";
+                    badgeClass = "badge-cyan";
+                    fluidTitle = "NaCl 0.9% (Normal Saline)";
+                    levelClass = "";
+                    explanation = "Mengandung Natrium dan Klorida konsentrasi tinggi. Natrium ditahan di luar sel (ruang ekstraselular) oleh pompa seluler. Dari volume infus, 75% lari ke celah jaringan (interstisial) memicu edema, sementara 25% menetap di pembuluh darah.";
+                    break;
+                case 'rl':
+                    // Balanced isotonic stays in ECF (ISF 75%, IV 25%)
+                    deltaICF = 0;
+                    deltaISF = Math.round(volume * 0.75);
+                    deltaIV = Math.round(volume * 0.25);
+                    typeBadge = "Balanced Isotonis";
+                    badgeClass = "badge-cyan";
+                    fluidTitle = "Ringer Laktat (RL)";
+                    levelClass = "";
+                    explanation = "Mirip NaCl 0.9% tapi kadar klorida lebih rendah (109 mEq/L) dan mengandung elektrolit lain serta laktat sebagai buffer. Terdistribusi 100% di ruang ekstraseluler (75% interstisial, 25% intravaskular). Sangat fisiologis.";
+                    break;
+                case 'hyper':
+                    // Hypertonic saline 3% draws fluid from ICF to ECF
+                    const ratio = volume / 500;
+                    deltaICF = Math.round(-750 * ratio);
+                    deltaISF = Math.round(950 * ratio);
+                    deltaIV = Math.round(300 * ratio);
+                    typeBadge = "Hipertonis";
+                    badgeClass = "badge-purple";
+                    fluidTitle = "NaCl 3% (Saline Pekat)";
+                    levelClass = "hypertonic";
+                    explanation = "Konsentrasi natrium tinggi meningkatkan osmolaritas ekstraselular secara drastis. Hal ini memaksa air keluar dari dalam sel (ICF) ke ruang ekstraselular melalui proses osmosis. Volume intraseluler menyusut, sementara volume pembuluh darah dan interstisial meningkat drastis melampaui volume yang diinfus.";
+                    break;
+                case 'alb5':
+                    // Iso-oncotic colloid stays 100% in IV
+                    deltaICF = 0;
+                    deltaISF = 0;
+                    deltaIV = volume;
+                    typeBadge = "Koloid Iso-onkotik";
+                    badgeClass = "badge-rose";
+                    fluidTitle = "Albumin 5%";
+                    levelClass = "colloid";
+                    explanation = "Mengandung makromolekul protein albumin yang tidak bisa menembus dinding kapiler yang sehat. Seluruh volume cairan infus tertahan di dalam pembuluh darah (Intravaskular) selama berjam-jam, memberikan ekspansi plasma yang efisien 1:1.";
+                    break;
+                case 'alb25':
+                    // Hyper-oncotic colloid pulls from ISF to IV
+                    const ratioAlb = volume / 100;
+                    deltaICF = 0;
+                    deltaISF = Math.round(-400 * ratioAlb);
+                    deltaIV = Math.round(500 * ratioAlb);
+                    typeBadge = "Koloid Hiper-onkotik";
+                    badgeClass = "badge-rose";
+                    fluidTitle = "Albumin 20-25%";
+                    levelClass = "colloid";
+                    explanation = "Mempunyai tekanan onkotik sangat tinggi (4-5x plasma normal). Protein pekat ini menarik cairan interstisial dari celah jaringan masuk ke dalam pembuluh darah. Sangat berguna untuk mengatasi asites atau edema anasarka, namun kontraindikasi bagi pasien dehidrasi berat.";
+                    break;
+                case 'halfns':
+                    // Half-normal saline distributes 50% like free water, 50% like saline
+                    deltaICF = Math.round(0.33 * volume);
+                    deltaISF = Math.round(0.50 * volume);
+                    deltaIV = Math.round(0.17 * volume);
+                    typeBadge = "Hipotonis";
+                    badgeClass = "badge-yellow";
+                    fluidTitle = "NaCl 0.45% (Half Normal)";
+                    levelClass = "hypertonic";
+                    explanation = "Memiliki osmolaritas setengah dari plasma (154 mOsm/L). Separuh cairannya bertindak sebagai air bebas yang masuk ke dalam sel (ICF), sedangkan separuhnya menetap di ruang ekstraseluler. Cocok untuk hidrasi sel pada hipernatremia tanpa ekspansi intravaskular cepat.";
+                    break;
+            }
+
+            // Calculate final volumes (Liters)
+            const finalICF = Math.max(10, (baseICF + deltaICF) / 1000).toFixed(1);
+            const finalISF = Math.max(5, (baseISF + deltaISF) / 1000).toFixed(1);
+            const finalIV = Math.max(1, (baseIV + deltaIV) / 1000).toFixed(1);
+
+            // Update Text Tags
+            document.getElementById('tag-icf').innerText = `${finalICF} L`;
+            document.getElementById('tag-isf').innerText = `${finalISF} L`;
+            document.getElementById('tag-iv').innerText = `${finalIV} L`;
+
+            // Update Delta Tags
+            updateDeltaEl(document.getElementById('delta-icf'), deltaICF);
+            updateDeltaEl(document.getElementById('delta-isf'), deltaISF);
+            updateDeltaEl(document.getElementById('delta-iv'), deltaIV);
+
+            // Calculate Graphic Heights (map 10L - 40L to 20% - 90% height)
+            const htICF = Math.min(95, Math.max(10, ((baseICF + deltaICF) / 45000) * 100));
+            const htISF = Math.min(95, Math.max(10, ((baseISF + deltaISF) / 20000) * 100));
+            const htIV = Math.min(95, Math.max(10, ((baseIV + deltaIV) / 8000) * 100));
+
+            // Set Heights
+            const lvlIcf = document.getElementById('level-icf');
+            const lvlIsf = document.getElementById('level-isf');
+            const lvlIv = document.getElementById('level-iv');
+
+            lvlIcf.style.height = `${htICF}%`;
+            lvlIsf.style.height = `${htISF}%`;
+            lvlIv.style.height = `${htIV}%`;
+
+            // Reset level classes
+            lvlIcf.className = "fluid-level";
+            lvlIsf.className = "fluid-level";
+            lvlIv.className = "fluid-level";
+
+            if (levelClass) {
+                lvlIcf.classList.add(levelClass);
+                lvlIsf.classList.add(levelClass);
+                lvlIv.classList.add(levelClass);
+            }
+
+            // Set Output Info
+            const badge = document.getElementById('vis-badge-type');
+            badge.className = `output-badge ${badgeClass}`;
+            badge.innerText = typeBadge;
+            document.getElementById('vis-fluid-title').innerText = fluidTitle;
+            document.getElementById('vis-explanation').innerText = explanation;
+        }
+
+        function updateDeltaEl(el, val) {
+            el.className = "volume-delta show";
+            if (val > 0) {
+                el.innerText = `+${val} mL`;
+                el.classList.add('delta-plus');
+                el.classList.remove('delta-minus');
+            } else if (val < 0) {
+                el.innerText = `${val} mL`;
+                el.classList.add('delta-minus');
+                el.classList.remove('delta-plus');
+            } else {
+                el.innerText = "+0 mL";
+                el.className = "volume-delta";
+            }
+        }
+
+        /* Case Studies (Quiz) Logic */
+
+        function initCase() {
+            document.getElementById('case-score-val').innerText = `Skor: ${score}`;
+            document.getElementById('case-num').innerText = `KASUS ${currentCaseIdx + 1} DARI ${cases.length}`;
+            
+            const currentCase = cases[currentCaseIdx];
+            document.getElementById('quiz-title').innerText = currentCase.title;
+            document.getElementById('quiz-desc').innerText = currentCase.desc;
+            
+            // Set Vitals
+            document.getElementById('v-bp').innerText = currentCase.vitals.bp;
+            document.getElementById('v-hr').innerText = currentCase.vitals.hr;
+            document.getElementById('v-gcs').innerText = currentCase.vitals.gcs;
+            document.getElementById('v-icp').innerText = currentCase.vitals.icp;
+            
+            // Reset vital text color to dark
+            document.querySelectorAll('.vital-value').forEach(el => el.style.color = 'var(--text-primary)');
+
+            // Set Labs
+            document.getElementById('quiz-lab').innerHTML = `
+                <div class="lab-item"><span class="lab-name">Natrium:</span> <span class="lab-val">${currentCase.lab.na}</span></div>
+                <div class="lab-item"><span class="lab-name">Albumin:</span> <span class="lab-val">${currentCase.lab.alb}</span></div>
+                <div class="lab-item"><span class="lab-name">Hemoglobin:</span> <span class="lab-val">${currentCase.lab.hb}</span></div>
+                <div class="lab-item"><span class="lab-name">Laktat Serum:</span> <span class="lab-val">${currentCase.lab.lac}</span></div>
+            `;
+
+            const choicesBox = document.getElementById('choices-box');
+            choicesBox.innerHTML = '';
+            document.getElementById('quiz-feedback-box').style.display = 'none';
+
+            currentCase.choices.forEach((choice, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.innerText = choice.text;
+                btn.onclick = () => selectChoice(index, btn);
+                choicesBox.appendChild(btn);
+            });
+
+            document.getElementById('quiz-container').style.display = 'block';
+            document.getElementById('quiz-end-screen').style.display = 'none';
+        }
+
+        function selectChoice(choiceIdx, btnEl) {
+            const currentCase = cases[currentCaseIdx];
+            const choice = currentCase.choices[choiceIdx];
+
+            document.querySelectorAll('.choice-btn').forEach(btn => {
+                btn.disabled = true;
+            });
+
+            const feedbackCard = document.getElementById('feedback-card');
+            const feedbackBadge = document.getElementById('feedback-badge');
+
+            if (choice.isCorrect) {
+                btnEl.classList.add('selected-correct');
+                feedbackCard.className = "output-card primary";
+                feedbackBadge.className = "output-badge badge-cyan";
+                feedbackBadge.innerText = "Benar (+25 Poin)";
+                score += 25;
+                document.getElementById('case-score-val').innerText = `Skor: ${score}`;
+                simulateVitals(currentCase.effect);
+            } else {
+                btnEl.classList.add('selected-incorrect');
+                feedbackCard.className = "output-card contraindication";
+                feedbackBadge.className = "output-badge badge-rose";
+                feedbackBadge.innerText = `Kurang Tepat (+${Math.round(choice.score/4)} Poin)`;
+                score += Math.round(choice.score / 4);
+                document.getElementById('case-score-val').innerText = `Skor: ${score}`;
+                simulateVitals(currentCase.vitals, true);
+            }
+
+            document.getElementById('feedback-text').innerText = choice.feedback;
+            document.getElementById('quiz-feedback-box').style.display = 'block';
+            document.getElementById('quiz-feedback-box').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function simulateVitals(effect, isFailure = false) {
+            const bpEl = document.getElementById('v-bp');
+            const hrEl = document.getElementById('v-hr');
+            const gcsEl = document.getElementById('v-gcs');
+            const icpEl = document.getElementById('v-icp');
+
+            const color = isFailure ? 'var(--accent-rose)' : '#047857'; // Green or red glow
+            
+            bpEl.innerText = effect.bp;
+            bpEl.style.color = color;
+            
+            hrEl.innerText = effect.hr;
+            hrEl.style.color = color;
+            
+            gcsEl.innerText = effect.gcs;
+            gcsEl.style.color = color;
+            
+            icpEl.innerText = effect.icp;
+            icpEl.style.color = color;
+        }
+
+        function nextCase() {
+            currentCaseIdx++;
+            if (currentCaseIdx < cases.length) {
+                initCase();
+            } else {
+                document.getElementById('quiz-container').style.display = 'none';
+                document.getElementById('quiz-end-screen').style.display = 'block';
+                document.getElementById('final-score').innerText = `${score}/100`;
+            }
+        }
+
+        function restartQuiz() {
+            currentCaseIdx = 0;
+            score = 0;
+            initCase();
+        }
+
+        // Initialize App
+        window.addEventListener('DOMContentLoaded', () => {
+            analisisCairan();
+        });
+    </script>
+</body>
+</html>
