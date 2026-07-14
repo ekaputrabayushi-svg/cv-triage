@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PediVito 🎈 – Kalkulator Pediatri Lengkap</title>
+    <meta name="description" content="PediVito: Kalkulator tanda vital, EKG, obat emergensi, cairan, dan PEWS untuk anak. Panduan klinis pediatri serba ada.">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --pink:#f472b6; --purple:#a855f7; --indigo:#6366f1;
+            --teal:#14b8a6; --amber:#f59e0b; --emerald:#10b981;
+            --rose:#f43f5e; --sky:#0ea5e9; --bg:#f0fdfa;
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Nunito',sans-serif;background-color:var(--bg);background-image:radial-gradient(#bae6fd 1.5px,transparent 1.5px);background-size:28px 28px;min-height:100vh;color:#374151;padding-bottom:90px}
+
+        /* HEADER */
+        .header{text-align:center;padding:32px 16px 14px}
+        .badge-cv{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.85);backdrop-filter:blur(8px);border:2px solid #99f6e4;border-radius:999px;padding:6px 18px;font-size:11px;font-weight:800;color:#0d9488;margin-bottom:16px;box-shadow:0 4px 14px rgba(20,184,166,.15)}
+        .logo-wrap{display:flex;justify-content:center;align-items:center;gap:14px;margin-bottom:4px}
+        .logo-icon{font-size:46px;line-height:1;animation:float 3s ease-in-out infinite}
+        .logo-icon:nth-child(3){animation-delay:.5s}
+        h1.title{font-family:'Outfit',sans-serif;font-size:clamp(2.2rem,6vw,3.4rem);font-weight:900;background:linear-gradient(135deg,#f43f5e,#a855f7,#6366f1,#0ea5e9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-1px;line-height:1}
+        .subtitle{font-size:.95rem;font-weight:700;color:#0d9488;margin-top:4px}
+        .tagline{font-size:.75rem;color:#6b7280;margin-top:2px}
+
+        /* ANIMATIONS */
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+        @keyframes pulse-ring{0%{opacity:.6;transform:scale(1)}100%{opacity:0;transform:scale(1.7)}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(400%)}}
+
+        /* CONTAINER */
+        .container{max-width:900px;margin:0 auto;padding:0 14px}
+
+        /* TABS */
+        .tab-bar{display:flex;gap:6px;overflow-x:auto;padding:10px 2px 6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+        .tab-bar::-webkit-scrollbar{display:none}
+        .tab-btn{flex-shrink:0;background:rgba(255,255,255,.8);border:2px solid #e5e7eb;border-radius:999px;padding:8px 18px;font-size:.77rem;font-weight:800;color:#6b7280;cursor:pointer;transition:all .25s ease;font-family:'Nunito',sans-serif;white-space:nowrap}
+        .tab-btn:hover{border-color:var(--teal);color:var(--teal);transform:translateY(-2px)}
+        .tab-btn.active{background:linear-gradient(135deg,#14b8a6,#6366f1);border-color:transparent;color:#fff;box-shadow:0 6px 18px rgba(99,102,241,.35);transform:translateY(-2px)}
+        .tab-panel{display:none;animation:fadeUp .3s ease}
+        .tab-panel.active{display:block}
+
+        /* CARDS */
+        .card{background:rgba(255,255,255,.92);backdrop-filter:blur(14px);border-radius:24px;padding:22px;box-shadow:0 8px 28px -4px rgba(0,0,0,.1),0 2px 8px rgba(0,0,0,.04);margin-bottom:16px;transition:transform .25s ease,box-shadow .25s ease}
+        .card:hover{transform:translateY(-4px);box-shadow:0 14px 36px -6px rgba(0,0,0,.14)}
+        .card-title{display:flex;align-items:center;gap:10px;font-size:1.05rem;font-weight:800;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid}
+        .card-icon{width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+
+        /* Color schemes */
+        .s-rose .card-title{color:#e11d48;border-color:#fecdd3}.s-rose .card-icon{background:#ffe4e6;color:#e11d48}
+        .s-purple .card-title{color:#7c3aed;border-color:#ede9fe}.s-purple .card-icon{background:#ede9fe;color:#7c3aed}
+        .s-orange .card-title{color:#ea580c;border-color:#fed7aa}.s-orange .card-icon{background:#ffedd5;color:#ea580c}
+        .s-teal .card-title{color:#0d9488;border-color:#99f6e4}.s-teal .card-icon{background:#ccfbf1;color:#0d9488}
+        .s-sky .card-title{color:#0284c7;border-color:#bae6fd}.s-sky .card-icon{background:#e0f2fe;color:#0284c7}
+        .s-amber .card-title{color:#d97706;border-color:#fde68a}.s-amber .card-icon{background:#fef3c7;color:#d97706}
+        .s-emerald .card-title{color:#059669;border-color:#a7f3d0}.s-emerald .card-icon{background:#d1fae5;color:#059669}
+        .s-indigo .card-title{color:#4338ca;border-color:#c7d2fe}.s-indigo .card-icon{background:#e0e7ff;color:#4338ca}
+        .s-fuchsia .card-title{color:#a21caf;border-color:#f5d0fe}.s-fuchsia .card-icon{background:#fae8ff;color:#a21caf}
+
+        /* INPUTS */
+        .ig{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+        .il{font-size:.77rem;font-weight:800;color:#4b5563}
+        input[type=number],select{width:100%;padding:11px 14px;border-radius:14px;border:2px solid #e5e7eb;font-family:'Nunito',sans-serif;font-size:.93rem;font-weight:700;color:#1f2937;background:#fff;outline:none;transition:border-color .2s,box-shadow .2s}
+        input[type=number]:focus,select:focus{border-color:var(--teal);box-shadow:0 0 0 4px rgba(20,184,166,.12)}
+        input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+        .ir{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        .ir3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+        /* VITALS GRID */
+        .vg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        .vb{border-radius:18px;padding:14px;position:relative;overflow:hidden}
+        .vb-lbl{font-size:.68rem;font-weight:800;margin-bottom:4px;opacity:.7}
+        .vb-val{font-size:1.45rem;font-weight:900;line-height:1}
+        .vb-unit{font-size:.68rem;font-weight:700;opacity:.6;margin-top:2px}
+        .vb-badge{position:absolute;top:10px;right:10px}
+        .vb-rose{background:#fff1f2;color:#e11d48}
+        .vb-orange{background:#fff7ed;color:#ea580c}
+        .vb-blue{background:#eff6ff;color:#1d4ed8}
+        .vb-cyan{background:#ecfeff;color:#0e7490}
+        .vb-purple{background:#f5f3ff;color:#6d28d9}
+        .vb-indigo{background:#eef2ff;color:#3730a3}
+        .vb-fuchsia{background:#fdf4ff;color:#86198f}
+        .vb-teal{background:#f0fdfa;color:#0d9488}
+        @media(min-width:640px){.vg{grid-template-columns:repeat(4,1fr)}}
+
+        /* BADGES */
+        .bdg{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:999px;font-size:.67rem;font-weight:800}
+        .b-ok{background:#d1fae5;color:#065f46}
+        .b-lo{background:#dbeafe;color:#1e40af}
+        .b-hi{background:#fee2e2;color:#991b1b}
+        .b-wn{background:#fef3c7;color:#92400e}
+        .b-ct{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+
+        /* CATEGORY BANNER */
+        .cat-ban{display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#f0abfc,#c7d2fe);border-radius:16px;padding:10px 16px;font-weight:800;font-size:.9rem;color:#4c1d95;margin-bottom:14px}
+
+        /* ECG */
+        .ecg-wrap{background:#070714;border-radius:18px;padding:14px 18px;margin-bottom:16px;overflow:hidden;position:relative}
+        .ecg-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+        .ecg-lbl{color:#4ade80;font-size:.7rem;font-weight:800;letter-spacing:.05em}
+        .ecg-hr{margin-left:auto;color:#f9a8d4;font-size:.78rem;font-weight:800}
+        .ecg-svg{width:100%;height:64px}
+        .ecg-line{stroke:#4ade80;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+        .ecg-grid{stroke:#0e2a0e;stroke-width:.6}
+        .live-dot{width:8px;height:8px;border-radius:50%;background:#4ade80;display:inline-block;position:relative;flex-shrink:0}
+        .live-dot::before{content:'';position:absolute;inset:0;border-radius:50%;background:#4ade80;animation:pulse-ring 1.4s ease-out infinite}
+
+        /* DRUG CARDS */
+        .dc{border-radius:16px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:12px}
+        .dc-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+        .dc-name{font-size:.83rem;font-weight:800;margin-bottom:2px}
+        .dc-dose{font-size:1.08rem;font-weight:900}
+        .dc-unit{font-size:.8rem;font-weight:700;color:#6b7280}
+        .dc-note{font-size:.69rem;font-weight:600;margin-top:3px;opacity:.8}
+
+        /* FLUID */
+        .f-result{background:#f0fdf4;border:2px solid #bbf7d0;border-radius:16px;padding:14px;margin-top:8px}
+        .f-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #dcfce7;font-size:.84rem}
+        .f-row:last-child{border-bottom:none}
+        .f-key{font-weight:700;color:#4b5563}
+        .f-val{font-weight:900;color:#065f46;font-size:1rem}
+        .f-total .f-key{font-size:.93rem;color:#065f46;font-weight:900}
+        .f-total .f-val{font-size:1.2rem}
+        .qr-row{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-radius:12px;margin-bottom:6px;font-size:.82rem}
+        .qr-k{font-weight:700}
+        .qr-v{font-weight:900}
+
+        /* PEWS */
+        .pews-tbl{width:100%;border-collapse:collapse;font-size:.8rem}
+        .pews-tbl th{background:#f3f4f6;padding:8px 10px;text-align:left;font-weight:800;border-bottom:2px solid #e5e7eb}
+        .pews-tbl td{padding:8px 10px;border-bottom:1px solid #f3f4f6;font-weight:600}
+        .pews-tbl tr:last-child td{border-bottom:none}
+        .pews-circle{width:82px;height:82px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:2rem;font-weight:900;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.1);transition:all .4s ease}
+        .pews-circle small{font-size:.52rem;font-weight:800;margin-top:-3px}
+        .pbar-wrap{background:#f3f4f6;border-radius:999px;height:9px;overflow:hidden;margin:8px 0}
+        .pbar{height:100%;border-radius:999px;transition:width .5s ease,background .5s ease}
+        .pews-opt{padding:5px 12px;border-radius:999px;border:2px solid #e5e7eb;font-size:.72rem;font-weight:800;cursor:pointer;transition:all .2s ease;background:#fff;color:#6b7280;font-family:'Nunito',sans-serif;margin:3px 3px 3px 0}
+        .pews-opt:hover{border-color:#a855f7;color:#7c3aed}
+        .pews-opt.sel{background:#7c3aed;border-color:#7c3aed;color:#fff}
+
+        /* BROSELOW */
+        .bz-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+        .bz{flex:1;min-width:90px;border-radius:14px;padding:10px 10px;font-size:.77rem;font-weight:800;cursor:pointer;transition:all .2s ease;border:3px solid transparent;text-align:center;line-height:1.3}
+        .bz:hover,.bz.act{transform:scale(1.06);border-color:rgba(255,255,255,.8);box-shadow:0 6px 18px rgba(0,0,0,.18)}
+        .bz-grey{background:#9ca3af;color:#fff}
+        .bz-pink{background:#ec4899;color:#fff}
+        .bz-red{background:#ef4444;color:#fff}
+        .bz-purple{background:#a855f7;color:#fff}
+        .bz-yellow{background:#f59e0b;color:#fff}
+        .bz-white{background:#e5e7eb;color:#374151;border:2px solid #d1d5db}
+        .bz-blue{background:#3b82f6;color:#fff}
+        .bz-orange{background:#f97316;color:#fff}
+        .bz-green{background:#10b981;color:#fff}
+
+        /* EMPTY STATE */
+        .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:38px 20px;text-align:center;background:rgba(255,255,255,.7);border:3px dashed #d1d5db;border-radius:24px;margin-bottom:16px}
+        .empty-ico{font-size:54px;margin-bottom:12px}
+        .empty-ttl{font-size:1.05rem;font-weight:800;color:#6b7280;margin-bottom:4px}
+        .empty-sub{font-size:.81rem;color:#9ca3af}
+
+        /* HL ROW */
+        .hlr{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:14px;margin-bottom:8px;font-size:.82rem}
+
+        /* PRINT BUTTON */
+        .print-btn{position:fixed;bottom:20px;right:20px;background:linear-gradient(135deg,#f43f5e,#f472b6);color:#fff;border:none;border-radius:999px;padding:12px 22px;font-family:'Nunito',sans-serif;font-size:.85rem;font-weight:800;cursor:pointer;box-shadow:0 6px 20px rgba(244,63,94,.4);transition:all .25s ease;z-index:100;display:flex;align-items:center;gap:8px}
+        .print-btn:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(244,63,94,.45)}
+
+        /* DIVIDER */
+        .divr{height:1px;background:#e5e7eb;margin:10px 0}
+
+        /* DISCLAIMER */
+        .disclaimer{margin:18px auto 10px;max-width:860px;padding:0 14px;text-align:center;font-size:.71rem;color:#9ca3af;line-height:1.6}
+        .disclaimer strong{color:#6b7280}
+
+        /* SCROLL FADE */
+        .sf{position:relative}
+        .sf::after{content:'';position:absolute;right:0;top:0;bottom:0;width:22px;background:linear-gradient(to right,transparent,var(--bg));pointer-events:none}
+
+        @media(max-width:420px){.ir{grid-template-columns:1fr}.ir3{grid-template-columns:1fr 1fr}}
+        @media print{.print-btn,.tab-bar{display:none!important}.tab-panel{display:block!important}.card{break-inside:avoid;box-shadow:none;border:1px solid #e5e7eb}}
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="badge-cv">
+        ❤️ Part of <strong>CardiologyVault</strong> &nbsp;·&nbsp;
+        Developed by <strong style="color:#374151">Bayushi Eka Putra, MD, FIHA.</strong>
+    </div>
+    <div class="logo-wrap">
+        <span class="logo-icon">🎈</span>
+        <h1 class="title">PediVito</h1>
+        <span class="logo-icon">🧸</span>
+    </div>
+    <p class="subtitle">Panduan Klinis Pediatri Serba Ada</p>
+    <p class="tagline">Tanda Vital · EKG · Obat Emergensi · Cairan · PEWS · Broselow</p>
+</div>
+
+<!-- TABS -->
+<div class="container">
+<div class="sf">
+<div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('vitals',this)"><i class="fas fa-heartbeat"></i> Tanda Vital & EKG</button>
+    <button class="tab-btn" onclick="switchTab('drugs',this)"><i class="fas fa-syringe"></i> Obat Emergensi</button>
+    <button class="tab-btn" onclick="switchTab('fluids',this)"><i class="fas fa-tint"></i> Kalkulator Cairan</button>
+    <button class="tab-btn" onclick="switchTab('pews',this)"><i class="fas fa-chart-line"></i> PEWS Score</button>
+    <button class="tab-btn" onclick="switchTab('broselow',this)"><i class="fas fa-ruler-combined"></i> Broselow</button>
+</div>
+</div>
+
+<!-- ═══ TAB 1: VITALS & ECG ═══ -->
+<div class="tab-panel active" id="panel-vitals">
+
+    <div class="card s-amber">
+        <div class="card-title"><div class="card-icon"><i class="fas fa-baby"></i></div>Data Pasien</div>
+        <div class="ir">
+            <div class="ig"><label class="il">Usia Anak</label><input type="number" id="ageValue" placeholder="Masukkan angka..." oninput="calculate()" min="0"></div>
+            <div class="ig"><label class="il">Satuan</label>
+                <select id="ageUnit" onchange="calculate()">
+                    <option value="days">Hari</option>
+                    <option value="months">Bulan</option>
+                    <option value="years" selected>Tahun</option>
+                </select>
+            </div>
+        </div>
+        <div class="ig"><label class="il">Berat Badan (kg) — opsional</label><input type="number" id="weightInput" placeholder="kg (otomatis mengisi tab obat & cairan)" oninput="calculate()" min="0" step="0.1"></div>
+        <div id="ageCatBanner" class="cat-ban" style="display:none"></div>
+    </div>
+
+    <div class="card s-teal">
+        <div class="card-title"><div class="card-icon"><i class="fas fa-notes-medical"></i></div>Nilai Pasien <span style="font-size:.7rem;font-weight:600;color:#9ca3af;margin-left:auto">opsional – untuk evaluasi otomatis</span></div>
+        <div class="ir">
+            <div class="ig"><label class="il">Heart Rate (bpm)</label><input type="number" id="inHR" placeholder="bpm" oninput="calculate()"></div>
+            <div class="ig"><label class="il">Resp. Rate (x/mnt)</label><input type="number" id="inRR" placeholder="x/mnt" oninput="calculate()"></div>
+        </div>
+        <div class="ir">
+            <div class="ig"><label class="il">Sistolik (mmHg)</label><input type="number" id="inSBP" placeholder="Sys" oninput="calculate()"></div>
+            <div class="ig"><label class="il">Diastolik (mmHg)</label><input type="number" id="inDBP" placeholder="Dia" oninput="calculate()"></div>
+        </div>
+        <div class="divr"></div>
+        <div class="ir3">
+            <div class="ig"><label class="il">PR Interval (ms)</label><input type="number" id="inPR" placeholder="ms" oninput="calculate()"></div>
+            <div class="ig"><label class="il">QRS (ms)</label><input type="number" id="inQRS" placeholder="ms" oninput="calculate()"></div>
+            <div class="ig"><label class="il">QTc (ms)</label><input type="number" id="inQTc" placeholder="ms" oninput="calculate()"></div>
+        </div>
+    </div>
+
+    <!-- ECG Monitor -->
+    <div class="ecg-wrap" id="ecgWrap" style="display:none">
+        <div class="ecg-header">
+            <span class="live-dot"></span>
+            <span class="ecg-lbl">MONITOR EKG SIMULASI</span>
+            <span class="ecg-hr" id="ecgHRshow"></span>
+        </div>
+        <svg class="ecg-svg" viewBox="0 0 500 64" xmlns="http://www.w3.org/2000/svg">
+            <line x1="100" y1="0" x2="100" y2="64" class="ecg-grid"/>
+            <line x1="200" y1="0" x2="200" y2="64" class="ecg-grid"/>
+            <line x1="300" y1="0" x2="300" y2="64" class="ecg-grid"/>
+            <line x1="400" y1="0" x2="400" y2="64" class="ecg-grid"/>
+            <line x1="0" y1="22" x2="500" y2="22" class="ecg-grid"/>
+            <line x1="0" y1="42" x2="500" y2="42" class="ecg-grid"/>
+            <polyline class="ecg-line" points="
+                0,32 8,32 12,30 16,32 20,32 23,34 24,8 25,56 26,20 30,32 40,32 43,27 52,27 54,32
+                100,32 108,32 112,30 116,32 120,32 123,34 124,8 125,56 126,20 130,32 140,32 143,27 152,27 154,32
+                200,32 208,32 212,30 216,32 220,32 223,34 224,8 225,56 226,20 230,32 240,32 243,27 252,27 254,32
+                300,32 308,32 312,30 316,32 320,32 323,34 324,8 325,56 326,20 330,32 340,32 343,27 352,27 354,32
+                400,32 408,32 412,30 416,32 420,32 423,34 424,8 425,56 426,20 430,32 440,32 443,27 452,27 454,32
+                500,32"/>
+        </svg>
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty" id="emptyVitals">
+        <div class="empty-ico">🔍</div>
+        <div class="empty-ttl">Masukkan usia anak</div>
+        <div class="empty-sub">Patokan normal tanda vital & EKG akan muncul otomatis</div>
+    </div>
+
+    <!-- Results -->
+    <div id="resVitals" style="display:none">
+        <div class="card s-rose">
+            <div class="card-title"><div class="card-icon"><i class="fas fa-heartbeat"></i></div>Tanda Vital Normal</div>
+            <div class="vg">
+                <div class="vb vb-rose"><div class="vb-lbl">Heart Rate</div><div class="vb-val" id="nHR">–</div><div class="vb-unit">x/menit</div><div class="vb-badge" id="eHR"></div></div>
+                <div class="vb vb-orange"><div class="vb-lbl">Resp. Rate</div><div class="vb-val" id="nRR">–</div><div class="vb-unit">x/menit</div><div class="vb-badge" id="eRR"></div></div>
+                <div class="vb vb-blue"><div class="vb-lbl">Sistolik</div><div class="vb-val" id="nSBP">–</div><div class="vb-unit">mmHg</div><div class="vb-badge" id="eSBP"></div></div>
+                <div class="vb vb-cyan"><div class="vb-lbl">Diastolik</div><div class="vb-val" id="nDBP">–</div><div class="vb-unit">mmHg</div><div class="vb-badge" id="eDBP"></div></div>
+            </div>
+            <div id="minSBPBox" style="display:none;margin-top:10px" class="hlr" style="background:#fff7ed">
+                <span style="font-size:20px">⚠️</span>
+                <div><div style="font-size:.77rem;font-weight:800;color:#ea580c">Batas Minimal Sistolik (Formula)</div><div id="minSBPTxt" style="font-size:.95rem;font-weight:900;color:#c2410c"></div></div>
+            </div>
+        </div>
+
+        <div class="card s-purple">
+            <div class="card-title"><div class="card-icon"><i class="fas fa-wave-square"></i></div>Patokan EKG</div>
+            <div class="vg" style="grid-template-columns:1fr 1fr 1fr">
+                <div class="vb vb-purple"><div class="vb-lbl">PR Interval</div><div class="vb-val" id="nPR">–</div><div class="vb-unit">ms</div><div style="margin-top:6px" id="ePR"></div></div>
+                <div class="vb vb-indigo"><div class="vb-lbl">Durasi QRS</div><div class="vb-val" id="nQRS">–</div><div class="vb-unit">ms</div><div style="margin-top:6px" id="eQRS"></div></div>
+                <div class="vb vb-fuchsia"><div class="vb-lbl">QTc Maks</div><div class="vb-val" id="nQTc">–</div><div class="vb-unit">ms</div><div style="margin-top:6px" id="eQTc"></div></div>
+            </div>
+        </div>
+
+        <div class="card s-emerald">
+            <div class="card-title"><div class="card-icon"><i class="fas fa-bolt"></i></div>Quick Reference Otomatis</div>
+            <div id="quickRef"></div>
+        </div>
+    </div>
+</div><!-- /panel-vitals -->
+
+<!-- ═══ TAB 2: DRUGS ═══ -->
+<div class="tab-panel" id="panel-drugs">
+    <div class="card s-rose">
+        <div class="card-title"><div class="card-icon"><i class="fas fa-syringe"></i></div>Obat Emergensi Pediatri</div>
+        <div class="ir">
+            <div class="ig"><label class="il">Berat Badan (kg)</label><input type="number" id="dWeight" placeholder="kg" oninput="calcDrugs()" min="0" step="0.1"></div>
+            <div class="ig"><label class="il">Estimasi dari Usia</label>
+                <select id="dEst" onchange="applyEst()">
+                    <option value="">-- pilih usia --</option>
+                    <option value="3.5">Neonatus (~3.5 kg)</option>
+                    <option value="4">1 Bulan (~4 kg)</option>
+                    <option value="6">3 Bulan (~6 kg)</option>
+                    <option value="7">6 Bulan (~7 kg)</option>
+                    <option value="10">1 Tahun (~10 kg)</option>
+                    <option value="13">2 Tahun (~13 kg)</option>
+                    <option value="16">3 Tahun (~16 kg)</option>
+                    <option value="18">4 Tahun (~18 kg)</option>
+                    <option value="20">5 Tahun (~20 kg)</option>
+                    <option value="25">7 Tahun (~25 kg)</option>
+                    <option value="32">10 Tahun (~32 kg)</option>
+                    <option value="45">13 Tahun (~45 kg)</option>
+                    <option value="55">16 Tahun (~55 kg)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="empty" id="emptyDrugs">
+        <div class="empty-ico">💊</div>
+        <div class="empty-ttl">Masukkan berat badan</div>
+        <div class="empty-sub">Dosis emergensi akan dihitung otomatis berdasarkan BB</div>
+    </div>
+    <div id="resDrugs" style="display:none">
+        <div class="card s-rose"><div class="card-title"><div class="card-icon">🚨</div>RESUSITASI & SYOK</div><div id="drugsResus"></div></div>
+        <div class="card s-purple"><div class="card-title"><div class="card-icon">⚡</div>ARITMIA</div><div id="drugsArr"></div></div>
+        <div class="card s-orange"><div class="card-title"><div class="card-icon">🧠</div>KEJANG & SEDASI</div><div id="drugsSeiz"></div></div>
+        <div class="card s-sky"><div class="card-title"><div class="card-icon">💙</div>PERNAPASAN & LAIN-LAIN</div><div id="drugsOther"></div></div>
+        <div style="background:#fef9c3;border:2px solid #fde047;border-radius:16px;padding:12px 16px;font-size:.75rem;color:#713f12;font-weight:700;margin-bottom:16px">
+            ⚠️ <strong>Penting:</strong> Dosis bersifat estimasi awal berbasis BB. Selalu verifikasi dengan panduan resmi PALS / lokal RS. Tidak melebihi dosis maksimum dewasa.
+        </div>
+    </div>
+</div><!-- /panel-drugs -->
+
+<!-- ═══ TAB 3: FLUIDS ═══ -->
+<div class="tab-panel" id="panel-fluids">
+    <div class="card s-sky">
+        <div class="card-title"><div class="card-icon"><i class="fas fa-tint"></i></div>Kalkulator Cairan Pediatri (Holliday-Segar)</div>
+        <div class="ig"><label class="il">Berat Badan (kg)</label><input type="number" id="fWeight" placeholder="kg" oninput="calcFluids()" min="0" step="0.1"></div>
+        <div class="ir">
+            <div class="ig"><label class="il">Status Dehidrasi</label>
+                <select id="fDehy" onchange="calcFluids()">
+                    <option value="0">Tidak ada</option>
+                    <option value="5">Ringan (5%)</option>
+                    <option value="10">Sedang (10%)</option>
+                    <option value="15">Berat (15%)</option>
+                </select>
+            </div>
+            <div class="ig"><label class="il">Mode Perhitungan</label>
+                <select id="fMode" onchange="calcFluids()">
+                    <option value="maint">Maintenance saja</option>
+                    <option value="def">+ Koreksi Defisit</option>
+                    <option value="bolus">Bolus Syok (20 mL/kg)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="empty" id="emptyFluids">
+        <div class="empty-ico">💧</div>
+        <div class="empty-ttl">Masukkan berat badan</div>
+        <div class="empty-sub">Kebutuhan cairan Holliday-Segar akan dihitung otomatis</div>
+    </div>
+    <div id="resFluids" style="display:none">
+        <div class="card s-sky"><div class="card-title"><div class="card-icon"><i class="fas fa-calculator"></i></div>Hasil Perhitungan</div><div class="f-result" id="fResultBox"></div></div>
+        <div class="card s-teal"><div class="card-title"><div class="card-icon"><i class="fas fa-clock"></i></div>Kecepatan Tetes / Pompa</div><div id="fDropBox"></div></div>
+        <div class="card s-emerald">
+            <div class="card-title"><div class="card-icon"><i class="fas fa-flask"></i></div>Panduan Pilihan Cairan</div>
+            <div class="hlr" style="background:#eff6ff"><span style="font-size:18px">💧</span><div><strong>Dehidrasi isotonis:</strong> NaCl 0.9% atau RL — pilihan pertama resusitasi</div></div>
+            <div class="hlr" style="background:#f0fdf4"><span style="font-size:18px">🌿</span><div><strong>Maintenance:</strong> D5% ½NS + KCl 20 mEq/L — anak > 1 tahun</div></div>
+            <div class="hlr" style="background:#ecfeff"><span style="font-size:18px">🍼</span><div><strong>Bayi < 1 tahun:</strong> D5% ¼NS — kebutuhan Na lebih rendah</div></div>
+            <div class="hlr" style="background:#fdf4ff"><span style="font-size:18px">⚠️</span><div><strong>Hindari hipotonik murni</strong> pada kondisi syok — risiko hiponatremia</div></div>
+            <div class="hlr" style="background:#fff7ed"><span style="font-size:18px">🧂</span><div><strong>Koreksi Na:</strong> tidak melebihi 10–12 mEq/L per 24 jam jika hiponatremia kronis</div></div>
+        </div>
+    </div>
+</div><!-- /panel-fluids -->
+
+<!-- ═══ TAB 4: PEWS ═══ -->
+<div class="tab-panel" id="panel-pews">
+    <div class="card s-purple">
+        <div class="card-title"><div class="card-icon"><i class="fas fa-chart-bar"></i></div>Pediatric Early Warning Score (PEWS)</div>
+        <p style="font-size:.8rem;color:#6b7280;margin-bottom:16px">Pilih nilai untuk setiap parameter. Skor dihitung otomatis.</p>
+        <div id="pewsForm"></div>
+        <div style="display:flex;align-items:center;gap:16px;margin-top:18px">
+            <div id="pewsCircle" class="pews-circle" style="background:#f3f4f6;color:#9ca3af"><span id="pewsNum">–</span><small>PEWS</small></div>
+            <div style="flex:1">
+                <div id="pewsInterp" style="font-size:.85rem;font-weight:700;color:#6b7280">Isi semua parameter terlebih dahulu</div>
+                <div id="pewsAct" style="font-size:.77rem;margin-top:4px;color:#9ca3af"></div>
+                <div class="pbar-wrap"><div class="pbar" id="pewsBar" style="width:0%;background:#d1d5db"></div></div>
+            </div>
+        </div>
+    </div>
+    <div class="card s-indigo">
+        <div class="card-title"><div class="card-icon"><i class="fas fa-table"></i></div>Panduan Interpretasi PEWS</div>
+        <table class="pews-tbl">
+            <thead><tr><th>Skor</th><th>Kategori</th><th>Tindakan Klinis</th></tr></thead>
+            <tbody>
+                <tr><td><span class="bdg b-ok">0</span></td><td>Normal</td><td>Monitoring rutin</td></tr>
+                <tr><td><span class="bdg b-ok">1–2</span></td><td>Risiko Rendah</td><td>Observasi tiap 4 jam</td></tr>
+                <tr><td><span class="bdg b-wn">3–4</span></td><td>Risiko Sedang</td><td>Pantau tiap 2 jam, lapor dokter jaga</td></tr>
+                <tr><td><span class="bdg b-hi">5–6</span></td><td>Risiko Tinggi</td><td>Lapor SEGERA, pertimbangkan transfer PICU</td></tr>
+                <tr><td><span class="bdg b-ct">≥7</span></td><td>KRITIS</td><td>Aktifkan Rapid Response Team / PICU</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div><!-- /panel-pews -->
+
+<!-- ═══ TAB 5: BROSELOW ═══ -->
+<div class="tab-panel" id="panel-broselow">
+    <div class="card s-orange">
+        <div class="card-title"><div class="card-icon"><i class="fas fa-ruler-combined"></i></div>Broselow Pediatric Tape</div>
+        <p style="font-size:.81rem;color:#6b7280;margin-bottom:12px">Pilih zona warna atau masukkan tinggi badan untuk estimasi BB, ukuran alat, dan dosis awal.</p>
+        <div class="ig"><label class="il">Tinggi Badan (cm)</label><input type="number" id="bHeight" placeholder="cm" oninput="calcBroselow()" min="46" max="145"></div>
+        <div style="font-size:.77rem;font-weight:800;color:#4b5563;margin:8px 0 6px">Atau klik zona warna:</div>
+        <div class="bz-grid">
+            <div class="bz bz-grey"   id="bz-grey"   onclick="pickZone('grey')">Abu-abu<br><small>46–53 cm</small></div>
+            <div class="bz bz-pink"   id="bz-pink"   onclick="pickZone('pink')">Merah Muda<br><small>54–60 cm</small></div>
+            <div class="bz bz-red"    id="bz-red"    onclick="pickZone('red')">Merah<br><small>61–70 cm</small></div>
+            <div class="bz bz-purple" id="bz-purple" onclick="pickZone('purple')">Ungu<br><small>71–80 cm</small></div>
+            <div class="bz bz-yellow" id="bz-yellow" onclick="pickZone('yellow')">Kuning<br><small>81–90 cm</small></div>
+            <div class="bz bz-white"  id="bz-white"  onclick="pickZone('white')">Putih<br><small>91–100 cm</small></div>
+            <div class="bz bz-blue"   id="bz-blue"   onclick="pickZone('blue')">Biru<br><small>101–110 cm</small></div>
+            <div class="bz bz-orange" id="bz-orange" onclick="pickZone('orange')">Oranye<br><small>111–120 cm</small></div>
+            <div class="bz bz-green"  id="bz-green"  onclick="pickZone('green')">Hijau<br><small>121–145 cm</small></div>
+        </div>
+    </div>
+    <div class="empty" id="emptyBroselow">
+        <div class="empty-ico">📏</div>
+        <div class="empty-ttl">Pilih zona atau masukkan tinggi</div>
+        <div class="empty-sub">Estimasi BB, ukuran alat, dan referensi dosis akan muncul</div>
+    </div>
+    <div id="resBroselow" style="display:none;animation:fadeUp .3s ease">
+        <div class="card" id="bzCard">
+            <div class="card-title" id="bzTitle"></div>
+            <div id="bzDetails"></div>
+        </div>
+    </div>
+</div><!-- /panel-broselow -->
+
+</div><!-- /container -->
+
+<button class="print-btn" onclick="window.print()"><i class="fas fa-print"></i> Cetak Ringkasan</button>
+
+<div class="disclaimer">
+    <i class="fas fa-info-circle"></i>
+    <strong>Disclaimer Medis:</strong> PediVito adalah alat referensi cepat untuk tenaga kesehatan.
+    Nilai yang ditampilkan bersifat panduan umum dan <strong>tidak</strong> menggantikan penilaian klinis, panduan PALS/ATLS/lokal RS, diagnosis, maupun keputusan terapi.
+    Selalu verifikasi dengan sumber resmi dan supervisori klinis.
+    &nbsp;|&nbsp; v2.0 · CardiologyVault © 2026
+</div>
+
+<script>
+// ============================================================
+// DATA REFERENSI
+// ============================================================
+const REFS = [
+    {maxM:1,   lbl:"👶 Neonatus (0–28 Hari)",     hr:[100,205],rr:[40,60], sbp:[60,90],  dbp:[20,60], pr:[80,120], qrs:[30,80], qtc:440, minSBP:60},
+    {maxM:12,  lbl:"🍼 Bayi (1–12 Bulan)",         hr:[100,190],rr:[30,53], sbp:[72,104], dbp:[37,56], pr:[80,150], qrs:[30,80], qtc:440, minSBP:70},
+    {maxM:36,  lbl:"🧸 Batita (1–3 Tahun)",         hr:[98,140], rr:[22,37], sbp:[86,106], dbp:[42,63], pr:[100,150],qrs:[40,80], qtc:440, minSBP:70},
+    {maxM:60,  lbl:"🎨 Prasekolah (4–5 Tahun)",     hr:[80,120], rr:[20,28], sbp:[89,112], dbp:[46,72], pr:[100,150],qrs:[40,80], qtc:440, minSBP:75},
+    {maxM:144, lbl:"🎒 Usia Sekolah (6–12 Tahun)",  hr:[75,118], rr:[18,25], sbp:[97,115], dbp:[57,76], pr:[120,160],qrs:[40,90], qtc:440, minSBP:80},
+    {maxM:216, lbl:"📱 Remaja (13–18 Tahun)",        hr:[60,100], rr:[12,20], sbp:[110,131],dbp:[64,83], pr:[120,200],qrs:[50,100],qtc:440, minSBP:90}
+];
+
+const BROSELOW = {
+    grey:  {lbl:"Abu-abu",   col:"#6b7280",cm:"46–53",  kg:"3–5",   et:"3.0–3.5",blade:"0",     cuff:"Neonatus",  urcat:"5 Fr",  iv:"24G",   def:"6–10 J"},
+    pink:  {lbl:"Merah Muda",col:"#ec4899",cm:"54–60",  kg:"6–7",   et:"3.5",    blade:"1 Miller",cuff:"Infant",   urcat:"6 Fr",  iv:"24G",   def:"12–14 J"},
+    red:   {lbl:"Merah",     col:"#ef4444",cm:"61–70",  kg:"8–9",   et:"3.5–4.0",blade:"1",      cuff:"Infant",   urcat:"8 Fr",  iv:"22G",   def:"16–18 J"},
+    purple:{lbl:"Ungu",      col:"#a855f7",cm:"71–80",  kg:"10–11", et:"4.0",    blade:"1–2",    cuff:"Child S",  urcat:"8 Fr",  iv:"22G",   def:"20–22 J"},
+    yellow:{lbl:"Kuning",    col:"#d97706",cm:"81–90",  kg:"12–14", et:"4.5",    blade:"2",      cuff:"Child",    urcat:"10 Fr", iv:"22–20G",def:"24–28 J"},
+    white: {lbl:"Putih",     col:"#6b7280",cm:"91–100", kg:"15–18", et:"5.0",    blade:"2",      cuff:"Child",    urcat:"10 Fr", iv:"20G",   def:"30–36 J"},
+    blue:  {lbl:"Biru",      col:"#3b82f6",cm:"101–110",kg:"19–22", et:"5.5",    blade:"2",      cuff:"Child L",  urcat:"12 Fr", iv:"20G",   def:"38–44 J"},
+    orange:{lbl:"Oranye",    col:"#f97316",cm:"111–120",kg:"24–28", et:"6.0 cuf",blade:"2–3",    cuff:"Child L",  urcat:"12 Fr", iv:"20–18G",def:"48–56 J"},
+    green: {lbl:"Hijau",     col:"#10b981",cm:"121–145",kg:"30–36", et:"6.5 cuf",blade:"3",      cuff:"Adult S",  urcat:"14 Fr", iv:"18G",   def:"60–72 J"}
+};
+
+// ============================================================
+// TAB SWITCH
+// ============================================================
+function switchTab(name,btn){
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('panel-'+name).classList.add('active');
+    btn.classList.add('active');
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+const r1 = n => Math.round(n*10)/10;
+const cap = (v,mx) => r1(Math.min(v,mx));
+const ageToM = (v,u) => u==='days'?v/30.44:u==='years'?v*12:v;
+const getRef = m => REFS.find(r=>m<=r.maxM)||null;
+
+function badge(type,txt){
+    const m={ok:'b-ok',lo:'b-lo',hi:'b-hi',wn:'b-wn',ct:'b-ct'};
+    const i={ok:'✔',lo:'↓',hi:'↑',wn:'⚠',ct:'🚨'};
+    return `<span class="bdg ${m[type]}">${i[type]} ${txt}</span>`;
+}
+function evl(v,mn,mx){
+    if(v===''||v===null||v===undefined)return'';
+    const n=parseFloat(v);
+    if(isNaN(n))return'';
+    if(n<mn)return badge('lo','Rendah');
+    if(n>mx)return badge('hi','Tinggi');
+    return badge('ok','Normal');
+}
+function estW(m){
+    if(m<12)return r1(m*0.5+4);
+    const y=m/12;
+    if(y<=5)return r1(2*y+8);
+    if(y<=14)return r1(4*y);
+    return 50;
+}
+function hs(w){
+    let ml=w<=10?w*100:w<=20?1000+(w-10)*50:1500+(w-20)*20;
+    return{total:Math.round(ml),perH:r1(ml/24)};
+}
+
+// ============================================================
+// TAB 1 – VITALS
+// ============================================================
+function calculate(){
+    const av=parseFloat(document.getElementById('ageValue').value);
+    const unit=document.getElementById('ageUnit').value;
+    const w=parseFloat(document.getElementById('weightInput').value)||null;
+    const emEl=document.getElementById('emptyVitals');
+    const resEl=document.getElementById('resVitals');
+    const ecgEl=document.getElementById('ecgWrap');
+
+    if(isNaN(av)||av<0){
+        emEl.innerHTML='<div class="empty-ico">🔍</div><div class="empty-ttl">Masukkan usia anak</div><div class="empty-sub">Patokan normal akan muncul di sini</div>';
+        emEl.style.display='';resEl.style.display='none';ecgEl.style.display='none';
+        document.getElementById('ageCatBanner').style.display='none';return;
+    }
+    const m=ageToM(av,unit);
+    if(m>216){
+        emEl.innerHTML='<div class="empty-ico">🧑‍⚕️</div><div class="empty-ttl">Usia Dewasa</div><div class="empty-sub">Aplikasi ini untuk anak usia 0–18 tahun</div>';
+        emEl.style.display='';resEl.style.display='none';ecgEl.style.display='none';
+        document.getElementById('ageCatBanner').style.display='none';return;
+    }
+    const ref=getRef(m);if(!ref)return;
+
+    // Category banner
+    const ban=document.getElementById('ageCatBanner');
+    const parts=ref.lbl.split(' ');
+    ban.innerHTML=`<span style="font-size:1.3rem">${parts[0]}</span><span>${parts.slice(1).join(' ')}</span>`;
+    ban.style.display='flex';
+
+    // Fill normals
+    document.getElementById('nHR').textContent=ref.hr[0]+'–'+ref.hr[1];
+    document.getElementById('nRR').textContent=ref.rr[0]+'–'+ref.rr[1];
+    document.getElementById('nSBP').textContent=ref.sbp[0]+'–'+ref.sbp[1];
+    document.getElementById('nDBP').textContent=ref.dbp[0]+'–'+ref.dbp[1];
+    document.getElementById('nPR').textContent=ref.pr[0]+'–'+ref.pr[1];
+    document.getElementById('nQRS').textContent=ref.qrs[0]+'–'+ref.qrs[1];
+    document.getElementById('nQTc').textContent='< '+ref.qtc;
+
+    // Evaluate
+    document.getElementById('eHR').innerHTML=evl(document.getElementById('inHR').value,ref.hr[0],ref.hr[1]);
+    document.getElementById('eRR').innerHTML=evl(document.getElementById('inRR').value,ref.rr[0],ref.rr[1]);
+    document.getElementById('eSBP').innerHTML=evl(document.getElementById('inSBP').value,ref.sbp[0],ref.sbp[1]);
+    document.getElementById('eDBP').innerHTML=evl(document.getElementById('inDBP').value,ref.dbp[0],ref.dbp[1]);
+    document.getElementById('ePR').innerHTML=evl(document.getElementById('inPR').value,ref.pr[0],ref.pr[1]);
+    document.getElementById('eQRS').innerHTML=evl(document.getElementById('inQRS').value,ref.qrs[0],ref.qrs[1]);
+    const qtcV=document.getElementById('inQTc').value;
+    document.getElementById('eQTc').innerHTML=qtcV?parseFloat(qtcV)>ref.qtc?badge('hi','Memanjang'):badge('ok','Normal'):'';
+
+    // Min SBP box
+    const yr=r1(m/12);
+    const formulaSBP=Math.round(70+(2*yr));
+    const mbx=document.getElementById('minSBPBox');
+    mbx.style.display='flex';
+    document.getElementById('minSBPTxt').textContent=`Formula: 70 + (2 × ${yr} th) = ${formulaSBP} mmHg  |  Minimal umum: ≥ ${ref.minSBP} mmHg`;
+
+    // Quick ref
+    const ew=w||estW(m);
+    const hsR=hs(ew);
+    document.getElementById('quickRef').innerHTML=`
+        <div class="qr-row" style="background:#f0fdf4"><span class="qr-k">🏋️ Estimasi BB (Luscombe)</span><span class="qr-v">${ew} kg</span></div>
+        <div class="qr-row" style="background:#eff6ff"><span class="qr-k">💉 Epinefrin IV (1:10.000)</span><span class="qr-v">${cap(ew*0.1,1)} mL</span></div>
+        <div class="qr-row" style="background:#fdf4ff"><span class="qr-k">⚡ Defibrilasi 2 J/kg</span><span class="qr-v">${cap(ew*2,200)}–${cap(ew*4,360)} J</span></div>
+        <div class="qr-row" style="background:#fff7ed"><span class="qr-k">💧 Maintenance (Holliday-Segar)</span><span class="qr-v">${hsR.total} mL/hari  |  ${hsR.perH} mL/jam</span></div>
+        <div class="qr-row" style="background:#fef3c7"><span class="qr-k">🩸 Bolus Syok 20 mL/kg</span><span class="qr-v">${cap(ew*20,500)} mL</span></div>
+        <div class="qr-row" style="background:#ecfeff"><span class="qr-k">🩹 Adenosin (SVT) 0.1 mg/kg</span><span class="qr-v">${cap(ew*0.1,6)} mg</span></div>
+    `;
+
+    // ECG display
+    ecgEl.style.display='';
+    const hrV=parseFloat(document.getElementById('inHR').value)||Math.round((ref.hr[0]+ref.hr[1])/2);
+    document.getElementById('ecgHRshow').textContent='♥ '+hrV+' bpm';
+
+    emEl.style.display='none';
+    resEl.style.display='block';
+
+    // Sync to other tabs
+    if(w){
+        document.getElementById('dWeight').value=w;calcDrugs();
+        document.getElementById('fWeight').value=w;calcFluids();
+    }
+}
+
+// ============================================================
+// TAB 2 – DRUGS
+// ============================================================
+function applyEst(){
+    const v=document.getElementById('dEst').value;
+    if(v){document.getElementById('dWeight').value=v;calcDrugs();}
+}
+
+function dc(ico,col,name,dose,unit,note){
+    return `<div class="dc" style="background:${col}18">
+        <div class="dc-icon">${ico}</div>
+        <div>
+          <div class="dc-name" style="color:${col}">${name}</div>
+          <div class="dc-dose">${dose} <span class="dc-unit">${unit}</span></div>
+          ${note?`<div class="dc-note">${note}</div>`:''}
+        </div></div>`;
+}
+
+function calcDrugs(){
+    const w=parseFloat(document.getElementById('dWeight').value);
+    const em=document.getElementById('emptyDrugs');
+    const res=document.getElementById('resDrugs');
+    if(!w||w<=0){em.style.display='';res.style.display='none';return;}
+    em.style.display='none';res.style.display='block';
+
+    document.getElementById('drugsResus').innerHTML=
+        dc('💉','#e11d48','Epinefrin (1:10.000) – Henti Jantung',`${cap(w*0.1,1)} mL`,'IV/IO bolus',`0.1 mL/kg · maks 1 mL · ulang tiap 3–5 mnt`)+
+        dc('💉','#9f1239','Epinefrin (1:1000) – Anafilaksis',`${cap(w*0.01,0.5)} mL`,'IM paha lateral',`0.01 mL/kg · maks 0.5 mL`)+
+        dc('💧','#0284c7','NaCl 0.9% / RL – Bolus Syok',`${cap(w*20,500)} mL`,'IV/IO cepat 5–10 mnt',`20 mL/kg · maks 500 mL · dapat diulang s/d 3×`)+
+        dc('🍬','#7c3aed','Glukosa 10% – Hipoglikemia',`${cap(w*2,25)} mL`,'IV pelan 10 mnt',`2 mL/kg G10% (atau 1 mL/kg D25%)`)+
+        dc('🧂','#0d9488','Atropin – Bradikardi',`${cap(Math.max(w*0.02,0.1),0.5)} mg`,'IV/IO',`0.02 mg/kg · min 0.1 mg · maks 0.5 mg`);
+
+    document.getElementById('drugsArr').innerHTML=
+        dc('⚡','#7c3aed','Adenosin – SVT',`${cap(w*0.1,6)} mg`,'IV bolus cepat',`Lini 1: 0.1 mg/kg · 2nd: 0.2 mg/kg · maks 12 mg`)+
+        dc('⚡','#4338ca','Amiodarone – VT/VF',`${cap(w*5,300)} mg`,'IV 30–60 mnt',`5 mg/kg · maks 300 mg`)+
+        dc('🔌','#0ea5e9','Defibrilasi – VF/pVT',`${cap(w*2,200)}–${cap(w*4,360)} J`,'bifasik',`2–4 J/kg · untuk kardioversi: 0.5–1 J/kg sync`)+
+        dc('💊','#6366f1','Prokainamid – SVT/VT stabil',`${cap(w*15,1000)} mg`,'IV 30–60 mnt',`15 mg/kg · maks 1000 mg · monitor QRS`);
+
+    document.getElementById('drugsSeiz').innerHTML=
+        dc('🧠','#ea580c','Diazepam IV – Status Epileptikus',`${cap(w*0.3,10)} mg`,'IV pelan 2 mnt',`0.3 mg/kg · maks 10 mg`)+
+        dc('🧠','#dc2626','Diazepam – Rektal',`${cap(w*0.5,10)} mg`,'rektal',`0.5 mg/kg`)+
+        dc('💊','#a855f7','Midazolam – Buccal/Intranasal',`${cap(w*0.2,10)} mg`,'buccal/IN',`0.2 mg/kg · maks 10 mg`)+
+        dc('💊','#7c3aed','Lorazepam IV',`${cap(w*0.05,4)} mg`,'IV pelan',`0.05–0.1 mg/kg · maks 4 mg`)+
+        dc('💉','#4338ca','Fenitoin – Status',`${cap(w*20,1000)} mg`,'IV ≤1 mg/kg/mnt',`20 mg/kg · maks 1000 mg`)+
+        dc('💊','#0284c7','Ketamin – Sedasi/RSI',`${cap(w*1.5,100)} mg`,'IV 60 dtk',`1–2 mg/kg IV · 4 mg/kg IM`);
+
+    document.getElementById('drugsOther').innerHTML=
+        dc('🫁','#0ea5e9','Salbutamol – Nebulisasi (Asma)',w<=20?'2.5 mg':'5 mg','nebulisasi',`< 20 kg: 2.5 mg · > 20 kg: 5 mg · dapat tiap 20 mnt`)+
+        dc('🫁','#0284c7','Ipratropium – Nebulisasi',w<=20?'0.25 mg':'0.5 mg','nebulisasi',`Kombinasi dgn salbutamol pada asma berat`)+
+        dc('💚','#059669','Deksametason – Croup/Asma',`${cap(w*0.15,10)} mg`,'IV/IM/PO',`0.15–0.6 mg/kg · maks 10 mg`)+
+        dc('💊','#f59e0b','Morfin – Analgesik',`${cap(w*0.1,10)} mg`,'IV pelan',`0.1 mg/kg · maks 10 mg`)+
+        dc('💊','#10b981','Parasetamol – Antipiretik',`${cap(w*15,1000)} mg`,'PO/IV',`15 mg/kg tiap 4–6 jam · maks 1000 mg/dosis`)+
+        dc('🩺','#6366f1','Adrenalin Nebul. – Croup',`${w<=10?'2.5 mL':'5 mL'} (1:1000)`,'nebulisasi',`0.5 mL/kg (1:1000) · maks 5 mL`);
+}
+
+// ============================================================
+// TAB 3 – FLUIDS
+// ============================================================
+function calcFluids(){
+    const w=parseFloat(document.getElementById('fWeight').value);
+    const dehy=parseInt(document.getElementById('fDehy').value)||0;
+    const mode=document.getElementById('fMode').value;
+    const em=document.getElementById('emptyFluids');
+    const res=document.getElementById('resFluids');
+    if(!w||w<=0){em.style.display='';res.style.display='none';return;}
+    em.style.display='none';res.style.display='block';
+
+    const h=hs(w);
+    const deficit=Math.round(w*dehy*10); // mL
+    const bolus=Math.round(w*20);
+
+    let rb='',db='';
+    if(mode==='bolus'){
+        rb=`
+            <div class="f-row"><span class="f-key">💧 Bolus Syok (20 mL/kg)</span><span class="f-val">${bolus} mL</span></div>
+            <div class="f-row"><span class="f-key">⏱ Durasi</span><span class="f-val">5–10 menit</span></div>
+            <div class="f-row"><span class="f-key">🔁 Dapat diulang</span><span class="f-val">s/d 3× (60 mL/kg)</span></div>
+            <div class="f-row f-total"><span class="f-key">📋 Maintenance lanjutan</span><span class="f-val">${h.total} mL/hari</span></div>`;
+        db=`<div class="qr-row" style="background:#eff6ff"><span class="qr-k">Tetes makro (20 gtt/mL) – 10 mnt</span><span class="qr-v">${Math.round(bolus/10*2)} gtt/mnt</span></div>
+            <div class="qr-row" style="background:#ecfeff"><span class="qr-k">Pompa syringe</span><span class="qr-v">${Math.round(bolus/10*6)} mL/jam</span></div>`;
+    } else if(mode==='def'&&dehy>0){
+        const h1=Math.round(deficit/2);
+        const h2=deficit-h1;
+        const m24=h.total;
+        const rate8=r1((h1+m24/3)/8);
+        const rate16=r1((h2+m24*2/3)/16);
+        rb=`
+            <div class="f-row"><span class="f-key">📊 Maintenance/hari</span><span class="f-val">${m24} mL</span></div>
+            <div class="f-row"><span class="f-key">❌ Defisit (${dehy}%)</span><span class="f-val">${deficit} mL</span></div>
+            <div class="f-row"><span class="f-key">⏩ ½ Defisit + ⅓ Maint (8 jam)</span><span class="f-val">${Math.round(h1+m24/3)} mL</span></div>
+            <div class="f-row"><span class="f-key">⏩ ½ Defisit + ⅔ Maint (16 jam)</span><span class="f-val">${Math.round(h2+m24*2/3)} mL</span></div>
+            <div class="f-row f-total"><span class="f-key">✅ Total 24 jam</span><span class="f-val" style="font-size:1.2rem">${m24+deficit} mL</span></div>`;
+        db=`<div class="qr-row" style="background:#eff6ff"><span class="qr-k">8 jam pertama (mL/jam)</span><span class="qr-v">${rate8} mL/jam</span></div>
+            <div class="qr-row" style="background:#f0fdf4"><span class="qr-k">16 jam berikutnya (mL/jam)</span><span class="qr-v">${rate16} mL/jam</span></div>
+            <div class="qr-row" style="background:#faf5ff"><span class="qr-k">Tetes mikro (60 gtt/mL) – 8 jam</span><span class="qr-v">${Math.round(rate8)} gtt/mnt</span></div>`;
+    } else {
+        rb=`
+            <div class="f-row"><span class="f-key">📊 Total / hari</span><span class="f-val">${h.total} mL</span></div>
+            <div class="f-row f-total"><span class="f-key">⏱ Per jam</span><span class="f-val">${h.perH} mL/jam</span></div>`;
+        db=`<div class="qr-row" style="background:#eff6ff"><span class="qr-k">Tetes mikro (60 gtt/mL)</span><span class="qr-v">${Math.round(h.perH)} gtt/mnt</span></div>
+            <div class="qr-row" style="background:#f0fdf4"><span class="qr-k">Tetes makro (20 gtt/mL)</span><span class="qr-v">${Math.round(h.perH/3)} gtt/mnt</span></div>
+            <div class="qr-row" style="background:#fef3c7"><span class="qr-k">Pompa (mL/jam)</span><span class="qr-v">${h.perH} mL/jam</span></div>`;
+    }
+    document.getElementById('fResultBox').innerHTML=rb;
+    document.getElementById('fDropBox').innerHTML=db;
+}
+
+// ============================================================
+// TAB 4 – PEWS
+// ============================================================
+const PEWS_PARAMS=[
+    {id:'beh',lbl:'🧠 Perilaku / Tingkat Kesadaran',opts:[
+        {v:0,t:'Bermain / sesuai usia / bangun normal'},
+        {v:1,t:'Tidur'},
+        {v:2,t:'Mudah marah / hanya merespons rangsangan'},
+        {v:3,t:'Letargis / bingung / tidak merespons'},
+    ]},
+    {id:'cvs',lbl:'❤️ Kardiovaskular / Perfusi',opts:[
+        {v:0,t:'Merah muda · CRT < 2 detik'},
+        {v:1,t:'Pucat · CRT 2–3 detik'},
+        {v:2,t:'Abu-abu · CRT 3–4 detik · takikardi sedang'},
+        {v:3,t:'Abu-abu & mottled · CRT ≥ 4 detik · takikardi berat'},
+    ]},
+    {id:'res',lbl:'🫁 Respirasi / Upaya Napas',opts:[
+        {v:0,t:'Normal, tidak ada retraksi, tidak ada wheezing'},
+        {v:1,t:'> Normal · retraksi ringan / FiO₂ > 30%'},
+        {v:2,t:'>> Normal · retraksi signifikan / FiO₂ > 40%'},
+        {v:3,t:'>>> Normal · retraksi berat + grunting / FiO₂ > 50%'},
+    ]},
+    {id:'o2',lbl:'🌬️ Suplementasi Oksigen',opts:[
+        {v:0,t:'Tidak ada suplementasi oksigen'},
+        {v:2,t:'Ada suplementasi oksigen tambahan'},
+    ]},
+    {id:'neb',lbl:'💨 Nebulisasi',opts:[
+        {v:0,t:'Tidak ada / jarang'},
+        {v:3,t:'Tiap 15–20 menit atau continuous'},
+    ]},
+    {id:'vom',lbl:'🤮 Muntah Post-Operasi',opts:[
+        {v:0,t:'Tidak ada'},
+        {v:2,t:'Ada muntah persisten post-operasi'},
+    ]},
+];
+
+let pewsSel={};
+
+function buildPews(){
+    let h='';
+    PEWS_PARAMS.forEach(p=>{
+        h+=`<div style="margin-bottom:14px">
+            <div style="font-size:.81rem;font-weight:800;color:#374151;margin-bottom:6px">${p.lbl}</div>
+            <div>`;
+        p.opts.forEach(o=>{
+            h+=`<button class="pews-opt" id="po-${p.id}-${o.v}" onclick="setPews('${p.id}',${o.v},this)">${o.v} – ${o.t}</button>`;
+        });
+        h+=`</div></div>`;
+    });
+    document.getElementById('pewsForm').innerHTML=h;
+}
+
+function setPews(pid,val,btn){
+    pewsSel[pid]=val;
+    PEWS_PARAMS.find(p=>p.id===pid).opts.forEach(o=>{
+        const el=document.getElementById(`po-${pid}-${o.v}`);
+        if(el)el.classList.remove('sel');
+    });
+    btn.classList.add('sel');
+    updatePews();
+}
+
+function updatePews(){
+    const coreSet=['beh','cvs','res'].every(id=>pewsSel[id]!==undefined);
+    if(!coreSet)return;
+    let tot=Object.values(pewsSel).reduce((a,b)=>a+b,0);
+    document.getElementById('pewsNum').textContent=tot;
+    const pct=Math.min(tot/9*100,100);
+    document.getElementById('pewsBar').style.width=pct+'%';
+    const c=document.getElementById('pewsCircle');
+    const interp=document.getElementById('pewsInterp');
+    const act=document.getElementById('pewsAct');
+    if(tot===0){
+        c.style.background='#d1fae5';c.style.color='#065f46';
+        interp.innerHTML=badge('ok','Normal');act.textContent='✅ Monitoring rutin';
+        document.getElementById('pewsBar').style.background='#10b981';
+    }else if(tot<=2){
+        c.style.background='#d1fae5';c.style.color='#065f46';
+        interp.innerHTML=badge('ok','Risiko Rendah');act.textContent='🔵 Observasi tiap 4 jam';
+        document.getElementById('pewsBar').style.background='#34d399';
+    }else if(tot<=4){
+        c.style.background='#fef3c7';c.style.color='#92400e';
+        interp.innerHTML=badge('wn','Risiko Sedang');act.textContent='🟡 Pantau tiap 2 jam · lapor dokter jaga';
+        document.getElementById('pewsBar').style.background='#f59e0b';
+    }else if(tot<=6){
+        c.style.background='#fee2e2';c.style.color='#991b1b';
+        interp.innerHTML=badge('hi','Risiko Tinggi');act.textContent='🔴 Lapor SEGERA · pertimbangkan transfer PICU';
+        document.getElementById('pewsBar').style.background='#ef4444';
+    }else{
+        c.style.background='#1f2937';c.style.color='#f87171';
+        interp.innerHTML=badge('ct','KRITIS');act.textContent='🚨 Aktifkan Rapid Response Team / PICU SEGERA';
+        document.getElementById('pewsBar').style.background='#b91c1c';
+    }
+}
+
+// ============================================================
+// TAB 5 – BROSELOW
+// ============================================================
+function calcBroselow(){
+    const h=parseFloat(document.getElementById('bHeight').value);
+    if(!h||h<46||h>145)return;
+    let z='green';
+    if(h<=53)z='grey';else if(h<=60)z='pink';else if(h<=70)z='red';
+    else if(h<=80)z='purple';else if(h<=90)z='yellow';else if(h<=100)z='white';
+    else if(h<=110)z='blue';else if(h<=120)z='orange';
+    document.querySelectorAll('.bz').forEach(el=>el.classList.remove('act'));
+    document.getElementById('bz-'+z)?.classList.add('act');
+    showBroselow(z);
+}
+
+function pickZone(z){
+    document.getElementById('bHeight').value='';
+    document.querySelectorAll('.bz').forEach(el=>el.classList.remove('act'));
+    document.getElementById('bz-'+z)?.classList.add('act');
+    showBroselow(z);
+}
+
+function showBroselow(zk){
+    const z=BROSELOW[zk];if(!z)return;
+    document.getElementById('emptyBroselow').style.display='none';
+    document.getElementById('resBroselow').style.display='block';
+    const card=document.getElementById('bzCard');
+    card.style.borderTop=`5px solid ${z.col}`;
+    document.getElementById('bzTitle').innerHTML=`<div class="card-icon" style="background:${z.col}22;color:${z.col}"><i class="fas fa-ruler-combined"></i></div><span style="color:${z.col}">Zona ${z.lbl} · ${z.cm} cm · ${z.kg} kg</span>`;
+    document.getElementById('bzDetails').innerHTML=`
+        <div class="vg" style="margin-bottom:12px">
+            <div class="vb" style="background:${z.col}14;color:${z.col}"><div class="vb-lbl">Berat Badan</div><div class="vb-val">${z.kg}</div><div class="vb-unit">kg</div></div>
+            <div class="vb" style="background:${z.col}14;color:${z.col}"><div class="vb-lbl">ET Tube</div><div class="vb-val">${z.et}</div><div class="vb-unit">mm</div></div>
+            <div class="vb" style="background:${z.col}14;color:${z.col}"><div class="vb-lbl">Blade</div><div class="vb-val">${z.blade}</div><div class="vb-unit">laringo</div></div>
+            <div class="vb" style="background:${z.col}14;color:${z.col}"><div class="vb-lbl">Defibrilasi</div><div class="vb-val">${z.def}</div><div class="vb-unit">2 J/kg</div></div>
+        </div>
+        <div style="background:${z.col}12;border:1.5px solid ${z.col}30;border-radius:16px;padding:14px 16px">
+            <div class="hlr" style="padding:6px 0;margin:0;background:transparent"><span>🩺</span><span><strong>Manset BP:</strong> ${z.cuff}</span></div>
+            <div class="hlr" style="padding:6px 0;margin:0;background:transparent"><span>🩹</span><span><strong>Akses IV:</strong> ${z.iv}</span></div>
+            <div class="hlr" style="padding:6px 0;margin:0;background:transparent"><span>🔵</span><span><strong>Kateter Urin:</strong> ${z.urcat}</span></div>
+            <div class="hlr" style="padding:6px 0;margin:0;background:transparent"><span>💉</span><span><strong>Epinefrin IV:</strong> ${cap(parseFloat(z.kg.split('–')[0])*0.1,1)} – ${cap(parseFloat(z.kg.split('–')[1]||z.kg.split('–')[0])*0.1,1)} mL (1:10.000)</span></div>
+            <div class="hlr" style="padding:6px 0;margin:0;background:transparent"><span>💧</span><span><strong>Bolus Syok:</strong> ${Math.round(parseFloat(z.kg.split('–')[0])*20)}–${Math.round(parseFloat(z.kg.split('–')[1]||z.kg.split('–')[0])*20)} mL</span></div>
+        </div>`;
+}
+
+// INIT
+buildPews();
+</script>
+</body>
+</html>
