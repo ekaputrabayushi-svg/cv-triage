@@ -1,0 +1,672 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ICD-10 Smart Interpreter & Categorizer Pro (202 Diagnosa Klinis & 144 FKTP)</title>
+    <meta name="description" content="Alat Bantu Pencarian, Pengategorian & Sugestor Interaktif Diagnosa Terkait untuk FKTP BPJS & Dokter Spesialis.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --bg-glass: rgba(15, 23, 42, 0.88);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #6366f1;
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --accent-fktp: #10b981;
+            --accent-rujukan: #3b82f6;
+            --accent-ugd: #ef4444;
+            --accent-star: #f59e0b;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow: 0 8px 24px -6px rgba(0,0,0,0.4);
+            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        [data-theme="light"] {
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f1f5f9;
+            --bg-glass: rgba(248, 250, 252, 0.92);
+            --border-color: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --shadow: 0 8px 20px -4px rgba(0,0,0,0.06);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-body); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; transition: background-color 0.25s ease, color 0.25s ease; padding-bottom: var(--safe-area-bottom); }
+        
+        button, input, select, .diag-card, .chip-btn, .filter-btn, .cat-tab { touch-action: manipulation; }
+        button:active, .diag-card:active { transform: scale(0.98); }
+
+        header { position: sticky; top: 0; z-index: 100; background: var(--bg-glass); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid var(--border-color); padding: 0.75rem 1rem; }
+        .header-container { max-width: 1400px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+        .brand { display: flex; align-items: center; gap: 0.6rem; }
+        .brand-icon { width: 38px; height: 38px; background: var(--primary-gradient); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35); flex-shrink: 0; }
+        .brand-text h1 { font-size: 1.05rem; font-weight: 800; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.2; }
+        .brand-text p { font-size: 0.7rem; color: var(--text-muted); display: none; }
+        @media (min-width: 640px) { .brand-text p { display: block; } .brand-icon { width: 44px; height: 44px; font-size: 1.5rem; } .brand-text h1 { font-size: 1.25rem; } }
+        
+        .stats-pills { display: flex; gap: 0.4rem; align-items: center; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .stats-pills::-webkit-scrollbar { display: none; }
+        .stat-badge { background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); padding: 0.3rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: 700; color: var(--primary); white-space: nowrap; }
+        .stat-badge.fktp { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2); color: var(--accent-fktp); }
+        .stat-badge.rujukan { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2); color: var(--accent-rujukan); }
+        .theme-btn { background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+
+        main { max-width: 1400px; margin: 0 auto; width: 100%; padding: 1rem; flex: 1; }
+
+        .search-section { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 0.85rem; box-shadow: var(--shadow); margin-bottom: 1.2rem; }
+        .search-box { position: relative; display: flex; align-items: center; }
+        .search-icon { position: absolute; left: 1rem; font-size: 1.2rem; color: var(--text-muted); pointer-events: none; }
+        .search-input { width: 100%; min-height: 46px; padding: 0.75rem 3rem 0.75rem 2.8rem; background: var(--bg-body); border: 2px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-main); font-size: 0.95rem; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+        .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
+        .clear-btn { position: absolute; right: 0.75rem; background: var(--bg-card-hover); border: none; color: var(--text-muted); width: 28px; height: 28px; border-radius: 50%; font-size: 1rem; cursor: pointer; display: none; align-items: center; justify-content: center; }
+
+        .keyword-chips { display: flex; gap: 0.4rem; margin-top: 0.75rem; overflow-x: auto; padding-bottom: 0.25rem; -webkit-overflow-scrolling: touch; scrollbar-width: none; align-items: center; }
+        .keyword-chips::-webkit-scrollbar { display: none; }
+        .keyword-chip-label { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; white-space: nowrap; margin-right: 0.2rem; }
+        .chip-btn { background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-muted); padding: 0.35rem 0.7rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.15s; flex-shrink: 0; min-height: 32px; display: inline-flex; align-items: center; }
+        .chip-btn:hover, .chip-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+        .filter-section { display: flex; flex-direction: column; gap: 0.85rem; margin-bottom: 1.2rem; }
+        .competency-filters { display: flex; gap: 0.4rem; overflow-x: auto; padding-bottom: 0.25rem; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .competency-filters::-webkit-scrollbar { display: none; }
+        .filter-btn { padding: 0.55rem 0.95rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-muted); font-weight: 700; font-size: 0.8rem; cursor: pointer; white-space: nowrap; transition: all 0.15s; flex-shrink: 0; min-height: 38px; display: inline-flex; align-items: center; }
+        .filter-btn.active { background: var(--primary-gradient); color: #fff; border-color: transparent; }
+
+        .category-tabs { display: flex; gap: 0.35rem; overflow-x: auto; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .category-tabs::-webkit-scrollbar { display: none; }
+        .cat-tab { padding: 0.45rem 0.8rem; border-radius: 20px; border: 1px solid transparent; background: transparent; color: var(--text-muted); font-size: 0.78rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.15s; flex-shrink: 0; min-height: 34px; display: inline-flex; align-items: center; }
+        .cat-tab.active { background: var(--bg-card); color: var(--primary); border-color: var(--border-color); }
+
+        .results-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; font-size: 0.8rem; color: var(--text-muted); flex-wrap: wrap; gap: 0.5rem; }
+        
+        .diagnosis-grid { display: grid; grid-template-columns: 1fr; gap: 0.85rem; }
+        @media (min-width: 640px) { .diagnosis-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; } }
+
+        .diag-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; cursor: pointer; transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease; display: flex; flex-direction: column; justify-content: space-between; contain: content; box-shadow: var(--shadow); }
+        .diag-card:hover { border-color: var(--primary); background: var(--bg-card-hover); }
+
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.6rem; gap: 0.5rem; }
+        .code-badge { background: var(--primary-gradient); color: #fff; font-weight: 800; font-size: 0.85rem; padding: 0.25rem 0.55rem; border-radius: 6px; }
+        .card-badges { display: flex; align-items: center; gap: 0.4rem; }
+        .badge-fktp { background: rgba(16, 185, 129, 0.15); color: var(--accent-fktp); border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.68rem; font-weight: 700; padding: 0.2rem 0.45rem; border-radius: 4px; }
+        .badge-rujukan { background: rgba(59, 130, 246, 0.15); color: var(--accent-rujukan); border: 1px solid rgba(59, 130, 246, 0.3); font-size: 0.68rem; font-weight: 700; padding: 0.2rem 0.45rem; border-radius: 4px; }
+        .star-btn { background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; padding: 0.2rem; min-width: 32px; min-height: 32px; display: flex; align-items: center; justify-content: center; }
+        .star-btn.starred { color: var(--accent-star); }
+
+        .diag-title { font-size: 1rem; font-weight: 700; line-height: 1.35; margin-bottom: 0.3rem; color: var(--text-main); }
+        .diag-sub { font-size: 0.78rem; color: var(--text-muted); font-style: italic; margin-bottom: 0.65rem; }
+        .synonyms-tags { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-bottom: 0.85rem; }
+        .syn-tag { background: var(--bg-body); color: var(--text-muted); font-size: 0.68rem; padding: 0.12rem 0.4rem; border-radius: 4px; border: 1px solid var(--border-color); }
+
+        .card-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 0.65rem; border-top: 1px dashed var(--border-color); font-size: 0.72rem; color: var(--text-muted); }
+        .copy-code-btn { background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.7rem; font-weight: 700; cursor: pointer; min-height: 32px; display: inline-flex; align-items: center; }
+
+        .load-more-container { text-align: center; margin: 1.5rem 0 2rem 0; }
+        .load-more-btn { background: var(--bg-card); border: 1px solid var(--primary); color: var(--primary); padding: 0.75rem 1.8rem; border-radius: 30px; font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: all 0.2s ease; min-height: 44px; width: 100%; max-width: 360px; }
+        .load-more-btn:hover { background: var(--primary-gradient); color: #fff; border-color: transparent; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.82); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 1000; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        
+        .modal-card { background: var(--bg-card); border: 1px solid var(--border-color); max-width: 100vw; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow); display: flex; flex-direction: column; border-top-left-radius: 20px; border-top-right-radius: 20px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .modal-overlay.active .modal-card { transform: translateY(0); }
+
+        .sheet-handle { width: 38px; height: 5px; background: var(--text-muted); opacity: 0.4; border-radius: 3px; margin: 0.6rem auto 0.2rem auto; flex-shrink: 0; }
+
+        @media (min-width: 768px) {
+            .modal-overlay { align-items: center; padding: 1.5rem; }
+            .modal-card { max-width: 800px; border-radius: var(--radius-lg); max-height: 85vh; transform: translateY(20px); }
+            .modal-overlay.active .modal-card { transform: translateY(0); }
+            .sheet-handle { display: none; }
+        }
+
+        .modal-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; position: sticky; top: 0; background: var(--bg-card); z-index: 10; align-items: flex-start; }
+        .modal-close { background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+        .modal-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+
+        .suggestor-box { background: rgba(99, 102, 241, 0.1); border: 1.5px solid rgba(99, 102, 241, 0.3); border-radius: var(--radius-md); padding: 1rem; }
+        .suggestor-box h4 { font-size: 0.85rem; color: #818cf8; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.65rem; display: flex; align-items: center; gap: 0.4rem; font-weight: 800; }
+        .sugg-pills { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+        
+        .sugg-pill { background: var(--bg-card); border: 1px solid var(--primary); color: var(--text-main); padding: 0.4rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 0.35rem; box-shadow: 0 2px 6px rgba(0,0,0,0.2); min-height: 36px; }
+        .sugg-pill:hover { background: var(--primary-gradient); color: #ffffff; border-color: transparent; }
+        .sugg-pill code { background: rgba(0,0,0,0.25); padding: 0.1rem 0.35rem; border-radius: 4px; font-weight: 800; font-size: 0.75rem; }
+
+        .breadcrumb-nav { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-size: 0.78rem; color: var(--text-muted); }
+        .back-hist-btn { background: var(--bg-body); border: 1px solid var(--border-color); color: var(--primary); padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.72rem; font-weight: 700; cursor: pointer; display: none; align-items: center; gap: 0.3rem; min-height: 30px; }
+
+        .info-group { background: var(--bg-body); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 0.85rem 1rem; }
+        .info-group h4 { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 700; }
+        .info-group p { font-size: 0.88rem; line-height: 1.45; color: var(--text-main); }
+        
+        .modal-footer { padding: 1rem 1.25rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 0.5rem; background: var(--bg-card); position: sticky; bottom: 0; z-index: 10; flex-wrap: wrap; }
+        .btn { padding: 0.65rem 1rem; border-radius: var(--radius-md); font-weight: 700; font-size: 0.82rem; cursor: pointer; border: 1px solid transparent; min-height: 42px; display: inline-flex; align-items: center; justify-content: center; flex: 1; }
+        @media (min-width: 480px) { .btn { flex: initial; } }
+        .btn-primary { background: var(--primary-gradient); color: #fff; }
+        .btn-secondary { background: var(--bg-body); border-color: var(--border-color); color: var(--text-main); }
+
+        .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(100px); background: #10b981; color: #fff; padding: 0.7rem 1.2rem; border-radius: 30px; font-weight: 700; font-size: 0.82rem; box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 2000; opacity: 0; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease; white-space: nowrap; max-width: 90vw; text-align: center; }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        mark { background: rgba(245, 158, 11, 0.35); color: inherit; border-radius: 2px; padding: 0 2px; }
+    </style>
+</head>
+<body data-theme="dark">
+
+    <header>
+        <div class="header-container">
+            <div class="brand">
+                <div class="brand-icon">🩺</div>
+                <div class="brand-text">
+                    <h1>ICD-10 Smart Interpreter Pro</h1>
+                    <p>Sub-sistem Diagnostik & Sugestor Interaktif Diagnosa Terkait (202 Diagnosa Klinis & 144 FKTP)</p>
+                </div>
+            </div>
+            <div class="stats-pills">
+                <div class="stat-badge" id="totalBadge">📚 <span id="countTotal">0</span> Diagnosa</div>
+                <div class="stat-badge fktp" id="fktpBadge">🟢 <span id="countFktp">0</span> 4A</div>
+                <div class="stat-badge rujukan" id="rujukanBadge">🔵 <span id="countRujukan">0</span> Sp</div>
+                <button class="theme-btn" id="themeToggleBtn" title="Ganti Tema">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="search-section">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" class="search-input" placeholder="Cari Kode ICD, Nama Diagnosa, Keluhan (diseksi aorta, angina, sesak)..." autocomplete="off">
+                <button class="clear-btn" id="clearBtn">&times;</button>
+            </div>
+            <div class="keyword-chips">
+                <span class="keyword-chip-label">Keluhan:</span>
+                <button class="chip-btn" onclick="quickSearch('diseksi aorta')">⚡ Diseksi Aorta</button>
+                <button class="chip-btn" onclick="quickSearch('angina')">🫀 Angina / Nyeri Dada</button>
+                <button class="chip-btn" onclick="quickSearch('sesak')">🫁 Sesak Napas</button>
+                <button class="chip-btn" onclick="quickSearch('demam')">🔥 Demam</button>
+                <button class="chip-btn" onclick="quickSearch('pusing')">🧠 Pusing / Vertigo</button>
+                <button class="chip-btn" onclick="quickSearch('gatal')">🧴 Gatal Kulit</button>
+                <button class="chip-btn" onclick="quickSearch('muntah')">🤮 Muntah / Diare</button>
+                <button class="chip-btn" onclick="quickSearch('darah tinggi')">🩸 Darah Tinggi</button>
+                <button class="chip-btn" onclick="quickSearch('gula')">🍬 DM / Gula</button>
+                <button class="chip-btn" onclick="quickSearch('luka')">🩹 Luka / UGD</button>
+                <button class="chip-btn" onclick="quickSearch('mata merah')">👁️ Mata Merah</button>
+                <button class="chip-btn" onclick="quickSearch('gigi')">🦷 Sakit Gigi</button>
+                <button class="chip-btn" onclick="quickSearch('hamil')">🤱 Obsgyn</button>
+            </div>
+        </section>
+
+        <section class="filter-section">
+            <div class="competency-filters">
+                <button class="filter-btn active" data-filter="all">✨ Semua Diagnosa (202)</button>
+                <button class="filter-btn" data-filter="fktp">🟢 144 FKTP (4A BPJS)</button>
+                <button class="filter-btn" data-filter="rujukan">🔵 Rujukan Spesialis (35)</button>
+                <button class="filter-btn" data-filter="ugd">🔴 UGD & Trauma</button>
+                <button class="filter-btn" data-filter="starred">⭐ Favorit (<span id="starCount">0</span>)</button>
+            </div>
+
+            <div class="category-tabs" id="categoryTabs">
+                <button class="cat-tab active" data-cat="all">Semua Kategori</button>
+                <button class="cat-tab" data-cat="kardio">🫀 Kardiovaskular</button>
+                <button class="cat-tab" data-cat="respirasi">🫁 Respirasi</button>
+                <button class="cat-tab" data-cat="infeksi">🦺 Infeksi & Tropis</button>
+                <button class="cat-tab" data-cat="gastro">🧪 Gastrointestinal</button>
+                <button class="cat-tab" data-cat="endokrin">🩸 Endokrin & Metabolik</button>
+                <button class="cat-tab" data-cat="saraf">🧠 Saraf & Psikiatri</button>
+                <button class="cat-tab" data-cat="kulit">🧴 Dermatologi</button>
+                <button class="cat-tab" data-cat="obgyn">🤱 Obsgyn</button>
+                <button class="cat-tab" data-cat="mata">👁️ Mata</button>
+                <button class="cat-tab" data-cat="tht">👂 THT-KL</button>
+                <button class="cat-tab" data-cat="gigi">🦷 Gigi & Mulut</button>
+                <button class="cat-tab" data-cat="muskulo">🦴 Muskoloskeletal</button>
+                <button class="cat-tab" data-cat="urologi">🫘 Ginjal & Urologi</button>
+                <button class="cat-tab" data-cat="anak">👶 Pediatri</button>
+                <button class="cat-tab" data-cat="ugd">🚑 UGD & Trauma</button>
+            </div>
+        </section>
+
+        <div class="results-meta">
+            <span id="resultsCount">Menampilkan 0 dari 0 Diagnosa</span>
+            <button class="btn btn-secondary" onclick="window.print()" style="padding: 0.25rem 0.6rem; font-size: 0.72rem; min-height: 30px;">🖨️ Cetak / PDF</button>
+        </div>
+
+        <div class="diagnosis-grid" id="diagnosisGrid"></div>
+
+        <div class="load-more-container" id="loadMoreContainer" style="display: none;">
+            <button class="load-more-btn" id="loadMoreBtn">Tampilkan Lebih Banyak Diagnosa (+36)</button>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="suggestorModal">
+        <div class="modal-card">
+            <div class="sheet-handle"></div>
+            <div class="modal-header">
+                <div>
+                    <div class="breadcrumb-nav">
+                        <button class="back-hist-btn" id="backHistBtn" onclick="goBackModalHistory()">⬅️ Kembali ke <span id="backHistName">...</span></button>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:0.4rem; margin-bottom:0.3rem;">
+                        <span class="code-badge" id="modalCode">I10</span>
+                        <span id="modalCompetencyBadge" class="badge-fktp">Kompetensi 4A</span>
+                    </div>
+                    <h2 id="modalTitle" style="font-size:1.15rem; font-weight:800;">Hipertensi Primer</h2>
+                    <p id="modalSub" style="font-size:0.78rem; color:var(--text-muted); font-style:italic;">Essential primary hypertension</p>
+                </div>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="suggestor-box">
+                    <h4>🔗 DIAGNOSA TERKAIT / D.BANDING:</h4>
+                    <p style="font-size:0.72rem; color:var(--text-muted); margin-bottom:0.6rem;">
+                        Klik diagnosa di bawah untuk membuka rincian:
+                    </p>
+                    <div class="sugg-pills" id="modalSuggestions"></div>
+                </div>
+
+                <div class="info-group">
+                    <h4>💊 FARMAKOTERAPI & RESEP FKTP:</h4>
+                    <p id="modalRx">-</p>
+                </div>
+
+                <div class="info-group">
+                    <h4>🩸 USULAN LAB & PENUNJANG FKTP:</h4>
+                    <p id="modalLab">-</p>
+                </div>
+
+                <div class="info-group">
+                    <h4>📌 CLINICAL PEARLS & KRITERIA:</h4>
+                    <p id="modalPearl">-</p>
+                </div>
+
+                <div class="info-group">
+                    <h4>🚑 PANDUAN RUJUKAN & RED FLAGS:</h4>
+                    <p id="modalRujukan">-</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modalStarBtn">⭐ Favoritkan</button>
+                <button class="btn btn-secondary" id="modalCopyBtn">📋 Salin Kode</button>
+                <button class="btn btn-primary" onclick="closeModal()">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Kode ICD-10 berhasil disalin!</div>
+
+    <script>
+        const masterDataset = [{"code":"I71.0","nameId":"Diseksi Aorta (Aortic Dissection - Stanford Type A / B)","titleEn":"Dissection of aorta [any part]","cat":"kardio","catName":"Kardiovaskular","isFktp":false,"synonyms":["diseksi aorta","aortic dissection","nyeri dada robek","stanford type a","stanford type b","nyeri dada tembus punggung"],"suggestions":[{"code":"I16.1","label":"Hipertensi Emergensi"},{"code":"I71.4","label":"AAA"},{"code":"I21.9","label":"STEMI"}],"clinicalPearl":"EMERGENSI GAWAT DARURAT UGD! Nyeri dada tajam hebat seperti ROBEK / TERKAYAK (tearing/ripping pain) yang menjalar ke punggung/antar belikat. Perbedaan tensi sistolik tangan kanan vs kiri (> 20 mmHg) & defisit nadi perifer.","rujukanInfo":"RUJUKAN EMERGENCY CATH LAB / OPERASI BEDAH THORAKS VASKULER (Sp.BTKV / Sp.JP) SEGERA!","rx":"Target Tekanan Darah & HR: Kontrol ketat HR < 60 x/mnt & SBP 100-120 mmHg SEGERA! Lini 1: Esmolol IV / Labetalol IV / Nicardipine IV (Beta Blocker diberikan SEBELUM vasodilator untuk cegah reflex tachycardia & shear stress). Morphine IV untuk nyeri.","lab":"CT Angiography Thorax & Abdomen (Gold Standard), EKG 12 Lead, D-Dimer, Ekokardiografi TEE"},{"code":"I71.4","nameId":"Aneurisma Aorta Abdominalis / AAA (Abdominal Aortic Aneurysm)","titleEn":"Abdominal aortic aneurysm, without mention of rupture","cat":"kardio","catName":"Kardiovaskular","isFktp":false,"synonyms":["aaa","aneurisma aorta","benjolan perut berdenyut","aortic aneurysm"],"suggestions":[{"code":"I71.0","label":"Diseksi Aorta"},{"code":"I10","label":"Hipertensi"}],"clinicalPearl":"Masa berdenyut ekspansil di epigastrium/periumbilikus + nyeri pinggang/perut bawah tumpul. Risiko ruptur mengancam jiwa jika diameter > 5.5 cm.","rujukanInfo":"Rujuk Sp.BTKV / Sp.B (EVAR / Open Surgery). Jika ruptur → EMERGENCY UGD RS!","rx":"Kontrol TD ketat (Beta blocker / ACE-i), kurangi faktor risiko vaskular.","lab":"USG Abdomen / CT Angiography Abdomen"},{"code":"I71.2","nameId":"Aneurisma Aorta Torakalis (Thoracic Aortic Aneurysm / TAA)","titleEn":"Thoracic aortic aneurysm, without mention of rupture","cat":"kardio","catName":"Kardiovaskular","isFktp":false,"synonyms":["taa","aneurisma dada","thoracic aortic aneurysm"],"suggestions":[{"code":"I71.0","label":"Diseksi Aorta"}],"clinicalPearl":"Pelebaran pembuluh aorta dada, sering asimptomatik atau timbul serak (paralisis N. laringeus rekuren), disfagia, atau nyeri dada tumpul.","rujukanInfo":"Rujuk Sp.BTKV / Sp.JP.","rx":"Beta Blocker, titrasi TD ketat.","lab":"CT Angiography Thorax, Ekokardiografi TEE"},{"code":"I26.9","nameId":"Emboli Paru Akut (Acute Pulmonary Embolism / PE)","titleEn":"Pulmonary embolism without mention of acute cor pulmonale","cat":"kardio","catName":"Kardiovaskular","isFktp":false,"synonyms":["emboli paru","pe","pulmonary embolism","sesak mendadak dvt"],"suggestions":[{"code":"I80.2","label":"DVT (Deep Vein Thrombosis)"},{"code":"I21.9","label":"STEMI"}],"clinicalPearl":"Sesak napas mendadak hebat + nyeri dada pleuritik + takikardia pasca tirah baring lama / DVT tungkai / pasca operasi besar (Skor Wells PE).","rujukanInfo":"RUJUK UGD RS EMERGENCY (Sp.JP / Sp.P)!","rx":"Antikoagulan (LMWH / Heparin IV / NOAC) & Trombolitik (Alteplase) jika instabilitas hemodinamik (Massive PE).","lab":"CT Pulmonary Angiography (CTPA), D-Dimer, EKG (S1Q3T3 pattern / RBBB), AGD"},{"code":"I80.2","nameId":"Trombosis Vena Dalam / DVT (Deep Vein Thrombosis)","titleEn":"Phlebitis and thrombophlebitis of other deep vessels of lower extremities","cat":"kardio","catName":"Kardiovaskular","isFktp":false,"synonyms":["dvt","deep vein thrombosis","bengkak tungkai sebelah","trombosis vena"],"suggestions":[{"code":"I26.9","label":"Emboli Paru"}],"clinicalPearl":"Tungkai bengkak unilateral, hangat, nyeri tekan di betis (Homan sign (+)) pasca tirah baring/penerbangan jauh.","rujukanInfo":"Rujuk Sp.JP / Sp.BTKV / Sp.PD.","rx":"Antikoagulan oral/injeksi (LMWH / Rivaroxaban / Warfarin) & stoking kompresi.","lab":"USG Doppler Vena Tungkai (Non-compressibility), D-Dimer"},{"code":"I16.1","nameId":"Hipertensi Emergensi (Hypertensive Emergency)","titleEn":"Hypertensive emergency","cat":"kardio","catName":"Kardiovaskular","isFktp":false,"synonyms":["hipertensi emergensi","tensi krisis organ","ht emergensi"],"suggestions":[{"code":"I71.0","label":"Diseksi Aorta"},{"code":"I63.9","label":"Stroke Iskemik"}],"clinicalPearl":"Tekanan Darah >= 180/120 mmHg DENGAN kerusakan organ target akut (Diseksi Aorta, Edema Paru, Stroke, Ensefalopati, AKI).","rujukanInfo":"RUJUK EMERGENCY UGD RS / ICU!","rx":"Titrasi Antihipertensi IV (Nicardipine IV / Labetalol IV / Nitroprusside IV). JANGAN turunkan > 25% di jam pertama kecuali Diseksi Aorta.","lab":"EKG, CT Scan Kepala, Ur/Cr, Troponin, Foto Thorax"},{"code":"I16.0","nameId":"Hipertensi Urgensi (Hypertensive Urgency)","titleEn":"Hypertensive urgency","cat":"kardio","catName":"Kardiovaskular","isFktp":true,"synonyms":["hipertensi urgensi","tensi sangat tinggi tanpa gejala organ"],"suggestions":[{"code":"I10","label":"Hipertensi Essensial"}],"clinicalPearl":"Tekanan Darah >= 180/120 mmHg TANPA kerusakan organ target akut.","rujukanInfo":"Tuntas FKTP / Obati Oral.","rx":"Captopril 25mg oral / Sublingual, Amlodipine 10mg. Turunkan TD perlahan dalam 24-48 jam.","lab":"Pemeriksaan fisik & EKG dasar"},{"code":"I31.9","nameId":"Tamponade Jantung (Cardiac Tamponade)","titleEn":"Pericardial disease, unspecified","cat":"kardio","catName":"Kardiovaskular","isFktp":false,"synonyms":["tamponade jantung","cardiac tamponade","trias beck"],"suggestions":[{"code":"I30.9","label":"Perikarditis Akut"}],"clinicalPearl":"EMERGENSI! Trias Beck: Hipotensi + JVP Meningkat + Suara Jantung Redup/Jauh + Pulsus Paradoxus.","rujukanInfo":"RUJUK EMERGENCY RS UNTUK PERIKARDIOSENTESIS SEGERA!","rx":"Resusitasi Cairan IV & Perikardiosentesis cito.","lab":"Ekokardiografi (Diastolic collapse RV/RA), EKG (Electrical Alternans)"},{"code":"I30.9","nameId":"Perikarditis Akut (Acute Pericarditis)","titleEn":"Acute pericarditis, unspecified","cat":"kardio","catName":"Kardiovaskular","isFktp":false,"synonyms":["perikarditis","radang selaput jantung","pericarditis"],"suggestions":[{"code":"I21.9","label":"STEMI (D.Banding)"}],"clinicalPearl":"Nyeri dada tajam substernal yang MEMBAIK saat DUDUK MEMBONGKOK ke depan & memburuk saat terlentang/napas dalam + Pericardial Friction Rub.","rujukanInfo":"Rujuk Sp.JP.","rx":"NSAIDS dosis tinggi (Ibuprofen 3x600mg) + Colchicine 1x0.5mg.","lab":"EKG 12 Lead (Diffuse ST Elevasi PR Depresi di hampir semua lead)"},{"code":"R57.0","nameId":"Syok Kardiogenik (Cardiogenic Shock)","titleEn":"Cardiogenic shock","cat":"kardio","catName":"Kardiovaskular","isFktp":false,"synonyms":["syok kardiogenik","cardiogenic shock","gagal pompa jantung"],"suggestions":[{"code":"I21.9","label":"STEMI"},{"code":"I50.9","label":"Gagal Jantung"}],"clinicalPearl":"Gagal pompa jantung berat: TD Sistolik < 90 mmHg, oliguria, akral dingin, perfusi jelek pasca Infark Miokard Akut / Decompensio Cordis.","rujukanInfo":"RUJUK ICU UGD RS EMERGENCY!","rx":"Inotropik IV (Dobutamine / Dopamine / Norepinephrine IV).","lab":"AGD, EKG, Ekokardiografi, Monitoring CVP"},{"code":"A00.9","nameId":"Kolera (Diare Cucian Beras Akut)","titleEn":"Cholera, unspecified","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["kolera","cholera","diare cucian beras","vibrio cholerae"]},{"code":"A01.0","nameId":"Demam Tifoid / Tipes (Typhoid Fever)","titleEn":"Typhoid fever","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["tipes","tifoid","demam tifoid","typhoid","lidah putih tipes"]},{"code":"A03.9","nameId":"Disentri Basil / Shigellosis (Diare Berdarah & Lendir)","titleEn":"Shigellosis, unspecified","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["disentri","disentri basil","shigellosis","diare berdarah"]},{"code":"A06.0","nameId":"Disentri Amoeba Akut (Entamoeba Histolytica)","titleEn":"Acute amoebic dysentery","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["disentri amoeba","entamoeba","diare darah lendir busuk"]},{"code":"A09","nameId":"Gastroenteritis Infeksi / Diare Akut (GEA)","titleEn":"Infectious gastroenteritis and colitis","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["mencret","diare","gea","muntaber","buang air besar cair"]},{"code":"A15.0","nameId":"Tuberkulosis (TB) Paru Terkonfirmasi Bakteriologis (TCM / BTA Positif)","titleEn":"Tuberculosis of lung, confirmed by sputum microscopy","cat":"respirasi","catName":"Respirasi / Paru","isFktp":true,"synonyms":["tb","tbc","tb paru","flek paru","batuk 2 minggu","batuk darah","bta positif","tcm tb"]},{"code":"A16.2","nameId":"Tuberkulosis (TB) Paru Terkonfirmasi Klinis (Ro Khas / Kontak)","titleEn":"Tuberculosis of lung, clinical","cat":"respirasi","catName":"Respirasi / Paru","isFktp":true,"synonyms":["tb klinis","tbc klinis","flek paru rontgen"]},{"code":"A27.9","nameId":"Leptospirosis (Infeksi Kencing Tikus / Nyeri Betis)","titleEn":"Leptospirosis, unspecified","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["leptospirosis","kencing tikus","demam banjir","nyeri betis"]},{"code":"A30.9","nameId":"Lepra / Kusta (Morbus Hansen / MH)","titleEn":"Leprosy, unspecified","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["kusta","lepra","morbus hansen","bercak mati rasa"]},{"code":"A35","nameId":"Tetanus (Trismus, Kaku Kuduk, Risus Sardonicus)","titleEn":"Other tetanus","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["tetanus","kaku mulut","trismus","kejang tetanus"]},{"code":"A36.9","nameId":"Diftria (Membran Putih Kelabu Saluran Napas)","titleEn":"Diphtheria, unspecified","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["diftria","dipteria","diphtheria","bullneck"]},{"code":"A37.9","nameId":"Pertusis / Batuk Rejan (Whooping Cough / Batuk 100 Hari)","titleEn":"Whooping cough, unspecified","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["pertusis","batuk rejan","whooping cough","batuk 100 hari"]},{"code":"A80.9","nameId":"Poliomielitis Akut (Lumpuh Layu Akut)","titleEn":"Acute poliomyelitis, unspecified","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["polio","poliomielitis","lumpuh layu"]},{"code":"A82.9","nameId":"Rabies (Hidrofobia / Penyakit Anjing Gila)","titleEn":"Rabies, unspecified","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["rabies","hidrofobia","anjing gila"]},{"code":"A90","nameId":"Demam Dengue / DD (Dengue Fever)","titleEn":"Dengue fever","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["dd","dengue fever","demam dengue","bintik merah"]},{"code":"A91","nameId":"Demam Berdarah Dengue (DBD / DHF)","titleEn":"Dengue haemorrhagic fever","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["dbd","dhf","demam berdarah","trombosit turun"]},{"code":"B01.9","nameId":"Varisella / Cacar Air (Chickenpox)","titleEn":"Varicella without complication","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["varisella","cacar air","chickenpox","cacar bintik air"]},{"code":"B02.9","nameId":"Herpes Zoster / Dompo / Cacar Ular","titleEn":"Zoster without complication","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["herpes zoster","dompo","cacar ular","zoster"]},{"code":"B00.9","nameId":"Herpes Simpleks (Herpes Labialis / Genitalis)","titleEn":"Herpesviral infection, unspecified","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["herpes simpleks","herpes bibir","herpes genital"]},{"code":"B05.9","nameId":"Morbili / Campak / Rubeola","titleEn":"Measles without complication","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["morbili","campak","rubeola","bintik merah campak"]},{"code":"B07","nameId":"Veruka Vulgaris / Kutil Kulit (Viral Warts)","titleEn":"Viral warts","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["veruka","kutil","warts"]},{"code":"B08.1","nameId":"Moluskum Kontagiosum (Kutil Kubah Berkawah)","titleEn":"Molluscum contagiosum","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["moluskum","molluscum","kutil kawah"]},{"code":"B15.9","nameId":"Hepatitis A Akut (Hepatitis Fekal-Oral / Mata Kuning)","titleEn":"Hepatitis A without hepatic coma","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["hepatitis a","hepa","sakit kuning"]},{"code":"B16.9","nameId":"Hepatitis B Akut (Infeksi Virus Hepatitis B)","titleEn":"Acute hepatitis B without delta-agent","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["hepatitis b","hbsag positif"]},{"code":"B20","nameId":"HIV / AIDS (Human Immunodeficiency Virus)","titleEn":"Human immunodeficiency virus [HIV] disease","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["hiv","aids","vct","pdp","cd4"]},{"code":"B26.9","nameId":"Parotitis Epidemika / Gondongan (Mumps)","titleEn":"Mumps without complication","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["gondongan","parotitis","mumps","bengkak pipi"]},{"code":"B35.0","nameId":"Tinea Kapitis / Jamur Kepala (Scalp Ringworm)","titleEn":"Tinea capitis and tinea barbae","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["tinea kapitis","jamur kepala","kerion"]},{"code":"B35.1","nameId":"Tinea Unguium / Onychomycosis (Jamur Kuku)","titleEn":"Tinea unguium","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["jamur kuku","tinea unguium"]},{"code":"B35.3","nameId":"Tinea Pedis / Kutu Air / Jamur Kaki (Athlete Foot)","titleEn":"Tinea pedis","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["kutu air","tinea pedis","jamur kaki"]},{"code":"B35.4","nameId":"Tinea Korporis / Kadas / Kurap Badan","titleEn":"Tinea corporis","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["kadas","kurap","tinea korporis","jamur badan"]},{"code":"B35.6","nameId":"Tinea Kruris / Jamur Selangkangan (Jock Itch)","titleEn":"Tinea cruris","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["jamur selangkangan","tinea cruris","gatal lipat paha"]},{"code":"B36.0","nameId":"Pitiriasis Versikolor / Panu (Malassezia Furfur)","titleEn":"Pityriasis versicolor","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["panu","pityriasis versicolor","tinea versicolor"]},{"code":"B37.0","nameId":"Kandidiasis Oral / Oral Thrush (Jamur Mulut Lidah Putih)","titleEn":"Candidal stomatitis","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["oral thrush","kandidiasis mulut","lidah putih jamur"]},{"code":"B37.2","nameId":"Kandidiasis Kutis (Jamur Lipatan Kulit / Intertrigo)","titleEn":"Candidiasis of skin and nail","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["kandidiasis kulit","intertrigo","jamur lipatan"]},{"code":"B37.3","nameId":"Kandidiasis Vulvovaginal (Keputihan Gatal Sperti Santan/Keju)","titleEn":"Candidiasis of vulva and vagina","cat":"obgyn","catName":"Obsgyn","isFktp":true,"synonyms":["kandidiasis vagina","keputihan gatal","keputihan keju"]},{"code":"B54","nameId":"Malaria Unspecified (Plasmodium / Demam Tropis Menggigil)","titleEn":"Unspecified malaria","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["malaria","menggigil","plasmodium"]},{"code":"B86","nameId":"Scabies / Kudis / Gatal Gudik Pesantren","titleEn":"Scabies","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["skabies","scabies","kudis","gudik","gatal malam"]},{"code":"B83.0","nameId":"Cutaneous Larva Migrans (Cacing Tambang Kulit)","titleEn":"Visceral larva migrans","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["cutaneous larva migrans","cacing kulit","creeping eruption"]},{"code":"B74.9","nameId":"Filariasis (Penyakit Kaki Gajah / Wuchereria Bancrofti)","titleEn":"Filariasis, unspecified","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["filariasis","kaki gajah","bengkak kaki filaria"]},{"code":"B76.9","nameId":"Ankylostomiasis / Infeksi Cacing Tambang","titleEn":"Hookworm disease, unspecified","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["cacing tambang","ankylostomiasis"]},{"code":"B77.9","nameId":"Askariasis / Infeksi Cacing Gelang (Ascaris Lumbricoides)","titleEn":"Ascariasis, unspecified","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["askariasis","cacing gelang","cacing perut"]},{"code":"B78.9","nameId":"Oxyuriasis / Infeksi Cacing Krembi (Enterobius Vermicularis)","titleEn":"Strongyloidiasis, unspecified","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["cacing krembi","oxyuriasis","gatal anus malam"]},{"code":"B68.9","nameId":"Taeniasis / Infeksi Cacing Pita (Taenia Saginata / Solium)","titleEn":"Taeniasis, unspecified","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["cacing pita","taeniasis"]},{"code":"J00","nameId":"Rhinitis Akut / Common Cold (Flu / Pilek Akut)","titleEn":"Acute nasopharyngitis [common cold]","cat":"respirasi","catName":"Respirasi / Paru","isFktp":true,"synonyms":["rhinitis akut","flu","pilek"]},{"code":"J01.9","nameId":"Sinusitis Akut (Radang Rongga Sinus Wajah)","titleEn":"Acute sinusitis, unspecified","cat":"respirasi","catName":"Respirasi / Paru","isFktp":true,"synonyms":["sinusitis","sinus","ingus bau"]},{"code":"J04.0","nameId":"Laringitis Akut (Suara Serak / Hilang Suara)","titleEn":"Acute laryngitis","cat":"respirasi","catName":"Respirasi / Paru","isFktp":true,"synonyms":["laringitis","suara serak","hilang suara"]},{"code":"J21.9","nameId":"Bronkiolitis Akut (Sesak Mengi pada Bayi / RSV)","titleEn":"Acute bronchiolitis, unspecified","cat":"respirasi","catName":"Respirasi / Paru","isFktp":true,"synonyms":["bronkiolitis","sesak bayi","rsv"]},{"code":"J30.0","nameId":"Rhinitis Vasomotor (Hidung Buntu Perubahan Suhu)","titleEn":"Vasomotor rhinitis","cat":"respirasi","catName":"Respirasi / Paru","isFktp":true,"synonyms":["rhinitis vasomotor","hidung tersumbat suhu"]},{"code":"J30.4","nameId":"Rhinitis Alergi (Bersin Pagi Hari / Hidung Meler)","titleEn":"Allergic rhinitis, unspecified","cat":"respirasi","catName":"Respirasi / Paru","isFktp":true,"synonyms":["rhinitis alergi","bersin pagi","hidung gatal"]},{"code":"J40","nameId":"Bronkitis Akut (Batuk Berdahak Radang Saluran Napas)","titleEn":"Bronchitis, unspecified","cat":"respirasi","catName":"Respirasi / Paru","isFktp":true,"synonyms":["bronkitis","batuk dahak"]},{"code":"J44.9","nameId":"PPOK (Penyakit Paru Obstruktif Kronis) / COPD / Emfisema","titleEn":"Chronic obstructive pulmonary disease","cat":"respirasi","catName":"Respirasi / Paru","isFktp":true,"synonyms":["ppok","copd","sesak perokok","emfisema"]},{"code":"J45.9","nameId":"Asma Bronkial (Serangan Sesak Mengi / Wheezing)","titleEn":"Asthma, unspecified","cat":"respirasi","catName":"Respirasi / Paru","isFktp":true,"synonyms":["asma","mengi","ngik ngik"]},{"code":"J18.9","nameId":"Pneumonia / Paru-Paru Basah","titleEn":"Pneumonia, unspecified","cat":"respirasi","catName":"Respirasi / Paru","isFktp":true,"synonyms":["pneumonia","paru basah","infeksi paru"]},{"code":"R04.0","nameId":"Epistaksis (Mimisan / Perdarahan Hidung)","titleEn":"Epistaxis","cat":"respirasi","catName":"Respirasi / Paru","isFktp":true,"synonyms":["epistaksis","mimisan","darah hidung"]},{"code":"I10","nameId":"Hipertensi Essensial / Darah Tinggi Primer","titleEn":"Essential (primary) hypertension","cat":"kardio","catName":"Kardiovaskular","isFktp":true,"synonyms":["tensi","darah tinggi","hipertensi","ht"]},{"code":"O13","nameId":"Hipertensi Gestasional (Darah Tinggi Kehamilan)","titleEn":"Gestational [pregnancy-induced] hypertension","cat":"obgyn","catName":"Obsgyn","isFktp":true,"synonyms":["hipertensi hamil","tensi tinggi hamil"]},{"code":"R00.0","nameId":"Takikardia Unspecified (Nadi Cepat >100 x/mnt)","titleEn":"Tachycardia, unspecified","cat":"kardio","catName":"Kardiovaskular","isFktp":true,"synonyms":["takikardi","nadi cepat"]},{"code":"R00.1","nameId":"Bradikardia Unspecified (Nadi Lambat <60 x/mnt)","titleEn":"Bradycardia, unspecified","cat":"kardio","catName":"Kardiovaskular","isFktp":true,"synonyms":["bradikardi","nadi lambat"]},{"code":"R00.2","nameId":"Palpitasi / Berdebar-Debar","titleEn":"Palpitations","cat":"kardio","catName":"Kardiovaskular","isFktp":true,"synonyms":["berdebar","palpitasi","deg-degan"]},{"code":"I84.9","nameId":"Hemoroid / Wasir / Ambeien","titleEn":"Haemorrhoids, unspecified","cat":"kardio","catName":"Kardiovaskular","isFktp":true,"synonyms":["wasir","ambeien","hemoroid"]},{"code":"K29.7","nameId":"Gastritis / Sakit Maag / Radang Lambung","titleEn":"Gastritis, unspecified","cat":"gastro","catName":"Gastrointestinal","isFktp":true,"synonyms":["maag","gastritis","nyeri ulu hati"]},{"code":"K30","nameId":"Dispepsia Fungsional (Kembung, Begah, Mual)","titleEn":"Functional dyspepsia","cat":"gastro","catName":"Gastrointestinal","isFktp":true,"synonyms":["dispepsia","kembung","begah"]},{"code":"K25.9","nameId":"Ulkus Gaster / Tukak Lambung","titleEn":"Gastric ulcer, unspecified","cat":"gastro","catName":"Gastrointestinal","isFktp":true,"synonyms":["ulkus gaster","tukak lambung"]},{"code":"K12.1","nameId":"Stomatitis Aphtosa / Sariawan","titleEn":"Other forms of stomatitis","cat":"gastro","catName":"Gastrointestinal","isFktp":true,"synonyms":["sariawan","stomatitis","sariawan mulut"]},{"code":"K02.9","nameId":"Caries Gigi / Gigi Berlubang","titleEn":"Dental caries, unspecified","cat":"gastro","catName":"Gastrointestinal","isFktp":true,"synonyms":["caries","gigi berlubang","sakit gigi"]},{"code":"K05.1","nameId":"Gingivitis / Radang Gusi","titleEn":"Chronic gingivitis","cat":"gastro","catName":"Gastrointestinal","isFktp":true,"synonyms":["gingivitis","radang gusi","gusi bengkak"]},{"code":"K05.3","nameId":"Periodontitis (Radang Jaringan Penyangga Gigi)","titleEn":"Chronic periodontitis","cat":"gastro","catName":"Gastrointestinal","isFktp":true,"synonyms":["periodontitis","gigi goyang"]},{"code":"K59.0","nameId":"Konstipasi / Sembelit (Susah BAB)","titleEn":"Constipation","cat":"gastro","catName":"Gastrointestinal","isFktp":true,"synonyms":["konstipasi","sembelit","susah bab"]},{"code":"K65.9","nameId":"Peritonitis (Radang Rongga Perut Akut)","titleEn":"Peritonitis, unspecified","cat":"gastro","catName":"Gastrointestinal","isFktp":true,"synonyms":["peritonitis","perut papan"]},{"code":"E11.9","nameId":"Diabetes Melitus Tipe 2 Tanpa Komplikasi (Kencing Manis)","titleEn":"Non-insulin-dependent diabetes mellitus","cat":"endokrin","catName":"Endokrin & Metabolik","isFktp":true,"synonyms":["gula","dm","kencing manis","hiperglikemia"]},{"code":"E16.2","nameId":"Hipoglikemia (Gula Darah Drop / Pingsan DM)","titleEn":"Hypoglycaemia, unspecified","cat":"endokrin","catName":"Endokrin & Metabolik","isFktp":true,"synonyms":["hipoglikemia","gula drop","gula rendah"]},{"code":"E78.5","nameId":"Dislipidemia / Kolesterol Tinggi","titleEn":"Hyperlipidemia, unspecified","cat":"endokrin","catName":"Endokrin & Metabolik","isFktp":true,"synonyms":["kolesterol","dislipidemia","lemak darah"]},{"code":"E66.9","nameId":"Obesitas / Kegemukan","titleEn":"Obesity, unspecified","cat":"endokrin","catName":"Endokrin & Metabolik","isFktp":true,"synonyms":["obesitas","kegemukan"]},{"code":"M10.9","nameId":"Gouty Arthritis / Asam Urat Tinggi","titleEn":"Gout, unspecified","cat":"endokrin","catName":"Endokrin & Metabolik","isFktp":true,"synonyms":["asam urat","gout","bengkak jempol"]},{"code":"E46","nameId":"Malnutrisi Energi Protein (MEP) / Stunting / Gizi Buruk","titleEn":"Unspecified protein-energy malnutrition","cat":"endokrin","catName":"Endokrin & Metabolik","isFktp":true,"synonyms":["stunting","gizi buruk","mep","kwashiorkor"]},{"code":"E50.9","nameId":"Defisiensi Vitamin A (Rabun Senja / Xeroftalmia)","titleEn":"Vitamin A deficiency, unspecified","cat":"endokrin","catName":"Endokrin & Metabolik","isFktp":true,"synonyms":["defisiensi vitamin a","rabun senja","xeroftalmia"]},{"code":"G44.2","nameId":"Tension-Type Headache (TTH) / Nyeri Kepala Tegang","titleEn":"Tension-type headache","cat":"saraf","catName":"Saraf & Psikiatri","isFktp":true,"synonyms":["tth","sakit kepala","pusing cengkram"]},{"code":"G43.9","nameId":"Migrain / Nyeri Kepala Sebelah Berdenyut","titleEn":"Migraine, unspecified","cat":"saraf","catName":"Saraf & Psikiatri","isFktp":true,"synonyms":["migrain","sakit kepala sebelah"]},{"code":"R42","nameId":"Vertigo / Pusing Tujuh Keliling / Melayang","titleEn":"Dizziness and giddiness","cat":"saraf","catName":"Saraf & Psikiatri","isFktp":true,"synonyms":["vertigo","pusing","muter","bppv"]},{"code":"H81.1","nameId":"BPPV (Benign Paroxysmal Positional Vertigo)","titleEn":"Benign paroxysmal vertigo","cat":"saraf","catName":"Saraf & Psikiatri","isFktp":true,"synonyms":["bppv","vertigo posisi"]},{"code":"G51.0","nameId":"Bell's Palsy (Lumpuh Wajah Sebelah / Perot)","titleEn":"Bell palsy","cat":"saraf","catName":"Saraf & Psikiatri","isFktp":true,"synonyms":["bell palsy","wajah perot","lumpuh wajah"]},{"code":"G56.0","nameId":"Carpal Tunnel Syndrome / CTS (Kesemutan Pergelangan Tangan)","titleEn":"Carpal tunnel syndrome","cat":"saraf","catName":"Saraf & Psikiatri","isFktp":true,"synonyms":["cts","carpal tunnel","kesemutan tangan"]},{"code":"F51.0","nameId":"Insomnia Non-organik (Gangguan Sulit Tidur)","titleEn":"Nonorganic insomnia","cat":"saraf","catName":"Saraf & Psikiatri","isFktp":true,"synonyms":["insomnia","sulit tidur"]},{"code":"F41.1","nameId":"Gangguan Anksietas Menyeluruh (Cemas Menyeluruh)","titleEn":"Generalized anxiety disorder","cat":"saraf","catName":"Saraf & Psikiatri","isFktp":true,"synonyms":["anxiety","cemas","anksietas"]},{"code":"F41.0","nameId":"Gangguan Panik (Panic Attack / Serangan Panik)","titleEn":"Panic disorder","cat":"saraf","catName":"Saraf & Psikiatri","isFktp":true,"synonyms":["panik","panic attack"]},{"code":"F03","nameId":"Demensia (Pikun Usia Lanjut)","titleEn":"Unspecified dementia","cat":"saraf","catName":"Saraf & Psikiatri","isFktp":true,"synonyms":["demensia","pikun"]},{"code":"F20.9","nameId":"Skizofrenia (Gangguan Jiwa Halusinasi / Waham)","titleEn":"Schizophrenia, unspecified","cat":"saraf","catName":"Saraf & Psikiatri","isFktp":true,"synonyms":["skizofrenia","gangguan jiwa","odgj"]},{"code":"L20.9","nameId":"Dermatitis Atopi (Eksem Susu / Gatal Atopi)","titleEn":"Atopic dermatitis, unspecified","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["dermatitis atopi","eksem susu","gatal atopi"]},{"code":"L23.9","nameId":"Dermatitis Kontak Alergi (DKA / Gatal Kena Perhiasan/Karet)","titleEn":"Allergic contact dermatitis","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["dka","dermatitis kontak alergi","gatal kena jam"]},{"code":"L24.9","nameId":"Dermatitis Kontak Iritan (DKI / Gatal Kena Sabun/Detergen)","titleEn":"Irritant contact dermatitis","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["dki","dermatitis kontak iritan","gatal detergen"]},{"code":"L21.9","nameId":"Dermatitis Seboroik (Ketombe Parah / Ketombe Berminyak)","titleEn":"Seborrhoeic dermatitis, unspecified","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["dermatitis seboroik","ketombe","cradle cap"]},{"code":"L30.0","nameId":"Dermatitis Nummularis (Eksem Uang Logam / Lesi Koin)","titleEn":"Nummular dermatitis","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["dermatitis numularis","eksem koin"]},{"code":"L22","nameId":"Ruam Popok / Napkin Dermatitis (Gatal Popok Bayi)","titleEn":"Diaper dermatitis","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["ruam popok","napkin dermatitis","gatal popok"]},{"code":"L42","nameId":"Pitiriasis Rosea (Bercak Merah Pohon Cemara / Herald Patch)","titleEn":"Pityriasis rosea","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["pitiriasis rosea","herald patch"]},{"code":"L40.0","nameId":"Psoriasis Vulgaris (Kulit Bersisik Perak Tebal)","titleEn":"Psoriasis vulgaris","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["psoriasis","sisik perak"]},{"code":"L50.9","nameId":"Urtikaria / Biduran / Kaligata","titleEn":"Urticaria, unspecified","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["urtikaria","biduran","kaligata","gatal bentol"]},{"code":"T78.3","nameId":"Angioedema (Bengkak Bibir / Kelopak Mata Alergi)","titleEn":"Angioneurotic oedema","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["angioedema","bibir bengkak alergi"]},{"code":"L01.0","nameId":"Impetigo Krustosa / Koreng Bernanah Pada Anak","titleEn":"Impetigo","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["impetigo","koreng anak","koreng bernanah"]},{"code":"L01.8","nameId":"Folikulitis (Infeksi Folikel Rambut / Bisul Kecil)","titleEn":"Other impetigo","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["folikulitis","bisul rambut"]},{"code":"L02.9","nameId":"Abses Kulit / Bisul / Furunkel / Karbunkel","titleEn":"Cutaneous abscess, furuncle and carbuncle","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["bisul","abses","furunkel","karbunkel"]},{"code":"L03.9","nameId":"Selulitis / Erisipelas (Infeksi Bakteri Kulit Merah Bengkak)","titleEn":"Cellulitis, unspecified","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["selulitis","erisipelas","kulit merah bengkak"]},{"code":"L73.2","nameId":"Hidradenitis Suppurativa (Bisul Ketiak / Lipat Paha Berulang)","titleEn":"Hidradenitis suppurativa","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["hidradenitis","bisul ketiak"]},{"code":"L70.0","nameId":"Acne Vulgaris / Jerawat","titleEn":"Acne vulgaris","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["jerawat","acne","acne vulgaris"]},{"code":"L74.3","nameId":"Miliaria / Biang Keringat / Keringat Buntet","titleEn":"Miliaria, unspecified","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["miliaria","biang keringat","keringat buntet"]},{"code":"L89","nameId":"Ulkus Dekubitus (Luka Lecet Tirah Baring / Luka Berbaring)","titleEn":"Decubitus ulcer","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["dekubitus","luka tirah baring"]},{"code":"L63.9","nameId":"Alopecia Areata (Kebotakan Pitak Berbentuk Koin)","titleEn":"Alopecia areata, unspecified","cat":"kulit","catName":"Dermatologi","isFktp":true,"synonyms":["alopecia","pitak","rambut rontok pitak"]},{"code":"H10.0","nameId":"Konjungtivitis Bakteri (Mata Merah Belekan Beleks)","titleEn":"Mucopurulent conjunctivitis","cat":"matatht","catName":"Mata & THT","isFktp":true,"synonyms":["konjungtivitis","mata belekan","mata merah"]},{"code":"H10.1","nameId":"Konjungtivitis Alergi / Virus (Mata Merah Gatal Airan)","titleEn":"Acute atopic conjunctivitis","cat":"matatht","catName":"Mata & THT","isFktp":true,"synonyms":["konjungtivitis alergi","mata gatal airan"]},{"code":"H00.0","nameId":"Hordeolum / Bintitan / Timbilen Kelopak Mata","titleEn":"Hordeolum and other deep inflammation of eyelid","cat":"matatht","catName":"Mata & THT","isFktp":true,"synonyms":["hordeolum","bintitan","timbilen"]},{"code":"H00.1","nameId":"Kalazion (Benjolan Jinak Kelopak Mata Tanpa Nyeri)","titleEn":"Chalazion","cat":"matatht","catName":"Mata & THT","isFktp":true,"synonyms":["kalazion","benjolan kelopak mata"]},{"code":"H01.0","nameId":"Blefaritis (Radang Tepi Kelopak Mata)","titleEn":"Blepharitis","cat":"matatht","catName":"Mata & THT","isFktp":true,"synonyms":["blefaritis","radang kelopak mata"]},{"code":"H02.0","nameId":"Trikiasis (Bulu Mata Ntusuk Bola Mata)","titleEn":"Entropion and trichiasis of eyelid","cat":"matatht","catName":"Mata & THT","isFktp":true,"synonyms":["trikiasis","bulu mata tusuk"]},{"code":"H11.0","nameId":"Pterigium (Selaput Daging Segitiga Mata)","titleEn":"Pterygium","cat":"matatht","catName":"Mata & THT","isFktp":true,"synonyms":["pterigium","selaput mata"]},{"code":"S05.0","nameId":"Erosi Kornea / Vulnus Kornea (Lecet Kornea Mata)","titleEn":"Injury of conjunctiva and corneal abrasion","cat":"matatht","catName":"Mata & THT","isFktp":true,"synonyms":["erosi kornea","lecet mata"]},{"code":"S05.1","nameId":"Hifema Traumatika (Darah di Bilik Mata Depan)","titleEn":"Contusion of eyeball and orbital tissues","cat":"matatht","catName":"Mata & THT","isFktp":true,"synonyms":["hifema","darah di mata"]},{"code":"H26.9","nameId":"Katarak (Lensa Mata Keruh Usia Lanjut)","titleEn":"Cataract, unspecified","cat":"matatht","catName":"Mata & THT","isFktp":true,"synonyms":["katarak","mata keruh"]},{"code":"H40.2","nameId":"Glaukoma Akut (Mera Mata Nyeri Hebat & Buram Mendadak)","titleEn":"Primary angle-closure glaucoma","cat":"matatht","catName":"Mata & THT","isFktp":true,"synonyms":["glaukoma","tekanan mata tinggi"]},{"code":"H52.1","nameId":"Miopia / Mata Minus (Rabun Jauh)","titleEn":"Myopia","cat":"matatht","catName":"Mata & THT","isFktp":true,"synonyms":["miopia","mata minus","rabun jauh"]},{"code":"H52.4","nameId":"Presbiopia / Mata Tua (Mata Plus Kacamata Baca)","titleEn":"Presbyopia","cat":"matatht","catName":"Mata & THT","isFktp":true,"synonyms":["presbiopia","mata tua","kacamata baca"]},{"code":"H52.2","nameId":"Astigmatisme / Mata Silinder","titleEn":"Astigmatism","cat":"matatht","catName":"Mata & THT","isFktp":true,"synonyms":["astigmatisme","mata silinder"]},{"code":"T15.9","nameId":"Benda Asing Mata (Corpus Alienum Mata / Kena Gram/Debu)","titleEn":"Foreign body on external eye, part unspecified","cat":"matatht","catName":"Mata & THT","isFktp":true,"synonyms":["benda asing mata","gram mata","kelilipan"]},{"code":"H60.9","nameId":"Otitis Eksterna (Radang Liang Telinga Luar / Nyeri Tarik Daun Telinga)","titleEn":"Otitis externa, unspecified","cat":"matatht","catName":"Mata & THT","isFktp":true,"synonyms":["otitis eksterna","sakit telinga luar"]},{"code":"H66.9","nameId":"Otitis Media Akut / OMA (Radang Telinga Tengah Congek Akut)","titleEn":"Otitis media, unspecified","cat":"matatht","catName":"Mata & THT","isFktp":true,"synonyms":["oma","otitis media","congek akut"]},{"code":"H65.9","nameId":"Otitis Media Efusi / OME (Telinga Rasa Pengap / Kebendung Fluid)","titleEn":"Nonsuppurative otitis media, unspecified","cat":"matatht","catName":"Mata & THT","isFktp":true,"synonyms":["ome","otitis media efusi"]},{"code":"H66.3","nameId":"Otitis Media Supuratif Kronis / OMSK (Congek Menahun / Gendang Telinga Pecah)","titleEn":"Other chronic suppurative otitis media","cat":"matatht","catName":"Mata & THT","isFktp":true,"synonyms":["omsk","congek menahun","telinga bernanah"]},{"code":"H61.2","nameId":"Serumen Prop (Kotoran Telinga Menyumbat / Telinga Tuli Mendadak)","titleEn":"Impacted cerumen","cat":"matatht","catName":"Mata & THT","isFktp":true,"synonyms":["serumen","kotoran telinga","telinga tersumbat"]},{"code":"T16","nameId":"Benda Asing Telinga (Corpus Alienum Telinga / Kemasukan Serangga/Biji)","titleEn":"Foreign body in ear","cat":"matatht","catName":"Mata & THT","isFktp":true,"synonyms":["benda asing telinga","kemasukan serangga telinga"]},{"code":"M54.5","nameId":"Low Back Pain (LBP) / Nyeri Punggung Bawah / Kecetit","titleEn":"Low back pain","cat":"muskulo","catName":"Muskuloskeletal","isFktp":true,"synonyms":["lbp","low back pain","nyeri pinggang","kecetit"]},{"code":"M79.1","nameId":"Myalgia / Nyeri Otot / Pegal Linu","titleEn":"Myalgia","cat":"muskulo","catName":"Muskuloskeletal","isFktp":true,"synonyms":["myalgia","nyeri otot","pegal linu"]},{"code":"M17.9","nameId":"Osteoarthritis (OA) Lutut / Pengapuran Sendi Lutut","titleEn":"Osteoarthritis of knee, unspecified","cat":"muskulo","catName":"Muskuloskeletal","isFktp":true,"synonyms":["oa","osteoarthritis","pengapuran lutut"]},{"code":"M06.9","nameId":"Rheumatoid Arthritis / RA (Radang Sendi Autoimun Jari)","titleEn":"Rheumatoid arthritis, unspecified","cat":"muskulo","catName":"Muskuloskeletal","isFktp":true,"synonyms":["ra","rheumatoid arthritis"]},{"code":"M75.0","nameId":"Frozen Shoulder (Bahu Kaku Nyeri / Capsulitis)","titleEn":"Adhesive capsulitis of shoulder","cat":"muskulo","catName":"Muskuloskeletal","isFktp":true,"synonyms":["frozen shoulder","bahu kaku"]},{"code":"N39.0","nameId":"Infeksi Saluran Kemih (ISK) / Anyang-Anyangan","titleEn":"Urinary tract infection, site unspecified","cat":"urologi","catName":"Urologi & Nefrologi","isFktp":true,"synonyms":["isk","anyang-anyangan","kencing perih"]},{"code":"N47","nameId":"Fimosis & Parafimosis (Kulit Penis Terjepit / Kulit Kuncup Khitan)","titleEn":"Hypertrophy of prepuce, phimosis and paraphimosis","cat":"urologi","catName":"Urologi & Nefrologi","isFktp":true,"synonyms":["fimosis","parafimosis","penis kuncup"]},{"code":"N45.9","nameId":"Orchitis / Epididymitis (Buah Zakar Bengkak Nyeri)","titleEn":"Orchitis, epididymitis and epididymo-orchitis","cat":"urologi","catName":"Urologi & Nefrologi","isFktp":true,"synonyms":["orchitis","epididymitis","buah zakar bengkak"]},{"code":"Z34.9","nameId":"ANC Normal / Pemeriksaan Kehamilan Normal","titleEn":"Supervision of normal pregnancy, unspecified","cat":"obgyn","catName":"Obsgyn","isFktp":true,"synonyms":["anc","periksa hamil","pemeriksaan kehamilan"]},{"code":"O20.0","nameId":"Abortus Imminens (Ancaman Keguguran / Flek Hamil Muda)","titleEn":"Threatened abortion","cat":"obgyn","catName":"Obsgyn","isFktp":true,"synonyms":["abortus imminens","ancaman keguguran","flek hamil"]},{"code":"O20.9","nameId":"Abortus Inkomplit (Keguguran Tidak Lengkap)","titleEn":"Hemorrhage in early pregnancy, unspecified","cat":"obgyn","catName":"Obsgyn","isFktp":true,"synonyms":["abortus inkomplit","keguguran"]},{"code":"O99.0","nameId":"Anemia Kehamilan (Hb Rendah Ibu Hamil)","titleEn":"Anemia complicating pregnancy","cat":"obgyn","catName":"Obsgyn","isFktp":true,"synonyms":["anemia hamil","hb rendah hamil"]},{"code":"O21.0","nameId":"Hiperemesis Gravidarum (Mual Muntah Hebat Kehamilan)","titleEn":"Mild hyperemesis gravidarum","cat":"obgyn","catName":"Obsgyn","isFktp":true,"synonyms":["hiperemesis","muntah hamil"]},{"code":"O14.0","nameId":"Preeklampsia Ringan / Sedang (PER / Tensi Tinggi + Proteinuria)","titleEn":"Mild to moderate pre-eclampsia","cat":"obgyn","catName":"Obsgyn","isFktp":true,"synonyms":["preeklampsia","per","tensi hamil proteinuria"]},{"code":"O70.0","nameId":"Ruptur Perineum Grade 1-2 (Robekan Jalan Lahir)","titleEn":"First degree perineal laceration during delivery","cat":"obgyn","catName":"Obsgyn","isFktp":true,"synonyms":["ruptur perineum","robekan jalan lahir"]},{"code":"N61","nameId":"Mastitis / Abses Payudara Ibu Menyusui","titleEn":"Inflammatory disorders of breast","cat":"obgyn","catName":"Obsgyn","isFktp":true,"synonyms":["mastitis","payudara bengkak menyusui"]},{"code":"N89.8","nameId":"Fluor Albus / Keputihan Non-Spesifik","titleEn":"Other specified noninflammatory disorders of vagina","cat":"obgyn","catName":"Obsgyn","isFktp":true,"synonyms":["fluor albus","keputihan"]},{"code":"N76.0","nameId":"Vulvovaginitis (Radang & Gatal Area Miss V)","titleEn":"Acute vaginitis","cat":"obgyn","catName":"Obsgyn","isFktp":true,"synonyms":["vulvovaginitis","radang vagina"]},{"code":"N94.6","nameId":"Dysmenorrhea / Nyeri Haid Mulas Hebat","titleEn":"Dysmenorrhea, unspecified","cat":"obgyn","catName":"Obsgyn","isFktp":true,"synonyms":["dysmenorrhea","nyeri haid","dismenore"]},{"code":"R56.0","nameId":"Kejang Demam Anak (Step Demam Akut)","titleEn":"Febrile convulsions","cat":"anak","catName":"Anak & Pediatri","isFktp":true,"synonyms":["kejang demam","step","kejang anak"]},{"code":"P07.1","nameId":"BBLR (Bayi Berat Lahir Rendah < 2500 gram)","titleEn":"Other low birth weight","cat":"anak","catName":"Anak & Pediatri","isFktp":true,"synonyms":["bblr","bayi kecil"]},{"code":"P21.9","nameId":"Asfiksia Neonatorum (Bayi Baru Lahir Tidak Langsung Menangis)","titleEn":"Birth asphyxia, unspecified","cat":"anak","catName":"Anak & Pediatri","isFktp":true,"synonyms":["asfiksia","bayi tidak menangis"]},{"code":"P59.9","nameId":"Ikterus Neonatorum (Bayi Kuning Baru Lahir)","titleEn":"Neonatal jaundice, unspecified","cat":"anak","catName":"Anak & Pediatri","isFktp":true,"synonyms":["ikterus","bayi kuning"]},{"code":"A04.9","nameId":"Infeksi Bakteri Usus Unspecified","titleEn":"Bacterial intestinal infection","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["diare bakteri","infeksi usus","bakteri gastro"],"suggestions":[{"code":"A09","label":"GEA"}],"clinicalPearl":"Diare akut dengan lender/darah ringan.","rujukanInfo":"Tuntas FKTP.","rx":"Kotrimoksazol / Ciprofloxacin.","lab":"Feses Rutin"},{"code":"A05.9","nameId":"Keracunan Makanan Bakteri (Bacterial Food Poisoning)","titleEn":"Bacterial food poisoning","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["intoksikasi bakteri","keracunan makanan"],"suggestions":[{"code":"T65.9","label":"Keracunan Makanan"}],"clinicalPearl":"Mual muntah diare serentak setelah makan.","rujukanInfo":"Tuntas FKTP.","rx":"Rehidrasi oral, Antiemetik.","lab":"Feses Lengkap"},{"code":"A08.4","nameId":"Infeksi Virus Usus / Diare Rotavirus","titleEn":"Viral intestinal infection","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["diare rotavirus","diare virus anak"],"suggestions":[{"code":"A09","label":"GEA Anak"}],"clinicalPearl":"Diare cair melimpah pada bayi/anak.","rujukanInfo":"Tuntas FKTP.","rx":"Zink 20mg 10hr, Oralit.","lab":"Feses Rutin"},{"code":"A18.2","nameId":"Tuberkulosis Limfadenitis (TB Kelenjar Leher)","titleEn":"Tuberculous peripheral lymphadenopathy","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["tb kelenjar","tbc leher","scrofuloderma"],"suggestions":[{"code":"A15.0","label":"TB Paru"}],"clinicalPearl":"Pembesaran kelenjar getah bening leher kenyal tak nyeri.","rujukanInfo":"OAT 6 Bulan FKTP.","rx":"OAT Kategori 1.","lab":"FNAB Kelenjar, Rontgen Thorax"},{"code":"A18.0","nameId":"Tuberkulosis Tulang dan Sendi (Spondilitis TB / Pott Disease)","titleEn":"Tuberculosis of bones and joints","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":false,"synonyms":["tb tulang","spondilitis tb","pott disease"],"suggestions":[{"code":"A15.0","label":"TB Paru"}],"clinicalPearl":"Nyeri punggung kronis, gibbus pada vertebra.","rujukanInfo":"Rujuk Sp.OT / Sp.PD.","rx":"OAT Kategori 1 Extended (9-12 bln).","lab":"Foto Ro Vertebra, MRI"},{"code":"A50.9","nameId":"Sifilis Kongenital","titleEn":"Congenital syphilis","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":false,"synonyms":["sifilis bayi","sifilis kongenital"],"suggestions":[{"code":"A51.0","label":"Sifilis Primer"}],"clinicalPearl":"Sifilis pada bayi baru lahir dari ibu sifilis.","rujukanInfo":"Rujuk Spesialis Anak.","rx":"Penisilin G Benzatin.","lab":"VDRL / TPHA Ibu & Bayi"},{"code":"A51.0","nameId":"Sifilis Primer (Ulcus Durum / Chancre)","titleEn":"Primary genital syphilis","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":false,"synonyms":["sifilis","ulcus durum","raja singa","luka tidak nyeri genital"],"suggestions":[{"code":"A54.9","label":"Gonore"}],"clinicalPearl":"Luka soliter, dasar bersih, indurasi, TIDAK NYERI pada genital.","rujukanInfo":"Tuntas FKTP / Sp.KK.","rx":"Benzathine Penicillin G 2.4 juta IU IM tunggal.","lab":"VDRL / TPHA"},{"code":"A54.9","nameId":"Gonore / Kencing Nanah (Gonococcal Infection)","titleEn":"Gonococcal infection","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["gonore","go","kencing nanah","kencing sakit nanah"],"suggestions":[{"code":"NGU","label":"Uretritis Non-Gonore"},{"code":"A56.0","label":"Klamidia"}],"clinicalPearl":"Sekret uretra purulen kental kuning-hijau, kencing sangat nyeri panas.","rujukanInfo":"Tuntas FKTP.","rx":"Sefiksim 400mg oral dosis tunggal + Azitromisin 1 gram dosis tunggal.","lab":"Pewarnaan Gram Sekret Uretra (Diplokokus Gram Negatif Intraseluler)"},{"code":"A56.0","nameId":"Infeksi Klamidia Genital (Uretritis Non-Gonore / NGU)","titleEn":"Chlamydial infection of lower urogenital tract","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["klamidia","ngu","uretritis non gonore"],"suggestions":[{"code":"A54.9","label":"Gonore"}],"clinicalPearl":"Sekret uretra mukoid jernih/putih encer, kencing agak perih.","rujukanInfo":"Tuntas FKTP.","rx":"Azitromisin 1 gram dosis tunggal ATAU Doksisiklin 2x100mg (7 hari).","lab":"Pewarnaan Gram (Tidak ditemukan diplokokus gram negatif)"},{"code":"A59.0","nameId":"Trichomoniasis Genital (Keputihan Berbusa Hijau Bau)","titleEn":"Urogenital trichomoniasis","cat":"obgyn","catName":"Obsgyn","isFktp":true,"synonyms":["trichomoniasis","keputihan hijau berbusa","strawberry cervix"],"suggestions":[{"code":"B37.3","label":"Kandidiasis Vaginal"},{"code":"N76.0","label":"Vaginosis Bakterialis"}],"clinicalPearl":"Flour albus hijau kekuningan berbusa berbau amis, serviks gambaran strawberry.","rujukanInfo":"Tuntas FKTP. Obati pasangan!","rx":"Metronidazole 2 gram dosis tunggal ATAU 2x500mg (7 hari).","lab":"Sediaan Basah Wet Mount (Protozoa Berflagel Bergerak)"},{"code":"B06.9","nameId":"Rubella / Campak Jerman","titleEn":"Rubella without complication","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["rubella","campak jerman"],"suggestions":[{"code":"B05.9","label":"Morbili"}],"clinicalPearl":"Demam ringan, ruam merah halus, limfadenopati suboksipital.","rujukanInfo":"Tuntas FKTP. Hati-hati pada wanita hamil (TORCH).","rx":"Suportif, Parasetamol.","lab":"IgM Rubella"},{"code":"B18.2","nameId":"Hepatitis C Kronis","titleEn":"Chronic hepatitis C","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":false,"synonyms":["hepatitis c","hep c kronis"],"suggestions":[{"code":"B16.9","label":"Hepatitis B"}],"clinicalPearl":"Infeksi virus Hepatitis C > 6 bulan.","rujukanInfo":"Rujuk Sp.PD KGEH (Direct Acting Antivirals).","rx":"DAA (Sofosbuvir + Velpatasvir).","lab":"Anti-HCV, HCV-RNA"},{"code":"B27.9","nameId":"Mononukleosis Infeksiosa (Epstein-Barr Virus)","titleEn":"Infectious mononucleosis","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":false,"synonyms":["mononukleosis","ebv","kissing disease"],"suggestions":[{"code":"J03.9","label":"Tonsilitis"}],"clinicalPearl":"Trias: Demam, Faringitis eksudatif, Limfadenopati servikal posterior, Splenomegali.","rujukanInfo":"Tuntas FKTP / Sp.PD.","rx":"Suportif. HINDARI Amoxicillin (bisa picu ruam).","lab":"Apusan Darah (Limfosit Atipikal / Downey Cell), Monospot Test"},{"code":"B95.6","nameId":"Staphylococcus Aureus Infection","titleEn":"Staphylococcus aureus infection","cat":"infeksi","catName":"Infeksi & Tropis","isFktp":true,"synonyms":["stafilokokus","s aureus"],"suggestions":[{"code":"L02.9","label":"Abses Kulit"}],"clinicalPearl":"Infeksi piogenik kulit & jaringan lunak.","rujukanInfo":"Tuntas FKTP.","rx":"Cefadroxil 2x500mg / Cloxacillin.","lab":"Kultur Sputum / Pus"},{"code":"J02.0","nameId":"Faringitis Streptokokus (Streptococcal Pharyngitis)","titleEn":"Streptococcal pharyngitis","cat":"respirasi","catName":"Respirasi / Paru","isFktp":true,"synonyms":["faringitis streptokokus","radang tenggorokan kuman"],"suggestions":[{"code":"J03.9","label":"Tonsilitis"}],"clinicalPearl":"Demam tinggi, petekie palatum, eksudat faring, tanpa batuk.","rujukanInfo":"Tuntas FKTP.","rx":"Amoxicillin 3x500mg (10 hari).","lab":"Swab Faring Cultur"},{"code":"J06.0","nameId":"Laringofaringitis Akut","titleEn":"Acute laryngopharyngitis","cat":"respirasi","catName":"Respirasi / Paru","isFktp":true,"synonyms":["laringofaringitis"],"suggestions":[{"code":"J02.9","label":"Faringitis"}],"clinicalPearl":"Nyeri menelan disertai suara serak.","rujukanInfo":"Tuntas FKTP.","rx":"Simptomatik, Parasetamol.","lab":"Klinis Faring"},{"code":"J12.9","nameId":"Pneumonia Virus","titleEn":"Viral pneumonia","cat":"respirasi","catName":"Respirasi / Paru","isFktp":false,"synonyms":["pneumonia virus","pneumonia influenza"],"suggestions":[{"code":"J18.9","label":"Pneumonia Bakteri"}],"clinicalPearl":"Infiltrat paru bilateral interstitialis.","rujukanInfo":"Rujuk RS.","rx":"Oksigenasi, Antiviral.","lab":"Foto Thorax, Swab PCR"},{"code":"J22","nameId":"Infeksi Saluran Napas Bawah Akut Unspecified","titleEn":"Unspecified acute lower respiratory infection","cat":"respirasi","catName":"Respirasi / Paru","isFktp":true,"synonyms":["ispa bawah","radang paru akut"],"suggestions":[{"code":"J20.9","label":"Bronkitis"}],"clinicalPearl":"Batuk sesak napas tanpa kriteria spesifik pneumonia.","rujukanInfo":"Tuntas FKTP.","rx":"Ekspektoran, Salbutamol.","lab":"Foto Thorax"},{"code":"J31.0","nameId":"Rhinitis Kronis","titleEn":"Chronic rhinitis","cat":"respirasi","catName":"Respirasi / Paru","isFktp":true,"synonyms":["rhinitis kronis","pilek kronis"],"suggestions":[{"code":"J30.4","label":"Rhinitis Alergi"}],"clinicalPearl":"Hidung meler / tersumbat > 12 minggu.","rujukanInfo":"Tuntas FKTP / Sp.THT.","rx":"Kortikosteroid Nasal Spray.","lab":"Klinis Nasal"},{"code":"J32.9","nameId":"Sinusitis Kronis","titleEn":"Chronic sinusitis","cat":"respirasi","catName":"Respirasi / Paru","isFktp":false,"synonyms":["sinusitis kronis"],"suggestions":[{"code":"J01.9","label":"Sinusitis Akut"}],"clinicalPearl":"Nyeri sinus & ingus purulen > 12 minggu.","rujukanInfo":"Rujuk Sp.THT.","rx":"Nasal Wash NaCl, Steroid Nasal Spray.","lab":"CT Scan Sinus Paranasal"},{"code":"J33.9","nameId":"Polip Hidung (Nasal Polyp)","titleEn":"Nasal polyp, unspecified","cat":"respirasi","catName":"Respirasi / Paru","isFktp":false,"synonyms":["polip hidung","daging tumbuh hidung"],"suggestions":[{"code":"J30.4","label":"Rhinitis Alergi"}],"clinicalPearl":"Massa bening bertangkai di rongga hidung, hidung tersumbat total.","rujukanInfo":"Rujuk Sp.THT.","rx":"Steroid Nasal, Operasi Polipektomi.","lab":"Nasoendoskopi"},{"code":"J34.2","nameId":"Deviasi Septum Nasi","titleEn":"Deviated nasal septum","cat":"respirasi","catName":"Respirasi / Paru","isFktp":false,"synonyms":["deviasi septum","sektum hidung bengkok"],"suggestions":[{"code":"J33.9","label":"Polip Hidung"}],"clinicalPearl":"Sektrum hidung bengkok menyebabkan hidung tersumbat sebelah.","rujukanInfo":"Rujuk Sp.THT.","rx":"Operasi Septoplasti.","lab":"Nasoendoskopi"},{"code":"J35.0","nameId":"Tonsilitis Kronis","titleEn":"Chronic tonsillitis","cat":"respirasi","catName":"Respirasi / Paru","isFktp":false,"synonyms":["tonsilitis kronis","amandel kronis"],"suggestions":[{"code":"J03.9","label":"Tonsilitis Akut"}],"clinicalPearl":"Tonsil membesar berbenjol-benjol, kripte melebar berisi detritus (kriptus).","rujukanInfo":"Rujuk Sp.THT jika Indikasi Tonsilektomi.","rx":"Analgesik, Operasi Tonsilektomi.","lab":"Klinis Tonsil T3-T4"},{"code":"J36","nameId":"Abses Peritonsil (Quinsy)","titleEn":"Peritonsillar abscess","cat":"respirasi","catName":"Respirasi / Paru","isFktp":false,"synonyms":["abses peritonsil","quinsy","amandel bernanah bengkak"],"suggestions":[{"code":"J03.9","label":"Tonsilitis Akut"}],"clinicalPearl":"Trismus, uvula terdorong ke sisi sehat, hot potato voice, nyeri hebat hebat menelan.","rujukanInfo":"RUJUK EMERGENCY Sp.THT (Incisie Abses)!","rx":"Antibiotik IV masif, Incisie abses.","lab":"Spesialis THT Incisie"},{"code":"J38.0","nameId":"Paralisis Pita Suara / Nodul Pita Suara","titleEn":"Paralysis of vocal cords and larynx","cat":"respirasi","catName":"Respirasi / Paru","isFktp":false,"synonyms":["nodul pita suara","paralisis pita suara","singer node"],"suggestions":[{"code":"J04.0","label":"Laringitis"}],"clinicalPearl":"Serak kronis pada penyanyi / guru / pengkhotbah.","rujukanInfo":"Rujuk Sp.THT.","rx":"Vocal rest, Terapi wicara.","lab":"Laringoskopi"},{"code":"J43.9","nameId":"Emfisema Paru","titleEn":"Emphysema, unspecified","cat":"respirasi","catName":"Respirasi / Paru","isFktp":false,"synonyms":["emfisema","paru mekar"],"suggestions":[{"code":"J44.9","label":"PPOK"}],"clinicalPearl":"Kerusakan alveoli paru, sela iga melebar, dada cembung.","rujukanInfo":"Rujuk Sp.P.","rx":"Bronkodilator Inhalasi.","lab":"Spirometri, Foto Thorax"},{"code":"J47","nameId":"Bronkiektasis","titleEn":"Bronchiectasis","cat":"respirasi","catName":"Respirasi / Paru","isFktp":false,"synonyms":["bronkiektasis","batuk darah nanah kronis"],"suggestions":[{"code":"A15.0","label":"TB Paru"}],"clinicalPearl":"Batuk dahak purulen berlapis 3 sangat banyak & bau, hemoptisis berulang.","rujukanInfo":"Rujuk Sp.P.","rx":"Antibiotik, Postural Drainage.","lab":"HRCT Thorax (Honeycomb Appearance)"},{"code":"J90","nameId":"Efusi Pleura Unspecified","titleEn":"Pleural effusion, not elsewhere classified","cat":"respirasi","catName":"Respirasi / Paru","isFktp":false,"synonyms":["efusi pleura","cairan di paru"],"suggestions":[{"code":"A15.0","label":"TB Paru"},{"code":"I50.9","label":"Gagal Jantung"}],"clinicalPearl":"Pekak saat perkusi dada, suara napas menghilang di basal paru.","rujukanInfo":"RUJUK Sp.P (Torakosentesis / WSD).","rx":"Torakosentesis punkso cairan pleura.","lab":"Foto Thorax AP/Lateral (Sudut Kostofrenikus Tumpul)"},{"code":"J93.9","nameId":"Pneumothorax Unspecified","titleEn":"Pneumothorax, unspecified","cat":"respirasi","catName":"Respirasi / Paru","isFktp":false,"synonyms":["pneumothorax","paru kempes","udara di pleura"],"suggestions":[{"code":"J44.9","label":"PPOK"}],"clinicalPearl":"Sesak napas mendadak hebat + nyeri dada tajam, hipersonor, fremitus turun.","rujukanInfo":"RUJUK EMERGENCY UGD RS (Pemasangan Chest Tube / WSD)!","rx":"Oksigenasi high flow, WSD.","lab":"Foto Thorax (Hyperlucent Avascular Zone)"},{"code":"J96.0","nameId":"Gagal Napas Akut (Acute Respiratory Failure)","titleEn":"Acute respiratory failure","cat":"respirasi","catName":"Respirasi / Paru","isFktp":false,"synonyms":["gagal napas","respiratory failure","sesak sianosis"],"suggestions":[{"code":"J18.9","label":"Pneumonia Berat"}],"clinicalPearl":"SpO2 < 85%, sianosis, penurunan kesadaran, napas cuping hidung.","rujukanInfo":"RUJUK ICU UGD RS ERGENT!","rx":"Intubasi ETT, Ventilator mekanik.","lab":"AGD (Analisa Gas Darah) PaO2/FiO2"},{"code":"I05.9","nameId":"Penyakit Katup Mitral Reumatik","titleEn":"Rheumatic mitral valve disease","cat":"kardio","catName":"Kardiovaskular","isFktp":false,"synonyms":["pjr","penyakit jantung reumatik","stenosis mitral"],"suggestions":[{"code":"I50.9","label":"Gagal Jantung"}],"clinicalPearl":"Bising dijumpai pasca infeksi Demam Reumatik anak.","rujukanInfo":"Rujuk Sp.JP.","rx":"Profilaksis Penisilin Benzatin.","lab":"Ekokardiografi"},{"code":"I20.0","nameId":"Angina Pektoris Tidak Stabil (UAP / Unstable Angina)","titleEn":"Unstable angina","cat":"kardio","catName":"Kardiovaskular","isFktp":false,"synonyms":["uap","angina tidak stabil","nyeri dada saat istirahat"],"suggestions":[{"code":"I21.9","label":"STEMI"},{"code":"I20.9","label":"Angina Stabil"}],"clinicalPearl":"Nyeri dada khas angina yang timbul saat ISTIRAHAT atau bertambah berat.","rujukanInfo":"RUJUK UGD RS SEGERA (UAP/NSTEMI)!","rx":"MONA (Morphine, Oxygen, Nitrates, Aspirin + Clopidogrel).","lab":"EKG 12 Lead (ST Depresi / T Inverted), Troponin I/T"},{"code":"I20.9","nameId":"Angina Pektoris Stabil (Stable Angina Pectoris / SAP)","titleEn":"Angina pectoris, unspecified","cat":"kardio","catName":"Kardiovaskular","isFktp":false,"synonyms":["angina stabil","nyeri dada koroner","pjk"],"suggestions":[{"code":"I10","label":"Hipertensi"},{"code":"E78.5","label":"Dislipidemia"}],"clinicalPearl":"Nyeri dada seperti tertindih beban berat dicetuskan aktivitas, membaik istirahat / ISDN sublingual < 10 mnt.","rujukanInfo":"Tuntas FKTP / Sp.JP.","rx":"ISDN 5mg Sublingual saat nyeri + Aspirin 1x80mg + Simvastatin 1x20mg + Bisoprolol 1x5mg.","lab":"EKG 12 Lead, Treadmill Test"},{"code":"I21.9","nameId":"STEMI (Infark Miokard Akut Elevasi ST / Acute Myocardial Infarction)","titleEn":"Acute myocardial infarction, unspecified","cat":"kardio","catName":"Kardiovaskular","isFktp":false,"synonyms":["stemi","infark miokard","serangan jantung akut","st elevasi"],"suggestions":[{"code":"I20.0","label":"UAP"},{"code":"I50.9","label":"Gagal Jantung Kardiogenik"}],"clinicalPearl":"GAWAT DARURAT UGD! Nyeri dada substernal > 20 mnt menjalar ke lengan kiri/rahang + ST Elevasi EKG.","rujukanInfo":"RUJUK UGD RS CATH LAB SEGERA (< 12 JAM UNTUK PCI / FIBRINOLITIK)!","rx":"Fasilitas Fibrinolitik (Streptokinase) / Aspirin 300mg + Clopidogrel 300mg + CPG + ISDN 5mg Sublingual.","lab":"EKG 12 Lead (ST Elevasi persisten), Biomarker Jantung Troponin T/I"},{"code":"I48.9","nameId":"Fibrilasi Atrium (Atrial Fibrillation / AF)","titleEn":"Atrial fibrillation and flutter","cat":"kardio","catName":"Kardiovaskular","isFktp":false,"synonyms":["af","fibrilasi atrium","nadi irreguler irregular","aritmia af"],"suggestions":[{"code":"I63.9","label":"Stroke Iskemik (Emboli)"},{"code":"I50.9","label":"Gagal Jantung"}],"clinicalPearl":"Nadi teraba sangat tidak teratur (irregularly irregular), berdebar, risiko tinggi Emboli Stroke (CHA2DS2-VASc).","rujukanInfo":"Rujuk Sp.JP / Sp.PD.","rx":"Rate Control: Bisoprolol 1x5mg / Digoxin. Antikoagulan: Warfarin / Dabigatran / Rivaroxaban.","lab":"EKG 12 Lead (Gelombang P absen, Fibrilatory waves, R-R irregular)"},{"code":"I49.3","nameId":"Ekstrasistol Ventrikel (Ventricular Extrasystole / VES / PVC)","titleEn":"Ventricular premature depolarization","cat":"kardio","catName":"Kardiovaskular","isFktp":false,"synonyms":["ves","pvc","ekstrasistol ventrikel","denyut lewati"],"suggestions":[{"code":"I20.9","label":"Angina Stabil"}],"clinicalPearl":"Rasa jantung seperti meloncat / berhenti sejenak.","rujukanInfo":"Tuntas FKTP jika asimptomatik / Rujuk Sp.JP jika frequent.","rx":"Beta Blocker (Bisoprolol 1x2.5-5mg).","lab":"EKG 12 Lead (QRS lebar bermorfologi aneh tanpa P precursory)"},{"code":"I50.9","nameId":"Gagal Jantung Kronis (Congestive Heart Failure / CHF)","titleEn":"Heart failure, unspecified","cat":"kardio","catName":"Kardiovaskular","isFktp":false,"synonyms":["gagal jantung","chf","jantung bengkak","sesak terlentang","ortopnea"],"suggestions":[{"code":"I10","label":"Hipertensi"},{"code":"I20.9","label":"PJK"},{"code":"E11.9","label":"DM Tipe 2"}],"clinicalPearl":"Sesak saat aktivitas (DOE), sesak saat terlentang (Ortopnea), terbangun sesak malam hari (PND), edema tungkai bilateral, JVP meningkat.","rujukanInfo":"Rujuk Sp.JP untuk Titrasi Obat & Ekokardiografi.","rx":"Furosemide 1x40mg + Captopril/Ramipril + Bisoprolol + Spironolakton.","lab":"EKG, Foto Thorax (Kardiomegali, Efusi Pleura), Echo EF"},{"code":"I63.9","nameId":"Stroke Infark / Iskemik (Cerebral Infarction)","titleEn":"Cerebral infarction, unspecified","cat":"saraf","catName":"Saraf & Psikiatri","isFktp":true,"synonyms":["stroke","stroke iskemik","stroke infark","lumpuh separuh badan","bicara pelo FAST"],"suggestions":[{"code":"I10","label":"Hipertensi"},{"code":"E11.9","label":"DM Tipe 2"},{"code":"I64","label":"Stroke Perdarahan"}],"clinicalPearl":"Defisit neurologis fokal mendadak (FAST: Face drooping, Arm weakness, Speech difficulty, Time). Tanpa tanda peningkatan TIK masif.","rujukanInfo":"RUJUK STROKE UNIT RS SEGERA (< 4.5 JAM GOLDEN PERIOD THROMBOLYSIS)!","rx":"Aspirin 1x80-160mg, Citicoline 2x500mg, Kontrol Tekanan Darah.","lab":"CT Scan Kepala Tanpa Kontras (Membedakan Iskemik vs Perdarahan)"},{"code":"I64","nameId":"Stroke Perdarahan / Intraserebral (Hemorrhagic Stroke)","titleEn":"Stroke, not specified as haemorrhage or infarction","cat":"saraf","catName":"Saraf & Psikiatri","isFktp":false,"synonyms":["stroke perdarahan","stroke hemoragik","pecah pembuluh darah otak"],"suggestions":[{"code":"I10","label":"Hipertensi Krisis"}],"clinicalPearl":"Nyeri kepala hebat mendadak, muntah menyembur, penurunan kesadaran cepat pasca aktivitas.","rujukanInfo":"RUJUK EMERGENCY UGD RS / BEBEDAH SARAF!","rx":"Manitol 20% drip IV, Antihipertensi IV Nicardipine.","lab":"CT Scan Kepala Tanpa Kontras (Hiperdens Intraserebral)"},{"code":"I83.9","nameId":"Varises Tungkai Bawah","titleEn":"Varicose veins of lower extremities","cat":"kardio","catName":"Kardiovaskular","isFktp":true,"synonyms":["varises","pembuluh darah menonjol kaki"],"suggestions":[{"code":"I87.2","label":"Insufisiensi Vena Kronis"}],"clinicalPearl":"Vena superfisialis melebar berbelok-belok di kaki, pegal saat berdiri lama.","rujukanInfo":"Tuntas FKTP.","rx":"Stoking kompresi elastis, Elevasi kaki saat tidur. Diosmin-Hesperidin (Ardium).","lab":"Pemeriksaan USG Doppler Vena"},{"code":"I87.2","nameId":"Insufisiensi Vena Kronis (Chronic Venous Insufficiency)","titleEn":"Venous insufficiency (chronic)(peripheral)","cat":"kardio","catName":"Kardiovaskular","isFktp":false,"synonyms":["insufisiensi vena","cvi","ulkus venosum"],"suggestions":[{"code":"I83.9","label":"Varises"}],"clinicalPearl":"Edema tungkai bawah kronis, stasis dermatitis, hiperpigmentasi coklat (hemosiderin).","rujukanInfo":"Rujuk Sp.B / Sp.BTKV.","rx":"Stoking Kompresi Graduated, Salep Moist.","lab":"USG Doppler Vena"},{"code":"I95.1","nameId":"Hipotensi Ortostatik","titleEn":"Orthostatic hypotension","cat":"kardio","catName":"Kardiovaskular","isFktp":true,"synonyms":["hipotensi ortostatik","tensi drop saat berdiri","kliyengan berdiri"],"suggestions":[{"code":"R42","label":"Vertigo / Dizziness"}],"clinicalPearl":"Penurunan TD sistolik >= 20 mmHg atau diastolik >= 10 mmHg saat perubahan posisi dari tidur ke berdiri.","rujukanInfo":"Tuntas FKTP.","rx":"Edukasi bangun perlahan, asupan cairan & garam cukup.","lab":"Pengukuran Tekanan Darah Tidur & Berdiri 3 Menit"}];
+
+        masterDataset.forEach(item => {
+            const syns = item.synonyms ? item.synonyms.join(' ') : '';
+            const pearl = item.clinicalPearl || '';
+            const rx = item.rx || '';
+            item._searchKey = `${item.code} ${item.nameId} ${item.titleEn} ${syns} ${pearl} ${rx}`.toLowerCase();
+        });
+
+        let searchQuery = '';
+        let currentCompetency = 'all';
+        let currentCategory = 'all';
+        let starredCodes = new Set(JSON.parse(localStorage.getItem('icd10_starred') || '[]'));
+        let selectedItem = null;
+        let modalHistory = [];
+
+        const BATCH_SIZE = 36;
+        let currentDisplayLimit = BATCH_SIZE;
+        let currentFilteredResults = [];
+        let searchDebounceTimer = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCounters();
+            filterAndRender(true);
+
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', (e) => {
+                const val = e.target.value;
+                document.getElementById('clearBtn').style.display = val ? 'flex' : 'none';
+                
+                clearTimeout(searchDebounceTimer);
+                searchDebounceTimer = setTimeout(() => {
+                    searchQuery = val.toLowerCase().trim();
+                    filterAndRender(true);
+                }, 40);
+            });
+
+            document.getElementById('clearBtn').addEventListener('click', () => {
+                searchInput.value = '';
+                searchQuery = '';
+                document.getElementById('clearBtn').style.display = 'none';
+                filterAndRender(true);
+            });
+
+            document.getElementById('loadMoreBtn').addEventListener('click', () => {
+                currentDisplayLimit += BATCH_SIZE;
+                renderCardsBatch(false);
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+                    e.preventDefault();
+                    searchInput.focus();
+                }
+            });
+
+            document.getElementById('themeToggleBtn').addEventListener('click', () => {
+                const body = document.body;
+                const newTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                body.setAttribute('data-theme', newTheme);
+                document.getElementById('themeToggleBtn').textContent = newTheme === 'dark' ? '🌙' : '☀️';
+            });
+
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentCompetency = btn.getAttribute('data-filter');
+                    filterAndRender(true);
+                });
+            });
+
+            document.querySelectorAll('.cat-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentCategory = tab.getAttribute('data-cat');
+                    filterAndRender(true);
+                });
+            });
+
+            window.addEventListener('scroll', () => {
+                if (currentDisplayLimit < currentFilteredResults.length) {
+                    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+                        currentDisplayLimit += BATCH_SIZE;
+                        renderCardsBatch(false);
+                    }
+                }
+            }, { passive: true });
+
+            updateStarCount();
+        });
+
+        function updateCounters() {
+            document.getElementById('countTotal').textContent = masterDataset.length;
+            document.getElementById('countFktp').textContent = masterDataset.filter(d => d.isFktp).length;
+            document.getElementById('countRujukan').textContent = masterDataset.filter(d => !d.isFktp).length;
+        }
+
+        function updateStarCount() {
+            document.getElementById('starCount').textContent = starredCodes.size;
+        }
+
+        function toggleStar(code, e) {
+            if (e) e.stopPropagation();
+            if (starredCodes.has(code)) {
+                starredCodes.delete(code);
+                showToast('Dihapus dari favorit');
+            } else {
+                starredCodes.add(code);
+                showToast('Ditambahkan ke favorit ⭐');
+            }
+            localStorage.setItem('icd10_starred', JSON.stringify(Array.from(starredCodes)));
+            updateStarCount();
+            filterAndRender(false);
+            if (selectedItem && selectedItem.code === code) {
+                updateModalStarBtn();
+            }
+        }
+
+        function quickSearch(keyword) {
+            const input = document.getElementById('searchInput');
+            input.value = keyword;
+            searchQuery = keyword.toLowerCase();
+            document.getElementById('clearBtn').style.display = 'flex';
+            filterAndRender(true);
+        }
+
+        function filterAndRender(resetLimit = true) {
+            if (resetLimit) {
+                currentDisplayLimit = BATCH_SIZE;
+            }
+
+            currentFilteredResults = masterDataset.filter(item => {
+                if (currentCompetency === 'fktp' && !item.isFktp) return false;
+                if (currentCompetency === 'rujukan' && item.isFktp) return false;
+                if (currentCompetency === 'ugd' && item.cat !== 'ugd') return false;
+                if (currentCompetency === 'starred' && !starredCodes.has(item.code)) return false;
+
+                if (currentCategory !== 'all' && item.cat !== currentCategory) return false;
+
+                if (searchQuery) {
+                    if (!item._searchKey.includes(searchQuery)) return false;
+                }
+
+                return true;
+            });
+
+            if (currentFilteredResults.length === masterDataset.length) {
+                document.getElementById('resultsCount').textContent = `Menampilkan ${Math.min(currentDisplayLimit, currentFilteredResults.length)} dari ${masterDataset.length} Diagnosa Terkurasi`;
+            } else {
+                document.getElementById('resultsCount').textContent = `Menampilkan ${Math.min(currentDisplayLimit, currentFilteredResults.length)} dari ${currentFilteredResults.length} Diagnosa Ditemukan (Total ${masterDataset.length} Diagnosa)`;
+            }
+
+            renderCardsBatch(true);
+        }
+
+        function renderCardsBatch(clearGrid = true) {
+            const grid = document.getElementById('diagnosisGrid');
+            if (clearGrid) {
+                grid.innerHTML = '';
+            }
+
+            if (currentFilteredResults.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
+                        <p style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</p>
+                        <h3>Tidak ada diagnosa yang cocok</h3>
+                        <p style="font-size:0.85rem; margin-top:0.3rem;">Coba ubah kata kunci atau reset filter kategori.</p>
+                    </div>
+                `;
+                document.getElementById('loadMoreContainer').style.display = 'none';
+                return;
+            }
+
+            const startIndex = clearGrid ? 0 : grid.children.length;
+            const batch = currentFilteredResults.slice(startIndex, currentDisplayLimit);
+
+            const fragment = document.createDocumentFragment();
+
+            batch.forEach(item => {
+                const isStarred = starredCodes.has(item.code);
+                const card = document.createElement('div');
+                card.className = 'diag-card';
+                card.onclick = () => {
+                    modalHistory = [];
+                    openModal(item);
+                };
+
+                const displayName = highlightText(item.nameId, searchQuery);
+                const displayCode = highlightText(item.code, searchQuery);
+                const synTags = item.synonyms ? item.synonyms.slice(0, 4).map(s => `<span class="syn-tag">#${s}</span>`).join('') : '';
+
+                card.innerHTML = `
+                    <div>
+                        <div class="card-top">
+                            <span class="code-badge">${displayCode}</span>
+                            <div class="card-badges">
+                                <span class="${item.isFktp ? 'badge-fktp' : 'badge-rujukan'}">
+                                    ${item.isFktp ? '🟢 FKTP (4A)' : '🔵 Spesialis'}
+                                </span>
+                                <button class="star-btn ${isStarred ? 'starred' : ''}" onclick="toggleStar('${item.code}', event)">
+                                    ${isStarred ? '★' : '☆'}
+                                </button>
+                            </div>
+                        </div>
+                        <h3 class="diag-title">${displayName}</h3>
+                        <div class="diag-sub">${item.titleEn}</div>
+                        <div class="synonyms-tags">${synTags}</div>
+                    </div>
+                    <div class="card-bottom">
+                        <span class="cat-name">${item.catName}</span>
+                        <button class="copy-code-btn" onclick="copyCode('${item.code}', event)">📋 Salin ${item.code}</button>
+                    </div>
+                `;
+                fragment.appendChild(card);
+            });
+
+            grid.appendChild(fragment);
+
+            const loadMoreContainer = document.getElementById('loadMoreContainer');
+            if (currentDisplayLimit < currentFilteredResults.length) {
+                loadMoreContainer.style.display = 'block';
+                document.getElementById('loadMoreBtn').textContent = `Tampilkan Lebih Banyak (+${Math.min(BATCH_SIZE, currentFilteredResults.length - currentDisplayLimit)})`;
+            } else {
+                loadMoreContainer.style.display = 'none';
+            }
+        }
+
+        function highlightText(text, query) {
+            if (!query) return text;
+            const regex = new RegExp(`(${escapeRegExp(query)})`, 'gi');
+            return text.replace(regex, '<mark>$1</mark>');
+        }
+
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function getConnectedSuggestions(item) {
+            let suggs = [...(item.suggestions || [])];
+            
+            if (suggs.length < 3) {
+                const sameCat = masterDataset.filter(d => d.cat === item.cat && d.code !== item.code);
+                if (sameCat.length > 0) {
+                    const sample = sameCat.slice(0, 3 - suggs.length);
+                    sample.forEach(s => {
+                        suggs.push({
+                            code: s.code,
+                            label: s.nameId.split(' (')[0],
+                            reason: `Terkait ${item.catName}`
+                        });
+                    });
+                }
+            }
+            return suggs;
+        }
+
+        function openModal(item, pushHistory = true) {
+            if (pushHistory && selectedItem && selectedItem.code !== item.code) {
+                modalHistory.push(selectedItem);
+            }
+
+            selectedItem = item;
+            document.getElementById('modalCode').textContent = item.code;
+            document.getElementById('modalTitle').textContent = item.nameId;
+            document.getElementById('modalSub').textContent = item.titleEn;
+
+            const backBtn = document.getElementById('backHistBtn');
+            if (modalHistory.length > 0) {
+                const prev = modalHistory[modalHistory.length - 1];
+                document.getElementById('backHistName').textContent = `${prev.code} - ${prev.nameId.slice(0, 16)}...`;
+                backBtn.style.display = 'inline-flex';
+            } else {
+                backBtn.style.display = 'none';
+            }
+
+            const badge = document.getElementById('modalCompetencyBadge');
+            badge.className = item.isFktp ? 'badge-fktp' : 'badge-rujukan';
+            badge.textContent = item.isFktp ? 'Kompetensi 4A - FKTP' : 'Rujukan Spesialis';
+
+            const suggContainer = document.getElementById('modalSuggestions');
+            suggContainer.innerHTML = '';
+            const connectedSuggs = getConnectedSuggestions(item);
+
+            if (connectedSuggs.length > 0) {
+                connectedSuggs.forEach(s => {
+                    const pill = document.createElement('button');
+                    pill.className = 'sugg-pill';
+                    pill.innerHTML = `<code>${s.code}</code> <span>${s.label}</span> <small style="opacity:0.75;">(${s.reason || 'Terhubung'})</small>`;
+                    pill.onclick = () => {
+                        const target = masterDataset.find(d => d.code === s.code);
+                        if (target) {
+                            openModal(target, true);
+                        } else {
+                            quickSearch(s.code);
+                            closeModal();
+                        }
+                    };
+                    suggContainer.appendChild(pill);
+                });
+            } else {
+                suggContainer.innerHTML = `<span style="font-size:0.78rem; color:var(--text-muted);">Tidak ada kode penyerta spesifik.</span>`;
+            }
+
+            const defaultPearl = item.isFktp ? 'Diagnosa FKTP BPJS Kompetensi 4A.' : 'Kriteria klinis standar ICD-10.';
+            const defaultRujukan = item.isFktp ? 'Tuntas di FKTP.' : 'Rujuk Dokter Spesialis Terkait.';
+            const defaultRx = 'Tatalaksana standar PPK Dokter FKTP.';
+            const defaultLab = 'Pemeriksaan penunjang tingkat 1 FKTP.';
+
+            document.getElementById('modalRx').textContent = item.rx || defaultRx;
+            document.getElementById('modalLab').textContent = item.lab || defaultLab;
+            document.getElementById('modalPearl').textContent = item.clinicalPearl || defaultPearl;
+            document.getElementById('modalRujukan').textContent = item.rujukanInfo || defaultRujukan;
+
+            updateModalStarBtn();
+
+            document.getElementById('modalCopyBtn').onclick = () => {
+                copyCode(item.code);
+            };
+
+            document.getElementById('suggestorModal').classList.add('active');
+        }
+
+        function goBackModalHistory() {
+            if (modalHistory.length > 0) {
+                const prev = modalHistory.pop();
+                openModal(prev, false);
+            }
+        }
+
+        function updateModalStarBtn() {
+            const starBtn = document.getElementById('modalStarBtn');
+            if (selectedItem && starredCodes.has(selectedItem.code)) {
+                starBtn.textContent = '★ Hapus Favorit';
+                starBtn.style.color = 'var(--accent-star)';
+            } else {
+                starBtn.textContent = '⭐ Tambah Favorit';
+                starBtn.style.color = 'var(--text-main)';
+            }
+            starBtn.onclick = () => {
+                if (selectedItem) toggleStar(selectedItem.code);
+            };
+        }
+
+        function closeModal() {
+            modalHistory = [];
+            document.getElementById('suggestorModal').classList.remove('active');
+        }
+
+        function copyCode(code, e) {
+            if (e) e.stopPropagation();
+            navigator.clipboard.writeText(code);
+            showToast(`Kode ICD-10 '${code}' disalin!`);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2200);
+        }
+    </script>
+</body>
+</html>
