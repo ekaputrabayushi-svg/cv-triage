@@ -1,0 +1,2090 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>HEART Score Pro | Clinical Decision Support by CardiologyVault</title>
+  <meta name="description" content="Kalkulator HEART Score interaktif & panduan klinis komprehensif untuk dokter umum. Stratifikasi risiko nyeri dada akut, penjelasan tipikal vs atipikal, EKG, troponin & tatalaksana." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+/* ───────────────────────────────────────────────
+   HEART Score Pro – CardiologyVault Edition
+   Design & Architecture: Bayushi Eka Putra, MD, FIHA
+   ─────────────────────────────────────────────── */
+
+:root {
+  --bg-primary:    #060913;
+  --bg-secondary:  #0b101d;
+  --bg-card:       #111827;
+  --bg-card-hover: #162035;
+  --bg-input:      #1a243b;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-glow:   rgba(0, 242, 254, 0.35);
+
+  --text-primary:   #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted:     #64748b;
+  --text-cyan:      #38bdf8;
+  --text-accent:    #00f2fe;
+
+  --color-low:    #10b981;
+  --color-low-bg: rgba(16, 185, 129, 0.14);
+  --color-med:    #f59e0b;
+  --color-med-bg: rgba(245, 158, 11, 0.14);
+  --color-high:   #ff2a5f;
+  --color-high-bg: rgba(255, 42, 95, 0.16);
+
+  --brand-cyan:   #00f2fe;
+  --brand-blue:   #4facfe;
+  --brand-purple: #7000ff;
+  --brand-red:    #ff0055;
+
+  --grad-vault:   linear-gradient(135deg, #00f2fe 0%, #4facfe 50%, #7000ff 100%);
+  --grad-card:    linear-gradient(145deg, #0d1527 0%, #131c33 100%);
+  --grad-btn:     linear-gradient(135deg, #00f2fe 0%, #0072ff 100%);
+  --grad-btn-red: linear-gradient(135deg, #ff0055 0%, #ff5252 100%);
+  --grad-dev:     linear-gradient(90deg, #111827 0%, #1e1b4b 50%, #111827 100%);
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 25px rgba(0, 242, 254, 0.25);
+  --shadow-btn:  0 8px 25px rgba(0, 114, 255, 0.4);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--brand-blue); border-radius: 3px; }
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(6, 9, 19, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 242, 254, 0.15);
+  padding: 12px var(--space-md);
+}
+
+.header-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  font-size: 32px;
+  filter: drop-shadow(0 0 12px rgba(255, 42, 95, 0.8));
+  animation: heartbeat 1.6s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.12); }
+  45% { transform: scale(1); }
+  55% { transform: scale(1.06); }
+}
+
+.logo-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  background: var(--grad-vault);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.logo-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  font-size: 20px;
+  color: #ffffff;
+  line-height: 1.1;
+  letter-spacing: -0.3px;
+}
+
+.logo-title-sub {
+  font-size: 11px;
+  padding: 2px 6px;
+  background: rgba(0, 242, 254, 0.15);
+  border: 1px solid rgba(0, 242, 254, 0.4);
+  border-radius: var(--radius-sm);
+  color: var(--brand-cyan);
+  vertical-align: middle;
+}
+
+.logo-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.info-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(0, 242, 254, 0.3);
+  background: rgba(15, 23, 42, 0.8);
+  color: var(--brand-cyan);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+}
+.info-btn:hover { background: var(--brand-cyan); color: #000; box-shadow: var(--shadow-glow); }
+
+.dev-strip {
+  background: var(--grad-dev);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 8px var(--space-md);
+}
+
+.dev-strip-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+
+.dev-badge {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.dev-name {
+  font-weight: 800;
+  color: var(--brand-cyan);
+  letter-spacing: 0.2px;
+}
+
+.dev-dot { color: var(--text-muted); }
+.dev-affiliation { color: var(--text-secondary); font-weight: 500; }
+
+.intro-banner {
+  background: linear-gradient(135deg, #090e1c 0%, #150a29 50%, #061324 100%);
+  border-bottom: 1px solid rgba(0, 242, 254, 0.12);
+  padding: var(--space-xl) var(--space-md);
+}
+
+.intro-inner { max-width: 720px; margin: 0 auto; }
+
+.intro-badge {
+  display: inline-flex;
+  background: rgba(0, 242, 254, 0.1);
+  border: 1px solid rgba(0, 242, 254, 0.3);
+  color: var(--brand-cyan);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-sm);
+  letter-spacing: 0.8px;
+}
+
+.intro-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(22px, 5vw, 28px);
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: var(--space-xs);
+}
+
+.intro-text {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: var(--space-lg);
+}
+
+.intro-acronym {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-lg);
+}
+
+.acronym-item {
+  flex: 1;
+  min-width: calc(20% - 8px);
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 10px 4px;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.acronym-letter {
+  font-family: 'Outfit', sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  background: var(--grad-btn);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: block;
+}
+
+.acronym-word { font-size: 11px; font-weight: 700; color: #fff; display: block; }
+.acronym-desc { font-size: 10px; color: var(--text-muted); }
+
+.intro-close {
+  width: 100%;
+  padding: 14px;
+  background: var(--grad-btn);
+  border: none;
+  border-radius: var(--radius-md);
+  color: #000;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: var(--shadow-btn);
+  transition: all 0.2s;
+}
+.intro-close:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0, 242, 254, 0.4); }
+
+.app-main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-md);
+  padding-bottom: 60px;
+}
+
+.progress-container {
+  margin-bottom: var(--space-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-sm);
+}
+
+.progress-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.progress-count {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--brand-cyan);
+}
+
+.progress-track {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00f2fe 0%, #4facfe 50%, #ff0055 100%);
+  border-radius: var(--radius-full);
+  transition: width 0.4s ease;
+  box-shadow: 0 0 12px rgba(0, 242, 254, 0.6);
+}
+
+.components-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.component-card {
+  background: var(--grad-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  transition: all 0.3s ease;
+}
+
+.component-card.filled {
+  border-color: rgba(0, 242, 254, 0.35);
+  box-shadow: 0 0 25px rgba(0, 242, 254, 0.08);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 14px var(--space-md);
+  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.card-number {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: var(--grad-btn);
+  color: #000;
+  font-size: 13px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-title-group { flex: 1; display: flex; align-items: center; gap: 8px; }
+
+.card-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.card-title-en { font-size: 12px; color: var(--text-muted); font-weight: 400; }
+
+.card-score-badge {
+  min-width: 36px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card-score-badge.scored-0 { background: var(--color-low-bg); border-color: var(--color-low); color: var(--color-low); }
+.card-score-badge.scored-1 { background: var(--color-med-bg); border-color: var(--color-med); color: var(--color-med); }
+.card-score-badge.scored-2 { background: var(--color-high-bg); border-color: var(--color-high); color: var(--color-high); }
+
+.card-info-btn {
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(0, 242, 254, 0.3);
+  background: rgba(0, 242, 254, 0.08);
+  color: var(--brand-cyan);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+.card-info-btn:hover { background: var(--brand-cyan); color: #000; }
+
+.card-body { padding: var(--space-md); display: flex; flex-direction: column; gap: var(--space-md); }
+
+.card-hint { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+
+.options-group { display: flex; flex-direction: column; gap: var(--space-sm); }
+
+.option-label { display: block; cursor: pointer; position: relative; }
+.option-label input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+
+.option-content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 14px var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.02);
+  transition: all 0.2s ease;
+}
+
+.option-label:hover .option-content {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.option-label input:checked + .option-content {
+  background: rgba(0, 242, 254, 0.1);
+  border-color: var(--brand-cyan);
+  box-shadow: 0 0 15px rgba(0, 242, 254, 0.15);
+  transform: translateX(4px);
+}
+
+.option-score {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+.score-low { background: var(--color-low-bg); color: var(--color-low); border: 1px solid var(--color-low); }
+.score-med { background: var(--color-med-bg); color: var(--color-med); border: 1px solid var(--color-med); }
+.score-high { background: var(--color-high-bg); color: var(--color-high); border: 1px solid var(--color-high); }
+
+.option-info { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.option-title { font-size: 14px; font-weight: 700; color: #fff; }
+.option-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.45; }
+
+.clinical-accordion {
+  margin-top: var(--space-xs);
+}
+
+.accordion-header {
+  padding: 10px 14px;
+  background: rgba(0, 242, 254, 0.07);
+  border: 1px solid rgba(0, 242, 254, 0.25);
+  border-radius: var(--radius-md);
+  color: var(--brand-cyan);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s;
+}
+.accordion-header:hover { background: rgba(0, 242, 254, 0.14); }
+
+.accordion-body {
+  margin-top: 10px;
+  animation: fadeIn 0.3s ease;
+}
+
+.guide-box {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.guide-box h4 {
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 6px;
+}
+
+.guide-list-num {
+  padding-left: 20px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.guide-list {
+  list-style: none;
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.guide-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 600px) {
+  .guide-grid-2 { grid-template-columns: 1fr 1fr; }
+}
+
+.guide-col {
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+}
+
+.col-typical { background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.3); }
+.col-atypical { background: rgba(255, 42, 95, 0.08); border-color: rgba(255, 42, 95, 0.3); }
+
+.col-title { font-size: 11px; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 6px; }
+.col-typical .col-title { color: var(--color-low); }
+.col-atypical .col-title { color: var(--color-high); }
+
+.guide-col ul { list-style: none; padding: 0; font-size: 11px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 4px; }
+.guide-col li { padding-left: 10px; position: relative; }
+.guide-col li::before { content: '•'; position: absolute; left: 0; }
+
+.guide-alert {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  line-height: 1.5;
+  border: 1px solid;
+}
+
+.alert-warning { background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); color: #fde68a; }
+.alert-danger { background: rgba(255, 42, 95, 0.12); border-color: rgba(255, 42, 95, 0.4); color: #fecdd3; }
+.alert-info { background: rgba(0, 242, 254, 0.1); border-color: rgba(0, 242, 254, 0.3); color: #bae6fd; }
+
+.score-breakdown-list { display: flex; flex-direction: column; gap: 8px; }
+.sb-item { display: flex; gap: 10px; padding: 8px; border-radius: 6px; border: 1px solid var(--border-subtle); }
+.sb-badge { font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; height: fit-content; }
+.sb-0 .sb-badge { background: var(--color-low-bg); color: var(--color-low); border: 1px solid var(--color-low); }
+.sb-1 .sb-badge { background: var(--color-med-bg); color: var(--color-med); border: 1px solid var(--color-med); }
+.sb-2 .sb-badge { background: var(--color-high-bg); color: var(--color-high); border: 1px solid var(--color-high); }
+.sb-text { font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+
+.age-input-group { display: flex; gap: var(--space-sm); align-items: center; }
+.age-input-wrapper { flex: 1; position: relative; }
+
+.age-input, .trop-input {
+  width: 100%;
+  padding: 12px var(--space-md);
+  background: var(--bg-input);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: #fff;
+  font-size: 15px;
+  outline: none;
+}
+.age-input:focus, .trop-input:focus { border-color: var(--brand-cyan); box-shadow: 0 0 10px rgba(0, 242, 254, 0.3); }
+
+.age-unit { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--text-muted); }
+
+.age-calc-btn, .trop-calc-btn {
+  padding: 12px var(--space-md);
+  background: var(--grad-btn);
+  border: none;
+  border-radius: var(--radius-md);
+  color: #000;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.risk-checklist {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.checklist-header { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
+
+.check-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+.check-item input { accent-color: var(--brand-cyan); width: 16px; height: 16px; margin-top: 2px; flex-shrink: 0; }
+
+.risk-known-group {
+  padding: 10px var(--space-md);
+  background: rgba(255, 42, 95, 0.1);
+  border: 1px solid rgba(255, 42, 95, 0.3);
+  border-radius: var(--radius-md);
+}
+
+.risk-counter-display { font-size: 12px; color: var(--text-secondary); text-align: right; }
+
+.troponin-helper {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+.troponin-input-row { display: flex; gap: var(--space-sm); }
+.trop-input-group { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.trop-label { font-size: 11px; color: var(--text-muted); font-weight: 700; }
+.trop-input-wrap { position: relative; }
+.trop-unit { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 10px; color: var(--text-muted); }
+
+.trop-result { padding: 10px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; text-align: center; }
+.trop-result.trop-normal { background: var(--color-low-bg); color: var(--color-low); border: 1px solid var(--color-low); }
+.trop-result.trop-mild { background: var(--color-med-bg); color: var(--color-med); border: 1px solid var(--color-med); }
+.trop-result.trop-high { background: var(--color-high-bg); color: var(--color-high); border: 1px solid var(--color-high); }
+
+.calc-section { margin-top: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-sm); }
+
+.calc-preview {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+}
+
+.preview-scores { display: flex; align-items: center; justify-content: center; gap: var(--space-sm); flex-wrap: wrap; }
+.preview-score-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.preview-letter { font-size: 10px; font-weight: 900; color: var(--text-muted); }
+.preview-val {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--text-muted);
+}
+.preview-val.has-score-0 { background: var(--color-low-bg); border-color: var(--color-low); color: var(--color-low); }
+.preview-val.has-score-1 { background: var(--color-med-bg); border-color: var(--color-med); color: var(--color-med); }
+.preview-val.has-score-2 { background: var(--color-high-bg); border-color: var(--color-high); color: var(--color-high); }
+
+.preview-total {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  padding: 6px 16px;
+  background: rgba(0, 242, 254, 0.1);
+  border: 1px solid rgba(0, 242, 254, 0.3);
+  border-radius: var(--radius-md);
+}
+.preview-total-val { font-family: 'Outfit', sans-serif; font-size: 26px; font-weight: 900; color: var(--brand-cyan); }
+.preview-total-label { font-size: 13px; color: var(--text-muted); font-weight: 700; }
+
+.calc-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--grad-btn);
+  border: none;
+  border-radius: var(--radius-md);
+  color: #000;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: var(--shadow-btn);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  transition: all 0.25s;
+}
+.calc-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0, 242, 254, 0.5); }
+.calc-btn:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; }
+
+.reset-btn {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.result-section { margin-top: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-md); }
+
+.result-card {
+  border-radius: var(--radius-xl);
+  padding: var(--space-xl) var(--space-lg);
+  text-align: center;
+  box-shadow: var(--shadow-card);
+}
+
+.result-score-big { font-family: 'Outfit', sans-serif; font-size: clamp(54px, 14vw, 76px); font-weight: 900; line-height: 1; }
+.result-score-of { font-size: 20px; opacity: 0.6; }
+.result-category { font-family: 'Outfit', sans-serif; font-size: clamp(20px, 5vw, 26px); font-weight: 900; margin: 8px 0; }
+
+.result-mace {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.result-score-breakdown { display: flex; justify-content: center; gap: 8px; margin-top: var(--space-md); }
+.breakdown-chip { display: flex; flex-direction: column; align-items: center; background: rgba(255, 255, 255, 0.1); border-radius: var(--radius-sm); padding: 6px 10px; }
+.chip-letter { font-size: 10px; font-weight: 900; opacity: 0.7; }
+.chip-score { font-size: 16px; font-weight: 900; }
+
+.risk-timeline-card, .action-card, .ddx-card, .evidence-card {
+  background: var(--grad-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.timeline-title, .action-title, .ddx-title, .evidence-title { font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+.timeline-subtitle { font-size: 12px; color: var(--text-muted); margin-bottom: var(--space-md); }
+
+.timeline-bars { display: flex; flex-direction: column; gap: var(--space-md); }
+.timeline-bar-item { display: flex; flex-direction: column; gap: 6px; }
+.tl-label-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; }
+.tl-track { height: 10px; background: rgba(255, 255, 255, 0.05); border-radius: var(--radius-full); overflow: hidden; }
+.tl-fill { height: 100%; border-radius: var(--radius-full); transition: width 1s ease; }
+.tl-fill-low { background: linear-gradient(90deg, #10b981, #34d399); }
+.tl-fill-med { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.tl-fill-high { background: linear-gradient(90deg, #ff2a5f, #ff6b8b); }
+
+.action-steps { display: flex; flex-direction: column; gap: var(--space-sm); margin-top: var(--space-md); }
+.action-step { display: flex; align-items: flex-start; gap: var(--space-sm); padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.05); }
+.step-icon { font-size: 18px; flex-shrink: 0; }
+.step-text { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+
+.action-note { margin-top: var(--space-md); padding: 12px; background: rgba(255, 255, 255, 0.04); border-left: 3px solid; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 12px; color: var(--text-secondary); }
+
+.ddx-grid { display: flex; flex-direction: column; gap: var(--space-sm); margin-top: var(--space-md); }
+.ddx-item { border-radius: var(--radius-md); padding: var(--space-md); border: 1px solid; }
+.ddx-urgent { background: rgba(255, 42, 95, 0.08); border-color: rgba(255, 42, 95, 0.3); }
+.ddx-moderate { background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.3); }
+.ddx-benign { background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.3); }
+
+.ddx-category { font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: var(--space-sm); }
+.ddx-urgent .ddx-category { color: var(--color-high); }
+.ddx-moderate .ddx-category { color: var(--color-med); }
+.ddx-benign .ddx-category { color: var(--color-low); }
+.ddx-item ul { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.ddx-item li { font-size: 12px; color: var(--text-secondary); padding-left: 12px; position: relative; }
+.ddx-item li::before { content: '–'; position: absolute; left: 0; color: var(--text-muted); }
+
+.evidence-items { display: flex; flex-direction: column; gap: var(--space-sm); margin-top: var(--space-md); }
+.evidence-item { display: flex; gap: var(--space-md); padding: var(--space-md); background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); }
+.ev-icon { font-size: 22px; flex-shrink: 0; }
+.ev-title { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+.ev-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
+
+.action-buttons-row { display: flex; gap: var(--space-sm); }
+.action-row-btn { flex: 1; padding: 14px; border-radius: var(--radius-md); font-size: 13px; font-weight: 800; cursor: pointer; border: 1px solid; }
+.print-btn { background: rgba(0, 242, 254, 0.1); border-color: rgba(0, 242, 254, 0.3); color: var(--brand-cyan); }
+.recalc-btn { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: var(--color-low); }
+
+.app-footer {
+  margin-top: var(--space-xl);
+  border-top: 1px solid var(--border-subtle);
+  padding: var(--space-xl) var(--space-md);
+  background: var(--bg-secondary);
+}
+
+.footer-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-md);
+}
+
+.footer-brand { display: flex; flex-direction: column; gap: 4px; }
+.footer-logo { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 900; color: var(--brand-cyan); }
+.footer-tagline { font-size: 12px; color: var(--text-muted); }
+
+.footer-author p { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+.footer-author strong { font-size: 15px; color: var(--brand-cyan); font-weight: 800; display: block; margin: 2px 0; }
+.footer-credits { font-size: 11px; color: var(--text-muted); }
+
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); z-index: 200; padding: var(--space-md); overflow-y: auto; }
+.modal-overlay.open { display: flex; align-items: center; justify-content: center; }
+.modal-box { width: 100%; max-width: 620px; background: #0f172a; border: 1px solid rgba(0, 242, 254, 0.35); border-radius: var(--radius-xl); padding: var(--space-xl); position: relative; margin: auto; }
+.modal-close { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: var(--radius-full); border: 1px solid var(--border-subtle); background: transparent; color: #fff; cursor: pointer; }
+.modal-title { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 800; color: #fff; margin-bottom: var(--space-md); }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+  </style>
+</head>
+<body>
+
+  <!-- ── HEADER ────────────────────────────────── -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-logo">
+        <span class="logo-icon">🫀</span>
+        <div class="logo-text-group">
+          <div class="brand-badge">⚡ Part of CardiologyVault Suite</div>
+          <span class="logo-title">HEART Score <span class="logo-title-sub">Clinical Pro</span></span>
+          <span class="logo-subtitle">Panduan Stratifikasi Risk Nyeri Dada Akut Dokter Umum</span>
+        </div>
+      </div>
+      <button class="info-btn" id="infoBtn" aria-label="Panduan Penggunaan">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── DEV BRANDING STRIP ─────────────────────── -->
+  <div class="dev-strip">
+    <div class="dev-strip-inner">
+      <span class="dev-badge">👨‍⚕️ Creator & Clinical Editor</span>
+      <span class="dev-name">Bayushi Eka Putra, MD, FIHA</span>
+      <span class="dev-dot">•</span>
+      <span class="dev-affiliation">CardiologyVault Evidence-Based Suite</span>
+    </div>
+  </div>
+
+  <!-- ── INTRO BANNER ───────────────────────────── -->
+  <section class="intro-banner" id="introBanner">
+    <div class="intro-inner">
+      <div class="intro-badge">📖 Clinical Decision Support & Guide</div>
+      <h2 class="intro-title">HEART Score Risk Stratification</h2>
+      <p class="intro-text">
+        Sistem skoring terdefinisi presisi yang divalidasi secara internasional untuk <strong>pasien dewasa (≥18 thn) dengan nyeri dada akut non-traumatik</strong> di IGD atau Faskes Primer. Membantu dokter umum menentukan secara aman: <em>Early Discharge (Boleh Pulang)</em>, <em>Observasi Serial (CDU/HDU)</em>, atau <em>Rawat Inap CVCU / Referal Urgent</em>.
+      </p>
+      <div class="intro-acronym">
+        <div class="acronym-item"><span class="acronym-letter">H</span><span class="acronym-word">History</span><span class="acronym-desc">Anamnesis Khas & Atipikal</span></div>
+        <div class="acronym-item"><span class="acronym-letter">E</span><span class="acronym-word">EKG</span><span class="acronym-desc">Gambaran ST-T 12-Lead</span></div>
+        <div class="acronym-item"><span class="acronym-letter">A</span><span class="acronym-word">Age</span><span class="acronym-desc">Usia Pasien (Trend Risk)</span></div>
+        <div class="acronym-item"><span class="acronym-letter">R</span><span class="acronym-word">Risk Factors</span><span class="acronym-desc">7 Faktor Risiko Koroner</span></div>
+        <div class="acronym-item"><span class="acronym-letter">T</span><span class="acronym-word">Troponin</span><span class="acronym-desc">Biomarker cTnI / cTnT</span></div>
+      </div>
+      <button class="intro-close" id="introClose">Mulai Penilaian Klinis (0 / 5 Komponen) ↓</button>
+    </div>
+  </section>
+
+  <!-- ── MAIN APP ───────────────────────────────── -->
+  <main class="app-main">
+
+    <!-- Progress Bar -->
+    <div class="progress-container">
+      <div class="progress-header">
+        <span class="progress-label">Progress Evaluasi Pasien</span>
+        <span class="progress-count" id="progressCount">0 / 5 komponen terisi</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- ── COMPONENT CARDS ─────────────────────── -->
+    <form id="heartForm" autocomplete="off" onsubmit="return false;">
+      <div class="components-grid">
+
+        <!-- 1. HISTORY -->
+        <div class="component-card" id="card-history" data-component="history">
+          <div class="card-header">
+            <div class="card-number">1</div>
+            <div class="card-title-group">
+              <h3 class="card-title">History <span class="card-title-en">(Riwayat Anamnesis Nyeri Dada)</span></h3>
+              <div class="card-score-badge" id="badge-history">–</div>
+            </div>
+            <button type="button" class="card-info-btn" data-modal="history-modal" aria-label="Detail Klinis History">ℹ️ Panduan Detail</button>
+          </div>
+          <div class="card-body">
+            <p class="card-hint">Evaluasi <strong>karakteristik klinis nyeri dada</strong> pasien berdasarkan kriteria Diamond-Forrester dan kecurigaan iskemia miokard:</p>
+
+            <div class="options-group" id="options-history">
+              <label class="option-label" data-value="0">
+                <input type="radio" name="history" value="0" autocomplete="off" />
+                <div class="option-content">
+                  <span class="option-score score-low">0</span>
+                  <div class="option-info">
+                    <span class="option-title">Tidak Tipikal / Kecurigaan Rendah (Slightly Suspicious)</span>
+                    <span class="option-desc">Gejala didominasi non-iskemik (tajam/ditusuk, lokal dipengaruhi posisi/napas, nyeri tekan dinding dada, tanpa gejala otonom). Memenuhi 0 atau 1 kriteria tipikal ringan.</span>
+                  </div>
+                </div>
+              </label>
+              <label class="option-label" data-value="1">
+                <input type="radio" name="history" value="1" autocomplete="off" />
+                <div class="option-content">
+                  <span class="option-score score-med">1</span>
+                  <div class="option-info">
+                    <span class="option-title">Moderately Suspicious (Kecurigaan Sedang)</span>
+                    <span class="option-desc">Campuran elemen tipikal & atipikal. Nyeri dada memiliki 2 kriteria tipikal (misal: rasa berat retrosternal tapi tanpa penjalaran & tanpa diaphoresis, atau nyeri ulu hati dengan respon nitrat yang samar).</span>
+                  </div>
+                </div>
+              </label>
+              <label class="option-label" data-value="2">
+                <input type="radio" name="history" value="2" autocomplete="off" />
+                <div class="option-content">
+                  <span class="option-score score-high">2</span>
+                  <div class="option-info">
+                    <span class="option-title">Highly Suspicious (Sangat Tipikal SKA)</span>
+                    <span class="option-desc">Klasik iskemik: Nyeri substernal/retrosternal rasa ditekan beban berat/diremas, menjalar ke lengan kiri/rahang/bahu, dipicu aktivitas/stres, membaik dengan nitrat/istirahat, disertai keringat dingin (diaphoresis), mual/muntah, atau sesak napas (≥3 kriteria).</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <!-- Deep Clinical Accordion Guide -->
+            <details class="clinical-accordion">
+              <summary class="accordion-header">📖 Penjelasan Lengkap: Nyeri Dada Tipikal vs Atipikal</summary>
+              <div class="accordion-body">
+                <div class="guide-box">
+                  <h4>💡 3 Kriteria Klasik Angina Tipikal (Diamond-Forrester):</h4>
+                  <ol class="guide-list-num">
+                    <li><strong>Lokasi & Karakter:</strong> Nyeri retrosternal/substernal rasa ditekan, ditindih beban berat, diremas, rasa terbakar (bukan tajam / tertusuk). Bisa menjalar ke lengan kiri, bahu, leher, rahang bawah, atau ulu hati (epigastrium).</li>
+                    <li><strong>Pemicu (Triggers):</strong> Dipicu oleh aktivitas fisik (exertion), stres emosional, atau udara dingin.</li>
+                    <li><strong>Peringan (Relief):</strong> Berkurang atau hilang dengan istirahat atau pemberian Nitrogliserin sublingual dalam 2–5 menit.</li>
+                  </ol>
+
+                  <div class="guide-grid-2">
+                    <div class="guide-col col-typical">
+                      <span class="col-title">✅ Angina Tipikal (Highly Suspicious)</span>
+                      <ul>
+                        <li>Rasa dada dihimpit / ditekan barang berat</li>
+                        <li>Penjalaran ke lengan kiri, leher, rahang, atau punggung</li>
+                        <li>Diiringi Diaphoresis (keringat dingin membasahi baju)</li>
+                        <li>Mual, muntah, atau sesak napas hebat</li>
+                        <li>Durasi 2–20 menit (jika >20 menit menetap → suspek Infark/STEMI)</li>
+                      </ul>
+                    </div>
+                    <div class="guide-col col-atypical">
+                      <span class="col-title">❌ Ciri Nyeri NON-Tipikal (Slightly Suspicious)</span>
+                      <ul>
+                        <li>Nyeri tajam, seperti ditusuk jarum/pisau</li>
+                        <li>Lokal pada satu titik jari (pleuritic / positional)</li>
+                        <li>Bertambah nyeri saat inspirasi dalam atau batuk</li>
+                        <li>Dapat direproduksi dengan penekanan dinding dada (muskuloskeletal)</li>
+                        <li>Durasi sangat singkat (<15 detik) atau berhari-hari terus menerus tanpa perubahan</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div class="guide-alert alert-warning">
+                    ⚠️ <strong>PENTING DOKTER UMUM (Presentasi Atipikal):</strong><br />
+                    Pada <strong>Wanita, Lansia (>75 thn), dan Pasien Diabetes Mellitus</strong>, nyeri dada sering tidak khas! Gejala equivalents SKA pada populasi ini meliputi: <em>Sesak napas mendadak (isolated dyspnea), keringat dingin tanpa nyeri dada, kelelahan ekstrim mendadak (unexplained fatigue), rasa melayang (dizziness/syncope), atau nyeri ulu hati yang dikira GERD</em>. Jangan ragu memberi Skor 1 atau 2 jika ada kecurigaan klinis pada populasi ini!
+                  </div>
+                </div>
+              </div>
+            </details>
+
+          </div>
+        </div>
+
+        <!-- 2. EKG -->
+        <div class="component-card" id="card-ekg" data-component="ekg">
+          <div class="card-header">
+            <div class="card-number">2</div>
+            <div class="card-title-group">
+              <h3 class="card-title">EKG <span class="card-title-en">(Elektrokardiogram 12-Lead)</span></h3>
+              <div class="card-score-badge" id="badge-ekg">–</div>
+            </div>
+            <button type="button" class="card-info-btn" data-modal="ekg-modal" aria-label="Detail Klinis EKG">ℹ️ Panduan Detail</button>
+          </div>
+          <div class="card-body">
+            <p class="card-hint">Evaluasi gambaran <strong>EKG 12-Lead awal saat kedatangan</strong> pasien:</p>
+
+            <div class="options-group" id="options-ekg">
+              <label class="option-label" data-value="0">
+                <input type="radio" name="ekg" value="0" autocomplete="off" />
+                <div class="option-content">
+                  <span class="option-score score-low">0</span>
+                  <div class="option-info">
+                    <span class="option-title">Normal</span>
+                    <span class="option-desc">EKG 12-lead completely normal, irama sinus, atau gambaran kronis stabil tanpa perubahan ST-T akut (misal: LBBB lama yang sudah diketahui, LVH kronis, early repolarization, pacemaker rhythm).</span>
+                  </div>
+                </div>
+              </label>
+              <label class="option-label" data-value="1">
+                <input type="radio" name="ekg" value="1" autocomplete="off" />
+                <div class="option-content">
+                  <span class="option-score score-med">1</span>
+                  <div class="option-info">
+                    <span class="option-title">Non-Spesifik Abnormal</span>
+                    <span class="option-desc">Perubahan repolarisasi non-spesifik: ST depresi minimal (<1mm), T-wave mendatar (flat T), T-wave inversion minimal (<1mm), RBBB, atau perubahan ST-T yang tidak khas iskemia.</span>
+                  </div>
+                </div>
+              </label>
+              <label class="option-label" data-value="2">
+                <input type="radio" name="ekg" value="2" autocomplete="off" />
+                <div class="option-content">
+                  <span class="option-score score-high">2</span>
+                  <div class="option-info">
+                    <span class="option-title">ST Deviasi Signifikan / Iskemia Akut Jelas</span>
+                    <span class="option-desc">ST depresi ≥1mm pada ≥2 lead bersebelahan (contiguous), T-wave inversion >1mm pada lead berpola iskemia, atau ST elevasi ≥1mm (STEMI Alert!).</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <!-- Deep Clinical Accordion Guide -->
+            <details class="clinical-accordion">
+              <summary class="accordion-header">📖 Penjelasan Lengkap: Panduan Pembacaan EKG Nyeri Dada</summary>
+              <div class="accordion-body">
+                <div class="guide-box">
+                  <h4>⚡ Cara Membaca & Mengkategorikan EKG di HEART Score:</h4>
+
+                  <div class="score-breakdown-list">
+                    <div class="sb-item sb-0">
+                      <span class="sb-badge">Skor 0</span>
+                      <div class="sb-text">
+                        <strong>Normal / Perubahan Kronis Jinak:</strong><br />
+                        - Tidak ada deviasi segmen ST atau inversi gelombang T.<br />
+                        - LBBB kronis / LVH dengan pola strain sekunder yang sudah lama ada.<br />
+                        - Repolarisasi dini (early repolarization) pada pasien muda.<br />
+                        <em>Catatan: EKG normal TIDAK menyingkirkan NSTEMI/Angina Tak Stabil! 1-in-3 NSTEMI memiliki EKG awal normal.</em>
+                      </div>
+                    </div>
+                    <div class="sb-item sb-1">
+                      <span class="sb-badge">Skor 1</span>
+                      <div class="sb-text">
+                        <strong>Abnormalitas Repolarisasi Non-Spesifik:</strong><br />
+                        - Depresi ST <1 mm di mana saja.<br />
+                        - Inversi T <1 mm atau gelombang T mendatar (flat T waves).<br />
+                        - Blok cabang berkas kanan (RBBB) atau gangguan konduksi lain tanpa ST deviasi akut.
+                      </div>
+                    </div>
+                    <div class="sb-item sb-2">
+                      <span class="sb-badge">Skor 2</span>
+                      <div class="sb-text">
+                        <strong>ST Deviasi Signifikan / Iskemia Akut Signifikan:</strong><br />
+                        - Depresi ST horizontal / downsloping ≥1 mm di ≥2 lead bersebelahan (misal: V4-V6 atau II, III, aVF).<br />
+                        - Inversi gelombang T simetris dalam >1 mm di lead dengan gelombang R dominan.<br />
+                        - ST Elevasi ≥1 mm → 🚨 <strong>STEMI ALERT!</strong> Pasien ini harus langsung masuk ke <em>Primary PCI / Fibrinolitik Protocol</em>, bukan sekedar observasi!
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="guide-alert alert-danger">
+                    🚨 <strong>EKG HIGH-RISK EQUIVALENT (Jangan Melewatkan Pattern Ini!):</strong><br />
+                    - <strong>Wellens Syndrome:</strong> Inversi T biphasic atau deep inverted di V2–V3 (stenosis kritis LAD proximal!). Berikan Skor 2 & konsultasi Sp.JP segera.<br />
+                    - <strong>De Winter T-waves:</strong> ST depresi 1-3 mm di J-point dengan T-wave tinggi simetris di V1-V6 (oklusi akut LAD!). Berikan Skor 2 / STEMI equivalent.<br />
+                    - <strong>Presumed New LBBB:</strong> LBBB baru yang disertai nyeri dada tipikal = indikasi aktivasi Cath Lab / STEMI.
+                  </div>
+                </div>
+              </div>
+            </details>
+
+          </div>
+        </div>
+
+        <!-- 3. AGE -->
+        <div class="component-card" id="card-age" data-component="age">
+          <div class="card-header">
+            <div class="card-number">3</div>
+            <div class="card-title-group">
+              <h3 class="card-title">Age <span class="card-title-en">(Usia Pasien)</span></h3>
+              <div class="card-score-badge" id="badge-age">–</div>
+            </div>
+            <button type="button" class="card-info-btn" data-modal="age-modal" aria-label="Detail Klinis Age">ℹ️ Panduan Detail</button>
+          </div>
+          <div class="card-body">
+            <p class="card-hint">Usia merupakan faktor risiko independen terkuat untuk Penyakit Arteri Koroner (PJK):</p>
+
+            <!-- Age Input Tool -->
+            <div class="age-input-group">
+              <div class="age-input-wrapper">
+                <input type="number" id="ageInput" class="age-input" placeholder="Ketik usia pasien (tahun)..." min="0" max="120" autocomplete="off" />
+                <span class="age-unit">tahun</span>
+              </div>
+              <button type="button" class="age-calc-btn" id="ageCalcBtn">Auto Select Skor</button>
+            </div>
+
+            <div class="options-group" id="options-age">
+              <label class="option-label" data-value="0">
+                <input type="radio" name="age" value="0" autocomplete="off" />
+                <div class="option-content">
+                  <span class="option-score score-low">0</span>
+                  <div class="option-info">
+                    <span class="option-title">Usia &lt; 45 Tahun</span>
+                    <span class="option-desc">Risiko aterosklerosis koroner dasar relatif rendah (kecuali ada komorbid berat/familiat).</span>
+                  </div>
+                </div>
+              </label>
+              <label class="option-label" data-value="1">
+                <input type="radio" name="age" value="1" autocomplete="off" />
+                <div class="option-content">
+                  <span class="option-score score-med">1</span>
+                  <div class="option-info">
+                    <span class="option-title">Usia 45 – 64 Tahun</span>
+                    <span class="option-desc">Risiko kardiovaskular tingkat sedang. Prevalensi plak aterosklerosis mulai meningkat signifikan.</span>
+                  </div>
+                </div>
+              </label>
+              <label class="option-label" data-value="2">
+                <input type="radio" name="age" value="2" autocomplete="off" />
+                <div class="option-content">
+                  <span class="option-score score-high">2</span>
+                  <div class="option-info">
+                    <span class="option-title">Usia ≥ 65 Tahun</span>
+                    <span class="option-desc">Risiko kardiovaskular tinggi. Usia tua merupakan prediktor independen MACE dan penyakit multivessel.</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <!-- Deep Clinical Accordion Guide -->
+            <details class="clinical-accordion">
+              <summary class="accordion-header">📖 Penjelasan Lengkap: Pertimbangan Usia dalam Nyeri Dada</summary>
+              <div class="accordion-body">
+                <div class="guide-box">
+                  <h4>👤 Pertimbangan Klinis Berdasarkan Usia:</h4>
+                  <ul>
+                    <li><strong>Pasien Muda (<45 thn):</strong> PJK aterosklerotik lebih jarang, tetapi pikirkan etiologi lain seperti: <em>Spontaneous Coronary Artery Dissection (SCAD - sering pada wanita muda), Vasospasme koroner (Prinzmetal), Penggunaan Kokain/Amfetamin, Miokarditis, atau Hiperkolesterolemia Familial berat</em>.</li>
+                    <li><strong>Pasien Usia Lanjut (≥65 thn):</strong> Memiliki prevalensi tinggi penyakit pembuluh darah multipel (multivessel CAD). Sering datang dengan keluhan <em>angina equivalents</em> (sesak napas, kebingungan akut/delirium, kelemahan mendadak) tanpa nyeri dada hebat!</li>
+                  </ul>
+                </div>
+              </div>
+            </details>
+
+          </div>
+        </div>
+
+        <!-- 4. RISK FACTORS -->
+        <div class="component-card" id="card-risk" data-component="risk">
+          <div class="card-header">
+            <div class="card-number">4</div>
+            <div class="card-title-group">
+              <h3 class="card-title">Risk Factors <span class="card-title-en">(Faktor Risiko Koroner)</span></h3>
+              <div class="card-score-badge" id="badge-risk">–</div>
+            </div>
+            <button type="button" class="card-info-btn" data-modal="risk-modal" aria-label="Detail Klinis Risk Factors">ℹ️ Panduan Detail</button>
+          </div>
+          <div class="card-body">
+            <p class="card-hint">Centang semua faktor risiko yang teridentifikasi pada pasien:</p>
+
+            <!-- Checkbox Checklist -->
+            <div class="risk-checklist" id="riskChecklist">
+              <div class="checklist-header">✅ Checklist 7 Faktor Risiko Koroner Standar:</div>
+              <label class="check-item"><input type="checkbox" class="risk-check" value="htn" autocomplete="off" /> <strong>Hipertensi</strong> (SDB ≥140 / TDB ≥90 mmHg atau sedang dalam pengobatan antihipertensi)</label>
+              <label class="check-item"><input type="checkbox" class="risk-check" value="hyperlipid" autocomplete="off" /> <strong>Hiperkolesterolemia / Dislipidemia</strong> (Kolesterol Total >200 / LDL >130 mg/dL atau terapi Statin)</label>
+              <label class="check-item"><input type="checkbox" class="risk-check" value="dm" autocomplete="off" /> <strong>Diabetes Mellitus</strong> (Tipe 1 / Tipe 2, terdiagnosis atau sedang terapi insulin/OAD)</label>
+              <label class="check-item"><input type="checkbox" class="risk-check" value="obesity" autocomplete="off" /> <strong>Obesitas</strong> (Indeks Massa Tubuh / BMI ≥ 30 kg/m² atau lingkar pinggang berlebih)</label>
+              <label class="check-item"><input type="checkbox" class="risk-check" value="smoking" autocomplete="off" /> <strong>Merokok</strong> (Perokok aktif saat ini atau baru berhenti <3 bulan yang lalu)</label>
+              <label class="check-item"><input type="checkbox" class="risk-check" value="family" autocomplete="off" /> <strong>Riwayat Keluarga PJK Dini</strong> (Orang tua/saudara kandung menderita PJK/Infark di usia <55th ♂ / <65th ♀)</label>
+              <label class="check-item"><input type="checkbox" class="risk-check" value="athero" autocomplete="off" /> <strong>Aterosklerosis Non-Koroner</strong> (Riwayat Stroke Iskemik, TIA, atau Penyakit Arteri Perifer / PAD)</label>
+            </div>
+
+            <div class="risk-known-group">
+              <label class="check-item check-known">
+                <input type="checkbox" class="risk-check" id="knownCad" value="knownCAD" autocomplete="off" />
+                <span>🚨 <strong>SUDAH ADA RIWAYAT PJK TERDIAGNOSIS (Pernah Infark / Stent PCI / Operasi CABG / Angiografi CAD Positif)</strong></span>
+              </label>
+            </div>
+
+            <div class="risk-counter-display" id="riskCounter">Faktor risiko tercentang: <strong>0</strong></div>
+
+            <div class="options-group" id="options-risk">
+              <label class="option-label" data-value="0">
+                <input type="radio" name="risk" value="0" autocomplete="off" />
+                <div class="option-content">
+                  <span class="option-score score-low">0</span>
+                  <div class="option-info">
+                    <span class="option-title">0 Faktor Risiko</span>
+                    <span class="option-desc">Tidak ada faktor risiko koroner di atas yang ditemukan pada anamnesis & rekam medis.</span>
+                  </div>
+                </div>
+              </label>
+              <label class="option-label" data-value="1">
+                <input type="radio" name="risk" value="1" autocomplete="off" />
+                <div class="option-content">
+                  <span class="option-score score-med">1</span>
+                  <div class="option-info">
+                    <span class="option-title">1 – 2 Faktor Risiko</span>
+                    <span class="option-desc">Ditemukan 1 atau 2 faktor risiko koroner (dan TANPA riwayat PJK/CAD sebelumnya).</span>
+                  </div>
+                </div>
+              </label>
+              <label class="option-label" data-value="2">
+                <input type="radio" name="risk" value="2" autocomplete="off" />
+                <div class="option-content">
+                  <span class="option-score score-high">2</span>
+                  <div class="option-info">
+                    <span class="option-title">≥3 Faktor Risiko ATAU Riwayat CAD Terbukti</span>
+                    <span class="option-desc">Memiliki 3 atau lebih faktor risiko koroner ATAU sudah pernah terdiagnosis PJK (Pernah PCI stent, CABG, Infark Miokard lama).</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <!-- Deep Clinical Accordion Guide -->
+            <details class="clinical-accordion">
+              <summary class="accordion-header">📖 Penjelasan Lengkap: Definisi 7 Faktor Risiko HEART Score</summary>
+              <div class="accordion-body">
+                <div class="guide-box">
+                  <h4>⚠️ Kriteria Resmi Faktor Risiko HEART Score:</h4>
+                  <ul class="guide-list">
+                    <li><strong>1. Hipertensi:</strong> Tekanan darah ≥140/90 mmHg pada ≥2 kali pengukuran atau pasien sudah mengonsumsi obat antihipertensi secara rutin.</li>
+                    <li><strong>2. Hiperkolesterolemia:</strong> Kolesterol Total >200 mg/dL, LDL >130 mg/dL, atau sedang dalam pengobatan statin / fibrat.</li>
+                    <li><strong>3. Diabetes Mellitus:</strong> DM Tipe 1 atau Tipe 2 dengan GDS/GDP/HbA1c tinggi atau terapi insulin/obat hipoglikemik oral.</li>
+                    <li><strong>4. Obesitas:</strong> BMI ≥30 kg/m² (atau kriteria Asia: BMI ≥25 kg/m² / lingkar pinggang >90cm ♂, >80cm ♀).</li>
+                    <li><strong>5. Perokok:</strong> Merokok aktif (rokok konvensional / vape) atau mantan perokok yang berhenti <3 bulan.</li>
+                    <li><strong>6. Riwayat Keluarga PJK Dini:</strong> Ayah/saudara laki-laki menderita PJK/Infark <55 tahun, atau Ibu/saudara perempuan <65 tahun.</li>
+                    <li><strong>7. Aterosklerosis Vaskular:</strong> Adanya riwayat aterosklerosis di organ lain (Stroke iskemik, TIA, Claudicatio / PAD).</li>
+                  </ul>
+                  <div class="guide-alert alert-info">
+                    💡 <strong>Aturan Khusus PJK Terbukti (CAD History):</strong> Jika pasien memiliki riwayat Infark Miokard (PJK), pernah pasang Stent (PCI), atau bypass (CABG), pasien <strong>otomatis mendapat Skor 2</strong> tanpa melihat jumlah faktor risiko lainnya.
+                  </div>
+                </div>
+              </div>
+            </details>
+
+          </div>
+        </div>
+
+        <!-- 5. TROPONIN -->
+        <div class="component-card" id="card-troponin" data-component="troponin">
+          <div class="card-header">
+            <div class="card-number">5</div>
+            <div class="card-title-group">
+              <h3 class="card-title">Troponin <span class="card-title-en">(Biomarker Lab Cardiac Troponin I / T)</span></h3>
+              <div class="card-score-badge" id="badge-troponin">–</div>
+            </div>
+            <button type="button" class="card-info-btn" data-modal="troponin-modal" aria-label="Detail Klinis Troponin">ℹ️ Panduan Detail</button>
+          </div>
+          <div class="card-body">
+            <p class="card-hint">Kalkulator rasio kadar Troponin pasien terhadap batas atas normal (ULN = Upper Limit of Normal 99th percentile):</p>
+
+            <!-- Troponin Calculator Helper -->
+            <div class="troponin-helper">
+              <div class="troponin-input-row">
+                <div class="trop-input-group">
+                  <label class="trop-label">Nilai Troponin Pasien</label>
+                  <div class="trop-input-wrap">
+                    <input type="number" id="tropValue" class="trop-input" placeholder="misal: 0.08" step="0.001" min="0" autocomplete="off" />
+                    <span class="trop-unit">ng/mL</span>
+                  </div>
+                </div>
+                <div class="trop-input-group">
+                  <label class="trop-label">ULN Lab Anda (Batas Normal)</label>
+                  <div class="trop-input-wrap">
+                    <input type="number" id="tropULN" class="trop-input" placeholder="misal: 0.04" step="0.001" min="0" autocomplete="off" />
+                    <span class="trop-unit">ng/mL</span>
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="trop-calc-btn" id="tropCalcBtn">Hitung Rasio & Auto-Select Skor</button>
+              <div class="trop-result" id="tropResult" style="display:none;"></div>
+            </div>
+
+            <div class="options-group" id="options-troponin">
+              <label class="option-label" data-value="0">
+                <input type="radio" name="troponin" value="0" autocomplete="off" />
+                <div class="option-content">
+                  <span class="option-score score-low">0</span>
+                  <div class="option-info">
+                    <span class="option-title">Normal (≤ 1× ULN)</span>
+                    <span class="option-desc">Kadar Troponin berada di bawah atau sama dengan batas atas normal (99th percentile cutoff lab).</span>
+                  </div>
+                </div>
+              </label>
+              <label class="option-label" data-value="1">
+                <input type="radio" name="troponin" value="1" autocomplete="off" />
+                <div class="option-content">
+                  <span class="option-score score-med">1</span>
+                  <div class="option-info">
+                    <span class="option-title">Mildly Elevated (1 – 3× ULN)</span>
+                    <span class="option-desc">Kadar Troponin meningkat ringan antara >1 hingga 3 kali dari nilai ULN lab.</span>
+                  </div>
+                </div>
+              </label>
+              <label class="option-label" data-value="2">
+                <input type="radio" name="troponin" value="2" autocomplete="off" />
+                <div class="option-content">
+                  <span class="option-score score-high">2</span>
+                  <div class="option-info">
+                    <span class="option-title">Significantly Elevated (> 3× ULN)</span>
+                    <span class="option-desc">Kadar Troponin meningkat signifikan melebihi 3 kali batas atas normal lab. Indikasi nekrosis miokard berat!</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <!-- Deep Clinical Accordion Guide -->
+            <details class="clinical-accordion">
+              <summary class="accordion-header">📖 Penjelasan Lengkap: Troponin Konvensional vs hs-Troponin & Penyebab Non-ACS</summary>
+              <div class="accordion-body">
+                <div class="guide-box">
+                  <h4>🧪 Prinsip Evaluasi Troponin:</h4>
+                  <ul>
+                    <li><strong>ULN (Upper Limit of Normal):</strong> Patokan nilai 99th percentile cutoff dari kit lab rumah sakit/faskes Anda (misal: Troponin I konvensional ULN = 0.04 ng/mL; hs-cTnI ULN = 14 ng/L atau 26 ng/L).</li>
+                    <li><strong>Pemeriksaan Serial Wajib:</strong> Peningkatan troponin membutuhkan waktu 2–4 jam pasca onset nekrosis. Lakukan sampel saat masuk (0-hour) dan serial ulang 3–6 jam kemudian untuk menilai *delta rise/fall*!</li>
+                  </ul>
+
+                  <h4>⚠️ Penyebab Troponin Meningkat Selain SKA (Differential Diagnosis Elevations):</h4>
+                  <div class="guide-grid-2">
+                    <div class="guide-col">
+                      <span class="col-title">Kardiak Non-Koroner</span>
+                      <ul>
+                        <li>Gagal Jantung Akut / Decompensasi</li>
+                        <li>Miokarditis / Perikarditis</li>
+                        <li>Takiaritmia berat (SVT / AF Rapid)</li>
+                        <li>Takotsubo Cardiomyopathy</li>
+                        <li>Kardiomiopati Hipertrofik</li>
+                      </ul>
+                    </div>
+                    <div class="guide-col">
+                      <span class="col-title">Sistemik & Non-Kardiak</span>
+                      <ul>
+                        <li>Gagal Ginjal Kronik / AKI (clearance lambat)</li>
+                        <li>Emboli Paru Masif (PE)</li>
+                        <li>Sepsis / Syok Septik</li>
+                        <li>Stroke Akut / Perdarahan Subarakhnoid</li>
+                        <li>Krisis Hipertensi</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <!-- ── CALCULATE BUTTON ───────────────────── -->
+    <div class="calc-section">
+      <div class="calc-preview" id="calcPreview">
+        <div class="preview-scores">
+          <div class="preview-score-item"><span class="preview-letter">H</span><span class="preview-val" id="pv-history">–</span></div>
+          <div class="preview-score-item"><span class="preview-letter">E</span><span class="preview-val" id="pv-ekg">–</span></div>
+          <div class="preview-score-item"><span class="preview-letter">A</span><span class="preview-val" id="pv-age">–</span></div>
+          <div class="preview-score-item"><span class="preview-letter">R</span><span class="preview-val" id="pv-risk">–</span></div>
+          <div class="preview-score-item"><span class="preview-letter">T</span><span class="preview-val" id="pv-troponin">–</span></div>
+          <div class="preview-divider">=</div>
+          <div class="preview-total"><span class="preview-total-val" id="pv-total">0</span><span class="preview-total-label">/10</span></div>
+        </div>
+      </div>
+      <button class="calc-btn" id="calcBtn" disabled>
+        <span class="calc-btn-icon">⚡</span>
+        Hitung HEART Score & Tampilkan Rekomendasi
+      </button>
+      <button class="reset-btn" id="resetBtn">↺ Reset Form (Pasien Baru)</button>
+    </div>
+
+    <!-- ── RESULT SECTION ─────────────────────── -->
+    <div class="result-section" id="resultSection" style="display:none;">
+
+      <div class="result-card" id="resultCard">
+        <!-- Dynamic content injected by JS -->
+      </div>
+
+      <!-- Risk Timeline -->
+      <div class="risk-timeline-card">
+        <h3 class="timeline-title">📊 Probabilitas MACE 6-Minggu</h3>
+        <p class="timeline-subtitle">Major Adverse Cardiac Events: Kematian, Infark Miokard (MI), atau Revaskularisasi Koroner Urgent</p>
+        <div class="timeline-bars" id="timelineBars">
+          <!-- injected -->
+        </div>
+      </div>
+
+      <!-- Action Plan -->
+      <div class="action-card" id="actionCard">
+        <!-- injected -->
+      </div>
+
+      <!-- Differential Diagnosis -->
+      <div class="ddx-card">
+        <h3 class="ddx-title">🩺 High-Risk Differential Diagnoses Nyeri Dada</h3>
+        <div class="ddx-grid">
+          <div class="ddx-item ddx-urgent">
+            <div class="ddx-category">🚨 Rule-Out Segera (Life-Threatening)</div>
+            <ul>
+              <li>STEMI / NSTEMI / Unstable Angina</li>
+              <li>Diseksi Aorta Akut (Stanford A/B)</li>
+              <li>Emboli Paru Masif (PE)</li>
+              <li>Tension Pneumothorax</li>
+              <li>Tamponade Jantung</li>
+            </ul>
+          </div>
+          <div class="ddx-item ddx-moderate">
+            <div class="ddx-category">⚠️ Evaluasi Lanjutan</div>
+            <ul>
+              <li>Perikarditis / Miokarditis Akut</li>
+              <li>Spasme / Ruptur Esofagus (Boerhaave)</li>
+              <li>Pneumonia Pleuritis</li>
+              <li>GERD Berat / Esofagitis</li>
+            </ul>
+          </div>
+          <div class="ddx-item ddx-benign">
+            <div class="ddx-category">✅ Non-Kardiak / Benign</div>
+            <ul>
+              <li>Kostokondritis (Tietze Syndrome)</li>
+              <li>Nyeri Otot / Muskuloskeletal Dinding Dada</li>
+              <li>Anxiety / Panic Disorder</li>
+              <li>Herpes Zoster (Fase Pre-eruptif)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Evidence & References -->
+      <div class="evidence-card">
+        <h3 class="evidence-title">📚 Evidence-Based Validity & Guidelines</h3>
+        <div class="evidence-items">
+          <div class="evidence-item">
+            <div class="ev-icon">🔬</div>
+            <div class="ev-content">
+              <div class="ev-title">Validation Study</div>
+              <div class="ev-desc">Six AJ et al. (2008) & Backus BE et al. (2010). Divalidasi prospektif pada >2000 pasien nyeri dada IGD.</div>
+            </div>
+          </div>
+          <div class="evidence-item">
+            <div class="ev-icon">📈</div>
+            <div class="ev-content">
+              <div class="ev-title">HEART Pathway RCT</div>
+              <div class="ev-desc">Mahler SA et al. (2015) Circulation. Penggunaan HEART Pathway memotong durasi perawatan 12+ jam secara aman.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Print/Share -->
+      <div class="action-buttons-row">
+        <button class="action-row-btn print-btn" id="printBtn">🖨️ Cetak / Simpan Rekam Medis PDF</button>
+        <button class="action-row-btn recalc-btn" id="recalcBtn">🔄 Hitung Ulang</button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── FOOTER BRANDING ──────────────────────────── -->
+  <footer class="app-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="footer-logo">🫀 CardiologyVault</span>
+        <span class="footer-tagline">Empowering General Practitioners with Evidence-Based Cardiology Tools</span>
+      </div>
+      <div class="footer-author">
+        <p>Developed & Curated by:</p>
+        <strong>Bayushi Eka Putra, MD, FIHA</strong>
+        <p class="footer-credits">Clinical Decision Support System Suite © 2026</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ── MODALS ─────────────────────────────────── -->
+  <div class="modal-overlay" id="history-modal">
+    <div class="modal-box">
+      <button class="modal-close" data-close="history-modal">✕</button>
+      <h2 class="modal-title">📋 History – Anamnesis Khas SKA</h2>
+      <div class="modal-content">
+        <div class="modal-section">
+          <h3>Kriteria Tipikal Nyeri Dada Iskemik</h3>
+          <div class="modal-criteria">
+            <div class="criteria-item"><span class="ci-num">1</span><div class="ci-text"><strong>Lokasi:</strong> Retro/substernal, menjalar ke arm kiri, rahang, leher, epigastrium</div></div>
+            <div class="criteria-item"><span class="ci-num">2</span><div class="ci-text"><strong>Karakter:</strong> Rasa tertindih beban berat, diremas, terbakar (bukan tajam/seperti ditusuk)</div></div>
+            <div class="criteria-item"><span class="ci-num">3</span><div class="ci-text"><strong>Pemicu & Peringan:</strong> Dipicu exertional/stres, membaik dengan nitrat/istirahat</div></div>
+            <div class="criteria-item"><span class="ci-num">4</span><div class="ci-text"><strong>Otonom:</strong> Diaphoresis (keringat dingin), mual, muntah, dyspnea</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="ekg-modal">
+    <div class="modal-box">
+      <button class="modal-close" data-close="ekg-modal">✕</button>
+      <h2 class="modal-title">⚡ EKG – Interpretasi 12-Lead</h2>
+      <div class="modal-content">
+        <div class="modal-section">
+          <p>ST Deviasi ≥1mm atau T-Wave Inversion >1mm pada lead kontigu mencerminkan iskemia aktif (Skor 2). ST-Elevasi kontigu = Kategori STEMI!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="age-modal">
+    <div class="modal-box">
+      <button class="modal-close" data-close="age-modal">✕</button>
+      <h2 class="modal-title">👤 Age – Usia Pasien</h2>
+      <div class="modal-content">
+        <div class="modal-section">
+          <p>&lt;45 tahun: Skor 0 | 45-64 tahun: Skor 1 | ≥65 tahun: Skor 2</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="risk-modal">
+    <div class="modal-box">
+      <button class="modal-close" data-close="risk-modal">✕</button>
+      <h2 class="modal-title">⚠️ Risk Factors Koroner</h2>
+      <div class="modal-content">
+        <div class="modal-section">
+          <p>Faktor risiko mencakup DM, Hipertensi, Dislipidemia, Obesitas, Merokok, Riwayat Keluarga PJK. Riwayat CAD/PCI/CABG otomatis memberikan Skor 2.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="troponin-modal">
+    <div class="modal-box">
+      <button class="modal-close" data-close="troponin-modal">✕</button>
+      <h2 class="modal-title">🧪 Troponin Biomarker</h2>
+      <div class="modal-content">
+        <div class="modal-section">
+          <p>≤1× ULN = Skor 0 | 1-3× ULN = Skor 1 | &gt;3× ULN = Skor 2. Selalu gunakan nilai ULN resmi dari kit lab Anda.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="info-modal">
+    <div class="modal-box">
+      <button class="modal-close" data-close="info-modal">✕</button>
+      <h2 class="modal-title">🫀 CardiologyVault - HEART Score Suite</h2>
+      <div class="modal-content">
+        <div class="modal-section">
+          <p>Clinical Decision Support Tool khusus Dokter Umum & Dokter Jaga IGD.</p>
+          <br>
+          <p><strong>Developed & Curated by:</strong><br>Bayushi Eka Putra, MD, FIHA</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+/* ─────────────────────────────────────────────────
+   HEART Score Pro – CardiologyVault Edition
+   JavaScript Application Logic
+   Author: Bayushi Eka Putra, MD, FIHA
+   ───────────────────────────────────────────────── */
+
+'use strict';
+
+const state = {
+  scores: {
+    history:  null,
+    ekg:      null,
+    age:      null,
+    risk:     null,
+    troponin: null,
+  },
+  get total() {
+    return Object.values(this.scores).reduce((sum, v) => sum + (v !== null ? v : 0), 0);
+  },
+  get allFilled() {
+    return Object.values(this.scores).every(v => v !== null);
+  },
+};
+
+const RISK_CATEGORIES = {
+  low: {
+    label:    'Risiko RENDAH',
+    range:    '0–3',
+    mace:     '≤ 2%',
+    maceExact: 0.018,
+    color:    '#10b981',
+    bgGrad:   'linear-gradient(135deg, #022c22 0%, #064e3b 100%)',
+    borderColor: '#10b981',
+    emoji:    '🟢',
+    accentColor: '#34d399',
+  },
+  moderate: {
+    label:    'Risiko SEDANG',
+    range:    '4–6',
+    mace:     '12–17%',
+    maceExact: 0.14,
+    color:    '#f59e0b',
+    bgGrad:   'linear-gradient(135deg, #271a00 0%, #452e00 100%)',
+    borderColor: '#f59e0b',
+    emoji:    '🟡',
+    accentColor: '#fbbf24',
+  },
+  high: {
+    label:    'Risiko TINGGI',
+    range:    '7–10',
+    mace:     '50–65%',
+    maceExact: 0.60,
+    color:    '#ff2a5f',
+    bgGrad:   'linear-gradient(135deg, #32000c 0%, #5c0018 100%)',
+    borderColor: '#ff2a5f',
+    emoji:    '🔴',
+    accentColor: '#ff6b8b',
+  },
+};
+
+const ACTION_PLANS = {
+  low: {
+    title:      '🟢 Tatalaksana – Risk Category Low (0–3)',
+    bg:         'rgba(16, 185, 129, 0.08)',
+    border:     'rgba(16, 185, 129, 0.25)',
+    borderLeft: '#10b981',
+    steps: [
+      { icon: '🏠', text: '<strong>Discharge Aman Terencana:</strong> Pasien berpotensi dipulangkan setelah observasi singkat di IGD (2–4 jam)' },
+      { icon: '🧪', text: '<strong>Serial Troponin:</strong> Pastikan tidak ada peningkatan (delta rise) bermakna pada pemeriksaan serial (jam ke-0 dan jam ke-3)' },
+      { icon: '💊', text: '<strong>Simptomatis & Edukasi:</strong> Berikan terapi simptomatis, obat antiangina bila diperlukan, serta edukasi tanda bahaya' },
+      { icon: '📋', text: '<strong>Poliklinik Cardiology / Rawat Jalan:</strong> Jadwalkan evaluasi rawat jalan & non-invasive stress testing elektif dalam 1–2 minggu' },
+    ],
+    note: '💡 Rekomendasi AHA/ESC 2021: Pasien low-risk HEART score (0–3) dengan serial troponin negatif memiliki risiko MACE 6 minggu <2% sehingga early discharge aman.',
+  },
+  moderate: {
+    title:      '🟡 Tatalaksana – Risk Category Moderate (4–6)',
+    bg:         'rgba(245, 158, 11, 0.08)',
+    border:     'rgba(245, 158, 11, 0.25)',
+    borderLeft: '#f59e0b',
+    steps: [
+      { icon: '🏥', text: '<strong>Observasi Ketat / Rawat Inap Ruang Khusus:</strong> Pindahkan ke Clinical Decision Unit (CDU) atau ruang perawatan biasa' },
+      { icon: '🧪', text: '<strong>Serial Troponin & EKG 12-Lead:</strong> Lakukan serial troponin (0, 3, 6 jam) dan EKG ulang bila ada episode nyeri dada berulang' },
+      { icon: '💊', text: '<strong>Terapi Antiplatelet / Nitrat:</strong> Berikan Aspirin loading (160–325 mg), P2Y12 inhibitor bila terindikasi, serta nitrat IV/sublingual' },
+      { icon: '🔬', text: '<strong>Non-Invasive Diagnostic:</strong> Rencanakan CCTA (CT Cardiac Angiography) atau Echocardiography / Stress Test sebelum pemulangan' },
+      { icon: '👨‍⚕️', text: '<strong>Konsultasi Sp.JP / Kardiologi:</strong> Evaluasi kebutuhan strategi invasif dini' },
+    ],
+    note: '⚠️ Kategori moderat memiliki risiko MACE ~12-17%. Memerlukan penanganan cermat sebelum memutuskan discharge.',
+  },
+  high: {
+    title:      '🔴 Tatalaksana – Risk Category High (7–10)',
+    bg:         'rgba(255, 42, 95, 0.1)',
+    border:     'rgba(255, 42, 95, 0.3)',
+    borderLeft: '#ff2a5f',
+    steps: [
+      { icon: '🚑', text: '<strong>RAWAT INAP SEGERA / CVCU / ICU:</strong> Indikasi rawat di Intensive Coronary Care Unit atau High Care Unit. Segera atur bed!' },
+      { icon: '🛑', text: '<strong>Tatalaksana Emergensi SKA:</strong> Tirah baring, Oksigenasi (bila SpO2 <94%), EKG Kontinyu, Jalur Vena IV bilateral' },
+      { icon: '💉', text: '<strong>DAPT & Antikoagulasi:</strong> Dual Antiplatelet Therapy (Aspirin + Clopidogrel/Ticagrelor) + Antikoagulan (LMWH/UFH) dosis terapeutik' },
+      { icon: '🏥', text: '<strong>Invasive Strategy Urgent (Angiografi Koroner / Cath Lab):</strong> Persiapkan kateringasi koroner dini (<24 jam) atau emergensi bila hemodinamik tidak stabil' },
+    ],
+    note: '🚨 Risiko MACE mencapai 50–65%. Ini adalah kondisi kegawatdaruratan kardiovaskular akut yang membutuhkan intervensi invasif dini.',
+  },
+};
+
+const el = {
+  progressFill:   document.getElementById('progressFill'),
+  progressCount:  document.getElementById('progressCount'),
+  calcBtn:        document.getElementById('calcBtn'),
+  resetBtn:       document.getElementById('resetBtn'),
+  resultSection:  document.getElementById('resultSection'),
+  resultCard:     document.getElementById('resultCard'),
+  timelineBars:   document.getElementById('timelineBars'),
+  actionCard:     document.getElementById('actionCard'),
+  printBtn:       document.getElementById('printBtn'),
+  recalcBtn:      document.getElementById('recalcBtn'),
+  introClose:     document.getElementById('introClose'),
+  introBanner:    document.getElementById('introBanner'),
+  infoBtn:        document.getElementById('infoBtn'),
+  ageInput:       document.getElementById('ageInput'),
+  ageCalcBtn:     document.getElementById('ageCalcBtn'),
+  tropValue:      document.getElementById('tropValue'),
+  tropULN:        document.getElementById('tropULN'),
+  tropCalcBtn:    document.getElementById('tropCalcBtn'),
+  tropResult:     document.getElementById('tropResult'),
+  riskCounter:    document.getElementById('riskCounter'),
+  knownCad:       document.getElementById('knownCad'),
+  heartForm:      document.getElementById('heartForm'),
+};
+
+const pvEls = {
+  history:  document.getElementById('pv-history'),
+  ekg:      document.getElementById('pv-ekg'),
+  age:      document.getElementById('pv-age'),
+  risk:     document.getElementById('pv-risk'),
+  troponin: document.getElementById('pv-troponin'),
+  total:    document.getElementById('pv-total'),
+};
+
+function getRiskCategory(score) {
+  if (score <= 3) return 'low';
+  if (score <= 6) return 'moderate';
+  return 'high';
+}
+
+function getFilledCount() {
+  return Object.values(state.scores).filter(v => v !== null).length;
+}
+
+function updateProgress() {
+  const count = getFilledCount();
+  const pct   = (count / 5) * 100;
+  if (el.progressFill) el.progressFill.style.width = pct + '%';
+  if (el.progressCount) el.progressCount.textContent = `${count} / 5 komponen terisi`;
+  if (el.calcBtn) el.calcBtn.disabled = !state.allFilled;
+}
+
+function updatePreview(component, value) {
+  const pvEl = pvEls[component];
+  if (!pvEl) return;
+  if (value === null) {
+    pvEl.textContent = '–';
+    pvEl.className   = 'preview-val';
+  } else {
+    pvEl.textContent = value;
+    pvEl.className   = `preview-val has-score-${value}`;
+  }
+  if (pvEls.total) pvEls.total.textContent = state.total;
+}
+
+function updateBadge(component, value) {
+  const badge = document.getElementById(`badge-${component}`);
+  if (!badge) return;
+  if (value === null) {
+    badge.textContent = '–';
+    badge.className   = 'card-score-badge';
+  } else {
+    badge.textContent = value;
+    badge.className   = `card-score-badge scored-${value}`;
+  }
+}
+
+function markCardFilled(component, filled) {
+  const card = document.getElementById(`card-${component}`);
+  if (card) card.classList.toggle('filled', filled);
+}
+
+function registerRadios(component) {
+  const radios = document.querySelectorAll(`input[name="${component}"]`);
+  radios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      const val = parseInt(radio.value, 10);
+      state.scores[component] = val;
+      updateBadge(component, val);
+      updatePreview(component, val);
+      markCardFilled(component, true);
+      updateProgress();
+    });
+  });
+}
+
+function initAgeCalculator() {
+  if (!el.ageCalcBtn) return;
+  el.ageCalcBtn.addEventListener('click', () => {
+    const age = parseInt(el.ageInput.value, 10);
+    if (isNaN(age) || age < 0 || age > 120) {
+      alert('Masukkan usia pasien yang valid (0–120 tahun)');
+      return;
+    }
+    let val;
+    if (age < 45)       val = 0;
+    else if (age < 65)  val = 1;
+    else                val = 2;
+
+    const radio = document.querySelector(`input[name="age"][value="${val}"]`);
+    if (radio) {
+      radio.checked = true;
+      radio.dispatchEvent(new Event('change'));
+    }
+  });
+
+  el.ageInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      el.ageCalcBtn.click();
+    }
+  });
+}
+
+function initRiskChecklist() {
+  const checks = document.querySelectorAll('.risk-check');
+  checks.forEach(check => {
+    check.addEventListener('change', updateRiskCounter);
+  });
+}
+
+function updateRiskCounter() {
+  const checks       = document.querySelectorAll('.risk-check:not(#knownCad)');
+  const checkedCount = Array.from(checks).filter(c => c.checked).length;
+  const hasKnownCAD  = el.knownCad ? el.knownCad.checked : false;
+
+  if (el.riskCounter) {
+    el.riskCounter.innerHTML = `Faktor risiko tercentang: <strong>${checkedCount}</strong>${hasKnownCAD ? ' + <strong style="color:var(--color-high)">Riwayat CAD ✓</strong>' : ''}`;
+  }
+
+  let suggestedScore;
+  if (hasKnownCAD || checkedCount >= 3) suggestedScore = 2;
+  else if (checkedCount >= 1)           suggestedScore = 1;
+  else                                  suggestedScore = 0;
+
+  const radio = document.querySelector(`input[name="risk"][value="${suggestedScore}"]`);
+  if (radio && !document.querySelector('input[name="risk"]:checked')) {
+    radio.checked = true;
+    radio.dispatchEvent(new Event('change'));
+  }
+}
+
+function initTroponinCalculator() {
+  if (!el.tropCalcBtn) return;
+  el.tropCalcBtn.addEventListener('click', () => {
+    const val = parseFloat(el.tropValue.value);
+    const uln = parseFloat(el.tropULN.value);
+
+    if (isNaN(val) || isNaN(uln) || uln <= 0) {
+      alert('Masukkan nilai troponin & ULN yang valid');
+      return;
+    }
+
+    const ratio = val / uln;
+    let score, cls, msg;
+
+    if (ratio <= 1) {
+      score = 0; cls = 'trop-normal';
+      msg = `✅ Rasio ${ratio.toFixed(2)}× ULN → Normal (Skor 0)`;
+    } else if (ratio <= 3) {
+      score = 1; cls = 'trop-mild';
+      msg = `⚠️ Rasio ${ratio.toFixed(2)}× ULN → Mildly Elevated (Skor 1)`;
+    } else {
+      score = 2; cls = 'trop-high';
+      msg = `🚨 Rasio ${ratio.toFixed(2)}× ULN → Significantly Elevated (Skor 2)`;
+    }
+
+    if (el.tropResult) {
+      el.tropResult.textContent = msg;
+      el.tropResult.className   = `trop-result ${cls}`;
+      el.tropResult.style.display = 'block';
+    }
+
+    const radio = document.querySelector(`input[name="troponin"][value="${score}"]`);
+    if (radio) {
+      radio.checked = true;
+      radio.dispatchEvent(new Event('change'));
+    }
+  });
+}
+
+function initModals() {
+  document.querySelectorAll('.card-info-btn[data-modal]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openModal(btn.dataset.modal);
+    });
+  });
+
+  document.querySelectorAll('.modal-close[data-close]').forEach(btn => {
+    btn.addEventListener('click', () => closeModal(btn.dataset.close));
+  });
+
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal(overlay.id);
+    });
+  });
+
+  if (el.infoBtn) el.infoBtn.addEventListener('click', () => openModal('info-modal'));
+}
+
+function openModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) {
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) {
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+}
+
+function calculateScore() {
+  if (!state.allFilled) return;
+
+  const score    = state.total;
+  const catKey   = getRiskCategory(score);
+  const category = RISK_CATEGORIES[catKey];
+  const plan     = ACTION_PLANS[catKey];
+
+  el.resultSection.style.display = 'flex';
+
+  setTimeout(() => {
+    el.resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
+
+  el.resultCard.style.background  = category.bgGrad;
+  el.resultCard.style.border      = `2px solid ${category.borderColor}`;
+  el.resultCard.style.color       = '#fff';
+
+  const breakdownHtml = [
+    { letter: 'H', score: state.scores.history },
+    { letter: 'E', score: state.scores.ekg },
+    { letter: 'A', score: state.scores.age },
+    { letter: 'R', score: state.scores.risk },
+    { letter: 'T', score: state.scores.troponin },
+  ].map(item => `
+    <div class="breakdown-chip">
+      <span class="chip-letter">${item.letter}</span>
+      <span class="chip-score">${item.score}</span>
+    </div>
+  `).join('');
+
+  el.resultCard.innerHTML = `
+    <div class="result-score-big" style="color:${category.accentColor}">
+      ${score}<span class="result-score-of">/10</span>
+    </div>
+    <div class="result-category" style="color:${category.accentColor}">
+      ${category.emoji} ${category.label}
+    </div>
+    <div class="result-mace">
+      📊 MACE 6-Minggu: <strong style="margin-left:6px;color:${category.accentColor}">${category.mace}</strong>
+    </div>
+    <div class="result-score-breakdown">${breakdownHtml}</div>
+  `;
+
+  const allCats = [
+    { key: 'low',      label: 'Risiko Rendah (0–3)',   mace: '≤ 2%',    pct: 2,    fillClass: 'tl-fill-low'  },
+    { key: 'moderate', label: 'Risiko Sedang (4–6)',   mace: '12–17%',  pct: 17,   fillClass: 'tl-fill-med'  },
+    { key: 'high',     label: 'Risiko Tinggi (7–10)',  mace: '50–65%',  pct: 65,   fillClass: 'tl-fill-high' },
+  ];
+
+  el.timelineBars.innerHTML = allCats.map(cat => {
+    const isActive = cat.key === catKey;
+    return `
+      <div class="timeline-bar-item" style="${isActive ? 'opacity:1' : 'opacity:0.4'}">
+        <div class="tl-label-row">
+          <span class="tl-label">${isActive ? '▶ ' : ''}${cat.label}</span>
+          <span class="tl-value" style="${isActive ? `color:${RISK_CATEGORIES[cat.key].color}` : ''}">${cat.mace}</span>
+        </div>
+        <div class="tl-track">
+          <div class="tl-fill ${cat.fillClass}" style="width:0%" data-target="${cat.pct}"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  setTimeout(() => {
+    document.querySelectorAll('.tl-fill[data-target]').forEach(bar => {
+      bar.style.width = bar.dataset.target + '%';
+    });
+  }, 150);
+
+  el.actionCard.style.background = plan.bg;
+  el.actionCard.style.border     = `1px solid ${plan.border}`;
+  el.actionCard.innerHTML = `
+    <h3 class="action-title" style="color:${category.accentColor}">${plan.title}</h3>
+    <div class="action-steps">
+      ${plan.steps.map(step => `
+        <div class="action-step">
+          <span class="step-icon">${step.icon}</span>
+          <span class="step-text">${step.text}</span>
+        </div>
+      `).join('')}
+    </div>
+    <div class="action-note" style="border-left-color:${category.color}">
+      ${plan.note}
+    </div>
+  `;
+}
+
+function resetAll() {
+  Object.keys(state.scores).forEach(k => { state.scores[k] = null; });
+
+  if (el.heartForm) el.heartForm.reset();
+
+  document.querySelectorAll('input[type="radio"]').forEach(r => { r.checked = false; });
+  document.querySelectorAll('input[type="checkbox"]').forEach(c => { c.checked = false; });
+
+  if (el.ageInput) el.ageInput.value = '';
+  if (el.tropValue) el.tropValue.value = '';
+  if (el.tropULN) el.tropULN.value = '';
+  if (el.tropResult) el.tropResult.style.display = 'none';
+
+  ['history', 'ekg', 'age', 'risk', 'troponin'].forEach(c => {
+    updateBadge(c, null);
+    updatePreview(c, null);
+    markCardFilled(c, false);
+  });
+
+  if (el.riskCounter) el.riskCounter.innerHTML = 'Faktor risiko tercentang: <strong>0</strong>';
+
+  if (el.resultSection) el.resultSection.style.display = 'none';
+
+  updateProgress();
+  if (pvEls.total) pvEls.total.textContent = '0';
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function initIntroBanner() {
+  if (!el.introClose) return;
+  el.introClose.addEventListener('click', () => {
+    if (el.introBanner) el.introBanner.style.display = 'none';
+    const cardH = document.getElementById('card-history');
+    if (cardH) cardH.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+}
+
+function init() {
+  ['history', 'ekg', 'age', 'risk', 'troponin'].forEach(registerRadios);
+
+  initAgeCalculator();
+  initRiskChecklist();
+  initTroponinCalculator();
+  initModals();
+  initIntroBanner();
+
+  if (el.calcBtn) {
+    el.calcBtn.addEventListener('click', () => {
+      if (state.allFilled) calculateScore();
+    });
+  }
+
+  if (el.resetBtn) el.resetBtn.addEventListener('click', resetAll);
+
+  if (el.recalcBtn) {
+    el.recalcBtn.addEventListener('click', () => {
+      if (el.resultSection) el.resultSection.style.display = 'none';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  if (el.printBtn) {
+    el.printBtn.addEventListener('click', () => window.print());
+  }
+
+  resetAll();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
