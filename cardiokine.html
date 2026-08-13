@@ -1,0 +1,946 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KardioKinetik – Kalkulator Biomarker Jantung</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--surface:#161b27;--surface2:#1c2235;--surface3:#212840;
+  --border:#252d45;--border2:#2e3a58;
+  --teal:#00d4b0;--teal-d:rgba(0,212,176,.12);--teal-b:rgba(0,212,176,.25);
+  --blue:#5c9aff;--blue-d:rgba(92,154,255,.12);
+  --red:#ff4f63;--red-d:rgba(255,79,99,.12);--red-b:rgba(255,79,99,.25);
+  --amber:#ffba52;--amber-d:rgba(255,186,82,.12);--amber-b:rgba(255,186,82,.25);
+  --purple:#a78bfa;--purple-d:rgba(167,139,250,.12);
+  --text:#dde3f0;--muted:#5d6b8a;--muted2:#8896b3;
+  --r:14px;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* HEADER */
+header{background:linear-gradient(135deg,#0a0f1e,#111829);border-bottom:1px solid var(--border);padding:16px 24px;position:sticky;top:0;z-index:100}
+.hi{max-width:1020px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{background:linear-gradient(135deg,var(--teal),#00a88a);border-radius:10px;padding:8px;display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:20px;height:20px;stroke:#0a0f1e;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.logo-text h1{font-size:18px;font-weight:900;color:#fff;letter-spacing:-.4px;line-height:1.1}
+.logo-text p{font-size:10px;font-weight:600;color:var(--muted2);margin-top:1px}
+.hbadge{font-size:10px;font-weight:700;color:var(--teal);background:var(--teal-d);padding:3px 10px;border-radius:20px;border:1px solid var(--teal-b);white-space:nowrap}
+
+/* MAIN */
+main{max-width:1020px;margin:0 auto;padding:24px 16px 60px}
+
+/* TABS */
+.tabs{display:flex;gap:5px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:5px;margin-bottom:22px}
+.tab-btn{flex:1;padding:10px 8px;border-radius:8px;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;color:var(--muted2);background:transparent;transition:all .2s;white-space:nowrap}
+.tab-btn:hover{color:var(--text);background:var(--surface2)}
+.tab-btn.active-teal{background:linear-gradient(135deg,#002e28,#003d35);color:var(--teal);box-shadow:0 2px 12px rgba(0,212,176,.15)}
+.tab-btn.active-blue{background:linear-gradient(135deg,#0d2050,#152868);color:var(--blue);box-shadow:0 2px 12px rgba(92,154,255,.15)}
+.tab-btn.active-red{background:linear-gradient(135deg,#350d15,#451220);color:var(--red);box-shadow:0 2px 12px rgba(255,79,99,.15)}
+
+/* SECTION */
+.section{display:none}
+.section.active{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start}
+@media(max-width:768px){.section.active{grid-template-columns:1fr}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.section.active{animation:fadeUp .25s ease}
+
+/* PANEL */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.panel-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.panel-header h2{font-size:13px;font-weight:800;color:var(--text)}
+.ph-icon{width:18px;height:18px;flex-shrink:0}
+.panel-body{padding:16px 18px}
+
+/* FORM */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.field input,.field select{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;color:var(--text);outline:none;transition:border-color .2s}
+.field input:focus,.field select:focus{border-color:var(--teal)}
+.field select option{background:var(--surface2)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field-note{font-size:10px;font-weight:600;color:var(--muted);margin-top:4px;line-height:1.5}
+
+/* CALC BTN */
+.calc-btn{width:100%;padding:12px;border:none;border-radius:10px;cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;font-weight:800;color:#fff;letter-spacing:.3px;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;margin-top:4px}
+.calc-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.calc-btn:active{transform:translateY(0);filter:brightness(.95)}
+.btn-teal{background:linear-gradient(135deg,#007a68,#009980)}
+.btn-blue{background:linear-gradient(135deg,#1a4eb8,#2360d0)}
+.btn-red{background:linear-gradient(135deg,#b81a28,#d02030)}
+
+/* DIVIDER */
+.fdiv{height:1px;background:var(--border);margin:14px 0}
+
+/* CHECKBOX */
+.chk-row{display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:8px 10px;border-radius:8px;border:1px solid var(--border);transition:border-color .15s}
+.chk-row:hover{border-color:var(--border2)}
+.chk-row input[type=checkbox]{width:16px;height:16px;margin-top:1px;accent-color:var(--teal);flex-shrink:0;cursor:pointer}
+.chk-row div p:first-child{font-size:12px;font-weight:700;color:var(--text)}
+.chk-row div p:last-child{font-size:10px;font-weight:600;color:var(--muted);margin-top:2px;line-height:1.5}
+
+/* OUTPUT PANEL */
+#out-troponin,#out-ckmb,#out-bnp{display:flex;flex-direction:column;gap:14px}
+
+/* VERDICT CARD */
+.verdict{border-radius:12px;padding:18px 20px;border:1px solid;position:relative;overflow:hidden}
+.verdict-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.verdict-title{font-size:24px;font-weight:900;letter-spacing:-.5px;margin-bottom:8px;line-height:1.1}
+.verdict-desc{font-size:12px;font-weight:600;line-height:1.7;opacity:.85}
+.verdict-bg{position:absolute;right:-10px;top:-10px;font-size:80px;opacity:.06;user-select:none;pointer-events:none;line-height:1}
+
+.v-ruleout{background:linear-gradient(135deg,rgba(0,212,176,.08),rgba(0,212,176,.04));border-color:var(--teal-b);color:var(--teal)}
+.v-rulein{background:linear-gradient(135deg,rgba(255,79,99,.08),rgba(255,79,99,.04));border-color:var(--red-b);color:var(--red)}
+.v-observe{background:linear-gradient(135deg,rgba(255,186,82,.08),rgba(255,186,82,.04));border-color:var(--amber-b);color:var(--amber)}
+
+/* METRIC CARDS */
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.metric{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px}
+.metric-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px}
+.metric-val{font-size:18px;font-weight:900;line-height:1}
+.metric-unit{font-size:10px;font-weight:600;color:var(--muted);margin-top:2px}
+
+/* CHART */
+.chart-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.chart-top{padding:10px 14px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.chart-top-title{font-size:11px;font-weight:700;color:var(--muted2)}
+.legend{display:flex;gap:12px;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:600;color:var(--muted)}
+.leg-line{width:16px;height:2.5px;border-radius:2px}
+svg{display:block;width:100%}
+
+/* FOLLOW UP */
+.followup{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+.followup h3{font-size:12px;font-weight:800;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.fu-step{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px}
+.fu-step:last-child{margin-bottom:0}
+.fu-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;flex-shrink:0;margin-top:1px}
+.fu-text p:first-child{font-size:12px;font-weight:700;color:var(--text)}
+.fu-text p:last-child{font-size:11px;font-weight:500;color:var(--muted2);margin-top:2px;line-height:1.6}
+
+/* IDLE STATE */
+.idle{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:40px 20px;color:var(--muted);text-align:center}
+.idle svg{width:40px;height:40px;opacity:.4}
+.idle p{font-size:12px;font-weight:600}
+
+/* NOTE BOX */
+.note{background:var(--surface3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:11px;font-weight:600;color:var(--muted2);line-height:1.7}
+.note strong{color:var(--text)}
+.note.warn{border-color:var(--amber-b);background:var(--amber-d);color:var(--amber)}
+.note.danger{border-color:var(--red-b);background:var(--red-d);color:var(--red)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hi">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </div>
+      <div class="logo-text">
+        <h1>KardioKinetik</h1>
+        <p>Kalkulator Biomarker Jantung &bull; Bayushi Eka Putra, MD, FIHA</p>
+      </div>
+    </div>
+    <span class="hbadge">CardiologyVault</span>
+  </div>
+</header>
+
+<main>
+  <div class="tabs">
+    <button id="btn-t" class="tab-btn active-teal" onclick="showTab('t',this,'active-teal')">&#128300; hs-Troponin</button>
+    <button id="btn-c" class="tab-btn" onclick="showTab('c',this,'active-blue')">&#129514; CK-MB</button>
+    <button id="btn-b" class="tab-btn" onclick="showTab('b',this,'active-red')">&#128137; BNP / NT-proBNP</button>
+  </div>
+
+  <!-- ══ hs-TROPONIN ══ -->
+  <div id="sec-t" class="section active">
+    <div><!-- LEFT: INPUT -->
+      <div class="panel">
+        <div class="panel-header">
+          <svg class="ph-icon" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <h2>Data Pasien — hs-Troponin</h2>
+        </div>
+        <div class="panel-body">
+
+          <div class="field">
+            <label>Reagen / Assay Lab</label>
+            <select id="t-assay" onchange="resetT()">
+              <option value="roche">Roche (Elecsys TnT-hs) — ULN 14 ng/L</option>
+              <option value="abbott">Abbott (Architect TnI-hs) — ULN 26 ng/L</option>
+              <option value="siemens">Siemens (Atellica TnI-hs) — ULN 45 ng/L</option>
+              <option value="beckman">Beckman (Access TnI-hs) — ULN 18 ng/L</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Interval Pengambilan Darah</label>
+            <select id="t-interval" onchange="resetT()">
+              <option value="1">0/1h — ESC Utama (1 jam)</option>
+              <option value="2">0/2h — ESC Alternatif (2 jam)</option>
+              <option value="3">0/3h — Konvensional (3 jam)</option>
+            </select>
+          </div>
+
+          <div class="fdiv"></div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Nilai 0 Jam (ng/L)</label>
+              <input type="number" id="t-v0" placeholder="mis. 8" min="0" step="0.1" oninput="resetT()">
+            </div>
+            <div class="field" id="t-v1-wrap">
+              <label id="t-v1-lbl">Nilai 1 Jam (ng/L)</label>
+              <input type="number" id="t-v1" placeholder="mis. 15" min="0" step="0.1" oninput="resetT()">
+            </div>
+          </div>
+
+          <div class="fdiv"></div>
+
+          <div class="field">
+            <label>Kecurigaan Klinis Awal</label>
+            <select id="t-prob" onchange="resetT()">
+              <option value="sedang">Sedang (anamnesis umum)</option>
+              <option value="rendah">Rendah (sangat jelas non-kardiak)</option>
+              <option value="tinggi">Tinggi (angina tipikal khas)</option>
+            </select>
+          </div>
+
+          <label class="chk-row" style="margin-bottom:10px">
+            <input type="checkbox" id="t-ckd" onchange="resetT()">
+            <div><p>Pasien CKD / Gagal Ginjal</p><p>eGFR &lt; 30 — modifikasi interpretasi</p></div>
+          </label>
+
+          <label class="chk-row">
+            <input type="checkbox" id="t-reperfusi" onchange="resetT()">
+            <div><p>Pasca Reperfusi (PCI / Trombolitik)</p><p>Aktifkan model washout kinetik</p></div>
+          </label>
+
+          <div class="fdiv"></div>
+          <button class="calc-btn btn-teal" onclick="calcTroponin()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Analisis Sekarang
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: OUTPUT -->
+    <div id="out-troponin">
+      <div class="idle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <p>Masukkan nilai hs-Troponin pasien<br>lalu klik <strong style="color:var(--text)">Analisis Sekarang</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CK-MB ══ -->
+  <div id="sec-c" class="section">
+    <div>
+      <div class="panel">
+        <div class="panel-header">
+          <svg class="ph-icon" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-linecap="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+          <h2>Data Pasien — CK-MB</h2>
+        </div>
+        <div class="panel-body">
+
+          <div class="field">
+            <label>Batas Normal Lab (ULN)</label>
+            <input type="number" id="c-uln" value="25" step="0.1" min="0" placeholder="25" oninput="resetC()">
+            <p class="field-note">Sesuaikan dengan nilai ULN lab RS Anda (satuan U/L atau µg/L)</p>
+          </div>
+
+          <div class="fdiv"></div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Nilai Pertama (D1)</label>
+              <input type="number" id="c-v1" placeholder="mis. 60" min="0" step="0.1" oninput="resetC()">
+            </div>
+            <div class="field">
+              <label>Nilai Kedua (D2)</label>
+              <input type="number" id="c-v2" placeholder="mis. 150" min="0" step="0.1" oninput="resetC()">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Jeda Waktu Antar Pemeriksaan (Jam)</label>
+            <input type="number" id="c-jeda" placeholder="mis. 6" min="1" max="24" step="1" value="6" oninput="resetC()">
+          </div>
+
+          <div class="fdiv"></div>
+
+          <label class="chk-row">
+            <input type="checkbox" id="c-reperfusi" onchange="resetC()">
+            <div><p>Pasca Reperfusi (PCI / Trombolitik)</p><p>Puncak lebih awal ~12h, washout cepat</p></div>
+          </label>
+
+          <div class="fdiv"></div>
+          <button class="calc-btn btn-blue" onclick="calcCKMB()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Analisis Kinetik
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="out-ckmb">
+      <div class="idle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <p>Masukkan nilai CK-MB serial pasien<br>lalu klik <strong style="color:var(--text)">Analisis Kinetik</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ BNP ══ -->
+  <div id="sec-b" class="section">
+    <div>
+      <div class="panel">
+        <div class="panel-header">
+          <svg class="ph-icon" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <h2>Data Pasien — BNP / NT-proBNP</h2>
+        </div>
+        <div class="panel-body">
+
+          <div class="field">
+            <label>Jenis Pemeriksaan</label>
+            <select id="b-type" onchange="resetB()">
+              <option value="bnp">BNP (pg/mL)</option>
+              <option value="ntprobnp">NT-proBNP (pg/mL)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Nilai Biomarker (pg/mL)</label>
+            <input type="number" id="b-val" placeholder="mis. 500" min="0" step="1" oninput="resetB()">
+          </div>
+
+          <div class="field">
+            <label>Usia Pasien (Tahun)</label>
+            <input type="number" id="b-age" placeholder="mis. 65" min="0" max="120" step="1" oninput="resetB()">
+          </div>
+
+          <div class="fdiv"></div>
+
+          <div class="field">
+            <label>Konteks Klinis</label>
+            <select id="b-context" onchange="resetB()">
+              <option value="hf">Suspek Gagal Jantung (Sesak napas)</option>
+              <option value="acs">ACS / Sindrom Koroner Akut</option>
+              <option value="followup">Follow-up terapi (Monitoring)</option>
+            </select>
+          </div>
+
+          <label class="chk-row" style="margin-bottom:10px">
+            <input type="checkbox" id="b-ckd" onchange="resetB()">
+            <div><p>CKD / Gagal Ginjal (eGFR &lt; 30)</p><p>NT-proBNP cenderung tinggi palsu</p></div>
+          </label>
+
+          <label class="chk-row">
+            <input type="checkbox" id="b-obese" onchange="resetB()">
+            <div><p>Obesitas (BMI &gt; 30)</p><p>BNP cenderung rendah palsu</p></div>
+          </label>
+
+          <div class="fdiv"></div>
+          <button class="calc-btn btn-red" onclick="calcBNP()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Interpretasi Biomarker
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="out-bnp">
+      <div class="idle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <p>Masukkan nilai BNP/NT-proBNP dan usia pasien<br>lalu klik <strong style="color:var(--text)">Interpretasi Biomarker</strong></p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ── DATA ──
+const HS = {
+  roche:   { uln:14, limits:{ '1':{roa:5,rob:12,do:3,ri:52,di:5},   '2':{roa:14,rob:14,do:4,ri:52,di:10} } },
+  abbott:  { uln:26, limits:{ '1':{roa:4,rob:5, do:2,ri:64,di:6},   '2':{roa:6, rob:6, do:2,ri:64,di:15} } },
+  siemens: { uln:45, limits:{ '1':{roa:3,rob:6, do:3,ri:120,di:12}, '2':{roa:6, rob:6, do:3,ri:120,di:20} } },
+  beckman: { uln:18, limits:{ '1':{roa:4,rob:5, do:4,ri:50,di:15},  '2':{roa:5, rob:5, do:5,ri:50,di:15} } }
+};
+const TROP_NAT = [[0,.1],[4,2],[8,8],[12,22],[18,42],[24,50],[36,46],[48,38],[72,22],[96,12],[120,6]];
+const TROP_REP = [[0,.1],[4,10],[8,36],[12,52],[16,40],[24,20],[36,10],[48,5],[72,2],[96,1],[120,.5]];
+const CKMB_NAT = [[0,.1],[4,1],[6,2],[8,5],[12,12],[16,18],[20,23],[24,25],[36,12],[48,4],[72,1.5],[96,1],[120,1]];
+const CKMB_REP = [[0,.1],[4,8],[8,20],[12,25],[16,14],[20,8],[24,4],[36,1.5],[48,1],[72,1],[96,1],[120,1]];
+
+// ── TAB ──
+function showTab(id, btn, cls) {
+  ['t','c','b'].forEach(x => { document.getElementById('sec-'+x).classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(b => b.className='tab-btn');
+  document.getElementById('sec-'+id).classList.add('active');
+  btn.classList.add(cls);
+}
+
+function resetT(){ /* noop — keep results visible until re-calc */ }
+function resetC(){}
+function resetB(){}
+
+// ── SVG HELPERS ──
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+function smooth(pts, sx, sy) {
+  let d = `M${sx(pts[0][0])} ${sy(pts[0][1])}`;
+  for (let i = 1; i < pts.length; i++) {
+    const mx = (sx(pts[i-1][0]) + sx(pts[i][0])) / 2;
+    d += ` C${mx} ${sy(pts[i-1][1])},${mx} ${sy(pts[i][1])},${sx(pts[i][0])} ${sy(pts[i][1])}`;
+  }
+  return d;
+}
+function mkSVG(W, H) {
+  const s = document.createElementNS(NS, 'svg');
+  s.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  s.setAttribute('width', '100%');
+  s.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  return s;
+}
+function addText(svg, x, y, txt, fill, fs, fw, anchor) {
+  const t = el('text', { x, y, fill, 'font-size': fs||11, 'text-anchor': anchor||'middle', 'font-weight': fw||700, 'font-family': 'Inter,sans-serif' });
+  t.textContent = txt;
+  svg.appendChild(t);
+}
+
+// ── TROPONIN CALC ──
+function calcTroponin() {
+  const v0 = parseFloat(document.getElementById('t-v0').value);
+  const v1 = parseFloat(document.getElementById('t-v1').value);
+  const assayKey = document.getElementById('t-assay').value;
+  const interval = document.getElementById('t-interval').value;
+  const prob = document.getElementById('t-prob').value;
+  const isCKD = document.getElementById('t-ckd').checked;
+  const isRep = document.getElementById('t-reperfusi').checked;
+  if (isNaN(v0) || isNaN(v1)) { alert('Masukkan nilai 0 jam dan nilai serial terlebih dahulu.'); return; }
+
+  const assay = HS[assayKey];
+  const uln = assay.uln;
+  const delta = parseFloat((v1 - v0).toFixed(1));
+
+  let status, color, desc;
+
+  if (interval === '3') {
+    const relDelta = v0 > 0 ? (delta / v0) * 100 : 0;
+    if (v0 < uln && v1 < uln && delta <= 5) status = 'RULE-OUT';
+    else if ((v0 >= uln || v1 >= uln) && (relDelta >= 20 || delta >= 15)) status = 'RULE-IN';
+    else status = 'OBSERVE';
+  } else {
+    const L = assay.limits[interval];
+    if (v0 < L.roa || (v0 < L.rob && Math.abs(delta) < L.do)) status = 'RULE-OUT';
+    else if (v0 >= L.ri || delta >= L.di) status = 'RULE-IN';
+    else status = 'OBSERVE';
+  }
+
+  // Modifier klinis
+  let caution = false;
+  if (status === 'RULE-OUT' && prob === 'tinggi') { caution = true; status = 'OBSERVE'; }
+
+  renderTroponinOutput({ v0, v1, delta, status, uln, assayKey, interval, prob, isCKD, isRep, caution, assay });
+}
+
+function renderTroponinOutput(r) {
+  const out = document.getElementById('out-troponin');
+  const { v0, v1, delta, status, uln, interval, prob, isCKD, isRep, caution, assay } = r;
+
+  let vClass, vIcon, vTitle, vDesc;
+  if (status === 'RULE-OUT') {
+    vClass='v-ruleout'; vIcon='✅'; vTitle='RULE-OUT';
+    vDesc = prob === 'rendah'
+      ? 'Risiko NSTEMI sangat rendah. Dengan kecurigaan klinis rendah, aman pertimbangkan diagnosis banding lain dan rawat jalan jika GRACE score rendah.'
+      : 'Risiko NSTEMI sangat rendah berdasarkan algoritme ESC. Pertimbangkan discharge jika tidak ada alasan lain untuk observasi.';
+  } else if (status === 'RULE-IN') {
+    vClass='v-rulein'; vIcon='🚨'; vTitle='RULE-IN';
+    vDesc = prob === 'rendah' && !isCKD
+      ? 'Terkonfirmasi Myocardial Injury akut. Klinis rendah → pertimbangkan MI Tipe 2 atau Myocarditis. Rawat ICCU, echo segera.'
+      : 'Terkonfirmasi NSTEMI / Myocardial Injury. Mulai terapi anti-iskemik, rawat ICCU, strategi invasif rutin.';
+  } else {
+    vClass='v-observe'; vIcon='⏳'; vTitle='OBSERVASI';
+    vDesc = caution
+      ? 'Kecurigaan klinis tinggi dengan nilai algoritme borderline. Kemungkinan early presenter. Jangan pulangkan — periksa ulang jam ke-3.'
+      : `Zona abu-abu. Lakukan evaluasi EKG ulang dan periksa ulang enzim jam ke-${parseInt(interval)+1} atau ke-3.`;
+  }
+
+  const ckdNote = isCKD ? `<div class="note warn" style="margin-top:0">⚠️ <strong>Pasien CKD:</strong> Elevasi kronis hs-Troponin lazim terjadi. Delta (Δ) lebih penting dari nilai absolut. PPV untuk Rule-In berkurang bermakna — korelasikan kuat dengan EKG.</div>` : '';
+
+  // Follow-up steps
+  const fuSteps = getTroponinFollowUp(status, interval, prob, isCKD, isRep);
+
+  const deltaSign = delta > 0 ? '+' : '';
+  const deltaColor = delta >= (assay.limits[interval]?.di || 15) ? 'var(--red)' : delta <= -(assay.limits[interval]?.do || 3) ? 'var(--teal)' : 'var(--amber)';
+
+  out.innerHTML = `
+    <div class="verdict ${vClass}">
+      <div class="verdict-bg">${vIcon}</div>
+      <div class="verdict-label">Hasil Triage hs-Troponin ESC 0/${interval}h</div>
+      <div class="verdict-title">${vTitle}</div>
+      <div class="verdict-desc">${vDesc}</div>
+    </div>
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">Nilai 0 Jam</div>
+        <div class="metric-val" style="color:var(--text)">${v0}</div>
+        <div class="metric-unit">ng/L</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Nilai ${interval} Jam</div>
+        <div class="metric-val" style="color:var(--text)">${v1}</div>
+        <div class="metric-unit">ng/L</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Delta (Δ)</div>
+        <div class="metric-val" style="color:${deltaColor}">${deltaSign}${delta}</div>
+        <div class="metric-unit">ng/L</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">ULN Assay</div>
+        <div class="metric-val" style="color:var(--blue)">${uln}</div>
+        <div class="metric-unit">ng/L</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">0h / ULN</div>
+        <div class="metric-val" style="color:var(--text)">${(v0/uln).toFixed(1)}×</div>
+        <div class="metric-unit">kelipatan</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">${interval}h / ULN</div>
+        <div class="metric-val" style="color:var(--text)">${(v1/uln).toFixed(1)}×</div>
+        <div class="metric-unit">kelipatan</div>
+      </div>
+    </div>
+    <div id="chart-t-wrap"></div>
+    ${ckdNote}
+    <div class="followup">
+      <h3>📋 Rencana Follow-Up</h3>
+      ${fuSteps}
+    </div>
+  `;
+
+  drawTroponinChart(r);
+}
+
+function getTroponinFollowUp(status, interval, prob, isCKD, isRep) {
+  const steps = [];
+  if (status === 'RULE-OUT' && prob !== 'tinggi') {
+    steps.push({ n:1, c:'var(--teal)', t:'Hitung GRACE Score', d:'Jika GRACE < 140 → kandidat rawat jalan. GRACE ≥ 140 → tetap observasi 24 jam.' });
+    steps.push({ n:2, c:'var(--teal)', t:'EKG Ulang + Konsultasi Kardiologi', d:'Pastikan EKG tidak ada perubahan iskemik baru. Jika ada → ubah tata laksana.' });
+    steps.push({ n:3, c:'var(--teal)', t:'Instruksi Pulang (jika aman)', d:'Edukasi gejala alarm, kontrol poli kardiologi dalam 72 jam. Resepkan aspirin jika perlu.' });
+  } else if (status === 'RULE-IN') {
+    steps.push({ n:1, c:'var(--red)', t:'Rawat ICCU Segera', d:'Monitoring hemodinamik kontinu, akses IV, oksigen jika SpO2 < 94%, EKG serial.' });
+    steps.push({ n:2, c:'var(--red)', t:'Mulai Terapi NSTEMI', d:'Aspirin 300 mg loading + P2Y12 inhibitor (Ticagrelor/Clopidogrel). Antikoagulan (UFH/Fondaparinux). Statin high-intensity.' });
+    steps.push({ n:3, c:'var(--red)', t:'Strategi Invasif', d:'Jadwalkan koronarografi dalam 24h (GRACE ≥ 140) atau 72h (GRACE < 140). Jika STEMI equivalent → PCI primer segera.' });
+    steps.push({ n:4, c:'var(--amber)', t:'Serial Enzim', d:'Ulangi hs-Troponin tiap 6 jam untuk memantau kurva kinetik hingga puncak.' });
+  } else {
+    steps.push({ n:1, c:'var(--amber)', t:'Lanjut Observasi', d:'Pasang monitoring EKG, akses IV. Jangan izinkan pasien pulang.' });
+    steps.push({ n:2, c:'var(--amber)', t:'Serial Enzim Ulang', d:`Periksa ulang hs-Troponin pada jam ke-${parseInt(interval)+1} atau ke-3. Jika delta meningkat signifikan → Rule-In.` });
+    steps.push({ n:3, c:'var(--amber)', t:'Evaluasi Klinis Lengkap', d:'Rekam EKG 12-lead ulang. Nilai ulang riwayat nyeri dada, faktor risiko, dan hemodinamik.' });
+    if (isCKD) steps.push({ n:4, c:'var(--muted2)', t:'Pertimbangkan Echo Bedside', d:'Pada CKD, echo dapat membantu membedakan gagal jantung akut vs iskemia.' });
+  }
+  return steps.map(s =>
+    `<div class="fu-step">
+      <div class="fu-num" style="background:${s.c}22;color:${s.c};border:1px solid ${s.c}44">${s.n}</div>
+      <div class="fu-text"><p>${s.t}</p><p>${s.d}</p></div>
+    </div>`
+  ).join('');
+}
+
+function drawTroponinChart(r) {
+  const { v0, v1, interval, assay, isRep } = r;
+  const W = 640, H = 220;
+  const pad = { t:24, r:20, b:32, l:48 };
+  const gW = W-pad.l-pad.r, gH = H-pad.t-pad.b;
+  const maxT = parseInt(interval)+2;
+  const maxChartT = Math.max(maxT+1, 4);
+  const pts = isRep ? TROP_REP : TROP_NAT;
+  // Only show early portion for micro chart
+  const microPts = pts.filter(p => p[0] <= maxChartT * 1.5);
+  const maxV = Math.max(assay.uln * 2, v0, v1, microPts.reduce((a,b)=>Math.max(a,b[1]),0)) * 1.15;
+
+  const sx = t => pad.l + (t / maxChartT) * gW;
+  const sy = v => pad.t + gH - Math.min(1,(v/maxV))*gH;
+
+  const svg = mkSVG(W, H);
+
+  // Grid
+  for (let i = 0; i <= maxChartT; i++) {
+    svg.appendChild(el('line', { x1:sx(i), y1:pad.t, x2:sx(i), y2:pad.t+gH, stroke:'#252d45', 'stroke-width':1, 'stroke-dasharray':'3 3' }));
+    addText(svg, sx(i), H-6, i+'h', '#5d6b8a', 10, 700);
+  }
+
+  // ULN zone
+  const ulnY = sy(assay.uln);
+  svg.appendChild(el('rect', { x:pad.l, y:ulnY, width:gW, height:pad.t+gH-ulnY, fill:'rgba(0,212,176,0.04)' }));
+  svg.appendChild(el('line', { x1:pad.l, y1:ulnY, x2:W-pad.r, y2:ulnY, stroke:'#00d4b0', 'stroke-width':1.5, 'stroke-dasharray':'5 3', opacity:.6 }));
+  addText(svg, W-pad.r-2, ulnY-4, 'ULN '+assay.uln, '#00d4b0', 9, 800, 'end');
+
+  // Kinetic curve background
+  if (microPts.length > 1) {
+    svg.appendChild(el('path', { d: smooth(microPts, sx, sy), fill:'none', stroke: isRep?'#5c9aff':'#ff4f63', 'stroke-width':2, 'stroke-dasharray':'5 3', opacity:.3 }));
+  }
+
+  // Trajectory line
+  const x0 = sx(0), y0 = sy(v0), x1 = sx(parseInt(interval)), y1 = sy(v1);
+  svg.appendChild(el('line', { x1:x0, y1:y0, x2:x1, y2:y1, stroke:'#fff', 'stroke-width':2.5, opacity:.85 }));
+
+  // Points
+  svg.appendChild(el('circle', { cx:x0, cy:y0, r:6, fill:'#fff', stroke:'#00d4b0', 'stroke-width':2.5 }));
+  addText(svg, x0-2, y0-12, `0h (${v0})`, '#e2e8f0', 10, 800, 'middle');
+
+  const v1Color = r.status==='RULE-IN'?'#ff4f63':r.status==='RULE-OUT'?'#00d4b0':'#ffba52';
+  svg.appendChild(el('circle', { cx:x1, cy:y1, r:7, fill:v1Color, stroke:'#fff', 'stroke-width':2 }));
+  addText(svg, x1, y1-12, `${interval}h (${v1})`, '#e2e8f0', 10, 800, 'middle');
+
+  // Delta label
+  const midX = (x0+x1)/2, midY = (y0+y1)/2;
+  const dSign = r.delta >= 0 ? '+' : '';
+  const bg = el('rect', { x:midX-22, y:midY-14, width:44, height:18, fill:'#1c2235', rx:5 });
+  svg.appendChild(bg);
+  addText(svg, midX, midY-2, `Δ${dSign}${r.delta}`, r.delta>0?'#ff4f63':'#00d4b0', 10, 900);
+
+  // Axes
+  svg.appendChild(el('line', { x1:pad.l, y1:pad.t, x2:pad.l, y2:pad.t+gH, stroke:'#2e3a58', 'stroke-width':1.5 }));
+  svg.appendChild(el('line', { x1:pad.l, y1:pad.t+gH, x2:W-pad.r, y2:pad.t+gH, stroke:'#2e3a58', 'stroke-width':1.5 }));
+
+  const wrap = document.createElement('div');
+  wrap.className = 'chart-wrap';
+  wrap.innerHTML = `<div class="chart-top"><span class="chart-top-title">Posisi Data Pasien pada Kurva Kinetik hs-Troponin</span><div class="legend"><div class="leg"><div class="leg-line" style="background:#fff"></div>Trajektori Pasien</div><div class="leg"><div class="leg-line" style="background:${isRep?'#5c9aff':'#ff4f63'};opacity:.5;border-top:1px dashed"></div>Kurva Referensi</div></div></div>`;
+  wrap.appendChild(svg);
+  document.getElementById('chart-t-wrap').replaceWith(wrap);
+}
+
+// ── CK-MB CALC ──
+function calcCKMB() {
+  const uln = parseFloat(document.getElementById('c-uln').value);
+  const v1 = parseFloat(document.getElementById('c-v1').value);
+  const v2 = parseFloat(document.getElementById('c-v2').value);
+  const jeda = parseFloat(document.getElementById('c-jeda').value);
+  const isRep = document.getElementById('c-reperfusi').checked;
+  if (isNaN(uln)||isNaN(v1)||isNaN(v2)||isNaN(jeda)) { alert('Isi semua field terlebih dahulu.'); return; }
+
+  const u1 = v1/uln, u2 = v2/uln;
+  const ratio = u2/u1;
+  let phase;
+  if (ratio > 1.15) phase = 'ESKALASI';
+  else if (ratio < 0.85) phase = 'RESOLUSI';
+  else phase = 'PLATEAU';
+
+  const dataSet = isRep ? CKMB_REP : CKMB_NAT;
+  const maxV = Math.max(...dataSet.map(d=>d[1]));
+  const peakT = dataSet.find(d=>d[1]===maxV)[0];
+  const cappedU2 = Math.min(u2, maxV);
+
+  let isRising = phase === 'ESKALASI';
+  let t2 = 0;
+  let subset = isRising ? dataSet.filter(d=>d[0]<=peakT) : dataSet.filter(d=>d[0]>=peakT);
+  for (let i = 0; i < subset.length-1; i++) {
+    if (isRising && cappedU2 >= subset[i][1] && cappedU2 <= subset[i+1][1]) {
+      const r2 = (cappedU2 - subset[i][1]) / (subset[i+1][1] - subset[i][1]);
+      t2 = subset[i][0] + r2*(subset[i+1][0]-subset[i][0]); break;
+    } else if (!isRising && cappedU2 <= subset[i][1] && cappedU2 >= subset[i+1][1]) {
+      const r2 = (subset[i][1] - cappedU2) / (subset[i][1] - subset[i+1][1]);
+      t2 = subset[i][0] + r2*(subset[i+1][0]-subset[i][0]); break;
+    }
+  }
+  if (t2===0) t2 = isRising ? subset[0][0] : subset[subset.length-1][0];
+  const t1 = Math.max(0, t2-jeda);
+
+  renderCKMBOutput({ v1, v2, u1, u2, ratio, phase, t1, t2, jeda, uln, isRep, dataSet, peakT });
+}
+
+function renderCKMBOutput(r) {
+  const out = document.getElementById('out-ckmb');
+  const { v1, v2, u1, u2, phase, t1, t2, peakT, isRep } = r;
+
+  let vClass, vIcon, vTitle, vDesc;
+  if (phase === 'ESKALASI') {
+    vClass='v-rulein'; vIcon='📈'; vTitle='FASE ESKALASI (NAIK)';
+    vDesc='Kadar CK-MB menunjukkan kurva positif — pasien berada pada fase akut pra-puncak. Time is Muscle! Nilai kembali setiap 6 jam hingga puncak teridentifikasi.';
+  } else if (phase === 'RESOLUSI') {
+    vClass='v-ruleout'; vIcon='📉'; vTitle='FASE RESOLUSI (TURUN)';
+    vDesc=`Kadar CK-MB menurun stabil. Pasien sudah melewati puncak (~${peakT}h pasca onset). CK-MB kembali normal dalam 48–72 jam total.`;
+  } else {
+    vClass='v-observe'; vIcon='📊'; vTitle='FASE PLATEAU';
+    vDesc='Kadar menetap pada nilai tinggi. Evaluasi gejala nyeri persisten yang mungkin menandakan re-infark atau instabilitas hemodinamik.';
+  }
+
+  const largeWarning = u2 > 50 ? `<div class="note danger">⛔ <strong>Peringatan: Large MI!</strong> Kadar puncak >50× ULN berkorelasi dengan nekrosis miokardial sangat luas. Antisipasi syok kardiogenik, gagal jantung akut (HFrEF), dan komplikasi mekanik.</div>` : '';
+
+  out.innerHTML = `
+    <div class="verdict ${vClass}">
+      <div class="verdict-bg">${vIcon}</div>
+      <div class="verdict-label">Pemetaan Kinetik CK-MB${isRep?' — Model Washout (Reperfusi)':''}</div>
+      <div class="verdict-title">${vTitle}</div>
+      <div class="verdict-desc">${vDesc}</div>
+    </div>
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Nilai D1</div><div class="metric-val" style="color:var(--text)">${v1.toFixed(1)}</div><div class="metric-unit">${u1.toFixed(1)}× ULN</div></div>
+      <div class="metric"><div class="metric-label">Nilai D2</div><div class="metric-val" style="color:var(--text)">${v2.toFixed(1)}</div><div class="metric-unit">${u2.toFixed(1)}× ULN</div></div>
+      <div class="metric"><div class="metric-label">Rasio D2/D1</div><div class="metric-val" style="color:${phase==='ESKALASI'?'var(--red)':'var(--teal)'}">${(v2/v1).toFixed(2)}</div><div class="metric-unit">rasio</div></div>
+      <div class="metric"><div class="metric-label">Est. Onset D1</div><div class="metric-val" style="color:var(--blue)">~${Math.round(t1)}h</div><div class="metric-unit">pasca onset</div></div>
+      <div class="metric"><div class="metric-label">Est. Onset D2</div><div class="metric-val" style="color:var(--blue)">~${Math.round(t2)}h</div><div class="metric-unit">pasca onset</div></div>
+      <div class="metric"><div class="metric-label">Puncak Ref.</div><div class="metric-val" style="color:var(--amber)">${peakT}h</div><div class="metric-unit">${isRep?'washout':'natural'}</div></div>
+    </div>
+    ${largeWarning}
+    <div id="chart-c-wrap"></div>
+    <div class="followup">
+      <h3>📋 Rencana Follow-Up CK-MB</h3>
+      ${getCKMBFollowUp(r)}
+    </div>
+  `;
+  drawCKMBChart(r);
+}
+
+function getCKMBFollowUp(r) {
+  const { phase, t2, peakT, isRep, u2 } = r;
+  const steps = [];
+  if (phase === 'ESKALASI') {
+    steps.push({ n:1, c:'var(--red)', t:'Serial CK-MB setiap 6 jam', d:'Lanjutkan monitoring hingga puncak teridentifikasi (nilai D2 > D3).' });
+    steps.push({ n:2, c:'var(--red)', t:'Evaluasi reperfusi', d:`Pasien masih pre-peak. ${isRep?'Pasca PCI/trombolitik — pantau keberhasilan reperfusi via kurva kinetik.':'Jika onset < 12 jam → pertimbangkan primary PCI segera.'}` });
+    steps.push({ n:3, c:'var(--amber)', t:'Pantau Komplikasi', d:'Monitoring EKG untuk aritmia reperfusi (VF, VT, AV block). Pantau hemodinamik ketat.' });
+  } else if (phase === 'RESOLUSI') {
+    steps.push({ n:1, c:'var(--teal)', t:'Cek CK-MB Terakhir', d:`Estimasi CK-MB kembali normal dalam ~${Math.max(0, 72 - Math.round(t2))} jam lagi. Konfirmasi 1× lagi.` });
+    steps.push({ n:2, c:'var(--teal)', t:'Evaluasi Fungsi Jantung', d:'Lakukan echo dalam 24–48 jam untuk menilai EF dan komplikasi mekanik (regurgitasi mitral, VSD).' });
+    steps.push({ n:3, c:'var(--blue)', t:'Tindak Lanjut', d:'Bila stabil → mulai mobilisasi, konseling, dan persiapkan discharge dengan DAPT, statin, beta blocker, ACE-I.' });
+  } else {
+    steps.push({ n:1, c:'var(--amber)', t:'Curiga Re-Infark', d:'Plateau kadar tinggi → periksa EKG segera. Bila ada perubahan baru → RE-INFARK, eskalasi tata laksana.' });
+    steps.push({ n:2, c:'var(--amber)', t:'Serial CK-MB ketat', d:'Ulangi tiap 3–4 jam. Kenaikan ulang > 50% dari nadir → konfirmasi re-infark.' });
+    steps.push({ n:3, c:'var(--amber)', t:'Konsultasi Kardiologi', d:'Pertimbangkan angiografi bila kondisi klinis memburuk atau ada perubahan hemodinamik.' });
+  }
+  return steps.map(s => `<div class="fu-step"><div class="fu-num" style="background:${s.c}22;color:${s.c};border:1px solid ${s.c}44">${s.n}</div><div class="fu-text"><p>${s.t}</p><p>${s.d}</p></div></div>`).join('');
+}
+
+function drawCKMBChart(r) {
+  const { u1, u2, t1, t2, isRep, dataSet, uln } = r;
+  const W=640, H=220, pad={t:24,r:20,b:32,l:48};
+  const gW=W-pad.l-pad.r, gH=H-pad.t-pad.b;
+  const maxT=120;
+  const maxV = Math.max(25, u1, u2) * 1.2;
+  const sx = t => pad.l+(t/maxT)*gW;
+  const sy = v => pad.t+gH-Math.min(1,v/maxV)*gH;
+
+  const svg = mkSVG(W, H);
+
+  [0,24,48,72,96,120].forEach(t => {
+    svg.appendChild(el('line',{x1:sx(t),y1:pad.t,x2:sx(t),y2:pad.t+gH,stroke:'#252d45','stroke-width':1,'stroke-dasharray':'3 3'}));
+    addText(svg,sx(t),H-6,t+'h','#5d6b8a',10,700);
+  });
+  [0,5,10,15,20,25].filter(v=>v<=maxV).forEach(v => {
+    svg.appendChild(el('line',{x1:pad.l,y1:sy(v),x2:W-pad.r,y2:sy(v),stroke:'#252d45','stroke-width':1,'stroke-dasharray':'3 5'}));
+    addText(svg,pad.l-4,sy(v)+4,v+'×','#5d6b8a',9,700,'end');
+  });
+
+  // ULN line
+  svg.appendChild(el('line',{x1:pad.l,y1:sy(1),x2:W-pad.r,y2:sy(1),stroke:'#00d4b0','stroke-width':1.5,'stroke-dasharray':'5 3',opacity:.5}));
+
+  // Reference curve
+  if (dataSet.length > 1) {
+    svg.appendChild(el('path',{d:smooth(dataSet,sx,sy),fill:'none',stroke:isRep?'#5c9aff':'#f97316','stroke-width':2,'stroke-dasharray':'5 3',opacity:.3}));
+  }
+
+  // Actual trajectory
+  const x1c=sx(t1),y1c=sy(u1),x2c=sx(t2),y2c=sy(u2);
+  svg.appendChild(el('line',{x1:x1c,y1:y1c,x2:x2c,y2:y2c,stroke:'#fff','stroke-width':2.5,opacity:.9}));
+
+  svg.appendChild(el('circle',{cx:x1c,cy:y1c,r:6,fill:'#fff',stroke:'#5c9aff','stroke-width':2.5}));
+  addText(svg,x1c,y1c-12,`D1 ~${Math.round(t1)}h (${u1.toFixed(1)}×)`,'#e2e8f0',9,800,'middle');
+
+  const col=r.phase==='ESKALASI'?'#ff4f63':'#00d4b0';
+  svg.appendChild(el('circle',{cx:x2c,cy:y2c,r:7,fill:col,stroke:'#fff','stroke-width':2}));
+  addText(svg,x2c,y2c-12,`D2 ~${Math.round(t2)}h (${u2.toFixed(1)}×)`,'#e2e8f0',9,800,'middle');
+
+  svg.appendChild(el('line',{x1:pad.l,y1:pad.t,x2:pad.l,y2:pad.t+gH,stroke:'#2e3a58','stroke-width':1.5}));
+  svg.appendChild(el('line',{x1:pad.l,y1:pad.t+gH,x2:W-pad.r,y2:pad.t+gH,stroke:'#2e3a58','stroke-width':1.5}));
+
+  const wrap=document.createElement('div'); wrap.className='chart-wrap';
+  wrap.innerHTML=`<div class="chart-top"><span class="chart-top-title">Posisi Data Pasien pada Kurva Kinetik CK-MB (×ULN)</span><div class="legend"><div class="leg"><div class="leg-line" style="background:#fff"></div>Trajektori Pasien</div><div class="leg"><div class="leg-line" style="background:${isRep?'#5c9aff':'#f97316'};opacity:.5"></div>Kurva Referensi</div></div></div>`;
+  wrap.appendChild(svg);
+  document.getElementById('chart-c-wrap').replaceWith(wrap);
+}
+
+// ── BNP CALC ──
+function calcBNP() {
+  const type = document.getElementById('b-type').value;
+  const val = parseFloat(document.getElementById('b-val').value);
+  const age = parseFloat(document.getElementById('b-age').value);
+  const context = document.getElementById('b-context').value;
+  const isCKD = document.getElementById('b-ckd').checked;
+  const isObese = document.getElementById('b-obese').checked;
+  if (isNaN(val)||isNaN(age)) { alert('Masukkan nilai biomarker dan usia pasien.'); return; }
+
+  let status, desc, vClass, vIcon, vTitle;
+
+  if (type === 'bnp') {
+    if (val < 35) { status='RULE-OUT'; }
+    else if (val < 100) { status='OBSERVE'; }
+    else if (val >= 400) { status='RULE-IN'; }
+    else { status='OBSERVE'; }
+  } else {
+    // NT-proBNP — age-stratified
+    let ruleIn;
+    if (age < 50) ruleIn = 450;
+    else if (age <= 75) ruleIn = 900;
+    else ruleIn = 1800;
+
+    if (val < 300) status='RULE-OUT';
+    else if (val >= ruleIn) status='RULE-IN';
+    else status='OBSERVE';
+  }
+
+  // Context modifiers
+  if (status==='RULE-IN' && isCKD && type==='ntprobnp') {
+    desc = '⚠️ Perhatian: Nilai tinggi pada CKD — NT-proBNP kronis meningkat. Bandingkan dengan nilai baseline pasien dan korelasikan klinis ketat.';
+  }
+  if (status==='RULE-OUT' && isObese && type==='bnp') {
+    desc = '⚠️ Perhatian: Obesitas menyebabkan BNP rendah palsu. Jika klinis mencurigakan, pertimbangkan NT-proBNP sebagai alternatif.';
+  }
+
+  renderBNPOutput({ val, type, age, context, status, isCKD, isObese, desc });
+}
+
+function renderBNPOutput(r) {
+  const out = document.getElementById('out-bnp');
+  const { val, type, age, context, status, isCKD, isObese, desc } = r;
+
+  let vClass, vIcon, vTitle, vDesc;
+  const isBNP = type === 'bnp';
+  const unit = 'pg/mL';
+
+  const ruleInVal = isBNP ? 400 : (age < 50 ? 450 : age <= 75 ? 900 : 1800);
+  const ruleOutVal = isBNP ? 35 : 300;
+
+  if (status === 'RULE-OUT') {
+    vClass='v-ruleout'; vIcon='✅'; vTitle='RULE-OUT';
+    vDesc = context==='hf'
+      ? 'Gagal jantung sangat tidak mungkin sebagai penyebab sesak napas. Cari penyebab lain (infeksi, emboli paru, asma).'
+      : 'Beban hemodinamik jantung rendah. Monitor tetap diperlukan jika ada perubahan klinis.';
+  } else if (status === 'RULE-IN') {
+    vClass='v-rulein'; vIcon='🚨'; vTitle='RULE-IN';
+    vDesc = context==='followup'
+      ? `Nilai ${type.toUpperCase()} masih tinggi. Terapi belum optimal atau terjadi dekompensasi. Evaluasi kepatuhan obat dan titrasi ulang.`
+      : `Konfirmasi beban hemodinamik jantung sangat tinggi. Kemungkinan besar gagal jantung akut / dekompensasi. Mulai terapi segera.`;
+  } else {
+    vClass='v-observe'; vIcon='⏳'; vTitle='ZONA ABU-ABU';
+    vDesc = `Nilai intermediate — tidak dapat rule-out maupun rule-in. Korelasikan dengan klinis, echo, dan radiologi dada.`;
+  }
+
+  if (desc) vDesc = desc + ' ' + vDesc;
+
+  const ntProBNPAgeRow = !isBNP ? `<div class="metric"><div class="metric-label">Rule-In (usia ${age}th)</div><div class="metric-val" style="color:var(--red)">≥${ruleInVal}</div><div class="metric-unit">${unit}</div></div>` : '';
+  const pctRuleIn = Math.min(200, (val / ruleInVal * 100)).toFixed(0);
+
+  out.innerHTML = `
+    <div class="verdict ${vClass}">
+      <div class="verdict-bg">${vIcon}</div>
+      <div class="verdict-label">Hasil Interpretasi ${type.toUpperCase()}</div>
+      <div class="verdict-title">${vTitle}</div>
+      <div class="verdict-desc">${vDesc}</div>
+    </div>
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Nilai ${type.toUpperCase()}</div><div class="metric-val" style="color:var(--text)">${val.toLocaleString()}</div><div class="metric-unit">${unit}</div></div>
+      <div class="metric"><div class="metric-label">Rule-Out</div><div class="metric-val" style="color:var(--teal)">&lt;${ruleOutVal}</div><div class="metric-unit">${unit}</div></div>
+      ${ntProBNPAgeRow || `<div class="metric"><div class="metric-label">Rule-In BNP</div><div class="metric-val" style="color:var(--red)">≥400</div><div class="metric-unit">${unit}</div></div>`}
+      <div class="metric"><div class="metric-label">% thd Rule-In</div><div class="metric-val" style="color:${pctRuleIn>=100?'var(--red)':pctRuleIn>=60?'var(--amber)':'var(--teal)'}">${pctRuleIn}%</div><div class="metric-unit">dari batas</div></div>
+      <div class="metric"><div class="metric-label">Usia</div><div class="metric-val" style="color:var(--text)">${age}</div><div class="metric-unit">tahun</div></div>
+      <div class="metric"><div class="metric-label">Konteks</div><div class="metric-val" style="font-size:12px;color:var(--muted2)">${context==='hf'?'Suspect HF':context==='acs'?'ACS':'Follow-up'}</div><div class="metric-unit"></div></div>
+    </div>
+    <div id="chart-b-wrap"></div>
+    ${isCKD?'<div class="note warn">⚠️ <strong>CKD:</strong> NT-proBNP baseline meningkat secara kronis. Bandingkan dengan nilai sebelumnya — tren lebih bermakna daripada nilai tunggal.</div>':''}
+    ${isObese?'<div class="note warn">⚠️ <strong>Obesitas:</strong> BNP relatif lebih rendah pada pasien obese. Nilai BNP rendah tidak sepenuhnya menyingkirkan HF pada pasien obesitas.</div>':''}
+    <div class="followup">
+      <h3>📋 Rencana Follow-Up BNP/NT-proBNP</h3>
+      ${getBNPFollowUp(r)}
+    </div>
+  `;
+  drawBNPChart(r);
+}
+
+function getBNPFollowUp(r) {
+  const { status, context, val, type, age, isCKD } = r;
+  const steps = [];
+  if (status === 'RULE-OUT') {
+    steps.push({ n:1, c:'var(--teal)', t:'Cari Penyebab Lain Sesak', d:'Pertimbangkan emboli paru (D-dimer), pneumonia, PPOK eksaserbasi, atau asma.' });
+    steps.push({ n:2, c:'var(--teal)', t:'Ulangi jika Klinis Memburuk', d:`Jika sesak memburuk dalam 24 jam, ulangi ${type.toUpperCase()} dan lakukan echo bedside.` });
+  } else if (status === 'RULE-IN') {
+    steps.push({ n:1, c:'var(--red)', t:'Mulai Terapi Dekongestif', d:'Furosemid IV (1–2 mg/kgBB) atau PO. Target: produksi urin 0.5–1 mL/kgBB/jam. Batasi cairan < 1.5 L/hari.' });
+    steps.push({ n:2, c:'var(--red)', t:'Posisi & Monitoring', d:'Posisi semi-fowler. Monitor SpO2, urin output, dan tekanan darah tiap 4–6 jam. Akses IV.' });
+    steps.push({ n:3, c:'var(--amber)', t:'Echo dalam 24 Jam', d:'Nilai EF, disfungsi sistolik vs diastolik, efusi pleura, dan penyebab struktural.' });
+    if (context === 'followup') {
+      steps.push({ n:4, c:'var(--blue)', t:'Titrasi Terapi Kronis', d:'Optimasi ARNI/ACE-I, beta blocker, MRA, SGLT2-inhibitor. Target: NT-proBNP < 1000 pg/mL atau turun > 30%.' });
+    }
+    steps.push({ n:4, c:'var(--amber)', t:`Ulangi ${type.toUpperCase()} dalam 48–72 jam`, d:'Target penurunan ≥ 30% dari nilai awal sebagai respons terapi yang adekuat.' });
+  } else {
+    steps.push({ n:1, c:'var(--amber)', t:'Echo Bedside Segera', d:'Nilai fungsi dan struktur jantung untuk membedakan penyebab.' });
+    steps.push({ n:2, c:'var(--amber)', t:'Foto Toraks', d:'Nilai edema paru, kardiomegali, efusi pleura.' });
+    steps.push({ n:3, c:'var(--amber)', t:`Ulangi ${type.toUpperCase()} dalam 6–12 jam`, d:'Nilai tren naik atau turun untuk kepastian interpretasi.' });
+    if (isCKD) steps.push({ n:4, c:'var(--muted2)', t:'Nilai Fungsi Ginjal Serial', d:'Creatinine, BUN, elektrolit — CKD mempengaruhi kliring NT-proBNP secara signifikan.' });
+  }
+  return steps.map(s => `<div class="fu-step"><div class="fu-num" style="background:${s.c}22;color:${s.c};border:1px solid ${s.c}44">${s.n}</div><div class="fu-text"><p>${s.t}</p><p>${s.d}</p></div></div>`).join('');
+}
+
+function drawBNPChart(r) {
+  const { val, type, age } = r;
+  const isBNP = type === 'bnp';
+  const ruleOut = isBNP ? 35 : 300;
+  const ruleIn = isBNP ? 400 : (age < 50 ? 450 : age <= 75 ? 900 : 1800);
+  const maxV = Math.max(ruleIn * 1.5, val * 1.3, 500);
+
+  const W=640, H=160, pad={t:20,r:20,b:32,l:60};
+  const gW=W-pad.l-pad.r, gH=H-pad.t-pad.b;
+  const sy = v => pad.t+gH - Math.min(1,v/maxV)*gH;
+
+  const svg = mkSVG(W, H);
+
+  // Zones
+  const roY = sy(ruleOut), riY = sy(ruleIn);
+  svg.appendChild(el('rect',{x:pad.l,y:sy(maxV),width:gW,height:riY-sy(maxV),fill:'rgba(255,79,99,.06)'}));
+  svg.appendChild(el('rect',{x:pad.l,y:roY,width:gW,height:gH-(roY-pad.t),fill:'rgba(0,212,176,.06)'}));
+  svg.appendChild(el('rect',{x:pad.l,y:riY,width:gW,height:roY-riY,fill:'rgba(255,186,82,.06)'}));
+
+  // Zone labels
+  addText(svg,W-pad.r-4,sy(maxV)+14,'Rule-In Zone','#ff4f63',9,700,'end');
+  addText(svg,W-pad.r-4,roY-4,'Grey Zone','#ffba52',9,700,'end');
+  addText(svg,W-pad.r-4,pad.t+gH-4,'Rule-Out Zone','#00d4b0',9,700,'end');
+
+  // Lines
+  svg.appendChild(el('line',{x1:pad.l,y1:riY,x2:W-pad.r,y2:riY,stroke:'#ff4f63','stroke-width':1.5,'stroke-dasharray':'5 3',opacity:.7}));
+  svg.appendChild(el('line',{x1:pad.l,y1:roY,x2:W-pad.r,y2:roY,stroke:'#00d4b0','stroke-width':1.5,'stroke-dasharray':'5 3',opacity:.7}));
+  addText(svg,pad.l-4,riY+4,(ruleIn>=1000?(ruleIn/1000).toFixed(1)+'k':ruleIn),'#ff4f63',9,800,'end');
+  addText(svg,pad.l-4,roY+4,ruleOut,'#00d4b0',9,800,'end');
+
+  // Value bar + label
+  const valY = sy(val);
+  const barColor = val < ruleOut ? '#00d4b0' : val >= ruleIn ? '#ff4f63' : '#ffba52';
+  const barX = pad.l+gW*0.35;
+  svg.appendChild(el('rect',{x:barX-18,y:valY,width:36,height:pad.t+gH-valY,fill:barColor,rx:4,opacity:.9}));
+  svg.appendChild(el('circle',{cx:barX,cy:valY,r:6,fill:barColor,stroke:'#fff','stroke-width':2}));
+
+  const labelY = valY > 40 ? valY-12 : valY+22;
+  const bg = el('rect',{x:barX-30,y:labelY-14,width:60,height:18,fill:'#1c2235',rx:5}); svg.appendChild(bg);
+  addText(svg,barX,labelY-2,val.toLocaleString(),barColor,10,900);
+
+  addText(svg,barX,H-6,'Nilai Pasien','#8896b3',9,700);
+
+  svg.appendChild(el('line',{x1:pad.l,y1:pad.t,x2:pad.l,y2:pad.t+gH,stroke:'#2e3a58','stroke-width':1.5}));
+  svg.appendChild(el('line',{x1:pad.l,y1:pad.t+gH,x2:W-pad.r,y2:pad.t+gH,stroke:'#2e3a58','stroke-width':1.5}));
+
+  const wrap=document.createElement('div'); wrap.className='chart-wrap';
+  wrap.innerHTML=`<div class="chart-top"><span class="chart-top-title">Posisi Nilai Pasien — ${type.toUpperCase()} ${age < 50?'(<50th)':age<=75?'(50-75th)':`(>75th)`}</span></div>`;
+  wrap.appendChild(svg);
+  document.getElementById('chart-b-wrap').replaceWith(wrap);
+}
+</script>
+</body>
+</html>
