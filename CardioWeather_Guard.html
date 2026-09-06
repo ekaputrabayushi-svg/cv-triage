@@ -1,0 +1,2770 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>CardioWeather Guard — Presisi Cuaca & Tatalaksana Jantung</title>
+  <meta name="description" content="Aplikasi mobile-first pemantauan cuaca dan kualitas udara real-time dengan rekomendasi tatalaksana medis lanjutan terpersonalisasi untuk pasien penyakit jantung dan populasi rentan." />
+  <meta name="theme-color" content="#0d1527" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-base: #0a0f1d;
+      --bg-surface: #111a2e;
+      --bg-card: rgba(22, 33, 58, 0.82);
+      --bg-card-hover: rgba(30, 45, 78, 0.9);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(56, 189, 248, 0.4);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --accent-cyan: #06b6d4;
+      --accent-blue: #38bdf8;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-purple: #a855f7;
+
+      --risk-low: #10b981;
+      --risk-moderate: #f59e0b;
+      --risk-high: #f97316;
+      --risk-critical: #ef4444;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+
+      --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 1px 1px rgba(255, 255, 255, 0.05);
+      --shadow-glow: 0 0 25px -5px rgba(56, 189, 248, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(14, 116, 144, 0.15), transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.12), transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.8), transparent 70%);
+      background-attachment: fixed;
+      padding-bottom: env(safe-area-inset-bottom, 24px);
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: rgba(10, 15, 29, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-left: 1px solid var(--border-subtle);
+      border-right: 1px solid var(--border-subtle);
+    }
+
+    /* Top App Bar */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(17, 26, 46, 0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .app-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, #0ea5e9, #f43f5e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(244, 63, 94, 0.35);
+    }
+
+    .brand-icon svg {
+      width: 22px;
+      height: 22px;
+      fill: #fff;
+    }
+
+    .brand-text h1 {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      background: linear-gradient(to right, #ffffff, #93c5fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
+    }
+
+    .brand-text span {
+      font-size: 11px;
+      color: var(--accent-cyan);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-icon:hover, .btn-icon:active {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: var(--accent-blue);
+      transform: scale(0.96);
+    }
+
+    /* Main Scroll Area */
+    .app-body {
+      padding: 16px 16px 90px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+
+    /* Live Location & Sync Bar */
+    .location-card {
+      background: linear-gradient(145deg, rgba(22, 33, 58, 0.9), rgba(15, 23, 42, 0.95));
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .location-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+    }
+
+    .location-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .location-coords {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 9px;
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 8px currentColor;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.3); }
+    }
+
+    /* Weather Quick Switcher & Presets Bar */
+    .weather-chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 2px 6px 2px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .weather-chips::-webkit-scrollbar {
+      display: none;
+    }
+
+    .w-chip-btn {
+      flex-shrink: 0;
+      padding: 7px 13px;
+      border-radius: var(--radius-full);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: #cbd5e1;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      white-space: nowrap;
+    }
+
+    .w-chip-btn:hover {
+      background: rgba(255, 255, 255, 0.09);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .w-chip-btn.active {
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.28), rgba(59, 130, 246, 0.28));
+      border-color: var(--accent-cyan);
+      color: #ffffff;
+      box-shadow: 0 0 14px rgba(6, 182, 212, 0.35);
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulse 1.8s infinite;
+    }
+
+    .inline-custom-card {
+      background: linear-gradient(145deg, rgba(20, 30, 52, 0.96), rgba(13, 20, 36, 0.98));
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 0 15px rgba(6, 182, 212, 0.15);
+      animation: slideDownFade 0.22s ease-out;
+      margin-top: 8px;
+    }
+
+    @keyframes slideDownFade {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .inline-custom-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .inline-custom-head h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .inline-custom-head p {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .btn-reset-pill {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: #fbbf24;
+      padding: 3px 9px;
+      border-radius: var(--radius-full);
+      font-size: 10.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+    .btn-reset-pill:hover {
+      background: rgba(245, 158, 11, 0.25);
+    }
+
+    .btn-text-sm {
+      background: none;
+      border: none;
+      color: var(--accent-blue);
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    /* Patient Profile Selector Bar */
+    .section-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+
+    /* Patient Profile Dropdown Selector */
+    .patient-dropdown-section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .profile-select-btn {
+      width: 100%;
+      background: linear-gradient(145deg, rgba(22, 33, 58, 0.95), rgba(15, 23, 42, 0.98));
+      border: 1px solid var(--border-focus);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .profile-select-btn:hover, .profile-select-btn:active {
+      background: linear-gradient(145deg, rgba(28, 42, 74, 0.95), rgba(18, 28, 52, 0.98));
+      border-color: var(--accent-blue);
+      box-shadow: 0 6px 24px rgba(56, 189, 248, 0.25);
+    }
+
+    .profile-select-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-align: left;
+    }
+
+    .profile-icon-badge {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .profile-select-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .profile-select-name {
+      font-size: 14px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.3;
+    }
+
+    .profile-select-desc {
+      font-size: 11.5px;
+      color: var(--accent-cyan);
+      font-weight: 600;
+      margin-top: 1px;
+    }
+
+    .profile-chevron {
+      color: var(--text-muted);
+      transition: transform 0.25s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-left: 6px;
+    }
+
+    .profile-select-btn.open .profile-chevron {
+      transform: rotate(180deg);
+      color: var(--accent-blue);
+    }
+
+    .profile-dropdown-menu {
+      background: linear-gradient(160deg, #111a2e, #0c1424);
+      border: 1px solid var(--accent-blue);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(56, 189, 248, 0.2);
+      animation: dropDownAnim 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      margin-top: 4px;
+    }
+
+    @keyframes dropDownAnim {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .profile-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .profile-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .profile-item:hover, .profile-item:active {
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.35);
+    }
+
+    .profile-item.active {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.25), rgba(59, 130, 246, 0.2));
+      border-color: var(--accent-blue);
+    }
+
+    .pi-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-align: left;
+    }
+
+    .pi-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .pi-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .pi-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.3;
+      margin-top: 1px;
+    }
+
+    .pi-check {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--accent-cyan);
+      margin-left: 8px;
+    }
+
+    /* City Picker & Location Search */
+    .loc-card-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .btn-loc-action {
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: #bae6fd;
+      padding: 5px 10px;
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+
+    .btn-loc-action:hover, .btn-loc-action:active {
+      background: rgba(56, 189, 248, 0.25);
+      border-color: var(--accent-blue);
+    }
+
+    .city-picker-drawer {
+      background: linear-gradient(145deg, rgba(18, 28, 48, 0.98), rgba(12, 18, 34, 0.98));
+      border: 1px solid var(--accent-cyan);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 16px rgba(6, 182, 212, 0.2);
+      animation: slideDownFade 0.22s ease-out;
+      margin-top: -6px;
+      margin-bottom: 4px;
+    }
+
+    .city-picker-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .city-search-input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .city-search-input-wrap input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius-sm);
+      padding: 10px 36px 10px 34px;
+      color: #fff;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .city-search-input-wrap input:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .btn-clear-search {
+      position: absolute;
+      right: 10px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .city-search-results {
+      background: rgba(10, 15, 28, 0.95);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: var(--radius-sm);
+      margin-top: 6px;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    .search-result-item {
+      padding: 9px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      transition: background 0.15s;
+    }
+
+    .search-result-item:last-child {
+      border-bottom: none;
+    }
+
+    .search-result-item:hover, .search-result-item:active {
+      background: rgba(56, 189, 248, 0.18);
+    }
+
+    .sri-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .sri-region {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .popular-city-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .pop-city-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: #e2e8f0;
+      padding: 6px 11px;
+      border-radius: var(--radius-full);
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .pop-city-btn:hover, .pop-city-btn:active {
+      background: rgba(6, 182, 212, 0.2);
+      border-color: var(--accent-cyan);
+      color: #fff;
+    }
+
+    .btn-restore-gps-wide {
+      width: 100%;
+      margin-top: 12px;
+      padding: 9px 12px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34d399;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-restore-gps-wide:hover {
+      background: rgba(16, 185, 129, 0.22);
+    }
+
+    /* Hero Environmental Threat Matrix */
+    .hero-matrix-card {
+      background: linear-gradient(160deg, #131e36, #0d1527);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+
+    .hero-matrix-card::before {
+      content: '';
+      position: absolute;
+      top: -50px;
+      right: -50px;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.25), transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+
+    .risk-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .risk-tag.low {
+      background: rgba(16, 185, 129, 0.18);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+    .risk-tag.moderate {
+      background: rgba(245, 158, 11, 0.18);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+    .risk-tag.high {
+      background: rgba(249, 115, 22, 0.18);
+      color: #fb923c;
+      border: 1px solid rgba(249, 115, 22, 0.4);
+    }
+    .risk-tag.critical {
+      background: rgba(239, 68, 68, 0.22);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      animation: alertBlink 1.8s infinite;
+    }
+
+    @keyframes alertBlink {
+      0%, 100% { box-shadow: 0 0 12px rgba(239, 68, 68, 0.4); }
+      50% { box-shadow: 0 0 2px rgba(239, 68, 68, 0.1); }
+    }
+
+    .hero-main-stat {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .main-temp {
+      font-size: 48px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -1.5px;
+      color: #ffffff;
+    }
+
+    .apparent-temp {
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .apparent-temp strong {
+      color: #e2e8f0;
+    }
+
+    .condition-desc {
+      font-size: 15px;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 16px;
+    }
+
+    /* Environmental Stats Grid */
+    .env-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .env-item {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: var(--radius-sm);
+      padding: 10px 8px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .env-item-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .env-item-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .env-item-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      font-weight: 500;
+    }
+
+    /* Specific Mask Recommendation Card */
+    .mask-hero-card {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-card);
+      position: relative;
+    }
+
+    .mask-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .mask-badge-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 22px;
+    }
+
+    .mask-type-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    .mask-rating-sub {
+      font-size: 12px;
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+
+    .mask-body-box {
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #cbd5e1;
+      border-left: 4px solid var(--accent-blue);
+    }
+
+    .mask-warning-note {
+      margin-top: 10px;
+      font-size: 11.5px;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      color: #fca5a5;
+      background: rgba(239, 68, 68, 0.1);
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* Actionable Clinical Directives Accordion/Tabs */
+    .action-module-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .module-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .module-head-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .module-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      flex: 1;
+    }
+
+    .directive-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .directive-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13px;
+      color: #e2e8f0;
+      background: rgba(255, 255, 255, 0.025);
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .bullet-point {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      margin-top: 7px;
+      flex-shrink: 0;
+    }
+
+    .directive-item strong {
+      color: #fff;
+      font-weight: 700;
+    }
+
+    /* Critical Alert Callout */
+    .critical-alert-box {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(185, 28, 28, 0.25));
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .critical-alert-icon {
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .critical-alert-text h4 {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: #fecaca;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .critical-alert-text p {
+      font-size: 12.5px;
+      color: #fee2e2;
+      line-height: 1.4;
+    }
+
+    /* Red Flag Symptoms Bar */
+    .red-flags-card {
+      background: rgba(20, 24, 38, 0.95);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      border-radius: var(--radius-md);
+      padding: 16px;
+    }
+
+    .red-flags-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .rf-item {
+      background: rgba(244, 63, 94, 0.06);
+      border: 1px solid rgba(244, 63, 94, 0.15);
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 11.5px;
+      color: #fecdd3;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 500;
+    }
+
+    .emergency-actions-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .btn-emergency {
+      flex: 1;
+      padding: 12px;
+      border-radius: var(--radius-md);
+      border: none;
+      font-size: 13px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.15s ease;
+    }
+
+    .btn-emergency.red {
+      background: linear-gradient(135deg, #ef4444, #b91c1c);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+    }
+    .btn-emergency.blue {
+      background: linear-gradient(135deg, #0ea5e9, #0284c7);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+    }
+    .btn-emergency:active {
+      transform: scale(0.97);
+    }
+
+    /* Sticky Bottom Quick Share & Profile Triage Bar */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background: rgba(13, 21, 39, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border-subtle);
+      padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 12px)) 16px;
+      display: flex;
+      gap: 10px;
+      z-index: 60;
+    }
+
+    .btn-action-share {
+      flex: 1;
+      padding: 12px;
+      background: #25d366;
+      color: #0c381c;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(37, 211, 102, 0.3);
+      transition: transform 0.15s ease;
+    }
+
+    .btn-action-share:active {
+      transform: scale(0.97);
+    }
+
+    .btn-refresh-loc {
+      width: 46px;
+      height: 46px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* Parameter Sliders */
+
+    .slider-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 14px;
+      border-radius: var(--radius-md);
+    }
+
+    .slider-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .slider-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .slider-label-row span.val {
+      font-family: 'JetBrains Mono', monospace;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.15);
+      outline: none;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+    }
+
+
+    /* Toast Notification */
+    .toast-popup {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--accent-blue);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      z-index: 200;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+
+    .toast-popup.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="app-brand">
+        <div class="brand-icon">
+          <!-- Heart Pulse Icon -->
+          <svg viewBox="0 0 24 24">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>CardioWeather Guard</h1>
+          <span>Clinical Environmental Triage</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn-icon" id="btn-open-sim" title="Simulasi Cuaca & Parameter">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="app-body">
+      <!-- Live GPS / City / Simulation Location Card -->
+      <section class="location-card">
+        <div class="location-info">
+          <div class="location-title">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" style="color:var(--accent-blue);flex-shrink:0;">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+            <span id="loc-name">Mendeteksi Lokasi Pengguna...</span>
+          </div>
+          <div class="location-coords" id="loc-coords">Lat: -6.2088, Lon: 106.8456 (Jakarta Default)</div>
+        </div>
+        <div class="loc-card-actions">
+          <button class="btn-loc-action" id="btn-toggle-city-picker" title="Pilih Kota atau Cari Lokasi Lain">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <span>Cari Kota</span>
+          </button>
+          <button class="btn-reset-pill" id="btn-reset-gps" style="display:none;" title="Kembalikan ke Lokasi GPS Asli">
+            <span>⟲</span> GPS Saya
+          </button>
+          <div class="status-pill" id="loc-status-pill">
+            <span class="status-pulse"></span>
+            <span id="loc-status-text">Live GPS</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Inline City Search & Picker Drawer -->
+      <div class="city-picker-drawer" id="city-picker-panel" style="display: none;">
+        <div class="city-picker-head">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:16px;">🌍</span>
+            <h4 style="font-size:13px; font-weight:800; color:#fff;">Pilih Lokasi & Cuaca Kota Lain</h4>
+          </div>
+          <button class="btn-text-sm" id="btn-close-city-picker">Tutup ✕</button>
+        </div>
+
+        <!-- Live Search Input -->
+        <div class="city-search-input-wrap">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" class="search-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input type="text" id="input-city-search" placeholder="Ketik kota (cth: Surabaya, Denpasar, Mekkah)..." autocomplete="off" />
+          <button id="btn-clear-city-search" style="display:none;" class="btn-clear-search">✕</button>
+        </div>
+
+        <!-- Dynamic Search Autocomplete Suggestions -->
+        <div class="city-search-results" id="city-search-results" style="display: none;"></div>
+
+        <!-- Quick Popular City Chips -->
+        <div style="margin-top:12px;">
+          <div style="font-size:10.5px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">
+            Kota Populer & Tujuan Wisata / Ibadah:
+          </div>
+          <div class="popular-city-chips">
+            <button class="pop-city-btn" data-lat="-6.2088" data-lon="106.8456" data-name="DKI Jakarta">🇮🇩 Jakarta</button>
+            <button class="pop-city-btn" data-lat="-7.2575" data-lon="112.7521" data-name="Surabaya, Jawa Timur">🇮🇩 Surabaya</button>
+            <button class="pop-city-btn" data-lat="-6.9175" data-lon="107.6191" data-name="Bandung, Jawa Barat">🇮🇩 Bandung</button>
+            <button class="pop-city-btn" data-lat="3.5952" data-lon="98.6722" data-name="Medan, Sumatera Utara">🇮🇩 Medan</button>
+            <button class="pop-city-btn" data-lat="-7.7956" data-lon="110.3695" data-name="DI Yogyakarta">🇮🇩 Yogyakarta</button>
+            <button class="pop-city-btn" data-lat="-8.6705" data-lon="115.2126" data-name="Denpasar, Bali">🇮🇩 Denpasar (Bali)</button>
+            <button class="pop-city-btn" data-lat="-5.1477" data-lon="119.4327" data-name="Makassar, Sulsel">🇮🇩 Makassar</button>
+            <button class="pop-city-btn" data-lat="-0.9739" data-lon="116.7073" data-name="IKN Nusantara">🇮🇩 IKN Nusantara</button>
+            <button class="pop-city-btn" data-lat="21.4266" data-lon="39.8256" data-name="Mekkah, Arab Saudi">🇸🇦 Mekkah (Haji/Umrah)</button>
+            <button class="pop-city-btn" data-lat="24.4672" data-lon="39.6111" data-name="Madinah, Arab Saudi">🇸🇦 Madinah</button>
+            <button class="pop-city-btn" data-lat="1.3521" data-lon="103.8198" data-name="Singapura">🇸🇬 Singapura</button>
+            <button class="pop-city-btn" data-lat="35.6762" data-lon="139.6503" data-name="Tokyo, Jepang">🇯🇵 Tokyo</button>
+          </div>
+        </div>
+
+        <button class="btn-restore-gps-wide" id="btn-restore-gps-wide">
+          <span>📍</span> Gunakan Kembali GPS Lokasi HP Saya
+        </button>
+      </div>
+
+      <!-- Weather Scenario & Simulation Bar (Direct Top Access) -->
+      <section>
+        <div class="section-label">
+          <span>Kondisi Cuaca & Skenario Uji</span>
+          <span id="weather-source-badge" style="font-size: 10.5px; color: var(--accent-emerald); font-weight:700;">● Live GPS Aktif</span>
+        </div>
+        <div class="weather-chips" id="weather-chips-container">
+          <button class="w-chip-btn active" data-preset="live" id="chip-live-gps">
+            <span class="live-dot"></span> 📍 Lokasi Asli (GPS)
+          </button>
+          <button class="w-chip-btn" data-preset="heatwave">
+            <span>🔥</span> Panas Ekstrem (38.5°)
+          </button>
+          <button class="w-chip-btn" data-preset="smog">
+            <span>🌫️</span> Polusi Berat (AQI 228)
+          </button>
+          <button class="w-chip-btn" data-preset="cold">
+            <span>❄️</span> Stres Dingin (15.5°)
+          </button>
+          <button class="w-chip-btn" data-preset="humid_storm">
+            <span>🌧️</span> Lembap & Badai
+          </button>
+          <button class="w-chip-btn" data-preset="ideal">
+            <span>🌿</span> Udara Bersih (24°)
+          </button>
+          <button class="w-chip-btn" data-preset="custom" id="chip-custom-toggle">
+            <span>🎛️</span> Kustom Slider
+          </button>
+        </div>
+
+        <!-- Inline Live Reactive Sliders Panel -->
+        <div class="inline-custom-card" id="inline-custom-panel" style="display: none;">
+          <div class="inline-custom-head">
+            <div>
+              <h4>🎛️ Kustomisasi Cuaca Real-Time</h4>
+              <p>Geser nilai — tatalaksana jantung langsung berubah seketika</p>
+            </div>
+            <button class="btn-text-sm" id="btn-close-inline-custom">Tutup ✕</button>
+          </div>
+          <div class="slider-group">
+            <div class="slider-row">
+              <div class="slider-label-row">
+                <span>Suhu Udara</span>
+                <span class="val" id="slide-val-temp">33.5°C</span>
+              </div>
+              <input type="range" id="input-temp" min="12" max="42" step="0.5" value="33.5">
+            </div>
+
+            <div class="slider-row">
+              <div class="slider-label-row">
+                <span>PM2.5 (Polusi Mikro)</span>
+                <span class="val" id="slide-val-pm25">68 µg/m³</span>
+              </div>
+              <input type="range" id="input-pm25" min="5" max="250" step="1" value="68">
+            </div>
+
+            <div class="slider-row">
+              <div class="slider-label-row">
+                <span>Kelembapan Relatif</span>
+                <span class="val" id="slide-val-humidity">64%</span>
+              </div>
+              <input type="range" id="input-humidity" min="20" max="100" step="1" value="64">
+            </div>
+
+            <div class="slider-row">
+              <div class="slider-label-row">
+                <span>Indeks UV</span>
+                <span class="val" id="slide-val-uv">8.4</span>
+              </div>
+              <input type="range" id="input-uv" min="0" max="13" step="0.5" value="8.4">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Patient Profile Expandable Dropdown Selector (No horizontal scroll!) -->
+      <section class="patient-dropdown-section">
+        <div class="section-label">
+          <span>Profil Pasien / Kondisi Anda</span>
+          <span style="font-size: 10px; color: var(--accent-blue);">Sentuh untuk Mengubah ▾</span>
+        </div>
+
+        <!-- Selected Profile Header Button (Click to Drop Down) -->
+        <button class="profile-select-btn" id="btn-toggle-profile-dropdown" aria-expanded="false">
+          <div class="profile-select-left">
+            <span class="profile-icon-badge" id="current-profile-icon">❤️</span>
+            <div class="profile-select-text">
+              <div class="profile-select-name" id="current-profile-name">PJK / Pasca Pasang Ring (CAD)</div>
+              <div class="profile-select-desc" id="current-profile-subtitle">Waspada vasospasme dingin & risiko plak mikro PM2.5</div>
+            </div>
+          </div>
+          <div class="profile-chevron" id="profile-chevron">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </div>
+        </button>
+
+        <!-- Dropdown Menu / Drawer (Smooth Expandable Downwards) -->
+        <div class="profile-dropdown-menu" id="profile-dropdown-menu" style="display: none;">
+          <div class="profile-grid" id="profile-items-container">
+            <div class="profile-item active" data-profile="cad">
+              <div class="pi-left">
+                <span class="pi-icon">❤️</span>
+                <div>
+                  <div class="pi-title">PJK / Pasca Ring (CAD)</div>
+                  <div class="pi-sub">Penyakit Jantung Koroner, riwayat infark, stent/CABG</div>
+                </div>
+              </div>
+              <span class="pi-check">✓</span>
+            </div>
+
+            <div class="profile-item" data-profile="hf">
+              <div class="pi-left">
+                <span class="pi-icon">🫁</span>
+                <div>
+                  <div class="pi-title">Gagal Jantung (Heart Failure)</div>
+                  <div class="pi-sub">Restriksi cairan ketat 1.2-1.5L, waspada edema paru</div>
+                </div>
+              </div>
+              <span class="pi-check"></span>
+            </div>
+
+            <div class="profile-item" data-profile="ht">
+              <div class="pi-left">
+                <span class="pi-icon">🩸</span>
+                <div>
+                  <div class="pi-title">Hipertensi</div>
+                  <div class="pi-sub">Lonjakan tensi cuaca dingin vs hipotensi panas terik</div>
+                </div>
+              </div>
+              <span class="pi-check"></span>
+            </div>
+
+            <div class="profile-item" data-profile="arr">
+              <div class="pi-left">
+                <span class="pi-icon">⚡</span>
+                <div>
+                  <div class="pi-title">Aritmia / Fibrilasi Atrium (AF)</div>
+                  <div class="pi-sub">Sensitif dehidrasi, keringat berlebih, & fluktuasi elektrolit</div>
+                </div>
+              </div>
+              <span class="pi-check"></span>
+            </div>
+
+            <div class="profile-item" data-profile="elderly">
+              <div class="pi-left">
+                <span class="pi-icon">👴</span>
+                <div>
+                  <div class="pi-title">Lansia Jantung (Geriatri)</div>
+                  <div class="pi-sub">Penurunan rasa haus, disregulasi suhu tubuh & komorbid</div>
+                </div>
+              </div>
+              <span class="pi-check"></span>
+            </div>
+
+            <div class="profile-item" data-profile="general">
+              <div class="pi-left">
+                <span class="pi-icon">🛡️</span>
+                <div>
+                  <div class="pi-title">Pencegahan / Umum Sehat</div>
+                  <div class="pi-sub">Skrining polusi udara & panduan olahraga kardioprotektif</div>
+                </div>
+              </div>
+              <span class="pi-check"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Hero Environmental Risk Assessment -->
+      <section class="hero-matrix-card">
+        <div class="hero-top">
+          <div>
+            <div class="risk-tag critical" id="overall-risk-badge">
+              <span id="risk-badge-icon">⚠️</span>
+              <span id="risk-badge-text">Risiko Tinggi</span>
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">Waktu Pembaruan</div>
+            <div style="font-size: 11px; font-family:'JetBrains Mono'; color: var(--text-muted);" id="data-updated-time">--:-- WIB</div>
+          </div>
+        </div>
+
+        <div class="hero-main-stat">
+          <div class="main-temp" id="val-temp">33.5°C</div>
+          <div class="apparent-temp">
+            Terasa seperti: <strong id="val-heat-index">39.8°C</strong> (Heat Stress)
+          </div>
+        </div>
+        <div class="condition-desc" id="weather-description">Sebagian Berawan • Udara Kering Terik</div>
+
+        <!-- 6 Core Parameters Matrix -->
+        <div class="env-grid">
+          <div class="env-item">
+            <div class="env-item-label">
+              <span>🌫️ PM2.5</span>
+            </div>
+            <div class="env-item-val" id="val-pm25">68 µg</div>
+            <div class="env-item-sub" id="sub-pm25" style="color:#fb923c;">Tidak Sehat</div>
+          </div>
+
+          <div class="env-item">
+            <div class="env-item-label">
+              <span>📊 AQI US</span>
+            </div>
+            <div class="env-item-val" id="val-aqi">158</div>
+            <div class="env-item-sub" id="sub-aqi" style="color:#f87171;">Unhealthy</div>
+          </div>
+
+          <div class="env-item">
+            <div class="env-item-label">
+              <span>☀️ Indeks UV</span>
+            </div>
+            <div class="env-item-val" id="val-uv">8.4</div>
+            <div class="env-item-sub" id="sub-uv" style="color:#fb923c;">Sangat Tinggi</div>
+          </div>
+
+          <div class="env-item">
+            <div class="env-item-label">
+              <span>💧 Kelembapan</span>
+            </div>
+            <div class="env-item-val" id="val-humidity">64%</div>
+            <div class="env-item-sub" id="sub-humidity">Sedang</div>
+          </div>
+
+          <div class="env-item">
+            <div class="env-item-label">
+              <span>💨 Kecepatan Angin</span>
+            </div>
+            <div class="env-item-val" id="val-wind">14 km/j</div>
+            <div class="env-item-sub" id="sub-wind">Normal</div>
+          </div>
+
+          <div class="env-item">
+            <div class="env-item-label">
+              <span>🧭 Tekanan Udara</span>
+            </div>
+            <div class="env-item-val" id="val-pressure">1011 hPa</div>
+            <div class="env-item-sub" id="sub-pressure">Stabil</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Targeted Mask Recommendation Module -->
+      <section class="mask-hero-card" id="mask-card">
+        <div class="mask-header">
+          <div class="mask-badge-icon" id="mask-badge-icon" style="background: rgba(239, 68, 68, 0.2); color: #f87171;">
+            😷
+          </div>
+          <div>
+            <div class="mask-type-title" id="mask-name">Respirator N95 / KN95 / KF94</div>
+            <div class="mask-rating-sub" id="mask-rating-sub">Wajib Filtrasi Partikulat Mikro ≥ 94%</div>
+          </div>
+        </div>
+        <div class="mask-body-box" id="mask-guidance-text">
+          Kadar partikel PM2.5 menembus membran alveoli dan dapat memicu inflamasi vaskular sistemik serta hiperkoagulasi darah (agregasi trombosit). Wajib gunakan masker berstandar respirator yang menempel rapat di pangkal hidung & dagu saat keluar ruangan.
+        </div>
+        <div class="mask-warning-note" id="mask-respiratory-caution">
+          <span style="font-size:16px;">⚠️</span>
+          <span id="mask-caution-text">Bila merasa sesak/berat bernapas dengan N95 (terutama pasien gagal jantung lanjut), <strong>SEGERA BATASI KELUAR RUANGAN</strong> daripada memakai masker longgar yang tidak memfilter partikulat.</span>
+        </div>
+      </section>
+
+      <!-- Critical Fluid & Hydration Advice (With HF Warning) -->
+      <section class="action-module-card">
+        <div class="module-head">
+          <div class="module-head-icon" style="background: rgba(56, 189, 248, 0.15); color: var(--accent-blue);">
+            💧
+          </div>
+          <div class="module-title">Panduan Cairan & Keseimbangan Elektrolit</div>
+        </div>
+        <div id="fluid-recommendation-content">
+          <!-- Populated dynamically based on Patient Condition -->
+        </div>
+      </section>
+
+      <!-- Medication & Farmakoterapi Environmental Warnings -->
+      <section class="action-module-card">
+        <div class="module-head">
+          <div class="module-head-icon" style="background: rgba(168, 85, 247, 0.15); color: var(--accent-purple);">
+            💊
+          </div>
+          <div class="module-title">Panduan Khusus Obat Jantung di Cuaca Ini</div>
+        </div>
+        <ul class="directive-list" id="medication-list-content">
+          <!-- Populated dynamically -->
+        </ul>
+      </section>
+
+      <!-- Physical Activity & Outdoor Safe Window -->
+      <section class="action-module-card">
+        <div class="module-head">
+          <div class="module-head-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald);">
+            🏃
+          </div>
+          <div class="module-title">Zona Aktivitas Fisik & Olahraga Luar Ruangan</div>
+        </div>
+        <div id="activity-recommendation-content">
+          <!-- Populated dynamically -->
+        </div>
+      </section>
+
+      <!-- Red Flags & Tanda Bahaya Kardiovaskular -->
+      <section class="red-flags-card">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:20px;">🚨</span>
+          <div>
+            <h3 style="font-size: 14px; font-weight: 800; color: #fecdd3; text-transform: uppercase;">
+              Tanda Bahaya Jantung (Segera ke IGD)
+            </h3>
+            <p style="font-size: 11.5px; color: var(--text-muted);">
+              Jika cuaca ekstrem memicu gejala berikut, jangan tunda bantuan medis:
+            </p>
+          </div>
+        </div>
+
+        <div class="red-flags-grid">
+          <div class="rf-item">
+            <span>💔</span> Dada tertindih / rasa terhimpit
+          </div>
+          <div class="rf-item">
+            <span>⚡</span> Nyeri menjalar ke leher/lengan
+          </div>
+          <div class="rf-item">
+            <span>😮‍💨</span> Sesak saat baring datar (Orthopnea)
+          </div>
+          <div class="rf-item">
+            <span>😵</span> Pusing berputar / pingsan mendadak
+          </div>
+          <div class="rf-item">
+            <span>💓</span> Jantung berdebar cepat tidak teratur
+          </div>
+          <div class="rf-item">
+            <span>🧊</span> Keringat dingin & lemas ekstrem
+          </div>
+        </div>
+
+        <div class="emergency-actions-row">
+          <a href="tel:119" class="btn-emergency red">
+            <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+            </svg>
+            Panggilan IGD (119)
+          </a>
+          <a href="https://www.google.com/maps/search/IGD+Rumah+Sakit+Jantung+Terdekat" target="_blank" class="btn-emergency blue">
+            <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+            Cari RS Terdekat
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Sticky Bar for Share & Fast Refresh -->
+    <div class="bottom-bar">
+      <button class="btn-refresh-loc" id="btn-refresh" title="Perbarui Data Cuaca">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+      </button>
+      <button class="btn-action-share" id="btn-share-wa">
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.978-.276-.1-.476-.15-.677.15-.2.301-.777.979-.953 1.18-.175.201-.351.226-.652.076-.301-.15-1.272-.469-2.424-1.496-.895-.798-1.5-1.784-1.676-2.085-.175-.301-.019-.464.132-.614.136-.135.301-.351.451-.527.15-.176.201-.301.301-.502.1-.201.05-.376-.025-.526-.075-.151-.677-1.632-.928-2.234-.244-.587-.492-.507-.677-.517l-.577-.01c-.2 0-.527.075-.802.376-.276.301-1.054 1.03-1.054 2.511 0 1.482 1.079 2.912 1.23 3.113.15.201 2.124 3.243 5.146 4.549.719.311 1.28.497 1.718.636.722.23 1.378.197 1.897.12.578-.087 1.78-.727 2.03-1.43.25-.703.25-1.305.175-1.43-.075-.125-.276-.2-.577-.35zM12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.38 5.08L2 22l5.09-1.33A9.957 9.957 0 0012 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18.2c-1.62 0-3.13-.46-4.42-1.25l-.32-.2-3.28.86.88-3.2-.21-.34A8.178 8.178 0 013.8 12c0-4.52 3.68-8.2 8.2-8.2 4.52 0 8.2 3.68 8.2 8.2 0 4.52-3.68 8.2-8.2 8.2z"/>
+        </svg>
+        Bagikan Rekomendasi ke WhatsApp
+      </button>
+    </div>
+
+
+    <!-- Toast Component -->
+    <div class="toast-popup" id="toast">Data berhasil diperbarui!</div>
+  </div>
+
+  <script>
+    /* =========================================================================
+     * CARDIO-WEATHER GUARD: Engine Medis & Pemantau Cuaca Terintegrasi
+     * ========================================================================= */
+
+    // Global State
+    const AppState = {
+      location: {
+        name: 'Mendeteksi...',
+        lat: -6.2088,
+        lon: 106.8456,
+        isSimulated: false,
+        simName: ''
+      },
+      patientProfile: 'cad', // 'cad', 'hf', 'ht', 'arr', 'elderly', 'general'
+      weather: {
+        temp: 33.5,
+        apparentTemp: 39.8,
+        humidity: 64,
+        windSpeed: 14,
+        pressure: 1011,
+        uvIndex: 8.4,
+        weatherCode: 1,
+        weatherDesc: 'Cerah Berawan'
+      },
+      airQuality: {
+        pm25: 68,
+        pm10: 95,
+        aqi: 158,
+        co: 420,
+        no2: 24,
+        o3: 45
+      }
+    };
+
+    // Preset Data Skenario Klinis
+    const Presets = {
+      heatwave: {
+        name: 'Gelombang Panas Ekstrem',
+        temp: 38.5,
+        apparentTemp: 45.2,
+        humidity: 48,
+        windSpeed: 8,
+        pressure: 1008,
+        uvIndex: 11.5,
+        pm25: 52,
+        aqi: 95,
+        weatherDesc: 'Panas Terik Ekstrem'
+      },
+      smog: {
+        name: 'Polusi Parah / Kabut Asap',
+        temp: 32.0,
+        apparentTemp: 36.5,
+        humidity: 70,
+        windSpeed: 4,
+        pressure: 1010,
+        uvIndex: 5.0,
+        pm25: 178,
+        aqi: 228,
+        weatherDesc: 'Kabut Asap Tebal Berbahaya'
+      },
+      cold: {
+        name: 'Stres Dingin & Angin Kencang',
+        temp: 15.5,
+        apparentTemp: 13.0,
+        humidity: 82,
+        windSpeed: 32,
+        pressure: 1018,
+        uvIndex: 2.1,
+        pm25: 22,
+        aqi: 45,
+        weatherDesc: 'Udara Dingin Menusuk & Angin Kencang'
+      },
+      humid_storm: {
+        name: 'Lembap Ekstrem & Badai',
+        temp: 26.0,
+        apparentTemp: 29.5,
+        humidity: 96,
+        windSpeed: 28,
+        pressure: 997,
+        uvIndex: 1.5,
+        pm25: 38,
+        aqi: 60,
+        weatherDesc: 'Hujan Deras & Tekanan Udara Rendah'
+      },
+      ideal: {
+        name: 'Cuaca Prima & Udara Bersih',
+        temp: 24.0,
+        apparentTemp: 24.0,
+        humidity: 55,
+        windSpeed: 10,
+        pressure: 1013,
+        uvIndex: 3.5,
+        pm25: 8,
+        aqi: 22,
+        weatherDesc: 'Sejuk, Nyaman & Udara Segar'
+      }
+    };
+
+    // Deskripsi Kode Cuaca WMO
+    const WMO_CODES = {
+      0: 'Langit Cerah',
+      1: 'Utamanya Cerah',
+      2: 'Sebagian Berawan',
+      3: 'Mendung Berawan Tebal',
+      45: 'Berkabut',
+      48: 'Kabut Berembun',
+      51: 'Gerimis Ringan',
+      53: 'Gerimis Sedang',
+      55: 'Gerimis Lebat',
+      61: 'Hujan Ringan',
+      63: 'Hujan Sedang',
+      65: 'Hujan Deras',
+      80: 'Hujan Rintik Mendadak',
+      81: 'Hujan Deras Terputus',
+      95: 'Badai Petir'
+    };
+
+    // DOM Elements
+    const dom = {
+      locName: document.getElementById('loc-name'),
+      locCoords: document.getElementById('loc-coords'),
+      locStatusPill: document.getElementById('loc-status-pill'),
+      locStatusText: document.getElementById('loc-status-text'),
+      btnResetGps: document.getElementById('btn-reset-gps'),
+      btnOpenSim: document.getElementById('btn-open-sim'),
+      btnToggleCityPicker: document.getElementById('btn-toggle-city-picker'),
+      cityPickerPanel: document.getElementById('city-picker-panel'),
+      btnCloseCityPicker: document.getElementById('btn-close-city-picker'),
+      inputCitySearch: document.getElementById('input-city-search'),
+      btnClearCitySearch: document.getElementById('btn-clear-city-search'),
+      citySearchResults: document.getElementById('city-search-results'),
+      btnRestoreGpsWide: document.getElementById('btn-restore-gps-wide'),
+      weatherChips: document.getElementById('weather-chips-container'),
+      weatherSourceBadge: document.getElementById('weather-source-badge'),
+      inlineCustomPanel: document.getElementById('inline-custom-panel'),
+      btnCloseInlineCustom: document.getElementById('btn-close-inline-custom'),
+      chipCustomToggle: document.getElementById('chip-custom-toggle'),
+      chipLiveGps: document.getElementById('chip-live-gps'),
+      // Patient Profile Dropdown Elements
+      btnToggleProfileDropdown: document.getElementById('btn-toggle-profile-dropdown'),
+      profileDropdownMenu: document.getElementById('profile-dropdown-menu'),
+      profileItemsContainer: document.getElementById('profile-items-container'),
+      currentProfileIcon: document.getElementById('current-profile-icon'),
+      currentProfileName: document.getElementById('current-profile-name'),
+      currentProfileSubtitle: document.getElementById('current-profile-subtitle'),
+      profileChevron: document.getElementById('profile-chevron'),
+      // Hero & Risk Matrix
+      overallRiskBadge: document.getElementById('overall-risk-badge'),
+      riskBadgeIcon: document.getElementById('risk-badge-icon'),
+      riskBadgeText: document.getElementById('risk-badge-text'),
+      dataUpdatedTime: document.getElementById('data-updated-time'),
+      valTemp: document.getElementById('val-temp'),
+      valHeatIndex: document.getElementById('val-heat-index'),
+      weatherDescription: document.getElementById('weather-description'),
+      valPm25: document.getElementById('val-pm25'),
+      subPm25: document.getElementById('sub-pm25'),
+      valAqi: document.getElementById('val-aqi'),
+      subAqi: document.getElementById('sub-aqi'),
+      valUv: document.getElementById('val-uv'),
+      subUv: document.getElementById('sub-uv'),
+      valHumidity: document.getElementById('val-humidity'),
+      subHumidity: document.getElementById('sub-humidity'),
+      valWind: document.getElementById('val-wind'),
+      subWind: document.getElementById('sub-wind'),
+      valPressure: document.getElementById('val-pressure'),
+      subPressure: document.getElementById('sub-pressure'),
+      maskBadgeIcon: document.getElementById('mask-badge-icon'),
+      maskName: document.getElementById('mask-name'),
+      maskRatingSub: document.getElementById('mask-rating-sub'),
+      maskGuidanceText: document.getElementById('mask-guidance-text'),
+      maskRespiratoryCaution: document.getElementById('mask-respiratory-caution'),
+      maskCautionText: document.getElementById('mask-caution-text'),
+      fluidContent: document.getElementById('fluid-recommendation-content'),
+      medicationContent: document.getElementById('medication-list-content'),
+      activityContent: document.getElementById('activity-recommendation-content'),
+      btnShareWa: document.getElementById('btn-share-wa'),
+      btnRefresh: document.getElementById('btn-refresh'),
+      toast: document.getElementById('toast'),
+      // Live Reactive Sliders
+      inputTemp: document.getElementById('input-temp'),
+      slideValTemp: document.getElementById('slide-val-temp'),
+      inputPm25: document.getElementById('input-pm25'),
+      slideValPm25: document.getElementById('slide-val-pm25'),
+      inputHumidity: document.getElementById('input-humidity'),
+      slideValHumidity: document.getElementById('slide-val-humidity'),
+      inputUv: document.getElementById('input-uv'),
+      slideValUv: document.getElementById('slide-val-uv')
+    };
+
+    // Helper: Show Toast
+    function showToast(msg) {
+      dom.toast.textContent = msg;
+      dom.toast.classList.add('visible');
+      setTimeout(() => dom.toast.classList.remove('visible'), 2800);
+    }
+
+    // Heat Index (Rothfusz Approximation)
+    function calculateHeatIndex(tempC, rh) {
+      if (tempC < 26) return tempC;
+      const T = (tempC * 9/5) + 32;
+      const R = rh;
+      let HI = -42.379 + 2.04901523*T + 10.14333127*R - 0.22475541*T*R - 0.00683783*T*T - 0.05481717*R*R + 0.00122874*T*T*R + 0.00085282*T*R*R - 0.00000199*T*T*R*R;
+      const HIC = (HI - 32) * 5/9;
+      return Math.round(HIC * 10) / 10;
+    }
+
+    // Convert PM2.5 to US AQI approx if missing
+    function pm25ToAqi(pm) {
+      if (pm <= 12.0) return Math.round((50/12.0) * pm);
+      if (pm <= 35.4) return Math.round(50 + ((100-50)/(35.4-12.1)) * (pm - 12.1));
+      if (pm <= 55.4) return Math.round(101 + ((150-101)/(55.4-35.5)) * (pm - 35.5));
+      if (pm <= 150.4) return Math.round(151 + ((200-151)/(150.4-55.5)) * (pm - 55.5));
+      if (pm <= 250.4) return Math.round(201 + ((300-201)/(250.4-150.5)) * (pm - 150.5));
+      return Math.round(301 + ((500-301)/(500.4-250.5)) * (pm - 250.5));
+    }
+
+    // Fetch Live Weather & Air Quality from Open-Meteo
+    async function fetchLiveWeather(lat, lon) {
+      try {
+        dom.locName.textContent = 'Mengambil data satelit cuaca & polusi...';
+        
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,surface_pressure&daily=uv_index_max&timezone=auto`;
+        const airQualityUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,ozone,us_aqi&timezone=auto`;
+
+        const [wRes, aqRes] = await Promise.all([
+          fetch(weatherUrl).then(r => r.json()),
+          fetch(airQualityUrl).then(r => r.json())
+        ]);
+
+        if (wRes && wRes.current) {
+          AppState.weather.temp = wRes.current.temperature_2m;
+          AppState.weather.humidity = wRes.current.relative_humidity_2m;
+          AppState.weather.apparentTemp = wRes.current.apparent_temperature || calculateHeatIndex(AppState.weather.temp, AppState.weather.humidity);
+          AppState.weather.windSpeed = Math.round(wRes.current.wind_speed_10m || 10);
+          AppState.weather.pressure = Math.round(wRes.current.surface_pressure || 1012);
+          AppState.weather.weatherCode = wRes.current.weather_code;
+          AppState.weather.weatherDesc = WMO_CODES[wRes.current.weather_code] || 'Cerah Berawan';
+          AppState.weather.uvIndex = (wRes.daily && wRes.daily.uv_index_max && wRes.daily.uv_index_max[0]) ? wRes.daily.uv_index_max[0] : 6.0;
+        }
+
+        if (aqRes && aqRes.current) {
+          AppState.airQuality.pm25 = Math.round(aqRes.current.pm2_5 || 35);
+          AppState.airQuality.pm10 = Math.round(aqRes.current.pm10 || 50);
+          AppState.airQuality.aqi = aqRes.current.us_aqi || pm25ToAqi(AppState.airQuality.pm25);
+        }
+
+        // Reverse Geocoding
+        await reverseGeocode(lat, lon);
+
+        AppState.location.isSimulated = false;
+        renderAll();
+        showToast('Data cuaca & udara terverifikasi real-time!');
+      } catch (err) {
+        console.warn('Gagal fetch live weather:', err);
+        showToast('Menggunakan data stasiun terdekat (offline fallback)');
+        renderAll();
+      }
+    }
+
+    // Reverse Geocode
+    async function reverseGeocode(lat, lon) {
+      try {
+        const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=id`;
+        const res = await fetch(url).then(r => r.json());
+        if (res) {
+          const city = res.city || res.locality || res.principalSubdivision || 'Wilayah Anda';
+          const sub = res.locality ? `${res.locality}, ${city}` : city;
+          AppState.location.name = sub;
+          dom.locName.textContent = sub;
+        }
+      } catch (e) {
+        dom.locName.textContent = `Area Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}`;
+      }
+    }
+
+    // Geolocation Auto-Detect
+    function initGeolocation() {
+      if (!navigator.geolocation) {
+        dom.locName.textContent = 'Jakarta Pusat (GPS tidak didukung)';
+        fetchLiveWeather(AppState.location.lat, AppState.location.lon);
+        return;
+      }
+
+      dom.locName.textContent = 'Mencari sinyal GPS perangkat...';
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          AppState.location.lat = pos.coords.latitude;
+          AppState.location.lon = pos.coords.longitude;
+          dom.locCoords.textContent = `Lat: ${AppState.location.lat.toFixed(4)}, Lon: ${AppState.location.lon.toFixed(4)}`;
+          fetchLiveWeather(AppState.location.lat, AppState.location.lon);
+        },
+        (err) => {
+          console.log('GPS error/denied:', err.message);
+          dom.locName.textContent = 'Jakarta (Izin Lokasi Belum Aktif)';
+          dom.locCoords.textContent = `Lat: -6.2088, Lon: 106.8456 (Default)`;
+          fetchLiveWeather(AppState.location.lat, AppState.location.lon);
+        },
+        { timeout: 8000, enableHighAccuracy: true }
+      );
+    }
+
+    /* =========================================================================
+     * CORE CLINICAL & ENVIRONMENTAL TRIAGE ENGINE
+     * ========================================================================= */
+    function calculateClinicalRisk() {
+      const { temp, apparentTemp, humidity, uvIndex, windSpeed } = AppState.weather;
+      const { pm25, aqi } = AppState.airQuality;
+      const profile = AppState.patientProfile;
+
+      let score = 0; // 0 (Low), 1 (Moderate), 2 (High), 3 (Critical)
+      let triggers = [];
+
+      // 1. PM2.5 / Air Quality Threat
+      if (pm25 >= 150 || aqi >= 200) {
+        score = Math.max(score, 3);
+        triggers.push('Polusi Udara Level Sangat Berbahaya (PM2.5 >150)');
+      } else if (pm25 >= 55 || aqi >= 150) {
+        score = Math.max(score, 2);
+        triggers.push('Polusi Udara Tidak Sehat (PM2.5 >55)');
+      } else if (pm25 >= 35 || aqi >= 100) {
+        score = Math.max(score, 1);
+        triggers.push('Polusi Udara Moderat (Sensitif)');
+      }
+
+      // 2. Heat Stress / Heat Index Threat
+      if (apparentTemp >= 41 || temp >= 38) {
+        score = Math.max(score, 3);
+        triggers.push('Stres Panas Ekstrem (Heat Index ≥41°C)');
+      } else if (apparentTemp >= 37 || temp >= 34) {
+        score = Math.max(score, 2);
+        triggers.push('Beban Panas Tinggi (Heat Index ≥37°C)');
+      } else if (apparentTemp >= 33 || temp >= 31) {
+        score = Math.max(score, 1);
+        triggers.push('Cuaca Cukup Terik');
+      }
+
+      // 3. Cold Stress / Vasospasm Threat
+      if (temp <= 16) {
+        score = Math.max(score, 2);
+        triggers.push('Stres Dingin Signifikan (Suhu ≤16°C)');
+      }
+
+      // 4. Vulnerable Patient Condition Amplifiers
+      if (profile === 'hf' && (apparentTemp >= 35 || pm25 >= 50)) {
+        score = Math.min(3, score + 1);
+      }
+      if (profile === 'cad' && (pm25 >= 55 || temp <= 18)) {
+        score = Math.min(3, score + 1);
+      }
+      if (profile === 'elderly' && (apparentTemp >= 36 || temp <= 18)) {
+        score = Math.min(3, score + 1);
+      }
+
+      return { score, triggers };
+    }
+
+    // Recommendation Renderers
+    function renderRecommendations() {
+      const { temp, apparentTemp, humidity, uvIndex, windSpeed, weatherDesc } = AppState.weather;
+      const { pm25, aqi } = AppState.airQuality;
+      const profile = AppState.patientProfile;
+      const { score, triggers } = calculateClinicalRisk();
+
+      // --- 1. OVERALL RISK BADGE ---
+      dom.overallRiskBadge.className = 'risk-tag';
+      if (score === 0) {
+        dom.overallRiskBadge.classList.add('low');
+        dom.riskBadgeIcon.textContent = '🟢';
+        dom.riskBadgeText.textContent = 'Risiko Rendah (Aman)';
+      } else if (score === 1) {
+        dom.overallRiskBadge.classList.add('moderate');
+        dom.riskBadgeIcon.textContent = '🟡';
+        dom.riskBadgeText.textContent = 'Kewaspadaan Sedang';
+      } else if (score === 2) {
+        dom.overallRiskBadge.classList.add('high');
+        dom.riskBadgeIcon.textContent = '🟠';
+        dom.riskBadgeText.textContent = 'Risiko Tinggi Kardiovaskular';
+      } else {
+        dom.overallRiskBadge.classList.add('critical');
+        dom.riskBadgeIcon.textContent = '🔴';
+        dom.riskBadgeText.textContent = 'BAHAYA / KRITIKAL MEDIS';
+      }
+
+      // --- 2. MASK RECOMMENDATION ---
+      let maskTitle = '';
+      let maskSub = '';
+      let maskDesc = '';
+      let maskIcon = '😷';
+      let cautionText = '';
+      let showCaution = true;
+
+      if (pm25 >= 150 || aqi >= 200) {
+        maskTitle = 'Respirator N95 / FFP2 Rapat';
+        maskSub = 'Wajib Proteksi Maksimal • Filtrasi ≥95%';
+        maskDesc = 'Konsentrasi PM2.5 sangat berbahaya. Partikulat nano menembus sirkulasi darah dan memicu adhesi platelet, spasme koroner, dan aritmia. Masker bedah biasa TIDAK MAMPU memfilter partikel sehalus ini. Gunakan N95 dengan segel hidung rapat.';
+        maskIcon = '🛡️';
+        cautionText = (profile === 'hf') 
+          ? 'Pasien Gagal Jantung: N95 memiliki hambatan inspirasi (resistensi pernapasan) yang dapat memberatkan kerja pernapasan. Lebih baik <strong>TETAP DI DALAM RUANGAN</strong> ber-AC dengan Air Purifier daripada memaksakan keluar ruangan memakai N95.'
+          : 'Bila timbul rasa pusing atau sesak nafas saat memakai N95, segera masuk ke ruangan tertutup berfilter udara dan longgarkan masker.';
+      } else if (pm25 >= 55 || aqi >= 150) {
+        maskTitle = 'Respirator KF94 / KN95 / N95';
+        maskSub = 'Wajib Saat Berada di Luar Ruangan';
+        maskDesc = 'Udara tidak sehat untuk seluruh kelompok, terutama penderita jantung & paru. Partikel PM2.5 memicu disfungsi endotel vaskular. Gunakan minimal KF94 dengan kawat hidung terpasang presisi.';
+        maskIcon = '😷';
+        cautionText = 'Jangan gunakan masker kain biasa karena efisiensi filtrasi partikel halus <2.5 mikron hanya sekitar 10-20%.';
+      } else if (pm25 >= 35 || aqi >= 101) {
+        maskTitle = 'Respirator KF94 / Masker Bedah 3-Ply Rapat';
+        maskSub = 'Direkomendasikan untuk Kelompok Rentan Jantung';
+        maskDesc = 'Kualitas udara tidak sehat bagi penderita penyakit kardiovaskular. Direkomendasikan masker berstandar filtrasi medis jika melintas di tepi jalan raya macet atau area konstruksi.';
+        maskIcon = '😷';
+        cautionText = 'Pastikan tidak ada celah udara di sisi samping pipi saat menarik napas.';
+      } else {
+        maskTitle = 'Masker Opsional / Masker Bedah Biasa';
+        maskSub = 'Kualitas Udara Relatif Bersih & Aman';
+        maskDesc = 'Partikulat udara dalam ambang toleransi yang aman. Masker tidak wajib untuk perlindungan polusi, kecuali jika Anda sedang mengalami gejala batuk, pilek, atau berada di fasilitas kesehatan.';
+        maskIcon = '🌿';
+        showCaution = false;
+      }
+
+      dom.maskName.textContent = maskTitle;
+      dom.maskRatingSub.textContent = maskSub;
+      dom.maskGuidanceText.innerHTML = maskDesc;
+      dom.maskBadgeIcon.textContent = maskIcon;
+      if (showCaution) {
+        dom.maskRespiratoryCaution.style.display = 'flex';
+        dom.maskCautionText.innerHTML = cautionText;
+      } else {
+        dom.maskRespiratoryCaution.style.display = 'none';
+      }
+
+      // --- 3. FLUID & HYDRATION GUIDELINE (CRUCIAL HF DIFFERENTIATION) ---
+      let fluidHtml = '';
+      if (profile === 'hf') {
+        fluidHtml = `
+          <div class="critical-alert-box" style="margin-bottom:12px;">
+            <div class="critical-alert-icon">⚠️</div>
+            <div class="critical-alert-text">
+              <h4>PENTING: JANGAN OVERHIDRASI SEMBARANGAN!</h4>
+              <p>Meskipun cuaca panas, pasien Gagal Jantung tetap memiliki risiko tinggi <strong>edema paru akut (cairan merembes ke paru)</strong> bila minum berlebihan.</p>
+            </div>
+          </div>
+          <ul class="directive-list">
+            <li class="directive-item">
+              <span class="bullet-point"></span>
+              <div><strong>Batas Asupan:</strong> Tetap patuhi restriksi cairan dokter Anda (rata-rata <strong>1.200 - 1.500 mL/24 jam</strong> termasuk kuah sop & buah berair).</div>
+            </li>
+            <li class="directive-item">
+              <span class="bullet-point"></span>
+              <div><strong>Mengatasi Haus Panas:</strong> Minum dengan tegukan kecil-kecil berkala, atau hisap es batu kecil / basahi bibir dengan air dingin tanpa menelan volume air besar sekaligus.</div>
+            </li>
+            <li class="directive-item">
+              <span class="bullet-point"></span>
+              <div><strong>Timbang Berat Badan Pagi:</strong> Timbang BB tiap pagi setelah BAK sebelum sarapan. Bila BB naik <strong>>1.5 - 2 kg dalam 48-72 jam</strong> atau pergelangan kaki bengkak, segera konsultasi DPJP untuk titrasi diuretik.</div>
+            </li>
+          </ul>
+        `;
+      } else if (apparentTemp >= 35 || temp >= 34) {
+        fluidHtml = `
+          <ul class="directive-list">
+            <li class="directive-item">
+              <span class="bullet-point"></span>
+              <div><strong>Hidrasi Ekstra (2.5 - 3 Liter/hari):</strong> Cuaca panas memicu dehidrasi dan hemokonsentrasi (darah mengental), meningkatkan risiko trombosis stent pada pasien PJK.</div>
+            </li>
+            <li class="directive-item">
+              <span class="bullet-point"></span>
+              <div><strong>Cairan Elektrolit Alami:</strong> Minum air kelapa murni tanpa gula atau air mineral dengan elektrolit untuk mengganti kalium & natrium yang hilang lewat keringat.</div>
+            </li>
+            <li class="directive-item">
+              <span class="bullet-point"></span>
+              <div><strong>Hindari Dehidrator:</strong> Batasi kopi pekat, minuman berenergi, dan alkohol karena mempercepat kehilangan cairan tubuh dan memicu takikardia.</div>
+            </li>
+          </ul>
+        `;
+      } else if (temp <= 18) {
+        fluidHtml = `
+          <ul class="directive-list">
+            <li class="directive-item">
+              <span class="bullet-point"></span>
+              <div><strong>Minum Hangat Teratur:</strong> Udara dingin sering menumpulkan rasa haus padahal tubuh tetap kehilangan uap air via respirasi. Minum air hangat 1.8 - 2.2 L/hari.</div>
+            </li>
+            <li class="directive-item">
+              <span class="bullet-point"></span>
+              <div><strong>Hindari Minuman Es/Dingin:</strong> Minuman sangat dingin dapat memicu refleks stimulasi vagal atau ketidaknyamanan vaskular saat suhu lingkungan sudah rendah.</div>
+            </li>
+          </ul>
+        `;
+      } else {
+        fluidHtml = `
+          <ul class="directive-list">
+            <li class="directive-item">
+              <span class="bullet-point"></span>
+              <div><strong>Hidrasi Seimbang:</strong> Pertahankan asupan cairan cukup 2 liter per hari. Perhatikan warna urine (harus kuning jernih keemasan).</div>
+            </li>
+          </ul>
+        `;
+      }
+      dom.fluidContent.innerHTML = fluidHtml;
+
+      // --- 4. MEDICATION & PHARMACOTHERAPY ADVICE ---
+      let medItems = [];
+      if (apparentTemp >= 35 || temp >= 34) {
+        medItems.push(`<div><strong>Waspada Diuretik (Furosemide / Spironolactone):</strong> Kombinasi keringat banyak dan diuretik dapat menyebabkan deplesi volume mendadak, gagal ginjal prerenal, serta hipotensi postural. Periksa tekanan darah rutin bila terasa limbung saat berdiri.</div>`);
+        medItems.push(`<div><strong>Obat Antihipertensi (ACEI, ARB, CCB):</strong> Efek vasodilatasi pembuluh darah akibat cuaca panas dapat menurunkan tensi lebih rendah dari biasanya. Jangan hentikan obat sendiri, hubungi dokter bila tensi sistolik < 95 mmHg.</div>`);
+        medItems.push(`<div><strong>Penyimpanan Obat:</strong> JANGAN tinggalkan obat jantung di dalam mobil yang terpapar terik matahari langsung. Simpan di ruangan sejuk < 25-30°C agar efektivitas bahan aktif tidak terdegradasi.</div>`);
+      } else if (temp <= 18) {
+        medItems.push(`<div><strong>Waspada Lonjakan Tensi (Sympathetic Surge):</strong> Udara dingin memicu vasokonstriksi perifer kuat. Pastikan obat antihipertensi dan beta-blocker diminum tepat waktu tanpa terputus.</div>`);
+        medItems.push(`<div><strong>Bawa Nitrat Sublingual (ISDN / Spray):</strong> Untuk pasien PJK, vasospasme koroner lebih sering terjadi di suhu dingin. Selalu siapkan tablet ISDN di saku yang mudah dijangkau saat bepergian.</div>`);
+      } else {
+        medItems.push(`<div><strong>Kepatuhan Rutin:</strong> Lanjutkan konsumsi obat kardioprotektif (antiplatelet aspirin/clopidogrel, statin, obat tensi) sesuai jadwal harian tanpa modifikasi mandiri.</div>`);
+      }
+
+      if (profile === 'arr') {
+        medItems.push(`<div><strong>Obat Anti-Aritmia:</strong> Fluktuasi kalium darah akibat cuaca ekstrim sangat sensitif memicu gangguan irama. Konsumsi obat irama jantung tepat jam.</div>`);
+      }
+
+      dom.medicationContent.innerHTML = medItems.map(item => `
+        <li class="directive-item">
+          <span class="bullet-point"></span>
+          ${item}
+        </li>
+      `).join('');
+
+      // --- 5. PHYSICAL ACTIVITY & OUTDOOR WINDOW (HARMONIZED WITH CLINICAL RISK SCORE) ---
+      let actHtml = '';
+
+      if (score >= 3 || pm25 >= 100 || apparentTemp >= 39) {
+        // ZONA MERAH: STOP / SANGAT BERBAHAYA
+        actHtml = `
+          <div class="critical-alert-box" style="margin-bottom:10px;">
+            <div class="critical-alert-icon">🚫</div>
+            <div class="critical-alert-text">
+              <h4>ZONA MERAH: STOP AKTIVITAS / OLAHRAGA LUAR RUANGAN</h4>
+              <p>Tingkat ancaman lingkungan dan risiko kardiovaskular Anda berada pada level <strong>KRITIKAL / SANGAT TINGGI</strong>. Beban gabungan cuaca & polusi melipatgandakan kebutuhan oksigen jantung (*myocardial oxygen demand*), sangat berisiko memicu iskemia akut, aritmia, atau dekompensasi jantung.</p>
+            </div>
+          </div>
+          <ul class="directive-list">
+            <li class="directive-item">
+              <span class="bullet-point"></span>
+              <div><strong>Instruksi Pasien Jantung:</strong> Tetap di dalam ruangan tertutup (indoor) dengan sirkulasi atau air purifier. Batasi mobilitas luar ruangan hingga cuaca/polusi membaik.</div>
+            </li>
+            <li class="directive-item">
+              <span class="bullet-point"></span>
+              <div><strong>Aktivitas Pengganti:</strong> Istirahat cukup atau peregangan ringan statis di dalam ruangan ber-AC. Tunda seluruh program latihan fisik luar ruangan.</div>
+            </li>
+          </ul>
+        `;
+      } else if (score === 2 || pm25 >= 45 || apparentTemp >= 34 || temp <= 16) {
+        // ZONA ORANYE: RISIKO TINGGI - RESTRIKSI KETAT AKTIVITAS
+        actHtml = `
+          <div style="background:rgba(249, 115, 22, 0.15); border-left:4px solid #f97316; padding:12px 14px; border-radius:8px; margin-bottom:10px;">
+            <div style="font-size:13.5px; font-weight:800; color:#fdba74; display:flex; align-items:center; gap:6px;">
+              ⚠️ <strong>ZONA ORANYE: RESTRIKSI KETAT AKTIVITAS LUAR</strong>
+            </div>
+            <p style="font-size:12px; color:#fed7aa; margin-top:4px; line-height:1.4;">
+              Status risiko kardiovaskular Anda saat ini <strong>TINGGI</strong>. Olahraga di luar ruangan berpotensi memicu vasospasme koroner, lonjakan tekanan darah mendadak, atau kelelahan kardiak.
+            </p>
+          </div>
+          <ul class="directive-list">
+            <li class="directive-item">
+              <span class="bullet-point"></span>
+              <div><strong>Alihkan ke Indoor:</strong> Hindari olahraga luar ruangan. Alihkan ke jalan santai di dalam rumah atau mall ber-AC dengan permukaan datar.</div>
+            </li>
+            <li class="directive-item">
+              <span class="bullet-point"></span>
+              <div><strong>Batasan Intensitas Rendah:</strong> Hindari tanjakan, latihan beban, atau gerakan menahan napas (Valsalva). Skala kelelahan maksimal Borg 9-11 (sangat ringan).</div>
+            </li>
+            <li class="directive-item">
+              <span class="bullet-point"></span>
+              <div><strong>Hentikan Segera Jika:</strong> Denyut nadi istirahat meningkat tajam, dada terasa tidak nyaman, pusing melayang, atau napas terasa pendek.</div>
+            </li>
+          </ul>
+        `;
+      } else if (score === 1 || pm25 >= 25 || apparentTemp >= 31 || uvIndex >= 7) {
+        // ZONA KUNING: KEWASPADAAN SEDANG - MODIFIKASI INTENSITAS & WAKTU
+        actHtml = `
+          <div style="background:rgba(245, 158, 11, 0.12); border-left:4px solid #f59e0b; padding:12px 14px; border-radius:8px; margin-bottom:10px;">
+            <div style="font-size:13.5px; font-weight:800; color:#fde68a; display:flex; align-items:center; gap:6px;">
+              ⚠️ <strong>ZONA KUNING: MODIFIKASI INTENSITAS & WAKTU</strong>
+            </div>
+            <p style="font-size:12px; color:#fef3c7; margin-top:4px; line-height:1.4;">
+              Kewaspadaan sedang. Lingkungan dapat membebani kerja jantung bila beraktivitas pada jam-jam puncak panas, radiasi UV, atau polusi kendaraan.
+            </p>
+          </div>
+          <ul class="directive-list">
+            <li class="directive-item">
+              <span class="bullet-point"></span>
+              <div><strong>Jam Aman Terbatas:</strong> Hanya berolahraga sebelum pukul 06.30 pagi atau setelah pukul 17.30 sore di area bertaman rindang yang jauh dari jalan raya protokol.</div>
+            </li>
+            <li class="directive-item">
+              <span class="bullet-point"></span>
+              <div><strong>Intensitas Moderat Terkontrol:</strong> Batasi jalan santai 20-30 menit. Tetap kenakan masker bila melintas di dekat jalan raya berdebu.</div>
+            </li>
+          </ul>
+        `;
+      } else {
+        // ZONA HIJAU: HANYA KETIKA RISIKO RENDAH (SCORE === 0) DAN CUACA AMAN
+        const isGeneral = profile === 'general';
+        actHtml = `
+          <div style="background:rgba(16, 185, 129, 0.12); border-left:4px solid #10b981; padding:12px 14px; border-radius:8px; margin-bottom:10px;">
+            <div style="font-size:13.5px; font-weight:800; color:#a7f3d0; display:flex; align-items:center; gap:6px;">
+              ✅ <strong>ZONA HIJAU: AMAN UNTUK AKTIVITAS FISIK</strong>
+            </div>
+            <p style="font-size:12px; color:#d1fae5; margin-top:4px; line-height:1.4;">
+              Kondisi cuaca dan kualitas udara sejuk serta aman bagi sistem kardiovaskular.
+            </p>
+          </div>
+          <ul class="directive-list">
+            <li class="directive-item">
+              <span class="bullet-point"></span>
+              <div><strong>Rekomendasi Aktivitas:</strong> ${isGeneral ? 'Olahraga aerobik moderat 30-45 menit (jalan cepat, jogging santai, bersepeda) sangat dianjurkan.' : 'Jalan cepat santai 20-30 menit di luar ruangan. Lakukan pemanasan 5 menit dan pendinginan bertahap.'}</div>
+            </li>
+            <li class="directive-item">
+              <span class="bullet-point"></span>
+              <div><strong>Prinsip Aman:</strong> Cukupi hidrasi, dan pasien PJK tetap disarankan membawa obat nitrat sublingual di saku sebagai tindakan pencegahan.</div>
+            </li>
+          </ul>
+        `;
+      }
+      dom.activityContent.innerHTML = actHtml;
+    }
+
+    // Render Stats & Weather Grid
+    function renderStats() {
+      const { temp, apparentTemp, humidity, windSpeed, pressure, uvIndex, weatherDesc } = AppState.weather;
+      const { pm25, aqi } = AppState.airQuality;
+
+      dom.valTemp.textContent = `${temp.toFixed(1)}°C`;
+      dom.valHeatIndex.textContent = `${apparentTemp.toFixed(1)}°C`;
+      dom.weatherDescription.textContent = `${weatherDesc} • Humiditas ${humidity}%`;
+
+      dom.valPm25.textContent = `${pm25} µg`;
+      if (pm25 <= 15) {
+        dom.subPm25.textContent = 'Bagus / Bersih';
+        dom.subPm25.style.color = '#34d399';
+      } else if (pm25 <= 55) {
+        dom.subPm25.textContent = 'Sedang';
+        dom.subPm25.style.color = '#fbbf24';
+      } else if (pm25 <= 150) {
+        dom.subPm25.textContent = 'Tidak Sehat';
+        dom.subPm25.style.color = '#fb923c';
+      } else {
+        dom.subPm25.textContent = 'Sangat Berbahaya';
+        dom.subPm25.style.color = '#f87171';
+      }
+
+      dom.valAqi.textContent = `${aqi}`;
+      if (aqi <= 50) {
+        dom.subAqi.textContent = 'Baik (Good)';
+        dom.subAqi.style.color = '#34d399';
+      } else if (aqi <= 100) {
+        dom.subAqi.textContent = 'Sedang (Moderate)';
+        dom.subAqi.style.color = '#fbbf24';
+      } else if (aqi <= 150) {
+        dom.subAqi.textContent = 'Sensitif (Unhealthy SG)';
+        dom.subAqi.style.color = '#fb923c';
+      } else {
+        dom.subAqi.textContent = 'Berbahaya (Unhealthy)';
+        dom.subAqi.style.color = '#f87171';
+      }
+
+      dom.valUv.textContent = `${uvIndex.toFixed(1)}`;
+      if (uvIndex <= 2) {
+        dom.subUv.textContent = 'Rendah (Aman)';
+        dom.subUv.style.color = '#34d399';
+      } else if (uvIndex <= 5) {
+        dom.subUv.textContent = 'Sedang';
+        dom.subUv.style.color = '#fbbf24';
+      } else if (uvIndex <= 7) {
+        dom.subUv.textContent = 'Tinggi';
+        dom.subUv.style.color = '#fb923c';
+      } else {
+        dom.subUv.textContent = 'Sangat Ekstrem';
+        dom.subUv.style.color = '#f87171';
+      }
+
+      dom.valHumidity.textContent = `${humidity}%`;
+      dom.subHumidity.textContent = humidity > 80 ? 'Sangat Lembap' : humidity < 40 ? 'Kering' : 'Normal';
+
+      dom.valWind.textContent = `${windSpeed} km/j`;
+      dom.subWind.textContent = windSpeed > 25 ? 'Kencang' : 'Normal';
+
+      dom.valPressure.textContent = `${pressure} hPa`;
+      dom.subPressure.textContent = pressure < 1005 ? 'Rendah (Badai)' : 'Stabil';
+
+      // Update Timestamp
+      const now = new Date();
+      dom.dataUpdatedTime.textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
+
+      // Status Pill & Badges
+      if (AppState.location.isSimulated) {
+        dom.locStatusPill.style.background = 'rgba(245, 158, 11, 0.15)';
+        dom.locStatusPill.style.color = '#fbbf24';
+        dom.locStatusPill.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+        dom.locStatusText.textContent = 'Simulasi';
+        dom.btnResetGps.style.display = 'inline-flex';
+        dom.weatherSourceBadge.textContent = `● Mode Uji: ${AppState.location.simName || 'Kustom'}`;
+        dom.weatherSourceBadge.style.color = 'var(--accent-amber)';
+      } else if (AppState.location.isCustomCity) {
+        dom.locStatusPill.style.background = 'rgba(6, 182, 212, 0.15)';
+        dom.locStatusPill.style.color = '#38bdf8';
+        dom.locStatusPill.style.borderColor = 'rgba(6, 182, 212, 0.4)';
+        dom.locStatusText.textContent = 'Kota Pilihan';
+        dom.btnResetGps.style.display = 'inline-flex';
+        dom.weatherSourceBadge.textContent = `● Cuaca Live: ${AppState.location.name}`;
+        dom.weatherSourceBadge.style.color = 'var(--accent-cyan)';
+      } else {
+        dom.locStatusPill.style.background = 'rgba(16, 185, 129, 0.15)';
+        dom.locStatusPill.style.color = '#34d399';
+        dom.locStatusPill.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+        dom.locStatusText.textContent = 'Live GPS';
+        dom.btnResetGps.style.display = 'none';
+        dom.weatherSourceBadge.textContent = '● Live GPS Aktif';
+        dom.weatherSourceBadge.style.color = 'var(--accent-emerald)';
+      }
+    }
+
+    function renderAll() {
+      renderStats();
+      renderRecommendations();
+    }
+
+    /* =========================================================================
+     * EVENT LISTENERS & INTERACTION
+     * ========================================================================= */
+
+    // Patient Profile Metadata
+    const PROFILES_DATA = {
+      cad: {
+        name: 'PJK / Pasca Pasang Ring (CAD)',
+        icon: '❤️',
+        sub: 'Waspada vasospasme dingin & risiko plak mikro PM2.5'
+      },
+      hf: {
+        name: 'Gagal Jantung (Heart Failure)',
+        icon: '🫁',
+        sub: 'Restriksi cairan ketat 1.2-1.5L, waspada edema paru'
+      },
+      ht: {
+        name: 'Hipertensi',
+        icon: '🩸',
+        sub: 'Lonjakan tensi cuaca dingin vs hipotensi panas terik'
+      },
+      arr: {
+        name: 'Aritmia / Fibrilasi Atrium (AF)',
+        icon: '⚡',
+        sub: 'Sensitif dehidrasi, keringat berlebih, & fluktuasi elektrolit'
+      },
+      elderly: {
+        name: 'Lansia Jantung (Geriatri)',
+        icon: '👴',
+        sub: 'Penurunan rasa haus, disregulasi suhu tubuh & komorbid'
+      },
+      general: {
+        name: 'Pencegahan / Umum Sehat',
+        icon: '🛡️',
+        sub: 'Skrining polusi udara & panduan olahraga kardioprotektif'
+      }
+    };
+
+    // Toggle Profile Dropdown Menu (Drops down vertically without horizontal slider)
+    dom.btnToggleProfileDropdown.addEventListener('click', () => {
+      const isClosed = dom.profileDropdownMenu.style.display === 'none';
+      dom.profileDropdownMenu.style.display = isClosed ? 'block' : 'none';
+      dom.btnToggleProfileDropdown.classList.toggle('open', isClosed);
+      dom.btnToggleProfileDropdown.setAttribute('aria-expanded', isClosed);
+    });
+
+    // Select Profile from Dropdown
+    dom.profileItemsContainer.addEventListener('click', (e) => {
+      const item = e.target.closest('.profile-item');
+      if (!item) return;
+
+      const profileKey = item.dataset.profile;
+      AppState.patientProfile = profileKey;
+
+      // Update active styling & checkmarks
+      document.querySelectorAll('.profile-item').forEach(el => {
+        el.classList.remove('active');
+        const check = el.querySelector('.pi-check');
+        if (check) check.textContent = '';
+      });
+      item.classList.add('active');
+      const check = item.querySelector('.pi-check');
+      if (check) check.textContent = '✓';
+
+      // Update Dropdown Header Card
+      const meta = PROFILES_DATA[profileKey];
+      if (meta) {
+        dom.currentProfileIcon.textContent = meta.icon;
+        dom.currentProfileName.textContent = meta.name;
+        dom.currentProfileSubtitle.textContent = meta.sub;
+      }
+
+      // Smoothly close menu
+      dom.profileDropdownMenu.style.display = 'none';
+      dom.btnToggleProfileDropdown.classList.remove('open');
+      dom.btnToggleProfileDropdown.setAttribute('aria-expanded', 'false');
+
+      renderRecommendations();
+      showToast(`Kondisi dipilih: ${meta ? meta.name : profileKey}`);
+    });
+
+    // --- City Search & Location Picker Listeners ---
+    dom.btnToggleCityPicker.addEventListener('click', () => {
+      const isHidden = dom.cityPickerPanel.style.display === 'none';
+      dom.cityPickerPanel.style.display = isHidden ? 'block' : 'none';
+      if (isHidden) {
+        dom.inputCitySearch.focus();
+      }
+    });
+
+    dom.btnCloseCityPicker.addEventListener('click', () => {
+      dom.cityPickerPanel.style.display = 'none';
+    });
+
+    // Select City Function
+    function selectCityLocation(name, lat, lon) {
+      AppState.location.name = name;
+      AppState.location.lat = parseFloat(lat);
+      AppState.location.lon = parseFloat(lon);
+      AppState.location.isSimulated = false;
+      AppState.location.isCustomCity = true;
+
+      dom.locName.textContent = name;
+      dom.locCoords.textContent = `Lat: ${AppState.location.lat.toFixed(4)}, Lon: ${AppState.location.lon.toFixed(4)}`;
+
+      // Reset weather chip active state
+      document.querySelectorAll('.w-chip-btn').forEach(b => b.classList.remove('active'));
+      dom.cityPickerPanel.style.display = 'none';
+      dom.inlineCustomPanel.style.display = 'none';
+
+      fetchLiveWeather(AppState.location.lat, AppState.location.lon);
+      showToast(`Memuat cuaca kota: ${name}`);
+    }
+
+    // Popular City Chips Click
+    document.querySelectorAll('.pop-city-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectCityLocation(btn.dataset.name, btn.dataset.lat, btn.dataset.lon);
+      });
+    });
+
+    // Live City Search Input with Open-Meteo Geocoding API
+    let searchDebounceTimer = null;
+    dom.inputCitySearch.addEventListener('input', (e) => {
+      const query = e.target.value.trim();
+      dom.btnClearCitySearch.style.display = query.length > 0 ? 'block' : 'none';
+
+      clearTimeout(searchDebounceTimer);
+      if (query.length < 2) {
+        dom.citySearchResults.style.display = 'none';
+        dom.citySearchResults.innerHTML = '';
+        return;
+      }
+
+      searchDebounceTimer = setTimeout(async () => {
+        try {
+          const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=6&language=id&format=json`;
+          const res = await fetch(url).then(r => r.json());
+          if (res && res.results && res.results.length > 0) {
+            dom.citySearchResults.innerHTML = res.results.map(r => {
+              const region = [r.admin1, r.country].filter(Boolean).join(', ');
+              const fullName = `${r.name}, ${region}`;
+              return `
+                <div class="search-result-item" data-lat="${r.latitude}" data-lon="${r.longitude}" data-name="${fullName}">
+                  <div class="sri-name">📍 ${r.name}</div>
+                  <div class="sri-region">${region} (Lat: ${r.latitude.toFixed(2)}, Lon: ${r.longitude.toFixed(2)})</div>
+                </div>
+              `;
+            }).join('');
+            dom.citySearchResults.style.display = 'block';
+          } else {
+            dom.citySearchResults.innerHTML = `<div style="padding:10px; font-size:12px; color:var(--text-muted); text-align:center;">Kota tidak ditemukan. Coba ketik nama lain.</div>`;
+            dom.citySearchResults.style.display = 'block';
+          }
+        } catch (err) {
+          console.warn('Geocoding error:', err);
+        }
+      }, 300);
+    });
+
+    dom.btnClearCitySearch.addEventListener('click', () => {
+      dom.inputCitySearch.value = '';
+      dom.btnClearCitySearch.style.display = 'none';
+      dom.citySearchResults.style.display = 'none';
+      dom.citySearchResults.innerHTML = '';
+    });
+
+    dom.citySearchResults.addEventListener('click', (e) => {
+      const item = e.target.closest('.search-result-item');
+      if (!item) return;
+      selectCityLocation(item.dataset.name, item.dataset.lat, item.dataset.lon);
+    });
+
+    // Restore GPS Handler
+    function restoreGpsLocation() {
+      AppState.location.isSimulated = false;
+      AppState.location.isCustomCity = false;
+      document.querySelectorAll('.w-chip-btn').forEach(b => b.classList.remove('active'));
+      dom.chipLiveGps.classList.add('active');
+      dom.cityPickerPanel.style.display = 'none';
+      dom.inlineCustomPanel.style.display = 'none';
+      initGeolocation();
+      showToast('Kembali ke Live GPS lokasi perangkat');
+    }
+
+    dom.btnRestoreGpsWide.addEventListener('click', restoreGpsLocation);
+
+    // Refresh Button
+    dom.btnRefresh.addEventListener('click', () => {
+      if (AppState.location.isSimulated) {
+        renderAll();
+        showToast('Parameter simulasi diperbarui!');
+      } else {
+        initGeolocation();
+      }
+    });
+
+    // Weather Quick Switcher (Direct 1-Tap Control at Top)
+    dom.weatherChips.addEventListener('click', (e) => {
+      const btn = e.target.closest('.w-chip-btn');
+      if (!btn) return;
+
+      const preset = btn.dataset.preset;
+
+      if (preset === 'live') {
+        document.querySelectorAll('.w-chip-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        dom.inlineCustomPanel.style.display = 'none';
+        AppState.location.isSimulated = false;
+        initGeolocation();
+        showToast('Beralih ke Live GPS lokasi perangkat');
+        return;
+      }
+
+      if (preset === 'custom') {
+        const isHidden = dom.inlineCustomPanel.style.display === 'none';
+        dom.inlineCustomPanel.style.display = isHidden ? 'block' : 'none';
+        if (isHidden) {
+          syncSliders();
+          document.querySelectorAll('.w-chip-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          showToast('Panel slider kustom dibuka');
+        }
+        return;
+      }
+
+      // Predefined Preset
+      const p = Presets[preset];
+      if (!p) return;
+
+      document.querySelectorAll('.w-chip-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      dom.inlineCustomPanel.style.display = 'none';
+
+      AppState.weather.temp = p.temp;
+      AppState.weather.apparentTemp = p.apparentTemp;
+      AppState.weather.humidity = p.humidity;
+      AppState.weather.windSpeed = p.windSpeed;
+      AppState.weather.pressure = p.pressure;
+      AppState.weather.uvIndex = p.uvIndex;
+      AppState.weather.weatherDesc = p.weatherDesc;
+      AppState.airQuality.pm25 = p.pm25;
+      AppState.airQuality.aqi = p.aqi;
+
+      AppState.location.isSimulated = true;
+      AppState.location.simName = p.name;
+
+      renderAll();
+      showToast(`Skenario aktif: ${p.name}`);
+    });
+
+    // Header Simulation Quick Button
+    dom.btnOpenSim.addEventListener('click', () => {
+      const isHidden = dom.inlineCustomPanel.style.display === 'none';
+      dom.inlineCustomPanel.style.display = isHidden ? 'block' : 'none';
+      if (isHidden) {
+        syncSliders();
+        document.querySelectorAll('.w-chip-btn').forEach(b => b.classList.remove('active'));
+        dom.chipCustomToggle.classList.add('active');
+        showToast('Panel slider kustom dibuka');
+      }
+    });
+
+    // Close Inline Custom Panel
+    dom.btnCloseInlineCustom.addEventListener('click', () => {
+      dom.inlineCustomPanel.style.display = 'none';
+      dom.chipCustomToggle.classList.remove('active');
+    });
+
+    // Reset GPS Button
+    dom.btnResetGps.addEventListener('click', () => {
+      document.querySelectorAll('.w-chip-btn').forEach(b => b.classList.remove('active'));
+      dom.chipLiveGps.classList.add('active');
+      dom.inlineCustomPanel.style.display = 'none';
+      AppState.location.isSimulated = false;
+      initGeolocation();
+      showToast('Kembali ke Live GPS');
+    });
+
+    function syncSliders() {
+      dom.inputTemp.value = AppState.weather.temp;
+      dom.slideValTemp.textContent = `${AppState.weather.temp}°C`;
+      dom.inputPm25.value = AppState.airQuality.pm25;
+      dom.slideValPm25.textContent = `${AppState.airQuality.pm25} µg/m³`;
+      dom.inputHumidity.value = AppState.weather.humidity;
+      dom.slideValHumidity.textContent = `${AppState.weather.humidity}%`;
+      dom.inputUv.value = AppState.weather.uvIndex;
+      dom.slideValUv.textContent = `${AppState.weather.uvIndex}`;
+    }
+
+    function applyLiveSliders() {
+      const t = parseFloat(dom.inputTemp.value);
+      const rh = parseInt(dom.inputHumidity.value, 10);
+      const pm = parseInt(dom.inputPm25.value, 10);
+      const uv = parseFloat(dom.inputUv.value);
+
+      AppState.weather.temp = t;
+      AppState.weather.humidity = rh;
+      AppState.weather.apparentTemp = calculateHeatIndex(t, rh);
+      AppState.weather.uvIndex = uv;
+      AppState.weather.weatherDesc = t > 35 ? 'Panas Terik' : t < 20 ? 'Sejuk/Dingin' : 'Normal Berawan';
+      AppState.airQuality.pm25 = pm;
+      AppState.airQuality.aqi = pm25ToAqi(pm);
+
+      AppState.location.isSimulated = true;
+      AppState.location.simName = 'Kustom Pengguna';
+
+      renderAll();
+    }
+
+    // Live Reactive Sliders (drag updates everything immediately without scrolling!)
+    dom.inputTemp.addEventListener('input', (e) => {
+      dom.slideValTemp.textContent = `${e.target.value}°C`;
+      applyLiveSliders();
+    });
+    dom.inputPm25.addEventListener('input', (e) => {
+      dom.slideValPm25.textContent = `${e.target.value} µg/m³`;
+      applyLiveSliders();
+    });
+    dom.inputHumidity.addEventListener('input', (e) => {
+      dom.slideValHumidity.textContent = `${e.target.value}%`;
+      applyLiveSliders();
+    });
+    dom.inputUv.addEventListener('input', (e) => {
+      dom.slideValUv.textContent = `${e.target.value}`;
+      applyLiveSliders();
+    });
+
+    // Share to WhatsApp
+    dom.btnShareWa.addEventListener('click', () => {
+      const profileNames = {
+        cad: 'Penyakit Jantung Koroner / Pasca Ring',
+        hf: 'Gagal Jantung (Heart Failure)',
+        ht: 'Hipertensi',
+        arr: 'Aritmia',
+        elderly: 'Lansia dengan Komorbid Jantung',
+        general: 'Populasi Umum / Preventif'
+      };
+
+      const pName = profileNames[AppState.patientProfile] || 'Pasien Jantung';
+      const risk = dom.riskBadgeText.textContent;
+      const mask = dom.maskName.textContent;
+
+      const text = 
+`🩺 *CARDIO-WEATHER GUARD: REKOMENDASI KLINIS KESEHATAN*
+📍 *Lokasi:* ${dom.locName.textContent}
+👤 *Profil Pasien:* ${pName}
+
+🌤️ *Parameter Lingkungan Saat Ini:*
+• Suhu: ${AppState.weather.temp}°C (Terasa: ${AppState.weather.apparentTemp}°C)
+• Kualitas Udara: PM2.5 ${AppState.airQuality.pm25} µg/m³ (AQI: ${AppState.airQuality.aqi})
+• Indeks UV: ${AppState.weather.uvIndex} | Kelembapan: ${AppState.weather.humidity}%
+
+🚨 *Status Risiko:* ${risk}
+😷 *Rekomendasi Masker:* *${mask}*
+${dom.maskGuidanceText.textContent.trim()}
+
+💧 *Catatan Cairan & Obat:*
+${AppState.patientProfile === 'hf' ? '⚠️ Waspada Overhidrasi! Tetap batasi cairan 1.2-1.5L/hari & timbang BB tiap pagi.' : 'Hidrasi cukup cairan elektrolit, hindari kopi pekat berlebih saat terik.'}
+Obat jantung & tensi harus diminum teratur sesuai jadwal.
+
+Segera ke IGD (119) jika merasakan dada tertekan berat, sesak mendadak, atau pusing melayang.`;
+
+      const encoded = encodeURIComponent(text);
+      window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+    });
+
+    // Auto-launch
+    window.addEventListener('DOMContentLoaded', () => {
+      renderAll();
+      initGeolocation();
+    });
+  </script>
+</body>
+</html>
