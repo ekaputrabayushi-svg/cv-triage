@@ -1,0 +1,2057 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Spartan Drip HUD - Battlefield & Emergency Vasopressor Titration</title>
+  <meta name="description" content="Kalkulator konversi drip vasopressor dan inotropik darurat tanpa syringe pump dengan visual metronome drip chamber untuk microdrip dan macrodrip.">
+  <meta name="theme-color" content="#0d1117">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-primary: #0a0f1d;
+      --bg-secondary: #111827;
+      --bg-card: rgba(17, 24, 39, 0.85);
+      --bg-card-border: rgba(255, 255, 255, 0.08);
+      --bg-card-hover: rgba(255, 255, 255, 0.04);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      
+      --accent-cyan: #06b6d4;
+      --accent-cyan-glow: rgba(6, 182, 212, 0.25);
+      --accent-emerald: #10b981;
+      --accent-emerald-glow: rgba(16, 185, 129, 0.25);
+      --accent-amber: #f59e0b;
+      --accent-amber-glow: rgba(245, 158, 11, 0.25);
+      --accent-rose: #f43f5e;
+      --accent-rose-glow: rgba(244, 63, 94, 0.25);
+      
+      --drip-water: #38bdf8;
+      --drip-glow: rgba(56, 189, 248, 0.6);
+      
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+      
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      
+      --shadow-hud: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+    }
+
+    /* TACTICAL RED / NIGHT BLACKOUT MODE */
+    body.tactical-red {
+      --bg-primary: #050002;
+      --bg-secondary: #140307;
+      --bg-card: rgba(20, 3, 7, 0.92);
+      --bg-card-border: rgba(255, 30, 60, 0.2);
+      --bg-card-hover: rgba(255, 30, 60, 0.08);
+      --text-main: #ff99a8;
+      --text-muted: #b84d5f;
+      --text-dim: #7a2332;
+      
+      --accent-cyan: #ff3355;
+      --accent-cyan-glow: rgba(255, 51, 85, 0.35);
+      --accent-emerald: #ff4766;
+      --accent-emerald-glow: rgba(255, 71, 102, 0.35);
+      --accent-amber: #ff2a4b;
+      --accent-amber-glow: rgba(255, 42, 75, 0.35);
+      --accent-rose: #ff173d;
+      --accent-rose-glow: rgba(255, 23, 61, 0.4);
+      
+      --drip-water: #ff2e51;
+      --drip-glow: rgba(255, 46, 81, 0.8);
+      --shadow-hud: 0 8px 32px 0 rgba(100, 0, 15, 0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 12px 80px 12px;
+      overflow-x: hidden;
+      line-height: 1.45;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* TOP BAR / HEADER */
+    .top-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 4px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-emerald));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000;
+      font-weight: 900;
+      font-size: 19px;
+      box-shadow: 0 0 16px var(--accent-cyan-glow);
+    }
+    body.tactical-red .brand-icon {
+      background: linear-gradient(135deg, #ff173d, #800010);
+      color: #fff;
+    }
+    .brand-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: 0.05em;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .btn-icon {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      color: var(--text-main);
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+    .btn-icon:active {
+      transform: scale(0.95);
+      background: var(--bg-card-hover);
+    }
+    .btn-icon.active {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      box-shadow: 0 0 12px var(--accent-cyan-glow);
+    }
+
+    /* CARD STYLING */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-hud);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+
+    /* DRUG SELECTION CHIPS */
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .drug-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    @media (min-width: 420px) {
+      .drug-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+    .drug-btn {
+      background: var(--bg-secondary);
+      border: 1px solid var(--bg-card-border);
+      border-radius: var(--radius-sm);
+      padding: 10px 8px;
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      text-align: center;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .drug-btn .drug-name {
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .drug-btn .drug-type {
+      font-size: 9.5px;
+      color: var(--text-dim);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .drug-btn:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .drug-btn.selected {
+      background: rgba(6, 182, 212, 0.12);
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 16px var(--accent-cyan-glow);
+    }
+    body.tactical-red .drug-btn.selected {
+      background: rgba(255, 23, 61, 0.2);
+      border-color: #ff2e51;
+    }
+
+    /* PREPARATION RECIPES & BAG PRESETS */
+    .recipe-bar {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--bg-card-border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .recipe-chips {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+    .recipe-chips::-webkit-scrollbar {
+      display: none;
+    }
+    .chip {
+      background: var(--bg-secondary);
+      border: 1px solid var(--bg-card-border);
+      color: var(--text-muted);
+      border-radius: var(--radius-full);
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .chip.active {
+      border-color: var(--accent-emerald);
+      color: var(--text-main);
+      background: rgba(16, 185, 129, 0.15);
+    }
+    body.tactical-red .chip.active {
+      border-color: #ff3355;
+      background: rgba(255, 51, 85, 0.25);
+    }
+
+    /* PARAMETERS GRID */
+    .params-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .param-box {
+      background: var(--bg-secondary);
+      border: 1px solid var(--bg-card-border);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .param-box.full-width {
+      grid-column: span 2;
+    }
+    .param-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+    .param-input-wrap {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .param-input {
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 24px;
+      font-weight: 800;
+      width: 100%;
+      outline: none;
+    }
+    .param-unit {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      white-space: nowrap;
+    }
+    .stepper-btns {
+      display: flex;
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .btn-step {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--bg-card-border);
+      color: var(--text-main);
+      border-radius: 6px;
+      padding: 4px 0;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      text-align: center;
+    }
+    .btn-step:active {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    /* DRIP SET SELECTOR (MICRODRIP VS MACRODRIP) */
+    .drip-set-toggle {
+      display: flex;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .toggle-opt {
+      flex: 1;
+      padding: 7px 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      line-height: 1.2;
+    }
+    .toggle-opt span {
+      display: block;
+      font-size: 9px;
+      font-weight: 500;
+      opacity: 0.75;
+    }
+    .toggle-opt.selected {
+      background: var(--accent-cyan);
+      color: #000;
+      box-shadow: 0 0 10px var(--accent-cyan-glow);
+    }
+    body.tactical-red .toggle-opt.selected {
+      background: #ff2e51;
+      color: #fff;
+    }
+
+    /* HERO RESULTS / HUD */
+    .hero-card {
+      position: relative;
+      background: linear-gradient(180deg, rgba(17, 24, 39, 0.95), rgba(10, 15, 29, 0.98));
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      box-shadow: 0 0 25px rgba(6, 182, 212, 0.15), var(--shadow-hud);
+      overflow: hidden;
+    }
+    body.tactical-red .hero-card {
+      border-color: rgba(255, 46, 81, 0.4);
+      box-shadow: 0 0 25px rgba(255, 46, 81, 0.2), var(--shadow-hud);
+    }
+
+    .hero-primary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--bg-card-border);
+    }
+    .hero-stat-col {
+      flex: 1;
+    }
+    .hero-tag {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    body.tactical-red .hero-tag {
+      color: #ff5c77;
+    }
+    .hero-value {
+      font-family: var(--font-mono);
+      font-size: 46px;
+      font-weight: 800;
+      line-height: 1;
+      margin: 4px 0;
+      color: #ffffff;
+      letter-spacing: -0.03em;
+      text-shadow: 0 0 16px var(--accent-cyan-glow);
+    }
+    .hero-unit {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    /* VISUAL DRIP CHAMBER ANIMATION DISPLAY */
+    .chamber-preview {
+      width: 105px;
+      height: 155px;
+      background: radial-gradient(circle at 50% 20%, rgba(255,255,255,0.06), rgba(0,0,0,0.6));
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      border-radius: 18px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.7);
+    }
+    .chamber-preview.flash {
+      border-color: var(--drip-water);
+      box-shadow: inset 0 0 18px var(--drip-glow), 0 0 16px var(--drip-glow);
+    }
+
+    /* Dripper Needle */
+    .dripper-needle {
+      width: 4px;
+      height: 18px;
+      background: #cbd5e1;
+      border-radius: 0 0 2px 2px;
+      position: absolute;
+      top: 0;
+      left: calc(50% - 2px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    .dripper-needle::after {
+      content: '';
+      position: absolute;
+      bottom: -3px;
+      left: 1px;
+      width: 2px;
+      height: 3px;
+      background: #94a3b8;
+    }
+
+    /* Falling Drop */
+    .drop-particle {
+      position: absolute;
+      width: 8px;
+      height: 11px;
+      background: var(--drip-water);
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      top: 18px;
+      left: calc(50% - 4px);
+      opacity: 0;
+      transform: scale(0.6);
+      box-shadow: 0 0 8px var(--drip-glow);
+      pointer-events: none;
+    }
+
+    /* Reservoir / Meniscus at bottom */
+    .chamber-reservoir {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 32px;
+      background: linear-gradient(180deg, rgba(56, 189, 248, 0.35), rgba(14, 165, 233, 0.65));
+      border-top: 1px solid rgba(255, 255, 255, 0.4);
+    }
+    body.tactical-red .chamber-reservoir {
+      background: linear-gradient(180deg, rgba(255, 46, 81, 0.4), rgba(180, 0, 30, 0.7));
+    }
+    .chamber-waves {
+      position: absolute;
+      top: -3px;
+      left: 0;
+      right: 0;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      opacity: 0;
+      transform: scale(0.4);
+      transition: transform 0.25s, opacity 0.25s;
+    }
+    .chamber-waves.ripple {
+      opacity: 0.9;
+      transform: scale(1.4);
+    }
+
+    .chamber-label {
+      position: absolute;
+      bottom: 4px;
+      font-size: 8.5px;
+      font-weight: 800;
+      color: rgba(255, 255, 255, 0.85);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      z-index: 2;
+    }
+
+    /* QUICK FIELD BENCHMARKS (15-sec count & cadence) */
+    .field-rules-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .field-rule-item {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--bg-card-border);
+      border-radius: var(--radius-sm);
+      padding: 8px 6px;
+      text-align: center;
+    }
+    .rule-title {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .rule-value {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-top: 2px;
+    }
+    .rule-highlight {
+      color: var(--accent-emerald);
+    }
+    body.tactical-red .rule-highlight {
+      color: #ff4766;
+    }
+
+    /* METRONOME CONTROLS & PULSE */
+    .metronome-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--bg-card-border);
+    }
+    .metronome-status {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .pulse-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      transition: background 0.15s;
+    }
+    .pulse-dot.pulse {
+      background: var(--drip-water);
+      box-shadow: 0 0 12px var(--drip-glow);
+    }
+
+    .metro-btn-group {
+      display: flex;
+      gap: 6px;
+    }
+    .metro-btn {
+      background: var(--bg-secondary);
+      border: 1px solid var(--bg-card-border);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+    .metro-btn.active {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      background: rgba(6, 182, 212, 0.15);
+    }
+    body.tactical-red .metro-btn.active {
+      border-color: #ff2e51;
+      color: #ff2e51;
+      background: rgba(255, 46, 81, 0.2);
+    }
+
+    /* VISUAL CADENCE COMPARISON BAR (EXPANDED MATCHING BAR) */
+    .cadence-bar-container {
+      margin-top: 10px;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 10px;
+      padding: 8px 10px;
+      border: 1px solid var(--bg-card-border);
+    }
+    .cadence-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .cadence-track {
+      position: relative;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .cadence-progress {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--drip-water));
+      border-radius: 4px;
+    }
+    body.tactical-red .cadence-progress {
+      background: linear-gradient(90deg, #ff173d, #ff5c77);
+    }
+
+    /* TAP TEMPO / VERIFICATION TOOL */
+    .tap-tool {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .tap-btn-hero {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+      border: 2px dashed rgba(255, 255, 255, 0.18);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease-out;
+      user-select: none;
+    }
+    .tap-btn-hero:active {
+      transform: scale(0.97);
+      background: rgba(6, 182, 212, 0.18);
+      border-color: var(--accent-cyan);
+    }
+    .tap-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+    .tap-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .tap-feedback {
+      display: none;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+      border-left: 3px solid var(--accent-emerald);
+      font-size: 12px;
+    }
+    .tap-feedback.warning {
+      border-left-color: var(--accent-amber);
+    }
+    .tap-feedback.danger {
+      border-left-color: var(--accent-rose);
+    }
+
+    /* CLINICAL SAFETY & BATTLEFIELD NOTES */
+    .field-alert {
+      display: flex;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: #fef3c7;
+      font-size: 11.5px;
+    }
+    body.tactical-red .field-alert {
+      background: rgba(255, 23, 61, 0.12);
+      border-color: rgba(255, 23, 61, 0.4);
+      color: #ffccd5;
+    }
+    .alert-icon {
+      font-size: 16px;
+      line-height: 1;
+    }
+    .alert-text b {
+      color: #fcd34d;
+    }
+    body.tactical-red .alert-text b {
+      color: #ff4766;
+    }
+
+    /* COLLAPSIBLE ACCORDION FOR CHEAT SHEET */
+    .accordion-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      padding: 2px 0;
+    }
+    .accordion-body {
+      display: none;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--bg-card-border);
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .accordion-body.open {
+      display: block;
+    }
+
+    /* QUICK TABLE */
+    .compact-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin-top: 6px;
+    }
+    .compact-table th, .compact-table td {
+      padding: 6px 4px;
+      text-align: left;
+      border-bottom: 1px solid var(--bg-card-border);
+    }
+    .compact-table th {
+      color: var(--text-dim);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 9.5px;
+    }
+    .compact-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* BADGES */
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-cyan { background: rgba(6, 182, 212, 0.2); color: #38bdf8; }
+    .badge-amber { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    .badge-rose { background: rgba(244, 63, 94, 0.2); color: #fb7185; }
+
+    /* TOOL INFO & CREDITS CARD */
+    .tool-info-card {
+      background: linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(15, 23, 42, 0.9));
+      border: 1px solid rgba(6, 182, 212, 0.25);
+      position: relative;
+      overflow: hidden;
+    }
+    body.tactical-red .tool-info-card {
+      border-color: rgba(255, 46, 81, 0.35);
+      background: linear-gradient(135deg, rgba(20, 3, 7, 0.95), rgba(30, 5, 12, 0.9));
+    }
+    .info-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .info-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      margin-bottom: 4px;
+    }
+    body.tactical-red .info-badge {
+      background: rgba(255, 46, 81, 0.2);
+      color: #ff5c77;
+      border-color: rgba(255, 46, 81, 0.4);
+    }
+    .info-main-title {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.25;
+    }
+    .info-author {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .info-author b {
+      color: #38bdf8;
+    }
+    body.tactical-red .info-author b {
+      color: #ff6b84;
+    }
+    .info-expand-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--bg-card-border);
+      color: var(--text-main);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+    .info-collapsible-body {
+      display: none;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--bg-card-border);
+      font-size: 11.5px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .info-collapsible-body.open {
+      display: block;
+    }
+    .info-features-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    @media (min-width: 480px) {
+      .info-features-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .feature-item {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--bg-card-border);
+      border-radius: var(--radius-sm);
+      padding: 9px 10px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .feat-icon {
+      font-size: 18px;
+      line-height: 1;
+    }
+    .feature-item b {
+      color: var(--text-main);
+      font-size: 11.5px;
+      display: block;
+      margin-bottom: 2px;
+    }
+    .feature-item p {
+      font-size: 10.5px;
+      color: var(--text-dim);
+      line-height: 1.4;
+      margin: 0;
+    }
+
+    /* WAKE LOCK NOTIFICATION BANNER */
+    .wake-banner {
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 11.5px;
+      animation: fadeIn 0.3s ease;
+    }
+    body.tactical-red .wake-banner {
+      background: rgba(255, 46, 81, 0.15);
+      border-color: rgba(255, 46, 81, 0.4);
+    }
+    .wake-banner-content {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #d1fae5;
+    }
+    body.tactical-red .wake-banner-content {
+      color: #ffd1d8;
+    }
+    .wake-dot-pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 8px var(--accent-emerald);
+      animation: pulseGlow 1.8s infinite;
+      flex-shrink: 0;
+    }
+    body.tactical-red .wake-dot-pulse {
+      background: #ff2e51;
+      box-shadow: 0 0 8px #ff2e51;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* FOOTER BRANDING */
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+    .footer-logo {
+      color: var(--accent-cyan);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+    body.tactical-red .footer-logo {
+      color: #ff4766;
+    }
+    .footer-doctor {
+      color: #e5e7eb;
+      font-weight: 700;
+    }
+    body.tactical-red .footer-doctor {
+      color: #ff99a8;
+    }
+    .footer-divider {
+      color: var(--text-dim);
+    }
+    .footer-desc {
+      font-size: 10px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    /* FOOTER */
+    .footer-note {
+      text-align: center;
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid var(--bg-card-border);
+    }
+
+    /* UTILITY */
+    .mono { font-family: var(--font-mono); }
+    .fw-800 { font-weight: 800; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- TOP HEADER -->
+    <header class="top-header">
+      <div class="brand">
+        <div class="brand-icon">💧</div>
+        <div>
+          <div class="brand-title">SPARTAN DRIP HUD</div>
+          <div class="brand-sub">CardiologyVault • Bayushi Eka Putra, MD, FIHA</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btnTacticalRed" class="btn-icon" title="Tactical Night Red Vision (Preservasi Penglihatan Malam)">
+          <span>🚨</span> Red HUD
+        </button>
+        <button id="btnScreenWake" class="btn-icon" title="Fungsi Wake Lock: Menjaga Layar HP Tetap Aktif">
+          <span id="wakeIcon">🔆</span> <span id="wakeBtnText">Wake Lock</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- WAKE LOCK NOTIFICATION & EXPLANATION BANNER -->
+    <div id="wakeBanner" class="wake-banner" style="display: none;">
+      <div class="wake-banner-content">
+        <div class="wake-dot-pulse"></div>
+        <div id="wakeBannerText">
+          <b>Layar Tetap Aktif (Wake Lock ON):</b> Layar HP tidak akan mati/meredup otomatis saat kedua tangan Anda sedang menyetel klem infus.
+        </div>
+      </div>
+      <button onclick="dismissWakeBanner()" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-size:14px; font-weight:700;">✕</button>
+    </div>
+
+    <!-- DESKRIPSI ALAT & PROTOKOL CARDIOLOGYVAULT -->
+    <section class="card tool-info-card">
+      <div class="info-header" id="infoToggle">
+        <div class="info-title-wrap">
+          <span class="info-badge">CardiologyVault Protocol</span>
+          <div class="info-main-title">Spartan Vasopressor & Inotrope Field Titrator</div>
+          <div class="info-author">Pengembang: <b>Bayushi Eka Putra, MD, FIHA</b> • CardiologyVault</div>
+        </div>
+        <button class="info-expand-btn" id="infoExpandBtn" aria-label="Toggle Deskripsi Alat">
+          <span id="infoExpandIcon">📖 Deskripsi Alat</span>
+        </button>
+      </div>
+
+      <div class="info-collapsible-body" id="infoBody">
+        <p style="margin-bottom: 8px;">
+          <b>Deskripsi Alat:</b> Aplikasi taktis darurat yang dirancang khusus untuk kondisi <i>battlefield medicine</i>, kedokteran bencana (<i>disaster triage</i>), evakuasi medik taktis (MEDEVAC), dan layanan gawat darurat dengan fasilitas terbatas di mana <b>syringe pump maupun infusion pump tidak tersedia</b>.
+        </p>
+        
+        <div class="info-features-grid">
+          <div class="feature-item">
+            <span class="feat-icon">💧</span>
+            <div>
+              <b>Simulator Visual Drip Matching</b>
+              <p>Cukup sejajarkan layar HP di samping tabung infus (drip chamber) fisik, lalu putar klem rol infus sampai ritme jatuhnya tetesan nyata <i>persis seirama</i> dengan animasi di layar.</p>
+            </div>
+          </div>
+
+          <div class="feature-item">
+            <span class="feat-icon">🔆</span>
+            <div>
+              <b>Fungsi Screen Wake Lock</b>
+              <p>Mencegah layar HP mati/terkunci otomatis karena <i>screen timeout</i>. Klinisi dapat leluasa mengatur tetesan dan mengecek pasien tanpa repot menyalakan ulang layar ponsel.</p>
+            </div>
+          </div>
+
+          <div class="feature-item">
+            <span class="feat-icon">🎯</span>
+            <div>
+              <b>Golden Rule Mikrodrip (60 gtt/mL)</b>
+              <p>Pada set mikrodrip buret (60 tetes/mL), laju <b>1 mL/jam = 1 tetes/menit</b>. Konversi dosis presisi dapat dihitung seketika tanpa rumus rumit di bawah tekanan resusitasi.</p>
+            </div>
+          </div>
+
+          <div class="feature-item">
+            <span class="feat-icon">👆</span>
+            <div>
+              <b>Tap-Tempo Reverse Verification</b>
+              <p>Fitur audit mandiri: ketuk layar 3-5 kali mengikuti tetesan riil untuk mengonfirmasi dosis aktual dan mencegah risiko toksisitas atau syok yang tak tertangani.</p>
+            </div>
+          </div>
+        </div>
+
+        <p style="margin-top: 10px; font-size: 10.5px; color: var(--text-dim); line-height: 1.5;">
+          *Protokol ini disusun oleh <b>Bayushi Eka Putra, MD, FIHA (CardiologyVault)</b> sebagai panduan klinis resusitasi inotropik/vasopressor perifer pada kondisi krisis tanpa pompa. Pemantauan klinis (MAP ≥ 65 mmHg, laju nadi, akral, urin output) tetap menjadi acuan utama titrasi.
+        </p>
+      </div>
+    </section>
+
+    <!-- DRUG SELECTION CARD -->
+    <section class="card">
+      <div class="section-title">
+        <span>1. Pilih Obat Inotropik / Vasopressor</span>
+        <span id="selectedDrugBadge" class="badge badge-cyan">Alpha/Beta-1</span>
+      </div>
+      <div class="drug-grid">
+        <button class="drug-btn selected" data-drug="norepi">
+          <span class="drug-name">Norepinefrin</span>
+          <span class="drug-type">Levophed (4mg)</span>
+        </button>
+        <button class="drug-btn" data-drug="epi">
+          <span class="drug-name">Epinefrin</span>
+          <span class="drug-type">Adrenalin (1mg)</span>
+        </button>
+        <button class="drug-btn" data-drug="dopamine">
+          <span class="drug-name">Dopamin</span>
+          <span class="drug-type">Inotropin (200mg)</span>
+        </button>
+        <button class="drug-btn" data-drug="dobutamine">
+          <span class="drug-name">Dobutamin</span>
+          <span class="drug-type">Dobutrex (250mg)</span>
+        </button>
+      </div>
+
+      <!-- RECIPES & BAG PRESETS -->
+      <div class="recipe-bar">
+        <div class="section-title" style="margin-bottom: 4px;">
+          <span>Resep Pelarutan Lapangan (D5W / NS)</span>
+          <span id="concentrationDisplay" class="mono" style="color: var(--accent-cyan); font-weight:700;">40 mcg/mL</span>
+        </div>
+        <div class="recipe-chips" id="recipeChips">
+          <!-- Populated by JS based on selected drug -->
+        </div>
+      </div>
+    </section>
+
+    <!-- PATIENT & DOSE SETTINGS -->
+    <section class="card">
+      <div class="params-grid">
+        <!-- Patient Weight -->
+        <div class="param-box">
+          <div class="param-label">
+            <span>BERAT BADAN</span>
+            <span class="mono" id="weightDisplayBadge">60 kg</span>
+          </div>
+          <div class="param-input-wrap">
+            <input type="number" id="inputWeight" class="param-input" value="60" min="5" max="250" step="1">
+            <span class="param-unit">kg</span>
+          </div>
+          <div class="stepper-btns">
+            <button class="btn-step" onclick="adjustParam('weight', -5)">-5</button>
+            <button class="btn-step" onclick="adjustParam('weight', 5)">+5</button>
+            <button class="btn-step" onclick="setQuickWeight(70)">70</button>
+          </div>
+        </div>
+
+        <!-- Target Dose -->
+        <div class="param-box">
+          <div class="param-label">
+            <span>TARGET DOSIS</span>
+            <span class="mono" id="doseTierBadge" style="color: var(--accent-emerald);">Standar</span>
+          </div>
+          <div class="param-input-wrap">
+            <input type="number" id="inputDose" class="param-input" value="0.10" min="0.01" max="100" step="0.02">
+            <span class="param-unit" id="doseUnitLabel">mcg/kg/m</span>
+          </div>
+          <div class="stepper-btns" id="doseStepperGroup">
+            <!-- Dynamic steppers based on drug -->
+          </div>
+        </div>
+
+        <!-- Tubing Selector (Microdrip vs Macrodrip) -->
+        <div class="param-box full-width">
+          <div class="param-label">
+            <span>JENIS SET INFUS (DRIP FACTOR)</span>
+            <span id="dripFactorNote" style="color: var(--accent-emerald); font-weight:700;">★ 1 mL/jam = 1 tetes/menit</span>
+          </div>
+          <div class="drip-set-toggle">
+            <button class="toggle-opt selected" data-factor="60">
+              MICRO DRIP (60)
+              <span>Buret / Pediatrik (Rekomendasi)</span>
+            </button>
+            <button class="toggle-opt" data-factor="20">
+              MACRO (20)
+              <span>Dewasa Standar</span>
+            </button>
+            <button class="toggle-opt" data-factor="15">
+              MACRO (15)
+              <span>Set Darurat 15</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HERO RESULT CARD & VISUAL DRIP CHAMBER -->
+    <section class="card hero-card">
+      <div class="hero-primary">
+        <div class="hero-stat-col">
+          <div class="hero-tag">
+            <span id="liveCadenceDot">●</span> KECEPATAN TETESAN
+          </div>
+          <div class="hero-value" id="resGttMin">9.0</div>
+          <div class="hero-unit" id="resGttUnit">TETES PER MENIT (gtt/m)</div>
+          
+          <div style="margin-top: 10px; display: flex; gap: 12px; font-size: 13px;">
+            <div>
+              <span style="color: var(--text-dim); font-size: 10px; display:block; font-weight:700;">RATE POMPA</span>
+              <span class="mono fw-800" id="resMlHr" style="color: var(--accent-cyan); font-size: 16px;">9.0</span>
+              <span style="color: var(--text-dim); font-size: 10px;">mL/jam</span>
+            </div>
+            <div>
+              <span style="color: var(--text-dim); font-size: 10px; display:block; font-weight:700;">DOSIS TOTAL</span>
+              <span class="mono fw-800" id="resTotalMcgMin" style="font-size: 16px;">6.0</span>
+              <span style="color: var(--text-dim); font-size: 10px;">mcg/mnt</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- VISUAL DRIP CHAMBER HUD -->
+        <div class="chamber-preview" id="chamberContainer" title="Sejajarkan layar HP di samping tabung infus fisik">
+          <div class="dripper-needle"></div>
+          <div class="drop-particle" id="chamberDrop"></div>
+          <div class="chamber-reservoir">
+            <div class="chamber-waves" id="chamberWave"></div>
+          </div>
+          <div class="chamber-label" id="chamberVisualLabel">SIMULATOR</div>
+        </div>
+      </div>
+
+      <!-- FIELD COUNTING BENCHMARKS (KUNCI PRAKTIS LAPANGAN) -->
+      <div class="field-rules-grid">
+        <div class="field-rule-item">
+          <div class="rule-title">RITME TETES</div>
+          <div class="rule-value rule-highlight" id="resSecPerDrop">1 tetes / 6.7 dtk</div>
+        </div>
+        <div class="field-rule-item">
+          <div class="rule-title">HITUNG 15 DETIK</div>
+          <div class="rule-value" id="resDropsIn15s">2.3 tetes</div>
+        </div>
+        <div class="field-rule-item">
+          <div class="rule-title">HITUNG 1 MENIT</div>
+          <div class="rule-value" id="resDropsIn60s">9 tetes</div>
+        </div>
+      </div>
+
+      <!-- VISUAL PROGRESSION BAR TO MATCH DROP TIMING -->
+      <div class="cadence-bar-container">
+        <div class="cadence-desc">
+          <span>Cadence Bar (Tetes saat garis penuh):</span>
+          <span class="mono" id="cadenceTimeRemaining">0.0s</span>
+        </div>
+        <div class="cadence-track">
+          <div class="cadence-progress" id="cadenceProgressBar"></div>
+        </div>
+      </div>
+
+      <!-- METRONOME AUDIO & VIBRATION HUD -->
+      <div class="metronome-controls">
+        <div class="metronome-status">
+          <div class="pulse-dot" id="metronomePulseDot"></div>
+          <span id="metronomeStatusText">Metronom Aktif</span>
+        </div>
+        <div class="metro-btn-group">
+          <button id="btnSoundToggle" class="metro-btn active">
+            <span id="soundIcon">🔊</span> Suara
+          </button>
+          <button id="btnVibrateToggle" class="metro-btn active">
+            <span id="vibrateIcon">📳</span> Getar
+          </button>
+          <button id="btnPlayPause" class="metro-btn">
+            <span id="playIcon">⏸</span> Jeda
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAP-TEMPO REVERSE VERIFICATION (FITUR VALIDASI TETESAN AKTUAL) -->
+    <section class="card tap-tool">
+      <div class="section-title">
+        <span>2. Verifikasi Lapangan (Tap-Tempo Drip Check)</span>
+        <span class="badge badge-amber">Self-Audit</span>
+      </div>
+      
+      <div class="tap-btn-hero" id="tapTempoBtn">
+        <div class="tap-title">👆 TAP DI SINI SETIAP MELIHAT TETESAN JATUH</div>
+        <div class="tap-sub">Tap 3-5 kali berurutan mengikuti tetesan nyata di tabung infus untuk cek dosis aktual</div>
+      </div>
+
+      <div class="tap-feedback" id="tapFeedback">
+        <!-- Injected by JS -->
+      </div>
+    </section>
+
+    <!-- CLINICAL SAFETY & BATTLEFIELD PEARLS -->
+    <section class="card">
+      <div class="field-alert">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-text">
+          <b>AUSTERITY / FIELD CAUTION:</b> Pastikan jalur IV perifer menggunakan vena besar (cubiti/antecubital). Cek patensi setiap 15 menit untuk cegah ekstravasasi iskemia jaringan. Evaluasi MAP target 65 mmHg atau pulsasi arteri radialis teraba kuat.
+        </div>
+      </div>
+
+      <!-- COLLAPSIBLE POCKET REFERENCE -->
+      <div style="margin-top: 12px;">
+        <div class="accordion-header" id="accToggle">
+          <span style="font-size: 12px; font-weight:700; color: var(--text-main);">📋 Panduan Pengoplosan Standar & Titrasi</span>
+          <span id="accIcon" style="font-size: 12px; color: var(--text-dim);">▼</span>
+        </div>
+        <div class="accordion-body" id="accContent">
+          <p style="margin-bottom: 8px;">
+            <b>Golden Rule Microdrip (60 gtt/mL):</b> Pada set mikrodrip, angka kecepatan infus dalam <b>mL/jam selalu SAMA DENGAN tetes/menit</b>! (Misal: 12 mL/jam = 12 tetes/menit).
+          </p>
+          <table class="compact-table">
+            <thead>
+              <tr>
+                <th>Obat</th>
+                <th>Resep Lapangan</th>
+                <th>Konsentrasi</th>
+                <th>Dosis Awal</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><b>Norepinefrin</b></td>
+                <td>4 mg dalam 100 mL D5W</td>
+                <td>40 mcg/mL</td>
+                <td>0.05 - 0.1 mcg/kg/m</td>
+              </tr>
+              <tr>
+                <td><b>Epinefrin</b></td>
+                <td>1 mg dalam 100 mL D5W</td>
+                <td>10 mcg/mL</td>
+                <td>0.02 - 0.1 mcg/kg/m</td>
+              </tr>
+              <tr>
+                <td><b>Dopamin</b></td>
+                <td>200 mg dalam 250 mL D5W</td>
+                <td>800 mcg/mL</td>
+                <td>5 mcg/kg/m (Inotropik)</td>
+              </tr>
+              <tr>
+                <td><b>Dobutamin</b></td>
+                <td>250 mg dalam 250 mL D5W</td>
+                <td>1000 mcg/mL</td>
+                <td>2.5 - 5 mcg/kg/m</td>
+              </tr>
+            </tbody>
+          </table>
+          <p style="margin-top: 8px; font-size: 11px; color: var(--text-dim);">
+            *Pelarut terbaik: Dextrose 5% (D5W) untuk stabilitas oksidasi katekolamin; jika darurat tak ada D5W, NaCl 0.9% dapat dipakai.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer-note">
+      <div class="footer-brand">
+        <span class="footer-logo">CardiologyVault</span>
+        <span class="footer-divider">•</span>
+        <span class="footer-doctor">Bayushi Eka Putra, MD, FIHA</span>
+      </div>
+      <div class="footer-desc">
+        SPARTAN TACTICAL RESUSCITATION TOOLKIT • OFFLINE-READY • NON-PUMP DRIP SETTING<br>
+        Protokol Titrasi Vasopressor & Inotropik Lapangan untuk Situasi Battlefield, Disaster, dan Prehospital.
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    /* ==========================================================================
+       DRUG DATABASE & FORMULATIONS
+       ========================================================================== */
+    const DRUG_DATA = {
+      norepi: {
+        name: 'Norepinefrin',
+        typeBadge: 'Vasopressor Utama (Alpha-1 > Beta-1)',
+        unitDose: 'mcg/kg/m',
+        defaultDose: 0.10,
+        doseStep: 0.02,
+        steppers: [
+          { label: '0.05', val: 0.05, text: 'Rendah' },
+          { label: '0.10', val: 0.10, text: 'Standar' },
+          { label: '0.20', val: 0.20, text: 'Moderat' },
+          { label: '0.40', val: 0.40, text: 'Tinggi' }
+        ],
+        recipes: [
+          { label: '4 mg / 100 mL (Standar Buret)', mg: 4, ml: 100, isDefault: true },
+          { label: '4 mg / 250 mL (Encer)', mg: 4, ml: 250 },
+          { label: '4 mg / 500 mL (Sangat Encer)', mg: 4, ml: 500 },
+          { label: '8 mg / 250 mL (Pekat)', mg: 8, ml: 250 }
+        ],
+        safety: {
+          low: 0.02,
+          normal: 0.25,
+          high: 0.5,
+          max: 1.5
+        }
+      },
+      epi: {
+        name: 'Epinefrin',
+        typeBadge: 'Inotropik & Pressor Kuat (Alpha/Beta)',
+        unitDose: 'mcg/kg/m',
+        defaultDose: 0.05,
+        doseStep: 0.02,
+        steppers: [
+          { label: '0.02', val: 0.02, text: 'Inotropik' },
+          { label: '0.05', val: 0.05, text: 'Standar' },
+          { label: '0.10', val: 0.10, text: 'Pressor' },
+          { label: '0.20', val: 0.20, text: 'Syok Refrakter' }
+        ],
+        recipes: [
+          { label: '1 mg / 100 mL (10 mcg/mL - Buret)', mg: 1, ml: 100, isDefault: true },
+          { label: '1 mg / 250 mL (4 mcg/mL)', mg: 1, ml: 250 },
+          { label: '1 mg / 500 mL (2 mcg/mL)', mg: 1, ml: 500 },
+          { label: '2 mg / 100 mL (20 mcg/mL - Pekat)', mg: 2, ml: 100 }
+        ],
+        safety: {
+          low: 0.01,
+          normal: 0.10,
+          high: 0.25,
+          max: 1.0
+        }
+      },
+      dopamine: {
+        name: 'Dopamin',
+        typeBadge: 'Inotropik / Vasokonstriktor',
+        unitDose: 'mcg/kg/m',
+        defaultDose: 5.0,
+        doseStep: 1.0,
+        steppers: [
+          { label: '3.0', val: 3.0, text: 'Low-dose' },
+          { label: '5.0', val: 5.0, text: 'Inotropik' },
+          { label: '10.0', val: 10.0, text: 'Pressor' },
+          { label: '15.0', val: 15.0, text: 'High Pressor' }
+        ],
+        recipes: [
+          { label: '200 mg / 250 mL (800 mcg/mL)', mg: 200, ml: 250, isDefault: true },
+          { label: '200 mg / 500 mL (400 mcg/mL)', mg: 200, ml: 500 },
+          { label: '400 mg / 500 mL (800 mcg/mL)', mg: 400, ml: 500 },
+          { label: '200 mg / 100 mL (2000 mcg/mL - Pekat)', mg: 200, ml: 100 }
+        ],
+        safety: {
+          low: 2.0,
+          normal: 10.0,
+          high: 15.0,
+          max: 20.0
+        }
+      },
+      dobutamine: {
+        name: 'Dobutamin',
+        typeBadge: 'Inotropik Murni (Beta-1 Agonis)',
+        unitDose: 'mcg/kg/m',
+        defaultDose: 5.0,
+        doseStep: 1.0,
+        steppers: [
+          { label: '2.5', val: 2.5, text: 'Titratif Awal' },
+          { label: '5.0', val: 5.0, text: 'Inotropik Sedang' },
+          { label: '10.0', val: 10.0, text: 'Gagal Jantung' },
+          { label: '15.0', val: 15.0, text: 'Dosis Maksimal' }
+        ],
+        recipes: [
+          { label: '250 mg / 250 mL (1000 mcg/mL)', mg: 250, ml: 250, isDefault: true },
+          { label: '250 mg / 500 mL (500 mcg/mL)', mg: 250, ml: 500 },
+          { label: '500 mg / 500 mL (1000 mcg/mL)', mg: 500, ml: 500 },
+          { label: '250 mg / 100 mL (2500 mcg/mL - Pekat)', mg: 250, ml: 100 }
+        ],
+        safety: {
+          low: 2.0,
+          normal: 10.0,
+          high: 15.0,
+          max: 20.0
+        }
+      }
+    };
+
+    /* ==========================================================================
+       APP STATE
+       ========================================================================== */
+    const state = {
+      drugKey: 'norepi',
+      weight: 60,
+      targetDose: 0.10,
+      dripFactor: 60, // 60 for microdrip
+      selectedRecipe: { mg: 4, ml: 100 },
+      isTacticalRed: false,
+      isWakeLocked: false,
+      soundEnabled: true,
+      vibrateEnabled: true,
+      isPlaying: true,
+      
+      // Computed outputs
+      concentrationMcgMl: 40,
+      rateMlHr: 9.0,
+      gttPerMin: 9.0,
+      intervalSec: 6.67,
+      dropsIn15s: 2.25,
+      dropsIn60s: 9,
+      
+      // Tap tempo data
+      tapTimestamps: []
+    };
+
+    /* ==========================================================================
+       AUDIO SYNTHESIS (Offline Web Audio API)
+       ========================================================================== */
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playDripSound() {
+      if (!state.soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        // Gentle realistic water drop "bloop/tick" pitch drop
+        const now = ctx.currentTime;
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(820, now);
+        osc.frequency.exponentialRampToValueAtTime(320, now + 0.07);
+        
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.start(now);
+        osc.stop(now + 0.08);
+      } catch (err) {
+        console.warn('Audio playback error', err);
+      }
+    }
+
+    function triggerHaptic() {
+      if (!state.vibrateEnabled || !navigator.vibrate) return;
+      try {
+        navigator.vibrate(35);
+      } catch (e) {}
+    }
+
+    /* ==========================================================================
+       CALCULATION LOGIC
+       ========================================================================== */
+    function calculate() {
+      const drug = DRUG_DATA[state.drugKey];
+      const concMcgMl = (state.selectedRecipe.mg * 1000) / state.selectedRecipe.ml;
+      state.concentrationMcgMl = concMcgMl;
+
+      // Rate mcg/min = dose (mcg/kg/min) * weight (kg)
+      const doseMcgMin = state.targetDose * state.weight;
+      
+      // Rate mL/hr = (doseMcgMin * 60 min) / concMcgMl
+      const rateMlHr = (doseMcgMin * 60) / concMcgMl;
+      state.rateMlHr = rateMlHr;
+
+      // Drops per min (gtt/min) = (rateMlHr * dripFactor) / 60
+      const gttPerMin = (rateMlHr * state.dripFactor) / 60;
+      state.gttPerMin = gttPerMin;
+
+      // Interval per drop (seconds)
+      const intervalSec = gttPerMin > 0 ? (60 / gttPerMin) : 999;
+      state.intervalSec = intervalSec;
+
+      state.dropsIn15s = (gttPerMin / 4);
+      state.dropsIn60s = Math.round(gttPerMin);
+
+      updateDOM();
+    }
+
+    /* ==========================================================================
+       DOM UPDATES & UI RENDERING
+       ========================================================================== */
+    function updateDOM() {
+      const drug = DRUG_DATA[state.drugKey];
+
+      // Drug badge & concentration
+      document.getElementById('selectedDrugBadge').textContent = drug.typeBadge;
+      document.getElementById('concentrationDisplay').textContent = `${Math.round(state.concentrationMcgMl * 10) / 10} mcg/mL`;
+      
+      // Weight & Dose Badges
+      document.getElementById('weightDisplayBadge').textContent = `${state.weight} kg`;
+      document.getElementById('doseUnitLabel').textContent = drug.unitDose;
+
+      // Dose Tier Badge
+      const tierBadge = document.getElementById('doseTierBadge');
+      if (state.targetDose <= drug.safety.low) {
+        tierBadge.textContent = 'Dosis Minimal';
+        tierBadge.style.color = 'var(--text-muted)';
+      } else if (state.targetDose <= drug.safety.normal) {
+        tierBadge.textContent = 'Dosis Terapi Standar';
+        tierBadge.style.color = 'var(--accent-emerald)';
+      } else if (state.targetDose <= drug.safety.high) {
+        tierBadge.textContent = 'Dosis Tinggi (Waspada)';
+        tierBadge.style.color = 'var(--accent-amber)';
+      } else {
+        tierBadge.textContent = 'Dosis Ekstrem (Syok Berat)';
+        tierBadge.style.color = 'var(--accent-rose)';
+      }
+
+      // Hero values
+      document.getElementById('resGttMin').textContent = state.gttPerMin < 10 
+        ? state.gttPerMin.toFixed(1) 
+        : Math.round(state.gttPerMin);
+      
+      const factorText = state.dripFactor === 60 ? 'MICRODRIP (gtt/m)' : `MACRO (${state.dripFactor} gtt/m)`;
+      document.getElementById('resGttUnit').textContent = `TETES PER MENIT • ${factorText}`;
+
+      document.getElementById('resMlHr').textContent = state.rateMlHr.toFixed(1);
+      document.getElementById('resTotalMcgMin').textContent = (state.targetDose * state.weight).toFixed(1);
+
+      // Field benchmarks
+      const secFormatted = state.intervalSec >= 10 
+        ? state.intervalSec.toFixed(1) 
+        : state.intervalSec.toFixed(1);
+      document.getElementById('resSecPerDrop').textContent = `1 tetes / ${secFormatted} dtk`;
+      document.getElementById('resDropsIn15s').textContent = `${state.dropsIn15s.toFixed(1)} tetes`;
+      document.getElementById('resDropsIn60s').textContent = `${state.dropsIn60s} tetes`;
+
+      // Drip factor note
+      const factorNote = document.getElementById('dripFactorNote');
+      if (state.dripFactor === 60) {
+        factorNote.textContent = '★ 1 mL/jam = 1 tetes/menit (Mudah Dihitung)';
+        factorNote.style.color = 'var(--accent-emerald)';
+      } else {
+        factorNote.textContent = `★ 1 mL/jam = ${(state.dripFactor/60).toFixed(2)} tetes/menit`;
+        factorNote.style.color = 'var(--accent-amber)';
+      }
+    }
+
+    function renderRecipes() {
+      const drug = DRUG_DATA[state.drugKey];
+      const container = document.getElementById('recipeChips');
+      container.innerHTML = '';
+
+      drug.recipes.forEach((rec, idx) => {
+        const chip = document.createElement('button');
+        chip.className = `chip ${rec.isDefault ? 'active' : ''}`;
+        chip.textContent = rec.label;
+        chip.onclick = () => {
+          container.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          state.selectedRecipe = { mg: rec.mg, ml: rec.ml };
+          calculate();
+        };
+        container.appendChild(chip);
+      });
+      // default selection
+      const def = drug.recipes.find(r => r.isDefault) || drug.recipes[0];
+      state.selectedRecipe = { mg: def.mg, ml: def.ml };
+    }
+
+    function renderDoseSteppers() {
+      const drug = DRUG_DATA[state.drugKey];
+      const container = document.getElementById('doseStepperGroup');
+      container.innerHTML = '';
+
+      drug.steppers.forEach(st => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-step';
+        btn.textContent = st.label;
+        btn.title = st.text;
+        btn.onclick = () => {
+          document.getElementById('inputDose').value = st.val;
+          state.targetDose = st.val;
+          calculate();
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    /* ==========================================================================
+       ANIMATED DRIP CHAMBER & TIMING ENGINE
+       ========================================================================== */
+    let lastDropTime = performance.now();
+    let animFrameId = null;
+
+    function animateDripChamber(now) {
+      if (!state.isPlaying) {
+        animFrameId = requestAnimationFrame(animateDripChamber);
+        return;
+      }
+
+      const intervalMs = state.intervalSec * 1000;
+      const elapsed = now - lastDropTime;
+
+      // Update Cadence Progress Bar (0 to 100%)
+      const progressRatio = Math.min(elapsed / intervalMs, 1);
+      const progressBar = document.getElementById('cadenceProgressBar');
+      if (progressBar) {
+        progressBar.style.width = `${(progressRatio * 100).toFixed(1)}%`;
+      }
+      
+      const timeRemaining = Math.max(0, (intervalMs - elapsed) / 1000);
+      const timeRemainEl = document.getElementById('cadenceTimeRemaining');
+      if (timeRemainEl) {
+        timeRemainEl.textContent = `${timeRemaining.toFixed(1)}s`;
+      }
+
+      // Check if a drop should trigger
+      if (elapsed >= intervalMs) {
+        triggerVisualDrop();
+        lastDropTime = now;
+      }
+
+      animFrameId = requestAnimationFrame(animateDripChamber);
+    }
+
+    function triggerVisualDrop() {
+      const chamberContainer = document.getElementById('chamberContainer');
+      const drop = document.getElementById('chamberDrop');
+      const wave = document.getElementById('chamberWave');
+      const dot = document.getElementById('metronomePulseDot');
+      const liveDot = document.getElementById('liveCadenceDot');
+
+      // Visual flash
+      chamberContainer.classList.add('flash');
+      dot.classList.add('pulse');
+      if (liveDot) liveDot.style.color = 'var(--drip-water)';
+
+      // Audio & tactile feedback
+      playDripSound();
+      triggerHaptic();
+
+      // Drop falling animation
+      drop.style.transition = 'none';
+      drop.style.opacity = '1';
+      drop.style.transform = 'translateY(0) scale(0.7)';
+      
+      // Force repaint
+      void drop.offsetWidth;
+
+      // Drop lands in 220ms
+      drop.style.transition = 'transform 0.22s cubic-bezier(0.55, 0.055, 0.675, 0.19), opacity 0.22s';
+      drop.style.transform = 'translateY(115px) scale(1.1)';
+      drop.style.opacity = '0.9';
+
+      setTimeout(() => {
+        drop.style.opacity = '0';
+        wave.classList.add('ripple');
+        setTimeout(() => wave.classList.remove('ripple'), 280);
+      }, 210);
+
+      setTimeout(() => {
+        chamberContainer.classList.remove('flash');
+        dot.classList.remove('pulse');
+        if (liveDot) liveDot.style.color = '';
+      }, 160);
+    }
+
+    /* ==========================================================================
+       TAP TEMPO / REVERSE VERIFICATION SYSTEM
+       ========================================================================== */
+    function initTapTempo() {
+      const tapBtn = document.getElementById('tapTempoBtn');
+      const feedback = document.getElementById('tapFeedback');
+
+      tapBtn.addEventListener('click', () => {
+        const now = performance.now();
+        state.tapTimestamps.push(now);
+
+        // Keep last 6 taps
+        if (state.tapTimestamps.length > 6) {
+          state.tapTimestamps.shift();
+        }
+
+        // Tap visual feedback
+        tapBtn.style.transform = 'scale(0.95)';
+        setTimeout(() => tapBtn.style.transform = '', 100);
+
+        // Calculate if we have at least 3 taps
+        if (state.tapTimestamps.length >= 2) {
+          const intervals = [];
+          for (let i = 1; i < state.tapTimestamps.length; i++) {
+            intervals.push((state.tapTimestamps[i] - state.tapTimestamps[i - 1]) / 1000);
+          }
+          
+          // Discard if user paused for more than 15s between taps (reset)
+          const lastInterval = intervals[intervals.length - 1];
+          if (lastInterval > 15) {
+            state.tapTimestamps = [now];
+            feedback.style.display = 'none';
+            return;
+          }
+
+          const avgIntervalSec = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+          const measuredGttMin = 60 / avgIntervalSec;
+          
+          // Reverse calculate actual delivered dose
+          // gtt/min -> mL/hr = (gtt/min * 60) / dripFactor
+          const measuredMlHr = (measuredGttMin * 60) / state.dripFactor;
+          // dose (mcg/kg/min) = (mL/hr * concMcgMl) / (60 * weight)
+          const measuredDose = (measuredMlHr * state.concentrationMcgMl) / (60 * state.weight);
+
+          const diffPercent = ((measuredDose - state.targetDose) / state.targetDose) * 100;
+          
+          feedback.style.display = 'block';
+          
+          let alertClass = '';
+          let adviceText = '';
+
+          if (Math.abs(diffPercent) <= 15) {
+            alertClass = '';
+            adviceText = `✅ <b>PAS / AKURAT:</b> Kecepatan nyata ~<b>${measuredGttMin.toFixed(1)} gtt/m</b> (${measuredDose.toFixed(2)} mcg/kg/m). Sangat mendekati target!`;
+          } else if (diffPercent < -15) {
+            alertClass = 'warning';
+            adviceText = `⚠️ <b>TERLALU LAMBAT:</b> Kecepatan nyata ~<b>${measuredGttMin.toFixed(1)} gtt/m</b> (${measuredDose.toFixed(2)} mcg/kg/m). <b>Buka sedikit klem infus!</b> (Kurang ${(Math.abs(diffPercent)).toFixed(0)}%)`;
+          } else {
+            alertClass = 'danger';
+            adviceText = `🚨 <b>TERLALU CEPAT:</b> Kecepatan nyata ~<b>${measuredGttMin.toFixed(1)} gtt/m</b> (${measuredDose.toFixed(2)} mcg/kg/m). <b>Tutup / rapatkan klem infus!</b> (Kelebihan ${(diffPercent).toFixed(0)}%)`;
+          }
+
+          feedback.className = `tap-feedback ${alertClass}`;
+          feedback.innerHTML = `
+            ${adviceText}<br>
+            <span style="font-size:10px; color:var(--text-dim);">Dihitung dari ${state.tapTimestamps.length} kali ketukan (Interval: ${avgIntervalSec.toFixed(2)} dtk/tetes).</span>
+          `;
+        }
+      });
+    }
+
+    /* ==========================================================================
+       USER EVENT HANDLERS & HELPERS
+       ========================================================================== */
+    function adjustParam(param, delta) {
+      if (param === 'weight') {
+        state.weight = Math.max(10, Math.min(200, state.weight + delta));
+        document.getElementById('inputWeight').value = state.weight;
+      }
+      calculate();
+    }
+
+    function setQuickWeight(val) {
+      state.weight = val;
+      document.getElementById('inputWeight').value = val;
+      calculate();
+    }
+
+    function setupEventListeners() {
+      // Drug Selection
+      document.querySelectorAll('.drug-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.drug-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          
+          const key = btn.dataset.drug;
+          state.drugKey = key;
+          const drug = DRUG_DATA[key];
+          
+          state.targetDose = drug.defaultDose;
+          document.getElementById('inputDose').value = drug.defaultDose;
+          document.getElementById('inputDose').step = drug.doseStep;
+
+          renderRecipes();
+          renderDoseSteppers();
+          calculate();
+        });
+      });
+
+      // Inputs
+      const weightInput = document.getElementById('inputWeight');
+      weightInput.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        if (!isNaN(val) && val > 0) {
+          state.weight = val;
+          calculate();
+        }
+      });
+
+      const doseInput = document.getElementById('inputDose');
+      doseInput.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        if (!isNaN(val) && val >= 0) {
+          state.targetDose = val;
+          calculate();
+        }
+      });
+
+      // Drip set toggle
+      document.querySelectorAll('.toggle-opt').forEach(opt => {
+        opt.addEventListener('click', () => {
+          document.querySelectorAll('.toggle-opt').forEach(o => o.classList.remove('selected'));
+          opt.classList.add('selected');
+          state.dripFactor = parseInt(opt.dataset.factor, 10);
+          calculate();
+        });
+      });
+
+      // Tactical Red Mode
+      const btnRed = document.getElementById('btnTacticalRed');
+      btnRed.addEventListener('click', () => {
+        state.isTacticalRed = !state.isTacticalRed;
+        document.body.classList.toggle('tactical-red', state.isTacticalRed);
+        btnRed.classList.toggle('active', state.isTacticalRed);
+      });
+
+      // Screen Wake Lock & Banner Controls
+      const btnWake = document.getElementById('btnScreenWake');
+      const wakeBtnText = document.getElementById('wakeBtnText');
+      const wakeIcon = document.getElementById('wakeIcon');
+      const wakeBanner = document.getElementById('wakeBanner');
+      const wakeBannerText = document.getElementById('wakeBannerText');
+      let wakeLock = null;
+
+      window.dismissWakeBanner = function() {
+        if (wakeBanner) wakeBanner.style.display = 'none';
+      };
+
+      async function requestWake() {
+        if ('wakeLock' in navigator) {
+          try {
+            wakeLock = await navigator.wakeLock.request('screen');
+            state.isWakeLocked = true;
+            btnWake.classList.add('active');
+            wakeBtnText.textContent = 'Wake ON';
+            wakeIcon.textContent = '🔆';
+            
+            wakeBanner.style.display = 'flex';
+            wakeBannerText.innerHTML = '<b>Layar Tetap Aktif (Wake Lock ON):</b> Layar HP tidak akan meredup atau terkunci otomatis selama proses titrasi infus berlangsung.';
+            
+            wakeLock.addEventListener('release', () => {
+              if (!state.isWakeLocked) {
+                btnWake.classList.remove('active');
+                wakeBtnText.textContent = 'Wake Lock';
+              }
+            });
+          } catch (err) {
+            console.warn('Wake Lock request error:', err);
+          }
+        } else {
+          alert('Wake Lock API tidak didukung pada browser ini. Harap atur sleep timeout di pengaturan HP Anda.');
+        }
+      }
+
+      async function releaseWake() {
+        if (wakeLock) {
+          await wakeLock.release();
+          wakeLock = null;
+        }
+        state.isWakeLocked = false;
+        btnWake.classList.remove('active');
+        wakeBtnText.textContent = 'Wake Lock';
+        wakeBanner.style.display = 'flex';
+        wakeBannerText.innerHTML = '<b>Wake Lock Dinonaktifkan:</b> Layar HP sekarang mengikuti batas waktu mati (screen timeout) standar ponsel Anda.';
+        setTimeout(() => {
+          if (!state.isWakeLocked && wakeBanner) wakeBanner.style.display = 'none';
+        }, 5000);
+      }
+
+      btnWake.addEventListener('click', async () => {
+        if (!state.isWakeLocked) {
+          await requestWake();
+        } else {
+          await releaseWake();
+        }
+      });
+
+      // Auto-reacquire wake lock on visibility change
+      document.addEventListener('visibilitychange', async () => {
+        if (state.isWakeLocked && document.visibilityState === 'visible' && !wakeLock) {
+          await requestWake();
+        }
+      });
+
+      // Tool Info Accordion Toggle
+      const infoToggle = document.getElementById('infoToggle');
+      const infoBody = document.getElementById('infoBody');
+      const infoExpandBtn = document.getElementById('infoExpandBtn');
+      const infoExpandIcon = document.getElementById('infoExpandIcon');
+
+      function toggleInfo() {
+        const isOpen = infoBody.classList.toggle('open');
+        infoExpandIcon.textContent = isOpen ? '✕ Tutup Info' : '📖 Deskripsi Alat';
+        infoExpandBtn.classList.toggle('active', isOpen);
+      }
+
+      if (infoToggle) infoToggle.addEventListener('click', toggleInfo);
+      if (infoExpandBtn) {
+        infoExpandBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleInfo();
+        });
+      }
+
+      // Metronome Sound & Vibrate Toggles
+      const btnSound = document.getElementById('btnSoundToggle');
+      btnSound.addEventListener('click', () => {
+        state.soundEnabled = !state.soundEnabled;
+        btnSound.classList.toggle('active', state.soundEnabled);
+        document.getElementById('soundIcon').textContent = state.soundEnabled ? '🔊' : '🔇';
+      });
+
+      const btnVibrate = document.getElementById('btnVibrateToggle');
+      btnVibrate.addEventListener('click', () => {
+        state.vibrateEnabled = !state.vibrateEnabled;
+        btnVibrate.classList.toggle('active', state.vibrateEnabled);
+        document.getElementById('vibrateIcon').textContent = state.vibrateEnabled ? '📳' : '🔕';
+      });
+
+      const btnPlay = document.getElementById('btnPlayPause');
+      btnPlay.addEventListener('click', () => {
+        state.isPlaying = !state.isPlaying;
+        btnPlay.classList.toggle('active', !state.isPlaying);
+        document.getElementById('playIcon').textContent = state.isPlaying ? '⏸' : '▶';
+        document.getElementById('metronomeStatusText').textContent = state.isPlaying ? 'Metronom Aktif' : 'Dijeda';
+      });
+
+      // Pocket Reference Accordion
+      const accToggle = document.getElementById('accToggle');
+      const accContent = document.getElementById('accContent');
+      const accIcon = document.getElementById('accIcon');
+      accToggle.addEventListener('click', () => {
+        const isOpen = accContent.classList.toggle('open');
+        accIcon.textContent = isOpen ? '▲' : '▼';
+      });
+    }
+
+    /* ==========================================================================
+       INITIALIZATION
+       ========================================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      renderRecipes();
+      renderDoseSteppers();
+      setupEventListeners();
+      initTapTempo();
+      calculate();
+
+      // Start animation loop
+      lastDropTime = performance.now();
+      requestAnimationFrame(animateDripChamber);
+    });
+  </script>
+</body>
+</html>
