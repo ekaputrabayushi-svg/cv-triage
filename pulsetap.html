@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PulseTap - Kalkulator Denyut Nadi Instan</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            background: #030712;
+            color: #f3f4f6;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            overflow-x: hidden;
+        }
+
+        .app {
+            background: radial-gradient(circle at top, #111827 0%, #070a13 100%);
+            width: 100%;
+            max-width: 480px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            padding: 0 16px 24px 16px;
+        }
+
+        /* HEADER */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .logo-wrap { display: flex; align-items: center; gap: 10px; }
+
+        .logo-icon {
+            font-size: 26px;
+            animation: pulse-icon 1.8s infinite ease-in-out;
+            display: flex;
+        }
+
+        .logo-text { display: flex; flex-direction: column; }
+        .logo-text h1 { font-size: 17px; font-weight: 800; letter-spacing: 0.5px; }
+        .sub-vault { font-size: 10px; color: #a5b4fc; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 1px; }
+        .sub-dev { font-size: 9px; color: #64748b; font-weight: 500; margin-top: 1px; }
+
+        .header-btns { display: flex; gap: 8px; }
+        .icon-btn {
+            background: rgba(31,41,55,0.45);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: #e5e7eb;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background 0.2s;
+        }
+        .icon-btn:hover { background: rgba(255,255,255,0.1); }
+
+        /* BPM CARD */
+        main { flex: 1; display: flex; flex-direction: column; gap: 14px; padding: 16px 0; }
+
+        .bpm-card-wrap { position: relative; }
+        .bpm-glow {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%; height: 80%;
+            background: radial-gradient(circle, rgba(99,102,241,0.3) 0%, transparent 70%);
+            border-radius: 50%; filter: blur(25px);
+            transition: background 0.5s ease;
+            z-index: 1; pointer-events: none;
+        }
+        .bpm-card {
+            position: relative; z-index: 2;
+            background: rgba(17,24,39,0.65);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px; padding: 24px;
+            text-align: center;
+            display: flex; flex-direction: column; align-items: center;
+            transition: border-color 0.3s ease;
+        }
+
+        .status-badge {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 6px 14px; border-radius: 20px;
+            font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.8px;
+            color: #64748b; transition: all 0.3s ease;
+        }
+
+        .bpm-row { margin: 16px 0; display: flex; align-items: baseline; justify-content: center; gap: 4px; }
+        .bpm-number {
+            font-size: 84px; font-weight: 800; line-height: 1;
+            color: #fff; transition: color 0.3s ease;
+        }
+        .bpm-unit { font-size: 16px; font-weight: 700; color: #64748b; letter-spacing: 1px; }
+
+        .dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: #64748b; transition: all 0.15s ease; opacity: 0.6;
+        }
+        .dot.flash { transform: scale(1.8); opacity: 1; box-shadow: 0 0 12px #6366f1; }
+
+        /* status colour theming */
+        .bpm-card.normal { border-color: rgba(16,185,129,0.4); }
+        .bpm-card.brady  { border-color: rgba(6,182,212,0.4); }
+        .bpm-card.tachy  { border-color: rgba(239,68,68,0.4); }
+        .status-badge.normal { color: #10b981; background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.2); }
+        .status-badge.brady  { color: #06b6d4; background: rgba(6,182,212,0.1);  border-color: rgba(6,182,212,0.2); }
+        .status-badge.tachy  { color: #ef4444; background: rgba(239,68,68,0.1);  border-color: rgba(239,68,68,0.2); }
+        .bpm-number.normal { color: #10b981; }
+        .bpm-number.brady  { color: #06b6d4; }
+        .bpm-number.tachy  { color: #ef4444; }
+
+        /* ECG */
+        .ecg-wrap {
+            height: 60px; background: rgba(15,23,42,0.3);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px; overflow: hidden;
+        }
+        #ecg { width: 100%; height: 100%; display: block; }
+
+        /* STATS */
+        .stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+        .stat-box {
+            background: rgba(17,24,39,0.65);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px; padding: 12px; text-align: center;
+        }
+        .stat-label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 600; }
+        .stat-val   { font-size: 15px; font-weight: 700; color: #f3f4f6; }
+
+        /* TAP BUTTON */
+        .tap-wrap { display: flex; justify-content: center; padding: 12px 0; }
+
+        #tap-btn {
+            width: 190px; height: 190px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, rgba(15,23,42,0.8) 100%);
+            border: 2px dashed rgba(99,102,241,0.4);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; position: relative; outline: none;
+            transition: transform 0.15s ease;
+            /* critical: no pointer-events blocking */
+            pointer-events: auto;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        #tap-btn:active { transform: scale(0.93); }
+
+        .tap-inner {
+            width: 160px; height: 160px; border-radius: 50%;
+            background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            pointer-events: none;
+            transition: background 0.15s ease;
+        }
+        #tap-btn:active .tap-inner { background: linear-gradient(135deg, #312e81 0%, #1e1b4b 100%); }
+
+        .tap-icon-svg { width: 48px; height: 48px; margin-bottom: 8px; }
+        .tap-label    { font-size: 13px; font-weight: 800; letter-spacing: 1.5px; color: #fff; }
+        .tap-sub      { font-size: 9px; color: #64748b; margin-top: 4px; text-align: center; max-width: 110px; line-height: 1.3; }
+
+        /* ripple */
+        .ripple {
+            position: absolute; border-radius: 50%;
+            background: rgba(99,102,241,0.35);
+            pointer-events: none; z-index: 0;
+            animation: ripple-anim 0.8s ease-out forwards;
+        }
+
+        /* CONTROLS */
+        .controls { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; }
+        .btn {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 14px 20px; border-radius: 14px;
+            font-size: 14px; font-weight: 700; cursor: pointer;
+            transition: all 0.2s ease; border: 1px solid transparent;
+        }
+        .btn-secondary { background: rgba(31,41,55,0.45); border-color: rgba(255,255,255,0.08); color: #e5e7eb; }
+        .btn-primary   { background: linear-gradient(135deg,#4f46e5,#3730a3); color: #fff; box-shadow: 0 4px 14px rgba(79,70,229,0.3); }
+        .btn:disabled  { opacity: 0.4; cursor: not-allowed; }
+        .btn:active:not(:disabled) { transform: translateY(1px); }
+
+        /* LOGS */
+        .log-section { border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px; }
+        .log-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .log-head h2 { font-size: 13px; font-weight: 700; color: #e5e7eb; display: flex; align-items: center; gap: 6px; }
+        .log-actions { display: flex; gap: 12px; }
+        .text-btn { background: none; border: none; color: #64748b; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .text-btn:hover { color: #fff; }
+        .text-btn.del:hover { color: #ef4444; }
+        .log-list { max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 2px; }
+        .log-list::-webkit-scrollbar { width: 4px; }
+        .log-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+        .empty { text-align: center; padding: 30px 0; color: #64748b; }
+        .empty svg { width: 32px; height: 32px; opacity: 0.3; margin-bottom: 8px; }
+        .empty p { font-size: 12px; }
+
+        .log-item {
+            background: rgba(31,41,55,0.45);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px; padding: 12px;
+            display: flex; align-items: center; justify-content: space-between;
+            animation: slideUp 0.3s ease-out;
+        }
+        .log-left { display: flex; align-items: center; gap: 12px; }
+        .log-badge {
+            width: 42px; height: 42px; border-radius: 10px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            font-weight: 800; font-size: 16px;
+        }
+        .log-badge.normal { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.25); }
+        .log-badge.brady  { background: rgba(6,182,212,0.15);  color: #06b6d4; border: 1px solid rgba(6,182,212,0.25); }
+        .log-badge.tachy  { background: rgba(239,68,68,0.15);  color: #ef4444; border: 1px solid rgba(239,68,68,0.25); }
+        .log-badge small  { font-size: 8px; font-weight: 700; text-transform: uppercase; }
+        .log-info { display: flex; flex-direction: column; }
+        .log-name { font-size: 13px; font-weight: 600; color: #e5e7eb; }
+        .log-note { font-size: 11px; color: #64748b; margin-top: 2px; }
+        .log-time { font-size: 10px; color: rgba(255,255,255,0.25); margin-top: 1px; }
+        .log-del  { background: none; border: none; color: rgba(255,255,255,0.2); cursor: pointer; font-size: 16px; padding: 4px; }
+        .log-del:hover { color: #ef4444; }
+
+        /* MODAL */
+        .modal-backdrop {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(3,7,18,0.85);
+            display: flex; justify-content: center; align-items: flex-end;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease; z-index: 200;
+        }
+        .modal-backdrop.open { opacity: 1; pointer-events: auto; }
+        .modal {
+            background: #0f172a;
+            border: 1px solid rgba(255,255,255,0.08); border-bottom: none;
+            border-radius: 28px 28px 0 0;
+            width: 100%; max-width: 480px; max-height: 85vh;
+            padding: 24px; overflow-y: auto;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.32,0.94,0.6,1);
+        }
+        .modal-backdrop.open .modal { transform: translateY(0); }
+        .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px; }
+        .modal-head h2 { font-size: 18px; font-weight: 700; }
+        .close-btn { background: none; border: none; color: #64748b; font-size: 28px; cursor: pointer; line-height: 1; }
+        .modal-body h3 { font-size: 14px; font-weight: 700; margin: 16px 0 8px; color: #e5e7eb; }
+        .guide-ol { padding-left: 20px; font-size: 13px; color: #cbd5e1; display: flex; flex-direction: column; gap: 8px; }
+        .guide-ol strong { color: #fff; }
+
+        .clinical-table { width: 100%; border-collapse: collapse; font-size: 12px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
+        .clinical-table th { background: rgba(255,255,255,0.03); color: #fff; font-weight: 600; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); text-align: left; }
+        .clinical-table td { padding: 10px 12px; color: #cbd5e1; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .clinical-table tr:last-child td { border-bottom: none; }
+
+        .alert-note { background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.15); padding: 12px; border-radius: 12px; font-size: 11px; color: #94a3b8; line-height: 1.4; margin-top: 16px; }
+
+        /* settings */
+        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .setting-row:last-child { border-bottom: none; }
+        .setting-info .st { font-size: 14px; font-weight: 600; color: #fff; }
+        .setting-info .sd { font-size: 11px; color: #64748b; margin-top: 2px; }
+        .toggle { position: relative; width: 46px; height: 24px; flex-shrink: 0; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px; cursor: pointer; transition: 0.3s;
+        }
+        .toggle-slider:before { content: ''; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: #fff; left: 3px; bottom: 3px; transition: 0.3s; }
+        .toggle input:checked + .toggle-slider { background: #6366f1; }
+        .toggle input:checked + .toggle-slider:before { transform: translateX(22px); }
+
+        .range-wrap { padding: 16px 0; }
+        .range-head { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .range-head span { font-size: 14px; font-weight: 600; color: #fff; }
+        .range-head em { font-size: 12px; font-weight: 700; color: #6366f1; background: rgba(99,102,241,0.1); padding: 2px 8px; border-radius: 12px; font-style: normal; }
+        .range-desc { font-size: 11px; color: #64748b; margin-bottom: 10px; }
+        .range-input { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.1); outline: none; }
+        .range-input::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #6366f1; cursor: pointer; border: 2px solid #fff; box-shadow: 0 0 10px rgba(99,102,241,0.4); }
+
+        /* save modal */
+        .result-preview { display: flex; align-items: center; gap: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 16px; border-radius: 16px; margin-bottom: 20px; }
+        .result-bpm { font-size: 40px; font-weight: 800; color: #fff; line-height: 1; }
+        .result-details { display: flex; flex-direction: column; gap: 2px; }
+        .result-label { font-size: 10px; color: #64748b; text-transform: uppercase; }
+        .result-status { font-size: 12px; font-weight: 700; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+        .form-group label { font-size: 12px; font-weight: 600; color: #e5e7eb; }
+        .form-group input, .form-group textarea {
+            background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.08);
+            color: #fff; padding: 12px; border-radius: 10px;
+            font-family: inherit; font-size: 13px; outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group textarea:focus { border-color: #6366f1; }
+        .btn-full { width: 100%; }
+
+        /* KEYFRAMES */
+        @keyframes pulse-icon {
+            0%, 100% { transform: scale(1); }
+            50%       { transform: scale(1.15); filter: drop-shadow(0 0 4px rgba(239,68,68,0.5)); }
+        }
+        @keyframes ripple-anim {
+            0%   { width: 160px; height: 160px; opacity: 0.7; }
+            100% { width: 280px; height: 280px; opacity: 0; }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (min-width: 481px) {
+            body { background-image: radial-gradient(#1e293b 0.5px, transparent 0.5px), radial-gradient(#1e293b 0.5px, #030712 0.5px); background-size: 20px 20px; background-position: 0 0, 10px 10px; align-items: center; }
+            .app { border-radius: 40px; border: 8px solid rgba(255,255,255,0.05); min-height: 840px; height: 840px; margin: 20px 0; box-shadow: 0 25px 60px -15px rgba(0,0,0,0.9); overflow: hidden; }
+            .modal-backdrop { position: absolute; border-radius: 32px; }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <!-- HEADER -->
+    <header>
+        <div class="logo-wrap">
+            <!-- Heart pulse SVG icon inline -->
+            <svg class="logo-icon" viewBox="0 0 24 24" width="26" height="26" fill="none">
+                <path d="M3 12h3l2-5 3 10 2-8 2 3h4" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div class="logo-text">
+                <h1>PulseTap</h1>
+                <span class="sub-vault">Part of CardiologyVault</span>
+                <span class="sub-dev">Dev: Bayushi Eka Putra, MD, FIHA</span>
+            </div>
+        </div>
+        <div class="header-btns">
+            <button class="icon-btn" id="btn-info" title="Panduan Klinis">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            </button>
+            <button class="icon-btn" id="btn-settings" title="Pengaturan">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <!-- BPM -->
+        <div class="bpm-card-wrap">
+            <div class="bpm-glow" id="bpm-glow"></div>
+            <div class="bpm-card" id="bpm-card">
+                <span class="status-badge" id="bpm-status">Menunggu Ketukan</span>
+                <div class="bpm-row">
+                    <span class="bpm-number" id="bpm-value">--</span>
+                    <span class="bpm-unit">BPM</span>
+                </div>
+                <div class="dot" id="dot"></div>
+            </div>
+        </div>
+
+        <!-- ECG -->
+        <div class="ecg-wrap">
+            <canvas id="ecg"></canvas>
+        </div>
+
+        <!-- STATS -->
+        <div class="stats">
+            <div class="stat-box"><div class="stat-label">Ketukan</div><div class="stat-val" id="st-taps">0</div></div>
+            <div class="stat-box"><div class="stat-label">Kepercayaan</div><div class="stat-val" id="st-conf">--</div></div>
+            <div class="stat-box"><div class="stat-label">Konsistensi</div><div class="stat-val" id="st-cons">--</div></div>
+        </div>
+
+        <!-- TAP BUTTON -->
+        <div class="tap-wrap">
+            <button id="tap-btn">
+                <div class="tap-inner">
+                    <svg class="tap-icon-svg" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2C9.24 2 7 4.24 7 7v5.29C6.1 12.1 5 12.56 5 13.5v4C5 19.43 6.57 21 8.5 21h7c1.93 0 3.5-1.57 3.5-3.5v-4c0-.94-1.1-1.4-2-1.21V7c0-2.76-2.24-5-5-5zm0 1.5c1.93 0 3.5 1.57 3.5 3.5v4.5h-1.5V7c0-1.1-.9-2-2-2s-2 .9-2 2v4.5H8.5V7C8.5 5.07 10.07 3.5 12 3.5z" fill="#6366f1"/>
+                    </svg>
+                    <div class="tap-label">TAP DISINI</div>
+                    <div class="tap-sub">Ikuti denyut nadi pasien</div>
+                </div>
+            </button>
+        </div>
+
+        <!-- CONTROLS -->
+        <div class="controls">
+            <button class="btn btn-secondary" id="btn-reset" disabled>↺ Reset</button>
+            <button class="btn btn-primary"   id="btn-save"  disabled>💾 Simpan</button>
+        </div>
+    </main>
+
+    <!-- LOG -->
+    <section class="log-section">
+        <div class="log-head">
+            <h2>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18"/></svg>
+                Riwayat Pengukuran
+            </h2>
+            <div class="log-actions">
+                <button class="text-btn" id="btn-export">⬇ Ekspor</button>
+                <button class="text-btn del" id="btn-clear">🗑 Bersihkan</button>
+            </div>
+        </div>
+        <div class="log-list" id="log-list">
+            <div class="empty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                <p>Belum ada data pengukuran disimpan.</p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- MODAL: Info -->
+<div class="modal-backdrop" id="modal-info">
+    <div class="modal">
+        <div class="modal-head"><h2>Panduan Pengukuran</h2><button class="close-btn" data-modal="modal-info">&times;</button></div>
+        <div class="modal-body">
+            <h3>Cara Penggunaan</h3>
+            <ol class="guide-ol">
+                <li>Temukan denyut nadi radialis di pergelangan tangan atau karotis di leher pasien.</li>
+                <li>Ketuk tombol <strong>TAP DISINI</strong> mengikuti irama denyutan yang Anda rasakan.</li>
+                <li>BPM akan muncul setelah 2–3 ketukan pertama dan terus diperbarui.</li>
+                <li>Ketuk terus hingga <strong>Kepercayaan</strong> mencapai ≥90% untuk keakuratan tinggi.</li>
+                <li>Tekan <strong>Simpan</strong> untuk mencatat riwayat pengukuran.</li>
+            </ol>
+            <h3>Referensi Nadi Istirahat Normal</h3>
+            <table class="clinical-table">
+                <thead><tr><th>Kategori Usia</th><th>Rentang Normal (BPM)</th></tr></thead>
+                <tbody>
+                    <tr><td>Bayi Baru Lahir (0–1 bln)</td><td>100 – 180</td></tr>
+                    <tr><td>Bayi (1–11 bln)</td><td>100 – 160</td></tr>
+                    <tr><td>Anak (1–2 thn)</td><td>90 – 150</td></tr>
+                    <tr><td>Anak (3–4 thn)</td><td>80 – 140</td></tr>
+                    <tr><td>Anak (5–12 thn)</td><td>70 – 120</td></tr>
+                    <tr><td>Remaja &amp; Dewasa (&gt;12 thn)</td><td>60 – 100</td></tr>
+                    <tr><td>Atlet Terlatih</td><td>40 – 60</td></tr>
+                </tbody>
+            </table>
+            <div class="alert-note">
+                <strong>Bradikardia</strong>: &lt;60 BPM (dewasa) &nbsp;|&nbsp; <strong>Takikardia</strong>: &gt;100 BPM (dewasa)
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Settings -->
+<div class="modal-backdrop" id="modal-settings">
+    <div class="modal">
+        <div class="modal-head"><h2>Pengaturan</h2><button class="close-btn" data-modal="modal-settings">&times;</button></div>
+        <div class="modal-body">
+            <div class="setting-row">
+                <div class="setting-info">
+                    <div class="st">Efek Suara (Beep)</div>
+                    <div class="sd">Bunyi detak setiap kali tombol diketuk</div>
+                </div>
+                <label class="toggle"><input type="checkbox" id="s-sound" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="setting-row">
+                <div class="setting-info">
+                    <div class="st">Umpan Balik Getaran</div>
+                    <div class="sd">Getaran haptic di HP saat diketuk</div>
+                </div>
+                <label class="toggle"><input type="checkbox" id="s-vibe" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="range-wrap">
+                <div class="range-head">
+                    <span>Sampel Ketukan</span>
+                    <em id="sample-label">5 ketukan</em>
+                </div>
+                <div class="range-desc">Jumlah ketukan terakhir yang dirata-ratakan. Sedikit = cepat, banyak = stabil.</div>
+                <input type="range" class="range-input" id="s-samples" min="3" max="10" value="5">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Save -->
+<div class="modal-backdrop" id="modal-save">
+    <div class="modal">
+        <div class="modal-head"><h2>Simpan Hasil</h2><button class="close-btn" data-modal="modal-save">&times;</button></div>
+        <div class="modal-body">
+            <div class="result-preview">
+                <div class="result-bpm" id="save-bpm">72</div>
+                <div class="result-details">
+                    <div class="result-label">Denyut Nadi</div>
+                    <div class="result-status" id="save-status">NORMAL</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="p-name">Nama / ID Pasien (opsional)</label>
+                <input type="text" id="p-name" placeholder="Misal: Tn. Budi / Pasien 01" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label for="p-notes">Catatan (opsional)</label>
+                <textarea id="p-notes" rows="2" placeholder="Misal: kondisi istirahat, post-exercise..."></textarea>
+            </div>
+            <button class="btn btn-primary btn-full" id="btn-confirm-save">✓ Simpan ke Riwayat</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ─── STATE ──────────────────────────────────────────────
+let tapTimes = [], sampleSize = 5, audioCtx = null;
+let isSoundOn = true, isVibeOn = true, lastTap = 0;
+const GAP_RESET = 2500;
+
+// ─── SAFE STORAGE (works on file:// protocol) ──────────
+const _store = {};
+const stor = {
+    ok: (() => { try { localStorage.setItem('_t','1'); localStorage.removeItem('_t'); return true; } catch(e){ return false; } })(),
+    get(k){ return this.ok ? localStorage.getItem(k) : (_store[k]||null); },
+    set(k,v){ if(this.ok){ try{ localStorage.setItem(k,v); }catch(e){} } else { _store[k]=String(v); } },
+    del(k){ if(this.ok) localStorage.removeItem(k); else delete _store[k]; }
+};
+
+// ─── DOM ─────────────────────────────────────────────────
+const tapBtn    = document.getElementById('tap-btn');
+const bpmValue  = document.getElementById('bpm-value');
+const bpmStatus = document.getElementById('bpm-status');
+const bpmCard   = document.getElementById('bpm-card');
+const bpmGlow   = document.getElementById('bpm-glow');
+const dotEl     = document.getElementById('dot');
+const stTaps    = document.getElementById('st-taps');
+const stConf    = document.getElementById('st-conf');
+const stCons    = document.getElementById('st-cons');
+const btnReset  = document.getElementById('btn-reset');
+const btnSave   = document.getElementById('btn-save');
+
+// ─── CANVAS ECG ──────────────────────────────────────────
+const cvs = document.getElementById('ecg');
+const ctx2 = cvs.getContext('2d');
+const MAX_PTS = 300;
+let pts = [], qrs = [];
+
+function initCanvas(){
+    const r = cvs.parentElement.getBoundingClientRect();
+    const w = r.width  || 400;
+    const h = r.height || 60;
+    const dpr = window.devicePixelRatio || 1;
+    cvs.width  = w * dpr;
+    cvs.height = h * dpr;
+    ctx2.scale(dpr, dpr);
+    pts = [];
+    for(let i=0;i<MAX_PTS;i++) pts.push({x:(w/MAX_PTS)*i, y:h/2});
+}
+
+function triggerSpike(){
+    qrs = [0,1.5,3,1.5,0,-2,-4,-6,12,30,15,-4,-12,-6,-2,0,1.5,3,5,6,4.5,3,1.5,0];
+}
+
+function drawECG(){
+    const w = cvs.width / (window.devicePixelRatio||1);
+    const h = cvs.height / (window.devicePixelRatio||1);
+    const cy = h/2;
+
+    for(let i=0;i<MAX_PTS-1;i++) pts[i].y = pts[i+1].y;
+    if(qrs.length>0){ const m=qrs.shift(); pts[MAX_PTS-1].y = cy - m; }
+    else { pts[MAX_PTS-1].y = cy + (Math.random()*0.8-0.4); }
+
+    ctx2.clearRect(0,0,w,h);
+
+    // grid
+    ctx2.strokeStyle='rgba(255,255,255,0.025)';
+    ctx2.lineWidth=1;
+    for(let x=0;x<w;x+=15){ ctx2.beginPath(); ctx2.moveTo(x,0); ctx2.lineTo(x,h); ctx2.stroke(); }
+    for(let y=0;y<h;y+=15){ ctx2.beginPath(); ctx2.moveTo(0,y); ctx2.lineTo(w,y); ctx2.stroke(); }
+
+    // line color
+    let clr='rgba(99,102,241,0.85)';
+    const cls = bpmStatus.className;
+    if(cls.includes('normal')) clr='rgba(16,185,129,0.85)';
+    else if(cls.includes('brady')) clr='rgba(6,182,212,0.85)';
+    else if(cls.includes('tachy')) clr='rgba(239,68,68,0.85)';
+
+    ctx2.beginPath();
+    ctx2.moveTo(pts[0].x, pts[0].y);
+    for(let i=1;i<MAX_PTS;i++) ctx2.lineTo(pts[i].x, pts[i].y);
+    ctx2.strokeStyle = clr;
+    ctx2.lineWidth = 2.5;
+    ctx2.lineJoin = 'round';
+    ctx2.lineCap  = 'round';
+    ctx2.shadowBlur = 8;
+    ctx2.shadowColor = clr;
+    ctx2.stroke();
+    ctx2.shadowBlur = 0;
+
+    requestAnimationFrame(drawECG);
+}
+
+// ─── AUDIO ──────────────────────────────────────────────
+function beep(){
+    try {
+        if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+        if(audioCtx.state==='suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime+0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.08);
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime+0.1);
+    } catch(e){}
+}
+
+// ─── TAP HANDLER ─────────────────────────────────────────
+function onTap(e){
+    // init audio ctx on first gesture
+    if(!audioCtx){ try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+    if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
+
+    if(isSoundOn) beep();
+    if(isVibeOn && navigator.vibrate) navigator.vibrate(40);
+
+    // dot flash
+    dotEl.classList.add('flash');
+    setTimeout(()=>dotEl.classList.remove('flash'), 120);
+
+    // ecg spike
+    triggerSpike();
+
+    // ripple
+    const rect = tapBtn.getBoundingClientRect();
+    let cx = rect.width/2, cy2 = rect.height/2;
+    if(e.touches && e.touches[0]){ cx=e.touches[0].clientX-rect.left; cy2=e.touches[0].clientY-rect.top; }
+    else if(e.clientX){ cx=e.clientX-rect.left; cy2=e.clientY-rect.top; }
+    const rpl = document.createElement('span');
+    rpl.className='ripple';
+    rpl.style.cssText=`left:${cx}px;top:${cy2}px;margin-left:-80px;margin-top:-80px;`;
+    tapBtn.appendChild(rpl);
+    setTimeout(()=>rpl.remove(), 850);
+
+    const now = performance.now();
+    if(lastTap>0 && now-lastTap>GAP_RESET) tapTimes=[];
+    tapTimes.push(now);
+    lastTap = now;
+    if(tapTimes.length>sampleSize) tapTimes.shift();
+    calcBPM();
+}
+
+// Multiple event bindings for maximum compatibility
+tapBtn.addEventListener('click',       onTap);
+tapBtn.addEventListener('touchend',    (e)=>{ e.preventDefault(); onTap(e); }, {passive:false});
+
+// ─── BPM CALC ────────────────────────────────────────────
+function calcBPM(){
+    const n = tapTimes.length;
+    stTaps.textContent = n;
+
+    if(n < 2){
+        bpmValue.textContent = '--';
+        bpmStatus.textContent = n===1 ? 'Ketuk lagi...' : 'Menunggu Ketukan';
+        bpmStatus.className = 'status-badge';
+        clearCardClass();
+        btnReset.disabled = n===0;
+        btnSave.disabled  = true;
+        stConf.textContent = '--';
+        stCons.textContent = '--';
+        return;
+    }
+
+    btnReset.disabled = false;
+    const intervals = [];
+    for(let i=1;i<tapTimes.length;i++) intervals.push(tapTimes[i]-tapTimes[i-1]);
+    const mean = intervals.reduce((a,b)=>a+b,0)/intervals.length;
+    const bpm  = Math.round(60000/mean);
+    const vari = intervals.reduce((a,v)=>a+Math.pow(v-mean,2),0)/intervals.length;
+    const cv   = mean>0 ? Math.sqrt(vari)/mean : 0;
+    const conf = Math.max(0,Math.min(100,Math.round((1-cv*2.5)*100)));
+    const cons = Math.max(0,Math.min(100,Math.round((1-cv)*100)));
+    stConf.textContent = conf+'%';
+    stCons.textContent = cons+'%';
+
+    bpmValue.textContent = bpm;
+
+    if(n>=3){
+        btnSave.disabled = false;
+        let cat='normal', lbl='NORMAL';
+        if(bpm<60){ cat='brady'; lbl='BRADIKARDIA'; }
+        else if(bpm>100){ cat='tachy'; lbl='TAKIKARDIA'; }
+        applyStatus(cat, lbl, bpm);
+    } else {
+        bpmStatus.textContent = 'Menganalisis...';
+        bpmStatus.className   = 'status-badge';
+        clearCardClass();
+    }
+}
+
+function applyStatus(cat, lbl, bpm){
+    clearCardClass();
+    bpmCard.classList.add(cat);
+    bpmStatus.classList.add(cat);
+    bpmStatus.textContent = lbl;
+    bpmValue.className    = 'bpm-number '+cat;
+    const glows = {normal:'rgba(16,185,129,0.25)',brady:'rgba(6,182,212,0.25)',tachy:'rgba(239,68,68,0.25)'};
+    bpmGlow.style.background = `radial-gradient(circle, ${glows[cat]} 0%, transparent 70%)`;
+}
+
+function clearCardClass(){
+    ['normal','brady','tachy'].forEach(c=>{ bpmCard.classList.remove(c); bpmStatus.classList.remove(c); });
+    bpmValue.className = 'bpm-number';
+    bpmGlow.style.background = 'radial-gradient(circle, rgba(99,102,241,0.3) 0%, transparent 70%)';
+}
+
+function resetTap(){ tapTimes=[]; lastTap=0; calcBPM(); }
+
+// ─── MODALS ──────────────────────────────────────────────
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+document.getElementById('btn-info').addEventListener('click',     ()=>openModal('modal-info'));
+document.getElementById('btn-settings').addEventListener('click', ()=>openModal('modal-settings'));
+btnReset.addEventListener('click', resetTap);
+btnSave.addEventListener('click', ()=>{
+    document.getElementById('save-bpm').textContent    = bpmValue.textContent;
+    document.getElementById('save-status').textContent = bpmStatus.textContent;
+    document.getElementById('p-name').value   = '';
+    document.getElementById('p-notes').value  = '';
+    openModal('modal-save');
+});
+
+document.querySelectorAll('.close-btn').forEach(b=>{
+    b.addEventListener('click', ()=>closeModal(b.dataset.modal));
+});
+document.querySelectorAll('.modal-backdrop').forEach(m=>{
+    m.addEventListener('click', e=>{ if(e.target===m) closeModal(m.id); });
+});
+
+// ─── SETTINGS ────────────────────────────────────────────
+const sSound   = document.getElementById('s-sound');
+const sVibe    = document.getElementById('s-vibe');
+const sSamples = document.getElementById('s-samples');
+const sLabel   = document.getElementById('sample-label');
+
+sSound.addEventListener('change',   e=>{ isSoundOn=e.target.checked; stor.set('sound',isSoundOn); });
+sVibe.addEventListener('change',    e=>{ isVibeOn =e.target.checked; stor.set('vibe',isVibeOn); });
+sSamples.addEventListener('input',  e=>{
+    sampleSize=parseInt(e.target.value);
+    sLabel.textContent=sampleSize+' ketukan';
+    stor.set('samples',sampleSize);
+    resetTap();
+});
+
+function loadSettings(){
+    const s=stor.get('sound'); if(s!==null){ isSoundOn=s==='true'; sSound.checked=isSoundOn; }
+    const v=stor.get('vibe');  if(v!==null){ isVibeOn =v==='true'; sVibe.checked =isVibeOn; }
+    const n=stor.get('samples'); if(n!==null){ sampleSize=parseInt(n); sSamples.value=sampleSize; sLabel.textContent=sampleSize+' ketukan'; }
+}
+
+// ─── LOG ENGINE ──────────────────────────────────────────
+function getLogs(){ try{ return JSON.parse(stor.get('logs')||'[]'); }catch(e){ return []; } }
+function setLogs(l){ stor.set('logs',JSON.stringify(l)); }
+
+function renderLogs(){
+    const logs = getLogs();
+    const el = document.getElementById('log-list');
+    if(!logs.length){
+        el.innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg><p>Belum ada data pengukuran disimpan.</p></div>';
+        return;
+    }
+    el.innerHTML='';
+    logs.forEach(log=>{
+        const d=new Date(log.ts);
+        const ds=d.toLocaleDateString('id-ID',{day:'2-digit',month:'short'});
+        const ts=d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+        const item=document.createElement('div');
+        item.className='log-item';
+        item.innerHTML=`
+            <div class="log-left">
+                <div class="log-badge ${log.cat}">${log.bpm}<small>BPM</small></div>
+                <div class="log-info">
+                    <span class="log-name">${esc(log.name)}</span>
+                    <span class="log-note">${esc(log.note)}</span>
+                    <span class="log-time">${ds}, ${ts} • <strong>${esc(log.lbl)}</strong></span>
+                </div>
+            </div>
+            <button class="log-del">✕</button>`;
+        item.querySelector('.log-del').addEventListener('click',()=>{
+            const ls=getLogs().filter(x=>x.id!==log.id);
+            setLogs(ls); renderLogs();
+        });
+        el.appendChild(item);
+    });
+}
+
+document.getElementById('btn-confirm-save').addEventListener('click',()=>{
+    const bpm = parseInt(bpmValue.textContent)||0;
+    const lbl = bpmStatus.textContent;
+    let cat='normal';
+    if(bpmCard.classList.contains('brady')) cat='brady';
+    if(bpmCard.classList.contains('tachy')) cat='tachy';
+    const entry={
+        id:'log_'+Date.now(), bpm, cat, lbl,
+        name: document.getElementById('p-name').value.trim()||'Pasien Tanpa Nama',
+        note: document.getElementById('p-notes').value.trim()||'-',
+        ts: new Date().toISOString()
+    };
+    const ls=getLogs(); ls.unshift(entry); setLogs(ls); renderLogs();
+    closeModal('modal-save'); resetTap();
+});
+
+document.getElementById('btn-clear').addEventListener('click',()=>{
+    if(confirm('Hapus semua riwayat pengukuran?')){ stor.del('logs'); renderLogs(); }
+});
+
+document.getElementById('btn-export').addEventListener('click',()=>{
+    const logs=getLogs();
+    if(!logs.length){ alert('Tidak ada data untuk diekspor.'); return; }
+    let csv='data:text/csv;charset=utf-8,ID,Tanggal,Waktu,BPM,Status,Nama,Catatan\n';
+    logs.forEach(l=>{
+        const d=new Date(l.ts);
+        csv+=`${l.id},${d.toLocaleDateString('id-ID')},${d.toLocaleTimeString('id-ID')},${l.bpm},${l.lbl},"${l.name.replace(/"/g,'""')}","${l.note.replace(/"/g,'""')}"\n`;
+    });
+    const a=document.createElement('a'); a.href=encodeURI(csv);
+    a.download='pulsetap_export_'+Date.now()+'.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+});
+
+function esc(s){ return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]||c)); }
+
+// ─── INIT ────────────────────────────────────────────────
+window.addEventListener('load',()=>{
+    initCanvas();
+    loadSettings();
+    renderLogs();
+    requestAnimationFrame(drawECG);
+});
+window.addEventListener('resize', initCanvas);
+</script>
+</body>
+</html>
