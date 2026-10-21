@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data: blob: https://fonts.googleapis.com https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline'; img-src 'self' data: blob:;">
+<meta name="referrer" content="no-referrer">
+<title>Virtual Cath Lab — Part of CardiologyVault</title>
+<meta name="description" content="Virtual Cath Lab — Part of CardiologyVault. Simulator angiografi koroner 3D interaktif: kinematika C-arm DICOM, fluoroskopi Beer–Lambert, foreshortening & overlap real-time, dominansi koroner, proyeksi standar, dan kuis.">
+<meta name="author" content="dr. Bayushi Eka Putra, Sp.JP, FIHA — Part of CardiologyVault">
+<meta name="theme-color" content="#060a13">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@600;700;800&display=swap">
+<style>
+:root{
+  --bg:#060a13;--bg2:#0a1020;--panel:rgba(14,21,38,.72);--panel2:rgba(20,29,52,.7);
+  --line:rgba(148,163,184,.14);--line2:rgba(148,163,184,.24);
+  --txt:#e7eef8;--mut:#8fa0ba;--dim:#5f6f89;
+  --cyan:#22d3ee;--blue:#38bdf8;--indigo:#818cf8;--violet:#a78bfa;--rose:#fb7185;--amber:#fbbf24;--green:#34d399;
+  --grad:linear-gradient(135deg,#38bdf8 0%,#818cf8 55%,#c084fc 100%);
+  --r:16px;--mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;--disp:'Outfit','Inter',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--sans);color:var(--txt);background:
+  radial-gradient(1100px 620px at 8% -8%,rgba(56,189,248,.13),transparent 60%),
+  radial-gradient(900px 520px at 100% 0%,rgba(129,140,248,.15),transparent 60%),
+  radial-gradient(800px 600px at 50% 120%,rgba(192,132,252,.08),transparent 60%),var(--bg);
+  min-height:100vh;-webkit-font-smoothing:antialiased;line-height:1.5}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(148,163,184,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,.035) 1px,transparent 1px);
+  background-size:44px 44px;mask-image:radial-gradient(ellipse at 50% 20%,#000 30%,transparent 75%)}
+a{color:var(--blue);text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+.wrap{position:relative;z-index:1}
+
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;padding:12px 24px;
+  background:rgba(6,10,19,.72);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px}
+.brand svg{width:40px;height:40px;filter:drop-shadow(0 4px 14px rgba(56,189,248,.35))}
+.brand-name{font-family:var(--disp);font-weight:800;font-size:17px;letter-spacing:.2px}
+.brand-sub{font-size:11.5px;color:var(--mut);letter-spacing:.3px}
+.topnav{display:flex;gap:4px;margin-left:auto}
+.topnav a{color:var(--mut);font-size:13px;font-weight:600;padding:7px 12px;border-radius:999px;transition:.2s}
+.topnav a:hover{color:var(--txt);background:rgba(148,163,184,.1)}
+.pill-vault{font-size:11px;font-weight:800;letter-spacing:1.4px;padding:7px 14px;border-radius:999px;color:#c7d2fe;
+  background:linear-gradient(135deg,rgba(99,102,241,.25),rgba(56,189,248,.18));border:1px solid rgba(129,140,248,.4)}
+
+/* ---------- hero ---------- */
+.hero{max-width:1680px;margin:0 auto;padding:22px 24px 14px;display:flex;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.hero h1{font-family:var(--disp);font-size:clamp(24px,2.6vw,36px);line-height:1.12;margin:6px 0 6px;letter-spacing:-.4px}
+.hero h1 span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.eyebrow{display:inline-flex;gap:8px;align-items:center;font-size:11px;font-weight:800;letter-spacing:1.3px;color:#7dd3fc;
+  background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.28);padding:5px 11px;border-radius:999px}
+.eyebrow i{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);animation:pulse 1.6s infinite}
+.hero p{margin:0;color:var(--mut);max-width:760px;font-size:14.5px}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+.badge{font-size:11.5px;font-weight:600;color:#cbd5e1;padding:6px 11px;border-radius:10px;background:var(--panel2);border:1px solid var(--line)}
+.badge b{color:var(--cyan);font-weight:700}
+
+/* ---------- simulator grid ---------- */
+.sim{max-width:1680px;margin:0 auto;padding:6px 24px 24px;display:grid;grid-template-columns:292px minmax(0,1fr) 390px;gap:16px;align-items:start}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px 14px 15px;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 10px 30px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.03);transition:border-color .25s}
+.card:hover{border-color:var(--line2)}
+.card h2,.card h3{margin:0 0 10px;font-size:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#a5b4fc;display:flex;align-items:center;gap:8px}
+.card h2 .dot,.card h3 .dot{width:8px;height:8px;border-radius:3px;background:var(--grad)}
+.card h2 .sp,.card h3 .sp{margin-left:auto;font-weight:600;letter-spacing:.3px;text-transform:none;color:var(--dim);font-size:11px}
+
+/* sliders */
+.ang{margin-bottom:12px}
+.ang-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.ang-top label{font-size:12px;color:var(--mut);font-weight:600}
+.ang-val{font-family:var(--mono);font-size:18px;font-weight:700;color:#fff;letter-spacing:.3px}
+.ang-val small{font-size:11px;color:var(--mut);font-weight:600;margin-left:4px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:30px;background:transparent;margin:0}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:6px;background:linear-gradient(90deg,#fb7185 0%,#334155 49.5%,#64748b 50%,#334155 50.5%,#38bdf8 100%)}
+input[type=range].beta::-webkit-slider-runnable-track{background:linear-gradient(90deg,#fbbf24 0%,#334155 49.5%,#64748b 50%,#334155 50.5%,#a78bfa 100%)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;margin-top:-7px;background:#fff;border:3px solid #0ea5e9;box-shadow:0 0 0 5px rgba(56,189,248,.18),0 4px 10px rgba(0,0,0,.4);transition:transform .15s}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.15)}
+input[type=range]::-moz-range-track{height:6px;border-radius:6px;background:linear-gradient(90deg,#fb7185,#334155 50%,#38bdf8)}
+input[type=range].beta::-moz-range-track{background:linear-gradient(90deg,#fbbf24,#334155 50%,#a78bfa)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid #0ea5e9}
+.ang-scale{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);font-family:var(--mono);margin-top:-2px}
+.nudges{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:4px}
+
+.btn{border:1px solid var(--line2);background:rgba(30,41,59,.6);color:var(--txt);font-size:12px;font-weight:600;padding:8px 10px;border-radius:10px;transition:all .18s;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn:hover{background:rgba(51,65,85,.75);border-color:rgba(148,163,184,.4);transform:translateY(-1px)}
+.btn:active{transform:translateY(0) scale(.98)}
+.btn.primary{background:linear-gradient(135deg,#0ea5e9,#6366f1);border-color:transparent;color:#fff;box-shadow:0 8px 22px rgba(56,130,246,.35)}
+.btn.primary:hover{filter:brightness(1.1)}
+.btn.inject{background:linear-gradient(135deg,#f43f5e,#f59e0b);border-color:transparent;color:#fff;box-shadow:0 8px 22px rgba(244,63,94,.35);font-size:13px;padding:11px}
+.btn.inject.running{animation:glow 1s infinite alternate}
+.btn svg{width:15px;height:15px}
+.seg{display:grid;gap:4px;padding:4px;border-radius:12px;background:rgba(2,6,23,.55);border:1px solid var(--line)}
+.seg.c3{grid-template-columns:repeat(3,1fr)}.seg.c4{grid-template-columns:repeat(4,1fr)}
+.seg button{border:0;background:transparent;color:var(--mut);font-size:12px;font-weight:700;padding:8px 4px;border-radius:9px;transition:.2s}
+.seg button:hover{color:var(--txt)}
+.seg button.on{background:linear-gradient(135deg,rgba(56,189,248,.25),rgba(129,140,248,.25));color:#fff;box-shadow:inset 0 0 0 1px rgba(125,211,252,.45)}
+.lbl{font-size:11px;color:var(--mut);font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin:12px 0 6px}
+.lbl:first-of-type{margin-top:0}
+
+.presets{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.preset{text-align:left;border:1px solid var(--line);background:rgba(15,23,42,.6);color:var(--txt);border-radius:11px;padding:8px 9px;transition:.2s;position:relative;overflow:hidden}
+.preset:hover{border-color:rgba(56,189,248,.5);transform:translateY(-1px);background:rgba(30,41,59,.7)}
+.preset.on{border-color:rgba(56,189,248,.8);background:linear-gradient(135deg,rgba(14,165,233,.22),rgba(99,102,241,.18))}
+.preset b{display:block;font-size:12px;font-weight:700}
+.preset span{font-family:var(--mono);font-size:10.5px;color:var(--mut)}
+.preset i{position:absolute;right:8px;top:9px;width:7px;height:7px;border-radius:50%}
+.preset i.left{background:var(--blue)}.preset i.right{background:var(--rose)}
+
+.toggles{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}
+.tg{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#cbd5e1;cursor:pointer;user-select:none;padding:4px 0}
+.tg input{display:none}
+.tg .sw{width:32px;height:18px;border-radius:999px;background:#1e293b;border:1px solid var(--line2);position:relative;flex:none;transition:.2s}
+.tg .sw::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#64748b;transition:.2s}
+.tg input:checked + .sw{background:linear-gradient(135deg,#0ea5e9,#6366f1);border-color:transparent}
+.tg input:checked + .sw::after{left:16px;background:#fff}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.actions .full{grid-column:1/-1}
+
+/* ---------- monitor ---------- */
+.monitor-card{padding:12px}
+.monitor{position:relative;margin:0 auto;width:100%;max-width:min(100%,calc(100vh - 150px));aspect-ratio:1/1;border-radius:14px;overflow:hidden;
+  background:#000;box-shadow:0 0 0 1px rgba(148,163,184,.18),0 0 0 7px #0b1120,0 0 0 8px rgba(148,163,184,.12),0 30px 60px rgba(0,0,0,.55)}
+.monitor canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#fluoro{image-rendering:auto}
+.monitor.invert #fluoro{filter:invert(1)}
+#fluoroOv{cursor:crosshair}
+.ov{position:absolute;pointer-events:none;font-family:var(--mono);color:#f8fafc;text-shadow:0 1px 2px rgba(0,0,0,.85),0 0 6px rgba(0,0,0,.6);font-size:clamp(10px,1.05vw,13px);line-height:1.35}
+.ov.tl{left:14px;top:12px}.ov.tr{right:14px;top:12px;text-align:right}.ov.bl{left:14px;bottom:12px}.ov.br{right:14px;bottom:12px;text-align:right}
+.ov .big{font-size:clamp(15px,1.7vw,22px);font-weight:700;letter-spacing:.5px}
+.ov .brandov{font-weight:700;letter-spacing:2px;font-size:clamp(9px,.9vw,11px);opacity:.9}
+.ov .rec{display:none;color:#fda4af;font-weight:700}
+.ov .rec.on{display:inline-block;animation:blink 1s steps(2) infinite}
+.ov .orient{position:absolute}
+.tip{position:absolute;pointer-events:none;z-index:5;background:rgba(2,6,23,.9);border:1px solid rgba(56,189,248,.45);color:#e2e8f0;font-size:12px;padding:6px 9px;border-radius:9px;white-space:nowrap;transform:translate(12px,-120%);display:none;font-family:var(--sans);box-shadow:0 8px 20px rgba(0,0,0,.4)}
+.tip b{color:var(--cyan)}
+.mon-info{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:12px;margin-top:14px}
+.vname{font-family:var(--disp);font-size:20px;font-weight:700;letter-spacing:.2px}
+.vname small{display:block;font-family:var(--mono);font-size:12px;color:var(--cyan);font-weight:600;margin-bottom:2px;letter-spacing:.4px}
+.vdesc{color:var(--mut);font-size:13px;margin-top:3px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font-size:11.5px;font-weight:600;padding:4px 9px;border-radius:999px;border:1px solid;font-family:var(--mono)}
+.chip.good{color:#6ee7b7;border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.08)}
+.chip.warn{color:#fcd34d;border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
+.chip.bad{color:#fda4af;border-color:rgba(251,113,133,.35);background:rgba(251,113,133,.08)}
+.mini-h{font-size:10.5px;font-weight:800;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
+
+/* quiz overlay */
+.quiz{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);width:min(92%,560px);z-index:6;display:none;
+  background:rgba(2,6,23,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(129,140,248,.45);border-radius:16px;padding:14px;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.quiz.on{display:block;animation:rise .35s ease}
+.quiz-h{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.quiz-h b{font-family:var(--disp);font-size:16px}
+.quiz-h .score{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--cyan)}
+.quiz-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.quiz-opts button{border:1px solid var(--line2);background:rgba(30,41,59,.7);color:var(--txt);border-radius:11px;padding:10px;font-weight:700;font-size:13px;transition:.15s}
+.quiz-opts button:hover{border-color:var(--indigo)}
+.quiz-opts button.ok{background:rgba(16,185,129,.25);border-color:#34d399}
+.quiz-opts button.no{background:rgba(244,63,94,.22);border-color:#fb7185}
+.quiz-fb{font-size:12.5px;color:#cbd5e1;margin-top:10px;min-height:18px}
+.quiz-row{display:flex;gap:8px;margin-top:10px;justify-content:flex-end}
+.quiz-mode .qhide{filter:blur(7px);opacity:.6;pointer-events:none;transition:filter .3s}
+
+/* ---------- right column ---------- */
+.room{position:relative;width:100%;aspect-ratio:16/11;border-radius:12px;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#14213d,#070b16 75%);border:1px solid var(--line)}
+.room canvas{width:100%;height:100%;display:block;cursor:grab}
+.room canvas:active{cursor:grabbing}
+.room .rhint{position:absolute;left:10px;top:9px;font-size:10.5px;color:var(--mut);background:rgba(2,6,23,.6);padding:4px 8px;border-radius:7px;pointer-events:none}
+.room .rbtns{position:absolute;right:8px;top:8px;display:flex;gap:4px}
+.room .rbtns button{font-size:10.5px;font-weight:700;color:#cbd5e1;background:rgba(2,6,23,.65);border:1px solid var(--line2);border-radius:7px;padding:4px 7px}
+.room .rbtns button:hover{color:#fff;border-color:var(--blue)}
+.room .rread{position:absolute;left:10px;bottom:9px;font-family:var(--mono);font-size:12px;font-weight:700;color:#e0f2fe;background:rgba(2,6,23,.6);padding:4px 8px;border-radius:7px;pointer-events:none}
+.pad-wrap{position:relative;width:100%;aspect-ratio:2/1.15;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.pad-wrap canvas{width:100%;height:100%;display:block;cursor:crosshair;touch-action:none}
+.legend{display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--mut);margin-top:8px}
+.legend .bar{flex:1;height:6px;border-radius:6px;background:linear-gradient(90deg,hsl(0,85%,50%),hsl(45,90%,50%),hsl(130,70%,45%))}
+.q-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.metric{background:rgba(2,6,23,.5);border:1px solid var(--line);border-radius:12px;padding:9px 10px}
+.metric .k{font-size:10px;color:var(--mut);font-weight:700;letter-spacing:.6px;text-transform:uppercase}
+.metric .v{font-family:var(--mono);font-size:20px;font-weight:700;margin-top:2px}
+.sel{width:100%;background:#0b1222;color:var(--txt);border:1px solid var(--line2);border-radius:10px;padding:9px 10px;font-size:13px;font-family:inherit;font-weight:600}
+.seglist{display:flex;flex-direction:column;gap:3px;max-height:260px;overflow:auto;padding-right:4px;margin-top:10px}
+.seglist::-webkit-scrollbar{width:6px}.seglist::-webkit-scrollbar-thumb{background:#334155;border-radius:6px}
+.srow{display:grid;grid-template-columns:62px 1fr 64px;align-items:center;gap:8px;border:1px solid transparent;background:transparent;color:var(--txt);padding:5px 6px;border-radius:8px;text-align:left;transition:.15s}
+.srow:hover{background:rgba(51,65,85,.4)}
+.srow.on{border-color:rgba(56,189,248,.55);background:rgba(14,165,233,.12)}
+.srow .n{font-family:var(--mono);font-size:11.5px;font-weight:700;display:flex;align-items:center;gap:6px}
+.srow .n i{width:7px;height:7px;border-radius:2px;flex:none}
+.srow .b{height:6px;border-radius:6px;background:#1e293b;overflow:hidden}
+.srow .b span{display:block;height:100%;border-radius:6px;transition:width .25s,background .25s}
+.srow .x{font-family:var(--mono);font-size:11px;color:var(--mut);text-align:right}
+
+/* ---------- guide ---------- */
+.guide{max-width:1280px;margin:0 auto;padding:30px 24px 10px}
+.sec{margin:0 0 44px;scroll-margin-top:80px}
+.sec-h{display:flex;align-items:flex-end;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+.sec-h .num{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--cyan);border:1px solid rgba(34,211,238,.35);padding:4px 9px;border-radius:8px}
+.sec-h h2{font-family:var(--disp);font-size:clamp(22px,2.2vw,28px);margin:0;letter-spacing:-.2px}
+.sec-h p{flex-basis:100%;margin:2px 0 0;color:var(--mut);font-size:14.5px;max-width:860px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.gcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;transition:.25s;position:relative;overflow:hidden}
+.gcard:hover{transform:translateY(-3px);border-color:rgba(56,189,248,.35);box-shadow:0 18px 40px rgba(0,0,0,.35)}
+.gcard h3{margin:8px 0 6px;font-size:16px;font-family:var(--disp)}
+.gcard p,.gcard li{color:#b8c4d6;font-size:13.5px}
+.gcard ul{padding-left:18px;margin:6px 0 0}
+.gcard li{margin:4px 0}
+.step{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-family:var(--mono);font-weight:700;font-size:13px;color:#fff;background:var(--grad);box-shadow:0 6px 16px rgba(99,102,241,.4)}
+kbd{font-family:var(--mono);font-size:11.5px;background:#0f172a;border:1px solid #334155;border-bottom-width:2px;padding:1px 6px;border-radius:6px;color:#e2e8f0}
+.formula{font-family:var(--mono);background:rgba(2,6,23,.6);border:1px solid var(--line);border-left:3px solid var(--cyan);border-radius:10px;padding:12px 14px;color:#e0f2fe;font-size:14px;margin:10px 0;overflow-x:auto}
+.tbl{width:100%;border-collapse:separate;border-spacing:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;font-size:13.5px}
+.tbl th{text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#a5b4fc;background:rgba(30,41,59,.6);padding:12px 14px;font-weight:800}
+.tbl td{padding:12px 14px;border-top:1px solid var(--line);color:#cbd5e1;vertical-align:middle}
+.tbl tr:hover td{background:rgba(56,189,248,.05)}
+.tbl td.mono{font-family:var(--mono);color:#fff;white-space:nowrap}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.6px;padding:3px 8px;border-radius:6px}
+.tag.l{color:#7dd3fc;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3)}
+.tag.r{color:#fda4af;background:rgba(251,113,133,.12);border:1px solid rgba(251,113,133,.3)}
+.goto{font-size:12px;font-weight:700;color:#fff;background:linear-gradient(135deg,#0ea5e9,#6366f1);border:0;padding:7px 12px;border-radius:9px;white-space:nowrap;transition:.2s}
+.goto:hover{filter:brightness(1.15);transform:translateX(2px)}
+.dom-pct{font-family:var(--disp);font-size:40px;font-weight:800;line-height:1;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.diag{width:100%;height:auto;display:block;margin-top:8px}
+.note{display:flex;gap:12px;align-items:flex-start;background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(251,113,133,.06));border:1px solid rgba(251,191,36,.3);border-radius:14px;padding:14px 16px;color:#fde68a;font-size:13.5px}
+.note svg{flex:none;width:20px;height:20px;margin-top:1px}
+.refs li{margin:7px 0;color:#b8c4d6;font-size:13.5px}
+footer{border-top:1px solid var(--line);margin-top:20px;padding:26px 24px 34px;background:rgba(2,6,23,.5)}
+.foot{max-width:1280px;margin:0 auto;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.foot .brand-name{font-size:15px}
+.foot small{color:var(--mut);font-size:12px;display:block}
+.foot .right{margin-left:auto;text-align:right}
+
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);opacity:0;z-index:100;background:rgba(2,6,23,.92);border:1px solid rgba(56,189,248,.45);color:#e0f2fe;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;transition:.3s;pointer-events:none;box-shadow:0 14px 34px rgba(0,0,0,.45)}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes blink{0%{opacity:1}100%{opacity:.2}}
+@keyframes glow{from{box-shadow:0 0 0 0 rgba(244,63,94,.6)}to{box-shadow:0 0 0 8px rgba(244,63,94,0)}}
+@keyframes rise{from{opacity:0;transform:translateX(-50%) translateY(14px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.sim .card{animation:fadeUp .6s ease both}
+.sim .col:nth-child(2) .card{animation-delay:.08s}.sim .col:nth-child(3) .card{animation-delay:.16s}
+
+@media (max-width:1380px){
+  .sim{grid-template-columns:280px minmax(0,1fr)}
+  .col.right{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:1000px){
+  .sim{grid-template-columns:1fr}
+  .col.right{grid-template-columns:1fr}
+  .grid3,.grid2{grid-template-columns:1fr}
+  .topnav{display:none}
+  .mon-info{grid-template-columns:1fr}
+  .badges{margin-left:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="topbar">
+  <div class="brand">
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#38bdf8"/><stop offset=".55" stop-color="#818cf8"/><stop offset="1" stop-color="#c084fc"/></linearGradient></defs>
+      <rect x="2" y="2" width="44" height="44" rx="13" fill="url(#lg1)"/>
+      <rect x="4.5" y="4.5" width="39" height="39" rx="11" fill="#0a1020" opacity=".55"/>
+      <path d="M24 36.5s-11-6.6-11-14.2a6 6 0 0 1 11-3.4a6 6 0 0 1 11 3.4c0 7.6-11 14.2-11 14.2z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/>
+      <path d="M10 25h7l2.5-5 3.5 9 3-6h12" fill="none" stroke="#7dd3fc" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div><div class="brand-name">Virtual Cath Lab</div><div class="brand-sub">Part of CardiologyVault · @bayushiep</div></div>
+  </div>
+  <nav class="topnav" aria-label="Navigasi">
+    <a href="#simulator">Simulator</a><a href="#panduan">Panduan</a><a href="#konvensi">Konvensi Sudut</a><a href="#proyeksi">Proyeksi Standar</a><a href="#fisika">Fisika &amp; Keamanan</a><a href="#referensi">Referensi</a>
+  </nav>
+  <span class="pill-vault">PART OF CARDIOLOGYVAULT</span>
+</header>
+
+<section class="hero" aria-label="Pendahuluan">
+  <div>
+    <span class="eyebrow"><i></i>TOOLS: MED STUDENT – SPECIALIST</span>
+    <h1>Virtual <span>Cath Lab</span></h1>
+    <p style="font-family:var(--disp);font-size:17px;font-weight:700;color:#c7d2fe;margin:0 0 6px;letter-spacing:.3px;">Part of CardiologyVault</p>
+    <p>Simulator angiografi koroner 3D interaktif: pahami hubungan sudut gantry C-arm dengan citra fluoroskopi 2D — foreshortening, overlap, dominansi, dan proyeksi standar langsung di browser, tanpa instalasi.</p>
+  </div>
+  <div class="badges">
+    <span class="badge"><b>DICOM</b> PS3.3 C.8.7.5</span>
+    <span class="badge"><b>Beer–Lambert</b> X-ray</span>
+    <span class="badge"><b>Real-time</b> Foreshortening</span>
+    <span class="badge"><b>Offline</b> · Single File</span>
+  </div>
+</section>
+
+<main id="simulator" class="sim">
+  <!-- LEFT: controls -->
+  <div class="col left">
+    <section class="card" aria-label="Gantry C-arm">
+      <h2><span class="dot"></span>Gantry C-Arm<span class="sp">α / β</span></h2>
+      <div class="ang">
+        <div class="ang-top"><label for="alpha">Rotasi α (RAO / LAO)</label><span class="ang-val qhide" id="alphaOut">LAO 45°</span></div>
+        <input type="range" id="alpha" class="qhide" min="-90" max="90" step="1" value="45" aria-label="Sudut alpha">
+        <div class="ang-scale"><span>RAO 90</span><span>AP</span><span>LAO 90</span></div>
+      </div>
+      <div class="ang">
+        <div class="ang-top"><label for="beta">Angulasi β (CAU / CRA)</label><span class="ang-val qhide" id="betaOut">CAU 35°</span></div>
+        <input type="range" id="beta" class="beta qhide" min="-45" max="45" step="1" value="-35" aria-label="Sudut beta">
+        <div class="ang-scale"><span>CAU 45</span><span>0</span><span>CRA 45</span></div>
+      </div>
+      <div class="nudges">
+        <button class="btn" id="nRAO" title="RAO 5°">◂ RAO</button>
+        <button class="btn" id="nLAO" title="LAO 5°">LAO ▸</button>
+        <button class="btn" id="nCAU" title="CAU 5°">▾ CAU</button>
+        <button class="btn" id="nCRA" title="CRA 5°">CRA ▴</button>
+      </div>
+      <button class="btn" id="btnAP" type="button" style-free="1">Reset ke AP 0° / 0°</button>
+    </section>
+
+    <section class="card" aria-label="Proyeksi standar">
+      <h2><span class="dot"></span>Proyeksi Standar<span class="sp">klik untuk memutar gantry</span></h2>
+      <div class="presets" id="presetGrid"></div>
+    </section>
+
+    <section class="card" aria-label="Sistem dan tampilan">
+      <h2><span class="dot"></span>Sistem &amp; Tampilan</h2>
+      <div class="lbl">Sistem yang diopasifikasi</div>
+      <div class="seg c3" id="sysSeg"><button data-sys="left" class="on">Kiri</button><button data-sys="right">Kanan</button><button data-sys="both">Keduanya</button></div>
+      <div class="lbl">Dominansi</div>
+      <div class="seg c3" id="domSeg"><button data-dom="right" class="on">Kanan</button><button data-dom="left">Kiri</button><button data-dom="co">Kodominan</button></div>
+      <div class="lbl">Field of View (detektor)</div>
+      <div class="seg c4" id="fovSeg"><button data-fov="25">25 cm</button><button data-fov="20">20 cm</button><button data-fov="17" class="on">17 cm</button><button data-fov="13">13 cm</button></div>
+      <div class="lbl">Tampilan</div>
+      <div class="toggles">
+        <label class="tg"><input type="checkbox" id="tRoadmap" checked><span class="sw"></span>Roadmap kontras</label>
+        <label class="tg"><input type="checkbox" id="tBeat" checked><span class="sw"></span>Detak jantung</label>
+        <label class="tg"><input type="checkbox" id="tNoise" checked><span class="sw"></span>Quantum mottle</label>
+        <label class="tg"><input type="checkbox" id="tLabels"><span class="sw"></span>Label segmen</label>
+        <label class="tg"><input type="checkbox" id="tColor"><span class="sw"></span>Warna teritori</label>
+        <label class="tg"><input type="checkbox" id="tInvert"><span class="sw"></span>Invert (negatif)</label>
+      </div>
+    </section>
+
+    <section class="card" aria-label="Aksi">
+      <h2><span class="dot"></span>Aksi</h2>
+      <div class="actions">
+        <button class="btn inject full" id="btnInject" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 2l4 4M17 7l-9.5 9.5M14 4l6 6M9 11l4 4M7.5 16.5L3 21"/></svg>Injeksi Kontras (Cine)</button>
+        <button class="btn" id="btnQuiz" type="button">🎯 Kuis Proyeksi</button>
+        <button class="btn" id="btnShot" type="button">📸 Simpan PNG</button>
+        <button class="btn full" id="btnShare" type="button">🔗 Salin tautan sudut ini</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- CENTER: fluoroscopy monitor -->
+  <div class="col center">
+    <section class="card monitor-card" aria-label="Viewport detektor fluoroskopi">
+      <div class="monitor" id="monitor">
+        <canvas id="fluoro" width="720" height="720" aria-label="Citra fluoroskopi simulasi"></canvas>
+        <canvas id="fluoroOv" width="720" height="720" aria-label="Lapisan label"></canvas>
+        <div class="ov tl qhide"><div class="big" id="ovA">LAO 45°</div><div class="big" id="ovB">CAU 35°</div><div id="ovView">Spider View</div></div>
+        <div class="ov tr"><div class="brandov">VIRTUAL CATH LAB</div><div style="font-size:10px;color:#a5b4fc;letter-spacing:1px;font-weight:700;">PART OF CARDIOLOGYVAULT</div><div id="ovClock">--</div><div class="rec" id="ovRec">● CINE 15 fps <span id="ovFrame">F000</span></div></div>
+        <div class="ov bl"><div id="ovFov">FOV 17 cm · SID 1140 mm</div><div id="ovHr">HR 72 bpm · Kontras: Kiri</div></div>
+        <div class="ov br"><div id="ovDom">Dominansi: Kanan</div><div>@bayushiep</div></div>
+        <div class="tip" id="tip"></div>
+        <div class="quiz" id="quiz" role="dialog" aria-label="Kuis proyeksi">
+          <div class="quiz-h"><span>🎯</span><b>Proyeksi apa ini?</b><span class="score" id="quizScore">Skor 0/0</span></div>
+          <div class="quiz-opts" id="quizOpts"></div>
+          <div class="quiz-fb" id="quizFb"></div>
+          <div class="quiz-row"><button class="btn" id="quizClose" type="button">Tutup kuis</button><button class="btn primary" id="quizNext" type="button">Soal berikutnya ▸</button></div>
+        </div>
+      </div>
+      <div class="mon-info">
+        <div>
+          <div class="vname qhide" id="vName"><small id="vAngles">LAO 45° · CAU 35°</small>Spider View</div>
+          <div class="vdesc qhide" id="vDesc">—</div>
+        </div>
+        <div>
+          <div class="mini-h">Terlihat optimal pada sudut ini</div>
+          <div class="chips" id="goodChips"></div>
+          <div class="mini-h" id="warnH">Perhatian (memendek / tumpang tindih)</div>
+          <div class="chips" id="warnChips"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- RIGHT: room, pad, quality -->
+  <div class="col right">
+    <section class="card" aria-label="Ruang cath lab 3D">
+      <h3><span class="dot"></span>Cath Lab 3D<span class="sp">orientasi fisik gantry</span></h3>
+      <div class="room qhide" id="roomWrap">
+        <canvas id="room" aria-label="Tampilan 3D ruang cath lab"></canvas>
+        <span class="rhint">Seret = putar · Scroll = zoom</span>
+        <div class="rbtns"><button data-cam="op">Operator</button><button data-cam="top">Atas</button><button data-cam="head">Kepala</button></div>
+        <span class="rread" id="roomRead">LAO 45° · CAU 35°</span>
+      </div>
+    </section>
+    <section class="card" aria-label="Angle pad">
+      <h3><span class="dot"></span>Angle Pad<span class="sp">seret untuk memilih sudut</span></h3>
+      <div class="pad-wrap qhide"><canvas id="pad" aria-label="Peta sudut RAO LAO terhadap CRA CAU"></canvas></div>
+      <div class="legend"><span>Buruk</span><div class="bar"></div><span>Optimal</span></div>
+      <label class="tg" for="tHeat"><input type="checkbox" id="tHeat" checked><span class="sw"></span>Heatmap kualitas segmen target</label>
+    </section>
+    <section class="card" aria-label="Kualitas proyeksi">
+      <h3><span class="dot"></span>Kualitas Proyeksi<span class="sp">klik pembuluh di layar</span></h3>
+      <select class="sel" id="tgtSel" aria-label="Segmen target"></select>
+      <div class="q-metrics">
+        <div class="metric"><div class="k">Foreshort.</div><div class="v" id="mFS">–</div></div>
+        <div class="metric"><div class="k">Overlap</div><div class="v" id="mOV">–</div></div>
+        <div class="metric"><div class="k">Skor</div><div class="v" id="mSC">–</div></div>
+      </div>
+      <button class="btn primary" id="btnBest" type="button">✦ Cari sudut optimal untuk segmen ini</button>
+      <div class="seglist" id="segList"></div>
+    </section>
+  </div>
+</main>
+
+<!-- =================== PANDUAN =================== -->
+<div class="guide">
+  <section class="sec" id="panduan">
+    <div class="sec-h"><span class="num">01</span><h2>Cara Menggunakan Simulator</h2><p>Simulator mengintegrasikan dua viewport terkoordinasi: ruang cath lab 3D (orientasi fisik gantry) dan panel detektor fluoroskopi 2D (citra proyeksi sinar-X), ditambah Angle Pad dan analisis kualitas proyeksi.</p></div>
+    <div class="grid3">
+      <article class="gcard"><div class="step">1</div><h3>Atur gantry</h3><p>Geser slider <b>α</b> (RAO ↔ LAO) dan <b>β</b> (CAU ↔ CRA), seret titik di <b>Angle Pad</b>, atau gunakan keyboard <kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> (tahan <kbd>Shift</kbd> = 5°).</p></article>
+      <article class="gcard"><div class="step">2</div><h3>Pilih proyeksi standar</h3><p>Klik kartu preset (Spider, RAO Caudal, RAO Cranial, dst.). Gantry berputar halus ke sudut tersebut, dan sistem kontras yang relevan otomatis dipilih.</p></article>
+      <article class="gcard"><div class="step">3</div><h3>Sistem &amp; dominansi</h3><p>Pilih injeksi koroner <b>kiri</b> (LM–LAD–LCx), <b>kanan</b> (RCA), atau keduanya. Ganti dominansi untuk melihat re-parenting PDA/PL secara langsung.</p></article>
+      <article class="gcard"><div class="step">4</div><h3>Injeksi kontras</h3><p>Tekan <b>Injeksi Kontras</b> atau <kbd>Space</kbd>: kontras mengisi pohon koroner dari ostium ke distal lalu <i>washout</i>. Matikan <b>Roadmap</b> untuk pengalaman fluoroskopi murni.</p></article>
+      <article class="gcard"><div class="step">5</div><h3>Evaluasi kualitas</h3><p>Klik pembuluh di layar (atau pilih di daftar) sebagai <b>segmen target</b>. Baca foreshortening, overlap, dan skor; lihat <b>heatmap</b> di Angle Pad, lalu tekan <b>Cari sudut optimal</b>.</p></article>
+      <article class="gcard"><div class="step">6</div><h3>Kuis &amp; berbagi</h3><p><b>Kuis Proyeksi</b> menyembunyikan sudut — tebak proyeksinya dari citra saja. Simpan frame sebagai PNG atau salin tautan (sudut tersimpan di URL, misal <code>#a=40&amp;b=30&amp;sys=right&amp;dom=co</code>).</p></article>
+    </div>
+  </section>
+
+  <section class="sec" id="konvensi">
+    <div class="sec-h"><span class="num">02</span><h2>Konvensi Sudut C-Arm (DICOM PS3.3 C.8.7.5)</h2><p>Nama proyeksi selalu mengacu pada <b>posisi detektor (image intensifier / flat panel)</b> terhadap pasien — bukan posisi tabung sinar-X. Tabung selalu berada di sisi berlawanan.</p></div>
+    <div class="grid2">
+      <article class="gcard">
+        <h3>α — Rotasi primer (RAO / LAO)</h3>
+        <p>α &gt; 0 = <b>LAO</b> (detektor ke kiri-anterior pasien) · α &lt; 0 = <b>RAO</b> · α = 0 = AP. Dilihat dari kaki pasien, LAO memutar gantry searah jarum jam.</p>
+        <svg class="diag" viewBox="0 0 420 210" role="img" aria-label="Diagram rotasi RAO dan LAO dilihat dari kaki pasien">
+          <defs><marker id="ar" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#7dd3fc"/></marker></defs>
+          <text x="210" y="16" fill="#8fa0ba" font-size="11" text-anchor="middle" font-family="Inter">Tampak dari kaki pasien (pasien telentang)</text>
+          <path d="M80 130 A130 130 0 0 1 340 130" fill="none" stroke="#334155" stroke-width="2" stroke-dasharray="4 5"/>
+          <ellipse cx="210" cy="140" rx="78" ry="46" fill="#1e293b" stroke="#475569"/>
+          <ellipse cx="236" cy="132" rx="22" ry="16" fill="#be123c" opacity=".75"/>
+          <rect x="196" y="168" width="28" height="14" rx="4" fill="#64748b"/>
+          <text x="210" y="105" fill="#cbd5e1" font-size="10" text-anchor="middle" font-family="Inter">ANTERIOR</text>
+          <text x="120" y="144" fill="#fda4af" font-size="11" font-weight="700" text-anchor="middle" font-family="Inter">R</text>
+          <text x="300" y="144" fill="#7dd3fc" font-size="11" font-weight="700" text-anchor="middle" font-family="Inter">L</text>
+          <rect x="190" y="26" width="40" height="10" rx="3" fill="#e2e8f0"/><text x="210" y="50" fill="#e2e8f0" font-size="10.5" text-anchor="middle" font-family="JetBrains Mono">AP</text>
+          <g transform="rotate(45 210 140)"><rect x="190" y="26" width="40" height="10" rx="3" fill="#38bdf8"/></g>
+          <text x="318" y="62" fill="#7dd3fc" font-size="11" font-weight="700" font-family="JetBrains Mono">LAO 45°</text>
+          <g transform="rotate(-30 210 140)"><rect x="190" y="26" width="40" height="10" rx="3" fill="#fb7185"/></g>
+          <text x="92" y="50" fill="#fda4af" font-size="11" font-weight="700" font-family="JetBrains Mono">RAO 30°</text>
+          <path d="M238 34 A107 107 0 0 1 290 62" fill="none" stroke="#7dd3fc" stroke-width="2" marker-end="url(#ar)"/>
+        </svg>
+      </article>
+      <article class="gcard">
+        <h3>β — Angulasi sekunder (CRA / CAU)</h3>
+        <p>β &gt; 0 = <b>Cranial</b> (detektor condong ke arah kepala) · β &lt; 0 = <b>Caudal</b> (ke arah kaki). Pada AP, sisi kiri pasien tampil di <b>kanan</b> layar, kepala di atas.</p>
+        <svg class="diag" viewBox="0 0 420 210" role="img" aria-label="Diagram angulasi cranial dan caudal">
+          <text x="210" y="16" fill="#8fa0ba" font-size="11" text-anchor="middle" font-family="Inter">Tampak samping (kepala di kanan)</text>
+          <rect x="60" y="150" width="300" height="10" rx="4" fill="#334155"/>
+          <rect x="80" y="122" width="230" height="28" rx="14" fill="#1e293b" stroke="#475569"/>
+          <circle cx="330" cy="134" r="18" fill="#1e293b" stroke="#475569"/>
+          <ellipse cx="230" cy="128" rx="16" ry="10" fill="#be123c" opacity=".75"/>
+          <text x="330" y="176" fill="#cbd5e1" font-size="10" text-anchor="middle" font-family="Inter">KEPALA</text>
+          <text x="80" y="176" fill="#cbd5e1" font-size="10" text-anchor="middle" font-family="Inter">KAKI</text>
+          <rect x="210" y="34" width="40" height="10" rx="3" fill="#e2e8f0"/>
+          <g transform="rotate(30 230 128)"><rect x="210" y="34" width="40" height="10" rx="3" fill="#a78bfa"/></g>
+          <g transform="rotate(-30 230 128)"><rect x="210" y="34" width="40" height="10" rx="3" fill="#fbbf24"/></g>
+          <text x="300" y="58" fill="#c4b5fd" font-size="11" font-weight="700" font-family="JetBrains Mono">CRA 30°</text>
+          <text x="110" y="58" fill="#fcd34d" font-size="11" font-weight="700" font-family="JetBrains Mono">CAU 30°</text>
+          <line x1="230" y1="128" x2="230" y2="48" stroke="#7dd3fc" stroke-dasharray="3 4"/>
+        </svg>
+      </article>
+    </div>
+    <div class="grid3" style-free="1">
+      <article class="gcard"><h3>Tip orientasi cepat</h3><ul><li>Kolom vertebra tampak di <b>kiri</b> layar pada RAO dan di <b>kanan</b> layar pada LAO.</li><li>Pada AP, kiri pasien = kanan layar (konvensi radiologi).</li></ul></article>
+      <article class="gcard"><h3>Kranial vs kaudal</h3><ul><li>Angulasi <b>kranial</b> "membuka" LAD dan percabangan diagonal.</li><li>Angulasi <b>kaudal</b> membuka LM, LCx, dan cabang marginal.</li></ul></article>
+      <article class="gcard"><h3>Dua proyeksi ortogonal</h3><ul><li>Setiap segmen sebaiknya dinilai pada ≥ 2 proyeksi yang berbeda ±90° sebelum menyimpulkan derajat stenosis.</li></ul></article>
+    </div>
+  </section>
+
+  <section class="sec" id="proyeksi">
+    <div class="sec-h"><span class="num">03</span><h2>Peta Sudut Proyeksi Standar</h2><p>Matriks acuan klinis yang juga ditandai pada Angle Pad. Klik <b>Lihat</b> untuk memutar gantry simulator ke sudut tersebut.</p></div>
+    <div style-free="1">
+    <table class="tbl" id="projTable">
+      <thead><tr><th>Proyeksi</th><th>Rotasi (α)</th><th>Angulasi (β)</th><th>Sistem</th><th>Segmen target (minim foreshortening)</th><th></th></tr></thead>
+      <tbody id="projBody"></tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="sec" id="kualitas">
+    <div class="sec-h"><span class="num">04</span><h2>Foreshortening &amp; Overlap</h2><p>Visualisasi lesi optimal menuntut pemendekan visual serendah mungkin dan tidak ada cabang lain yang menumpuk di atas segmen target.</p></div>
+    <div class="grid2">
+      <article class="gcard"><h3>Pemendekan visual (foreshortening)</h3>
+        <div class="formula">FS % = (1 − L<sub>proj</sub> / L<sub>3D</sub>) × 100%</div>
+        <ul><li><b>0%</b>: pembuluh tegak lurus berkas sinar — panjang tampak maksimal.</li><li><b>100%</b>: pembuluh sejajar berkas sinar — tampak sebagai satu titik.</li><li>Panduan simulator: <span class="chip good">≤ 10% ideal</span> <span class="chip warn">10–25% dapat diterima</span> <span class="chip bad">&gt; 25% hindari untuk ukur panjang lesi/stent</span></li></ul>
+      </article>
+      <article class="gcard"><h3>Tumpang tindih (overlap)</h3>
+        <p>Overlap dihitung sebagai fraksi titik segmen target yang proyeksinya berimpit (jarak 2D &lt; jumlah radius lumen + 0,8 mm) dengan pembuluh lain yang secara spasial tidak bersebelahan.</p>
+        <div class="formula">Skor = (1 − FS) × (1 − Overlap) × 100</div>
+        <p>Heatmap Angle Pad menghitung skor ini untuk seluruh kombinasi α (−90…+90°) × β (−45…+45°) dengan langkah 5°.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="sec" id="dominansi">
+    <div class="sec-h"><span class="num">05</span><h2>Varian Dominansi Koroner</h2><p>Dominansi ditentukan oleh arteri yang memberikan PDA dan mencapai crux cordis. Simulator mengimplementasikannya melalui penyambungan ulang topologi pohon (tree re-parenting).</p></div>
+    <div class="grid3">
+      <article class="gcard"><div class="dom-pct">~85%</div><h3>Dominan kanan</h3><p>PDA dan cabang posterolateral berasal dari RCA distal. LCx berakhir di mid-sulcus atrioventrikular dan tidak mencapai crux.</p></article>
+      <article class="gcard"><div class="dom-pct">~8%</div><h3>Dominan kiri</h3><p>PDA dan PL berasal dari LCx distal. RCA berukuran kecil (hipoplastik) dan berakhir sebelum crux.</p></article>
+      <article class="gcard"><div class="dom-pct">~7%</div><h3>Kodominan</h3><p>PDA berasal dari RCA, sedangkan cabang-cabang posterolateral berasal dari LCx.</p></article>
+    </div>
+  </section>
+
+  <section class="sec" id="fisika">
+    <div class="sec-h"><span class="num">06</span><h2>Fisika Fluoroskopi &amp; Keselamatan Radiasi</h2><p>Pembuluh tampak sebagai bayangan gelap pada latar abu-abu karena kontras iodin menyerap foton sinar-X.</p></div>
+    <div class="grid2">
+      <article class="gcard"><h3>Atenuasi Beer–Lambert</h3>
+        <div class="formula">x(r) = 2·√(R² − r²) &nbsp;&nbsp;→&nbsp;&nbsp; I(r) = I₀ · e<sup>−μ·x(r)</sup></div>
+        <ul><li><b>Quantum mottle</b>: derau foton dosis rendah (overlay Gaussian).</li><li><b>Vignetting</b>: intensitas berkurang ke tepi detektor.</li><li><b>Cardiac jitter</b>: Δx = sin(t·4)·0,4 mm + kontraksi sistolik.</li><li><b>Magnifikasi cone-beam</b>: objek yang lebih dekat ke tabung tampak lebih besar (SOD 720 / SID 1140 mm).</li></ul>
+      </article>
+      <article class="gcard"><h3>Tip keselamatan radiasi (ALARA)</h3>
+        <ul><li>Operator umumnya berdiri di sisi kanan pasien; pada proyeksi <b>LAO</b> tabung berada di sisi operator sehingga hamburan (scatter) ke operator meningkat.</li><li>Angulasi curam (kranial/kaudal dalam) menambah tebal jaringan yang ditembus → dosis pasien dan scatter naik.</li><li>Kolimasi rapat, frame rate rendah (7,5–15 fps), jarak tabung–pasien maksimal, detektor sedekat mungkin ke pasien.</li><li>Gunakan simulator ini untuk merencanakan sudut sebelum sine — kurangi sine "coba-coba".</li></ul>
+      </article>
+    </div>
+  </section>
+
+  <section class="sec" id="shortcut">
+    <div class="sec-h"><span class="num">07</span><h2>Pintasan Keyboard</h2></div>
+    <div class="grid3">
+      <article class="gcard"><ul><li><kbd>←</kbd> / <kbd>→</kbd> : RAO / LAO 1° (<kbd>Shift</kbd> 5°)</li><li><kbd>↑</kbd> / <kbd>↓</kbd> : CRA / CAU 1° (<kbd>Shift</kbd> 5°)</li></ul></article>
+      <article class="gcard"><ul><li><kbd>Space</kbd> : injeksi kontras</li><li><kbd>L</kbd> : label segmen · <kbd>I</kbd> : invert</li></ul></article>
+      <article class="gcard"><ul><li><kbd>1</kbd>–<kbd>9</kbd> : proyeksi standar</li><li><kbd>0</kbd> : reset AP · <kbd>O</kbd> : cari sudut optimal</li></ul></article>
+    </div>
+  </section>
+
+  <section class="sec" id="referensi">
+    <div class="sec-h"><span class="num">08</span><h2>Referensi</h2></div>
+    <article class="gcard">
+      <ul class="refs">
+        <li>Konsep dasar arsitektur: AngioView / CathLabSimulator (DevRush/iiviewer) oleh Annas Rahman, MD — coronary angiography view simulator.</li>
+        <li>NEMA. DICOM PS3.3 Section C.8.7.5 — X-Ray Positioner Module.</li>
+        <li>Dodge JT Jr, Brown BG, Bolson EL, Dodge HT. Lumen diameter of normal human coronary arteries. <i>Circulation</i> 1992;86:232–246.</li>
+        <li>Dodge JT Jr, et al. Intrathoracic spatial location of specified coronary segments on the normal human heart. <i>Circulation</i> 1988;78:1167–1180.</li>
+        <li>Database Center for Life Science (DBCLS). BodyParts3D (CC BY 4.0) — rujukan anatomi 3D.</li>
+      </ul>
+    </article>
+    <div class="note" role="note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+      <div><b>Untuk tujuan edukasi.</b> Model anatomi bersifat skematik (populasi normal) dan bukan perangkat medis. Jangan gunakan sebagai dasar keputusan klinis individual — sudut optimal pada pasien nyata bervariasi menurut anatomi, posisi jantung, dan habitus tubuh.</div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="foot">
+    <div class="brand">
+      <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="2" y="2" width="44" height="44" rx="13" fill="url(#lg1)"/><rect x="4.5" y="4.5" width="39" height="39" rx="11" fill="#0a1020" opacity=".55"/><path d="M24 36.5s-11-6.6-11-14.2a6 6 0 0 1 11-3.4a6 6 0 0 1 11 3.4c0 7.6-11 14.2-11 14.2z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/><path d="M10 25h7l2.5-5 3.5 9 3-6h12" fill="none" stroke="#7dd3fc" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div><div class="brand-name">Virtual Cath Lab</div><small>Part of CardiologyVault · dr. Bayushi Eka Putra, Sp.JP, FIHA · @bayushiep</small></div>
+    </div>
+    <div class="right"><small>© 2026 Virtual Cath Lab · Part of CardiologyVault. Hak cipta dilindungi.</small><small>Single-file HTML · Berjalan offline</small></div>
+  </div>
+</footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(()=>{'use strict';
+/* =====================================================================
+   Virtual Cath Lab — Part of CardiologyVault
+   AngioView Coronary Angiography Simulator
+   Pure JS / Canvas 2D, no external dependencies.
+   ===================================================================== */
+const $=id=>document.getElementById(id);
+const DEG=Math.PI/180;
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
+const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
+const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+const mul=(a,s)=>[a[0]*s,a[1]*s,a[2]*s];
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const len=a=>Math.hypot(a[0],a[1],a[2]);
+const norm=a=>{const l=len(a)||1;return[a[0]/l,a[1]/l,a[2]/l];};
+const fmtA=a=>{a=Math.round(a);return a===0?'AP 0°':(a>0?'LAO ':'RAO ')+Math.abs(a)+'°';};
+const fmtB=b=>{b=Math.round(b);return b===0?'STRAIGHT 0°':(b>0?'CRA ':'CAU ')+Math.abs(b)+'°';};
+const fmtBs=b=>{b=Math.round(b);return b===0?'0°':(b>0?'CRA ':'CAU ')+Math.abs(b)+'°';};
+
+/* ---------------- C-arm kinematics (DICOM PS3.3 C.8.7.5) ----------------
+   alpha: RAO(-) / LAO(+), beta: CAU(-) / CRA(+).
+   cam = viewer/detector direction; forward f points detector -> isocenter -> source.
+   Screen: right = r, up = u = r x f  (patient left -> screen right, head -> up). */
+function carmBasis(alpha,beta){
+  const a=alpha*DEG,b=beta*DEG;
+  const cam=[Math.sin(a)*Math.cos(b),Math.sin(b),Math.cos(a)*Math.cos(b)];
+  const f=mul(cam,-1);
+  const r=norm([-f[2],0,f[0]]);
+  const u=cross(r,f);
+  return{cam,f,r,u};
+}
+function calculateForeshortening(pts,f){
+  if(pts.length<2)return 0;let T=0,P=0;
+  for(let i=0;i<pts.length-1;i++){const d=sub(pts[i+1],pts[i]);const L=len(d);if(!L)continue;T+=L;const al=dot(d,f);P+=Math.sqrt(Math.max(0,L*L-al*al));}
+  return T?clamp((1-P/T)*100,0,100):0;
+}
+
+/* ---------------- Heart frame & anatomy ----------------
+   Body coords (mm): +X patient left, +Y cranial, +Z anterior. Isocenter (0,0,0) ≈ heart centre. */
+const S=1.15;
+const AX=norm([Math.cos(30*DEG)*Math.sin(45*DEG),-Math.sin(30*DEG),Math.cos(30*DEG)*Math.cos(45*DEG)]); // base -> apex
+const E0=norm(sub([0,0,1],mul(AX,AX[2])));   // theta 0 : anterior
+const E90=norm(cross(E0,AX));                // theta 90: leftward (obtuse margin)
+const ORIGIN=mul(AX,-30*S);
+const R=w=>{const t=(w-10)/80;return Math.abs(t)>=1?0:40*Math.sqrt(1-t*t);};
+const loc=(th,w,r)=>{const c=Math.cos(th*DEG),s=Math.sin(th*DEG);return add(add(ORIGIN,mul(AX,w*S)),add(mul(E0,r*S*c),mul(E90,r*S*s)));};
+const surf=(th,w,h=1.1)=>loc(th,w,R(w)+h);
+function snapSurf(p,h=1.1){const d=sub(p,ORIGIN);const wS=dot(d,AX);const rv=sub(d,mul(AX,wS));const l=len(rv);if(l<1e-6)return p;return add(add(ORIGIN,mul(AX,wS)),mul(rv,(R(wS/S)+h)*S/l));}
+
+const TERR_COL={LM:'#fbbf24',LAD:'#38bdf8',LCx:'#a78bfa',RCA:'#fb7185'};
+const TERR_RGB={LM:[251,191,36],LAD:[56,189,248],LCx:[167,139,250],RCA:[251,113,133]};
+
+const SEG_DEFS=[
+ {id:'lm',name:'Left Main',short:'LM',terr:'LM',sys:'left',parent:null,r:[2.25,2.05],epi:false,main:true,pts:()=>[loc(30,-12,24),loc(38,-7,32),surf(45,-2)]},
+ {id:'lad-p',name:'Proximal LAD',short:'pLAD',terr:'LAD',sys:'left',parent:'lm',r:[1.85,1.6],epi:true,main:true,pts:()=>[surf(45,-2),surf(40,6),surf(35,14),surf(32,22)]},
+ {id:'lad-m',name:'Mid LAD',short:'mLAD',terr:'LAD',sys:'left',parent:'lad-p',r:[1.55,1.25],epi:true,main:true,pts:()=>[surf(32,22),surf(30,34),surf(29,46),surf(28,56)]},
+ {id:'lad-d',name:'Distal LAD',short:'dLAD',terr:'LAD',sys:'left',parent:'lad-m',r:[1.2,0.55],epi:true,main:true,pts:()=>[surf(28,56),surf(27,68),surf(26,78),surf(24,85),loc(120,89.6,3),surf(205,86),surf(208,80)]},
+ {id:'d1',name:'Diagonal 1',short:'D1',terr:'LAD',sys:'left',parent:'lad-p',r:[1.15,0.6],epi:true,main:true,pts:()=>[surf(33,20),surf(48,28),surf(62,40),surf(70,55),surf(74,66)]},
+ {id:'d2',name:'Diagonal 2',short:'D2',terr:'LAD',sys:'left',parent:'lad-m',r:[0.95,0.5],epi:true,main:true,pts:()=>[surf(29,44),surf(44,52),surf(56,63),surf(60,74)]},
+ {id:'s1',name:'Septal 1',short:'S1',terr:'LAD',sys:'left',parent:'lad-p',r:[0.75,0.35],epi:false,pts:()=>[surf(33,18),loc(31,24,R(24)-8),loc(30,33,R(33)-16),loc(30,42,R(42)-21)]},
+ {id:'s2',name:'Septal 2',short:'S2',terr:'LAD',sys:'left',parent:'lad-m',r:[0.6,0.3],epi:false,pts:()=>[surf(29,38),loc(29,44,R(44)-8),loc(29,52,R(52)-15)]},
+ {id:'lcx-p',name:'Proximal LCx',short:'pLCx',terr:'LCx',sys:'left',parent:'lm',r:[1.65,1.45],epi:true,main:true,pts:()=>[surf(45,-2),surf(62,-1),surf(80,0),surf(95,1)]},
+ {id:'om1',name:'Obtuse Marginal 1',short:'OM1',terr:'LCx',sys:'left',parent:'lcx-p',r:[1.15,0.6],epi:true,main:true,pts:()=>[surf(92,1),surf(98,14),surf(102,30),surf(102,48),surf(98,62)]},
+ {id:'lcx-m',name:'Mid–Distal LCx',short:'dLCx',terr:'LCx',sys:'left',parent:'lcx-p',r:[1.35,1.05],epi:true,main:true,pts:()=>[surf(95,1),surf(112,2),surf(128,3),surf(142,3)]},
+ {id:'om2',name:'Obtuse Marginal 2',short:'OM2',terr:'LCx',sys:'left',parent:'lcx-m',r:[1.0,0.5],epi:true,main:true,pts:()=>[surf(126,3),surf(132,18),surf(136,36),surf(134,54)]},
+ {id:'lcx-d',name:'LCx AV-groove distal',short:'LCx-AV',terr:'LCx',sys:'left',parent:'lcx-m',dom:['left','co'],r:[1.05,0.85],epi:true,main:true,pts:d=>d==='left'?[surf(142,3),surf(165,3),surf(190,3),surf(213,2)]:[surf(142,3),surf(162,3),surf(184,3)]},
+ {id:'lpl',name:'Posterolateral (dari LCx)',short:'L-PL',terr:'LCx',sys:'left',parent:'lcx-d',dom:['left','co'],r:[0.85,0.45],epi:true,main:true,pts:()=>[surf(170,3),surf(172,18),surf(174,36),surf(172,50)]},
+ {id:'lpda',name:'PDA (dari LCx)',short:'L-PDA',terr:'LCx',sys:'left',parent:'lcx-d',dom:['left'],r:[1.0,0.5],epi:true,main:true,pts:()=>[surf(213,2),surf(213,16),surf(212,34),surf(210,52),surf(208,66)]},
+ {id:'rca-p',name:'Proximal RCA',short:'pRCA',terr:'RCA',sys:'right',parent:null,r:[1.95,1.75],epi:false,main:true,pts:()=>[loc(-20,-12,26),loc(-30,-8,34),surf(-45,-3),surf(-62,-1),surf(-78,0)]},
+ {id:'conus',name:'Conus Branch',short:'Conus',terr:'RCA',sys:'right',parent:'rca-p',r:[0.6,0.35],epi:true,pts:()=>[surf(-40,-3),surf(-20,4),surf(-2,10),surf(12,14)]},
+ {id:'rvb',name:'RV Branch',short:'RV',terr:'RCA',sys:'right',parent:'rca-p',r:[0.75,0.4],epi:true,pts:()=>[surf(-68,0),surf(-60,16),surf(-50,30),surf(-42,40)]},
+ {id:'rca-m',name:'Mid RCA',short:'mRCA',terr:'RCA',sys:'right',parent:'rca-p',r:[1.7,1.5],epi:true,main:true,pts:()=>[surf(-78,0),surf(-96,1),surf(-114,2),surf(-128,2)]},
+ {id:'am',name:'Acute Marginal',short:'AM',terr:'RCA',sys:'right',parent:'rca-m',r:[0.9,0.5],epi:true,main:true,pts:()=>[surf(-100,1),surf(-96,18),surf(-88,36),surf(-80,52),surf(-74,62)]},
+ {id:'rca-d',name:'Distal RCA',short:'dRCA',terr:'RCA',sys:'right',parent:'rca-m',dom:['right','co'],r:[1.5,1.35],epi:true,main:true,pts:()=>[surf(-128,2),surf(-137,2),surf(-145,2)]},
+ {id:'pda',name:'Posterior Descending (PDA)',short:'PDA',terr:'RCA',sys:'right',parent:'rca-d',dom:['right','co'],r:[1.1,0.5],epi:true,main:true,pts:()=>[surf(-145,2),surf(-147,16),surf(-148,34),surf(-150,52),surf(-152,66)]},
+ {id:'rpl',name:'Posterolateral (RPL)',short:'RPL',terr:'RCA',sys:'right',parent:'rca-d',dom:['right'],r:[1.05,0.7],epi:true,main:true,pts:()=>[surf(-145,2),surf(-165,3),surf(-185,3),surf(-200,3)]},
+ {id:'plb',name:'Cabang Posterolateral',short:'PLB',terr:'RCA',sys:'right',parent:'rpl',dom:['right'],r:[0.8,0.45],epi:true,pts:()=>[surf(-178,3),surf(-180,18),surf(-182,34),surf(-180,48)]},
+];
+
+function catmull(cp,step){
+  if(cp.length<2)return cp.slice();
+  const P=[sub(mul(cp[0],2),cp[1]),...cp,sub(mul(cp[cp.length-1],2),cp[cp.length-2])];
+  const out=[cp[0]];
+  for(let i=1;i<P.length-2;i++){
+    const p0=P[i-1],p1=P[i],p2=P[i+1],p3=P[i+2];
+    const n=Math.max(2,Math.ceil(len(sub(p2,p1))/step));
+    for(let k=1;k<=n;k++){const t=k/n,t2=t*t,t3=t2*t;const q=[0,0,0];
+      for(let j=0;j<3;j++)q[j]=0.5*(2*p1[j]+(-p0[j]+p2[j])*t+(2*p0[j]-5*p1[j]+4*p2[j]-p3[j])*t2+(-p0[j]+3*p1[j]-3*p2[j]+p3[j])*t3);
+      out.push(q);}
+  }
+  return out;
+}
+function buildTree(dom){
+  const segs=[],by={};
+  for(const d of SEG_DEFS){
+    if(d.dom&&!d.dom.includes(dom))continue;
+    let pts=catmull(d.pts(dom),1.5);
+    if(d.epi)pts=pts.map(p=>snapSurf(p));
+    let d0=0;const par=d.parent?by[d.parent]:null;
+    if(par){let bi=0,bd=1e9;par.pts.forEach((q,i)=>{const dd=len(sub(q,pts[0]));if(dd<bd){bd=dd;bi=i;}});pts[0]=par.pts[bi].slice();d0=par.dist[bi];}
+    const dist=[d0];for(let i=1;i<pts.length;i++)dist.push(dist[i-1]+len(sub(pts[i],pts[i-1])));
+    const L=dist[dist.length-1]-d0;
+    let sc=1;if(dom==='left'){if(d.sys==='right')sc=0.6;else if(d.terr==='LCx')sc=1.12;}
+    const rad=dist.map(x=>(d.r[0]+(d.r[1]-d.r[0])*((x-d0)/(L||1)))*sc);
+    const sub3=[];for(let i=0;i<pts.length;i+=2)sub3.push(i);if(sub3[sub3.length-1]!==pts.length-1)sub3.push(pts.length-1);
+    const seg=Object.assign({},d,{pts,dist,rad,len:L,sidx:sub3});
+    segs.push(seg);by[d.id]=seg;
+  }
+  return{segs,by};
+}
+
+/* Aorta, catheter & ostia */
+const ROOT=loc(5,-16,14);
+const LM_OST=loc(30,-12,24), RCA_OST=loc(-20,-12,26);
+const MIDX=-25;
+const AORTA=[ROOT,add(ROOT,[-6,30,6]),add(ROOT,[-6,62,4]),[-28,122,-32],[-10,108,-66],[-8,40,-78],[-8,-260,-80]];
+function cathPath(side){
+  const base=[[-8,-320,-80],[-8,-120,-80],[-8,30,-78],[-10,100,-66],[-27,119,-36],add(ROOT,[-8,60,3])];
+  let tail;
+  if(side==='left'){tail=[add(ROOT,[-9,26,0]),add(ROOT,[-7,7,-4]),add(ROOT,[-1,4,-6]),[(ROOT[0]+LM_OST[0])/2+2,(ROOT[1]+LM_OST[1])/2-3,(ROOT[2]+LM_OST[2])/2-3],LM_OST];}
+  else{tail=[add(ROOT,[-8,30,4]),add(ROOT,[-10,9,7]),[(ROOT[0]+RCA_OST[0])/2-4,(ROOT[1]+RCA_OST[1])/2+2,(ROOT[2]+RCA_OST[2])/2+6],RCA_OST];}
+  const pts=catmull(base.concat(tail),2.5);
+  let acc=0;const w=new Array(pts.length);w[pts.length-1]=1;
+  for(let i=pts.length-2;i>=0;i--){acc+=len(sub(pts[i+1],pts[i]));w[i]=1-smooth(10,70,acc);}
+  return{pts,w};
+}
+const CATH={left:cathPath('left'),right:cathPath('right')};
+
+/* Bones / soft tissue models for the fluoro background */
+const RIBS=[];
+for(const s of[-1,1])for(let i=0;i<9;i++){
+  const y0=165-i*33,pts=[];
+  for(let k=0;k<=22;k++){const ph=k/22,psi=(-82+142*ph)*DEG;
+    pts.push([MIDX+s*(150+i*4)*Math.cos(psi)+s*8,y0+12*Math.sin(ph*Math.PI)-58*ph*ph,-15+112*Math.sin(psi)]);}
+  RIBS.push(pts);
+}
+const DIAPH=[{c:[MIDX-62,-150,-18],r:95},{c:[MIDX+72,-166,-28],r:90}];
+const HEART_PTS=(()=>{const a=[];for(let w=-16;w<=90;w+=8)for(let th=0;th<360;th+=24)a.push(loc(th,w,R(w)+2));
+  const la=loc(185,-20,16),ra=loc(-115,-16,20);
+  for(let k=0;k<24;k++){const t=k/24*2*Math.PI;for(const z of[-.6,0,.6]){const c=Math.sqrt(1-z*z);
+    a.push(add(la,[26*S*c*Math.cos(t),26*S*z,26*S*c*Math.sin(t)]));a.push(add(ra,[24*S*c*Math.cos(t),24*S*z,24*S*c*Math.sin(t)]));}}
+  return a;})();
+
+/* ---------------- Presets ---------------- */
+const PRESETS=[
+ {id:'spider',name:'Spider View',a:45,b:-35,sys:'left',abbr:'SPI',tg:'Left Main, bifurkasi LM–LAD–LCx, ostial LCx',spec:1},
+ {id:'raocau',name:'RAO Caudal',a:-30,b:-30,sys:'left',abbr:'RAO-CAU',tg:'LCx proksimal & mid, cabang Obtuse Marginal (OM)',spec:1},
+ {id:'raocra',name:'RAO Cranial',a:-30,b:30,sys:'left',abbr:'RAO-CRA',tg:'Mid & distal LAD, cabang diagonal (D1, D2)',spec:1},
+ {id:'laocra',name:'LAO Cranial',a:40,b:30,sys:'left',abbr:'LAO-CRA',tg:'Bifurkasi LAD–diagonal, LAD distal',spec:1},
+ {id:'apcra',name:'AP Cranial',a:0,b:30,sys:'left',abbr:'AP-CRA',tg:'Mid–distal LAD tanpa tumpang tindih diafragma',spec:1},
+ {id:'apcau',name:'AP Caudal',a:0,b:-30,sys:'left',abbr:'AP-CAU',tg:'Badan Left Main, LCx proksimal'},
+ {id:'laorca',name:'LAO Straight (RCA)',a:40,b:0,sys:'right',abbr:'LAO',tg:'Mid RCA, kurvatura proksimal, cabang ventrikel kanan',spec:1},
+ {id:'raorca',name:'RAO Straight (RCA)',a:-30,b:0,sys:'right',abbr:'RAO',tg:'Mid RCA, panjang PDA'},
+ {id:'apcrarca',name:'AP Cranial (RCA)',a:0,b:30,sys:'right',abbr:'AP-CRA R',tg:'Crux, bifurkasi PDA–PL'},
+];
+
+/* ---------------- State ---------------- */
+const state={alpha:45,beta:-35,sys:'left',dom:'right',fov:17,noise:true,beat:true,labels:false,color:false,invert:false,roadmap:true,heat:true,target:'lm',panX:0,panY:0,hover:null};
+let tree=buildTree(state.dom);
+let visible=[];
+const visibleSegs=()=>tree.segs.filter(s=>state.sys==='both'||s.sys===state.sys);
+
+/* ---------------- Fluoroscopy renderer ---------------- */
+const FN=720,SOD=720,SID=1140;
+const fCv=$('fluoro'),fctx=fCv.getContext('2d');
+const oCv=$('fluoroOv'),octx=oCv.getContext('2d');
+const mk=()=>{const c=document.createElement('canvas');c.width=FN;c.height=FN;return c;};
+const stC=mk(),sctx=stC.getContext('2d');
+const vC=mk(),vctx=vC.getContext('2d');
+const vigC=mk();
+(()=>{const g=vigC.getContext('2d');const gr=g.createRadialGradient(FN/2,FN/2,FN*0.3,FN/2,FN/2,FN*0.76);gr.addColorStop(0,'#fff');gr.addColorStop(0.7,'rgb(214,214,214)');gr.addColorStop(1,'rgb(118,118,118)');g.fillStyle=gr;g.fillRect(0,0,FN,FN);})();
+const GRAY=[];for(let i=0;i<256;i++)GRAY.push('rgb('+i+','+i+','+i+')');
+const noisePats=[];
+for(let n=0;n<4;n++){const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');const im=g.createImageData(256,256);
+  for(let i=0;i<im.data.length;i+=4){let u=0,v=0;while(!u)u=Math.random();v=Math.random();const z=Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);const val=clamp(128+z*38,0,255);im.data[i]=im.data[i+1]=im.data[i+2]=val;im.data[i+3]=255;}
+  g.putImageData(im,0,0);noisePats.push(fctx.createPattern(c,'repeat'));}
+const pxmm=()=>FN/(state.fov*10);
+let basis=carmBasis(state.alpha,state.beta);
+function projector(B){const{f,r,u}=B;const cx=FN/2+state.panX,cy=FN/2+state.panY,k=pxmm();
+  return p=>{const d=p[0]*f[0]+p[1]*f[1]+p[2]*f[2];const m=SOD/(SOD-d);return[cx+(p[0]*r[0]+p[1]*r[1]+p[2]*r[2])*k*m,cy-(p[0]*u[0]+p[1]*u[1]+p[2]*u[2])*k*m,d,m];};}
+function strokePath(c,P){c.beginPath();c.moveTo(P[0][0],P[0][1]);for(let i=1;i<P.length;i++)c.lineTo(P[i][0],P[i][1]);c.stroke();}
+function hull(pts){pts=pts.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]);const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);
+  const lo=[],up=[];for(const p of pts){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],p)<=0)lo.pop();lo.push(p);}
+  for(let i=pts.length-1;i>=0;i--){const p=pts[i];while(up.length>=2&&cr(up[up.length-2],up[up.length-1],p)<=0)up.pop();up.push(p);}
+  up.pop();lo.pop();return lo.concat(up);}
+
+let staticDirty=true;
+function renderStatic(){
+  const c=sctx,P=projector(basis),k=pxmm();
+  c.globalCompositeOperation='source-over';
+  const g=c.createRadialGradient(FN/2,FN/2,FN*0.05,FN/2,FN/2,FN*0.75);g.addColorStop(0,'rgb(224,224,224)');g.addColorStop(1,'rgb(200,200,200)');
+  c.fillStyle=g;c.fillRect(0,0,FN,FN);
+  c.globalCompositeOperation='multiply';c.lineCap='round';c.lineJoin='round';
+  // mediastinum / aorta soft shadow
+  const AP=catmull(AORTA,6).map(P);
+  for(const wf of[1,0.7]){c.strokeStyle=GRAY[246];c.lineWidth=28*k*wf;strokePath(c,AP);}
+  // heart silhouette
+  const H=hull(HEART_PTS.map(P));
+  if(H.length>2){let cx=0,cy=0;for(const p of H){cx+=p[0];cy+=p[1];}cx/=H.length;cy/=H.length;
+    for(const [sc,gv] of[[1.0,245],[0.965,243],[0.92,241]]){c.fillStyle=GRAY[gv];c.beginPath();H.forEach((p,i)=>{const x=cx+(p[0]-cx)*sc,y=cy+(p[1]-cy)*sc;i?c.lineTo(x,y):c.moveTo(x,y);});c.closePath();c.fill();}}
+  // diaphragm domes
+  for(const d of DIAPH){const a=P(d.c),b=P(add(d.c,[0,-420,0]));const rp=d.r*k*a[3];
+    for(const wf of[1,0.975,0.95,0.92,0.88,0.82]){c.strokeStyle=GRAY[233];c.lineWidth=2*rp*wf;c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke();}}
+  // spine: vertebral bodies, discs and pedicles
+  c.lineCap='butt';
+  for(let y=230;y>-300;y-=29){const a=P([MIDX,y,-98]),b=P([MIDX,y-24,-98]);
+    for(const wf of[1,0.86,0.66,0.42]){c.strokeStyle=GRAY[236];c.lineWidth=44*k*a[3]*wf;c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke();}
+    for(const s of[-1,1]){const p=P([MIDX+s*15,y-12,-116]);c.fillStyle=GRAY[228];c.beginPath();c.ellipse(p[0],p[1],5*k,7*k,0,0,7);c.fill();}}
+  c.lineCap='round';
+  // sternum
+  const s0=P([MIDX,150,108]),s1=P([MIDX,-70,104]);
+  for(const wf of[1,0.7]){c.strokeStyle=GRAY[241];c.lineWidth=28*k*wf;c.beginPath();c.moveTo(s0[0],s0[1]);c.lineTo(s1[0],s1[1]);c.stroke();}
+  // ribs
+  for(const rb of RIBS){const Q=rb.map(P);for(const wf of[11,7.5,4]){c.strokeStyle=GRAY[243];c.lineWidth=wf*k;strokePath(c,Q);}}
+  c.globalCompositeOperation='source-over';
+}
+
+/* Injection timeline */
+const inj={active:false,t0:0,tau:0,end:5};
+function heartPhase(t){const ph=(t*72/60)%1;return ph<0.38?Math.pow(Math.sin(Math.PI*ph/0.38),1.5):0;}
+function makeMotion(t){if(!state.beat)return p=>p;const c=heartPhase(t)*0.075,jx=Math.sin(t*4)*0.4,k=1-c,dy=c*6;return p=>[p[0]*k+jx,p[1]*k+dy,p[2]*k];}
+function density(seg,i){
+  if(!inj.active)return state.roadmap?1:0;
+  const d=seg.dist[i],tau=inj.tau;let den=smooth(0,12,(tau-0.25)*115-d);
+  if(tau>3.0)den*=1-smooth(0,30,(tau-3.0)*125-d);
+  return den;
+}
+const MU=0.55,RHO=[0.93,0.75,0.5,0.15],WF=[1,0.82,0.6,0.34];
+let lastProj={};
+
+function renderFluoro(t){
+  if(staticDirty){renderStatic();staticDirty=false;}
+  const P=projector(basis),k=pxmm(),motion=makeMotion(t);
+  fctx.globalCompositeOperation='source-over';fctx.globalAlpha=1;fctx.drawImage(stC,0,0);
+  const v=vctx;v.globalCompositeOperation='source-over';v.fillStyle='#fff';v.fillRect(0,0,FN,FN);
+  v.globalCompositeOperation='darken';v.lineCap='round';v.lineJoin='round';
+  // catheter (radiopaque)
+  const cath=CATH[state.sys==='right'?'right':'left'];
+  const CP=cath.pts.map((p,i)=>{const w=cath.w[i];if(w<=0.001)return P(p);const q=motion(p);return P([p[0]+(q[0]-p[0])*w,p[1]+(q[1]-p[1])*w,p[2]+(q[2]-p[2])*w]);});
+  v.strokeStyle=GRAY[150];v.lineWidth=Math.max(1.4,2.0*k);strokePath(v,CP);
+  v.strokeStyle=GRAY[118];v.lineWidth=Math.max(1,1.1*k);strokePath(v,CP);
+  // contrast reflux puff at ostium
+  if(inj.active&&inj.tau>0.25&&inj.tau<3.3){const amt=smooth(0.25,0.7,inj.tau)*(1-smooth(2.6,3.3,inj.tau));const o=CP[CP.length-1];const rr=9*k;
+    const g=v.createRadialGradient(o[0],o[1],0,o[0],o[1],rr);const gv=Math.round(255-95*amt);g.addColorStop(0,GRAY[gv]);g.addColorStop(1,'#fff');v.fillStyle=g;v.beginPath();v.arc(o[0],o[1],rr,0,7);v.fill();}
+  // vessels — Beer–Lambert banded profile, 'darken' merges joints seamlessly
+  lastProj={};
+  for(const seg of visible){
+    const Q=seg.pts.map(p=>P(motion(p)));lastProj[seg.id]=Q;
+    const tint=state.color?TERR_RGB[seg.terr]:null;
+    for(let i=0;i<Q.length-1;i+=2){
+      const j=Math.min(i+2,Q.length-1);const den=density(seg,i);if(den<0.02)continue;
+      const Rm=seg.rad[i],wpx=2*Rm*k*Q[i][3];
+      for(let b=0;b<4;b++){
+        const T=Math.exp(-MU*2*Rm*Math.sqrt(1-RHO[b]*RHO[b])*den);
+        if(tint){v.strokeStyle='rgb('+Math.round(255*T+(1-T)*tint[0]*0.5)+','+Math.round(255*T+(1-T)*tint[1]*0.5)+','+Math.round(255*T+(1-T)*tint[2]*0.5)+')';}
+        else v.strokeStyle=GRAY[Math.round(255*T)];
+        v.lineWidth=Math.max(0.9,wpx*WF[b]);
+        v.beginPath();v.moveTo(Q[i][0],Q[i][1]);v.lineTo(Q[j][0],Q[j][1]);v.stroke();
+      }
+    }
+  }
+  fctx.globalCompositeOperation='multiply';fctx.drawImage(vC,0,0);
+  if(state.noise){fctx.globalCompositeOperation='overlay';fctx.globalAlpha=0.24;const ox=Math.random()*256|0,oy=Math.random()*256|0;
+    fctx.save();fctx.translate(-ox,-oy);fctx.fillStyle=noisePats[(Math.random()*4)|0];fctx.fillRect(ox,oy,FN,FN);fctx.restore();fctx.globalAlpha=1;}
+  fctx.globalCompositeOperation='multiply';fctx.drawImage(vigC,0,0);
+  fctx.globalCompositeOperation='source-over';
+  renderOverlay();
+}
+
+function renderOverlay(){
+  const c=octx;c.clearRect(0,0,FN,FN);
+  const sel=state.target,hov=state.hover;
+  for(const id of[sel,hov]){if(!id||!lastProj[id])continue;const Q=lastProj[id];
+    c.lineCap='round';c.lineJoin='round';c.strokeStyle=id===sel?'rgba(34,211,238,.35)':'rgba(251,191,36,.35)';c.lineWidth=id===sel?9:7;strokePath(c,Q);
+    c.strokeStyle=id===sel?'rgba(165,243,252,.9)':'rgba(253,230,138,.9)';c.lineWidth=1.2;c.setLineDash([5,5]);strokePath(c,Q);c.setLineDash([]);}
+  if(state.labels){
+    c.font='600 13px Inter, system-ui, sans-serif';c.textBaseline='middle';
+    for(const seg of visible){const Q=lastProj[seg.id];if(!Q||seg.len<10)continue;const p=Q[Math.floor(Q.length*0.55)];
+      const txt=seg.short,w=c.measureText(txt).width+12;const x=p[0]+10,y=p[1]-12;
+      c.strokeStyle='rgba(125,211,252,.7)';c.lineWidth=1;c.beginPath();c.moveTo(p[0],p[1]);c.lineTo(x,y);c.stroke();
+      c.fillStyle='rgba(2,6,23,.78)';c.beginPath();c.roundRect?c.roundRect(x,y-10,w,20,6):c.rect(x,y-10,w,20);c.fill();
+      c.fillStyle=TERR_COL[seg.terr];c.fillRect(x+4,y-6,3,12);
+      c.fillStyle='#e0f2fe';c.fillText(txt,x+9,y+0.5);}
+  }
+}
+
+/* ---------------- Quality analysis ---------------- */
+let quality={};
+function orthoP(B){const{r,u}=B;return p=>[dot(p,r),dot(p,u)];}
+function computeQuality(){
+  const B=basis,pr=orthoP(B);quality={};
+  const flat=[];for(const s of visible)for(const i of s.sidx)flat.push({sid:s.id,p:s.pts[i],r:s.rad[i],q:pr(s.pts[i])});
+  for(const s of visible){
+    const fs=calculateForeshortening(s.sidx.map(i=>s.pts[i]),B.f);
+    let ov=0,n=0;
+    for(const i of s.sidx){n++;const p=s.pts[i],q=pr(p),r=s.rad[i];
+      for(const o of flat){if(o.sid===s.id)continue;const dx=o.p[0]-p[0],dy=o.p[1]-p[1],dz=o.p[2]-p[2];if(dx*dx+dy*dy+dz*dz<144)continue;
+        const ex=o.q[0]-q[0],ey=o.q[1]-q[1],th=r+o.r+0.8;if(ex*ex+ey*ey<th*th){ov++;break;}}}
+    const ovf=n?ov/n:0;quality[s.id]={fs,ov:ovf,score:(1-fs/100)*(1-ovf)*100};
+  }
+}
+let heat=null;
+function computeHeat(){
+  const t=tree.by[state.target];if(!t||!visible.includes(t)){heat=null;return;}
+  const tp=[];for(let i=0;i<t.pts.length;i+=3)tp.push(i);
+  const others=[];for(const s of visible){if(s.id===t.id)continue;for(const i of s.sidx)others.push({p:s.pts[i],r:s.rad[i]});}
+  const pairs=tp.map(i=>{const p=t.pts[i];const L=[];others.forEach((o,j)=>{const d=sub(o.p,p);if(dot(d,d)>=144)L.push(j);});return L;});
+  const tsub=t.sidx.map(i=>t.pts[i]);
+  const cells=[];let best=null;
+  for(let a=-90;a<=90;a+=5)for(let b=-45;b<=45;b+=5){
+    const B=carmBasis(a,b),pr=orthoP(B);const fs=calculateForeshortening(tsub,B.f);
+    const oq=others.map(o=>pr(o.p));let ov=0;
+    tp.forEach((ti,k)=>{const q=pr(t.pts[ti]),r=t.rad[ti];for(const j of pairs[k]){const ex=oq[j][0]-q[0],ey=oq[j][1]-q[1],th=r+others[j].r+0.8;if(ex*ex+ey*ey<th*th){ov++;break;}}});
+    const ovf=ov/tp.length;const sc=(1-fs/100)*(1-ovf);
+    cells.push({a,b,s:sc});
+    const adj=sc-0.04*(Math.abs(b)/45)-0.02*(Math.abs(a)/90);
+    if(Math.abs(b)<=40&&(!best||adj>best.adj))best={a,b,s:sc,adj};
+  }
+  heat={cells,best,target:t.id};
+}
+
+/* ---------------- 3D Cath-lab room (software renderer) ---------------- */
+const rCv=$('room'),rctx=rCv.getContext('2d');
+const cam3={yaw:-128*DEG,pitch:24*DEG,dist:3900,target:[0,-120,-260]};
+const CAM_PRESETS={op:{yaw:-128*DEG,pitch:24*DEG,dist:3900},top:{yaw:-90*DEG,pitch:84*DEG,dist:4300},head:{yaw:72*DEG,pitch:16*DEG,dist:3900}};
+const face=(p,c,a,ref,cull=true,flat=false)=>({p,c,a,ref,cull,flat});
+function box(F,c,ax,h,col,a=1){const V=[];for(const sx of[-1,1])for(const sy of[-1,1])for(const sz of[-1,1])V.push(add(add(add(c,mul(ax[0],sx*h[0])),mul(ax[1],sy*h[1])),mul(ax[2],sz*h[2])));
+  for(const q of[[0,1,3,2],[4,5,7,6],[0,1,5,4],[2,3,7,6],[0,2,6,4],[1,3,7,5]])F.push(face(q.map(i=>V[i]),col,a,c));}
+function ellipsoid(F,c,rd,nl,nm,col,a){const P=(i,j)=>{const ph=-Math.PI/2+Math.PI*i/nl,th=2*Math.PI*j/nm;return[c[0]+rd[0]*Math.cos(ph)*Math.cos(th),c[1]+rd[1]*Math.sin(ph),c[2]+rd[2]*Math.cos(ph)*Math.sin(th)];};
+  for(let i=0;i<nl;i++)for(let j=0;j<nm;j++)F.push(face([P(i,j),P(i,j+1),P(i+1,j+1),P(i+1,j)],col,a,c));}
+function cylinder(F,a,b,r,n,col,al=1){const ax=norm(sub(b,a)),tmp=Math.abs(ax[2])<0.9?[0,0,1]:[1,0,0],e1=norm(cross(ax,tmp)),e2=cross(ax,e1),mid=mul(add(a,b),0.5);
+  const ring=c=>{const o=[];for(let i=0;i<n;i++){const t=2*Math.PI*i/n;o.push(add(c,add(mul(e1,r*Math.cos(t)),mul(e2,r*Math.sin(t)))));}return o;};
+  const A=ring(a),B=ring(b);for(let i=0;i<n;i++){const j=(i+1)%n;F.push(face([A[i],A[j],B[j],B[i]],col,al,mid));}
+  F.push(face(A.slice(),col,al,mid));F.push(face(B.slice(),col,al,mid));}
+function heartMesh(F){
+  const col=[176,38,60],NT=20,ws=[];for(let w=-14;w<=86;w+=8)ws.push(w);ws.push(89);
+  const ring=w=>{const a=[];for(let i=0;i<NT;i++)a.push(loc(i*360/NT,w,Math.max(0.6,R(w)-0.8)));return a;};
+  let prev=ring(ws[0]);const bc=loc(0,ws[0],0);
+  for(let i=0;i<NT;i++)F.push(face([prev[i],prev[(i+1)%NT],bc],col,1,add(bc,mul(AX,20))));
+  for(let k=1;k<ws.length;k++){const cur=ring(ws[k]);const ref=loc(0,(ws[k]+ws[k-1])/2,0);
+    for(let i=0;i<NT;i++){const j=(i+1)%NT;F.push(face([prev[i],prev[j],cur[j],cur[i]],col,1,ref));}prev=cur;}
+  const ap=loc(0,90.2,0),rf=loc(0,80,0);for(let i=0;i<NT;i++)F.push(face([prev[i],prev[(i+1)%NT],ap],col,1,rf));
+  ellipsoid(F,loc(185,-20,16),[26*S,26*S,26*S],7,12,[150,40,66],1);
+  ellipsoid(F,loc(-115,-16,20),[24*S,24*S,24*S],7,12,[160,44,70],1);
+  const A=catmull(AORTA,14);for(let i=0;i<A.length-1;i++)cylinder(F,A[i],A[i+1],13,10,[214,82,98],1);
+}
+const SKIN=[236,196,166];
+function buildRoomStatic(){
+  const F=[],X=[1,0,0],Y=[0,1,0],Z=[0,0,1];
+  box(F,[-25,1360,-520],[X,Y,Z],[150,150,480],[196,206,220]);
+  box(F,[-25,1360,-992],[X,Y,Z],[330,330,8],[60,72,92]);
+  box(F,[-25,1110,0],[X,Y,Z],[85,260,85],[206,214,228]);
+  box(F,[-25,-900,-590],[X,Y,Z],[110,200,420],[44,54,72]);
+  box(F,[-25,-900,-994],[X,Y,Z],[280,400,6],[34,42,58]);
+  box(F,[-25,-360,-152],[X,Y,Z],[265,1110,18],[56,68,90]);
+  box(F,[-25,-310,-128],[X,Y,Z],[225,1010,6],[78,92,116]);
+  heartMesh(F);
+  ellipsoid(F,[-25,-40,-15],[168,310,108],10,18,SKIN,0.2);
+  ellipsoid(F,[-25,425,-40],[86,105,96],8,12,SKIN,0.32);
+  cylinder(F,[-95,-330,-62],[-95,-1210,-72],64,12,SKIN,0.24);
+  cylinder(F,[45,-330,-62],[45,-1210,-72],64,12,SKIN,0.24);
+  return F;
+}
+let roomStatic=buildRoomStatic();
+function buildCarm(B){
+  const F=[],{cam,r,u}=B,Ra=860,arcC=[226,232,240];
+  const N=30,rings=[];
+  for(let i=0;i<=N;i++){const ph=Math.PI*i/N,n=add(mul(cam,Math.cos(ph)),mul(u,Math.sin(ph))),c=mul(n,Ra);
+    rings.push({c,q:[add(add(c,mul(n,55)),mul(r,72)),add(add(c,mul(n,55)),mul(r,-72)),add(add(c,mul(n,-55)),mul(r,-72)),add(add(c,mul(n,-55)),mul(r,72))]});}
+  for(let i=0;i<N;i++){const A=rings[i].q,Bq=rings[i+1].q,ref=mul(add(rings[i].c,rings[i+1].c),0.5);
+    for(let s=0;s<4;s++){const t=(s+1)%4;F.push(face([A[s],A[t],Bq[t],Bq[s]],arcC,1,ref));}}
+  F.push(face(rings[0].q.slice(),arcC,1,mul(cam,Ra-200)));F.push(face(rings[N].q.slice(),arcC,1,mul(cam,-(Ra-200))));
+  const fr=[r,u,cam];
+  box(F,mul(cam,665),fr,[62,52,195],[203,213,225]);
+  box(F,mul(cam,430),fr,[215,215,40],[30,41,59]);
+  F.push(face([add(add(mul(cam,388),mul(r,190)),mul(u,190)),add(add(mul(cam,388),mul(r,-190)),mul(u,190)),add(add(mul(cam,388),mul(r,-190)),mul(u,-190)),add(add(mul(cam,388),mul(r,190)),mul(u,-190))],[56,189,248],0.55,mul(cam,430),true,true));
+  box(F,mul(cam,-835),fr,[70,60,40],[203,213,225]);
+  cylinder(F,mul(cam,-870),mul(cam,-700),98,14,[148,163,184]);
+  box(F,mul(cam,-650),fr,[85,85,50],[100,116,139]);
+  box(F,[0,860,0].map((v,i)=>v+[-25,0,0][i]*0),[r,[0,1,0],cross(r,[0,1,0])],[125,72,125],[241,245,249]);
+  const fs=mul(cam,-620),dc=[[1,1],[-1,1],[-1,-1],[1,-1]].map(([x,y])=>add(add(mul(cam,388),mul(r,185*x)),mul(u,185*y)));
+  for(let i=0;i<4;i++)F.push(face([fs,dc[i],dc[(i+1)%4]],[56,189,248],0.075,[0,0,0],false,true));
+  return F;
+}
+let roomDirty=true;
+function roomCamera(){const cp=Math.cos(cam3.pitch),sp=Math.sin(cam3.pitch);const pos=add(cam3.target,mul([cp*Math.cos(cam3.yaw),cp*Math.sin(cam3.yaw),sp],cam3.dist));
+  const fwd=norm(sub(cam3.target,pos)),right=norm(cross(fwd,[0,0,1])),up=cross(right,fwd);return{pos,fwd,right,up};}
+const LIGHT=norm([-0.35,-0.3,0.88]);
+function newell(p){let x=0,y=0,z=0;for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length];x+=(a[1]-b[1])*(a[2]+b[2]);y+=(a[2]-b[2])*(a[0]+b[0]);z+=(a[0]-b[0])*(a[1]+b[1]);}return[x,y,z];}
+function renderRoom(){
+  const dpr=Math.min(2,window.devicePixelRatio||1),W=rCv.clientWidth,H=rCv.clientHeight;if(!W||!H)return;
+  if(rCv.width!==Math.round(W*dpr)||rCv.height!==Math.round(H*dpr)){rCv.width=Math.round(W*dpr);rCv.height=Math.round(H*dpr);}
+  const c=rctx;c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);
+  const C=roomCamera(),fl=H*1.3,cx=W/2,cy=H*0.52;
+  const proj=p=>{const v=sub(p,C.pos);const z=dot(v,C.fwd);if(z<80)return null;return[cx+dot(v,C.right)*fl/z,cy-dot(v,C.up)*fl/z,z];};
+  // floor
+  const fz=-1000;const fq=[[-2600,-3000,fz],[2600,-3000,fz],[2600,2600,fz],[-2600,2600,fz]].map(proj);
+  if(fq.every(Boolean)){c.fillStyle='rgba(15,23,42,.75)';c.beginPath();fq.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.closePath();c.fill();}
+  c.strokeStyle='rgba(56,189,248,.08)';c.lineWidth=1;
+  for(let x=-2500;x<=2500;x+=250){const a=proj([x,-3000,fz]),b=proj([x,2600,fz]);if(a&&b){c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke();}}
+  for(let y=-3000;y<=2600;y+=250){const a=proj([-2600,y,fz]),b=proj([2600,y,fz]);if(a&&b){c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke();}}
+  const items=[];
+  const faces=roomStatic.concat(buildCarm(basis));
+  for(const f of faces){
+    const Q=[];let ok=true,zs=0;for(const p of f.p){const q=proj(p);if(!q){ok=false;break;}Q.push(q);zs+=q[2];}if(!ok)continue;
+    let n=newell(f.p);const cen=mul(f.p.reduce((s,p)=>add(s,p),[0,0,0]),1/f.p.length);
+    if(dot(n,sub(cen,f.ref))<0)n=mul(n,-1);
+    if(f.cull&&dot(n,sub(cen,C.pos))>0)continue;
+    let col;if(f.flat)col=f.c;else{const nn=norm(n);const lam=Math.max(0,dot(nn,LIGHT));const sh=0.36+0.64*lam;col=[f.c[0]*sh,f.c[1]*sh,f.c[2]*sh];}
+    items.push({t:0,Q,z:zs/Q.length,col,a:f.a});
+  }
+  // coronary tree on the heart
+  for(const s of tree.segs){const act=state.sys==='both'||s.sys===state.sys;const rgb=TERR_RGB[s.terr];
+    for(let i=0;i<s.pts.length-3;i+=3){const a=proj(s.pts[i]),b=proj(s.pts[i+3]);if(!a||!b)continue;
+      items.push({t:1,a2:a,b2:b,z:(a[2]+b[2])/2-14,col:rgb,a:act?1:0.35,w:Math.max(1.1,2*s.rad[i]*fl/a[2]*1.7)});}}
+  items.sort((p,q)=>q.z-p.z);
+  c.lineJoin='round';c.lineCap='round';
+  for(const it of items){
+    if(it.t===0){c.fillStyle='rgba('+(it.col[0]|0)+','+(it.col[1]|0)+','+(it.col[2]|0)+','+it.a+')';c.beginPath();it.Q.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.closePath();c.fill();
+      if(it.a>=1){c.strokeStyle=c.fillStyle;c.lineWidth=0.6;c.stroke();}}
+    else{c.strokeStyle='rgba('+it.col[0]+','+it.col[1]+','+it.col[2]+','+it.a+')';c.lineWidth=it.w;c.beginPath();c.moveTo(it.a2[0],it.a2[1]);c.lineTo(it.b2[0],it.b2[1]);c.stroke();}
+  }
+  // central ray
+  const fsp=proj(mul(basis.cam,-620)),dcp=proj(mul(basis.cam,388));
+  if(fsp&&dcp){c.strokeStyle='rgba(125,211,252,.55)';c.setLineDash([4,4]);c.lineWidth=1;c.beginPath();c.moveTo(fsp[0],fsp[1]);c.lineTo(dcp[0],dcp[1]);c.stroke();c.setLineDash([]);}
+  // labels
+  c.font='700 10.5px Inter, system-ui, sans-serif';c.textAlign='center';c.textBaseline='middle';
+  const lab=(p,t,col)=>{const q=proj(p);if(!q)return;const w=c.measureText(t).width+10;c.fillStyle='rgba(2,6,23,.7)';c.fillRect(q[0]-w/2,q[1]-8,w,16);c.fillStyle=col;c.fillText(t,q[0],q[1]);};
+  lab(mul(basis.cam,560),'DETEKTOR','#7dd3fc');lab(mul(basis.cam,-980),'TABUNG X-RAY','#e2e8f0');
+  lab([-25,600,-40],'KEPALA','#cbd5e1');lab([-25,-1320,-70],'KAKI','#cbd5e1');lab([-560,-150,-120],'OPERATOR ▸','#fcd34d');
+  c.textAlign='start';
+}
+// room interaction
+(()=>{let drag=null;
+  rCv.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY};rCv.setPointerCapture(e.pointerId);});
+  rCv.addEventListener('pointermove',e=>{if(!drag)return;cam3.yaw-=(e.clientX-drag.x)*0.008;cam3.pitch=clamp(cam3.pitch+(e.clientY-drag.y)*0.006,4*DEG,88*DEG);drag={x:e.clientX,y:e.clientY};roomDirty=true;});
+  rCv.addEventListener('pointerup',()=>{drag=null;});
+  rCv.addEventListener('wheel',e=>{e.preventDefault();cam3.dist=clamp(cam3.dist*(1+Math.sign(e.deltaY)*0.08),1800,7000);roomDirty=true;},{passive:false});
+  rCv.addEventListener('dblclick',()=>{Object.assign(cam3,CAM_PRESETS.op);roomDirty=true;});
+  document.querySelectorAll('[data-cam]').forEach(b=>b.addEventListener('click',()=>{Object.assign(cam3,CAM_PRESETS[b.dataset.cam]);roomDirty=true;}));
+})();
+
+/* ---------------- Angle pad ---------------- */
+const pCv=$('pad'),pctx=pCv.getContext('2d');
+let padDirty=true;
+const PADM={l:40,r:12,t:16,b:26};
+function padGeom(){const W=pCv.clientWidth,H=pCv.clientHeight;return{W,H,x:a=>PADM.l+(a+90)/180*(W-PADM.l-PADM.r),y:b=>PADM.t+(45-b)/90*(H-PADM.t-PADM.b),
+  ia:x=>(x-PADM.l)/(W-PADM.l-PADM.r)*180-90,ib:y=>45-(y-PADM.t)/(H-PADM.t-PADM.b)*90};}
+function renderPad(){
+  const dpr=Math.min(2,window.devicePixelRatio||1),G=padGeom();if(!G.W)return;
+  if(pCv.width!==Math.round(G.W*dpr)){pCv.width=Math.round(G.W*dpr);pCv.height=Math.round(G.H*dpr);}
+  const c=pctx;c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,G.W,G.H);
+  c.fillStyle='#0a1120';c.fillRect(0,0,G.W,G.H);
+  const cw=G.x(5)-G.x(0),ch=G.y(0)-G.y(5);
+  if(state.heat&&heat){for(const k of heat.cells){const h=130*Math.pow(k.s,1.4);c.fillStyle='hsla('+h.toFixed(0)+',85%,48%,0.55)';c.fillRect(G.x(k.a)-cw/2,G.y(k.b)-ch/2,cw+0.6,ch+0.6);}}
+  c.lineWidth=1;
+  for(let a=-90;a<=90;a+=15){c.strokeStyle=a===0?'rgba(226,232,240,.35)':'rgba(148,163,184,.13)';c.beginPath();c.moveTo(G.x(a),G.y(45));c.lineTo(G.x(a),G.y(-45));c.stroke();}
+  for(let b=-45;b<=45;b+=15){c.strokeStyle=b===0?'rgba(226,232,240,.35)':'rgba(148,163,184,.13)';c.beginPath();c.moveTo(G.x(-90),G.y(b));c.lineTo(G.x(90),G.y(b));c.stroke();}
+  c.font='600 9.5px JetBrains Mono, monospace';c.fillStyle='#64748b';c.textAlign='center';c.textBaseline='top';
+  for(const a of[-90,-60,-30,0,30,60,90])c.fillText(a===0?'AP':Math.abs(a),G.x(a),G.H-PADM.b+5);
+  c.textAlign='right';c.textBaseline='middle';for(const b of[-45,-30,-15,0,15,30,45])c.fillText(b===0?'0':Math.abs(b),PADM.l-6,G.y(b));
+  c.font='800 9.5px Inter, sans-serif';c.fillStyle='#fda4af';c.textAlign='left';c.textBaseline='top';c.fillText('◂ RAO',PADM.l+3,G.H-PADM.b+5+10>G.H?G.H-12:G.H-12);
+  c.fillStyle='#7dd3fc';c.textAlign='right';c.fillText('LAO ▸',G.W-PADM.r-2,G.H-12);
+  c.fillStyle='#c4b5fd';c.textAlign='left';c.fillText('CRA ▴',PADM.l+4,PADM.t+3);c.fillStyle='#fcd34d';c.textBaseline='bottom';c.fillText('CAU ▾',PADM.l+4,G.y(-45)-3);
+  // presets
+  c.font='700 9px Inter, sans-serif';c.textAlign='center';c.textBaseline='bottom';
+  for(const p of PRESETS){const act=state.sys==='both'||p.sys===state.sys;const x=G.x(p.a),y=G.y(p.b);
+    c.globalAlpha=act?1:0.35;c.fillStyle=p.sys==='left'?'#38bdf8':'#fb7185';c.strokeStyle='#0a1120';c.lineWidth=2;c.beginPath();c.arc(x,y,4.2,0,7);c.fill();c.stroke();
+    c.fillStyle='#e2e8f0';c.fillText(p.abbr,x,y-6);c.globalAlpha=1;}
+  // best
+  if(state.heat&&heat&&heat.best){const x=G.x(heat.best.a),y=G.y(heat.best.b);c.save();c.translate(x,y);c.fillStyle='#fef08a';c.strokeStyle='#0a1120';c.lineWidth=1.5;c.beginPath();
+    for(let i=0;i<10;i++){const rr=i%2?3.2:7.5,t=-Math.PI/2+i*Math.PI/5;c.lineTo(Math.cos(t)*rr,Math.sin(t)*rr);}c.closePath();c.fill();c.stroke();c.restore();}
+  // current
+  const x=G.x(state.alpha),y=G.y(state.beta);
+  c.strokeStyle='rgba(34,211,238,.5)';c.setLineDash([3,4]);c.beginPath();c.moveTo(x,PADM.t);c.lineTo(x,G.H-PADM.b);c.moveTo(PADM.l,y);c.lineTo(G.W-PADM.r,y);c.stroke();c.setLineDash([]);
+  const gg=c.createRadialGradient(x,y,0,x,y,16);gg.addColorStop(0,'rgba(34,211,238,.55)');gg.addColorStop(1,'rgba(34,211,238,0)');c.fillStyle=gg;c.beginPath();c.arc(x,y,16,0,7);c.fill();
+  c.fillStyle='#fff';c.strokeStyle='#06b6d4';c.lineWidth=3;c.beginPath();c.arc(x,y,6,0,7);c.fill();c.stroke();
+}
+(()=>{let down=false;const set=e=>{const r=pCv.getBoundingClientRect(),G=padGeom();setAngles(clamp(Math.round(G.ia(e.clientX-r.left)),-90,90),clamp(Math.round(G.ib(e.clientY-r.top)),-45,45));};
+  pCv.addEventListener('pointerdown',e=>{down=true;pCv.setPointerCapture(e.pointerId);stopTween();set(e);});
+  pCv.addEventListener('pointermove',e=>{if(down)set(e);});
+  pCv.addEventListener('pointerup',()=>{down=false;});})();
+
+/* ---------------- UI wiring ---------------- */
+const elA=$('alpha'),elB=$('beta');
+let tween=null;
+function stopTween(){tween=null;}
+function goTo(a,b,ms=700){tween={a0:state.alpha,b0:state.beta,a1:clamp(a,-90,90),b1:clamp(b,-45,45),t0:performance.now(),ms};}
+function setAngles(a,b){state.alpha=a;state.beta=b;onAngles();}
+let hashTimer=0;
+function onAngles(){
+  basis=carmBasis(state.alpha,state.beta);staticDirty=true;roomDirty=true;padDirty=true;
+  elA.value=Math.round(state.alpha);elB.value=Math.round(state.beta);
+  const A=fmtA(state.alpha),Bs=fmtBs(state.beta);
+  $('alphaOut').textContent=A;$('betaOut').textContent=Bs;$('ovA').textContent=A;$('ovB').textContent=fmtB(state.beta);
+  $('roomRead').textContent=A+' · '+Bs;
+  computeQuality();updateQualityUI();updateViewName();
+  clearTimeout(hashTimer);hashTimer=setTimeout(writeHash,250);
+}
+elA.addEventListener('input',()=>{stopTween();setAngles(+elA.value,state.beta);});
+elB.addEventListener('input',()=>{stopTween();setAngles(state.alpha,+elB.value);});
+const nud=(da,db)=>{stopTween();setAngles(clamp(Math.round(state.alpha)+da,-90,90),clamp(Math.round(state.beta)+db,-45,45));};
+$('nRAO').addEventListener('click',()=>nud(-5,0));$('nLAO').addEventListener('click',()=>nud(5,0));
+$('nCAU').addEventListener('click',()=>nud(0,-5));$('nCRA').addEventListener('click',()=>nud(0,5));
+$('btnAP').addEventListener('click',()=>goTo(0,0));
+
+function presetGo(p){if(p.sys!==state.sys&&state.sys!=='both')setSys(p.sys);goTo(p.a,p.b);}
+const presetBtns={};
+(()=>{const g=$('presetGrid');PRESETS.forEach((p,i)=>{const b=document.createElement('button');b.className='preset';b.type='button';b.title=p.tg+' (tombol '+(i+1)+')';
+  const t=document.createElement('b');t.textContent=p.name;const s=document.createElement('span');s.textContent=fmtA(p.a).replace(' 0°','')+' · '+fmtBs(p.b);
+  const d=document.createElement('i');d.className=p.sys;b.append(t,s,d);b.addEventListener('click',()=>presetGo(p));g.appendChild(b);presetBtns[p.id]=b;});
+  const tb=$('projBody');PRESETS.forEach(p=>{const tr=document.createElement('tr');
+    const td=(txt,cls)=>{const e=document.createElement('td');if(cls)e.className=cls;e.textContent=txt;return e;};
+    const n=td(p.name);n.style.fontWeight='700';n.style.color='#fff';
+    const sy=document.createElement('td');const tg=document.createElement('span');tg.className='tag '+(p.sys==='left'?'l':'r');tg.textContent=p.sys==='left'?'KIRI':'KANAN';sy.appendChild(tg);
+    const go=document.createElement('td');const gb=document.createElement('button');gb.className='goto';gb.type='button';gb.textContent='Lihat ▸';
+    gb.addEventListener('click',()=>{presetGo(p);$('simulator').scrollIntoView({behavior:'smooth'});});go.appendChild(gb);
+    tr.append(n,td(p.a===0?'0° (AP)':fmtA(p.a),'mono'),td(fmtBs(p.b),'mono'),sy,td(p.tg),go);tb.appendChild(tr);});
+})();
+
+function segSet(id,attr,val){document.querySelectorAll('#'+id+' button').forEach(b=>b.classList.toggle('on',b.dataset[attr]===String(val)));}
+function setSys(s){state.sys=s;segSet('sysSeg','sys',s);onTree();}
+function setDom(d){state.dom=d;segSet('domSeg','dom',d);tree=buildTree(d);onTree();}
+document.querySelectorAll('#sysSeg button').forEach(b=>b.addEventListener('click',()=>setSys(b.dataset.sys)));
+document.querySelectorAll('#domSeg button').forEach(b=>b.addEventListener('click',()=>setDom(b.dataset.dom)));
+document.querySelectorAll('#fovSeg button').forEach(b=>b.addEventListener('click',()=>{state.fov=+b.dataset.fov;segSet('fovSeg','fov',state.fov);staticDirty=true;updateOvText();}));
+const bindT=(id,key,fn)=>{const e=$(id);e.checked=state[key];e.addEventListener('change',()=>{state[key]=e.checked;fn&&fn();});};
+bindT('tRoadmap','roadmap');bindT('tBeat','beat');bindT('tNoise','noise');bindT('tLabels','labels');bindT('tColor','color');
+bindT('tInvert','invert',()=>$('monitor').classList.toggle('invert',state.invert));bindT('tHeat','heat',()=>{padDirty=true;});
+
+const DOM_TXT={right:'Kanan',left:'Kiri',co:'Kodominan'},SYS_TXT={left:'Kiri (LCA)',right:'Kanan (RCA)',both:'Kiri + Kanan'};
+function updateOvText(){$('ovFov').textContent='FOV '+state.fov+' cm · SID '+SID+' mm';$('ovHr').textContent='HR 72 bpm · Kontras: '+SYS_TXT[state.sys];$('ovDom').textContent='Dominansi: '+DOM_TXT[state.dom];}
+function onTree(){
+  visible=visibleSegs();
+  if(!tree.by[state.target]||!visible.includes(tree.by[state.target]))state.target=state.sys==='right'?'rca-m':'lad-m';
+  state.hover=null;
+  let mx=0;for(const s of visible)mx=Math.max(mx,s.dist[s.dist.length-1]);inj.end=3.0+(mx+30)/125+0.3;
+  buildTargetUI();computeQuality();computeHeat();updateQualityUI();updateViewName();updateOvText();
+  roomDirty=true;padDirty=true;clearTimeout(hashTimer);hashTimer=setTimeout(writeHash,250);
+}
+
+/* quality UI */
+const rowEls={};
+function buildTargetUI(){
+  const sel=$('tgtSel');sel.replaceChildren();const list=$('segList');list.replaceChildren();
+  for(const s of visible){const o=document.createElement('option');o.value=s.id;o.textContent=s.short+' — '+s.name;sel.appendChild(o);
+    const r=document.createElement('button');r.type='button';r.className='srow';
+    const n=document.createElement('span');n.className='n';const i=document.createElement('i');i.style.background=TERR_COL[s.terr];n.append(i,document.createTextNode(s.short));
+    const b=document.createElement('span');b.className='b';const bf=document.createElement('span');b.appendChild(bf);
+    const x=document.createElement('span');x.className='x';
+    r.append(n,b,x);r.title=s.name;r.addEventListener('click',()=>setTarget(s.id));list.appendChild(r);rowEls[s.id]={r,bf,x};}
+  sel.value=state.target;
+}
+$('tgtSel').addEventListener('change',e=>setTarget(e.target.value));
+function setTarget(id){if(!tree.by[id])return;state.target=id;$('tgtSel').value=id;computeHeat();updateQualityUI();padDirty=true;}
+const fsCol=v=>v<=10?'#34d399':v<=25?'#fbbf24':'#fb7185';
+const scCol=v=>v>=75?'#34d399':v>=50?'#fbbf24':'#fb7185';
+function updateQualityUI(){
+  const q=quality[state.target];
+  if(q){$('mFS').textContent=q.fs.toFixed(0)+'%';$('mFS').style.color=fsCol(q.fs);$('mOV').textContent=(q.ov*100).toFixed(0)+'%';$('mOV').style.color=q.ov<0.1?'#34d399':q.ov<0.3?'#fbbf24':'#fb7185';
+    $('mSC').textContent=q.score.toFixed(0);$('mSC').style.color=scCol(q.score);}
+  for(const s of visible){const e=rowEls[s.id];const qq=quality[s.id];if(!e||!qq)continue;e.r.classList.toggle('on',s.id===state.target);
+    e.bf.style.width=Math.max(4,qq.score).toFixed(0)+'%';e.bf.style.background=scCol(qq.score);e.x.textContent='FS '+qq.fs.toFixed(0)+'%'+(qq.ov>=0.15?' ⧉':'');}
+  // chips
+  const gc=$('goodChips'),wc=$('warnChips');gc.replaceChildren();wc.replaceChildren();
+  const mains=visible.filter(s=>s.main&&s.len>14&&quality[s.id]);
+  const good=mains.slice().sort((a,b)=>quality[b.id].score-quality[a.id].score).slice(0,4);
+  for(const s of good){const c=document.createElement('span');c.className='chip good';c.textContent=s.short+' · FS '+quality[s.id].fs.toFixed(0)+'%';gc.appendChild(c);}
+  const bad=mains.filter(s=>quality[s.id].fs>35||quality[s.id].ov>0.35).sort((a,b)=>quality[a.id].score-quality[b.id].score).slice(0,4);
+  for(const s of bad){const qq=quality[s.id];const c=document.createElement('span');c.className='chip '+(qq.score<40?'bad':'warn');c.textContent=s.short+(qq.fs>35?' · FS '+qq.fs.toFixed(0)+'%':'')+(qq.ov>0.35?' · overlap':'');wc.appendChild(c);}
+  $('warnH').style.display=bad.length?'block':'none';
+}
+$('btnBest').addEventListener('click',findBest);
+function findBest(){if(!heat||!heat.best){toast('Pilih segmen target terlebih dahulu');return;}goTo(heat.best.a,heat.best.b);const s=tree.by[state.target];toast('Sudut optimal '+s.short+': '+fmtA(heat.best.a)+' · '+fmtBs(heat.best.b)+' (skor '+(heat.best.s*100).toFixed(0)+')');}
+
+function updateViewName(){
+  let best=null,bd=1e9;for(const p of PRESETS){const d=Math.hypot(p.a-state.alpha,p.b-state.beta)+(state.sys!=='both'&&p.sys!==state.sys?3:0);if(d<bd){bd=d;best=p;}}
+  const nm=$('vName');nm.replaceChildren();const sm=document.createElement('small');sm.textContent=fmtA(state.alpha)+' · '+fmtBs(state.beta);nm.appendChild(sm);
+  for(const k in presetBtns)presetBtns[k].classList.remove('on');
+  if(best&&bd<=6){nm.appendChild(document.createTextNode((bd>1.5?'≈ ':'')+best.name));$('vDesc').textContent='Segmen target: '+best.tg+'.';$('ovView').textContent=best.name;presetBtns[best.id].classList.add('on');}
+  else{nm.appendChild(document.createTextNode('Proyeksi kustom'));$('vDesc').textContent='Pilih segmen target lalu gunakan heatmap Angle Pad atau tombol "Cari sudut optimal".';$('ovView').textContent='Custom';}
+}
+
+/* fluoro interactions: hover / select / pan */
+(()=>{let down=null;const tip=$('tip');
+  const toCanvas=e=>{const r=oCv.getBoundingClientRect();return[(e.clientX-r.left)*FN/r.width,(e.clientY-r.top)*FN/r.height,r];};
+  const hit=(x,y)=>{let best=null,bd=14*14;for(const s of visible){const Q=lastProj[s.id];if(!Q)continue;for(let i=0;i<Q.length;i+=1){const dx=Q[i][0]-x,dy=Q[i][1]-y,d=dx*dx+dy*dy;if(d<bd){bd=d;best=s;}}}return best;};
+  oCv.addEventListener('pointerdown',e=>{const[x,y]=toCanvas(e);down={x,y,px:state.panX,py:state.panY,moved:false};oCv.setPointerCapture(e.pointerId);});
+  oCv.addEventListener('pointermove',e=>{const[x,y,r]=toCanvas(e);
+    if(down){const dx=x-down.x,dy=y-down.y;if(Math.abs(dx)+Math.abs(dy)>6)down.moved=true;if(down.moved){state.panX=clamp(down.px+dx,-FN*0.6,FN*0.6);state.panY=clamp(down.py+dy,-FN*0.6,FN*0.6);staticDirty=true;tip.style.display='none';return;}}
+    const s=hit(x,y);state.hover=s?s.id:null;
+    if(s&&quality[s.id]){const q=quality[s.id];tip.replaceChildren();const b=document.createElement('b');b.textContent=s.short;tip.append(b,document.createTextNode(' '+s.name+' · FS '+q.fs.toFixed(0)+'% · overlap '+(q.ov*100).toFixed(0)+'%'));
+      tip.style.left=(e.clientX-r.left)+'px';tip.style.top=(e.clientY-r.top)+'px';tip.style.display='block';}else tip.style.display='none';});
+  oCv.addEventListener('pointerup',e=>{if(down&&!down.moved){const[x,y]=toCanvas(e);const s=hit(x,y);if(s)setTarget(s.id);}down=null;});
+  oCv.addEventListener('pointerleave',()=>{state.hover=null;tip.style.display='none';});
+  oCv.addEventListener('dblclick',()=>{state.panX=0;state.panY=0;staticDirty=true;});
+})();
+
+/* injection */
+const btnInj=$('btnInject');
+function startInject(){inj.active=true;inj.t0=performance.now();inj.tau=0;btnInj.classList.add('running');$('ovRec').classList.add('on');}
+btnInj.addEventListener('click',startInject);
+
+/* toast */
+let toastT=0;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2600);}
+
+/* screenshot */
+$('btnShot').addEventListener('click',()=>{
+  const c=document.createElement('canvas');c.width=FN;c.height=FN;const x=c.getContext('2d');x.drawImage(fCv,0,0);
+  if(state.invert){const im=x.getImageData(0,0,FN,FN);for(let i=0;i<im.data.length;i+=4){im.data[i]=255-im.data[i];im.data[i+1]=255-im.data[i+1];im.data[i+2]=255-im.data[i+2];}x.putImageData(im,0,0);}
+  x.drawImage(oCv,0,0);
+  x.fillStyle='#fff';x.shadowColor='rgba(0,0,0,.85)';x.shadowBlur=4;x.font='700 22px JetBrains Mono, monospace';x.fillText(fmtA(state.alpha),16,34);x.fillText(fmtB(state.beta),16,62);
+  x.font='600 13px Inter, sans-serif';x.textAlign='right';x.fillText("Virtual Cath Lab · Part of CardiologyVault",FN-14,FN-16);x.fillText('@bayushiep',FN-14,FN-34);
+  c.toBlob(b=>{if(!b)return;const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='angio_'+fmtA(state.alpha).replace(/[^A-Z0-9]/gi,'')+'_'+fmtBs(state.beta).replace(/[^A-Z0-9]/gi,'')+'_VirtualCathLab.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),3000);toast('Frame disimpan sebagai PNG');},'image/png');
+});
+
+/* share / URL hash */
+function writeHash(){const h='#a='+Math.round(state.alpha)+'&b='+Math.round(state.beta)+'&sys='+state.sys+'&dom='+({right:'r',left:'l',co:'co'})[state.dom];try{history.replaceState(null,'',h);}catch(_){}}
+function readHash(){
+  const p=new URLSearchParams(location.hash.slice(1));let changed=false;
+  const a=parseFloat(p.get('a')),b=parseFloat(p.get('b'));
+  if(Number.isFinite(a)){state.alpha=clamp(Math.round(a),-90,90);changed=true;}
+  if(Number.isFinite(b)){state.beta=clamp(Math.round(b),-45,45);changed=true;}
+  const s=p.get('sys');if(['left','right','both'].includes(s))state.sys=s;
+  const d=({r:'right',l:'left',co:'co'})[p.get('dom')];if(d)state.dom=d;
+  return changed;
+}
+$('btnShare').addEventListener('click',()=>{writeHash();const url=location.href;
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(()=>toast('Tautan sudut disalin ke clipboard'),()=>toast('Salin manual dari address bar: '+location.hash));
+  else toast('Salin manual dari address bar: '+location.hash);});
+window.addEventListener('hashchange',()=>{const prevDom=state.dom;readHash();segSet('sysSeg','sys',state.sys);segSet('domSeg','dom',state.dom);if(prevDom!==state.dom)tree=buildTree(state.dom);onTree();onAngles();});
+
+/* quiz */
+const quiz={on:false,score:0,total:0,cur:null,done:false};
+function quizStart(){quiz.on=true;document.body.classList.add('quiz-mode');$('quiz').classList.add('on');$('tLabels').checked=false;state.labels=false;quizNext();}
+function quizStop(){quiz.on=false;document.body.classList.remove('quiz-mode');$('quiz').classList.remove('on');}
+function quizNext(){
+  const p=PRESETS[(Math.random()*PRESETS.length)|0];quiz.cur=p;quiz.done=false;
+  if(state.sys!==p.sys)setSys(p.sys);goTo(p.a,p.b,500);
+  const others=PRESETS.filter(o=>o.id!==p.id&&!(o.a===p.a&&o.b===p.b));for(let i=others.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[others[i],others[j]]=[others[j],others[i]];}
+  const opts=[p,...others.slice(0,3)];for(let i=opts.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[opts[i],opts[j]]=[opts[j],opts[i]];}
+  const box=$('quizOpts');box.replaceChildren();$('quizFb').textContent='Amati posisi vertebra, diafragma, dan arah percabangan.';
+  for(const o of opts){const b=document.createElement('button');b.type='button';b.textContent=o.name;b.addEventListener('click',()=>quizAnswer(o,b));box.appendChild(b);}
+  $('quizScore').textContent='Skor '+quiz.score+'/'+quiz.total;
+}
+function quizAnswer(o,btn){if(quiz.done)return;quiz.done=true;quiz.total++;const ok=o.id===quiz.cur.id;if(ok)quiz.score++;
+  btn.classList.add(ok?'ok':'no');if(!ok)[...$('quizOpts').children].forEach(b=>{if(b.textContent===quiz.cur.name)b.classList.add('ok');});
+  $('quizFb').textContent=(ok?'✅ Benar! ':'❌ Kurang tepat. ')+quiz.cur.name+' = '+fmtA(quiz.cur.a)+' · '+fmtBs(quiz.cur.b)+'. Target: '+quiz.cur.tg+'.';
+  $('quizScore').textContent='Skor '+quiz.score+'/'+quiz.total;}
+$('btnQuiz').addEventListener('click',()=>quiz.on?quizStop():quizStart());
+$('quizNext').addEventListener('click',quizNext);$('quizClose').addEventListener('click',quizStop);
+
+/* keyboard */
+window.addEventListener('keydown',e=>{
+  const tg=e.target&&e.target.tagName;if(tg==='INPUT'&&e.target.type!=='range'&&e.target.type!=='checkbox')return;if(tg==='SELECT'||tg==='TEXTAREA')return;
+  const st=e.shiftKey?5:1;
+  if(e.key==='ArrowLeft'){e.preventDefault();nud(-st,0);}else if(e.key==='ArrowRight'){e.preventDefault();nud(st,0);}
+  else if(e.key==='ArrowUp'){e.preventDefault();nud(0,st);}else if(e.key==='ArrowDown'){e.preventDefault();nud(0,-st);}
+  else if(e.key===' '){e.preventDefault();startInject();}
+  else if(e.key==='l'||e.key==='L'){state.labels=!state.labels;$('tLabels').checked=state.labels;}
+  else if(e.key==='i'||e.key==='I'){state.invert=!state.invert;$('tInvert').checked=state.invert;$('monitor').classList.toggle('invert',state.invert);}
+  else if(e.key==='o'||e.key==='O')findBest();
+  else if(e.key==='0')goTo(0,0);
+  else if(/^[1-9]$/.test(e.key)){const p=PRESETS[+e.key-1];if(p)presetGo(p);}
+});
+
+/* clock */
+function tick(){const d=new Date(),z=n=>String(n).padStart(2,'0');$('ovClock').textContent=z(d.getDate())+'/'+z(d.getMonth()+1)+'/'+d.getFullYear()+' '+z(d.getHours())+':'+z(d.getMinutes());}
+tick();setInterval(tick,15000);
+
+/* resize */
+window.addEventListener('resize',()=>{roomDirty=true;padDirty=true;});
+
+/* ---------------- main loop ---------------- */
+let lastF=0;
+function loop(now){
+  if(tween){const t=clamp((now-tween.t0)/tween.ms,0,1),e=t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+    state.alpha=tween.a0+(tween.a1-tween.a0)*e;state.beta=tween.b0+(tween.b1-tween.b0)*e;onAngles();if(t>=1){state.alpha=tween.a1;state.beta=tween.b1;tween=null;onAngles();}}
+  if(inj.active){inj.tau=(now-inj.t0)/1000;$('ovFrame').textContent='F'+String(Math.floor(inj.tau*15)).padStart(3,'0');
+    if(inj.tau>inj.end){inj.active=false;btnInj.classList.remove('running');$('ovRec').classList.remove('on');}}
+  if(now-lastF>=30){lastF=now;renderFluoro(now/1000);}
+  if(roomDirty){roomDirty=false;renderRoom();}
+  if(padDirty){padDirty=false;renderPad();}
+  requestAnimationFrame(loop);
+}
+
+/* init */
+readHash();
+segSet('sysSeg','sys',state.sys);segSet('domSeg','dom',state.dom);segSet('fovSeg','fov',state.fov);
+tree=buildTree(state.dom);
+onTree();onAngles();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
