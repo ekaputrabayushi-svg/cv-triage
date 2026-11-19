@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>1-Click SOAP & Rujukan BPJS (TACC) Generator — 100 Kasus Poli & IGD Faskes 2</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+    .font-mono-code {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .scenario-card.active {
+      border-color: #0284c7;
+      background-color: #f0f9ff;
+      box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.22);
+    }
+    .scenario-card.active-igd {
+      border-color: #e11d48;
+      background-color: #fff1f2;
+      box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.22);
+    }
+    .pulse-highlight {
+      animation: highlightFade 0.9s ease-out;
+    }
+    @keyframes highlightFade {
+      0% { box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.55); }
+      100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+  <!-- Top Bar -->
+  <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-300 font-bold">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-sm sm:text-base font-bold tracking-tight text-white leading-tight">
+            1-Click SOAP &amp; Rujukan BPJS (TACC) Generator
+          </h1>
+          <p class="text-[11px] text-slate-400">
+            e-EMR Helper Faskes 2 (SIMRS / TrakCare / P-Care) &middot; 50 Kasus Poli + 50 Kasus IGD
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <div class="inline-flex rounded-lg bg-slate-800 p-0.5 border border-slate-700 text-xs">
+          <button type="button" id="modeFktpBtn" class="px-3 py-1.5 rounded-md font-semibold transition bg-sky-600 text-white">
+            Poli Rawat Jalan (50)
+          </button>
+          <button type="button" id="modeIgdBtn" class="px-3 py-1.5 rounded-md font-semibold transition text-slate-300 hover:text-white">
+            IGD / Emergensi (50)
+          </button>
+        </div>
+        <button type="button" id="resetBtn" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition">
+          Reset
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-4">
+    <!-- Step 1: Fast Search + Category Filter + Compact Grid -->
+    <section class="mb-4 bg-white rounded-xl border border-slate-200 shadow-sm p-3.5 sm:p-4">
+      <div class="flex flex-wrap items-center justify-between gap-2.5 mb-2.5">
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-sky-600 text-white text-xs font-bold">1</span>
+          <h2 class="text-sm font-semibold text-slate-800">Pilih Kasus Cepat</h2>
+          <span id="modeBadge" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800">POLI RAWAT JALAN</span>
+          <span id="resultCountBadge" class="text-[11px] text-slate-400">50 skenario</span>
+        </div>
+
+        <!-- Instant Search Box -->
+        <div class="relative w-full sm:w-80">
+          <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input type="text" id="scenarioSearch" placeholder="Ketik penyakit, gejala, atau ICD-10 (tekan /)..." class="w-full pl-9 pr-8 py-1.5 text-xs sm:text-sm border border-slate-300 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500" />
+          <button type="button" id="clearSearchBtn" class="hidden absolute right-2 top-1.5 text-slate-400 hover:text-slate-700 text-sm font-bold px-1">&times;</button>
+        </div>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div id="categoryTabs" class="flex flex-wrap gap-1.5 mb-2.5">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Compact Scrollable Scenario Grid -->
+      <div id="scenarioGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 max-h-52 overflow-y-auto pr-1">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- 2-Column Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+      <!-- Left Panel: Inputs -->
+      <section class="lg:col-span-6 space-y-4">
+        <!-- Card: Identitas & TTV -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-sky-600 text-white text-xs font-bold">2</span>
+              <h2 class="text-sm font-semibold text-slate-800">Data Klinis &amp; Tanda Vital</h2>
+            </div>
+            <div id="vitalBadges" class="flex flex-wrap gap-1.5"></div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3 pb-3 border-b border-slate-100">
+            <div>
+              <label for="ageInput" class="block text-xs font-medium text-slate-600 mb-1">Usia (tahun)</label>
+              <input type="number" id="ageInput" min="0" max="120" value="52" class="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500" />
+            </div>
+            <div>
+              <label for="sexSelect" class="block text-xs font-medium text-slate-600 mb-1">Jenis Kelamin</label>
+              <select id="sexSelect" class="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 bg-white">
+                <option value="Laki-laki">Laki-laki</option>
+                <option value="Perempuan">Perempuan</option>
+              </select>
+            </div>
+            <div class="col-span-2">
+              <label for="ekgSelect" class="block text-xs font-medium text-slate-600 mb-1">Penunjang / EKG Singkat</label>
+              <input type="text" id="ekgSelect" class="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500" />
+            </div>
+          </div>
+
+          <!-- Vitals Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 mb-3">
+            <div>
+              <label for="sbpInput" class="block text-xs font-medium text-slate-600 mb-1">TD Sistolik</label>
+              <div class="relative">
+                <input type="number" id="sbpInput" min="40" max="300" class="w-full px-2.5 py-1.5 text-sm font-semibold border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                <span class="absolute right-2 top-2 text-[10px] text-slate-400">mmHg</span>
+              </div>
+            </div>
+            <div>
+              <label for="dbpInput" class="block text-xs font-medium text-slate-600 mb-1">TD Diastolik</label>
+              <div class="relative">
+                <input type="number" id="dbpInput" min="20" max="200" class="w-full px-2.5 py-1.5 text-sm font-semibold border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                <span class="absolute right-2 top-2 text-[10px] text-slate-400">mmHg</span>
+              </div>
+            </div>
+            <div>
+              <label for="hrInput" class="block text-xs font-medium text-slate-600 mb-1">HR (Nadi)</label>
+              <div class="relative">
+                <input type="number" id="hrInput" min="20" max="260" class="w-full px-2.5 py-1.5 text-sm font-semibold border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                <span class="absolute right-2 top-2 text-[10px] text-slate-400">x/mnt</span>
+              </div>
+            </div>
+            <div>
+              <label for="rrInput" class="block text-xs font-medium text-slate-600 mb-1">RR (Napas)</label>
+              <div class="relative">
+                <input type="number" id="rrInput" min="6" max="60" class="w-full px-2.5 py-1.5 text-sm font-semibold border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                <span class="absolute right-2 top-2 text-[10px] text-slate-400">x/mnt</span>
+              </div>
+            </div>
+            <div class="col-span-2 sm:col-span-1">
+              <label for="spo2Input" class="block text-xs font-medium text-slate-600 mb-1">SpO2</label>
+              <div class="relative">
+                <input type="number" id="spo2Input" min="50" max="100" class="w-full px-2.5 py-1.5 text-sm font-semibold border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                <span class="absolute right-2 top-2 text-[10px] text-slate-400">%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Keluhan Singkat -->
+          <div class="mb-3">
+            <div class="flex items-center justify-between mb-1">
+              <label for="complaintInput" class="block text-xs font-medium text-slate-600">Keluhan Singkat &amp; Anamnesis Terarah</label>
+              <span class="text-[11px] text-slate-400">Klik chip untuk tambah cepat</span>
+            </div>
+            <textarea id="complaintInput" rows="2" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></textarea>
+            <div id="complaintChips" class="flex flex-wrap gap-1.5 mt-1.5"></div>
+          </div>
+
+          <!-- Pemeriksaan Fisik Tambahan -->
+          <div>
+            <label for="peInput" class="block text-xs font-medium text-slate-600 mb-1">Temuan Fisik Terfokus</label>
+            <input type="text" id="peInput" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500" />
+          </div>
+        </div>
+
+        <!-- Card: ICD-10 & Kriteria TACC -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-sky-600 text-white text-xs font-bold">3</span>
+              <h2 class="text-sm font-semibold text-slate-800">ICD-10 &amp; Kriteria BPJS (TACC / Kegawatan)</h2>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-3.5">
+            <div>
+              <label for="icdCodeInput" class="block text-xs font-medium text-slate-600 mb-1">Kode ICD-10</label>
+              <input type="text" id="icdCodeInput" class="w-full px-3 py-1.5 text-sm font-mono-code font-semibold border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500" />
+            </div>
+            <div class="sm:col-span-2">
+              <label for="icdDescInput" class="block text-xs font-medium text-slate-600 mb-1">Deskripsi Diagnosis ICD-10</label>
+              <input type="text" id="icdDescInput" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500" />
+            </div>
+          </div>
+
+          <!-- TACC Checkboxes -->
+          <div class="mb-3">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-medium text-slate-600">Komponen Justifikasi TACC BPJS</span>
+              <label class="inline-flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                <input type="checkbox" id="referNeededCheck" class="rounded border-slate-300 text-sky-600 focus:ring-sky-500" checked />
+                <span id="referToggleLabel">Perlu Lanjut Spesialis / Rujuk</span>
+              </label>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <label class="flex items-start gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                <input type="checkbox" id="taccTime" class="mt-0.5 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                <div class="text-xs">
+                  <div class="font-semibold text-slate-800">T &mdash; Time (Waktu)</div>
+                  <div class="text-[11px] text-slate-500">Terapi belum tercapai / kronis / golden time</div>
+                </div>
+              </label>
+              <label class="flex items-start gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                <input type="checkbox" id="taccAge" class="mt-0.5 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                <div class="text-xs">
+                  <div class="font-semibold text-slate-800">A &mdash; Age (Usia)</div>
+                  <div class="text-[11px] text-slate-500">Geriatri (&ge;65 th) / pediatri rentan</div>
+                </div>
+              </label>
+              <label class="flex items-start gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                <input type="checkbox" id="taccComorbidity" class="mt-0.5 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                <div class="text-xs">
+                  <div class="font-semibold text-slate-800">C &mdash; Comorbidity</div>
+                  <div class="text-[11px] text-slate-500">Penyakit penyerta multipel</div>
+                </div>
+              </label>
+              <label class="flex items-start gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                <input type="checkbox" id="taccComplication" class="mt-0.5 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                <div class="text-xs">
+                  <div class="font-semibold text-slate-800">C &mdash; Complication</div>
+                  <div class="text-[11px] text-slate-500">Komplikasi organ / kondisi akut</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Komorbid Cepat -->
+          <div class="mb-4">
+            <span class="block text-xs font-medium text-slate-600 mb-1.5">Komorbiditas Penyerta (Otomatis masuk ICD-10 Sekunder &amp; TACC)</span>
+            <div id="comorbidGrid" class="flex flex-wrap gap-1.5"></div>
+          </div>
+
+          <!-- Generate CTA -->
+          <button type="button" id="generateBtn" class="w-full py-2.5 px-4 bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white font-semibold text-sm rounded-xl shadow-sm transition flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Generate SOAP, ICD-10 &amp; Justifikasi BPJS
+          </button>
+        </div>
+      </section>
+
+      <!-- Right Panel: Outputs -->
+      <section id="outputPanel" class="lg:col-span-6 space-y-4 lg:sticky lg:top-20">
+        <div class="bg-slate-800 text-white rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shadow-sm">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span class="text-xs font-semibold">Output Siap Copy-Paste ke e-EMR</span>
+          </div>
+          <button type="button" id="copyAllBtn" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-semibold text-xs transition">
+            Copy Semua (SOAP + ICD + TACC)
+          </button>
+        </div>
+
+        <!-- Output 1: SOAP -->
+        <div id="soapCard" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-sky-700">Catatan Klinis S-O-A-P</span>
+              <span id="soapWordCount" class="text-[11px] text-slate-400"></span>
+            </div>
+            <button type="button" data-copy="soapOutput" class="copy-btn px-2.5 py-1 rounded-md bg-sky-600 hover:bg-sky-700 text-white text-xs font-medium transition">
+              Copy SOAP
+            </button>
+          </div>
+          <div class="p-3">
+            <textarea id="soapOutput" rows="12" class="w-full text-xs sm:text-[13px] leading-relaxed font-mono-code text-slate-800 bg-slate-50/70 border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-sky-500"></textarea>
+          </div>
+        </div>
+
+        <!-- Output 2: ICD-10 -->
+        <div id="icdCard" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-700">Kode ICD-10 Otomatis</span>
+            <div class="flex items-center gap-1.5">
+              <button type="button" id="copyIcdCodeOnlyBtn" class="px-2.5 py-1 rounded-md bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-xs font-medium transition">
+                Copy Kode Saja
+              </button>
+              <button type="button" data-copy="icdOutput" class="copy-btn px-2.5 py-1 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium transition">
+                Copy ICD-10 Lengkap
+              </button>
+            </div>
+          </div>
+          <div class="p-3">
+            <textarea id="icdOutput" rows="3" class="w-full text-xs sm:text-[13px] font-mono-code text-slate-800 bg-slate-50/70 border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+          </div>
+        </div>
+
+        <!-- Output 3: TACC / BPJS -->
+        <div id="taccCard" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span id="taccCardTitle" class="text-xs font-bold uppercase tracking-wider text-emerald-700">Alasan Rujukan / TACC BPJS</span>
+              <span id="taccStatusBadge" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800"></span>
+            </div>
+            <button type="button" data-copy="taccOutput" class="copy-btn px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium transition">
+              Copy Alasan TACC
+            </button>
+          </div>
+          <div id="rnsAlert" class="hidden mx-3 mt-3 p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-900"></div>
+          <div class="p-3">
+            <textarea id="taccOutput" rows="5" class="w-full text-xs sm:text-[13px] leading-relaxed font-mono-code text-slate-800 bg-slate-50/70 border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+          </div>
+        </div>
+
+        <!-- Session History -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-3.5">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-700">Riwayat Generate Terakhir (Sesi Lokal)</span>
+            <button type="button" id="clearHistoryBtn" class="text-[11px] text-slate-400 hover:text-rose-600 transition">Hapus Riwayat</button>
+          </div>
+          <div id="historyList" class="space-y-1.5 text-xs text-slate-500">
+            Belum ada riwayat tersimpan.
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-medium shadow-lg border border-slate-700">
+    <span class="text-emerald-400">&#10003;</span>
+    <span id="toastMsg">Berhasil disalin ke clipboard!</span>
+  </div>
+
+  <script>
+    // Helper to build clean scenario objects
+    function mk(id, setting, cat, title, icd, icdDesc, vitals, ekg, complaint, pe, assessment, plan, referNeeded, taccArr, chips, top = false) {
+      return {
+        id, setting, cat, title, icd, icdDesc,
+        sbp: vitals[0], dbp: vitals[1], hr: vitals[2], rr: vitals[3], spo2: vitals[4],
+        ekg, complaint, pe, assessment, plan, referNeeded,
+        tacc: { time: taccArr[0], age: taccArr[1], comorbidity: taccArr[2], complication: taccArr[3] },
+        chips: chips || ['Keluhan membaik', 'Kontrol rutin', 'Tidak ada tanda bahaya'],
+        top
+      };
+    }
+
+    // =====================================================================
+    // 100 SCENARIOS: 50 POLI RAWAT JALAN + 50 IGD / EMERGENSI (FASKES 2)
+    // =====================================================================
+    const SCENARIOS = [
+      // -------------------- POLI: KARDIO & VASKULAR (8) --------------------
+      mk('p_ht_ok', 'poli', 'Kardio', 'Hipertensi Esensial Terkontrol', 'I10', 'Essential (primary) hypertension', [126, 78, 74, 18, 99],
+        'EKG: Sinus rhythm, normoaxis, tidak tampak perubahan segmen ST-T akut',
+        'Kontrol rutin hipertensi, minum obat antihipertensi teratur, tidak ada nyeri dada, sesak napas, atau sakit kepala hebat.',
+        'Cor: S1-S2 reguler, murmur (-), gallop (-). Pulmo: vesikuler (+/+), ronkhi (-/-). Ekstremitas: edema (-/-).',
+        'Hipertensi esensial terkontrol baik tanpa kerusakan organ target akut',
+        '1. Lanjutkan antihipertensi oral sesuai regimen terakhir.\n2. Edukasi diet rendah garam (<5 g/hari) dan kepatuhan obat.\n3. Pertimbangkan Program Rujuk Balik (PRB) ke FKTP bila stabil >=3 bulan.',
+        false, [0,0,0,0], ['Kontrol rutin, obat habis', 'Patuh minum obat', 'Tidak ada keluhan akut'], true),
+
+      mk('p_ht_unctrl', 'poli', 'Kardio', 'Hipertensi Tidak Terkontrol', 'I10', 'Essential (primary) hypertension', [164, 96, 84, 18, 98],
+        'EKG: Sinus rhythm dengan tanda LVH / strain minimal',
+        'Kontrol hipertensi, tekanan darah masih tinggi meski minum 1-2 obat, kadang pusing ringan atau tengkuk terasa berat.',
+        'Cor: S1-S2 reguler, murmur (-). Pulmo: vesikuler (+/+), ronkhi (-/-). Neurologis: defisit fokal (-).',
+        'Hipertensi esensial derajat II belum terkontrol optimal',
+        '1. Optimasi/titrasi kombinasi antihipertensi oral (ACEi/ARB + CCB +/- Diuretik).\n2. Evaluasi fungsi ginjal (Ur/Cr), elektrolit, dan urinalisis.\n3. Edukasi pembatasan garam dan kontrol ulang 2-4 minggu.',
+        true, [1,0,0,0], ['Obat habis beberapa hari', 'Tengkuk terasa berat', 'Nyeri dada (-)'], false),
+
+      mk('p_hhd', 'poli', 'Kardio', 'Penyakit Jantung Hipertensi (HHD)', 'I11.9', 'Hypertensive heart disease without heart failure', [144, 88, 78, 18, 98],
+        'EKG: Sinus rhythm dengan kriteria voltase LVH / strain pattern',
+        'Kontrol penyakit jantung hipertensi, sesak saat aktivitas berat minimal, tidak ada nyeri dada saat istirahat.',
+        'Cor: iktus kordis kuat angkat, S1-S2 reguler, murmur (-), gallop (-). Pulmo: vesikuler (+/+), ronkhi (-/-).',
+        'Hypertensive Heart Disease (HHD) tanpa gagal jantung akut',
+        '1. Lanjutkan antihipertensi kardioprotektif (ACEi/ARB + CCB/Beta-blocker).\n2. Evaluasi ekokardiografi berkala untuk menilai LVH dan fungsi diastolik.\n3. Kontrol rutin Poli Jantung.',
+        true, [1,0,0,1], ['Kontrol HHD rutin', 'Riwayat hipertensi lama', 'Cepat lelah saat aktivitas'], true),
+
+      mk('p_cad', 'poli', 'Kardio', 'PJK / CAD Stabil (Pasca PCI)', 'I25.1', 'Atherosclerotic heart disease of native coronary artery', [124, 76, 68, 18, 98],
+        'EKG: Sinus rhythm, tidak tampak perubahan segmen ST-T akut',
+        'Kontrol rutin Penyakit Jantung Koroner stabil, nyeri dada tipikal saat istirahat disangkal, aktivitas harian baik.',
+        'Cor: S1-S2 reguler, murmur (-), gallop (-). Pulmo: vesikuler (+/+), ronkhi (-/-). Akral hangat.',
+        'Penyakit Jantung Koroner (CAD) Stabil / Chronic Coronary Syndrome',
+        '1. Lanjutkan terapi optimal medis (antiplatelet, statin intensitas tinggi, beta-blocker/ACEi).\n2. Evaluasi profil lipid dan gula darah berkala.\n3. Edukasi tanda bahaya nyeri dada akut (segera ke IGD bila >20 menit).',
+        true, [1,0,1,1], ['Kontrol pasca pasang ring/PCI', 'Angina stabil', 'Nyeri dada saat ini (-)'], true),
+
+      mk('p_hf', 'poli', 'Kardio', 'Gagal Jantung Kronik Stabil (CHF)', 'I50.9', 'Heart failure, unspecified', [116, 72, 76, 19, 97],
+        'Ekokardiografi terakhir: penurunan LVEF / disfungsi diastolik',
+        'Kontrol gagal jantung kronik, sesak napas hanya saat aktivitas sedang-berat (NYHA II), tidur 1-2 bantal, bengkak kaki minimal.',
+        'JVP 5+2 cmH2O. Cor: S1-S2 reguler, gallop S3 (-). Pulmo: ronkhi (-/-). Ekstremitas: edema pretibial (-/-).',
+        'Gagal Jantung Kronik Stabil (NYHA Kelas II)',
+        '1. Pertahankan GDMT (ARNI/ACEi/ARB, Beta-blocker, MRA, SGLT2i) dan diuretik sesuai dosis.\n2. Edukasi restriksi cairan, diet rendah garam, dan timbang berat badan harian.\n3. Kontrol Poli Jantung untuk titrasi GDMT dan cek elektrolit/fungsi ginjal.',
+        true, [1,0,1,1], ['Sesak saat aktivitas (DOE)', 'Tidur butuh >1 bantal', 'Edema kaki berkurang'], true),
+
+      mk('p_afib', 'poli', 'Kardio', 'Atrial Fibrilasi (AFib) Kontrol', 'I48.91', 'Unspecified atrial fibrillation', [124, 78, 82, 18, 98],
+        'EKG: Atrial fibrilasi dengan respons ventrikel terkontrol (AFib NVR)',
+        'Kontrol Atrial Fibrilasi, kadang terasa berdebar ringan, tidak ada sesak berat atau pingsan.',
+        'Cor: S1-S2 ireguler (irregularly irregular), laju ventrikel terkontrol. Pulmo: vesikuler (+/+), ronkhi (-/-).',
+        'Atrial Fibrilasi dengan laju ventrikel terkontrol',
+        '1. Lanjutkan rate control dan antikoagulan oral sesuai skor CHA2DS2-VASc & HAS-BLED.\n2. Edukasi tanda perdarahan dan kepatuhan obat.\n3. Kontrol berkala Poli Jantung.',
+        true, [1,0,0,1], ['Kontrol antikoagulan/INR', 'Berdebar ringan sesekali', 'Nadi ireguler stabil'], false),
+
+      mk('p_dyslip', 'poli', 'Kardio', 'Dislipidemia / Hiperkolesterolemia', 'E78.5', 'Hyperlipidemia, unspecified', [124, 78, 74, 18, 99],
+        'Lab: Kolesterol total / LDL di atas target risiko kardiovaskular',
+        'Kontrol profil lipid, tidak ada keluhan nyeri dada atau nyeri otot (mialgia).',
+        'KU baik, Compos Mentis. Cor/Pulmo dalam batas normal. Tidak tampak xantelasma/xantoma.',
+        'Dislipidemia dalam terapi penurun lipid',
+        '1. Lanjutkan statin sesuai stratifikasi risiko kardiovaskular.\n2. Edukasi diet rendah lemak jenuh dan olahraga aerobik 150 menit/minggu.\n3. Evaluasi ulang profil lipid tiap 3-6 bulan.',
+        false, [0,0,1,0], ['Kontrol hasil lab kolesterol', 'Nyeri otot (-)', 'Sedang minum statin'], false),
+
+      mk('p_pad', 'poli', 'Kardio', 'Penyakit Arteri Perifer / CVI', 'I73.9', 'Peripheral vascular disease, unspecified', [134, 82, 76, 18, 98],
+        'USG Doppler Vaskular: evaluasi aliran arteri/vena ekstremitas bawah',
+        'Nyeri/pegal pada betis saat berjalan jarak tertentu membaik saat istirahat (klaudikasio) atau bengkak tungkai kronis.',
+        'Ekstremitas bawah: pulsasi a. dorsalis pedis teraba lemah/normal, varises/hiperpigmentasi kulit (+/-), ulkus (-).',
+        'Suspek Penyakit Arteri Perifer (PAD) / Insufisiensi Vena Kronik',
+        '1. Edukasi berhenti merokok, perawatan kaki, dan latihan jalan terstruktur (atau stoking kompresi bila CVI).\n2. Pertimbangkan antiplatelet/cilostazol atau terapi vaskular sesuai hasil Doppler.\n3. Kontrol Poli Bedah Vaskular / Jantung.',
+        true, [1,0,1,1], ['Nyeri betis saat jalan', 'Kaki bengkak sore hari', 'Riwayat DM/merokok'], false),
+
+      // -------------------- POLI: METABOLIK & GINJAL (7) --------------------
+      mk('p_dm2', 'poli', 'Metabolik & Ginjal', 'Diabetes Melitus Tipe 2', 'E11.9', 'Type 2 diabetes mellitus without complications', [130, 80, 78, 18, 98],
+        'Lab: GDP / GD2PP / HbA1c dalam pemantauan kontrol glikemik',
+        'Kontrol rutin DM tipe 2, minum OAD/insulin teratur, tidak ada keluhan hipoglikemia atau luka kaki.',
+        'KU baik, Compos Mentis. Cor/Pulmo normal. Ekstremitas: ulkus diabetikum (-), sensibilitas baik.',
+        'Diabetes Melitus Tipe 2 dalam terapi reguler',
+        '1. Lanjutkan terapi OAD / insulin sesuai profil glukosa darah.\n2. Edukasi pola makan 3J, aktivitas fisik, dan perawatan kaki.\n3. Cek HbA1c, profil lipid, dan fungsi ginjal berkala.',
+        true, [1,0,1,0], ['Kontrol gula darah rutin', 'Hasil lab HbA1c tinggi', 'Tidak ada luka kaki'], true),
+
+      mk('p_dm_neuro', 'poli', 'Metabolik & Ginjal', 'DM Tipe 2 + Neuropati/Komplikasi', 'E11.8', 'Type 2 diabetes mellitus with unspecified complications', [136, 84, 80, 18, 98],
+        'Lab: Hiperglikemia dengan evaluasi HbA1c dan fungsi ginjal',
+        'Kontrol DM tipe 2 disertai keluhan kesemutan, kebas, atau rasa terbakar di kedua telapak kaki sejak beberapa bulan.',
+        'Ekstremitas bawah: penurunan sensasi monofilamen/getar distal simetris, pulsasi pedis (+/+), ulkus (-).',
+        'Diabetes Melitus Tipe 2 dengan komplikasi neuropati diabetikum',
+        '1. Optimalkan kontrol glikemik (OAD/insulin) untuk mencegah progresivitas komplikasi.\n2. Berikan terapi simtomatik neuropati (Gabapentin/Pregabalin/Vitamin neurotropik) sesuai toleransi.\n3. Edukasi alas kaki pelindung dan kontrol Poli Penyakit Dalam.',
+        true, [1,0,1,1], ['Kesemutan kedua kaki', 'Kebas telapak kaki', 'Gula darah belum stabil'], false),
+
+      mk('p_ckd', 'poli', 'Metabolik & Ginjal', 'Penyakit Ginjal Kronik (CKD)', 'N18.9', 'Chronic kidney disease, unspecified', [144, 86, 80, 19, 97],
+        'Lab: Peningkatan Ureum/Kreatinin dengan penurunan eGFR',
+        'Kontrol rutin penyakit ginjal kronik, BAK masih lancar, cepat lelah ringan, bengkak tungkai minimal.',
+        'Konjungtiva anemis ringan (+/-). Cor/Pulmo stabil. Ekstremitas: edema pretibial minimal.',
+        'Chronic Kidney Disease (CKD) dalam pemantauan nefroproteksi',
+        '1. Lanjutkan nefroproteksi (kontrol TD, ACEi/ARB/SGLT2i sesuai indikasi), koreksi anemia bila perlu.\n2. Hindari obat nefrotoksik (OAINS/jamu).\n3. Pantau Ur/Cr, eGFR, Kalium, dan Hb berkala di Poli Dalam/Ginjal.',
+        true, [1,0,1,1], ['Kontrol fungsi ginjal', 'Cepat lelah / pucat', 'Edema tungkai ringan'], false),
+
+      mk('p_ckd_hd', 'poli', 'Metabolik & Ginjal', 'CKD Stage 5 / Kontrol HD', 'N18.5', 'Chronic kidney disease, stage 5', [152, 88, 82, 20, 97],
+        'Lab: Ureum/Kreatinin tinggi, eGFR <15 mL/min/1.73m2',
+        'Kontrol rutin pasien CKD Stage 5 / Hemodialisa reguler, keluhan sesak berat saat ini tidak ada.',
+        'Konjungtiva anemis (+/+). Akses AV shunt / CDL baik (thrill/bruit +). Pulmo: ronkhi (-/-).',
+        'Chronic Kidney Disease Stage 5 (dalam program HD reguler / persiapan RRT)',
+        '1. Lanjutkan jadwal HD rutin, pembatasan cairan, dan diet rendah kalium/fosfat.\n2. Lanjutkan terapi suportif (asam folat, CaCO3, eritropoietin bila Hb <10).\n3. Pantau elektrolit, Hb, dan dry weight.',
+        true, [1,0,1,1], ['Jadwal HD rutin', 'Cek Hb & elektrolit', 'Sesak (-)'], false),
+
+      mk('p_thyroid', 'poli', 'Metabolik & Ginjal', 'Hipertiroid / Gangguan Tiroid', 'E05.9', 'Thyrotoxicosis, unspecified', [132, 78, 98, 18, 99],
+        'Lab: Evaluasi TSHs dan Free T4 berkala',
+        'Kontrol gangguan tiroid, keluhan berdebar dan tangan gemetar berkurang dengan obat rutin.',
+        'Leher: pembesaran tiroid difus/nodul (+/-). Ekstremitas: tremor halus (-/+). Cor: reguler.',
+        'Tirotoksikosis / Hipertiroid dalam terapi antitiroid',
+        '1. Lanjutkan obat antitiroid (Thiamazole/PTU) +/- beta-blocker bila masih takikardia.\n2. Evaluasi ulang TSHs dan FT4 untuk penyesuaian dosis.\n3. Kontrol Poli Penyakit Dalam / Endokrin.',
+        true, [1,0,0,0], ['Berdebar berkurang', 'Benjolan leher', 'Cek hasil TSH/FT4'], false),
+
+      mk('p_gout', 'poli', 'Metabolik & Ginjal', 'Artritis Gout / Hiperurisemia', 'M10.9', 'Gout, unspecified', [128, 80, 76, 18, 99],
+        'Lab: Peningkatan kadar asam urat serum',
+        'Nyeri sendi jempol kaki/pergelangan kaki hilang timbul, saat ini fase tenang/nyeri ringan.',
+        'Status lokalis sendi: tofus (-/+), kemerahan dan nyeri tekan minimal saat ini.',
+        'Artritis Gout Kronik / Hiperurisemia',
+        '1. Terapi penurun asam urat (Allopurinol) pada fase interkritikal; hindari memulai saat serangan akut.\n2. Edukasi diet rendah purin, cukup minum air putih, dan hindari alkohol.\n3. Evaluasi kadar asam urat target <6 mg/dL.',
+        false, [0,0,0,0], ['Nyeri jempol kaki berulang', 'Kontrol kadar asam urat', 'Ada benjolan tofus'], false),
+
+      mk('p_obes', 'poli', 'Metabolik & Ginjal', 'Obesitas / Sindrom Metabolik', 'E66.9', 'Obesity, unspecified', [132, 82, 78, 18, 99],
+        'Lab: Evaluasi profil lipid, gula darah puasa, dan fungsi hati',
+        'Konsultasi manajemen berat badan dan faktor risiko metabolik, cepat lelah saat aktivitas berat.',
+        'IMT kategori obesitas. Cor/Pulmo dalam batas normal. Acanthosis nigricans (+/-).',
+        'Obesitas dengan risiko Sindrom Metabolik',
+        '1. Edukasi defisit kalori bertahap, diet tinggi serat, dan kurangi gula/karbohidrat sederhana.\n2. Program aktivitas fisik terstruktur 150-300 menit/minggu.\n3. Skrining hipertensi, DM, dan dislipidemia.',
+        false, [0,0,1,0], ['Konsultasi berat badan', 'Cepat mengantuk/lelah', 'Riwayat keluarga DM/HT'], false),
+
+      // -------------------- POLI: RESPIRASI (6) --------------------
+      mk('p_tb', 'poli', 'Respirasi', 'TB Paru Kontrol OAT', 'A15.0', 'Tuberculosis of lung, confirmed by sputum microscopy', [114, 72, 84, 20, 97],
+        'Foto Toraks / TCM / BTA sputum dalam pemantauan pengobatan OAT',
+        'Kontrol rutin pengobatan TB Paru (OAT bulan ke-...), batuk dan keringat malam sudah berkurang, nafsu makan membaik.',
+        'Pulmo: suara napas vesikuler (+/+), ronkhi minimal di apeks. Tidak ada ikterus sklera.',
+        'Tuberkulosis Paru dalam terapi OAT (fase intensif/lanjutan)',
+        '1. Lanjutkan OAT sesuai dosis berat badan dan fase pengobatan; pantau efek samping (mual, ikterus, gangguan penglihatan).\n2. Edukasi kepatuhan minum obat tanpa putus (PMO) dan etika batuk.\n3. Evaluasi BTA/TCM ulang sesuai jadwal.',
+        true, [1,0,0,0], ['Batuk berkurang', 'Berat badan mulai naik', 'Tidak ada mual/kuning'], true),
+
+      mk('p_ppok', 'poli', 'Respirasi', 'PPOK Stabil', 'J44.9', 'Chronic obstructive pulmonary disease, unspecified', [128, 80, 82, 20, 95],
+        'Spirometri / Ro Toraks: gambaran emfisema / obstruksi jalan napas kronik',
+        'Kontrol rutin PPOK, sesak napas ringan saat berjalan cepat, batuk berdahak pagi hari terkontrol dengan inhaler.',
+        'Pulmo: dada emfisematous, ekspirasi memanjang, wheezing minimal/(-), ronkhi (-/-).',
+        'Penyakit Paru Obstruktif Kronik (PPOK) Stabil',
+        '1. Lanjutkan inhaler bronkodilator kerja panjang (LABA/LAMA +/- ICS sesuai grup GOLD).\n2. Edukasi berhenti merokok mutlak dan cek teknik penggunaan inhaler.\n3. Kontrol berkala Poli Paru.',
+        true, [1,1,0,0], ['Sesak saat jalan jauh', 'Riwayat perokok lama', 'Kontrol inhaler rutin'], false),
+
+      mk('p_asma', 'poli', 'Respirasi', 'Asma Bronkial Terkontrol', 'J45.9', 'Asthma, unspecified', [118, 76, 78, 18, 99],
+        'APE / Spirometri dalam evaluasi kontrol asma',
+        'Kontrol asma bronkial, serangan mengi jarang, aktivitas harian tidak terganggu.',
+        'Pulmo: vesikuler (+/+), wheezing (-/-), ronkhi (-/-).',
+        'Asma Bronkial Terkontrol Baik / Sebagian',
+        '1. Lanjutkan inhaler controller (ICS/LABA) dan sediaan reliever bila perlu.\n2. Edukasi penghindaran pencetus (debu, dingin, asap).\n3. Evaluasi kontrol asma (ACT) pada kunjungan berikutnya.',
+        false, [0,0,0,0], ['Mengi jarang muncul', 'Kontrol obat semprot', 'Tidak terbangun malam'], false),
+
+      mk('p_ispa', 'poli', 'Respirasi', 'ISPA / Nasofaringitis Akut', 'J06.9', 'Acute upper respiratory infection, unspecified', [118, 74, 82, 18, 99],
+        'Tidak memerlukan pemeriksaan penunjang khusus saat ini',
+        'Batuk, pilek, dan nyeri tenggorokan sejak 2 hari terakhir, demam ringan membaik.',
+        'Faring: hiperemis ringan (+), tonsil T1-T1 tenang. Pulmo: vesikuler (+/+), ronkhi (-/-), wheezing (-/-).',
+        'Infeksi Saluran Pernapasan Akut (ISPA) tanpa komplikasi',
+        '1. Terapi simtomatik (dekongestan/antihistamin, ekspektoran, parasetamol bila demam).\n2. Edukasi istirahat cukup, hidrasi, dan etika batuk/masker.\n3. Tidak memerlukan antibiotik kecuali ada bukti infeksi bakteri sekunder.',
+        false, [0,0,0,0], ['Batuk pilek 2 hari', 'Nyeri menelan ringan', 'Sesak napas (-)'], false),
+
+      mk('p_bronkitis', 'poli', 'Respirasi', 'Bronkitis Akut / Kronik', 'J40', 'Bronchitis, not specified as acute or chronic', [122, 78, 82, 19, 98],
+        'Ro Toraks: tidak tampak infiltrat pneumonia',
+        'Batuk berdahak sejak 1 minggu terakhir, tidak disertai sesak napas berat atau demam tinggi.',
+        'Pulmo: vesikuler (+/+), ronkhi basah kasar minimal (+/+), wheezing (-/-).',
+        'Bronkitis tanpa tanda pneumonia',
+        '1. Mukolitik/ekspektoran oral dan hidrasi hangat adekuat.\n2. Edukasi hindari paparan asap rokok dan debu.\n3. Kontrol ulang bila batuk >2-3 minggu untuk skrining TB.',
+        false, [0,0,0,0], ['Batuk berdahak 1 minggu', 'Demam tinggi (-)', 'Sesak (-)'], false),
+
+      mk('p_efusi', 'poli', 'Respirasi', 'Efusi Pleura Kontrol', 'J90', 'Pleural effusion, not elsewhere classified', [120, 76, 84, 20, 96],
+        'Foto Toraks / USG Toraks: evaluasi cairan pleura',
+        'Kontrol pasca tindakan/terapi efusi pleura, sesak napas sudah jauh berkurang.',
+        'Pulmo: suara napas menurun minimal di basal hemitoraks terkait, perkusi redup minimal.',
+        'Efusi Pleura dalam pemantauan etiologi & resolusi',
+        '1. Lanjutkan terapi etiologi dasar (OAT/diuretik/lainnya sesuai hasil analisis cairan pleura).\n2. Evaluasi Foto Toraks/USG Toraks serial.\n3. Kontrol Poli Paru.',
+        true, [1,0,1,1], ['Sesak berkurang', 'Kontrol foto toraks', 'Pasca pungsi pleura'], false),
+
+      // -------------------- POLI: GI & HEPATOBILIER (7) --------------------
+      mk('p_dyspepsia', 'poli', 'GI & Hepar', 'Dispepsia Fungsional', 'K30', 'Functional dyspepsia', [120, 76, 78, 18, 99],
+        'EKG normal (bila usia >40 th dengan nyeri epigastrium untuk eksklusi jantung)',
+        'Nyeri ulu hati terasa perih/begah, mual, dan cepat kenyang terutama bila terlambat makan.',
+        'Abdomen: supel, bising usus (+) normal, nyeri tekan epigastrium (+), defans (-).',
+        'Dispepsia Fungsional tanpa alarm symptoms',
+        '1. Terapi PPI oral (Omeprazole/Lansoprazole 1x20-30 mg ac) +/- prokinetik.\n2. Edukasi makan teratur porsi kecil, hindari pedas/asam/kopi.\n3. Evaluasi tanda bahaya bila gejala menetap >4-8 minggu.',
+        false, [0,0,0,0], ['Nyeri ulu hati', 'Kembung & mual', 'Telat makan'], true),
+
+      mk('p_gerd', 'poli', 'GI & Hepar', 'GERD (Refluks Gastroesofageal)', 'K21.9', 'Gastro-esophageal reflux disease without esophagitis', [122, 78, 76, 18, 99],
+        'Evaluasi klinis GERD-Q; endoskopi dipertimbangkan bila refrakter',
+        'Rasa panas di dada menjalar ke tenggorokan (heartburn) dan regurgitasi asam terutama setelah makan atau saat berbaring.',
+        'Abdomen: nyeri tekan epigastrium ringan (+). Cor/Pulmo dalam batas normal.',
+        'Gastroesophageal Reflux Disease (GERD)',
+        '1. Terapi PPI oral selama 4-8 minggu.\n2. Edukasi tidak berbaring <2-3 jam setelah makan, tinggikan kepala tempat tidur, kurangi kafein/lemak.\n3. Kontrol ulang bila gejala tidak membaik.',
+        false, [0,0,0,0], ['Rasa terbakar di dada', 'Mulut terasa asam/pahit', 'Memberat saat tidur'], false),
+
+      mk('p_cholelith', 'poli', 'GI & Hepar', 'Kolelitiasis / Batu Empedu', 'K80.2', 'Calculus of gallbladder without cholecystitis', [126, 78, 78, 18, 99],
+        'USG Abdomen: tampak batu kandung empedu (cholelithiasis)',
+        'Nyeri perut kanan atas hilang timbul terutama setelah makan berlemak, mual ringan, tidak demam atau kuning.',
+        'Sklera ikterik (-). Abdomen: nyeri tekan ringan kuadran kanan atas, Murphy sign (-).',
+        'Kolelitiasis Simtomatik tanpa kolesistitis akut',
+        '1. Edukasi diet rendah lemak dan analgetik/antispasmodik bila nyeri ringan.\n2. Konsul Poli Bedah Digestif untuk rencana kolesistektomi elektif.\n3. Edukasi ke IGD bila muncul demam, nyeri hebat menetap, atau kuning.',
+        true, [1,0,0,1], ['Nyeri kanan atas setelah makan lemak', 'Hasil USG batu empedu', 'Demam/kuning (-)'], false),
+
+      mk('p_sirosis', 'poli', 'GI & Hepar', 'Sirosis Hati / Hepatitis Kronik', 'K74.6', 'Other and unspecified cirrhosis of liver', [112, 70, 80, 19, 98],
+        'Lab: SGOT/SGPT, Albumin, Bilirubin, PT/INR; USG Abdomen',
+        'Kontrol penyakit hati kronis, perut terasa agak penuh/begah, nafsu makan cukup, tidak ada muntah darah atau BAB hitam.',
+        'Sklera subikterik (+/-). Abdomen: shifting dullness (-/+), hepatosplenomegali (+/-). Spider nevi (+/-).',
+        'Sirosis Hati Kompensata / Penyakit Hati Kronik dalam pemantauan',
+        '1. Lanjutkan terapi suportif hepar / diuretik bila asites ringan dan antivirus bila Hepatitis B/C.\n2. Edukasi pantang alkohol/obat hepatotoksik, diet cukup protein.\n3. Pantau fungsi hati, AFP, USG berkala di Poli Dalam/GEH.',
+        true, [1,0,1,1], ['Kontrol fungsi hati', 'Perut terasa penuh', 'Muntah darah/melena (-)'], false),
+
+      mk('p_hemoroid', 'poli', 'GI & Hepar', 'Hemoroid Interna / Eksterna', 'I84.9', 'Unspecified haemorrhoids without complication', [120, 76, 76, 18, 99],
+        'Anuskopi / RT bila indikasi; cek Hb bila riwayat perdarahan sering',
+        'Keluhan benjolan di anus saat BAB dan/atau BAB berdarah merah segar menetes tanpa nyeri perut hebat.',
+        'Abdomen: supel. Regio anal: tampak hemoroid grade II-III (+/-), perdarahan aktif (-).',
+        'Hemoroid tanpa komplikasi trombosis/anemia berat',
+        '1. Edukasi diet tinggi serat, minum cukup air, dan hindari mengedan lama.\n2. Terapi flebotropik oral / supositoria antihemoroid dan pelunak feses.\n3. Konsul Poli Bedah bila grade III-IV untuk evaluasi tindakan.',
+        true, [1,0,0,0], ['BAB berdarah merah segar', 'Benjolan di anus', 'Sulit BAB / kurang serat'], false),
+
+      mk('p_konstipasi', 'poli', 'GI & Hepar', 'Konstipasi Kronik / IBS', 'K59.0', 'Constipation', [120, 76, 74, 18, 99],
+        'Tidak ada tanda obstruksi atau perdarahan saluran cerna',
+        'Sulit BAB (>3 hari sekali), feses keras, perut terasa kembung/begah tanpa penurunan berat badan.',
+        'Abdomen: agak distensi ringan, bising usus (+) normal, nyeri tekan minimal.',
+        'Konstipasi Kronik Fungsional',
+        '1. Edukasi peningkatan serat, cairan, dan aktivitas fisik.\n2. Laksatif osmotik (Laktulosa / Polietilen glikol) jangka pendek.\n3. Evaluasi lebih lanjut bila ada red flags (usia >50 th baru muncul, melena, BB turun).',
+        false, [0,0,0,0], ['BAB jarang & keras', 'Perut kembung', 'Tidak ada darah saat BAB'], false),
+
+      mk('p_gastritis', 'poli', 'GI & Hepar', 'Gastritis Kronik', 'K29.5', 'Unspecified chronic gastritis', [118, 74, 76, 18, 99],
+        'Evaluasi riwayat OAINS atau H. pylori bila gejala berulang',
+        'Nyeri ulu hati hilang timbul sejak beberapa minggu, mual saat perut kosong.',
+        'Abdomen: nyeri tekan epigastrium ringan (+), defans (-).',
+        'Gastritis Kronik',
+        '1. Terapi PPI / sukralfat oral dan hentikan penggunaan OAINS bila ada.\n2. Edukasi pola makan teratur.\n3. Pertimbangkan uji H. pylori / endoskopi bila refrakter.',
+        false, [0,0,0,0], ['Sering minum obat nyeri', 'Perih saat perut kosong', 'Mual ringan'], false),
+
+      // -------------------- POLI: NEUROLOGI & PSIKIATRI (6) --------------------
+      mk('p_post_stroke', 'poli', 'Neuro', 'Kontrol Pasca Stroke Iskemik', 'I69.3', 'Sequelae of cerebral infarction', [138, 84, 76, 18, 98],
+        'CT-Scan Kepala sebelumnya: infark serebri; evaluasi faktor risiko vaskular',
+        'Kontrol rutin pasca stroke iskemik, kelemahan anggota gerak sisi kanan/kiri berangsur membaik dengan fisioterapi.',
+        'GCS E4V5M6. Motorik: hemiparese residual kekuatan 4/4. Bicara cukup jelas.',
+        'Sekuele Stroke Iskemik (kontrol prevensi sekunder & rehabilitasi)',
+        '1. Lanjutkan prevensi sekunder (antiplatelet, statin, antihipertensi target).\n2. Lanjutkan program fisioterapi / rehabilitasi medik.\n3. Kontrol faktor risiko (TD, gula darah, kolesterol) di Poli Saraf.',
+        true, [1,0,1,1], ['Kontrol pasca stroke', 'Menjalani fisioterapi', 'Obat pengencer darah rutin'], true),
+
+      mk('p_bppv', 'poli', 'Neuro', 'Vertigo Perifer / BPPV', 'H81.1', 'Benign paroxysmal vertigo', [124, 78, 80, 18, 99],
+        'Dix-Hallpike test (+/-); tidak ada tanda defisit batang otak/serebelum',
+        'Pusing berputar (vertigo) singkat terutama saat berubah posisi kepala (bangun tidur/menoleh), disertai mual ringan.',
+        'GCS E4V5M6. Nistagmus horizontal/rotatoar (+/-). Defisit neurologis fokal (-), tes tunjuk hidung baik.',
+        'Benign Paroxysmal Positional Vertigo (BPPV) / Vertigo Perifer',
+        '1. Terapi Betahistine oral +/- antiemetik bila mual.\n2. Lakukan manuver Epley / Brandt-Daroff di rumah.\n3. Edukasi bangkit perlahan dan segera ke IGD bila muncul bicara pelo atau lemah sesisi.',
+        false, [0,0,0,0], ['Pusing berputar saat miring/bangun', 'Mual ringan', 'Bicara pelo/lemah sesisi (-)'], false),
+
+      mk('p_tth', 'poli', 'Neuro', 'Tension Headache / Migrain', 'G44.2', 'Tension-type headache', [122, 76, 76, 18, 99],
+        'Tidak ada tanda peningkatan tekanan intrakranial',
+        'Nyeri kepala terasa seperti terikat/tegang di kedua sisi kepala atau berdenyut satu sisi, hilang timbul saat stres/kurang tidur.',
+        'GCS E4V5M6. Funduskopi/neurologis dalam batas normal, kaku kuduk (-).',
+        'Tension-Type Headache / Migrain tanpa tanda bahaya',
+        '1. Analgetik lini pertama (Parasetamol/Ibuprofen) atau triptan bila migrain berat.\n2. Edukasi manajemen stres, tidur cukup, dan hindari pemicu.\n3. Evaluasi ulang bila nyeri kepala memberat progresif.',
+        false, [0,0,0,0], ['Kepala terasa diikat', 'Kurang tidur / stres', 'Muntah menyemprot (-)'], false),
+
+      mk('p_epilepsi', 'poli', 'Neuro', 'Epilepsi Kontrol OAE', 'G40.9', 'Epilepsy, unspecified', [118, 74, 76, 18, 99],
+        'EEG sebelumnya sesuai gambaran epileptiform; evaluasi obat rutin',
+        'Kontrol rutin epilepsi, bebas kejang dalam beberapa bulan terakhir dengan obat anti-epilepsi teratur.',
+        'GCS E4V5M6, status neurologis dalam batas normal.',
+        'Epilepsi terkontrol dengan Obat Anti-Epilepsi (OAE)',
+        '1. Lanjutkan OAE sesuai dosis rutin (jangan putus obat mendadak).\n2. Edukasi tidur cukup, hindari kelelahan ekstrem dan cahaya berkedip.\n3. Kontrol rutin Poli Saraf.',
+        true, [1,0,0,0], ['Bebas kejang', 'Kontrol obat kejang rutin', 'Efek samping obat (-)'], false),
+
+      mk('p_neuropati', 'poli', 'Neuro', 'Neuropati Perifer / CTS', 'G62.9', 'Polyneuropathy, unspecified', [124, 78, 74, 18, 99],
+        'Evaluasi gula darah, vitamin B12, atau ENMG bila perlu',
+        'Kesemutan, baal, atau nyeri menjalar pada jari tangan/kaki sejak beberapa minggu.',
+        'Sensibilitas distal menurun ringan, kekuatan motorik baik.',
+        'Neuropati Perifer',
+        '1. Terapi vitamin neurotropik (B1, B6, B12) +/- Gabapentin bila nyeri neuropatik.\n2. Cari dan kendalikan penyebab dasar (DM, kompresi mekanik).\n3. Kontrol Poli Saraf.',
+        true, [1,0,0,0], ['Tangan sering kesemutan', 'Nyeri seperti tertusuk', 'Kelemahan otot (-)'], false),
+
+      mk('p_anxietas', 'poli', 'Neuro', 'Gangguan Anxietas / Psikosomatik', 'F41.9', 'Anxiety disorder, unspecified', [126, 80, 88, 18, 99],
+        'EKG normal (eksklusi gangguan irama jantung)',
+        'Merasa cemas berlebihan, sulit tidur, kadang dada berdebar dan napas terasa pendek saat pikiran tegang.',
+        'KU baik, Compos Mentis. Cor/Pulmo dalam batas normal.',
+        'Gangguan Anxietas / Keluhan Psikosomatik',
+        '1. Psikoedukasi teknik relaksasi napas dalam dan sleep hygiene.\n2. Farmakoterapi anxiolitik/SSRI sesuai indikasi klinis.\n3. Kontrol Poli Jiwa / Psikiatri bila perlu pendampingan.',
+        true, [1,0,0,0], ['Sulit tidur', 'Cemas & berdebar', 'Hasil EKG normal'], false),
+
+      // -------------------- POLI: BEDAH, ORTOPEDI & UROLOGI (6) --------------------
+      mk('p_oa', 'poli', 'Bedah & Trauma', 'Osteoartritis Genu (Lutut)', 'M17.9', 'Gonarthrosis, unspecified', [130, 80, 76, 18, 99],
+        'Foto Rontgen Genu: penyempitan celah sendi dan osteofit',
+        'Nyeri kedua lutut terutama saat naik tangga dan berjalan jauh, kaku pagi hari <30 menit.',
+        'Genu: krepitasi (+) saat gerak, efusi minimal/(-), deformitas (-), ROM sedikit terbatas nyeri.',
+        'Osteoartritis Genu (OA Lutut)',
+        '1. Analgetik aman (Parasetamol atau OAINS topikal/selektif jangka pendek).\n2. Edukasi penurunan berat badan, latihan penguatan kuadrisep, hindari jongkok.\n3. Konsul Poli Ortopedi / Rehab Medik untuk fisioterapi.',
+        true, [1,1,0,0], ['Nyeri lutut saat naik tangga', 'Kaku pagi <30 menit', 'Bunyi krepitasi'], false),
+
+      mk('p_lbp', 'poli', 'Bedah & Trauma', 'Low Back Pain (LBP) / HNP', 'M54.5', 'Low back pain', [128, 78, 76, 18, 99],
+        'Rontgen Lumbosakral / MRI bila ada tanda radikulopati menetap',
+        'Nyeri pinggang bawah sejak 2 minggu setelah mengangkat beban, menjalar ke bokong/paha (-/+), BAK/BAB lancar.',
+        'Vertebra lumbal: nyeri tekan paravertebral (+), Lasegue test (-/+), motorik tungkai 5/5.',
+        'Low Back Pain Mekanik / Suspek HNP tanpa red flags kauda ekuina',
+        '1. Analgetik + muscle relaxant jangka pendek.\n2. Edukasi postur ergonomis, hindari angkat berat, dan latihan core.\n3. Rujuk Fisioterapi / Poli Saraf bila nyeri radikuler menetap.',
+        true, [1,0,0,0], ['Nyeri pinggang bawah', 'Menjalar ke kaki', 'Gangguan BAK/BAB (-)'], false),
+
+      mk('p_bph', 'poli', 'Bedah & Trauma', 'Pembesaran Prostat Jinak (BPH)', 'N40', 'Hyperplasia of prostate', [132, 80, 76, 18, 99],
+        'USG Urologi / PSA bila indikasi; evaluasi IPSS',
+        'BAK sering di malam hari (nokturia), pancaran urin melemah, terasa tidak lampias, masih bisa BAK spontan.',
+        'Abdomen: vesika urinaria tidak penuh. Colok dubur (RT): prostat membesar simetris, kenyal, permukaan rata.',
+        'Benign Prostatic Hyperplasia (BPH) tanpa retensi urin akut',
+        '1. Terapi alpha-blocker (Tamsulosin) +/- 5-alpha reductase inhibitor sesuai volume prostat.\n2. Edukasi kurangi minum menjelang tidur.\n3. Kontrol Poli Urologi; segera ke IGD bila tidak bisa BAK sama sekali.',
+        true, [1,1,0,0], ['Pancaran kencing lemah', 'Sering kencing malam hari', 'Masih bisa BAK'], false),
+
+      mk('p_batu_ginjal', 'poli', 'Bedah & Trauma', 'Nefrolitiasis / Batu Ginjal', 'N20.0', 'Calculus of kidney', [128, 80, 78, 18, 99],
+        'USG Ginjal / BNO-IVP / CT Urografi: tampak batu saluran kemih',
+        'Nyeri pinggang kanan/kiri hilang timbul (nyeri tumpul), BAK kadang keruh/kemerahan, demam (-).',
+        'Abdomen: nyeri ketok CVA (+/-) ringan, massa (-).',
+        'Nefrolitiasis tanpa tanda obstruksi total atau urosepsis',
+        '1. Edukasi hidrasi cukup (2-2.5 L/hari) dan analgetik bila nyeri ringan.\n2. Konsul Poli Urologi untuk evaluasi ukuran batu (ESWL/URS/konservatif).\n3. Ke IGD bila demam tinggi atau nyeri kolik hebat.',
+        true, [1,0,0,1], ['Nyeri pinggang hilang timbul', 'Hasil USG ada batu ginjal', 'Demam (-)'], false),
+
+      mk('p_hernia', 'poli', 'Bedah & Trauma', 'Hernia Inguinalis Reponibilis', 'K40.9', 'Unilateral or unspecified inguinal hernia, without obstruction or gangrene', [124, 78, 76, 18, 99],
+        'Evaluasi klinis benjolan lipat paha',
+        'Benjolan di lipat paha kanan/kiri muncul saat berdiri atau mengedan dan masuk kembali saat berbaring, tidak nyeri hebat.',
+        'Regio inguinalis: tampak benjolan saat Valsava, konsistensi kenyal, dapat direposisi, nyeri tekan (-).',
+        'Hernia Inguinalis Reponibilis tanpa tanda inkarserata',
+        '1. Edukasi hindari mengangkat beban berat dan atasi faktor mengedan (batuk/konstipasi).\n2. Konsul Poli Bedah Umum untuk rencana herniorafi elektif.\n3. Ke IGD segera bila benjolan tidak bisa masuk disertai nyeri hebat/muntah.',
+        true, [1,0,0,1], ['Benjolan keluar saat mengedan', 'Bisa masuk saat tiduran', 'Nyeri hebat (-)'], false),
+
+      mk('p_kontrol_op', 'poli', 'Bedah & Trauma', 'Kontrol Luka Pasca Operasi', 'Z48.8', 'Other specified surgical follow-up care', [120, 76, 76, 18, 99],
+        'Evaluasi penyembuhan luka operasi',
+        'Kontrol rutin luka pasca operasi hari ke-..., nyeri minimal, tidak ada demam atau rembesan nanah.',
+        'Status lokalis: luka operasi kering, jahitan intak, eritema (-), pus (-), edema (-).',
+        'Perawatan Luka Pasca Operasi (penyembuhan baik)',
+        '1. Rawat luka steril / ganti balutan atau angkat jahitan sesuai jadwal.\n2. Edukasi jaga luka tetap bersih dan kering serta asupan tinggi protein.\n3. Lanjutkan obat pulang sesuai instruksi DPJP.',
+        false, [0,0,0,0], ['Kontrol jahitan operasi', 'Luka kering tidak bernanah', 'Demam (-)'], false),
+
+      // -------------------- POLI: ANAK, OBGYN, THT, MATA, KULIT (10) --------------------
+      mk('p_anc', 'poli', 'Anak & Obgyn', 'ANC Kehamilan Risiko Tinggi', 'Z34.9', 'Supervision of normal pregnancy, unspecified', [124, 78, 84, 18, 99],
+        'USG Obstetri & Lab ANC (Hb, HBsAg, HIV, Sifilis, Proteinuria)',
+        'Kontrol kehamilan (ANC), gerak janin aktif dirasakan ibu, tidak ada perdarahan jalan lahir atau nyeri perut hebat.',
+        'TFU sesuai usia kehamilan, DJJ (+) 140-150 x/menit reguler, edema tungkai (-).',
+        'Pemeriksaan Antenatal (ANC) dalam pemantauan Sp.OG',
+        '1. Lanjutkan suplemen zat besi, asam folat, dan kalsium.\n2. Edukasi tanda bahaya kehamilan (perdarahan, ketuban pecah, pusing hebat/pandangan kabur).\n3. Kontrol terjadwal Poli Obgyn.',
+        true, [0,0,1,0], ['Gerak janin aktif', 'Kontrol USG kehamilan', 'Perdarahan (-)'], false),
+
+      mk('p_mioma', 'poli', 'Anak & Obgyn', 'Mioma Uteri / Kista Ovarium', 'D25.9', 'Leiomyoma of uterus, unspecified', [118, 74, 80, 18, 99],
+        'USG Ginekologi: evaluasi ukuran mioma/kista dan kadar Hb',
+        'Kontrol ginekologi dengan keluhan haid banyak/memanjang atau rasa penuh di perut bawah.',
+        'Abdomen: teraba massa suprapubik (+/-), nyeri tekan (-). Konjungtiva anemis (-/+).',
+        'Mioma Uteri / Massa Ginekologi Jinak dalam pemantauan',
+        '1. Pantau kadar Hb bila menoragia, berikan tablet tambah darah/asam traneksamat saat haid.\n2. Evaluasi USG berkala di Poli Obgyn untuk rencana terapi hormonal atau operatif.\n3. Ke IGD bila perdarahan masif atau nyeri perut mendadak.',
+        true, [1,0,0,1], ['Haid banyak/lama', 'Kontrol hasil USG', 'Pusing/anemia ringan'], false),
+
+      mk('p_anak_tumbuh', 'poli', 'Anak & Obgyn', 'Kontrol Anak / Gizi & Imunisasi', 'Z00.1', 'Routine child health examination', [96, 62, 102, 22, 99],
+        'Plotting kurva pertumbuhan WHO (BB/U, TB/U, BB/TB)',
+        'Kontrol rutin tumbuh kembang anak / evaluasi kenaikan berat badan, anak aktif, nafsu makan cukup.',
+        'KU aktif, ceria. Antropometri sesuai kurva. Cor/Pulmo dalam batas normal.',
+        'Pemantauan Tumbuh Kembang Anak / Evaluasi Status Gizi',
+        '1. Edukasi nutrisi seimbang sesuai usia (MPASI/makanan keluarga tinggi protein hewani).\n2. Lengkapi imunisasi sesuai jadwal IDAI.\n3. Pantau BB/TB bulanan di Poli Anak / Posyandu.',
+        false, [0,0,0,0], ['Kontrol berat badan anak', 'Anak aktif & makan mau', 'Jadwal imunisasi'], false),
+
+      mk('p_anemia', 'poli', 'Anak & Obgyn', 'Anemia Defisiensi Besi', 'D50.9', 'Iron deficiency anaemia, unspecified', [110, 70, 86, 18, 99],
+        'Lab: Hb menurun, MCV/MCH rendah (anemia mikrositik hipokrom)',
+        'Cepat lelah, pucat, dan pusing ringan sejak beberapa minggu, tidak ada perdarahan aktif.',
+        'Konjungtiva anemis (+/+), sklera ikterik (-). Cor: murmur fungsional (-/+). Akral hangat.',
+        'Anemia Mikrositik Hipokrom ec Suspek Defisiensi Besi',
+        '1. Suplementasi besi oral (Sulfas Ferosus / Fumarat) disertai vitamin C.\n2. Edukasi konsumsi makanan kaya zat besi dan evaluasi sumber perdarahan kronik.\n3. Cek ulang Hb setelah 4 minggu.',
+        false, [0,0,0,0], ['Lemas & pucat', 'Hasil lab Hb rendah', 'Perdarahan aktif (-)'], false),
+
+      mk('p_rinitis', 'poli', 'THT, Mata, Kulit', 'Rinitis Alergi', 'J30.4', 'Allergic rhinitis, unspecified', [118, 74, 76, 18, 99],
+        'Evaluasi klinis rinitis alergi persisten/intermiten',
+        'Bersin-bersin berulang terutama pagi hari, hidung tersumbat, dan keluar cairan bening encer saat terpapar debu/dingin.',
+        'Rinoskopi anterior: mukosa kavum nasi pucat/livid, konka edema (+/+), sekret serosa (+).',
+        'Rinitis Alergi',
+        '1. Antihistamin oral generasi kedua (Cetirizine/Loratadine) dan/atau semprot hidung kortikosteroid intranasal.\n2. Edukasi hindari alergen (debu, tungau, asap).\n3. Kontrol Poli THT bila tidak membaik.',
+        false, [0,0,0,0], ['Bersin-bersin pagi hari', 'Hidung meler bening', 'Terpapar debu/dingin'], false),
+
+      mk('p_omsk', 'poli', 'THT, Mata, Kulit', 'Otitis Media Supuratif Kronik', 'H66.3', 'Other chronic suppurative otitis media', [120, 76, 78, 18, 99],
+        'Otoskopi: perforasi membran timpani dengan/tanpa sekret',
+        'Keluar cairan dari telinga hilang timbul sejak >2 bulan disertai penurunan pendengaran ringan, nyeri hebat (-).',
+        'Otoskopi: liang telinga sekret mukopurulen minimal, perforasi membran timpani sentral/marginal.',
+        'Otitis Media Supuratif Kronik (OMSK) tipe aman/bahaya dalam evaluasi THT',
+        '1. Cuci telinga (ear toilet H2O2 3% / NaCl) dan tetes telinga antibiotik (Ofloxacin) sesuai indikasi.\n2. Edukasi jaga telinga tetap kering (tidak berenang, tutup kapas bervaselin saat mandi).\n3. Kontrol Poli THT untuk evaluasi timpanoplasti/kolesteatoma.',
+        true, [1,0,0,1], ['Telinga berair >2 bulan', 'Pendengaran berkurang', 'Demam/nyeri kepala (-)'], false),
+
+      mk('p_katarak', 'poli', 'THT, Mata, Kulit', 'Katarak Senilis', 'H25.9', 'Unspecified age-related cataract', [130, 80, 74, 18, 99],
+        'Pemeriksaan visus Snellen & Slit-lamp: kekeruhan lensa',
+        'Penglihatan kedua/satu mata buram perlahan seperti tertutup kabut sejak beberapa bulan, silau saat melihat cahaya.',
+        'Visus menurun, segmen anterior tenang, lensa keruh (+), shadow test (+/-).',
+        'Katarak Senilis (evaluasi tindakan fakoemulsifikasi)',
+        '1. Konsul/rencana operasi katarak elektif di Poli Mata bila visus mengganggu aktivitas.\n2. Kendalikan faktor komorbid (TD dan gula darah) pra-tindakan.\n3. Edukasi gunakan kacamata pelindung UV.',
+        true, [1,1,0,0], ['Pandangan seperti berkabut', 'Silau lihat lampu malam', 'Mata merah/nyeri (-)'], false),
+
+      mk('p_glaukoma', 'poli', 'THT, Mata, Kulit', 'Glaukoma Kontrol', 'H40.9', 'Unspecified glaucoma', [132, 80, 74, 18, 99],
+        'Tonometri TIO & evaluasi lapang pandang / papil N. II',
+        'Kontrol rutin glaukoma dengan obat tetes mata teratur, tidak ada nyeri mata mendadak atau mual muntah.',
+        'TIO terkontrol/dalam pemantauan, kornea jernih, segmen anterior tenang.',
+        'Glaukoma Kronik dalam terapi tetes penurun TIO',
+        '1. Lanjutkan obat tetes mata penurun TIO (Timolol/Latanoprost) tepat waktu.\n2. Edukasi kepatuhan tetes mata seumur hidup dan pantau TIO berkala.\n3. Ke IGD bila nyeri mata hebat mendadak disertai halo/muntah.',
+        true, [1,1,0,1], ['Kontrol tekanan bola mata', 'Tetes mata rutin', 'Nyeri mata hebat (-)'], false),
+
+      mk('p_dermatitis', 'poli', 'THT, Mata, Kulit', 'Dermatitis Atopik / Kontak', 'L20.9', 'Atopic dermatitis, unspecified', [118, 74, 76, 18, 99],
+        'Evaluasi klinis lesi kulit dan riwayat paparan alergen/iritan',
+        'Gatal dan kemerahan pada kulit lipatan/tangan hilang timbul, memburuk saat kulit kering atau kontak sabun/bahan tertentu.',
+        'Status dermatologikus: plak eritematosa dengan skuama/likenifikasi ringan, ekskoriasi (-/+), infeksi sekunder (-).',
+        'Dermatitis Atopik / Dermatitis Kontak',
+        '1. Pelembap (emolien) rutin setelah mandi + kortikosteroid topikal potensi sesuai area.\n2. Antihistamin oral bila gatal mengganggu tidur.\n3. Edukasi hindari sabun keras dan garukan.',
+        false, [0,0,0,0], ['Gatal di lipatan/tangan', 'Kulit kering bersisik', 'Riwayat alergi'], false),
+
+      mk('p_tinea', 'poli', 'THT, Mata, Kulit', 'Tinea / Infeksi Jamur Kulit', 'B35.9', 'Dermatophytosis, unspecified', [118, 74, 76, 18, 99],
+        'Pemeriksaan klinis tepi aktif; KOH 10% bila perlu',
+        'Bercak merah gatal yang melebar dengan bagian tengah lebih tenang, gatal bertambah saat berkeringat.',
+        'Status dermatologikus: plak eritematosa berbatas tegas dengan tepi aktif berskuama (central healing +).',
+        'Dermatofitosis (Tinea Korporis / Kruris)',
+        '1. Antijamur topikal (Ketoconazole / Miconazole krim 2x/hari selama 2-4 minggu) atau oral bila luas.\n2. Edukasi jaga area tetap kering, tidak bertukar handuk/pakaian.\n3. Lanjutkan krim 1 minggu setelah lesi bersih.',
+        false, [0,0,0,0], ['Gatal saat berkeringat', 'Bercak melingkar tepi merah', 'Menyebar di lipatan'], false),
+
+
+      // ==================== IGD / EMERGENSI (50 KASUS) ====================
+      // -------------------- IGD: KARDIO & VASKULAR (8) --------------------
+      mk('i_acs', 'igd', 'Kardio', 'Suspek ACS (STEMI / NSTEMI / UAP)', 'I20.0', 'Unstable angina (Suspek ACS)', [146, 88, 98, 22, 96],
+        'EKG 12-lead: Perubahan ST-elevasi / ST-depresi / T-inversi baru yang mengarah iskemia miokard',
+        'Nyeri dada kiri terasa seperti tertindih beban berat sejak 2 jam SMRS, menjalar ke lengan kiri dan rahang, disertai keringat dingin.',
+        'Tampak gelisah, nyeri berat. Cor: S1-S2 reguler, gallop (-). Pulmo: ronkhi basal (-). Akral hangat, CRT <2 dtk.',
+        'Suspek Sindrom Koroner Akut (ACS) / UAP dd/ NSTEMI / STEMI',
+        '1. EKG 12-lead segera + serial, pasang IV line, monitor EKG kontinu, cek Troponin I/T & lab cito.\n2. Loading DAPT (Aspilet 160-320 mg kunyah + Clopidogrel 300 mg / Ticagrelor 180 mg) bila tidak ada kontraindikasi + Nitrat SL bila TD >90 mmHg.\n3. Konsul cito Sp.JP untuk stratifikasi dan reperfusi (PCI / fibrinolitik / ICCU).',
+        true, [1,0,0,1], ['Nyeri dada tipikal >20 mnt', 'Menjalar ke lengan/rahang', 'Keringat dingin'], true),
+
+      mk('i_ht_urg', 'igd', 'Kardio', 'Hipertensi Urgensi (Krisis HT)', 'I16.0', 'Hypertensive urgency', [196, 114, 92, 20, 98],
+        'EKG 12-lead: Sinus rhythm dengan LVH, tanpa iskemia akut',
+        'Sakit kepala berat dan tengkuk kaku sejak beberapa jam SMRS, riwayat putus obat hipertensi. Nyeri dada/sesak/kelemahan sesisi (-).',
+        'GCS E4V5M6. Cor: S1-S2 reguler. Pulmo: vesikuler (+/+), ronkhi (-/-). Defisit neurologis fokal (-).',
+        'Hipertensi Urgensi (Krisis Hipertensi tanpa kerusakan organ target akut)',
+        '1. Evaluasi cepat red flags kerusakan organ target (EKG, Ur/Cr, urinalisis).\n2. Antihipertensi oral bertahap (Captopril 12.5-25 mg PO atau Amlodipine 10 mg PO); target turun MAP <=25% dalam 24-48 jam.\n3. Observasi TTV 1-2 jam di IGD.',
+        true, [1,0,0,1], ['Nyeri kepala & tengkuk kaku', 'Putus obat HT', 'Defisit neurologis (-)'], true),
+
+      mk('i_ht_emg', 'igd', 'Kardio', 'Hipertensi Emergensi', 'I16.1', 'Hypertensive emergency', [214, 126, 106, 24, 94],
+        'EKG 12-lead, Ur/Cr, Ro Toraks / CT-Scan Kepala cito sesuai target organ',
+        'Tekanan darah sangat tinggi disertai tanda kerusakan organ target akut (nyeri dada / sesak napas berat / penurunan kesadaran / defisit neurologis).',
+        'Tampak sakit berat. Evaluasi tanda edema paru, defisit neurologis, atau diseksi aorta (TD lengan kanan-kiri).',
+        'Hipertensi Emergensi dengan ancaman kerusakan organ target akut',
+        '1. Pasang IV line, monitor EKG & TD kontinu, kateter urin.\n2. Mulai antihipertensi titrasi IV (Nicardipine drip / Nitrogliserin IV sesuai organ target) di IGD.\n3. Konsul cito Sp.JP/Sp.PD/Sp.S untuk perawatan ICU/ICCU.',
+        true, [1,0,0,1], ['TD >180/120 + sesak/nyeri dada', 'Pandangan kabur mendadak', 'Penurunan kesadaran'], false),
+
+      mk('i_adhf', 'igd', 'Kardio', 'ADHF / Edema Paru Akut', 'I50.1', 'Left ventricular failure / Acute pulmonary edema', [148, 90, 114, 28, 89],
+        'Ro Toraks: Kardiomegali + edema paru alveolar; EKG 12-lead & elektrolit/Ur-Cr',
+        'Sesak napas berat memberat sejak 1 hari SMRS terutama saat berbaring (ortopnea), terbangun malam hari (PND), kaki bengkak.',
+        'Posisi setengah duduk. JVP 5+4 cmH2O. Cor: gallop S3 (+/-). Pulmo: ronkhi basah halus bilateral basal-medial. Edema pretibial (+/+).',
+        'Acute Decompensated Heart Failure (ADHF) / Edema Paru Akut',
+        '1. Posisikan Fowler, berikan O2 (NC/NRM sesuai SpO2), pasang IV line & kateter urin.\n2. Furosemide 40 mg IV bolus/drip +/- Nitrat IV/SL bila TD sistolik >110 mmHg.\n3. Konsul Sp.JP untuk Rawat Inap (MRS / HCU / ICCU).',
+        true, [1,0,1,1], ['Sesak berat saat berbaring', 'Terbangun sesak malam hari', 'Kedua kaki bengkak'], true),
+
+      mk('i_afib_rvr', 'igd', 'Kardio', 'Atrial Fibrilasi RVR (AFib RVR)', 'I48.91', 'Unspecified atrial fibrillation', [118, 76, 142, 22, 96],
+        'EKG 12-lead: Atrial fibrilasi dengan rapid ventricular response (HR >110)',
+        'Jantung berdebar sangat cepat tidak teratur sejak 4 jam SMRS, disertai lemas dan rasa melayang.',
+        'Cor: S1-S2 ireguler cepat, defisit nadi (+). Pulmo: ronkhi (-/-). Akral hangat, CRT <2 dtk.',
+        'Atrial Fibrilasi dengan Rapid Ventricular Response (AFib RVR)',
+        '1. Monitor EKG kontinu, cek elektrolit (K, Mg), DPL, fungsi ginjal, TSH.\n2. Rate control sesuai hemodinamik & EF (Beta-blocker / Digoxin IV / Diltiazem); siapkan kardioversi bila tidak stabil.\n3. Konsul Sp.JP untuk tata laksana lanjutan dan MRS.',
+        true, [1,0,0,1], ['Berdebar sangat cepat', 'Rasa melayang / lemas', 'Hemodinamik stabil'], false),
+
+      mk('i_svt', 'igd', 'Kardio', 'SVT (Supraventricular Tachycardia)', 'I47.1', 'Supraventricular tachycardia', [112, 74, 176, 22, 97],
+        'EKG 12-lead: Takikardia kompleks sempit reguler tanpa gelombang P jelas',
+        'Jantung berdebar sangat cepat mendadak sejak 1 jam SMRS saat istirahat, terasa penuh di leher.',
+        'GCS E4V5M6. Cor: takikardia reguler sangat cepat. Pulmo: vesikuler (+/+). Akral hangat.',
+        'Supraventricular Tachycardia (SVT)',
+        '1. Monitor EKG kontinu dan pasang akses IV.\n2. Bila hemodinamik stabil: manuver vagal (modified Valsalva) -> bila gagal berikan Adenosine 6 mg IV bolus cepat (lanjut 12 mg bila perlu) atau Verapamil/Diltiazem.\n3. Bila tidak stabil: kardioversi sinkronisasi sesuai ACLS.',
+        true, [1,0,0,1], ['Berdebar mendadak >150x/mnt', 'Onset tiba-tiba', 'Nyeri dada / pusing'], false),
+
+      mk('i_bradi', 'igd', 'Kardio', 'Bradikardia Simtomatik / AV Block', 'I44.2', 'Atrioventricular block, complete', [86, 54, 38, 20, 95],
+        'EKG 12-lead: Sinus bradikardia berat / AV Block derajat II-III',
+        'Pusing berputar, hampir pingsan (presinkop), dan lemas berat sejak beberapa jam SMRS.',
+        'Tampak lemas, akral agak dingin. Cor: bradikardia reguler/disosiasi. Pulmo: vesikuler (+/+).',
+        'Bradikardia Simtomatik / Total AV Block',
+        '1. Pasang akses IV, O2 bila perlu, monitor EKG kontinu, dan siapkan transcutaneous pacing (TCP).\n2. Berikan Atropin 1 mg IV (dapat diulang tiap 3-5 menit maks 3 mg) atau drip Dopamin/Epinefrin bila refrakter.\n3. Konsul cito Sp.JP untuk evaluasi pacu jantung temporer/permanen (TPM/PPM).',
+        true, [1,0,0,1], ['Hampir pingsan / sinkop', 'Nadi sangat lambat', 'Lemas berat'], false),
+
+      mk('i_syok', 'igd', 'Kardio', 'Syok (Kardiogenik / Hipovolemik)', 'R57.0', 'Cardiogenic shock', [78, 48, 122, 26, 91],
+        'EKG 12-lead, laktat, AGD, elektrolit, Ur/Cr, Troponin',
+        'Pasien datang dengan penurunan kesadaran/lemas berat, akral dingin, dan tekanan darah rendah.',
+        'Akral dingin basah, CRT >3 detik, nadi lemah cepat, oliguria.',
+        'Syok (Kardiogenik / Hipovolemik / Distributif dalam evaluasi cepat)',
+        '1. Amankan ABC, O2, pasang 2 jalur IV besar + kateter urin + monitor ketat.\n2. Bedakan etiologi syok (fluid challenge hati-hati bila hipovolemik; mulai vasopressor Norepinefrin/inotopik bila kardiogenik/sepsis).\n3. Konsul cito DPJP untuk rawat ICU/ICCU.',
+        true, [1,0,0,1], ['TD sistolik <90 mmHg', 'Akral dingin & pucat', 'Produksi urin sedikit'], false),
+
+      // -------------------- IGD: INFEKSI & DEMAM AKUT (7) --------------------
+      mk('i_febris', 'igd', 'Infeksi', 'Observasi Febris / Suspek DHF', 'R50.9', 'Fever, unspecified', [110, 72, 104, 20, 98],
+        'Lab: DPL (Hb, Ht, Leukosit, Trombosit) & NS1 Dengue',
+        'Demam tinggi mendadak sejak 3 hari SMRS, nyeri kepala, nyeri otot/sendi, mual, nafsu makan turun.',
+        'Tampak sakit sedang, febris. Uji torniket (+/-). Abdomen: nyeri tekan epigastrium ringan (+). Akral hangat, CRT <2 dtk.',
+        'Observasi Febris Hari ke-3 ec Suspek Infeksi Dengue (dd/ Infeksi Virus/Tifoid)',
+        '1. Cek DPL serial dan NS1 bila demam <=3 hari.\n2. Rehidrasi cairan IV kristaloid (RL/NaCl 0.9%) bila asupan oral kurang + Parasetamol antipiretik.\n3. Pantau warning signs; MRS bila trombosit <100.000 atau tanda kebocoran plasma.',
+        true, [1,0,0,1], ['Demam tinggi 3 hari', 'Mual muntah', 'Nyeri belakang mata'], true),
+
+      mk('i_dhf', 'igd', 'Infeksi', 'Demam Berdarah Dengue (DBD/DHF)', 'A91', 'Dengue haemorrhagic fever', [98, 66, 112, 22, 98],
+        'Lab: Trombositopenia (<100.000) + Hemokonsentrasi (Ht meningkat >=20%)',
+        'Demam hari ke-4-5, lemas, mual muntah persisten, nyeri perut, atau gusi berdarah/mimisan.',
+        'Petekie (+), nyeri tekan epigastrium/hipokondrium kanan (+). Akral hangat/agak dingin, evaluasi CRT.',
+        'Demam Berdarah Dengue (DBD / DHF)',
+        '1. Resusitasi/rumatan cairan kristaloid IV sesuai protokol DBD WHO/Kemenkes berdasarkan Ht dan TTV.\n2. Pantau DPL (Hb, Ht, Trombosit) tiap 6-12 jam dan monitor diuresis.\n3. Rawat Inap (MRS) untuk pemantauan fase kritis.',
+        true, [1,0,0,1], ['Trombosit turun drastis', 'Nyeri perut hebat', 'Mimisan / gusi berdarah'], false),
+
+      mk('i_tifoid', 'igd', 'Infeksi', 'Demam Tifoid', 'A01.0', 'Typhoid fever', [112, 74, 96, 20, 98],
+        'Lab: DPL, Tes Widal / Tubex TF (IgM Salmonella typhi)',
+        'Demam naik-turun terutama sore/malam hari sejak >5 hari, disertai mual, nyeri perut, dan sulit BAB/diare.',
+        'Lidah kotor (coated tongue) dengan tepi hiperemis (+). Abdomen: nyeri tekan difus ringan (+).',
+        'Demam Tifoid',
+        '1. Rehidrasi cairan IV + antipiretik + antiemetik bila mual muntah.\n2. Antibiotik lini sesuai pedoman (Ceftriaxone IV bila MRS atau Florokuinolon/Cefixime PO).\n3. Rawat Inap bila asupan oral buruk atau demam tinggi persisten.',
+        true, [1,0,0,1], ['Demam >5 hari sore/malam', 'Lidah kotor', 'Mual & susah BAB'], false),
+
+      mk('i_sepsis', 'igd', 'Infeksi', 'Sepsis / Infeksi Berat', 'A41.9', 'Sepsis, unspecified', [86, 52, 124, 26, 92],
+        'Lab: DPL, Prokalsitonin/CRP, Laktat, Ur/Cr, Kultur darah',
+        'Demam tinggi atau hipotermia disertai penurunan kesadaran/gelisah, sesak, dan lemas berat.',
+        'Tampak sakit berat, qSOFA >=2 (RR >=22, kesadaran berubah, TD sistolik <=100). Cari fokus infeksi (paru/urin/abdomen).',
+        'Sepsis (Suspek fokus infeksi paru / saluran kemih / intraabdomen)',
+        '1. Terapkan Sepsis Hour-1 Bundle: ukur laktat, kultur darah, antibiotik spektrum luas IV segera, bolus kristaloid 30 mL/kg bila hipotensi/laktat >=4.\n2. Mulai Norepinefrin bila MAP <65 mmHg pasca cairan.\n3. Rawat Inap ICU/HCU.',
+        true, [1,0,0,1], ['Demam tinggi + mengiggil', 'Gelisah / bingung', 'TD turun'], false),
+
+      mk('i_selulitis', 'igd', 'Infeksi', 'Selulitis / Abses Kutis', 'L03.9', 'Cellulitis, unspecified', [124, 78, 92, 19, 98],
+        'Lab: DPL (leukositosis) & GDS (skrining DM pada infeksi kulit)',
+        'Kaki/tangan bengkak, merah, terasa panas dan nyeri berdenyut sejak 3 hari, disertai demam.',
+        'Status lokalis: eritema difus batas tidak tegas, edema, hangat, nyeri tekan (+), fluktuasi (-/+).',
+        'Selulitis Ekstremitas (evaluasi komorbid DM)',
+        '1. Elevasi ekstremitas, kompres NaCl 0.9%, analgetik/antipiretik.\n2. Antibiotik IV/oral anti-Staphylococcus/Streptococcus (Cefazolin/Ceftriaxone/Clindamycin) dan insisi drainase bila ada abses.\n3. Rawat Inap bila selulitis luas atau disertai demam tinggi/DM tidak terkontrol.',
+        true, [1,0,1,1], ['Bengkak merah & panas', 'Nyeri berdenyut', 'Riwayat diabetes'], false),
+
+      mk('i_parotitis', 'igd', 'Infeksi', 'Parotitis / Limfadenitis Akut', 'B26.9', 'Mumps without complication', [112, 72, 96, 20, 99],
+        'Evaluasi klinis; DPL bila demam tinggi',
+        'Bengkak nyeri di pipi/bawah telinga atau leher sejak 2 hari, demam, dan sulit membuka mulut/menelan.',
+        'Regio parotis/servikal: edema, nyeri tekan (+), hangat, trismus (-/+).',
+        'Parotitis Akut / Limfadenitis Akut',
+        '1. Antipiretik/analgetik, kompres hangat/dingin, hidrasi cukup.\n2. Antibiotik bila curiga parotitis supuratif bakterial.\n3. Edukasi isolasi ringan dan asupan makanan lunak.',
+        false, [0,0,0,0], ['Pipi/leher bengkak nyeri', 'Demam', 'Susah mengunyah'], false),
+
+      mk('i_anafilaksis', 'igd', 'Infeksi', 'Reaksi Anafilaksis / Alergi Berat', 'T78.2', 'Anaphylactic shock, unspecified', [84, 52, 128, 26, 91],
+        'Evaluasi jalan napas, pernapasan, dan sirkulasi segera',
+        'Sesak napas mendadak, suara serak, biduran seluruh tubuh, dan pusing lemas setelah minum obat atau makan makanan tertentu.',
+        'Urtikaria generalisata (+), angioedema bibir/kelopak mata (+), stridor/wheezing (+), hipotensi.',
+        'Reaksi Anafilaksis Akut',
+        '1. EPINEFRIN 0.3-0.5 mg IM (1:1000) di paha anterolateral SEGERA (dapat diulang tiap 5-15 menit).\n2. Posisi terlentang elevasi tungkai, O2 aliran tinggi, loading kristaloid IV.\n3. Tambahan Difenhidramin/Cetirizine + Kortikosteroid IV + observasi minimal 6-24 jam.',
+        true, [1,0,0,1], ['Sesak mendadak setelah obat/makan', 'Bengkak bibir/mata', 'Biduran seluruh tubuh'], false),
+
+      // -------------------- IGD: RESPIRASI AKUT (6) --------------------
+      mk('i_asma_ex', 'igd', 'Respirasi', 'Asma Eksaserbasi Akut', 'J45.901', 'Unspecified asthma with (acute) exacerbation', [134, 82, 112, 28, 91],
+        'Pantau SpO2 dan APE bila memungkinkan',
+        'Sesak napas mendadak disertai bunyi mengi sejak 3 jam SMRS, hanya bisa bicara penggalan kalimat, inhaler rumah tidak mempan.',
+        'Tampak sesak, otot bantu napas (+). Pulmo: ekspirasi memanjang, wheezing (+/+) difus.',
+        'Asma Bronkial Eksaserbasi Akut Derajat Sedang-Berat',
+        '1. Posisi duduk tegak, O2 target SpO2 93-95%.\n2. Nebulisasi SABA + Ipratropium tiap 20 menit pada jam pertama + Kortikosteroid sistemik IV/PO.\n3. Evaluasi respon 1 jam; MRS bila respon inkomplit.',
+        true, [1,0,0,1], ['Sesak disertai mengi', 'Bicara terputus-putus', 'Inhaler tidak mempan'], true),
+
+      mk('i_ppok_ex', 'igd', 'Respirasi', 'PPOK Eksaserbasi Akut', 'J44.1', 'Chronic obstructive pulmonary disease with acute exacerbation', [140, 86, 108, 28, 88],
+        'Ro Toraks, DPL, AGD (bila sesak berat/retensi CO2)',
+        'Sesak napas memberat sejak 2 hari, batuk bertambah sering dengan dahak kuning kehijauan lebih banyak.',
+        'Dada emfisematous, penggunaan otot bantu napas (+), ekspirasi memanjang, wheezing (+/+), ronkhi (+/+).',
+        'PPOK Eksaserbasi Akut',
+        '1. O2 titrasi terkontrol target SpO2 88-92%.\n2. Nebulisasi bronkodilator (SABA + Ipratropium) + Kortikosteroid sistemik + Antibiotik bila dahak purulen.\n3. Rawat Inap (MRS) untuk pemantauan respirasi.',
+        true, [1,1,0,1], ['Sesak memberat', 'Dahak berubah kuning/kental', 'Riwayat perokok/PPOK'], false),
+
+      mk('i_pneumonia', 'igd', 'Respirasi', 'Pneumonia / Bronkopneumonia', 'J18.9', 'Pneumonia, unspecified organism', [118, 76, 110, 26, 92],
+        'Ro Toraks: infiltrat paru; Lab: DPL, CRP, Ur/Cr (skor CURB-65)',
+        'Demam tinggi, batuk berdahak purulen, dan sesak napas sejak 3 hari SMRS.',
+        'Pulmo: suara napas bronkovesikuler, ronkhi basah halus/kasar terlokalisir (+).',
+        'Community-Acquired Pneumonia (CAP) / Bronkopneumonia',
+        '1. O2 suplementasi bila SpO2 <92%, hidrasi IV.\n2. Antibiotik empiris IV (Ceftriaxone + Azitromisin atau Levofloxacin) sesuai skor CURB-65.\n3. Rawat Inap bila CURB-65 >=2 atau hipoksemia.',
+        true, [1,0,0,1], ['Demam tinggi + sesak', 'Batuk berdahak kental', 'Nyeri dada saat tarik napas'], false),
+
+      mk('i_hemoptisis', 'igd', 'Respirasi', 'Hemoptisis Masif / Batuk Darah', 'R04.2', 'Haemoptysis', [114, 72, 108, 24, 94],
+        'Lab: DPL, PT/APTT, golongan darah; Ro Toraks',
+        'Batuk mengeluarkan darah segar cukup banyak sejak beberapa jam SMRS, riwayat TB/batuk lama.',
+        'Tampak cemas, bercak darah di mulut. Pulmo: ronkhi (+). Evaluasi tanda anemia/syok.',
+        'Hemoptisis (evaluasi masif vs non-masif, dd/ TB Paru / Bronkiektasis)',
+        '1. Amankan jalan napas, posisikan miring ke sisi paru yang sakit bila diketahui, O2.\n2. Pasang IV line, berikan Asam Traneksamat IV + antitusif ringan bila perlu, siapkan transfusi bila Hb turun.\n3. Konsul Sp.P untuk Rawat Inap.',
+        true, [1,0,0,1], ['Batuk darah segar', 'Riwayat TB paru', 'Sesak napas'], false),
+
+      mk('i_pneumotoraks', 'igd', 'Respirasi', 'Pneumotoraks / Efusi Masif', 'J93.9', 'Pneumothorax, unspecified', [100, 66, 118, 30, 88],
+        'Ro Toraks (bila stabil); pada tension pneumothorax dekompresi klinis SEGERA',
+        'Sesak napas mendadak berat disertai nyeri dada tajam satu sisi.',
+        'Hemitoraks sakit: gerak napas tertinggal, perkusi hipersonor (pneumotoraks) atau redup (efusi), suara napas menghilang.',
+        'Pneumotoraks Spontan / Efusi Pleura Masif',
+        '1. Berikan O2 aliran tinggi dan pasang akses IV.\n2. Bila tension pneumothorax: needle thoracocentesis SEGERA di ICS II midklavikula/ICS IV-V anterior aksilaris.\n3. Konsul cito Bedah/Paru untuk pemasangan WSD dan Rawat Inap.',
+        true, [1,0,0,1], ['Sesak mendadak satu sisi', 'Nyeri dada tajam', 'Suara napas hilang'], false),
+
+      mk('i_croup', 'igd', 'Respirasi', 'Sesak Stridor / Croup / Benda Asing', 'T17.9', 'Foreign body in respiratory tract, part unspecified', [100, 64, 124, 32, 92],
+        'Evaluasi klinis jalan napas; foto servikal/toraks bila stabil',
+        'Anak tiba-tiba batuk menggonggong / tersedak / napas berbunyi ngorok saat tarik napas (stridor).',
+        'Stridor inspiratoir (+), retraksi suprasternal/interkostal (+).',
+        'Obstruksi Jalan Napas Atas Akut (dd/ Croup / Aspirasi Benda Asing)',
+        '1. Tenangkan anak, O2 blow-by/kanul; bila tersedak total lakukan back blows/Heimlich.\n2. Bila Croup: Deksametason 0.6 mg/kg IM/IV + Nebulisasi Epinefrin.\n3. Konsul cito Sp.THT / Sp.A.',
+        true, [1,1,0,1], ['Batuk menggonggong', 'Riwayat tersedak', 'Napas bunyi saat tarik'], false),
+
+      // -------------------- IGD: GI & HEPATOBILIER AKUT (7) --------------------
+      mk('i_dysp_akut', 'igd', 'GI & Hepar', 'Dispepsia Akut / Gastritis Akut', 'K30', 'Functional dyspepsia', [126, 80, 90, 20, 99],
+        'EKG 12-lead: Sinus rhythm normal (eksklusi iskemia inferior)',
+        'Nyeri ulu hati mendadak sangat perih/melilit sejak 4 jam SMRS, mual muntah 2 kali. Nyeri menjalar/keringat dingin (-).',
+        'Abdomen: nyeri tekan epigastrium (+) jelas, defans muskular (-), Murphy sign (-).',
+        'Sindrom Dispepsia Akut / Gastritis Akut',
+        '1. Rekam EKG 12-lead pada pasien dewasa/berisiko untuk menyingkirkan ACS.\n2. PPI IV (Omeprazole 40 mg IV) + Antiemetik (Ondansetron 4 mg IV) +/- antispasmodik.\n3. Observasi 1-2 jam; pulang dengan obat oral bila membaik.',
+        false, [0,0,0,0], ['Nyeri ulu hati mendadak', 'Mual muntah', 'EKG normal'], true),
+
+      mk('i_gea', 'igd', 'GI & Hepar', 'GEA (Diare Akut) & Dehidrasi', 'A09.9', 'Gastroenteritis and colitis of unspecified origin', [100, 66, 108, 20, 98],
+        'Lab: DPL & elektrolit bila dehidrasi sedang-berat',
+        'BAB cair >6x sejak 1 hari tanpa darah/lendir, muntah tiap kali minum, lemas dan haus.',
+        'Mata agak cekung, bibir kering, turgor agak lambat. Bising usus (+) meningkat.',
+        'Gastroenteritis Akut (GEA) dengan Dehidrasi Ringan-Sedang',
+        '1. Rehidrasi cairan kristaloid IV (RL/NaCl 0.9%) sesuai derajat dehidrasi.\n2. Antiemetik IV bila muntah persisten, zink/probiotik.\n3. Observasi diuresis & toleransi oral; MRS bila muntah profus/dehidrasi berat.',
+        true, [0,0,0,1], ['BAB cair >5x', 'Muntah tiap masuk minum', 'Lemas & haus'], true),
+
+      mk('i_kolik_abd', 'igd', 'GI & Hepar', 'Kolik Abdomen / Akut Abdomen', 'R10.4', 'Other and unspecified abdominal pain', [132, 84, 98, 22, 98],
+        'Lab: DPL, Amilase/Lipase, Urinalisis; USG / Foto Polos Abdomen',
+        'Nyeri perut hebat melilit atau menetap sejak beberapa jam SMRS, disertai mual dan keringat dingin.',
+        'Abdomen: nyeri tekan terlokalisir/difus (+), evaluasi defans muskular dan nyeri lepas.',
+        'Kolik Abdomen / Suspek Akut Abdomen (dalam evaluasi etiologi)',
+        '1. Puasakan sementara, pasang IV line + cairan rumatan, cek lab & pencitraan abdomen.\n2. Berikan antispasmodik/analgetik setelah evaluasi awal.\n3. Konsul Bedah/Penyakit Dalam bila mengarah akut abdomen bedah.',
+        true, [1,0,0,1], ['Nyeri perut melilit hebat', 'Mual muntah', 'Perut terasa keras'], false),
+
+      mk('i_apend', 'igd', 'GI & Hepar', 'Apendisitis Akut', 'K35.9', 'Acute appendicitis, unspecified', [122, 78, 102, 20, 99],
+        'Lab: DPL (leukositosis), Urinalisis; USG Abdomen (Alvarado Score)',
+        'Nyeri perut awalnya di ulu hati/pusar lalu berpindah ke perut kanan bawah sejak 12 jam SMRS, mual dan demam ringan.',
+        'Abdomen: nyeri tekan titik McBurney (+), nyeri lepas (+), Rovsing sign (+), defans lokal (+/-).',
+        'Suspek Apendisitis Akut',
+        '1. Puasakan pasien, pasang IV line cairan kristaloid, berikan antibiotik profilaksis/empiris IV.\n2. Cek DPL, urinalisis, dan USG abdomen.\n3. Konsul cito Sp.B untuk rencana apendektomi dan Rawat Inap.',
+        true, [1,0,0,1], ['Nyeri pindah ke kanan bawah', 'Demam ringan & mual', 'Nyeri saat berjalan/batuk'], false),
+
+      mk('i_scba', 'igd', 'GI & Hepar', 'Hematemesis Melena (Perdarahan SCBA)', 'K92.2', 'Gastrointestinal haemorrhage, unspecified', [92, 58, 114, 22, 96],
+        'Lab: DPL (Hb), Golongan Darah, PT/APTT, Ur/Cr, SGOT/SGPT',
+        'Muntah darah hitam/merah segar dan/atau BAB hitam pekat seperti ter sejak 1 hari SMRS, badan terasa lemas.',
+        'Konjungtiva anemis (+/+), akral agak dingin. Abdomen: nyeri epigastrium (+/-). RT: melena (+).',
+        'Perdarahan Saluran Cerna Bagian Atas (Hematemesis Melena)',
+        '1. Resusitasi cairan IV 2 jalur besar, siapkan transfusi PRC bila Hb <7-8 g/dL atau syok.\n2. Puasa, pasang NGT (evaluasi bilas lambung), berikan PPI IV dosis tinggi (Omeprazole 80 mg IV bolus lanjut drip 8 mg/jam).\n3. Rawat Inap HCU/ICU dan konsul Sp.PD-KGEH untuk endoskopi.',
+        true, [1,0,1,1], ['Muntah hitam / darah', 'BAB hitam seperti aspal', 'Pusing & lemas'], false),
+
+      mk('i_kolesistitis', 'igd', 'GI & Hepar', 'Kolesistitis Akut / Kolik Bilier', 'K81.0', 'Acute cholecystitis', [132, 82, 98, 20, 98],
+        'Lab: DPL, Bilirubin, SGOT/SGPT, Amilase; USG Abdomen',
+        'Nyeri hebat di perut kanan atas menetap >6 jam setelah makan berlemak, menjalar ke bahu kanan, disertai demam dan mual.',
+        'Sklera ikterik (-/+). Abdomen: nyeri tekan kuadran kanan atas, Murphy sign (+).',
+        'Kolesistitis Akut (dd/ Kolangitis)',
+        '1. Puasa, hidrasi IV, analgetik (Ketorolac/Parasetamol IV), antiemetik.\n2. Antibiotik IV (Ceftriaxone + Metronidazole).\n3. Konsul Sp.PD / Sp.B untuk Rawat Inap.',
+        true, [1,0,0,1], ['Nyeri kanan atas menetap', 'Demam & mual', 'Murphy sign (+)'], false),
+
+      mk('i_ileus', 'igd', 'GI & Hepar', 'Ileus Obstruktif', 'K56.6', 'Other and unspecified intestinal obstruction', [114, 72, 108, 22, 97],
+        'Foto Polos Abdomen 3 Posisi (air-fluid level), DPL, elektrolit',
+        'Perut kembung membesar, nyeri melilit, muntah kehijauan, tidak bisa BAB dan tidak bisa buang angin (flatus) sejak 2 hari.',
+        'Abdomen: distensi (+), bising usus meningkat nada tinggi (metallic sound) atau menghilang, timpani.',
+        'Ileus Obstruktif (Total / Parsial)',
+        '1. Puasa mutlak, pasang NGT terbuka (dekompresi), pasang IV line + koreksi cairan & elektrolit, kateter urin.\n2. Foto abdomen 3 posisi.\n3. Konsul cito Sp.B untuk Rawat Inap dan evaluasi laparotomi.',
+        true, [1,0,0,1], ['Tidak bisa kentut/BAB', 'Perut sangat kembung', 'Muntah hijau'], false),
+
+      // -------------------- IGD: NEUROLOGI EMERGENSI (6) --------------------
+      mk('i_stroke', 'igd', 'Neuro', 'Suspek Stroke Akut (Code Stroke)', 'I63.9', 'Cerebral infarction, unspecified', [178, 98, 84, 20, 96],
+        'CT-Scan Kepala non-kontras CITO, GDS cito, EKG 12-lead, lab koagulasi',
+        'Kelemahan mendadak anggota gerak satu sisi dan bicara pelo sejak 2 jam SMRS saat beraktivitas.',
+        'GCS E4V4M6 (disartria). Parese N. VII & XII sentral, hemiparese 2/2, Babinski (+/-).',
+        'Suspek Stroke Akut (dd/ Stroke Iskemik / Stroke Hemoragik)',
+        '1. Amankan ABC, elevasi kepala 30 derajat, cek GDS cito (eksklusi hipoglikemia).\n2. CT-Scan Kepala non-kontras CITO; hindari penurunan TD agresif sebelum hasil CT.\n3. Konsul cito Sp.S / Sp.N untuk evaluasi trombolisis (<4.5 jam) dan MRS Unit Stroke/ICU.',
+        true, [1,0,1,1], ['Lemah sesisi mendadak', 'Bicara pelo / wajah perot', 'Onset <4.5 jam'], true),
+
+      mk('i_kejang', 'igd', 'Neuro', 'Kejang Akut / Status Epileptikus', 'R56.8', 'Other and unspecified convulsions', [132, 82, 118, 24, 94],
+        'Cek GDS cito, elektrolit (Na, K, Ca), DPL; evaluasi CT-Scan bila kejang pertama',
+        'Kejang kelojotan seluruh tubuh di rumah/saat tiba di IGD, pasca kejang pasien tampak mengantuk/bingung.',
+        'Post-ictal state / kejang aktif. Amankan lidah/jalan napas, evaluasi demam dan tanda rangsang meningeal.',
+        'Kejang Umum Tonik-Klonik (dd/ Epilepsi / Metabolik / Infeksi SSP)',
+        '1. Posisi miring mantap (recovery), O2 aliran tinggi, cek GDS cito.\n2. Bila kejang aktif: Diazepam 10 mg IV pelan (atau rektal bila belum ada IV) -> lanjut Fenitoin/Levetirasetam IV bila berulang.\n3. Konsul Sp.S / Sp.A untuk Rawat Inap.',
+        true, [1,0,0,1], ['Kejang seluruh tubuh', 'Pasca kejang mengantuk', 'Riwayat epilepsi'], false),
+
+      mk('i_penurunan_kes', 'igd', 'Neuro', 'Penurunan Kesadaran / Ensefalopati', 'R40.2', 'Coma, unspecified', [112, 70, 102, 22, 94],
+        'GDS cito, DPL, Ur/Cr, SGOT/SGPT, elektrolit, EKG, CT-Scan Kepala',
+        'Pasien dibawa keluarga karena sulit dibangunkan / mengigau sejak beberapa jam SMRS.',
+        'GCS menurun (E2V3M5). Evaluasi pupil isokor, tanda lateralisi, bau aseton/uremik, dan tanda sepsis.',
+        'Penurunan Kesadaran (eksklusi metabolik: hipoglikemia, uremia, hepatik, stroke, sepsis)',
+        '1. Amankan ABC, O2, cek GDS cito (berikan D40% IV bila <70 mg/dL), pasang IV line & kateter urin.\n2. Panel lab metabolik lengkap + CT kepala sesuai indikasi.\n3. Rawat Inap HCU/ICU.',
+        true, [1,0,1,1], ['Sulit dibangunkan', 'Bicara meracau', 'Riwayat DM/ginjal/hati'], false),
+
+      mk('i_vertigo_akut', 'igd', 'Neuro', 'Vertigo Akut Berat + Muntah Profus', 'R42', 'Dizziness and giddiness', [138, 86, 92, 20, 99],
+        'Evaluasi HINTS exam (eksklusi vertigo sentral/stroke serebelum)',
+        'Pusing berputar sangat hebat mendadak sehingga tidak bisa berdiri, disertai muntah berulang.',
+        'GCS E4V5M6. Nistagmus (+). Tes serebelar (dismetria/ataksia) baik, defisit fokal (-).',
+        'Vertigo Akut Berat (Perifer vs Sentral dalam observasi)',
+        '1. Pasang IV line cairan rumatan, berikan antiemetik IV (Ondansetron/Metoclopramide) + Diphenhydramine/Dimenhydrinate atau Betahistine.\n2. Lakukan pemeriksaan HINTS untuk menyingkirkan stroke batang otak/serebelum.\n3. MRS bila muntah tidak teratasi atau curiga sentral.',
+        true, [0,0,0,1], ['Pusing berputar hebat', 'Muntah berulang', 'Tidak bisa berdiri'], false),
+
+      mk('i_ckr', 'igd', 'Neuro', 'Cedera Kepala Ringan (CKR)', 'S06.0', 'Concussion', [124, 78, 86, 18, 99],
+        'Evaluasi indikasi CT-Scan Kepala (Canadian CT Head Rule)',
+        'Riwayat benturan kepala akibat jatuh/kecelakaan lalu lintas, sadar penuh, pusing ringan, pingsan/muntah menyemprot (-).',
+        'GCS E4V5M6 (15). Pupil isokor 3mm/3mm RCL (+/+). Luka lecet/hematom kulit kepala (+/-). Defisit neurologis (-).',
+        'Cedera Kepala Ringan (CKR) GCS 15 tanpa tanda peningkatan TIK',
+        '1. Rawat luka luar bila ada, analgetik Parasetamol (hindari sedatif).\n2. Observasi tanda vital & GCS di IGD 2-4 jam.\n3. Edukasi pulang dengan lembar observasi keluarga (kembali segera bila muntah menyemprot, nyeri kepala hebat, mengantuk).',
+        false, [0,0,0,0], ['Riwayat terbentur kepala', 'Sadar penuh (GCS 15)', 'Muntah/pingsan (-)'], false),
+
+      mk('i_sah', 'igd', 'Neuro', 'Nyeri Kepala Hebat / Suspek SAH', 'R51', 'Headache', [168, 96, 96, 20, 98],
+        'CT-Scan Kepala non-kontras CITO',
+        'Nyeri kepala paling hebat seumur hidup muncul sangat mendadak (thunderclap headache), disertai muntah dan silau.',
+        'GCS E4V5M6 / somnolen. Kaku kuduk (+), tanda Kernig/Brudzinski (+/-).',
+        'Thunderclap Headache / Suspek Perdarahan Subaraknoid (SAH)',
+        '1. Elevasi kepala 30 derajat, ruang tenang, O2, pasang IV line.\n2. Analgetik IV hati-hati + CT-Scan Kepala non-kontras CITO.\n3. Konsul cito Sp.S / Sp.BS untuk Rawat ICU.',
+        true, [1,0,0,1], ['Nyeri kepala mendadak hebat', 'Kaku leher', 'Muntah menyemprot'], false),
+
+      // -------------------- IGD: METABOLIK & UROLOGI AKUT (6) --------------------
+      mk('i_hipoglikemia', 'igd', 'Metabolik & Ginjal', 'Hipoglikemia Berat', 'E16.2', 'Hypoglycaemia, unspecified', [132, 82, 108, 20, 98],
+        'GDS Cito: <50-70 mg/dL; pantau GDS ulang tiap 15-30 menit',
+        'Penurunan kesadaran mendadak / keringat dingin dan gemetar pada pasien DM yang minum obat/suntik insulin namun tidak makan.',
+        'GCS menurun / somnolen, diaforesis (+), akral dingin.',
+        'Hipoglikemia Berat ec OAD / Insulin',
+        '1. Berikan Dekstrosa 40% (D40%) 50 mL (2 flakon) IV bolus SEGERA -> cek GDS ulang 15 menit kemudian.\n2. Lanjutkan infus D10% bila GDS belum stabil >100 mg/dL, terutama bila menggunakan sulfonilurea/insulin kerja panjang.\n3. Rawat Inap untuk observasi hipoglikemia berulang.',
+        true, [1,0,1,1], ['Keringat dingin & lemas', 'Riwayat suntik insulin', 'GDS sangat rendah'], false),
+
+      mk('i_kad', 'igd', 'Metabolik & Ginjal', 'Hiperglikemia / Suspek KAD / HHS', 'E11.1', 'Type 2 diabetes mellitus with ketoacidosis', [102, 66, 118, 28, 97],
+        'GDS Cito (>250-300 / High), AGD, keton darah/urin, elektrolit (K, Na)',
+        'Mual muntah, nyeri perut, napas cepat dan dalam, sering kencing, sangat haus sejak 2 hari.',
+        'Turgor menurun, bibir kering, pernapasan Kussmaul (+), bau napas aseton (+/-).',
+        'Krisis Hiperglikemia (Suspek Ketoasidosis Diabetikum / HHS)',
+        '1. Rehidrasi NaCl 0.9% 1000 mL pada 1 jam pertama, cek Kalium sebelum memulai drip Insulin.\n2. Drip Insulin reguler IV (0.1 unit/kg/jam) bila K >=3.3 mEq/L dan pantau GDS tiap jam.\n3. Rawat Inap HCU/ICU.',
+        true, [1,0,1,1], ['Gula darah High (>400)', 'Napas cepat & dalam', 'Mual muntah'], false),
+
+      mk('i_kolik_renal', 'igd', 'Metabolik & Ginjal', 'Kolik Renal / Batu Ureter', 'N23', 'Unspecified renal colic', [142, 88, 98, 20, 99],
+        'Urinalisis (hematuria mikroskopik), Ur/Cr, USG / BNO',
+        'Nyeri pinggang sangat hebat hilang timbul menjalar ke perut bawah/lipat paha, gelisah, disertai mual.',
+        'Nyeri ketok CVA (+) jelas di sisi sakit, abdomen supel tanpa defans.',
+        'Kolik Renal ec Suspek Ureterolitiasis',
+        '1. Analgetik efektif (Ketorolac 30 mg IV bila fungsi ginjal baik, atau Parasetamol/Tramadol IV) + antiemetik.\n2. Hidrasi cukup dan Medical Expulsive Therapy (Tamsulosin) bila batu kecil tanpa infeksi.\n3. Konsul Urologi / MRS bila nyeri refrakter atau disertai demam (pionefrosis).',
+        true, [0,0,0,1], ['Nyeri pinggang menjalar ke paha', 'BAK kemerahan', 'Sangat gelisah kesakitan'], false),
+
+      mk('i_retensi_urin', 'igd', 'Metabolik & Ginjal', 'Retensi Urin Akut', 'R33', 'Retention of urine', [148, 90, 94, 20, 99],
+        'Evaluasi volume urin residu & fungsi ginjal bila obstruksi lama',
+        'Tidak bisa BAK sama sekali sejak >8 jam SMRS, perut bawah terasa sangat penuh dan nyeri.',
+        'Abdomen: teraba vesika urinaria penuh di suprapubik, nyeri tekan (+), perkusi redup.',
+        'Retensi Urin Akut (ec Suspek BPH / Striktur Uretra / Bekuan)',
+        '1. Pemasangan kateter Foley steril (dengan lubrikasi adekuat; ukuran sesuai) dan catat volume urin awal.\n2. Bila gagal kateterisasi: jangan dipaksa, konsul cito Urologi untuk sistostomi/kateter khusus.\n3. Berikan Tamsulosin dan rujuk Poli Urologi.',
+        true, [1,1,0,1], ['Tidak bisa kencing >8 jam', 'Perut bawah tegang nyeri', 'Riwayat prostat'], false),
+
+      mk('i_isk', 'igd', 'Metabolik & Ginjal', 'ISK / Pielonefritis Akut', 'N39.0', 'Urinary tract infection, site not specified', [114, 72, 102, 20, 98],
+        'Urinalisis (leukosituria, nitrit, bakteri), DPL',
+        'Demam menggigil disertai nyeri pinggang dan nyeri saat BAK (disuria) / sering BAK sejak 2 hari.',
+        'Nyeri tekan suprapubik (+) dan/atau nyeri ketok CVA (+).',
+        'Infeksi Saluran Kemih (ISK) Atas / Pielonefritis Akut',
+        '1. Hidrasi IV/oral adekuat dan antipiretik/analgetik.\n2. Antibiotik empiris (Ceftriaxone IV bila MRS/pielonefritis atau Ciprofloxacin/Cefixime PO bila sistitis).\n3. MRS bila demam tinggi, muntah, atau curiga urosepsis.',
+        true, [0,0,0,1], ['Nyeri & panas saat BAK', 'Demam menggigil', 'Nyeri pinggang'], false),
+
+      mk('i_elektrolit', 'igd', 'Metabolik & Ginjal', 'Gangguan Elektrolit (Hipo/Hiperkalemia)', 'E87.5', 'Hyperkalaemia', [124, 78, 62, 20, 97],
+        'Lab: Elektrolit (Na, K, Cl), Ur/Cr, dan EKG 12-lead segera',
+        'Lemas seluruh badan / otot terasa berat (atau riwayat gagal ginjal telat cuci darah).',
+        'Kekuatan otot ekstremitas menurun ringan/berat. EKG: evaluasi gelombang T tinggi (hiperkalemia) atau gelombang U (hipokalemia).',
+        'Gangguan Elektrolit Bermakna (Hiperkalemia / Hipokalemia)',
+        '1. Rekam EKG 12-lead segera.\n2. Bila Hiperkalemia + perubahan EKG: Kalsium Glukonas 10% 10 mL IV pelan -> Insulin + D40% IV -> Nebul Salbutamol.\n3. Bila Hipokalemia: koreksi KCl IV/oral sesuai kadar dan pantau jantung; Rawat Inap.',
+        true, [1,0,1,1], ['Lemas berat seluruh badan', 'Riwayat gagal ginjal / diare', 'Perubahan EKG'], false),
+
+      // -------------------- IGD: BEDAH, TRAUMA, ANAK, OBGYN (10) --------------------
+      mk('i_vulnus', 'igd', 'Bedah & Trauma', 'Vulnus Laceratum / Luka Robek', 'T14.1', 'Open wound of unspecified body region', [124, 78, 88, 18, 99],
+        'Evaluasi kedalaman luka dan struktur tendon/neurovaskular',
+        'Luka robek akibat jatuh/benda tajam sejak 1 jam SMRS, perdarahan terkontrol, tidak ada riwayat pingsan.',
+        'Status lokalis: vulnus laceratum panjang +/- 4 cm, dasar subkutis, perdarahan aktif (-), CRT distal <2 dtk, sensibilitas & gerak jari baik.',
+        'Vulnus Laceratum tanpa cedera neurovaskular/tendon mayor',
+        '1. Irigasi NaCl 0.9%, antiseptik, anestesi lokal, debridemen, dan penjahitan (hecting) luka.\n2. Profilaksis tetanus (TT/ATS bila indikasi), analgetik, dan antibiotik oral bila terkontaminasi.\n3. Edukasi kontrol angkat jahitan.',
+        false, [0,0,0,0], ['Luka robek akibat jatuh', 'Perdarahan berhenti', 'Jari masih bisa digerakkan'], false),
+
+      mk('i_fraktur', 'igd', 'Bedah & Trauma', 'Fraktur Tertutup Ekstremitas', 'T14.2', 'Fracture of unspecified body region', [132, 82, 98, 20, 99],
+        'Foto Rontgen Ekstremitas AP/Lateral',
+        'Nyeri hebat dan tidak bisa menggerakkan lengan/tungkai setelah jatuh/kecelakaan lalu lintas.',
+        'Look: bengkak & deformitas (+), luka terbuka (-). Feel: nyeri tekan lokal (+). Move: ROM terbatas nyeri. NVD distal baik.',
+        'Suspek Fraktur Tertutup Ekstremitas (NVD distal intak)',
+        '1. Imobilisasi dengan pemasangan bidai (spalk) melewati dua sendi, elevasi, dan kompres dingin.\n2. Berikan analgetik IV/PO dan lakukan foto Rontgen.\n3. Konsul Sp.OT untuk tata laksana definitif (gips/ORIF).',
+        true, [1,0,0,1], ['Bengkak & bengkok pasca jatuh', 'Tidak bisa digerakkan', 'Luka terbuka (-)'], false),
+
+      mk('i_luka_bakar', 'igd', 'Bedah & Trauma', 'Luka Bakar (Combustio)', 'T30.0', 'Burn of unspecified body region, unspecified degree', [118, 76, 108, 22, 98],
+        'Hitung luas luka bakar (% TBSA) & kedalaman derajat',
+        'Terkena air panas/api sejak 1 jam SMRS, terasa sangat perih dan melepuh.',
+        'Status lokalis: eritema dan bula (+), luas +/- ...% TBSA, derajat II. Trauma inhalasi (-/+).',
+        'Combustio Derajat II (evaluasi kebutuhan resusitasi cairan Parkland)',
+        '1. Pendinginan dengan air mengalir suhu ruang (bukan es), tutup kasa steril lembab/silver sulfadiazine.\n2. Analgetik IV, profilaksis tetanus, dan resusitasi cairan RL (formula Parkland) bila luas >=15-20%.\n3. MRS / konsul Bedah bila luas/mengenai wajah-sendi.',
+        true, [1,0,0,1], ['Kulit melepuh kena air panas', 'Terasa sangat perih', 'Sesak/bulu hidung terbakar (-)'], false),
+
+      mk('i_inkarserata', 'igd', 'Bedah & Trauma', 'Hernia Inkarserata / Strangulata', 'K40.3', 'Unilateral or unspecified inguinal hernia, with obstruction', [130, 82, 108, 22, 98],
+        'Lab pre-op (DPL, Ur/Cr, GDS, elektrolit, PT/APTT) & Foto Abdomen',
+        'Benjolan lipat paha tidak bisa masuk kembali sejak 6 jam SMRS, disertai nyeri hebat dan muntah.',
+        'Regio inguinalis/skrotalis: benjolan tegang, kemerahan/hangat, nyeri tekan hebat (+), tidak dapat direposisi.',
+        'Hernia Inguinalis Inkarserata / Suspek Strangulata',
+        '1. Puasa mutlak, pasang IV line + cairan kristaloid, pasang NGT bila muntah, analgetik.\n2. Jangan paksa reposisi bila sudah ada tanda strangulasi.\n3. Konsul cito Sp.B untuk operasi emergensi (herniotomi).',
+        true, [1,0,0,1], ['Benjolan tidak bisa masuk', 'Nyeri hebat & muntah', 'Perut kembung'], false),
+
+      mk('i_kds', 'igd', 'Anak & Obgyn', 'Kejang Demam Anak (KDS / KDK)', 'R56.0', 'Febrile convulsions', [90, 60, 134, 26, 98],
+        'Evaluasi sumber demam (ISPA/diare/ISK); DPL & GDS cito',
+        'Anak demam tinggi mendadak diikuti kejang kelojotan <15 menit, setelah kejang anak menangis/sadar.',
+        'KU sadar/rewel, suhu febris. Tanda rangsang meningeal (-). Cari fokus infeksi (faring/telinga/paru).',
+        'Kejang Demam Sederhana (dd/ Kejang Demam Kompleks)',
+        '1. Bila masih kejang: Diazepam rektal (5 mg BB <12 kg / 10 mg BB >=12 kg) atau IV.\n2. Turunkan demam dengan Parasetamol 10-15 mg/kg/kali dan kompres hangat.\n3. Konsul Sp.A; MRS bila kejang berulang (>1x/24 jam), >15 menit, atau usia <6 bulan.',
+        true, [1,1,0,1], ['Anak demam lalu kejang', 'Durasi kejang <15 menit', 'Setelah kejang menangis'], false),
+
+      mk('i_bronkiolitis', 'igd', 'Anak & Obgyn', 'Bronkiolitis / Sesak Napas Anak', 'J21.9', 'Acute bronchiolitis, unspecified', [88, 58, 138, 42, 91],
+        'Pantau SpO2, Ro Toraks bila curiga pneumonia',
+        'Bayi/anak batuk pilek sejak 2 hari lalu napas menjadi cepat, tampak cekungan di dada dan sulit menyusu.',
+        'Napas cepat, retraksi subkostal (+), ekspirasi memanjang, wheezing/ronkhi halus (+/+).',
+        'Bronkiolitis Akut / Distress Napas pada Anak',
+        '1. Berikan O2 lembab target SpO2 >=92-94%, bersihkan sekret hidung (suction/NaCl nasal).\n2. Hidrasi IV bila asupan oral/ASI tidak adekuat karena takipnea.\n3. Konsul Sp.A untuk Rawat Inap.',
+        true, [1,1,0,1], ['Napas anak cepat & cekung', 'Sulit minum/menyusu', 'Diawali batuk pilek'], false),
+
+      mk('i_peb', 'igd', 'Anak & Obgyn', 'Preeklampsia Berat (PEB)', 'O14.1', 'Severe pre-eclampsia', [174, 112, 96, 22, 97],
+        'Proteinuria dipstick (>=+2), DPL, Ur/Cr, SGOT/SGPT, LDH, CTG janin',
+        'Ibu hamil >=20 minggu datang dengan tekanan darah tinggi disertai nyeri kepala hebat, pandangan kabur, atau nyeri ulu hati.',
+        'TD >=160/110 mmHg, edema tungkai (+/+), refleks patella (+/+). DJJ janin (+).',
+        'Preeklampsia Berat (PEB)',
+        '1. Pasang IV line & kateter urin, O2, monitor ketat TTV ibu & DJJ.\n2. Berikan MgSO4 40% loading 4 g IV pelan (15-20 mnt) lanjut rumatan 1 g/jam (pastikan refleks patella +, RR >=16, urin >=30 mL/jam) + Antihipertensi (Nifedipine 10 mg PO / Nicardipine IV).\n3. Konsul cito Sp.OG untuk terminasi/Rawat Inap.',
+        true, [1,0,0,1], ['Hamil tensi sangat tinggi', 'Pandangan kabur & sakit kepala', 'Nyeri ulu hati'], false),
+
+      mk('i_abortus', 'igd', 'Anak & Obgyn', 'Perdarahan Hamil Muda / Abortus', 'O03.4', 'Incomplete, without complication, spontaneous abortion', [104, 68, 108, 20, 98],
+        'Lab: Hb/DPL, Golongan Darah, Tes kehamilan / USG Obgyn',
+        'Perdarahan dari jalan lahir disertai gumpalan darah dan nyeri kram perut bawah pada kehamilan muda.',
+        'Abdomen: nyeri tekan suprapubik (+). Inspekulo/VT: OUE terbuka, tampak jaringan/darah (+).',
+        'Abortus Inkomplit (dd/ Kehamilan Ektopik Terganggu bila nyeri hebat/syok)',
+        '1. Pasang IV line kristaloid (resusitasi bila perdarahan banyak), cek Hb & golongan darah.\n2. Berikan uterotonika/analgetik sesuai instruksi Sp.OG.\n3. Konsul cito Sp.OG untuk evakuasi/kuretase dan Rawat Inap.',
+        true, [1,0,0,1], ['Keluar darah bergumpal', 'Nyeri kram perut bawah', 'Telat haid / hamil muda'], false),
+
+      mk('i_epistaksis', 'igd', 'THT, Mata, Kulit', 'Epistaksis (Mimisan Akut)', 'R04.0', 'Epistaxis', [156, 92, 92, 18, 99],
+        'Evaluasi TD, DPL & PT/APTT bila berulang',
+        'Mimisan deras dari satu/kedua lubang hidung sejak 30 menit SMRS tidak berhenti setelah dipencet.',
+        'Rinoskopi anterior: perdarahan aktif dari pleksus Kiesselbach (anterior) atau mengalir ke faring (posterior).',
+        'Epistaksis Anterior / Posterior (evaluasi hipertensi sebagai pencetus)',
+        '1. Posisikan duduk condong ke depan, pencet cuping hidung 10-15 menit, kompres dingin.\n2. Pasang tampon anterior (kapas adrenalin/lidokain atau tampon vaselin) bila masih mengalir, dan kendalikan tekanan darah bila hipertensi.\n3. Konsul THT bila curiga epistaksis posterior.',
+        true, [0,0,1,1], ['Mimisan tidak berhenti', 'Darah tertelan ke tenggorokan', 'Riwayat darah tinggi'], false),
+
+      mk('i_ca', 'igd', 'THT, Mata, Kulit', 'Benda Asing Mata / Telinga', 'T15.9', 'Foreign body on external eye, part unspecified', [120, 76, 82, 18, 99],
+        'Evaluasi visus / otoskopi sebelum dan sesudah tindakan',
+        'Mata terasa mengganjal, berair, dan perih setelah kemasukan serbuk gerinda/debu (atau serangga/benda asing di telinga).',
+        'Visus dasar baik. Segmen anterior / otoskopi: tampak korpus alienum superfisial, perforasi (-).',
+        'Corpus Alienum Kornea / Konjungtiva / Liang Telinga',
+        '1. Anestesi topikal (Pantocain tetes mata) -> irigasi NaCl 0.9% atau ekstraksi hati-hati dengan kapas lidi/hook bila superfisial.\n2. Berikan salep/tetes antibiotik profilaksis pasca ekstraksi.\n3. Rujuk Poli Mata / THT bila korpus alienum tertanam dalam atau ada ulkus.',
+        false, [0,0,0,0], ['Mata kemasukan serbuk', 'Terasa mengganjal & berair', 'Serangga masuk telinga'], false)
+    ];
+
+    const COMORBIDS = [
+      { id: 'ht', label: 'Hipertensi', code: 'I10', desc: 'Essential (primary) hypertension' },
+      { id: 'dm', label: 'DM Tipe 2', code: 'E11.9', desc: 'Type 2 diabetes mellitus without complications' },
+      { id: 'ckd', label: 'CKD', code: 'N18.9', desc: 'Chronic kidney disease, unspecified' },
+      { id: 'cad', label: 'PJK / CAD', code: 'I25.1', desc: 'Atherosclerotic heart disease' },
+      { id: 'stroke', label: 'Riwayat Stroke', code: 'I69.3', desc: 'Sequelae of cerebral infarction' },
+      { id: 'dyslip', label: 'Dislipidemia', code: 'E78.5', desc: 'Hyperlipidemia, unspecified' },
+      { id: 'copd', label: 'PPOK', code: 'J44.9', desc: 'Chronic obstructive pulmonary disease, unspecified' }
+    ];
+
+    // --- App State ---
+    let state = {
+      mode: 'poli', // 'poli' | 'igd'
+      category: 'Semua',
+      search: '',
+      scenarioId: 'p_ht_ok',
+      selectedComorbids: new Set(),
+      favorites: new Set(['p_ht_ok', 'p_dm2', 'p_dyspepsia', 'i_acs', 'i_febris', 'i_dysp_akut']),
+      history: []
+    };
+
+    try {
+      const savedHist = localStorage.getItem('cv_soap_tacc_history_v3');
+      if (savedHist) state.history = JSON.parse(savedHist);
+      const savedFav = localStorage.getItem('cv_soap_tacc_favs_v3');
+      if (savedFav) state.favorites = new Set(JSON.parse(savedFav));
+    } catch (e) {}
+
+    // --- DOM Elements ---
+    const el = {
+      modeFktpBtn: document.getElementById('modeFktpBtn'),
+      modeIgdBtn: document.getElementById('modeIgdBtn'),
+      modeBadge: document.getElementById('modeBadge'),
+      resultCountBadge: document.getElementById('resultCountBadge'),
+      resetBtn: document.getElementById('resetBtn'),
+      scenarioSearch: document.getElementById('scenarioSearch'),
+      clearSearchBtn: document.getElementById('clearSearchBtn'),
+      categoryTabs: document.getElementById('categoryTabs'),
+      scenarioGrid: document.getElementById('scenarioGrid'),
+      ageInput: document.getElementById('ageInput'),
+      sexSelect: document.getElementById('sexSelect'),
+      ekgSelect: document.getElementById('ekgSelect'),
+      sbpInput: document.getElementById('sbpInput'),
+      dbpInput: document.getElementById('dbpInput'),
+      hrInput: document.getElementById('hrInput'),
+      rrInput: document.getElementById('rrInput'),
+      spo2Input: document.getElementById('spo2Input'),
+      vitalBadges: document.getElementById('vitalBadges'),
+      complaintInput: document.getElementById('complaintInput'),
+      complaintChips: document.getElementById('complaintChips'),
+      peInput: document.getElementById('peInput'),
+      icdCodeInput: document.getElementById('icdCodeInput'),
+      icdDescInput: document.getElementById('icdDescInput'),
+      referNeededCheck: document.getElementById('referNeededCheck'),
+      referToggleLabel: document.getElementById('referToggleLabel'),
+      taccTime: document.getElementById('taccTime'),
+      taccAge: document.getElementById('taccAge'),
+      taccComorbidity: document.getElementById('taccComorbidity'),
+      taccComplication: document.getElementById('taccComplication'),
+      comorbidGrid: document.getElementById('comorbidGrid'),
+      generateBtn: document.getElementById('generateBtn'),
+      soapOutput: document.getElementById('soapOutput'),
+      icdOutput: document.getElementById('icdOutput'),
+      taccOutput: document.getElementById('taccOutput'),
+      soapWordCount: document.getElementById('soapWordCount'),
+      taccCardTitle: document.getElementById('taccCardTitle'),
+      taccStatusBadge: document.getElementById('taccStatusBadge'),
+      rnsAlert: document.getElementById('rnsAlert'),
+      copyAllBtn: document.getElementById('copyAllBtn'),
+      copyIcdCodeOnlyBtn: document.getElementById('copyIcdCodeOnlyBtn'),
+      historyList: document.getElementById('historyList'),
+      clearHistoryBtn: document.getElementById('clearHistoryBtn'),
+      toast: document.getElementById('toast'),
+      toastMsg: document.getElementById('toastMsg'),
+      soapCard: document.getElementById('soapCard'),
+      icdCard: document.getElementById('icdCard'),
+      taccCard: document.getElementById('taccCard')
+    };
+
+    function getFilteredScenarios() {
+      const q = state.search.trim().toLowerCase();
+      let list = SCENARIOS.filter(s => s.setting === state.mode);
+
+      if (state.category === 'Favorit') {
+        list = list.filter(s => state.favorites.has(s.id));
+      } else if (state.category === 'Terbanyak') {
+        list = list.filter(s => s.top);
+      } else if (state.category !== 'Semua') {
+        list = list.filter(s => s.cat === state.category);
+      }
+
+      if (q) {
+        list = list.filter(s =>
+          s.title.toLowerCase().includes(q) ||
+          s.icd.toLowerCase().includes(q) ||
+          s.cat.toLowerCase().includes(q) ||
+          s.complaint.toLowerCase().includes(q)
+        );
+      }
+      return list;
+    }
+
+    function renderCategoryTabs() {
+      const modeList = SCENARIOS.filter(s => s.setting === state.mode);
+      const cats = ['Semua', 'Terbanyak', 'Favorit', ...new Set(modeList.map(s => s.cat))];
+      el.categoryTabs.innerHTML = cats.map(c => {
+        const active = state.category === c;
+        const label = c === 'Favorit' ? '&#9733; Favorit' : (c === 'Terbanyak' ? '&#128293; Top Tersering' : c);
+        const activeCls = state.mode === 'igd'
+          ? 'bg-rose-600 text-white border-rose-600'
+          : 'bg-sky-600 text-white border-sky-600';
+        return `
+          <button type="button" data-cat="${c}"
+            class="px-2.5 py-1 rounded-full text-[11px] font-medium border transition ${
+              active ? activeCls : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-sky-300'
+            }">
+            ${label}
+          </button>
+        `;
+      }).join('');
+
+      el.categoryTabs.querySelectorAll('[data-cat]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.category = btn.getAttribute('data-cat');
+          renderCategoryTabs();
+          renderScenarioGrid();
+        });
+      });
+    }
+
+    function renderScenarioGrid() {
+      const list = getFilteredScenarios();
+      el.resultCountBadge.textContent = `${list.length} skenario`;
+
+      if (state.mode === 'poli') {
+        el.modeBadge.textContent = 'POLI RAWAT JALAN';
+        el.modeBadge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800';
+        el.referToggleLabel.textContent = 'Perlu Lanjut Spesialis / Rujuk';
+        el.taccCardTitle.textContent = 'Alasan Rujukan / Kontrol Poli (TACC)';
+      } else {
+        el.modeBadge.textContent = 'IGD / EMERGENSI';
+        el.modeBadge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800';
+        el.referToggleLabel.textContent = 'Indikasi MRS / Rujuk IGD Lanjut';
+        el.taccCardTitle.textContent = 'Justifikasi Kegawatan IGD / MRS BPJS';
+      }
+
+      if (!list.length) {
+        el.scenarioGrid.innerHTML = `<div class="col-span-full py-6 text-center text-xs text-slate-400">Tidak ada skenario cocok dengan pencarian "${state.search}". Coba kata kunci lain atau klik Reset Filter.</div>`;
+        return;
+      }
+
+      el.scenarioGrid.innerHTML = list.map(sc => {
+        const isActive = sc.id === state.scenarioId;
+        const activeClass = isActive ? (state.mode === 'igd' ? 'active-igd' : 'active') : 'border-slate-200 hover:border-sky-300';
+        const isFav = state.favorites.has(sc.id);
+        return `
+          <div class="scenario-card relative rounded-xl border bg-white p-2.5 transition cursor-pointer ${activeClass}" data-scenario="${sc.id}">
+            <div class="flex items-center justify-between gap-1 mb-1">
+              <span class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 truncate">${sc.cat}</span>
+              <div class="flex items-center gap-1 shrink-0">
+                <span class="text-[10px] font-mono-code font-semibold text-sky-700">${sc.icd}</span>
+                <button type="button" data-fav="${sc.id}" title="Pin ke Favorit" class="text-xs leading-none ${isFav ? 'text-amber-500' : 'text-slate-300 hover:text-amber-400'}">&#9733;</button>
+              </div>
+            </div>
+            <div class="text-xs font-semibold text-slate-800 leading-snug line-clamp-2">${sc.title}</div>
+          </div>
+        `;
+      }).join('');
+
+      el.scenarioGrid.querySelectorAll('[data-scenario]').forEach(card => {
+        card.addEventListener('click', (e) => {
+          if (e.target && e.target.hasAttribute('data-fav')) return;
+          selectScenario(card.getAttribute('data-scenario'));
+        });
+      });
+
+      el.scenarioGrid.querySelectorAll('[data-fav]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = btn.getAttribute('data-fav');
+          if (state.favorites.has(id)) state.favorites.delete(id);
+          else state.favorites.add(id);
+          try {
+            localStorage.setItem('cv_soap_tacc_favs_v3', JSON.stringify([...state.favorites]));
+          } catch (err) {}
+          renderScenarioGrid();
+        });
+      });
+    }
+
+    function renderComorbids() {
+      el.comorbidGrid.innerHTML = COMORBIDS.map(c => {
+        const active = state.selectedComorbids.has(c.id);
+        return `
+          <button type="button" data-comorbid="${c.id}"
+            class="px-2.5 py-1 rounded-full text-xs font-medium border transition ${
+              active
+                ? 'bg-sky-600 text-white border-sky-600'
+                : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-sky-300'
+            }">
+            ${active ? '&#10003; ' : '+ '}${c.label} (${c.code})
+          </button>
+        `;
+      }).join('');
+
+      el.comorbidGrid.querySelectorAll('[data-comorbid]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-comorbid');
+          if (state.selectedComorbids.has(id)) state.selectedComorbids.delete(id);
+          else {
+            state.selectedComorbids.add(id);
+            el.taccComorbidity.checked = true;
+          }
+          renderComorbids();
+          generateOutputs(false);
+        });
+      });
+    }
+
+    function renderComplaintChips(chips) {
+      el.complaintChips.innerHTML = chips.map(ch => `
+        <button type="button" class="chip-btn px-2 py-0.5 rounded-md bg-slate-100 hover:bg-sky-100 hover:text-sky-800 text-[11px] text-slate-600 transition border border-slate-200">
+          + ${ch}
+        </button>
+      `).join('');
+
+      el.complaintChips.querySelectorAll('.chip-btn').forEach((btn, idx) => {
+        btn.addEventListener('click', () => {
+          const textToAdd = chips[idx];
+          const cur = el.complaintInput.value.trim();
+          if (!cur) el.complaintInput.value = textToAdd + '.';
+          else if (!cur.toLowerCase().includes(textToAdd.toLowerCase())) {
+            el.complaintInput.value = cur.replace(/\.+$/, '') + '; ' + textToAdd.toLowerCase() + '.';
+          }
+          generateOutputs(false);
+        });
+      });
+    }
+
+    function updateModeButtons() {
+      if (state.mode === 'poli') {
+        el.modeFktpBtn.className = 'px-3 py-1.5 rounded-md font-semibold transition bg-sky-600 text-white';
+        el.modeIgdBtn.className = 'px-3 py-1.5 rounded-md font-semibold transition text-slate-300 hover:text-white';
+      } else {
+        el.modeIgdBtn.className = 'px-3 py-1.5 rounded-md font-semibold transition bg-rose-600 text-white';
+        el.modeFktpBtn.className = 'px-3 py-1.5 rounded-md font-semibold transition text-slate-300 hover:text-white';
+      }
+    }
+
+    function selectScenario(id) {
+      const sc = SCENARIOS.find(s => s.id === id);
+      if (!sc) return;
+      state.scenarioId = id;
+      state.mode = sc.setting;
+      updateModeButtons();
+
+      el.sbpInput.value = sc.sbp;
+      el.dbpInput.value = sc.dbp;
+      el.hrInput.value = sc.hr;
+      el.rrInput.value = sc.rr;
+      el.spo2Input.value = sc.spo2;
+      el.ekgSelect.value = sc.ekg;
+      el.complaintInput.value = sc.complaint;
+      el.peInput.value = sc.pe;
+      el.icdCodeInput.value = sc.icd;
+      el.icdDescInput.value = sc.icdDesc;
+      el.referNeededCheck.checked = sc.referNeeded;
+      el.taccTime.checked = sc.tacc.time;
+      el.taccAge.checked = Number(el.ageInput.value) >= 65 ? true : sc.tacc.age;
+      el.taccComorbidity.checked = state.selectedComorbids.size > 0 ? true : sc.tacc.comorbidity;
+      el.taccComplication.checked = sc.tacc.complication;
+
+      renderCategoryTabs();
+      renderScenarioGrid();
+      renderComplaintChips(sc.chips);
+      generateOutputs(false);
+    }
+
+    function computeVitalBadges(sbp, dbp, hr, rr, spo2) {
+      const badges = [];
+      if (sbp > 0 && dbp > 0) {
+        const map = Math.round((sbp + 2 * dbp) / 3);
+        badges.push({ text: `MAP ${map} mmHg`, cls: 'bg-slate-100 text-slate-700' });
+        if (sbp >= 180 || dbp >= 120) badges.push({ text: 'Krisis HT', cls: 'bg-rose-100 text-rose-800 font-semibold' });
+        else if (sbp < 90) badges.push({ text: 'Hipotensi', cls: 'bg-rose-100 text-rose-800 font-semibold' });
+      }
+      if (hr > 100) badges.push({ text: 'Takikardia', cls: 'bg-amber-100 text-amber-800 font-semibold' });
+      else if (hr > 0 && hr < 55) badges.push({ text: 'Bradikardia', cls: 'bg-amber-100 text-amber-800 font-semibold' });
+      if (spo2 > 0 && spo2 < 94) badges.push({ text: 'Desaturasi', cls: 'bg-rose-100 text-rose-800 font-semibold' });
+      if (rr > 24) badges.push({ text: 'Takipnea', cls: 'bg-amber-100 text-amber-800 font-semibold' });
+
+      el.vitalBadges.innerHTML = badges.map(b =>
+        `<span class="text-[11px] px-2 py-0.5 rounded-full ${b.cls}">${b.text}</span>`
+      ).join('');
+    }
+
+    function generateOutputs(saveToHistory = false) {
+      const sc = SCENARIOS.find(s => s.id === state.scenarioId) || SCENARIOS[0];
+      const age = Number(el.ageInput.value) || 0;
+      const sex = el.sexSelect.value;
+      const sbp = Number(el.sbpInput.value) || 0;
+      const dbp = Number(el.dbpInput.value) || 0;
+      const hr = Number(el.hrInput.value) || 0;
+      const rr = Number(el.rrInput.value) || 0;
+      const spo2 = Number(el.spo2Input.value) || 0;
+      const map = (sbp > 0 && dbp > 0) ? Math.round((sbp + 2 * dbp) / 3) : 0;
+
+      computeVitalBadges(sbp, dbp, hr, rr, spo2);
+
+      const complaint = el.complaintInput.value.trim() || sc.complaint;
+      const ekg = el.ekgSelect.value.trim() || sc.ekg;
+      const pe = el.peInput.value.trim() || sc.pe;
+      const primaryCode = el.icdCodeInput.value.trim() || sc.icd;
+      const primaryDesc = el.icdDescInput.value.trim() || sc.icdDesc;
+
+      const activeComorbids = COMORBIDS.filter(c => state.selectedComorbids.has(c.id));
+      const comorbidText = activeComorbids.length > 0 ? activeComorbids.map(c => c.label).join(', ') : 'Tidak ada yang tercatat';
+
+      let assessmentLine = sc.assessment;
+      if (activeComorbids.length > 0) {
+        assessmentLine += ` dengan komorbiditas ${activeComorbids.map(c => c.label).join(', ')}`;
+      }
+
+      const settingLabel = state.mode === 'igd' ? '[IGD]' : '[POLI RAWAT JALAN]';
+      const ageLabel = age > 0 ? `Pasien ${sex.toLowerCase()}, usia ${age} tahun. ` : `Pasien ${sex.toLowerCase()}. `;
+      const soap = [
+        `${settingLabel} S (Subjektif):`,
+        `${ageLabel}${complaint}`,
+        `Riwayat komorbid: ${comorbidText}.`,
+        ``,
+        `O (Objektif):`,
+        `KU: ${state.mode === 'igd' ? 'Tampak sakit sedang-berat' : 'Tampak sakit ringan-sedang'}, Kesadaran: Compos Mentis (GCS E4V5M6).`,
+        `TTV: TD ${sbp}/${dbp} mmHg (MAP ${map} mmHg) | HR ${hr} x/menit | RR ${rr} x/menit | SpO2 ${spo2}% (room air).`,
+        `Pemeriksaan Fisik: ${pe}`,
+        `Penunjang: ${ekg}.`,
+        ``,
+        `A (Assessment):`,
+        `${assessmentLine} (ICD-10: ${primaryCode}).`,
+        ``,
+        `P (Plan):`,
+        `${sc.plan}`
+      ].join('\n');
+
+      el.soapOutput.value = soap;
+      el.soapWordCount.textContent = `${soap.split(/\s+/).filter(Boolean).length} kata`;
+
+      // ICD-10 Output
+      let icdLines = [`Utama: ${primaryCode} - ${primaryDesc}`];
+      activeComorbids.forEach((c, i) => {
+        icdLines.push(`Sekunder ${i + 1}: ${c.code} - ${c.desc}`);
+      });
+      el.icdOutput.value = icdLines.join('\n');
+
+      // TACC / BPJS Output
+      const referNeeded = el.referNeededCheck.checked;
+      const taccReasons = [];
+      if (el.taccTime.checked) {
+        taccReasons.push(state.mode === 'igd'
+          ? 'Time (T): Kondisi akut dengan jendela waktu kritis (golden period) yang memerlukan intervensi dan observasi ketat segera.'
+          : 'Time (T): Kondisi kronis yang memerlukan evaluasi, titrasi terapi spesialistik, atau pemantauan berkala di Faskes 2.');
+      }
+      if (el.taccAge.checked) {
+        taccReasons.push(`Age (A): Faktor usia rentan (${age > 0 ? age + ' tahun' : 'geriatri/pediatri'}) yang memerlukan kehati-hatian dosis dan pemantauan spesialis.`);
+      }
+      if (el.taccComorbidity.checked) {
+        const cList = activeComorbids.length > 0 ? activeComorbids.map(c => c.label).join(', ') : 'penyakit penyerta multipel';
+        taccReasons.push(`Comorbidity (C): Terdapat komorbiditas penyerta (${cList}) yang memperberat risiko klinis dan memengaruhi tata laksana.`);
+      }
+      if (el.taccComplication.checked) {
+        taccReasons.push(state.mode === 'igd'
+          ? 'Complication (C): Risiko komplikasi akut mengancam nyawa / fungsi organ vital sehingga memenuhi kriteria kegawatdaruratan / indikasi rawat inap (MRS).'
+          : 'Complication (C): Terdapat komplikasi atau potensi kerusakan organ target yang memerlukan penanganan dokter spesialis.');
+      }
+
+      if ((sc.id === 'p_ht_ok' || sc.id === 'p_dyspepsia' || sc.id === 'p_ispa') && referNeeded && taccReasons.length === 0) {
+        el.rnsAlert.classList.remove('hidden');
+        el.rnsAlert.innerHTML = '<strong>Perhatian Audit BPJS (RNS):</strong> Diagnosis ini termasuk kompetensi primer (4A). Centang minimal 1 kriteria <strong>TACC</strong> di panel kiri jika pasien tetap perlu ditangani/dirujuk ke spesialis.';
+      } else {
+        el.rnsAlert.classList.add('hidden');
+      }
+
+      let taccText = '';
+      if (!referNeeded) {
+        if (state.mode === 'poli') {
+          el.taccStatusBadge.textContent = 'Layak PRB / FKTP';
+          el.taccStatusBadge.className = 'text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700';
+          taccText = `Pasien dalam kondisi klinis stabil dan terkontrol (TD ${sbp}/${dbp} mmHg, HR ${hr} x/mnt, SpO2 ${spo2}%). Layak dikelola di FKTP atau Program Rujuk Balik (PRB) dengan terapi lanjutan sesuai regimen.`;
+        } else {
+          el.taccStatusBadge.textContent = 'Rawat Jalan / Pulang IGD';
+          el.taccStatusBadge.className = 'text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700';
+          taccText = `Pasien stabil pasca observasi dan terapi awal di IGD (TD ${sbp}/${dbp} mmHg, HR ${hr} x/mnt, SpO2 ${spo2}%), tidak ada indikasi rawat inap. Dipulangkan dengan terapi oral dan edukasi tanda bahaya.`;
+        }
+      } else if (state.mode === 'igd') {
+        el.taccStatusBadge.textContent = 'Emergensi IGD / Indikasi MRS';
+        el.taccStatusBadge.className = 'text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800';
+        taccText = `JUSTIFIKASI KEGAWATDARURATAN BPJS / MRS: Pasien IGD dengan klinis ${sc.title} (${primaryCode}), TTV: TD ${sbp}/${dbp} mmHg, HR ${hr} x/mnt, RR ${rr} x/mnt, SpO2 ${spo2}%. Memenuhi kriteria gawat darurat untuk stabilisasi segera, rawat inap (MRS), atau rujukan cito ke fasilitas lanjutan.\n` +
+          (taccReasons.length ? '- ' + taccReasons.join('\n- ') : '');
+      } else {
+        el.taccStatusBadge.textContent = taccReasons.length > 0 ? `TACC Valid (${taccReasons.length} kriteria)` : 'Belum Ada Kriteria TACC';
+        el.taccStatusBadge.className = taccReasons.length > 0
+          ? 'text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800'
+          : 'text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800';
+
+        taccText = `Justifikasi Layanan Spesialistik / Rujukan BPJS (TACC) untuk ${sc.title} (${primaryCode}) dengan data objektif TD ${sbp}/${dbp} mmHg, HR ${hr} x/mnt, RR ${rr} x/mnt, SpO2 ${spo2}%:\n` +
+          (taccReasons.length > 0
+            ? `- ` + taccReasons.join('\n- ')
+            : `[Pilih minimal satu kriteria Time / Age / Comorbidity / Complication pada panel kiri].`);
+      }
+
+      el.taccOutput.value = taccText.trim();
+
+      if (saveToHistory) {
+        addHistory({
+          time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+          setting: state.mode.toUpperCase(),
+          scenario: sc.title,
+          icd: primaryCode,
+          vitals: `${sbp}/${dbp} | HR ${hr} | SpO2 ${spo2}%`,
+          soap,
+          icdText: el.icdOutput.value,
+          taccText: el.taccOutput.value
+        });
+        [el.soapCard, el.icdCard, el.taccCard].forEach(card => {
+          card.classList.remove('pulse-highlight');
+          void card.offsetWidth;
+          card.classList.add('pulse-highlight');
+        });
+      }
+    }
+
+    function addHistory(entry) {
+      state.history.unshift(entry);
+      if (state.history.length > 5) state.history = state.history.slice(0, 5);
+      try { localStorage.setItem('cv_soap_tacc_history_v3', JSON.stringify(state.history)); } catch (e) {}
+      renderHistory();
+    }
+
+    function renderHistory() {
+      if (!state.history.length) {
+        el.historyList.innerHTML = 'Belum ada riwayat tersimpan. Klik tombol <strong>Generate</strong> untuk menyimpan ke sesi lokal.';
+        return;
+      }
+      el.historyList.innerHTML = state.history.map((h, idx) => `
+        <div class="flex items-center justify-between gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200">
+          <div class="min-w-0">
+            <div class="font-semibold text-slate-700 truncate">
+              <span class="text-[10px] px-1.5 py-0.5 rounded ${h.setting === 'IGD' ? 'bg-rose-100 text-rose-700' : 'bg-sky-100 text-sky-700'} mr-1">${h.setting}</span>
+              ${h.scenario} <span class="font-mono-code text-sky-700">(${h.icd})</span>
+            </div>
+            <div class="text-[11px] text-slate-500">${h.time} &middot; ${h.vitals}</div>
+          </div>
+          <button type="button" data-restore="${idx}" class="shrink-0 px-2 py-1 rounded bg-white border border-slate-300 hover:bg-sky-50 text-[11px] font-medium text-slate-700">
+            Muat
+          </button>
+        </div>
+      `).join('');
+
+      el.historyList.querySelectorAll('[data-restore]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const item = state.history[Number(btn.getAttribute('data-restore'))];
+          if (!item) return;
+          el.soapOutput.value = item.soap;
+          el.icdOutput.value = item.icdText;
+          el.taccOutput.value = item.taccText;
+          showToast('Catatan riwayat dimuat ke panel output');
+        });
+      });
+    }
+
+    // --- Clipboard Helper ---
+    function copyText(text, message) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => showToast(message)).catch(() => fallbackCopy(text, message));
+      } else fallbackCopy(text, message);
+    }
+
+    function fallbackCopy(text, message) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast(message);
+      } catch (e) {
+        showToast('Gagal menyalin otomatis, silakan Ctrl+C manual.');
+      }
+      document.body.removeChild(ta);
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      el.toastMsg.textContent = msg;
+      el.toast.classList.remove('hidden');
+      el.toast.classList.add('flex');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        el.toast.classList.add('hidden');
+        el.toast.classList.remove('flex');
+      }, 2200);
+    }
+
+    // --- Event Listeners ---
+    el.modeFktpBtn.addEventListener('click', () => {
+      if (state.mode === 'poli') return;
+      state.mode = 'poli';
+      state.category = 'Semua';
+      state.search = '';
+      el.scenarioSearch.value = '';
+      el.clearSearchBtn.classList.add('hidden');
+      const firstPoli = SCENARIOS.find(s => s.setting === 'poli');
+      if (firstPoli) selectScenario(firstPoli.id);
+    });
+
+    el.modeIgdBtn.addEventListener('click', () => {
+      if (state.mode === 'igd') return;
+      state.mode = 'igd';
+      state.category = 'Semua';
+      state.search = '';
+      el.scenarioSearch.value = '';
+      el.clearSearchBtn.classList.add('hidden');
+      const firstIgd = SCENARIOS.find(s => s.setting === 'igd');
+      if (firstIgd) selectScenario(firstIgd.id);
+    });
+
+    el.scenarioSearch.addEventListener('input', (e) => {
+      state.search = e.target.value;
+      if (state.search) {
+        el.clearSearchBtn.classList.remove('hidden');
+        state.category = 'Semua';
+        renderCategoryTabs();
+      } else {
+        el.clearSearchBtn.classList.add('hidden');
+      }
+      renderScenarioGrid();
+    });
+
+    el.scenarioSearch.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const list = getFilteredScenarios();
+        if (list.length > 0) {
+          selectScenario(list[0].id);
+          showToast(`Memilih: ${list[0].title}`);
+        }
+      }
+    });
+
+    el.clearSearchBtn.addEventListener('click', () => {
+      state.search = '';
+      el.scenarioSearch.value = '';
+      el.clearSearchBtn.classList.add('hidden');
+      renderScenarioGrid();
+      el.scenarioSearch.focus();
+    });
+
+    // Keyboard shortcut '/' to focus search
+    document.addEventListener('keydown', (e) => {
+      if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        el.scenarioSearch.focus();
+      }
+    });
+
+    el.resetBtn.addEventListener('click', () => {
+      state.selectedComorbids.clear();
+      state.search = '';
+      state.category = 'Semua';
+      el.scenarioSearch.value = '';
+      el.clearSearchBtn.classList.add('hidden');
+      el.ageInput.value = 52;
+      el.sexSelect.value = 'Laki-laki';
+      renderComorbids();
+      selectScenario(state.scenarioId);
+      showToast('Input direset ke default skenario');
+    });
+
+    [
+      el.ageInput, el.sexSelect, el.ekgSelect,
+      el.sbpInput, el.dbpInput, el.hrInput, el.rrInput, el.spo2Input,
+      el.complaintInput, el.peInput, el.icdCodeInput, el.icdDescInput,
+      el.referNeededCheck, el.taccTime, el.taccAge, el.taccComorbidity, el.taccComplication
+    ].forEach(input => {
+      input.addEventListener('input', () => generateOutputs(false));
+      input.addEventListener('change', () => generateOutputs(false));
+    });
+
+    el.ageInput.addEventListener('input', () => {
+      if (Number(el.ageInput.value) >= 65) el.taccAge.checked = true;
+    });
+
+    el.generateBtn.addEventListener('click', () => {
+      generateOutputs(true);
+      showToast('SOAP, ICD-10, & Justifikasi BPJS berhasil di-generate!');
+    });
+
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetEl = document.getElementById(btn.getAttribute('data-copy'));
+        if (!targetEl) return;
+        const original = btn.textContent;
+        copyText(targetEl.value, 'Berhasil disalin ke clipboard!');
+        btn.textContent = 'Tersalin!';
+        setTimeout(() => { btn.textContent = original; }, 1400);
+      });
+    });
+
+    el.copyIcdCodeOnlyBtn.addEventListener('click', () => {
+      const codes = [el.icdCodeInput.value.trim()];
+      COMORBIDS.filter(c => state.selectedComorbids.has(c.id)).forEach(c => codes.push(c.code));
+      copyText(codes.filter(Boolean).join(', '), `Kode ICD-10 (${codes.filter(Boolean).join(', ')}) disalin!`);
+    });
+
+    el.copyAllBtn.addEventListener('click', () => {
+      const combined = [
+        el.soapOutput.value,
+        '',
+        '--- KODE ICD-10 ---',
+        el.icdOutput.value,
+        '',
+        '--- JUSTIFIKASI BPJS (TACC / KEGAWATAN) ---',
+        el.taccOutput.value
+      ].join('\n');
+      copyText(combined, 'Semua output (SOAP + ICD-10 + TACC) disalin!');
+    });
+
+    el.clearHistoryBtn.addEventListener('click', () => {
+      state.history = [];
+      try { localStorage.removeItem('cv_soap_tacc_history_v3'); } catch (e) {}
+      renderHistory();
+      showToast('Riwayat sesi dihapus');
+    });
+
+    // --- Init ---
+    renderComorbids();
+    selectScenario('p_ht_ok');
+    renderHistory();
+  </script>
+</body>
+</html>
