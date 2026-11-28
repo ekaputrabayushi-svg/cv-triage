@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>DiuretikFlow Pro — Bayushi's Cardiology Vault</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --surface: #ffffff;
+      --surface-alt: #f8fafc;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --primary: #0f4c81;
+      --primary-light: #e0f2fe;
+      --accent: #0d9488;
+      --accent-bg: #f0fdfa;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --danger-border: #fecaca;
+      --warn: #d97706;
+      --warn-bg: #fffbeb;
+      --warn-border: #fde68a;
+      --ok: #15803d;
+      --ok-bg: #f0fdf4;
+      --ok-border: #bbf7d0;
+      --radius: 14px;
+      --shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      padding-bottom: 40px;
+    }
+
+    .app {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 12px 14px 28px;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #0b2e4f 0%, #0f4c81 60%, #0d9488 100%);
+      color: #ffffff;
+      border-radius: 16px;
+      padding: 16px 18px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 14px rgba(15, 76, 129, 0.22);
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .header h1 {
+      margin: 4px 0 2px;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.2px;
+    }
+    .header p {
+      margin: 0;
+      font-size: 12.5px;
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+    /* Sticky Mobile Tabs */
+    .tabs {
+      position: sticky;
+      top: 6px;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      background: rgba(244, 247, 251, 0.92);
+      backdrop-filter: blur(8px);
+      padding: 6px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      margin-bottom: 14px;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+    }
+    .tab-btn {
+      appearance: none;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 9px 4px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      transition: all 0.15s ease;
+    }
+    .tab-btn .tab-ico { font-size: 15px; line-height: 1; }
+    .tab-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(15, 76, 129, 0.25);
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 15px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+    .card-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--primary);
+      margin: 0 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Segmented / Choice Buttons */
+    .seg-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .seg-btn {
+      border: 1.5px solid var(--border);
+      background: var(--surface-alt);
+      border-radius: 11px;
+      padding: 10px 10px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .seg-btn .seg-head {
+      display: block;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .seg-btn .seg-sub {
+      display: block;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .seg-btn.selected {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+    .seg-btn.selected.danger-opt {
+      border-color: var(--danger);
+      background: var(--danger-bg);
+    }
+    .seg-btn.selected.danger-opt .seg-head { color: var(--danger); }
+
+    /* Chips */
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .chip {
+      border: 1.5px solid var(--border);
+      background: var(--surface-alt);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .chip.selected {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    /* Form Controls */
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .field {
+      margin-bottom: 10px;
+    }
+    .field:last-child { margin-bottom: 0; }
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .input-wrap {
+      display: flex;
+      align-items: center;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: #ffffff;
+      overflow: hidden;
+    }
+    .input-wrap:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(15, 76, 129, 0.12);
+    }
+    .input-wrap input {
+      width: 100%;
+      border: none;
+      outline: none;
+      padding: 10px 11px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      background: transparent;
+    }
+    .input-unit {
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: var(--surface-alt);
+      align-self: stretch;
+      display: flex;
+      align-items: center;
+      border-left: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    /* Slider */
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--primary);
+      height: 6px;
+      cursor: pointer;
+    }
+
+    /* Result Boxes */
+    .result-hero {
+      background: linear-gradient(135deg, #f0f9ff 0%, #f0fdfa 100%);
+      border: 1.5px solid #bae6fd;
+      border-radius: 14px;
+      padding: 14px 15px;
+      margin-bottom: 10px;
+    }
+    .result-hero.danger {
+      background: var(--danger-bg);
+      border-color: var(--danger-border);
+    }
+    .result-hero.warn {
+      background: var(--warn-bg);
+      border-color: var(--warn-border);
+    }
+    .result-hero.ok {
+      background: var(--ok-bg);
+      border-color: var(--ok-border);
+    }
+    .result-label {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+    .result-hero.danger .result-label { color: var(--danger); }
+    .result-hero.warn .result-label { color: var(--warn); }
+    .result-hero.ok .result-label { color: var(--ok); }
+
+    .result-value {
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: -0.4px;
+      line-height: 1.2;
+    }
+    .result-sub {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* Metrics row */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .metric-box {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 10px;
+    }
+    .metric-k {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .metric-v {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text);
+      margin-top: 2px;
+    }
+
+    /* Alert List */
+    .alert-box {
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 12.5px;
+      margin-top: 8px;
+      border: 1px solid transparent;
+    }
+    .alert-danger {
+      background: var(--danger-bg);
+      border-color: var(--danger-border);
+      color: #991b1b;
+    }
+    .alert-warn {
+      background: var(--warn-bg);
+      border-color: var(--warn-border);
+      color: #92400e;
+    }
+    .alert-info {
+      background: var(--primary-light);
+      border-color: #bae6fd;
+      color: #075985;
+    }
+    .alert-ok {
+      background: var(--ok-bg);
+      border-color: var(--ok-border);
+      color: #166534;
+    }
+
+    /* Copy Button */
+    .copy-btn {
+      width: 100%;
+      margin-top: 10px;
+      padding: 11px 14px;
+      border-radius: 11px;
+      border: none;
+      background: var(--primary);
+      color: #ffffff;
+      font-size: 13.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .copy-btn:active { transform: scale(0.99); }
+    .copy-btn.copied { background: var(--ok); }
+
+    /* Step List */
+    .step-item {
+      border-left: 3px solid var(--primary);
+      padding: 6px 0 6px 11px;
+      margin-bottom: 10px;
+    }
+    .step-item:last-child { margin-bottom: 0; }
+    .step-item h4 {
+      margin: 0 0 3px;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .step-item p {
+      margin: 0;
+      font-size: 12.5px;
+      color: var(--text-muted);
+    }
+
+    .footer-note {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 14px;
+      padding: 0 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-top">
+        <span class="brand-pill">CARDIOLOGY VAULT • v26</span>
+        <span class="brand-pill">📱 Mobile &amp; 💻 Desktop</span>
+      </div>
+      <h1>💧 DiuretikFlow Pro</h1>
+      <p>Kalkulator Furosemide IV, Syringe Pump Drip &amp; Algoritma Diuretic Resistance (ADHF)</p>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Menu DiuretikFlow Pro">
+      <button class="tab-btn active" data-tab="bolus" role="tab" aria-selected="true">
+        <span class="tab-ico">💉</span><span>Bolus IV</span>
+      </button>
+      <button class="tab-btn" data-tab="drip" role="tab" aria-selected="false">
+        <span class="tab-ico">⏱️</span><span>Drip ICU</span>
+      </button>
+      <button class="tab-btn" data-tab="eval" role="tab" aria-selected="false">
+        <span class="tab-ico">📊</span><span>Eval 2–6j</span>
+      </button>
+      <button class="tab-btn" data-tab="guide" role="tab" aria-selected="false">
+        <span class="tab-ico">🛡️</span><span>Red Flag</span>
+      </button>
+    </nav>
+
+    <!-- TAB 1: DOSIS AWAL BOLUS IV -->
+    <section id="panel-bolus" class="panel active">
+      <div class="card">
+        <h2 class="card-title">1. Cek Profil Hemodinamik Pasien</h2>
+        <div class="seg-grid">
+          <button type="button" class="seg-btn selected" id="perf-warm">
+            <span class="seg-head">🟢 Warm &amp; Wet</span>
+            <span class="seg-sub">Akral hangat, TD cukup, kongesti/sesak</span>
+          </button>
+          <button type="button" class="seg-btn danger-opt" id="perf-cold">
+            <span class="seg-head">🔴 Cold &amp; Wet</span>
+            <span class="seg-sub">Akral dingin, hipotensi / syok</span>
+          </button>
+        </div>
+
+        <h2 class="card-title" style="margin-top:14px;">2. Riwayat Furosemide Oral di Rumah</h2>
+        <div class="seg-grid">
+          <button type="button" class="seg-btn selected" id="hist-naive">
+            <span class="seg-head">Diuretic-Naive</span>
+            <span class="seg-sub">Belum rutin furosemide</span>
+          </button>
+          <button type="button" class="seg-btn" id="hist-chronic">
+            <span class="seg-head">Rutin Oral</span>
+            <span class="seg-sub">Sudah minum tiap hari</span>
+          </button>
+        </div>
+
+        <div class="field" id="oral-dose-wrap" style="display:none;">
+          <label for="oral-dose">Total Dosis Furosemide Oral / Hari di Rumah</label>
+          <div class="chip-row" id="oral-presets">
+            <button type="button" class="chip" data-val="40">40 mg</button>
+            <button type="button" class="chip selected" data-val="80">80 mg</button>
+            <button type="button" class="chip" data-val="120">120 mg</button>
+            <button type="button" class="chip" data-val="160">160 mg</button>
+          </div>
+          <div class="input-wrap">
+            <input type="number" id="oral-dose" value="80" min="10" max="400" step="10" inputmode="numeric" />
+            <span class="input-unit">mg / hari</span>
+          </div>
+        </div>
+
+        <div class="field-grid" style="margin-top:10px;">
+          <div class="field">
+            <label for="sbp">TD Sistolik</label>
+            <div class="input-wrap">
+              <input type="number" id="sbp" value="130" min="50" max="260" inputmode="numeric" />
+              <span class="input-unit">mmHg</span>
+            </div>
+          </div>
+          <div class="field">
+            <label for="potassium">Kalium (K+) Opsional</label>
+            <div class="input-wrap">
+              <input type="number" id="potassium" value="4.0" min="1.5" max="8.0" step="0.1" inputmode="decimal" />
+              <span class="input-unit">mEq/L</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="egfr">eGFR (Opsional)</label>
+          <div class="input-wrap">
+            <input type="number" id="egfr" value="60" min="5" max="150" inputmode="numeric" />
+            <span class="input-unit">mL/mnt</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="result-hero" id="bolus-hero">
+          <div class="result-label" id="bolus-label">REKOMENDASI DOSIS BOLUS IV AWAL</div>
+          <div class="result-value" id="bolus-value">20–40 mg IV Bolus</div>
+          <div class="result-sub" id="bolus-sub">Berikan perlahan (1–2 menit). Evaluasi output urin setelah 2–6 jam.</div>
+        </div>
+        <div id="bolus-alerts"></div>
+        <button type="button" class="copy-btn" id="copy-bolus">📋 Copy Instruksi Bolus IV</button>
+      </div>
+    </section>
+
+    <!-- TAB 2: SYRINGE PUMP CONTINUOUS DRIP -->
+    <section id="panel-drip" class="panel">
+      <div class="card">
+        <h2 class="card-title">1. Pilih Pengenceran Spuit (Syringe Pump)</h2>
+        <div class="chip-row" id="dil-presets">
+          <button type="button" class="chip selected" data-mg="100" data-ml="50">100 mg / 50 mL (2 mg/mL)</button>
+          <button type="button" class="chip" data-mg="200" data-ml="50">200 mg / 50 mL (4 mg/mL)</button>
+          <button type="button" class="chip" data-mg="250" data-ml="50">250 mg / 50 mL (5 mg/mL)</button>
+        </div>
+
+        <div class="field-grid">
+          <div class="field">
+            <label for="drip-total-mg">Total Furosemide</label>
+            <div class="input-wrap">
+              <input type="number" id="drip-total-mg" value="100" min="20" max="500" step="10" inputmode="numeric" />
+              <span class="input-unit">mg</span>
+            </div>
+          </div>
+          <div class="field">
+            <label for="drip-total-ml">Total Pelarut (NaCl 0,9%)</label>
+            <div class="input-wrap">
+              <input type="number" id="drip-total-ml" value="50" min="10" max="500" step="10" inputmode="numeric" />
+              <span class="input-unit">mL</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top:10px;">
+          <label for="drip-rate-mg">Target Laju Dosis: <strong id="drip-rate-display">10 mg/jam</strong></label>
+          <input type="range" id="drip-rate-slider" min="2" max="40" step="1" value="10" />
+          <div class="chip-row" style="margin-top:8px;" id="rate-presets">
+            <button type="button" class="chip" data-rate="5">5 mg/jam</button>
+            <button type="button" class="chip selected" data-rate="10">10 mg/jam</button>
+            <button type="button" class="chip" data-rate="15">15 mg/jam</button>
+            <button type="button" class="chip" data-rate="20">20 mg/jam</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="result-hero" id="drip-hero">
+          <div class="result-label">ATUR KECEPATAN SYRINGE PUMP</div>
+          <div class="result-value" id="drip-ml-hr">5.0 mL / jam</div>
+          <div class="result-sub" id="drip-conc-text">Konsentrasi: 2.0 mg/mL (5 ampul @20 mg dalam 50 mL NaCl 0,9%)</div>
+          <div class="metrics-row">
+            <div class="metric-box">
+              <div class="metric-k">Total Dosis / 24 Jam</div>
+              <div class="metric-v" id="drip-24h">240 mg/hari</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-k">1 Spuit Habis Dalam</div>
+              <div class="metric-v" id="drip-duration">10.0 jam</div>
+            </div>
+          </div>
+        </div>
+        <div id="drip-alerts"></div>
+        <button type="button" class="copy-btn" id="copy-drip">📋 Copy Instruksi Syringe Pump</button>
+      </div>
+    </section>
+
+    <!-- TAB 3: EVALUASI 2-6 JAM & DIURETIC RESISTANCE -->
+    <section id="panel-eval" class="panel">
+      <div class="card">
+        <h2 class="card-title">Evaluasi Respon Diuretik (ESC 2021/2023)</h2>
+        <div class="field-grid">
+          <div class="field">
+            <label for="last-bolus">Dosis IV Terakhir</label>
+            <div class="input-wrap">
+              <input type="number" id="last-bolus" value="40" min="10" max="240" step="10" inputmode="numeric" />
+              <span class="input-unit">mg IV</span>
+            </div>
+          </div>
+          <div class="field">
+            <label for="urine-out">Output Urin (Rata-rata 6j)</label>
+            <div class="input-wrap">
+              <input type="number" id="urine-out" value="60" min="0" max="1000" step="10" inputmode="numeric" />
+              <span class="input-unit">mL/jam</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="spot-na">Spot Urine Na+ (2 jam pasca-bolus — Opsional)</label>
+          <div class="input-wrap">
+            <input type="number" id="spot-na" placeholder="Kosongkan jika tidak cek" min="0" max="250" inputmode="numeric" />
+            <span class="input-unit">mEq/L</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="result-hero" id="eval-hero">
+          <div class="result-label" id="eval-label">HASIL EVALUASI</div>
+          <div class="result-value" id="eval-value">Respon Belum Adekuat</div>
+          <div class="result-sub" id="eval-sub"></div>
+        </div>
+        <div id="eval-steps"></div>
+        <button type="button" class="copy-btn" id="copy-eval">📋 Copy Rencana Tindak Lanjut</button>
+      </div>
+    </section>
+
+    <!-- TAB 4: RED FLAGS & MONITORING -->
+    <section id="panel-guide" class="panel">
+      <div class="card">
+        <h2 class="card-title">🛡️ Checklist Keamanan &amp; Red Flags ICU/IGD</h2>
+        <div class="step-item">
+          <h4>1. Ototoksisitas (Dosis Tinggi ≥80–100 mg)</h4>
+          <p>Jangan bolus cepat! Kecepatan infus maksimal <strong>≤4 mg/menit</strong> (misal 100 mg berikan dalam 25–30 menit) untuk mencegah tuli sementara/permanen.</p>
+        </div>
+        <div class="step-item">
+          <h4>2. Selalu Beri Loading Bolus Sebelum Drip</h4>
+          <p>Drip kontinyu tanpa bolus awal butuh waktu lama mencapai ambang tubulus. Berikan <strong>bolus IV 20–40 mg</strong> dulu sebelum menjalankan syringe pump.</p>
+        </div>
+        <div class="step-item">
+          <h4>3. Pseudo-Resistance (Jangan Asal Naikkan Dosis)</h4>
+          <p>Cek 4 hal sebelum vonis resisten: (a) <strong>Kateter urin tersumbat/tertekuk</strong>, (b) <strong>Pasien Cold &amp; Wet / syok</strong> butuh inotropik, (c) Obat <strong>NSAID</strong> menghambat prostaglandin ginjal, (d) Asupan cairan/garam masih bebas.</p>
+        </div>
+        <div class="step-item">
+          <h4>4. Worsening Renal Function (WRF) vs Pseudo-WRF</h4>
+          <p>Kenaikan ringan kreatinin (0,3–0,5 mg/dL) disertai <strong>diuresis baik &amp; sesak membaik</strong> sering kali hemokonsentrasi (<em>pseudo-WRF</em>) — jangan buru-buru stop diuretik jika pasien masih jelas kongesti.</p>
+        </div>
+        <div class="step-item">
+          <h4>5. Monitoring Elektrolit Wajib</h4>
+          <p>Pantau <strong>K+ dan Mg2+</strong> tiap 12–24 jam pada terapi intensif / kombinasi Thiazide (HCT) karena risiko hipokalemia berat &amp; aritmia ventrikel.</p>
+        </div>
+      </div>
+    </section>
+
+    <p class="footer-note">
+      Bayushi’s Cardiology Vault • Alat bantu keputusan klinis berbasis ESC HF &amp; AHA/ACC ADHF Guidelines. Keputusan akhir tetap menyesuaikan kondisi klinis pasien.
+    </p>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      function clampNum(val, min, max, fallback) {
+        var n = parseFloat(val);
+        if (isNaN(n)) return fallback;
+        if (n < min) return min;
+        if (n > max) return max;
+        return n;
+      }
+
+      function createAlert(type, title, body) {
+        var box = document.createElement("div");
+        box.className = "alert-box alert-" + type;
+        var strong = document.createElement("strong");
+        strong.textContent = title + " ";
+        var span = document.createElement("span");
+        span.textContent = body;
+        box.appendChild(strong);
+        box.appendChild(span);
+        return box;
+      }
+
+      function createStep(title, body) {
+        var item = document.createElement("div");
+        item.className = "step-item";
+        var h4 = document.createElement("h4");
+        h4.textContent = title;
+        var p = document.createElement("p");
+        p.textContent = body;
+        item.appendChild(h4);
+        item.appendChild(p);
+        return item;
+      }
+
+      function copyText(btn, text) {
+        if (!navigator.clipboard) return;
+        navigator.clipboard.writeText(text).then(function () {
+          var orig = btn.textContent;
+          btn.textContent = "✅ Tersalin! Siap paste ke catatan medis";
+          btn.classList.add("copied");
+          setTimeout(function () {
+            btn.textContent = orig;
+            btn.classList.remove("copied");
+          }, 1800);
+        });
+      }
+
+      /* Tabs */
+      var tabBtns = document.querySelectorAll(".tab-btn");
+      tabBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var target = btn.getAttribute("data-tab");
+          tabBtns.forEach(function (b) {
+            var isMatch = b === btn;
+            b.classList.toggle("active", isMatch);
+            b.setAttribute("aria-selected", isMatch ? "true" : "false");
+          });
+          document.querySelectorAll(".panel").forEach(function (p) {
+            p.classList.toggle("active", p.id === "panel-" + target);
+          });
+        });
+      });
+
+      /* State */
+      var state = {
+        perfusion: "warm",
+        history: "naive"
+      };
+
+      /* TAB 1: BOLUS IV */
+      var perfWarm = document.getElementById("perf-warm");
+      var perfCold = document.getElementById("perf-cold");
+      var histNaive = document.getElementById("hist-naive");
+      var histChronic = document.getElementById("hist-chronic");
+      var oralWrap = document.getElementById("oral-dose-wrap");
+      var oralInput = document.getElementById("oral-dose");
+      var sbpInput = document.getElementById("sbp");
+      var kInput = document.getElementById("potassium");
+      var egfrInput = document.getElementById("egfr");
+
+      var lastBolusCopy = "";
+
+      function updateBolus() {
+        var sbp = clampNum(sbpInput.value, 50, 260, 130);
+        var kVal = clampNum(kInput.value, 1.5, 8.0, 4.0);
+        var egfr = clampNum(egfrInput.value, 5, 150, 60);
+        var oral = clampNum(oralInput.value, 10, 400, 80);
+
+        var hero = document.getElementById("bolus-hero");
+        var label = document.getElementById("bolus-label");
+        var value = document.getElementById("bolus-value");
+        var sub = document.getElementById("bolus-sub");
+        var alerts = document.getElementById("bolus-alerts");
+        alerts.replaceChildren();
+
+        hero.className = "result-hero";
+
+        if (state.perfusion === "cold" || sbp < 90) {
+          hero.classList.add("danger");
+          label.textContent = "🚨 RED FLAG — TUNDA DIURETIK AGRESIF";
+          value.textContent = "Stabilisasi Perfusi Dulu!";
+          sub.textContent = "Pasien Cold & Wet atau TD Sistolik <90 mmHg berisiko jatuh ke syok kardiogenik berat bila langsung diberikan diuretik dosis tinggi.";
+          alerts.appendChild(createAlert("danger", "Prioritas:", "Evaluasi SCAI Shock, pertimbangkan inotropik/vasopresor (Dobutamin / Norepinefrin) sebelum memulai diuretik."));
+          lastBolusCopy = "Evaluasi ADHF: Profil Cold & Wet / TD Sistolik " + sbp + " mmHg. Tunda diuretik agresif; prioritas stabilisasi hemodinamik & perfusi terlebih dahulu.";
+          return;
+        }
+
+        var minDose, maxDose, recNote;
+        if (state.history === "naive") {
+          minDose = 20;
+          maxDose = 40;
+          recNote = "Pasien diuretic-naive: mulai 20–40 mg IV bolus pelan (1–2 menit). Evaluasi output urin setelah 2–6 jam.";
+        } else {
+          minDose = Math.round(oral / 10) * 10;
+          maxDose = Math.min(200, Math.round((oral * 2.5) / 10) * 10);
+          if (maxDose < minDose) maxDose = minDose;
+          recNote = "Pasien rutin oral " + oral + " mg/hari: berikan 1–2,5× dosis oral harian sebagai dosis IV (bagi 2 dosis atau bolus tunggal pelan bila ≤80 mg; infus 20–30 mnt bila >80 mg).";
+        }
+
+        hero.classList.add("ok");
+        label.textContent = "REKOMENDASI DOSIS BOLUS IV AWAL";
+        value.textContent = minDose + "–" + maxDose + " mg IV";
+        sub.textContent = recNote;
+
+        if (maxDose >= 80) {
+          alerts.appendChild(createAlert("info", "Kecepatan Pemberian:", "Untuk dosis ≥80 mg IV, berikan perlahan via infus 20–30 menit (maks 4 mg/menit) untuk mencegah ototoksisitas."));
+        }
+        if (kVal < 3.5) {
+          alerts.appendChild(createAlert("warn", "Hipokalemia (K+ " + kVal.toFixed(1) + "):", "Koreksi Kalium segera bersamaan dengan diuretik untuk mencegah aritmia ventrikel."));
+        }
+        if (egfr < 30) {
+          alerts.appendChild(createAlert("warn", "CKD Berat (eGFR " + egfr + "):", "Sering membutuhkan dosis batas atas (" + maxDose + " mg IV) atau drip kontinyu + kombinasi diuretik karena penurunan sekresi tubulus."));
+        }
+
+        lastBolusCopy =
+          "Instruksi Furosemide IV Awal (DiuretikFlow Pro)\n" +
+          "- Profil: Warm & Wet (TD Sistolik " + sbp + " mmHg, eGFR " + egfr + ", K+ " + kVal.toFixed(1) + ")\n" +
+          "- Dosis rekomendasi: Furosemide " + minDose + "–" + maxDose + " mg IV\n" +
+          "- Evaluasi: Pantau output urin 2–6 jam (target ≥100–150 mL/jam).";
+      }
+
+      perfWarm.addEventListener("click", function () {
+        state.perfusion = "warm";
+        perfWarm.classList.add("selected");
+        perfCold.classList.remove("selected");
+        updateBolus();
+      });
+      perfCold.addEventListener("click", function () {
+        state.perfusion = "cold";
+        perfCold.classList.add("selected");
+        perfWarm.classList.remove("selected");
+        updateBolus();
+      });
+      histNaive.addEventListener("click", function () {
+        state.history = "naive";
+        histNaive.classList.add("selected");
+        histChronic.classList.remove("selected");
+        oralWrap.style.display = "none";
+        updateBolus();
+      });
+      histChronic.addEventListener("click", function () {
+        state.history = "chronic";
+        histChronic.classList.add("selected");
+        histNaive.classList.remove("selected");
+        oralWrap.style.display = "block";
+        updateBolus();
+      });
+
+      document.querySelectorAll("#oral-presets .chip").forEach(function (c) {
+        c.addEventListener("click", function () {
+          document.querySelectorAll("#oral-presets .chip").forEach(function (x) { x.classList.remove("selected"); });
+          c.classList.add("selected");
+          oralInput.value = c.getAttribute("data-val");
+          updateBolus();
+        });
+      });
+
+      [oralInput, sbpInput, kInput, egfrInput].forEach(function (el) {
+        el.addEventListener("input", updateBolus);
+      });
+
+      document.getElementById("copy-bolus").addEventListener("click", function () {
+        copyText(this, lastBolusCopy);
+      });
+
+      /* TAB 2: SYRINGE PUMP DRIP */
+      var dripMgInput = document.getElementById("drip-total-mg");
+      var dripMlInput = document.getElementById("drip-total-ml");
+      var dripSlider = document.getElementById("drip-rate-slider");
+      var dripRateDisp = document.getElementById("drip-rate-display");
+      var lastDripCopy = "";
+
+      function updateDrip() {
+        var totalMg = clampNum(dripMgInput.value, 20, 500, 100);
+        var totalMl = clampNum(dripMlInput.value, 10, 500, 50);
+        var rateMgHr = clampNum(dripSlider.value, 1, 40, 10);
+
+        var conc = totalMg / totalMl; // mg/mL
+        var mlHr = rateMgHr / conc;
+        var dose24h = rateMgHr * 24;
+        var durationHr = totalMl / mlHr;
+        var ampuls = (totalMg / 20).toFixed(1).replace(/\.0$/, "");
+
+        dripRateDisp.textContent = rateMgHr + " mg/jam";
+        document.getElementById("drip-ml-hr").textContent = mlHr.toFixed(1) + " mL / jam";
+        document.getElementById("drip-conc-text").textContent =
+          "Konsentrasi: " + conc.toFixed(1) + " mg/mL (" + ampuls + " ampul @20 mg ad " + totalMl + " mL NaCl 0,9%)";
+        document.getElementById("drip-24h").textContent = Math.round(dose24h) + " mg/hari";
+        document.getElementById("drip-duration").textContent = durationHr.toFixed(1) + " jam";
+
+        var alerts = document.getElementById("drip-alerts");
+        alerts.replaceChildren();
+        alerts.appendChild(createAlert("info", "Wajib Loading:", "Berikan bolus Furosemide 20–40 mg IV dulu sebelum menjalankan syringe pump agar kadar tubulus cepat tercapai."));
+        if (dose24h > 240) {
+          alerts.appendChild(createAlert("warn", "Dosis Tinggi (" + Math.round(dose24h) + " mg/24j):", "Pertimbangkan kombinasi Sequential Nephron Blockade (HCT / Acetazolamide) dan pantau ketat K+, Mg2+, serta fungsi ginjal."));
+        }
+
+        lastDripCopy =
+          "Instruksi Syringe Pump Furosemide (DiuretikFlow Pro)\n" +
+          "- Pengenceran: Furosemide " + totalMg + " mg (" + ampuls + " ampul @20 mg) + NaCl 0,9% ad " + totalMl + " mL (konsentrasi " + conc.toFixed(1) + " mg/mL)\n" +
+          "- Dosis: " + rateMgHr + " mg/jam → Jalankan " + mlHr.toFixed(1) + " mL/jam\n" +
+          "- Estimasi total 24 jam: " + Math.round(dose24h) + " mg/hari (1 spuit habis dalam " + durationHr.toFixed(1) + " jam).";
+      }
+
+      document.querySelectorAll("#dil-presets .chip").forEach(function (c) {
+        c.addEventListener("click", function () {
+          document.querySelectorAll("#dil-presets .chip").forEach(function (x) { x.classList.remove("selected"); });
+          c.classList.add("selected");
+          dripMgInput.value = c.getAttribute("data-mg");
+          dripMlInput.value = c.getAttribute("data-ml");
+          updateDrip();
+        });
+      });
+
+      document.querySelectorAll("#rate-presets .chip").forEach(function (c) {
+        c.addEventListener("click", function () {
+          document.querySelectorAll("#rate-presets .chip").forEach(function (x) { x.classList.remove("selected"); });
+          c.classList.add("selected");
+          dripSlider.value = c.getAttribute("data-rate");
+          updateDrip();
+        });
+      });
+
+      [dripMgInput, dripMlInput, dripSlider].forEach(function (el) {
+        el.addEventListener("input", updateDrip);
+      });
+
+      document.getElementById("copy-drip").addEventListener("click", function () {
+        copyText(this, lastDripCopy);
+      });
+
+      /* TAB 3: EVALUASI 2-6 JAM & DIURETIC RESISTANCE */
+      var lastBolusInput = document.getElementById("last-bolus");
+      var urineOutInput = document.getElementById("urine-out");
+      var spotNaInput = document.getElementById("spot-na");
+      var lastEvalCopy = "";
+
+      function updateEval() {
+        var lastDose = clampNum(lastBolusInput.value, 10, 240, 40);
+        var uo = clampNum(urineOutInput.value, 0, 1000, 60);
+        var spotNaRaw = spotNaInput.value.trim();
+        var hasNa = spotNaRaw !== "";
+        var spotNa = hasNa ? clampNum(spotNaRaw, 0, 250, 50) : null;
+
+        var adequate = uo >= 100 && (!hasNa || spotNa >= 50);
+
+        var hero = document.getElementById("eval-hero");
+        var label = document.getElementById("eval-label");
+        var value = document.getElementById("eval-value");
+        var sub = document.getElementById("eval-sub");
+        var steps = document.getElementById("eval-steps");
+        steps.replaceChildren();
+
+        hero.className = "result-hero";
+
+        if (adequate) {
+          hero.classList.add("ok");
+          label.textContent = "✅ RESPON DIURETIK ADEKUAT";
+          value.textContent = "Pertahankan " + lastDose + " mg IV / 12 jam";
+          sub.textContent = "Output urin " + uo + " mL/jam" + (hasNa ? " & Spot Urine Na+ " + spotNa + " mEq/L" : "") + " memenuhi target ESC (≥100–150 mL/jam).";
+          steps.appendChild(createStep("Langkah Lanjutan", "Ulangi dosis " + lastDose + " mg IV tiap 12 jam sampai kongesti teratasi (euvolemia), lalu konversi ke dosis oral efektif sebelum pulang."));
+          steps.appendChild(createStep("Monitoring", "Pantau balans cairan harian, berat badan tiap pagi, K+, Na+, dan kreatinin tiap 24 jam."));
+          lastEvalCopy = "Evaluasi Diuretik 6 jam: Respon ADEKUAT (urin " + uo + " mL/jam). Lanjutkan Furosemide " + lastDose + " mg IV tiap 12 jam hingga euvolemia.";
+        } else {
+          var nextDose = Math.min(200, lastDose * 2);
+          hero.classList.add("warn");
+          label.textContent = "⚠️ RESPON INADEKUAT / DIURETIC RESISTANCE";
+          value.textContent = "Eskalasi → " + nextDose + " mg IV (2× Dosis)";
+          sub.textContent = "Output urin " + uo + " mL/jam (<100 mL/jam)" + (hasNa && spotNa < 50 ? " & Spot Na+ " + spotNa + " mEq/L (<50)" : "") + ". Jangan tunggu sampai besok!";
+
+          steps.appendChild(createStep("Step 1: Gandakan Dosis IV atau Pindah Drip", "Naikkan dosis bolus menjadi " + nextDose + " mg IV (maks ceiling ~160–200 mg, infus pelan ≤4 mg/mnt) ATAU mulai Syringe Pump Drip 10–20 mg/jam."));
+          steps.appendChild(createStep("Step 2: Sequential Nephron Blockade (Kombinasi)", "Bila dosis maksimal tetap seret, tambahkan diuretik beda segmen: HCT 25–50 mg PO (30 mnt sebelum furosemide IV), ATAU Acetazolamide 500 mg IV 1×/hari (ADVOR Trial), ATAU Spironolactone 25–50 mg PO (jika K+ <5,0)."));
+          steps.appendChild(createStep("Step 3: Singkirkan Pseudo-Resistance", "Pastikan kateter urin paten, tidak ada hipoperfusi/syok (Cold & Wet), hentikan NSAID, dan batasi asupan cairan/garam."));
+
+          lastEvalCopy =
+            "Evaluasi Diuretik 6 jam: Respon INADEKUAT (urin " + uo + " mL/jam pasca " + lastDose + " mg IV).\n" +
+            "- Rencana: Eskalasi Furosemide ke " + nextDose + " mg IV (2× dosis) atau pindah continuous drip.\n" +
+            "- Pertimbangkan Sequential Nephron Blockade (HCT 25–50 mg PO / Acetazolamide 500 mg IV) bila tetap resisten + cek patensi kateter & perfusi.";
+        }
+      }
+
+      [lastBolusInput, urineOutInput, spotNaInput].forEach(function (el) {
+        el.addEventListener("input", updateEval);
+      });
+
+      document.getElementById("copy-eval").addEventListener("click", function () {
+        copyText(this, lastEvalCopy);
+      });
+
+      /* Init */
+      updateBolus();
+      updateDrip();
+      updateEval();
+    })();
+  </script>
+</body>
+</html>
